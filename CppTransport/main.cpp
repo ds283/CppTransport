@@ -7,10 +7,10 @@
 //
 
 #include <iostream>
+#include "core.h"
 
 int main(int argc, const char *argv[])
   {
-    std::cout << "CppTransport (c) David Seery and others 2013";
+    std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << "\n";
     return 0;
   }
-
