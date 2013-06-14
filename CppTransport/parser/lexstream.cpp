@@ -26,7 +26,7 @@ static bool parse            (const std::string filename, finder* search,
 static void lexicalize       (std::deque<struct lexeme>& lexeme_list, finder* search,
                               std::deque<struct inclusion>& inclusions, lexfile& input);
 
-static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type);
+static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type, std::deque<struct inclusion>& p);
 
 // ******************************************************************
 
@@ -102,8 +102,7 @@ static void lexicalize(std::deque<struct lexeme>& lexeme_list, finder* search,
     while(input.current_state() == lex_ok)
       {
         enum lexeme_buffer_type type;
-        unsigned int            line = input.current_line();  // note current line, so not thrown off when end-of-line terminates a lexeme
-        std::string             word = get_lexeme(input, type);
+        std::string             word = get_lexeme(input, type, inclusions);
 
         if(word != "")
           {
@@ -112,15 +111,15 @@ static void lexicalize(std::deque<struct lexeme>& lexeme_list, finder* search,
                 case buf_symbol:
                   if(word == "#")                         // treat as a preprocessor directive
                     {
-                      word = get_lexeme(input, type);     // get next lexeme
+                      word = get_lexeme(input, type, inclusions);     // get next lexeme
 
                       if(word == "include")               // inclusion directive
                         {
-                          word = get_lexeme(input, type);
+                          word = get_lexeme(input, type, inclusions);
 
                           if(type != buf_string_literal)
                             {
-                              error(ERROR_INCLUDE_FILE, line, inclusions);
+                              error(ERROR_INCLUDE_DIRECTIVE, input.current_line(), inclusions);
                             }
                           else
                             {
@@ -128,15 +127,15 @@ static void lexicalize(std::deque<struct lexeme>& lexeme_list, finder* search,
                               if(parse(word, search, lexeme_list, inclusions) == false)
                                 {
                                   std::ostringstream msg;
-                                  msg << ERROR_OPEN_FILE << " '" << word << "'";
-                                  error(msg.str(), line, inclusions);
+                                  msg << ERROR_INCLUDE_FILE << " '" << word << "'";
+                                  error(msg.str(), input.current_line(), inclusions);
                                 }
                             }
                         }
                     }
                   else
                     {
-                      lexeme_list.push_back(lexeme(word, type, inclusions, line));
+                      lexeme_list.push_back(lexeme(word, type, inclusions, input.current_line()));
                     }
                   break;
 
@@ -153,7 +152,7 @@ static void lexicalize(std::deque<struct lexeme>& lexeme_list, finder* search,
       }
   }
 
-static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
+static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type, std::deque<struct inclusion>& p)
   {
     enum lexfile_outcome state = lex_ok;
     char                 c     = 0;
@@ -171,7 +170,7 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
                 word = c;
                 input.eat();
 
-                while((isalnum(c = input.get(state)) || c == '_' || c == '$' || c == '%') && state == lex_ok)
+                while((isalnum(c = input.get(state)) || c == '_' || c == '$') && state == lex_ok)
                   { word += c;
                     input.eat();
                   }
@@ -207,10 +206,21 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
                   }
                 type = buf_number;
               }
-            else if(c == ' ' || c == '\t' || c == '\n')       // skip over white-space characters
-              { input.eat();
+            else if(c == '%')                                 // single-line comment
+              {
+                input.eat();
+
+                while((c = input.get(state)) != '\n' && state == lex_ok)
+                  {
+                    input.eat();
+                  }
+                input.eat();
               }
-            else if(c == '-')
+            else if(c == ' ' || c == '\t' || c == '\n')       // skip over white-space characters
+              {
+                input.eat();
+              }
+            else if(c == '-')                                 // could be a '-' sign, or could be the first char of '->'
               {
                 word = c;
                 input.eat();
@@ -221,7 +231,7 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
                   }
                 type = buf_symbol;
               }
-            else if(c == '.')
+            else if(c == '.')                                 // could be a '.', or could be the first char of '...'
               {
                 word = c;
                 input.eat();
@@ -234,10 +244,15 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
                         word += c;
                         input.eat();
                       }
+                    else
+                      {
+                        error(ERROR_EXPECTED_ELLIPSIS, input.current_line(), p);
+                        word += '.';                          // make up to a proper ellipsis anyway
+                      }
                   }
                 type = buf_symbol;
               }
-            else if(c == '"')
+            else if(c == '"')                                 // looks like a string literal
               {
                 input.eat();
                 c = input.get(state);
@@ -247,7 +262,14 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type)
                     input.eat();
                     c = input.get(state);
                   }
-                if(c == '"') input.eat();
+                if(c == '"')
+                  {
+                    input.eat();
+                  }
+                else
+                  {
+                    error(ERROR_EXPECTED_CLOSE_QUOTE, input.current_line(), p);
+                  }
                 type = buf_string_literal;
               }
             else
