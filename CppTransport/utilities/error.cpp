@@ -43,7 +43,7 @@ void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path
   {
     if(path.size() < level)
       {
-        level = path.size();
+        level = (unsigned int)path.size();
       }
 
     std::ostringstream out;
@@ -66,7 +66,7 @@ void error(std::string msg, unsigned int line, std::deque<struct inclusion>& pat
   {
     if(path.size() < level)
       {
-        level = path.size();
+        level = (unsigned int)path.size();
       }
 
     std::ostringstream out;

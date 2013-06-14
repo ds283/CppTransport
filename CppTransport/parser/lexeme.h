@@ -16,9 +16,14 @@
 
 #include "core.h"
 
+enum lexeme_buffer_type
+  {
+    buf_string, buf_number, buf_symbol, buf_string_literal
+  };
+
 enum lexeme_type
   {
-    keyword, symbol, ident, integer, decimal, string
+    keyword, symbol, ident, integer, decimal, string, unknown
   };
 
 enum keyword_type
@@ -26,41 +31,32 @@ enum keyword_type
     name, author, tag, field, potential, parameter
   };
 
+#define NUMBER_KEYWORDS (6)
+
 enum symbol_type
   {
     open_brace, close_brace, open_bracket, close_bracket,
     open_square, close_square, comma, period, semicolon, plus, minus, star, backslash, foreslash, tilde,
-    ampersand, dollar, percent, circumflex, ampersat
+    ampersand, circumflex, ampersat, ellipsis, rightarrow
   };
 
-class identifier
-  {
-    public:
-      identifier(std::string id);
-      ~identifier();
-
-    private:
-      std::string name;
-  };
+#define NUMBER_SYMBOLS (22)
 
 class lexeme
   {
     public:
-      lexeme(enum keyword_type kw, std::deque<struct inclusion> p, unsigned int l);
-      lexeme(enum symbol_type sym, std::deque<struct inclusion> p, unsigned int l);
-      lexeme(identifier& id,       std::deque<struct inclusion> p, unsigned int l);
-      lexeme(int intg,             std::deque<struct inclusion> p, unsigned int l);
-      lexeme(double decm,          std::deque<struct inclusion> p, unsigned int l);
-      lexeme(std::string strg,     std::deque<struct inclusion> p, unsigned int l);
-
+      lexeme(std::string buffer, enum lexeme_buffer_type t, std::deque<struct inclusion> p, unsigned int l);
       ~lexeme();
 
+      // write details to specified output stream
+      void dump(std::ostream& stream);
+
     private:
-      enum lexeme_type type;
+      enum lexeme_type  type;
+      unsigned int      unique;
 
       enum keyword_type k;
       enum symbol_type  s;
-      identifier*       i;
       int               z;
       double            d;
       std::string       str;

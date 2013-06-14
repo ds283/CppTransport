@@ -28,8 +28,7 @@ int main(int argc, const char *argv[])
 
     std::deque<struct input> inputs;
 
-    int i;
-    for(i = 1; i < argc; i++)
+    for(int i = 1; i < argc; i++)
       {
         if(strcmp(argv[i], "-I") == 0)
           {
@@ -42,8 +41,16 @@ int main(int argc, const char *argv[])
             in.name   = (std::string)argv[i];
             in.stream = new lexstream((std::string)argv[i], &path);
 
+            in.stream->dump(std::cout);
+
             inputs.push_back(in);
           }
+      }
+
+    // deallocate lexeme storage
+    for(int i = 0; i < inputs.size(); i++)
+      {
+        delete inputs[i].stream;
       }
 
     return 0;

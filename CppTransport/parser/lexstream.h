@@ -24,7 +24,7 @@ class lexstream
 
       lexeme* next();
 
-      void dump(std::ostream);
+      void dump(std::ostream& stream);
 
     private:
       std::deque<struct lexeme> lexeme_list;
