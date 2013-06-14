@@ -9,7 +9,7 @@
 #define __error_H_
 
 #include <string>
-#include <list>
+#include <deque>
 
 #include "core.h"
 
@@ -19,13 +19,13 @@
 #define WARNING_TOKEN    "warning: "
 #define ERROR_TOKEN      ""
 
-void warn(std::string msg);
+void warn (std::string msg);
 void error(std::string msg);
 
-void warn(std::string msg, unsigned int line, std::list<std::string> path);
-void error(std::string msg, unsigned int line, std::list<std::string> path);
+void warn (std::string msg, unsigned int line, std::deque<struct inclusion>& path);
+void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path);
 
-void warn(std::string msg, unsigned int line, std::list<std::string> path, unsigned int level);
-void error(std::string msg, unsigned int line, std::list<std::string> path, unsigned int level);
+void warn (std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level);
+void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level);
 
 #endif //__error_H_

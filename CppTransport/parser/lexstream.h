@@ -10,51 +10,24 @@
 
 #include <iostream>
 #include <string>
-#include <list>
+#include <deque>
 
+#include "lexeme.h"
 #include "finder.h"
 
-enum lexeme_type
-  {
-    keyword, identifier, integer, decimal, string, open_brace, close_brace, open_bracket, close_bracket,
-    open_square, close_square, comma, period, semicolon };
-  };
-
-enum keyword_type
-  {
-    name, tag, fields, potential
-  };
-
-struct lexeme
-  {
-    enum lexeme_type type;
-    union
-      {
-        enum keyword_type keyword;
-        std::string       identifier;
-        int               integer;
-        double            decimal;
-        std::string       string;
-      } value;
-
-    std::list<std::string> path;
-    unsigned int line;
-  };
 
 class lexstream
   {
     public:
-      lexstream(const std::string filename, finder search);
+      lexstream(const std::string filename, finder* search);
       ~lexstream();
 
-      lexeme read();
+      lexeme* next();
 
       void dump(std::ostream);
 
     private:
-      std::list<struct lexeme> lexeme_list;
-
-      finder* spaths;
+      std::deque<struct lexeme> lexeme_list;
   };
 
 

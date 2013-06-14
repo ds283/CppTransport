@@ -5,23 +5,28 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-
-
 #ifndef __finder_H_
 #define __finder_H_
 
 #include <iostream>
 #include <string>
-#include <list>
+#include <vector>
 
 class finder
   {
     public:
+      finder();
       finder(std::string path);
       ~finder();
 
+      // add a path to the search list
+      void add(std::string path);
+
+      // find fully-qualified path name corresponding to a given leafname
+      bool fqpn(std::string leaf, std::string& fqpn);
+
     private:
-      std::list<std::string> paths;
+      std::vector<std::string> paths;
   };
 
 

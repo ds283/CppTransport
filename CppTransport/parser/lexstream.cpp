@@ -16,23 +16,22 @@
 
 // ******************************************************************
 
-static int parse(const std::string filename, finder* search,
-                 std::list<struct lexeme> lexeme_list, std::list<std::string> inclusions);
+static bool parse(const std::string filename, finder* search,
+                  std::deque<struct lexeme> lexeme_list, std::deque<struct inclusion>& inclusions);
 
 // ******************************************************************
 
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 lexstream::lexstream(const std::string filename, finder* search)
-  : spaths(search)
   {
     assert(search != NULL);
 
-    std::list<std::string> inclusions;
+    std::deque<struct inclusion> inclusions;
 
-    if(parse(filename, search, lexeme_list, inclusions) != 0)
+    if(parse(filename, search, lexeme_list, inclusions) == false)
       {
-        std:: ostringstream msg;
+        std::ostringstream msg;
         msg << ERROR_OPEN_FILE << " '" << filename << "'";
         error(msg.str());
       }
@@ -45,13 +44,32 @@ lexstream::~lexstream(void)
 
 // ******************************************************************
 
-static int parse(const std::string filename, finder* search,
-                 std::list<struct lexeme> lexeme_list, std::list<std::string> inclusions)
+static bool parse(const std::string filename, finder* search,
+                  std::deque<struct lexeme> lexeme_list, std::deque<struct inclusion>& inclusions)
   {
     assert(search != NULL);
 
-    unsigned int line = 0;
+    unsigned int  line = 0;
+    std::string   path = "";
     std::ifstream input;
 
-    input.open(filename);
+    bool found = search->fqpn(filename, path);
+
+    if(found)
+      {
+        std::cout << "Opened file '" << path << "'\n";
+
+        // remember this inclusion
+        struct inclusion inc;
+        inc.line = 0;                // line doesn't count for the topmost file on the stack
+        inc.name = path;
+
+        inclusions.push_front(inc);  // note this takes a copy of inc
+
+        // LEXICALIZE!
+
+        inclusions.pop_front();      // pop this file from the stack
+      }
+
+    return(found);
   }

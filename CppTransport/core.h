@@ -15,4 +15,12 @@
 #define CPPTRANSPORT_NUMERIC_VERSION (0.01)
 #define CPPTRANSPORT_COPYRIGHT       "(c) David Seery and others 2013"
 
+
+// data structure for tracking the source of any lexeme
+struct inclusion
+  {
+    std::string  name;
+    unsigned int line;
+  };
+
 #endif //__core_H_

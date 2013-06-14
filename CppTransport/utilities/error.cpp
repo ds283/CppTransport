@@ -29,17 +29,17 @@ void error(std::string msg)
     std::cerr << out.str() << "\n";
   }
 
-void warn(std::string msg, unsigned int line, std::list<std::string>& path)
+void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path)
   {
     warn(msg, line, path, WARN_PATH_LEVEL);
   }
 
-void error(std::string msg, unsigned int line, std::list<std::list>& path)
+void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path)
   {
     error(msg, line, path, ERROR_PATH_LEVEL);
   }
 
-void warn(std::string msg, unsigned int line, std::list<std::string>& path, unsigned int level)
+void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level)
   {
     if(path.size() < level)
       {
@@ -51,18 +51,18 @@ void warn(std::string msg, unsigned int line, std::list<std::string>& path, unsi
     out << CPPTRANSPORT_NAME << ": " << WARNING_TOKEN << msg << " at line " << line;
     if(level >= 1)
       {
-        out << " of '" << path[0] << "'";
+        out << " of '" << path[0].name << "'";
       }
     std::cerr << out.str() << "\n";
 
     int i;
     for(i = 1; i < level; i++)
       {
-        std::cerr << "  included from file '" << path[i] << "'\n";
+        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
       }
   }
 
-void error(std::string msg, unsigned int line, std::list<std::string>& path, unsigned int level)
+void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level)
   {
     if(path.size() < level)
       {
@@ -74,13 +74,13 @@ void error(std::string msg, unsigned int line, std::list<std::string>& path, uns
     out << CPPTRANSPORT_NAME << ": " << ERROR_TOKEN << msg << " at line " << line;
     if(level >= 1)
       {
-        out << " of '" << path[0] << "'";
+        out << " of '" << path[0].name << "'";
       }
     std::cerr << out.str() << "\n";
 
     int i;
     for(i = 1; i < level; i++)
       {
-        std::cerr << "  included from file '" << path[i] << "'\n";
+        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
       }
   }
