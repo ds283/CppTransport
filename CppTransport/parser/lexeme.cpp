@@ -19,20 +19,32 @@
 static unsigned int unique_count = 0;
 
 std::string keyword_table[]
-                = { "name", "author", "tag", "field", "potential", "parameter" };
+                = { "name", "author", "tag", "field", "potential", "parameter", "latex",
+                    "abs", "step", "sqrt", "sin", "cos", "tan",
+                    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
+                    "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G", "S", "H",
+                    "zeta", "zetaderiv", "tgamma", "lgamma", "beta", "psi", "factorial", "binomial" };
 
 enum keyword_type keyword_map[]
-                = { name, author, tag, field, potential, parameter };
+                = { name, author, tag, field, potential, parameter,
+                    f_abs, f_step, f_sqrt,
+                    f_sin, f_cos, f_tan,
+                    f_asin, f_acos, f_atan, f_atan2,
+                    f_sinh, f_cosh, f_tanh,
+                    f_asinh, f_acosh, f_atanh,
+                    f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
+                    f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
+                    f_beta, f_psi, f_factorial, f_binomial };
 
 std::string symbol_table[]
                 = { "{", "}", "(", ")",
-                    "[", "]", ",", ".", ";",
+                    "[", "]", ",", ".", ":", ";",
                     "+", "-", "*", "/", "\\", "~",
                     "&", "^", "@", "...", "->" };
 
 enum symbol_type symbol_map[]
                 = { open_brace, close_brace, open_bracket, close_bracket,
-                    open_square, close_square, comma, period, semicolon,
+                    open_square, close_square, comma, period, colon, semicolon,
                     plus, minus, star, backslash, foreslash, tilde,
                     ampersand, circumflex, ampersat, ellipsis, rightarrow };
 
@@ -87,6 +99,19 @@ lexeme::lexeme(std::string buffer, enum lexeme_buffer_type t, std::deque<struct 
               msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
               error(msg.str(), l, p);
             }
+
+          if(type == decimal && buffer[0] == '0' && buffer[1] == 'x')
+            {
+              std::ostringstream msg;
+              msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
+              warn(msg.str(), l, p);
+            }
+          else if(type == decimal && buffer[0] == '0')
+            {
+              std::ostringstream msg;
+              msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVESRION_B;
+              warn(msg.str(), l, p);
+            }
           break;
 
         case buf_symbol:
@@ -133,42 +158,26 @@ lexeme::~lexeme()
 
 void lexeme::dump(std::ostream& stream)
   {
-    bool ok = false;
-
     stream << "Lexeme " << this->unique << " = ";
 
     switch(type)
       {
         case keyword:
           stream << "keyword ";
-          for(int i = 0; i < NUMBER_KEYWORDS; i++)
-            {
-              if(keyword_map[i] == this->k)
-                {
-                  stream << "'" << keyword_table[i] << "'\n";
-                  ok = true;
-                }
-            }
-          if(ok == false)
-            {
-              stream << "UNKNOWN! (" << this->k << ")\n";
-            }
+
+          assert(this->k >= 0);
+          assert(this->k < NUMBER_KEYWORDS);
+
+          stream << "'" << keyword_table[(int)this->k] << "'\n";
           break;
 
         case symbol:
           stream << "symbol ";
-          for(int i = 0; i < NUMBER_SYMBOLS; i++)
-            {
-              if(symbol_map[i] == this->s)
-                {
-                  stream << "'" << symbol_table[i] << "'\n";
-                  ok = true;
-                }
-            }
-          if(ok == false)
-            {
-              stream << "UNKNOWN! (" << this->s << ")\n";
-            }
+
+          assert(this->s >= 0);
+          assert(this->s < NUMBER_SYMBOLS);
+
+          stream << "'" << symbol_table[(int)this->s] << "'\n";
           break;
 
         case ident:
@@ -194,4 +203,127 @@ void lexeme::dump(std::ostream& stream)
         default:
           assert(false);
       }
+  }
+
+
+// ******************************************************************
+
+
+enum lexeme_type lexeme::get_type()
+  {
+    return this->type;
+  }
+
+bool lexeme::get_keyword(enum keyword_type& keyword)
+  {
+    bool rval = false;
+
+    if(this->type == keyword)
+      {
+        keyword = this->k;
+        rval    = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
+  }
+
+bool lexeme::get_symbol(enum symbol_type& symbol)
+  {
+    bool rval = false;
+
+    if(this->type == symbol)
+      {
+        symbol = this->s;
+        rval   = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
+  }
+
+bool lexeme::get_identifier(std::string& id)
+  {
+    bool rval = false;
+
+    if(this->type == ident)
+      {
+        id   = this->str;
+        rval = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
+  }
+
+bool lexeme::get_integer(int& z)
+  {
+    bool rval = false;
+
+    if(this->type == z)
+      {
+        z    = this->z;
+        rval = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
+  }
+
+bool lexeme::get_decimal(double& d)
+  {
+    bool rval = false;
+
+    if(this->type == d)
+      {
+        d    = this->d;
+        rval = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
+  }
+
+bool lexeme::get_string(std::string& str)
+  {
+    bool rval = false;
+
+    if(this->type == string)
+      {
+        str  = this->str;
+        rval = true;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
+        warn(msg.str(), this->line, this->path);
+      }
+
+    return(rval);
   }

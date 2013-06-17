@@ -34,10 +34,13 @@ static std::string get_lexeme(lexfile& input, enum lexeme_buffer_type& type, std
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 lexstream::lexstream(const std::string filename, finder* search)
+  : ptr_valid(false)
   {
     assert(search != NULL);
 
     std::deque<struct inclusion> inclusions;
+
+    ptr = lexeme_list.begin();
 
     if(parse(filename, search, lexeme_list, inclusions) == false)
       {
@@ -66,6 +69,54 @@ void lexstream::dump(std::ostream& stream)
   }
 
 // ******************************************************************
+
+
+void lexstream::reset()
+  {
+    if(this->lexeme_list.size() > 0)
+      {
+        this->ptr       = this->lexeme_list.begin();
+        this->ptr_valid = true;
+      }
+    else
+      {
+        this->ptr_valid = false;
+      }
+  }
+
+lexeme* lexstream::get()
+  { lexeme* rval = NULL;
+
+    if(this->ptr_valid)
+      {
+        rval = &(*(this->ptr));
+      }
+
+    return(rval);
+  }
+
+bool lexstream::eat()
+  {
+    if(this->ptr_valid && this->ptr != this->lexeme_list.end())
+      {
+        this->ptr++;
+      }
+    else
+      {
+        this->ptr_valid = false;
+      }
+
+    return(this->ptr_valid);
+  }
+
+bool lexstream::state()
+  {
+    return(this->ptr_valid);
+  }
+
+
+// ******************************************************************
+
 
 static bool parse(const std::string filename, finder* search,
                   std::deque<struct lexeme>& lexeme_list, std::deque<struct inclusion>& inclusions)

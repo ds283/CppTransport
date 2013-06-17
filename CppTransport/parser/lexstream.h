@@ -22,12 +22,18 @@ class lexstream
       lexstream(const std::string filename, finder* search);
       ~lexstream();
 
-      lexeme* next();
+      void    reset();
+      lexeme* get();
+      bool    eat();
+      bool    state();
 
       void dump(std::ostream& stream);
 
     private:
-      std::deque<struct lexeme> lexeme_list;
+      std::deque<struct lexeme>           lexeme_list;
+
+      std::deque<struct lexeme>::iterator ptr;
+      bool                                ptr_valid;
   };
 
 
