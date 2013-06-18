@@ -46,7 +46,8 @@
 
     #include "lexeme.h"
     #include "parse_tree.h"
-    
+    #include "lexical.h"
+
     namespace y {
         class y_driver;
         class y_lexer;
@@ -54,7 +55,7 @@
 
 
 /* Line 33 of lalr1.cc  */
-#line 58 "y_parser.tab.hh"
+#line 59 "y_parser.tab.hh"
 
 
 #include <string>
@@ -71,7 +72,7 @@
 #line 5 "y_parser.yy"
 namespace y {
 /* Line 33 of lalr1.cc  */
-#line 75 "y_parser.tab.hh"
+#line 76 "y_parser.tab.hh"
 
   /// A Bison parser.
   class y_parser
@@ -82,14 +83,14 @@ namespace y {
     union semantic_type
     {
 /* Line 33 of lalr1.cc  */
-#line 37 "y_parser.yy"
+#line 42 "y_parser.yy"
 
     lexeme<enum keyword_type, enum symbol_type>* lex;
     parse_tree*                                  tree;
 
 
 /* Line 33 of lalr1.cc  */
-#line 93 "y_parser.tab.hh"
+#line 94 "y_parser.tab.hh"
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -344,7 +345,7 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 33 of lalr1.cc  */
-#line 348 "y_parser.tab.hh"
+#line 349 "y_parser.tab.hh"
 
 
 

@@ -7,3 +7,16 @@
 
 
 #include "y_driver.h"
+
+namespace y
+  {
+      y_driver::y_driver()
+        {
+          return;
+        }
+
+      y_driver::~y_driver()
+        {
+          return;
+        }
+  }

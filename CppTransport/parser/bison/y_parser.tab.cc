@@ -45,7 +45,7 @@
 #line 46 "y_parser.tab.cc"
 /* Unqualified %code blocks.  */
 /* Line 290 of lalr1.cc  */
-#line 24 "y_parser.yy"
+#line 25 "y_parser.yy"
 
     #include <iostream>
     #include <cstdlib>
@@ -53,14 +53,18 @@
 
     #include "y_lexer.h"
     #include "y_driver.h"
-    
+    #include "error.h"
+
     static int yylex(y::y_parser::semantic_type* yylval,
-                     y::y_lexer& lexer,
-                     y::y_driver& driver);
+                     y::y_lexer* lexer,
+                     y::y_driver* driver)
+      {
+        return(lexer->yylex(yylval));
+      }
 
 
 /* Line 290 of lalr1.cc  */
-#line 64 "y_parser.tab.cc"
+#line 68 "y_parser.tab.cc"
 
 
 # ifndef YY_NULL
@@ -156,7 +160,7 @@ do {					\
 #line 5 "y_parser.yy"
 namespace y {
 /* Line 357 of lalr1.cc  */
-#line 160 "y_parser.tab.cc"
+#line 164 "y_parser.tab.cc"
 
   /// Build a parser object.
   y_parser::y_parser (y_lexer*  lexer_yyarg, y_driver* driver_yyarg)
@@ -421,7 +425,7 @@ namespace y {
       {
         
 /* Line 664 of lalr1.cc  */
-#line 425 "y_parser.tab.cc"
+#line 429 "y_parser.tab.cc"
       default:
         break;
       }
@@ -922,13 +926,13 @@ namespace y {
   const unsigned char
   y_parser::yyrline_[] =
   {
-         0,   108,   108,   109,   112,   113,   114,   115,   116,   117,
-     120,   123,   126,   129,   132,   135,   138,   139,   142,   143,
-     146,   149,   150,   151,   154,   155,   156,   159,   160,   163,
-     164,   165,   166,   167,   170,   171,   172,   173,   174,   175,
-     176,   177,   178,   179,   180,   181,   182,   183,   184,   185,
-     186,   187,   188,   189,   190,   191,   192,   193,   194,   195,
-     196,   197,   198,   199,   200,   201,   202,   203
+         0,   113,   113,   114,   117,   118,   119,   120,   121,   122,
+     125,   128,   131,   134,   137,   140,   143,   144,   147,   148,
+     151,   154,   155,   156,   159,   160,   161,   164,   165,   168,
+     169,   170,   171,   172,   175,   176,   177,   178,   179,   180,
+     181,   182,   183,   184,   185,   186,   187,   188,   189,   190,
+     191,   192,   193,   194,   195,   196,   197,   198,   199,   200,
+     201,   202,   203,   204,   205,   206,   207,   208
   };
 
   // Print the state stack on the debug stream.
@@ -1024,22 +1028,13 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 1135 of lalr1.cc  */
-#line 1028 "y_parser.tab.cc"
+#line 1032 "y_parser.tab.cc"
 /* Line 1136 of lalr1.cc  */
-#line 205 "y_parser.yy"
+#line 210 "y_parser.yy"
 
 
-void y::y_Parser::error(const y::y_parser::location_type &l,
+void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    error(err_message);
-  }
-
-#include "y_lexer.h"
-
-static int yylex(y::y_parser::semantic_type* yylval,
-                 y::y_lexer& lexer,
-                 y::y_driver& driver)
-  {
-    return(lexer.yylex(yylval));
+    ::error(err_message); // :: forces link to default namespace, so finds error.h implementation
   }

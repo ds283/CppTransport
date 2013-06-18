@@ -8,6 +8,7 @@
 %code requires {
     #include "lexeme.h"
     #include "parse_tree.h"
+    #include "lexical.h"
 
     namespace y {
         class y_driver;
@@ -28,10 +29,14 @@
 
     #include "y_lexer.h"
     #include "y_driver.h"
-    
+    #include "error.h"
+
     static int yylex(y::y_parser::semantic_type* yylval,
-                     y::y_lexer& lexer,
-                     y::y_driver& driver);
+                     y::y_lexer* lexer,
+                     y::y_driver* driver)
+      {
+        return(lexer->yylex(yylval));
+      }
 }
 
 %union {
@@ -204,17 +209,8 @@ built_in_function: abs open_bracket expression close_bracket
 
 %%
 
-void y::y_Parser::error(const y::y_parser::location_type &l,
+void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    error(err_message);
-  }
-
-#include "y_lexer.h"
-
-static int yylex(y::y_parser::semantic_type* yylval,
-                 y::y_lexer& lexer,
-                 y::y_driver& driver)
-  {
-    return(lexer.yylex(yylval));
+    ::error(err_message); // :: forces link to default namespace, so finds error.h implementation
   }
