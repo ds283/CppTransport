@@ -15,6 +15,7 @@
 
 #include <iostream>
 
+#include "lexical.h"
 #include "lexeme.h"
 #include "lexstream.h"
 
@@ -26,15 +27,15 @@ namespace y
     class y_lexer
       {
         public:
-          y_lexer(lexstream* s);
+          y_lexer(lexstream<enum keyword_type, enum symbol_type>* s);
           ~y_lexer();
 
           int yylex(y::y_parser::semantic_type* lval);
 
         private:
-			    lexstream* stream;
+			    lexstream<enum keyword_type, enum symbol_type>* stream;
       };
 
   }
 
-#endif //__Y_lexer_H_
+#endif //__y_lexer_H_

@@ -6,6 +6,9 @@
 %define parser_class_name "y_parser"
 
 %code requires {
+    #include "lexeme.h"
+    #include "parse_tree.h"
+
     namespace y {
         class y_driver;
         class y_lexer;
@@ -23,7 +26,8 @@
     #include <cstdlib>
     #include <fstream>
 
-    #include "y_driver.hpp"
+    #include "y_lexer.h"
+    #include "y_driver.h"
     
     static int yylex(y::y_parser::semantic_type* yylval,
                      y::y_lexer& lexer,
@@ -31,8 +35,8 @@
 }
 
 %union {
-    lexeme*     lex;
-    parse_tree* tree;
+    lexeme<enum keyword_type, enum symbol_type>* lex;
+    parse_tree*                                  tree;
 }
 
 %token          name
@@ -200,7 +204,7 @@ built_in_function: abs open_bracket expression close_bracket
 
 %%
 
-void Y::Y_Parser::error(const y::y_parser::location_type &l,
+void y::y_Parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
     error(err_message);

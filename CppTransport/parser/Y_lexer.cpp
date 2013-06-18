@@ -82,7 +82,7 @@ enum y::y_parser::token::yytokentype symbol_tokens[] =
 namespace y
   {
 
-    y_lexer::y_lexer(lexstream* s)
+    y_lexer::y_lexer(lexstream<enum keyword_type, enum symbol_type>* s)
       : stream(s)
       {
         assert(s != NULL);
