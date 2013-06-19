@@ -47,7 +47,7 @@ std::string keyword_table[] =
 
 enum keyword_type keyword_map[] =
   {
-      name, author, tag, field, potential, parameter,
+      name, author, tag, field, potential, parameter, latex,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
