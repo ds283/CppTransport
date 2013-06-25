@@ -13,7 +13,7 @@
 
 // ******************************************************************
 
-void warn(std::string msg)
+void warn(std::string const msg)
   {
     std::ostringstream out;
 
@@ -21,7 +21,7 @@ void warn(std::string msg)
     std::cerr << out.str() << "\n";
   }
 
-void error(std::string msg)
+void error(std::string const msg)
   {
     std::ostringstream out;
 
@@ -29,17 +29,17 @@ void error(std::string msg)
     std::cerr << out.str() << "\n";
   }
 
-void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path)
+void warn(std::string const msg, unsigned int line, std::deque<inclusion> const &path)
   {
     warn(msg, line, path, WARN_PATH_LEVEL);
   }
 
-void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path)
+void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path)
   {
     error(msg, line, path, ERROR_PATH_LEVEL);
   }
 
-void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level)
+void warn(std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level)
   {
     if(path.size() < level)
       {
@@ -61,7 +61,7 @@ void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path
       }
   }
 
-void error(std::string msg, unsigned int line, std::deque<struct inclusion>& path, unsigned int level)
+void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level)
   {
     if(path.size() < level)
       {

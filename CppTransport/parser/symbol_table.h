@@ -27,10 +27,10 @@ class symbol_table
       symbol_table(unsigned int s);
       ~symbol_table();
 
-      void print(std::ostream& stream);               // output contents
+      void print (std::ostream& stream);                        // output contents
 
-      bool insert(container* obj);                    // insert an object into the table, if it does not already exist
-      bool find(std::string name, container*& obj);   // find an object by name
+      bool insert(container* obj);                              // insert *copy* of an object into the table, if it does not already exist
+      bool find  (std::string const name, container*& obj);     // find an object by name
 
     private:
       boost::hash<std::string> hash_object;
@@ -77,7 +77,7 @@ void symbol_table<container>::print(std::ostream& stream)
 
 
 template <class container>
-bool symbol_table<container>::find(std::string name, container*& obj)
+bool symbol_table<container>::find(std::string const name, container*& obj)
   {
     // search for existing identifier associated with 'name'
     size_t h = this->hash_object(name) % this->size;

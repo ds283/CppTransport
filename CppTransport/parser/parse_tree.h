@@ -22,19 +22,22 @@
 class declaration
   {
     public:
-      quantity*    get_quantity();
-      virtual void print(std::ostream& stream) = 0;
+      quantity*                          get_quantity();
+      virtual void                       print       (std::ostream& stream) = 0;
 
     protected:
-      quantity*                    obj;
-      unsigned int                 line;
-      std::deque<struct inclusion> path;
+      declaration
+        (const quantity& o, unsigned int l, const std::deque<struct inclusion>& p); // constructor needed for const members
+
+      quantity*                          obj;
+      const unsigned int                 line;
+      const std::deque<struct inclusion> path;
   };
 
 class field_declaration: public declaration
   {
     public:
-      field_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p);
+      field_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p);
       ~field_declaration();
 
       void print(std::ostream& stream);
@@ -43,7 +46,7 @@ class field_declaration: public declaration
 class parameter_declaration: public declaration
   {
     public:
-      parameter_declaration(quantity& o, unsigned int l, std::deque<struct inclusion>& p);
+      parameter_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p);
       ~parameter_declaration();
 
       void print(std::ostream& stream);

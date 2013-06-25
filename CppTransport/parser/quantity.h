@@ -36,27 +36,29 @@ class attributes
 
 class quantity
   {
-    public:
-      quantity(std::string n, unsigned int l, std::deque<struct inclusion>& p);                 // basic constructor
-      quantity(std::string n, attributes& a, unsigned int l, std::deque<struct inclusion>& p);  // constructor with attributes
-      ~quantity();
+public:
+    quantity(std::string n, unsigned int l, const std::deque<struct inclusion>& p);                 // basic constructor
+    quantity(std::string n, attributes& a, unsigned int l, const std::deque<struct inclusion>& p);  // constructor with attributes
+    ~quantity();
 
-      void                          print(std::ostream& stream);
+    void                                print(std::ostream& stream);
 
-      std::string                   get_name();
-      GiNaC::symbol*                get_ginac_symbol();
+                                        std::string get_name();
 
-      unsigned int                  get_line();
-      std::deque<struct inclusion>& get_path();
+    const GiNaC::symbol*                get_ginac_symbol();
 
-    protected:
-      std::string                   name;
+    unsigned int                        get_line();
 
-      unsigned int                  line;
-      std::deque<struct inclusion>  path;
+    const std::deque<struct inclusion>& get_path();
 
-      attributes                    attrs;
-      GiNaC::symbol                 ginac_symbol;
+protected:
+    std::string                         name;
+
+    const unsigned int                  line;
+    const std::deque<struct inclusion>  path;
+
+    attributes                          attrs;
+    GiNaC::symbol                       ginac_symbol;
   };
 
 

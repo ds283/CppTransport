@@ -26,8 +26,8 @@ class lexstream
   {
     public:
       lexstream(const std::string filename, finder* search,
-								std::string* kt, keywords* km, unsigned int num_k,
-								std::string* ct, characters* cm, unsigned int num_c);
+								const std::string* kt, const keywords* km, unsigned int num_k,
+								const std::string* ct, const characters* cm, unsigned int num_c);
       ~lexstream();
 
       void							                    reset();
@@ -51,13 +51,13 @@ class lexstream
 
 		  unsigned int															                            unique;
 
-      std::string*                                                          ktable;      // table of keywords
-      keywords*                                                             kmap;        // table of keyword token types
-      unsigned int                                                          Nk;          // number of keywords
+      const std::string*                                                    ktable;      // table of keywords
+      const keywords*                                                       kmap;        // table of keyword token types
+      const unsigned int                                                    Nk;          // number of keywords
 
-      std::string*                                                          ctable;      // table of 'characters'
-      characters*                                                           cmap;        // table of character token types
-      unsigned int                                                          Nc;          // number of characters
+      const std::string*                                                    ctable;      // table of 'characters'
+      const characters*                                                     cmap;        // table of character token types
+      const unsigned int                                                    Nc;          // number of characters
   };
 
 
@@ -71,8 +71,8 @@ class lexstream
 // included files as necessary
 template <class keywords, class characters>
 lexstream<keywords, characters>::lexstream(const std::string filename, finder* search,
-                                           std::string* kt, keywords* km, unsigned int num_k,
-                                           std::string*ct, characters*cm, unsigned int num_c)
+                                           const std::string* kt, const keywords* km, unsigned int num_k,
+                                           const std::string*ct, const characters*cm, unsigned int num_c)
   : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c)
   {
     assert(search != NULL);
@@ -111,6 +111,7 @@ void lexstream<keywords, characters>::print(std::ostream& stream)
         this->lexeme_list[i].dump(stream);
       }
   }
+
 
 // ******************************************************************
 
@@ -237,21 +238,21 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                     }
                   else
                     {
-                      lexeme_list.push_back(lexeme::lexeme<enum keyword_type, enum character_type>
-                                                (word, type, inclusions, input.current_line(), this->unique++,
-                                                 this->ktable, this->kmap, this->Nk,
-                                                 this->ctable, this->cmap, this->Nc));
+                      lexeme_list.push_back(lexeme::lexeme<keywords, characters>
+                        (word, type, inclusions, input.current_line(), this->unique++,
+                          this->ktable, this->kmap, this->Nk,
+                          this->ctable, this->cmap, this->Nc));
                     }
                   break;
 
                 case lexeme::buf_string:
                 case lexeme::buf_number:
                 case lexeme::buf_string_literal:
-                  lexeme_list.push_back(lexeme::lexeme<enum keyword_type, enum character_type>
-                                            (word, type, inclusions, input.current_line(), this->unique++,
-                                             this->ktable, this->kmap, this->Nk,
-                                             this->ctable, this->cmap, this->Nc));
-                  break;
+                  lexeme_list.push_back(lexeme::lexeme<keywords, characters>
+                    (word, type, inclusions, input.current_line(), this->unique++,
+                      this->ktable, this->kmap, this->Nk,
+                      this->ctable, this->cmap, this->Nc));
+                break;
 
                 default:
                   assert(false);                          // should never get here

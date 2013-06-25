@@ -13,19 +13,22 @@
 // ******************************************************************
 
 
+declaration::declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+  : line(l), path(p)
+  {
+    this->obj = new quantity(o);
+  }
+
+
 quantity* declaration::get_quantity()
   {
     return(this->obj);
   }
 
 
-field_declaration::field_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p)
+field_declaration::field_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+  : declaration(o, l, p)
   {
-    this->line = l;
-    this->path = p;
-    this->obj  = new quantity(s);
-
-    return;
   }
 
 field_declaration::~field_declaration()
@@ -53,13 +56,9 @@ void field_declaration::print(std::ostream& stream)
       }
   }
 
-parameter_declaration::parameter_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p)
+parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+  : declaration(o, l, p)
   {
-    this->line = l;
-    this->path = p;
-    this->obj  = new quantity(s);
-
-    return;
   }
 
 parameter_declaration::~parameter_declaration()

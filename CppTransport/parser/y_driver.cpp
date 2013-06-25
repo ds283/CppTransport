@@ -19,14 +19,11 @@ namespace y
       y_driver::y_driver()
         {
           root = new script;
-          return;
         }
 
       y_driver::~y_driver()
         {
           delete this->root;
-
-          return;
         }
 
       void y_driver::error(std::string msg)
@@ -59,7 +56,7 @@ namespace y
 
           delete a; // otherwise, attributes block would never be deallocated
 			 
-			 return(d);
+			    return(d);
         }
 
       declaration* y_driver::make_parameter(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
@@ -82,7 +79,7 @@ namespace y
 
           delete a; // otherwise, attributes block would never be deallocated
 			 
-			 return(d);
+			    return(d);
         }
 
       void y_driver::add_latex_attribute(attributes *a, lexeme::lexeme<keyword_type, character_type> *lex)

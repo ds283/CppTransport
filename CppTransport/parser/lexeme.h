@@ -38,10 +38,10 @@ namespace lexeme    // package in a unique namespace to protect common words lik
       class lexeme
         {
           public:
-          lexeme(std::string buffer, enum lexeme_buffer_type t,
-                 std::deque<struct inclusion> p, unsigned int l, unsigned int u,
-                 std::string* kt, keywords* km, unsigned int num_k,
-                 std::string* ct, characters* cm, unsigned int num_c);
+          lexeme(const std::string buffer, const enum lexeme_buffer_type t,
+                 const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
+                 const std::string* kt, const keywords* km, unsigned int num_k,
+                 const std::string* ct, const characters* cm, unsigned int num_c);
 
           ~lexeme();
 
@@ -49,53 +49,55 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           void dump(std::ostream& stream);
 
           // get information
-          enum lexeme_type              get_type();
+          enum lexeme_type                    get_type();
 
-          bool                          get_keyword(keywords& keyword);
+          bool                                get_keyword(keywords& keyword);
 
-          bool                          get_symbol(characters& symbol);
+          bool                                get_symbol(characters& symbol);
 
-          bool                          get_identifier(std::string& id);
+          bool                                get_identifier(std::string& id);
 
-          bool                          get_integer(int& z);
+          bool                                get_integer(int& z);
 
-          bool                          get_decimal(double& d);
+          bool                                get_decimal(double& d);
 
-          bool                          get_string(std::string& str);
+          bool                                get_string(std::string& str);
 
-          unsigned int&                 get_line();
+          const unsigned int&                 get_line();
 
-          std::deque<struct inclusion>& get_path();
+          const std::deque<struct inclusion>& get_path();
 
           private:
-          enum lexeme_type type;
-          unsigned int     unique;
+          enum lexeme_type                    type;
+          const unsigned int                  unique;
 
-          keywords    k;
-          characters     s;
-          int         z;
-          double      d;
-          std::string str;
+          // lexeme value - not all of these are used by any single lexeme
+          keywords                            k;
+          characters                          s;
+          int                                 z;
+          double                              d;
+          std::string                         str;
 
-          std::deque<struct inclusion> path;
-          unsigned int                 line;
+          // origin: line number and sequence of inclusions
+          const std::deque<struct inclusion>  path;
+          const unsigned int                  line;
 
-          std::string *ktable;
-          keywords    *kmap;
-          unsigned int Nk;
+          const std::string*                  ktable;
+          const keywords*                     kmap;
+          const unsigned int                  Nk;
 
-          std::string *ctable;
-          characters     *cmap;
-          unsigned int Nc;
+          const std::string*                  ctable;
+          const characters*                   cmap;
+          unsigned int                        Nc;
         };
 
 //  IMPLEMENTATION
 
       template <class keywords, class characters>
-      lexeme<keywords, characters>::lexeme(std::string buffer, enum lexeme_buffer_type t,
-                                           std::deque<struct inclusion> p, unsigned int l, unsigned int u,
-                                           std::string* kt, keywords* km, unsigned int num_k,
-                                           std::string* ct, characters* cm, unsigned int num_c)
+      lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
+                                           const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
+                                           const std::string* kt, const keywords* km, unsigned int num_k,
+                                           const std::string* ct, const characters* cm, unsigned int num_c)
       : path(p), line(l), unique(u),
         ktable(kt), kmap(km), Nk(num_k),
         ctable(ct), cmap(cm), Nc(num_c)
@@ -383,14 +385,14 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
 
       template <class keywords, class characters>
-      unsigned int& lexeme<keywords, characters>::get_line()
+      const unsigned int& lexeme<keywords, characters>::get_line()
         {
           return (this->line);
         }
 
 
       template <class keywords, class characters>
-      std::deque<struct inclusion>& lexeme<keywords, characters>::get_path()
+      const std::deque<struct inclusion>& lexeme<keywords, characters>::get_path()
         {
           return (this->path);
         }

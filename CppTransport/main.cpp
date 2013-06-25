@@ -10,28 +10,13 @@
 #include <deque>
 
 #include "core.h"
-#include "error.h"
-#include "msg_en.h"
-#include "finder.h"
-#include "lexical.h"
-#include "lexstream.h"
-#include "y_lexer.h"
-#include "y_driver.h"
-#include "y_parser.tab.hh"
+#include "input.h"
+#include "backends.h"
 
 // FAIL return code for Bison parser
 #ifndef FAIL
 #define FAIL (1)
 #endif
-
-struct input
-  {
-    lexstream<enum keyword_type, enum character_type>* stream;
-    y::y_lexer*                                     lexer;
-    y::y_driver*                                    driver;
-    y::y_parser*                                    parser;
-    std::string                                     name;
-  };
 
 
 // ******************************************************************
@@ -39,7 +24,7 @@ struct input
 // lexical analyser data
 
 
-std::string keyword_table[] =
+const std::string keyword_table[] =
   {
       "name", "author", "tag", "field", "potential", "parameter", "latex",
       "abs", "step", "sqrt", "sin", "cos", "tan",
@@ -48,7 +33,7 @@ std::string keyword_table[] =
       "zeta", "zetaderiv", "tgamma", "lgamma", "beta", "psi", "factorial", "binomial"
   };
 
-enum keyword_type keyword_map[] =
+const enum keyword_type keyword_map[] =
   {
       name, author, tag, field, potential, parameter, latex,
       f_abs, f_step, f_sqrt,
@@ -61,7 +46,7 @@ enum keyword_type keyword_map[] =
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-std::string character_table[] =
+const std::string character_table[] =
   {
       "{", "}", "(", ")",
       "[", "]", ",", ".", ":", ";",
@@ -69,13 +54,38 @@ std::string character_table[] =
       "&", "^", "@", "...", "->"
   };
 
-enum character_type character_map[] =
+const enum character_type character_map[] =
    {
        open_brace, close_brace, open_bracket, close_bracket,
        open_square, close_square, comma, period, colon, semicolon,
        plus, minus, star, backslash, foreslash, tilde,
        ampersand, circumflex, ampersat, ellipsis, rightarrow
    };
+
+
+// ******************************************************************
+
+
+const std::string backend_table[] =
+  {
+    "cpp"
+  };
+
+const backend_function backend_dispatcher[] =
+  {
+    cpp_backend
+  };
+
+bool backend_selector[] =
+  {
+    true
+  };
+
+
+// ******************************************************************
+
+
+static std::string mangle_output_name(std::string input);
 
 
 // ******************************************************************
@@ -94,7 +104,45 @@ int main(int argc, const char *argv[])
       {
         if(strcmp(argv[i], "-I") == 0)
           {
-            path.add(std::string(argv[++i]));
+            if(i + 1 < argc)
+              {
+                path.add(std::string(argv[++i]));
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << ERROR_MISSING_PATHNAME << " -I";
+                error(msg.str());
+              }
+          }
+        else if(strcmp(argv[i], "--backend") == 0)
+          {
+            std::string backend = "";
+            bool        found   = false;
+
+            if(i + 1 < argc)
+              {
+                backend = argv[++i];
+              }
+            else
+              {
+                error(ERROR_MISSING_BACKEND);
+              }
+
+            for(int i = 0; i < NUMBER_BACKENDS; i++)
+              {
+                if(backend == backend_table[i])
+                  {
+                    backend_selector[i] = true;
+                    found = true;
+                  }
+              }
+            if(!found)
+              {
+                std::ostringstream msg;
+                msg << ERROR_UNKNOWN_BACKEND << " '" << backend << "'";
+                error(msg.str());
+              }
           }
         else  // assume to be an input file we are processing
           {
@@ -119,12 +167,27 @@ int main(int argc, const char *argv[])
               }
 
             in.driver->get_script()->print(std::cerr);
+            in.output = mangle_output_name(in.name);
+
+            std::cerr << "Ouptut file = " << in.output << "\n";
 
             inputs.push_back(in);
           }
       }
 
-    // deallocate lexeme storage
+    // pass each translation unit off to the selected backends
+    for(int i = 0; i < inputs.size(); i++)
+      {
+        for(int j = 0; j < NUMBER_BACKENDS; j++)
+          {
+            if(backend_selector[j])
+              {
+                (*(backend_dispatcher[j]))(inputs[i]);
+              }
+          }
+      }
+
+    // deallocate  storage
     for(int i = 0; i < inputs.size(); i++)
       {
         delete inputs[i].stream;
@@ -134,4 +197,28 @@ int main(int argc, const char *argv[])
       }
 
     return 0;
+  }
+
+
+// ******************************************************************
+
+
+static std::string mangle_output_name(std::string input)
+  {
+    size_t      pos = 0;
+    std::string output;
+
+    if((pos = input.find(MODEL_SCRIPT_SUFFIX)) != std::string::npos)
+      {
+        if(pos = input.length() - MODEL_SCRIPT_SUFFIX_LENGTH)
+          {
+            output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos);
+          }
+        else
+          {
+            output = input;
+          }
+      }
+
+    return(output);
   }

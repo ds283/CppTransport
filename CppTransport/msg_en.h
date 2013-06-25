@@ -12,6 +12,10 @@
 #define ERROR_INCLUDE_FILE         "Could not open included file"
 #define ERROR_INCLUDE_DIRECTIVE    "Expected filename following #include directive"
 
+#define ERROR_MISSING_PATHNAME     "Too few arguments: expected pathname following"
+#define ERROR_MISSING_BACKEND      "Too few arguments: expected backend name following --backend"
+#define ERROR_UNKNOWN_BACKEND      "Requested unknown backend"
+
 #define ERROR_UNRECOGNIZED_NUMBER  "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL  "Unrecognized character"
 #define ERROR_EXPECTED_CLOSE_QUOTE "Unterminated string literal"
