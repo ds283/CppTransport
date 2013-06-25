@@ -143,6 +143,36 @@ namespace y
             }
         }
 
+      void y_driver::set_class(lexeme::lexeme<keyword_type, character_type> *lex)
+        {
+          std::string str;
+          bool        ok = lex->get_string(str);
+
+          if(ok)
+            {
+              this->root->set_class(str);
+            }
+          else
+            {
+              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
+      void y_driver::set_model(lexeme::lexeme<keyword_type, character_type> *lex)
+        {
+          std::string str;
+          bool        ok = lex->get_string(str);
+
+          if(ok)
+            {
+              this->root->set_model(str);
+            }
+          else
+            {
+              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
       GiNaC::ex* y_driver::add(GiNaC::ex *l, GiNaC::ex *r)
         {
           GiNaC::ex* rval = new GiNaC::ex((*l) + (*r));

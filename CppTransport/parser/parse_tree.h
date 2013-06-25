@@ -75,6 +75,12 @@ class script
       void              set_tag        (const std::string t);
       const std::string get_tag        ();
 
+      void              set_class      (const std::string c);
+      const std::string get_class      ();
+
+      void              set_model      (const std::string m);
+      const std::string get_model      ();
+
       void              set_potential  (GiNaC::ex* V);
       bool              get_potential  (GiNaC::ex*& V);
       void              unset_potential();
@@ -88,6 +94,8 @@ class script
       std::string                 name;
       std::string                 author;
       std::string                 tag;
+      std::string                 cls;
+      std::string                 model;
 
       std::deque<declaration*>    decls;
 

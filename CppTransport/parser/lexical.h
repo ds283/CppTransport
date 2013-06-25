@@ -14,7 +14,8 @@
 
 enum keyword_type
   {
-      name, author, tag, field, potential, parameter, latex,
+      k_name, k_author, k_tag, k_field, k_potential,
+      k_parameter, k_latex, k_class, k_model,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
@@ -25,7 +26,7 @@ enum keyword_type
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-#define NUMBER_KEYWORDS (38)
+#define NUMBER_KEYWORDS (40)
 
 enum character_type
   {

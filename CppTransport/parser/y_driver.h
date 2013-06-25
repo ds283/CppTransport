@@ -32,12 +32,14 @@ namespace y
 
           script*      get_script         ();
 
-          declaration* make_field         (lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a);
-          declaration* make_parameter     (lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a);
+          declaration* make_field         (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
+          declaration* make_parameter     (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
 
           void         set_name           (lexeme::lexeme<keyword_type, character_type> *lex);
           void         set_author         (lexeme::lexeme<keyword_type, character_type> *lex);
           void         set_tag            (lexeme::lexeme<keyword_type, character_type> *lex);
+          void         set_class          (lexeme::lexeme<keyword_type, character_type> *lex);
+          void         set_model          (lexeme::lexeme<keyword_type, character_type> *lex);
 
           void         add_latex_attribute(attributes* a, lexeme::lexeme<keyword_type, character_type> *lex);
 

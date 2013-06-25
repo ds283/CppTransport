@@ -14,7 +14,14 @@
 
 #define ERROR_MISSING_PATHNAME     "Too few arguments: expected pathname following"
 #define ERROR_MISSING_BACKEND      "Too few arguments: expected backend name following --backend"
+
 #define ERROR_UNKNOWN_BACKEND      "Requested unknown backend"
+#define ERROR_BACKEND_FAILURE      "Failed to generate output for backend"
+
+#define ERROR_NO_CPP_TEMPLATE      "No C++ template specified"
+#define ERROR_MISSING_CPP_CLASS    "Could not find specified C++ class template"
+#define ERROR_MISSING_CPP_HEADER   "Could not find specified C++ header template"
+#define ERROR_CPP_TEMPLATE_READ    "Error reading from C++ template file"
 
 #define ERROR_UNRECOGNIZED_NUMBER  "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL  "Unrecognized character"

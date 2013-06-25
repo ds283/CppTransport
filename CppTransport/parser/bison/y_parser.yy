@@ -57,6 +57,8 @@
 %token          potential
 %token          parameter
 %token          latex
+%token          k_class
+%token          model
 %token          abs
 %token          step
 %token          sqrt
@@ -135,6 +137,8 @@ script: script declaration                                          { driver->ge
         | script name string semicolon                              { driver->set_name($3); }
         | script author string semicolon                            { driver->set_author($3); }
         | script tag string semicolon                               { driver->set_tag($3); }
+        | script k_class string semicolon                           { driver->set_class($3); }
+        | script model string semicolon                             { driver->set_model($3); }
         |
         ;
 

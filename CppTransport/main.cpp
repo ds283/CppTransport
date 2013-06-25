@@ -26,7 +26,8 @@
 
 const std::string keyword_table[] =
   {
-      "name", "author", "tag", "field", "potential", "parameter", "latex",
+      "name", "author", "tag", "field", "potential",
+      "parameter", "latex", "class", "model",
       "abs", "step", "sqrt", "sin", "cos", "tan",
       "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
       "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G", "S", "H",
@@ -35,7 +36,8 @@ const std::string keyword_table[] =
 
 const enum keyword_type keyword_map[] =
   {
-      name, author, tag, field, potential, parameter, latex,
+      k_name, k_author, k_tag, k_field, k_potential,
+      k_parameter, k_latex, k_class, k_model,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
@@ -169,8 +171,6 @@ int main(int argc, const char *argv[])
             in.driver->get_script()->print(std::cerr);
             in.output = mangle_output_name(in.name);
 
-            std::cerr << "Ouptut file = " << in.output << "\n";
-
             inputs.push_back(in);
           }
       }
@@ -182,7 +182,12 @@ int main(int argc, const char *argv[])
           {
             if(backend_selector[j])
               {
-                (*(backend_dispatcher[j]))(inputs[i]);
+                if((*(backend_dispatcher[j]))(inputs[i], &path) == false)
+                  {
+                    std::ostringstream msg;
+                    msg << ERROR_BACKEND_FAILURE << " '" << backend_table[j] << "'";
+                    error(msg.str());
+                  };
               }
           }
       }

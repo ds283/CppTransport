@@ -9,6 +9,7 @@
 
 #include "parse_tree.h"
 
+#define DEFAULT_MODEL_NAME "inflationary_model"
 
 // ******************************************************************
 
@@ -91,7 +92,7 @@ void parameter_declaration::print(std::ostream& stream)
 
 
 script::script()
-  : potential_set(false), potential(NULL)
+  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME)
   {
     this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
   }
@@ -150,13 +151,45 @@ void script::set_tag(const std::string t)
   }
 
 
+const std::string script::get_tag()
+  {
+    return(this->tag);
+  }
+
+
+void script::set_class(const std::string c)
+  {
+    this->cls = c;
+  }
+
+
+const std::string script::get_class()
+  {
+    return(this->cls);
+  }
+
+
+void script::set_model(const std::string m)
+  {
+    this->model = m;
+  }
+
+
+const std::string script::get_model()
+  {
+    return(this->model);
+  }
+
+
 void script::print(std::ostream& stream)
   {
     stream << "Script summary:\n";
     stream << "===============\n";
     stream << "  Name   = '" << this->name << "'\n";
+    stream << "  Model  = '" << this->model << "'\n";
     stream << "  Author = '" << this->author << "'\n";
     stream << "  Tag    = '" << this->tag << "'\n";
+    stream << "  Class  = '" << this->cls << "'\n";
 
     stream << "\nDeclarations:\n";
     stream <<   "=============\n";
@@ -179,12 +212,6 @@ void script::print(std::ostream& stream)
       {
         stream << "Potential unset\n";
       }
-  }
-
-
-const std::string script::get_tag()
-  {
-    return(this->tag);
   }
 
 

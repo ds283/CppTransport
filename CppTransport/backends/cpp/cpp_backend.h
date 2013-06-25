@@ -13,7 +13,7 @@
 #include "input.h"
 
 
-bool cpp_backend(struct input& data);
+bool cpp_backend(struct input& data, finder* path);
 
 
 #endif //__cpp_backend_H_
