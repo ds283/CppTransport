@@ -106,7 +106,7 @@ int main(int argc, const char *argv[])
                                                                               keyword_table, keyword_map, NUMBER_KEYWORDS,
                                                                               character_table, character_map, NUMBER_CHARACTERS);
 
-            // in.stream->dump(std::cerr);
+            // in.stream->print(std::cerr);
 
             // now pass to the parser for syntactic analysis
             in.lexer  = new y::y_lexer(in.stream);
@@ -117,6 +117,8 @@ int main(int argc, const char *argv[])
               {
                 warn(WARNING_PARSING_FAILED + (std::string)(" '") + in.name + (std::string)("'"));
               }
+
+            in.driver->get_script()->print(std::cerr);
 
             inputs.push_back(in);
           }

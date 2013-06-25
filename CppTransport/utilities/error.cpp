@@ -55,8 +55,7 @@ void warn(std::string msg, unsigned int line, std::deque<struct inclusion>& path
       }
     std::cerr << out.str() << "\n";
 
-    int i;
-    for(i = 1; i < level; i++)
+    for(int i = 1; i < level; i++)
       {
         std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
       }
@@ -78,8 +77,7 @@ void error(std::string msg, unsigned int line, std::deque<struct inclusion>& pat
       }
     std::cerr << out.str() << "\n";
 
-    int i;
-    for(i = 1; i < level; i++)
+    for(int i = 1; i < level; i++)
       {
         std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
       }

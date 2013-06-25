@@ -6,10 +6,8 @@
 //
 
 #include <sstream>
-#include <string>
 
 #include "parse_tree.h"
-#include "error.h"
 
 
 // ******************************************************************
@@ -21,9 +19,11 @@ quantity* declaration::get_quantity()
   }
 
 
-field_declaration::field_declaration(quantity& s)
+field_declaration::field_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p)
   {
-    this->obj = new quantity(s);
+    this->line = l;
+    this->path = p;
+    this->obj  = new quantity(s);
 
     return;
   }
@@ -35,9 +35,29 @@ field_declaration::~field_declaration()
     return;
   }
 
-parameter_declaration::parameter_declaration(quantity& s)
+void field_declaration::print(std::ostream& stream)
   {
-    this->obj = new quantity(s);
+    stream << "Field declaration for symbol '" << this->obj->get_name()
+           << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'\n";
+
+    stream << "  defined at line " << line;
+    if(this->path.size() >= 1)
+      {
+        stream << " of '" << path[0].name << "'";
+      }
+    stream << "\n";
+
+    for(int i = 1; i < this->path.size(); i++)
+      {
+        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'\n";
+      }
+  }
+
+parameter_declaration::parameter_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p)
+  {
+    this->line = l;
+    this->path = p;
+    this->obj  = new quantity(s);
 
     return;
   }
@@ -47,6 +67,24 @@ parameter_declaration::~parameter_declaration()
     delete this->obj;
 
     return;
+  }
+
+void parameter_declaration::print(std::ostream& stream)
+  {
+    stream << "Parameter declaration for symbol '" << this->obj->get_name()
+      << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'\n";
+
+    stream << "  defined at line " << line;
+    if(this->path.size() >= 1)
+      {
+        stream << " of '" << path[0].name << "'";
+      }
+    stream << "\n";
+
+    for(int i = 1; i < this->path.size(); i++)
+      {
+        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'\n";
+      }
   }
 
 
@@ -113,6 +151,38 @@ void script::set_tag(const std::string t)
   }
 
 
+void script::print(std::ostream& stream)
+  {
+    stream << "Script summary:\n";
+    stream << "===============\n";
+    stream << "  Name   = '" << this->name << "'\n";
+    stream << "  Author = '" << this->author << "'\n";
+    stream << "  Tag    = '" << this->tag << "'\n";
+
+    stream << "\nDeclarations:\n";
+    stream <<   "=============\n";
+    for(std::deque<declaration*>::iterator ptr = this->decls.begin();
+        ptr != this->decls.end(); ptr++)
+      {
+        (*ptr)->print(stream);
+      }
+
+    stream << "\nSymbol table:\n";
+    stream <<   "=============\n";
+    this->table->print(stream);
+
+    if(this->potential_set)
+      {
+        assert(this->potential != NULL);
+        stream << "** Potential = " << *this->potential << "\n";
+      }
+    else
+      {
+        stream << "Potential unset\n";
+      }
+  }
+
+
 const std::string script::get_tag()
   {
     return(this->tag);
@@ -159,7 +229,7 @@ void script::set_potential(GiNaC::ex* V)
     this->potential     = V;
     this->potential_set = true;
 
-    std::cerr << "Set potential to be V = " << *this->potential << "\n";
+    // std::cerr << "Set potential to be V = " << *this->potential << "\n";
   }
 
 

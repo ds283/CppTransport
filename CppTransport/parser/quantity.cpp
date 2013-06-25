@@ -77,6 +77,21 @@ quantity::~quantity()
     return;
   }
 
+void quantity::print(std::ostream& stream)
+  {
+    stream << "Quantity '" << this->name << "'\n";
+
+    stream << "  GiNaC symbol = '" << this->ginac_symbol << "'\n";
+
+    std::string latex_name;
+    bool        latex_set = this->attrs.get_latex(latex_name);
+
+    if(latex_set)
+      {
+        stream << "  LaTeX name = '" << latex_name << "'\n";
+      }
+  }
+
 unsigned int quantity::get_line()
   {
     return(this->line);

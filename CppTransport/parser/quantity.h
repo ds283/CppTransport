@@ -41,6 +41,8 @@ class quantity
       quantity(std::string n, attributes& a, unsigned int l, std::deque<struct inclusion>& p);  // constructor with attributes
       ~quantity();
 
+      void                          print(std::ostream& stream);
+
       std::string                   get_name();
       GiNaC::symbol*                get_ginac_symbol();
 

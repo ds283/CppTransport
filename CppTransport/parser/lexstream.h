@@ -35,7 +35,7 @@ class lexstream
       bool							                    eat();
       bool							                    state();
 
-      void								                  dump(std::ostream& stream);
+      void								                  print(std::ostream& stream);
 
     private:
 		  bool                                  parse     (std::string file, finder* search, std::deque<struct inclusion>& inclusions);
@@ -104,7 +104,7 @@ lexstream<keywords, characters>::~lexstream(void)
 
 // output list of lexemes
 template <class keywords, class characters>
-void lexstream<keywords, characters>::dump(std::ostream& stream)
+void lexstream<keywords, characters>::print(std::ostream& stream)
   {
     for(int i = 0; i < this->lexeme_list.size(); i++)
       {

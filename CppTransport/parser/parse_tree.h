@@ -22,24 +22,31 @@
 class declaration
   {
     public:
-      quantity* get_quantity();
+      quantity*    get_quantity();
+      virtual void print(std::ostream& stream) = 0;
 
     protected:
-      quantity* obj;
+      quantity*                    obj;
+      unsigned int                 line;
+      std::deque<struct inclusion> path;
   };
 
 class field_declaration: public declaration
   {
     public:
-      field_declaration(quantity& s);
+      field_declaration(quantity& s, unsigned int l, std::deque<struct inclusion>& p);
       ~field_declaration();
+
+      void print(std::ostream& stream);
   };
 
 class parameter_declaration: public declaration
   {
     public:
-      parameter_declaration(quantity& o);
+      parameter_declaration(quantity& o, unsigned int l, std::deque<struct inclusion>& p);
       ~parameter_declaration();
+
+      void print(std::ostream& stream);
   };
 
 #define SYMBOL_TABLE_SIZE (1024)
@@ -49,6 +56,8 @@ class script
     public:
       script();
       ~script();
+
+      void              print          (std::ostream& stream);
 
       bool              add_declaration(declaration* d);
 

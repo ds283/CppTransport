@@ -50,7 +50,7 @@ namespace y
             {
               quantity s(id, *a, lex->get_line(), lex->get_path());
 
-              d = new field_declaration(s);
+              d = new field_declaration(s, lex->get_line(), lex->get_path());
             }
           else
             {
@@ -73,7 +73,7 @@ namespace y
             {
               quantity s(id, *a, lex->get_line(), lex->get_path());
 
-              d = new parameter_declaration(s);
+              d = new parameter_declaration(s, lex->get_line(), lex->get_path());
             }
           else
             {
