@@ -23,7 +23,6 @@ enum y::y_parser::token::yytokentype keyword_tokens[] =
       y::y_parser::token::abs,
       y::y_parser::token::step,
       y::y_parser::token::sqrt,
-      y::y_parser::token::sqrt,
       y::y_parser::token::sin,
       y::y_parser::token::cos,
       y::y_parser::token::tan,
@@ -82,7 +81,7 @@ enum y::y_parser::token::yytokentype symbol_tokens[] =
 namespace y
   {
 
-    y_lexer::y_lexer(lexstream<enum keyword_type, enum symbol_type>* s)
+    y_lexer::y_lexer(lexstream<enum keyword_type, enum character_type>* s)
       : stream(s)
       {
         assert(s != NULL);
@@ -106,11 +105,11 @@ namespace y
 
         if(lval->lex != NULL)
           {
-            enum lexeme_type type = lval->lex->get_type();
+            enum lexeme::lexeme_type type = lval->lex->get_type();
 
             switch(type)
               {
-                case keyword:
+                case lexeme::keyword:
                   {
                     enum keyword_type kw;
 
@@ -121,9 +120,9 @@ namespace y
                   }
                   break;
 
-                case symbol:
+                case lexeme::character:
                   {
-                    enum symbol_type sym;
+                    enum character_type sym;
 
                     if(lval->lex->get_symbol(sym))
                       {
@@ -132,19 +131,19 @@ namespace y
                   }
                   break;
 
-                case ident:
+                case lexeme::ident:
                   rval = y::y_parser::token::identifier;
                   break;
 
-                case integer:
+                case lexeme::integer:
                   rval = y::y_parser::token::integer;
                   break;
 
-                case decimal:
+                case lexeme::decimal:
                   rval = y::y_parser::token::decimal;
                   break;
 
-                case string:
+                case lexeme::string:
                   rval = y::y_parser::token::string;
                   break;
 
@@ -156,6 +155,8 @@ namespace y
           {
             /* return eof? */
           }
+
+        // std::cerr << "Returning token number " << rval << "\n";
 
         return(rval);
       }

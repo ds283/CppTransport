@@ -21,12 +21,12 @@
 
 // FAIL return code for Bison parser
 #ifndef FAIL
-#define FAIL (-1)
+#define FAIL (1)
 #endif
 
 struct input
   {
-    lexstream<enum keyword_type, enum symbol_type>* stream;
+    lexstream<enum keyword_type, enum character_type>* stream;
     y::y_lexer*                                     lexer;
     y::y_driver*                                    driver;
     y::y_parser*                                    parser;
@@ -34,7 +34,10 @@ struct input
   };
 
 
-// lexical analyser definition
+// ******************************************************************
+
+// lexical analyser data
+
 
 std::string keyword_table[] =
   {
@@ -58,7 +61,7 @@ enum keyword_type keyword_map[] =
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-std::string symbol_table[] =
+std::string character_table[] =
   {
       "{", "}", "(", ")",
       "[", "]", ",", ".", ":", ";",
@@ -66,13 +69,16 @@ std::string symbol_table[] =
       "&", "^", "@", "...", "->"
   };
 
-enum symbol_type symbol_map[] =
+enum character_type character_map[] =
    {
        open_brace, close_brace, open_bracket, close_bracket,
        open_square, close_square, comma, period, colon, semicolon,
        plus, minus, star, backslash, foreslash, tilde,
        ampersand, circumflex, ampersat, ellipsis, rightarrow
    };
+
+
+// ******************************************************************
 
 
 int main(int argc, const char *argv[])
@@ -94,13 +100,15 @@ int main(int argc, const char *argv[])
           {
             struct input in;
 
+            // lexicalize this input file
             in.name   = (std::string)argv[i];
-            in.stream = new lexstream<enum keyword_type, enum symbol_type>((std::string)argv[i], &path,
-                                                                           keyword_table, keyword_map, NUMBER_KEYWORDS,
-                                                                           symbol_table, symbol_map, NUMBER_SYMBOLS);
+            in.stream = new lexstream<enum keyword_type, enum character_type>((std::string)argv[i], &path,
+                                                                              keyword_table, keyword_map, NUMBER_KEYWORDS,
+                                                                              character_table, character_map, NUMBER_CHARACTERS);
 
-            in.stream->dump(std::cout);
+            // in.stream->dump(std::cerr);
 
+            // now pass to the parser for syntactic analysis
             in.lexer  = new y::y_lexer(in.stream);
             in.driver = new y::y_driver();
             in.parser = new y::y_parser(in.lexer, in.driver);

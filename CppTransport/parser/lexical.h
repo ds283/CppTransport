@@ -27,7 +27,7 @@ enum keyword_type
 
 #define NUMBER_KEYWORDS (38)
 
-enum symbol_type
+enum character_type
   {
       open_brace, close_brace, open_bracket, close_bracket,
       open_square, close_square, comma, period, colon, semicolon,
@@ -35,7 +35,7 @@ enum symbol_type
       ampersand, circumflex, ampersat, ellipsis, rightarrow
   };
 
-#define NUMBER_SYMBOLS (23)
+#define NUMBER_CHARACTERS (21)
 
 
 #endif //__lexical_H_

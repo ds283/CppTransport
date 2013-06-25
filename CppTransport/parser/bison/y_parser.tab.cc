@@ -45,7 +45,7 @@
 #line 46 "y_parser.tab.cc"
 /* Unqualified %code blocks.  */
 /* Line 290 of lalr1.cc  */
-#line 25 "y_parser.yy"
+#line 27 "y_parser.yy"
 
     #include <iostream>
     #include <cstdlib>
@@ -54,6 +54,8 @@
     #include "y_lexer.h"
     #include "y_driver.h"
     #include "error.h"
+
+    #include "ginac/ginac.h"
 
     static int yylex(y::y_parser::semantic_type* yylval,
                      y::y_lexer* lexer,
@@ -64,7 +66,7 @@
 
 
 /* Line 290 of lalr1.cc  */
-#line 68 "y_parser.tab.cc"
+#line 70 "y_parser.tab.cc"
 
 
 # ifndef YY_NULL
@@ -160,7 +162,7 @@ do {					\
 #line 5 "y_parser.yy"
 namespace y {
 /* Line 357 of lalr1.cc  */
-#line 164 "y_parser.tab.cc"
+#line 166 "y_parser.tab.cc"
 
   /// Build a parser object.
   y_parser::y_parser (y_lexer*  lexer_yyarg, y_driver* driver_yyarg)
@@ -423,9 +425,369 @@ namespace y {
     YY_REDUCE_PRINT (yyn);
     switch (yyn)
       {
-        
+          case 3:
 /* Line 664 of lalr1.cc  */
-#line 429 "y_parser.tab.cc"
+#line 133 "y_parser.yy"
+    { driver->get_script()->add_declaration((yysemantic_stack_[(2) - (2)].d)); }
+    break;
+
+  case 4:
+/* Line 664 of lalr1.cc  */
+#line 134 "y_parser.yy"
+    { driver->get_script()->set_potential((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 5:
+/* Line 664 of lalr1.cc  */
+#line 135 "y_parser.yy"
+    { driver->set_name((yysemantic_stack_[(4) - (3)].lex)); }
+    break;
+
+  case 6:
+/* Line 664 of lalr1.cc  */
+#line 136 "y_parser.yy"
+    { driver->set_author((yysemantic_stack_[(4) - (3)].lex)); }
+    break;
+
+  case 7:
+/* Line 664 of lalr1.cc  */
+#line 137 "y_parser.yy"
+    { driver->set_tag((yysemantic_stack_[(4) - (3)].lex)); }
+    break;
+
+  case 9:
+/* Line 664 of lalr1.cc  */
+#line 141 "y_parser.yy"
+    { (yyval.d) = (yysemantic_stack_[(1) - (1)].d); }
+    break;
+
+  case 10:
+/* Line 664 of lalr1.cc  */
+#line 142 "y_parser.yy"
+    { (yyval.d) = (yysemantic_stack_[(1) - (1)].d); }
+    break;
+
+  case 11:
+/* Line 664 of lalr1.cc  */
+#line 145 "y_parser.yy"
+    { (yyval.d) = driver->make_field((yysemantic_stack_[(4) - (3)].lex), (yysemantic_stack_[(4) - (2)].a)); }
+    break;
+
+  case 12:
+/* Line 664 of lalr1.cc  */
+#line 148 "y_parser.yy"
+    { (yyval.d) = driver->make_parameter((yysemantic_stack_[(4) - (3)].lex), (yysemantic_stack_[(4) - (2)].a)); }
+    break;
+
+  case 13:
+/* Line 664 of lalr1.cc  */
+#line 151 "y_parser.yy"
+    { (yyval.a) = (yysemantic_stack_[(3) - (2)].a); }
+    break;
+
+  case 14:
+/* Line 664 of lalr1.cc  */
+#line 152 "y_parser.yy"
+    { (yyval.a) = new attributes; }
+    break;
+
+  case 15:
+/* Line 664 of lalr1.cc  */
+#line 155 "y_parser.yy"
+    { driver->add_latex_attribute((yysemantic_stack_[(4) - (1)].a), (yysemantic_stack_[(4) - (3)].lex)); (yyval.a) = (yysemantic_stack_[(4) - (1)].a); }
+    break;
+
+  case 16:
+/* Line 664 of lalr1.cc  */
+#line 156 "y_parser.yy"
+    { (yyval.a) = new attributes; }
+    break;
+
+  case 17:
+/* Line 664 of lalr1.cc  */
+#line 159 "y_parser.yy"
+    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+    break;
+
+  case 18:
+/* Line 664 of lalr1.cc  */
+#line 160 "y_parser.yy"
+    { (yyval.x) = driver->add((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+    break;
+
+  case 19:
+/* Line 664 of lalr1.cc  */
+#line 161 "y_parser.yy"
+    { (yyval.x) = driver->sub((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+    break;
+
+  case 20:
+/* Line 664 of lalr1.cc  */
+#line 164 "y_parser.yy"
+    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+    break;
+
+  case 21:
+/* Line 664 of lalr1.cc  */
+#line 165 "y_parser.yy"
+    { (yyval.x) = driver->mul((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+    break;
+
+  case 22:
+/* Line 664 of lalr1.cc  */
+#line 166 "y_parser.yy"
+    { (yyval.x) = driver->div((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+    break;
+
+  case 23:
+/* Line 664 of lalr1.cc  */
+#line 169 "y_parser.yy"
+    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+    break;
+
+  case 24:
+/* Line 664 of lalr1.cc  */
+#line 170 "y_parser.yy"
+    { (yyval.x) = driver->pow((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+    break;
+
+  case 25:
+/* Line 664 of lalr1.cc  */
+#line 173 "y_parser.yy"
+    { (yyval.x) = driver->get_integer((yysemantic_stack_[(1) - (1)].lex)); }
+    break;
+
+  case 26:
+/* Line 664 of lalr1.cc  */
+#line 174 "y_parser.yy"
+    { (yyval.x) = driver->get_decimal((yysemantic_stack_[(1) - (1)].lex)); }
+    break;
+
+  case 27:
+/* Line 664 of lalr1.cc  */
+#line 175 "y_parser.yy"
+    { (yyval.x) = driver->get_identifier((yysemantic_stack_[(1) - (1)].lex)); }
+    break;
+
+  case 28:
+/* Line 664 of lalr1.cc  */
+#line 176 "y_parser.yy"
+    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+    break;
+
+  case 29:
+/* Line 664 of lalr1.cc  */
+#line 177 "y_parser.yy"
+    { (yyval.x) = (yysemantic_stack_[(3) - (2)].x); }
+    break;
+
+  case 30:
+/* Line 664 of lalr1.cc  */
+#line 180 "y_parser.yy"
+    { (yyval.x) = driver->abs((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 31:
+/* Line 664 of lalr1.cc  */
+#line 181 "y_parser.yy"
+    { (yyval.x) = driver->step((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 32:
+/* Line 664 of lalr1.cc  */
+#line 182 "y_parser.yy"
+    { (yyval.x) = driver->sqrt((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 33:
+/* Line 664 of lalr1.cc  */
+#line 183 "y_parser.yy"
+    { (yyval.x) = driver->sin((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 34:
+/* Line 664 of lalr1.cc  */
+#line 184 "y_parser.yy"
+    { (yyval.x) = driver->cos((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 35:
+/* Line 664 of lalr1.cc  */
+#line 185 "y_parser.yy"
+    { (yyval.x) = driver->tan((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 36:
+/* Line 664 of lalr1.cc  */
+#line 186 "y_parser.yy"
+    { (yyval.x) = driver->asin((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 37:
+/* Line 664 of lalr1.cc  */
+#line 187 "y_parser.yy"
+    { (yyval.x) = driver->acos((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 38:
+/* Line 664 of lalr1.cc  */
+#line 188 "y_parser.yy"
+    { (yyval.x) = driver->atan((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 39:
+/* Line 664 of lalr1.cc  */
+#line 189 "y_parser.yy"
+    { (yyval.x) = driver->atan2((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 40:
+/* Line 664 of lalr1.cc  */
+#line 190 "y_parser.yy"
+    { (yyval.x) = driver->sinh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 41:
+/* Line 664 of lalr1.cc  */
+#line 191 "y_parser.yy"
+    { (yyval.x) = driver->cosh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 42:
+/* Line 664 of lalr1.cc  */
+#line 192 "y_parser.yy"
+    { (yyval.x) = driver->tanh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 43:
+/* Line 664 of lalr1.cc  */
+#line 193 "y_parser.yy"
+    { (yyval.x) = driver->asinh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 44:
+/* Line 664 of lalr1.cc  */
+#line 194 "y_parser.yy"
+    { (yyval.x) = driver->acosh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 45:
+/* Line 664 of lalr1.cc  */
+#line 195 "y_parser.yy"
+    { (yyval.x) = driver->atanh((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 46:
+/* Line 664 of lalr1.cc  */
+#line 196 "y_parser.yy"
+    { (yyval.x) = driver->exp((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 47:
+/* Line 664 of lalr1.cc  */
+#line 197 "y_parser.yy"
+    { (yyval.x) = driver->log((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 48:
+/* Line 664 of lalr1.cc  */
+#line 198 "y_parser.yy"
+    { (yyval.x) = driver->Li2((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 49:
+/* Line 664 of lalr1.cc  */
+#line 199 "y_parser.yy"
+    { (yyval.x) = driver->Li((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 50:
+/* Line 664 of lalr1.cc  */
+#line 200 "y_parser.yy"
+    { (yyval.x) = driver->G((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 51:
+/* Line 664 of lalr1.cc  */
+#line 201 "y_parser.yy"
+    { (yyval.x) = driver->G((yysemantic_stack_[(8) - (3)].x), (yysemantic_stack_[(8) - (5)].x), (yysemantic_stack_[(8) - (7)].x)); }
+    break;
+
+  case 52:
+/* Line 664 of lalr1.cc  */
+#line 202 "y_parser.yy"
+    { (yyval.x) = driver->S((yysemantic_stack_[(8) - (3)].x), (yysemantic_stack_[(8) - (5)].x), (yysemantic_stack_[(8) - (7)].x)); }
+    break;
+
+  case 53:
+/* Line 664 of lalr1.cc  */
+#line 203 "y_parser.yy"
+    { (yyval.x) = driver->H((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 54:
+/* Line 664 of lalr1.cc  */
+#line 204 "y_parser.yy"
+    { (yyval.x) = driver->zeta((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 55:
+/* Line 664 of lalr1.cc  */
+#line 205 "y_parser.yy"
+    { (yyval.x) = driver->zeta((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 56:
+/* Line 664 of lalr1.cc  */
+#line 206 "y_parser.yy"
+    { (yyval.x) = driver->zetaderiv((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 57:
+/* Line 664 of lalr1.cc  */
+#line 207 "y_parser.yy"
+    { (yyval.x) = driver->tgamma((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 58:
+/* Line 664 of lalr1.cc  */
+#line 208 "y_parser.yy"
+    { (yyval.x) = driver->lgamma((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 59:
+/* Line 664 of lalr1.cc  */
+#line 209 "y_parser.yy"
+    { (yyval.x) = driver->beta((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 60:
+/* Line 664 of lalr1.cc  */
+#line 210 "y_parser.yy"
+    { (yyval.x) = driver->psi((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 61:
+/* Line 664 of lalr1.cc  */
+#line 211 "y_parser.yy"
+    { (yyval.x) = driver->psi((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+  case 62:
+/* Line 664 of lalr1.cc  */
+#line 212 "y_parser.yy"
+    { (yyval.x) = driver->factorial((yysemantic_stack_[(4) - (3)].x)); }
+    break;
+
+  case 63:
+/* Line 664 of lalr1.cc  */
+#line 213 "y_parser.yy"
+    { (yyval.x) = driver->binomial((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+    break;
+
+
+/* Line 664 of lalr1.cc  */
+#line 791 "y_parser.tab.cc"
       default:
         break;
       }
@@ -637,31 +999,31 @@ namespace y {
 
   /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
      STATE-NUM.  */
-  const signed char y_parser::yypact_ninf_ = -64;
+  const signed char y_parser::yypact_ninf_ = -59;
   const short int
   y_parser::yypact_[] =
   {
-       -64,     1,   -64,   -63,   -51,    15,    42,    36,    42,   -64,
-     -64,   -64,   -64,   -64,   -64,   -64,    43,    59,    69,   -64,
-      61,    85,    98,   109,   118,   127,   138,   147,   167,   179,
-     185,   187,   193,   195,   201,   203,   208,   213,   216,   217,
-     218,   219,   220,   221,   222,   223,   224,   225,   226,   227,
-     228,   229,    36,   -64,   -64,   -64,   -39,   199,   -64,    92,
-     -64,    74,   -64,   -64,   -64,    68,   115,    36,    36,    36,
+       -59,     2,   218,   -59,   -58,   -51,    15,    42,    36,    42,
+     -59,   -59,   -59,    47,    69,    73,   -59,    26,    50,    59,
+     103,   114,   123,   132,   143,   152,   161,   175,   185,   187,
+     193,   195,   201,   203,   209,   211,   216,   219,   222,   223,
+     224,   225,   226,   227,   228,   229,   230,   231,   232,    36,
+     -59,   -59,   -59,   163,   207,   -59,    97,   -59,    79,   -59,
+     -59,   -59,    68,   120,    36,    36,    36,    36,    36,    36,
       36,    36,    36,    36,    36,    36,    36,    36,    36,    36,
       36,    36,    36,    36,    36,    36,    36,    36,    36,    36,
-      36,    36,    36,    36,    36,    36,    36,    36,   -41,    36,
-      36,    36,    36,    36,   129,   143,   -64,   -64,   -64,    38,
-      44,    60,    62,    78,    81,    83,    87,    93,    56,    96,
-     102,   105,   107,   111,   116,   120,   122,   125,   172,   180,
-     182,   188,    34,   190,   131,   134,   196,    40,   136,   140,
-     -64,   199,   199,   -64,   -64,   -64,   -64,   144,   -64,   -64,
-     -64,   -64,   -64,   -64,   -64,   -64,   -64,    36,   -64,   -64,
-     -64,   -64,   -64,   -64,   -64,   -64,   -64,    36,    36,    36,
-      36,   -64,    36,    36,   -64,   -64,    36,   -64,    36,   -64,
-     -64,   -64,   145,   149,    50,   198,   151,   154,   160,   163,
-     165,   -64,   -64,   -64,    36,    36,   -64,   -64,   -64,   -64,
-     -64,   169,   174,   -64,   -64
+      36,    36,    36,    36,    36,   -39,   -59,    36,    36,    36,
+      36,    36,   134,   212,   -59,   -59,    38,    40,    43,    52,
+      57,    62,    78,    81,    83,    60,    87,    96,    98,   101,
+     107,   110,   112,   116,   121,   180,   182,   188,   190,   -43,
+     196,   125,   127,   198,   -41,   130,   204,   -59,   207,   207,
+     -59,   -59,   -59,   -59,   149,   -59,   -59,   -59,   -59,   -59,
+     -59,   -59,   -59,   -59,    36,   -59,   -59,   -59,   -59,   -59,
+     -59,   -59,   -59,   -59,    36,    36,    36,    36,   -59,    36,
+      36,   -59,   -59,    36,   -59,    36,   -59,    36,   -59,   136,
+     139,    34,   206,   141,   145,   150,   154,   156,   159,   -59,
+     -59,   -59,    36,    36,   -59,   -59,   -59,   -59,   -59,   -59,
+     165,   168,   -59,   -59
   };
 
   /* YYDEFACT[S] -- default reduction number in state S.  Performed when
@@ -670,43 +1032,43 @@ namespace y {
   const unsigned char
   y_parser::yydefact_[] =
   {
-         3,     0,     1,     0,     0,     0,    17,     0,    17,     2,
-       4,     5,     6,     7,     8,     9,     0,     0,     0,    19,
+         8,     0,     2,     1,     0,     0,     0,    14,     0,    14,
+       3,     9,    10,     0,     0,     0,    16,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,    31,    29,    30,    15,    21,    24,    27,
-      32,     0,    10,    11,    12,     0,     0,     0,     0,     0,
+      27,    25,    26,     0,    17,    20,    23,    28,     0,     5,
+       6,     7,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
+       0,     0,     0,     0,     0,     0,     4,     0,     0,     0,
+       0,     0,     0,     0,    13,    11,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,    16,    18,    13,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
-      33,    22,    23,    25,    26,    28,    14,     0,    34,    35,
-      36,    37,    38,    39,    40,    41,    42,     0,    44,    45,
-      46,    47,    48,    49,    50,    51,    52,     0,     0,     0,
-       0,    58,     0,     0,    61,    62,     0,    64,     0,    66,
-      67,    20,     0,     0,     0,     0,     0,     0,     0,     0,
-       0,    43,    53,    54,     0,     0,    57,    59,    60,    63,
-      65,     0,     0,    55,    56
+       0,     0,     0,     0,     0,     0,     0,    29,    18,    19,
+      21,    22,    24,    12,     0,    30,    31,    32,    33,    34,
+      35,    36,    37,    38,     0,    40,    41,    42,    43,    44,
+      45,    46,    47,    48,     0,     0,     0,     0,    54,     0,
+       0,    57,    58,     0,    60,     0,    62,     0,    15,     0,
+       0,     0,     0,     0,     0,     0,     0,     0,     0,    39,
+      49,    50,     0,     0,    53,    55,    56,    59,    61,    63,
+       0,     0,    51,    52
   };
 
   /* YYPGOTO[NTERM-NUM].  */
   const short int
   y_parser::yypgoto_[] =
   {
-       -64,   -64,   -64,   -64,   -64,   -64,   -64,   -64,   -64,   191,
-     -64,   -64,   -52,   155,   156,   170,   -64
+       -59,   -59,   -59,   -59,   -59,   -59,   267,   -59,   -49,    39,
+     164,   177,   -59
   };
 
   /* YYDEFGOTO[NTERM-NUM].  */
   const signed char
   y_parser::yydefgoto_[] =
   {
-        -1,     1,     9,    10,    11,    12,    13,    14,    15,    20,
-      65,   107,    56,    57,    58,    59,    60
+        -1,     1,     2,    10,    11,    12,    17,    62,    53,    54,
+      55,    56,    57
   };
 
   /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
@@ -716,68 +1078,68 @@ namespace y {
   const unsigned char
   y_parser::yytable_[] =
   {
-        98,     2,    16,   140,     3,     4,     5,     6,     7,     8,
-      99,   100,    99,   100,    17,   109,   110,   111,   112,   113,
-     114,   115,   116,   117,   118,   119,   120,   121,   122,   123,
-     124,   125,   126,   127,   128,   129,   130,   131,   132,   133,
-     134,   135,   136,   137,   138,   139,    21,    22,    23,    24,
-      25,    26,    27,    28,    29,    30,    31,    32,    33,    34,
-      35,    36,    37,    38,    39,    40,    41,    42,    43,    44,
-      45,    46,    47,    48,    49,    50,    51,   105,   171,    52,
-      18,   172,   148,    19,   177,    99,   100,   178,   149,    99,
-     100,    99,   100,    62,   193,    99,   100,   194,    53,    54,
-      55,    99,   100,   157,   150,   182,   151,    99,   100,    63,
-     106,    99,   100,    99,   100,   183,   184,   185,   186,    64,
-     187,   188,   152,    66,   189,   153,   190,   154,    67,    99,
-     100,   155,    99,   100,    99,   100,   104,   156,    99,   100,
-     158,    68,   201,   202,    99,   100,   159,    99,   100,   160,
-     103,   161,    69,    99,   100,   162,    99,   100,    99,   100,
-     163,    70,    99,   100,   164,   108,   165,    99,   100,   166,
-      71,    99,   100,    99,   100,   174,    99,   100,   175,   146,
-     179,    72,    99,   100,   180,    99,   100,    99,   100,   191,
-      73,    99,   100,   192,   181,   196,    99,   100,   197,    61,
-      99,   100,    99,   100,   198,    99,   100,   199,   147,   200,
-      74,    99,   100,   203,    99,   100,    99,   100,   204,   167,
-      99,   100,    75,    99,   100,    99,   100,   168,    76,   169,
-      77,    99,   100,    99,   100,   170,    78,   173,    79,    99,
-     100,    99,   100,   176,    80,   195,    81,    99,   100,    99,
-     100,    82,   101,   102,   141,   142,    83,   143,   144,    84,
-      85,    86,    87,    88,    89,    90,    91,    92,    93,    94,
-      95,    96,    97,   145
+        95,   168,     3,   174,   169,   137,   175,    13,    97,    98,
+      97,    98,    97,    98,    14,   106,   107,   108,   109,   110,
+     111,   112,   113,   114,   115,   116,   117,   118,   119,   120,
+     121,   122,   123,   124,   125,   126,   127,   128,   129,   130,
+     131,   132,   133,   134,   135,   136,    18,    19,    20,    21,
+      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
+      32,    33,    34,    35,    36,    37,    38,    39,    40,    41,
+      42,    43,    44,    45,    46,    47,    48,   103,   191,    49,
+      15,   192,   145,    16,   146,    97,    98,   147,    63,    97,
+      98,    97,    98,    64,    97,    98,   148,    59,    50,    51,
+      52,   149,    65,    97,    98,   179,   150,   154,    97,    98,
+     104,    97,    98,    97,    98,   180,   181,   182,   183,    60,
+     184,   185,   151,    61,   186,   152,   187,   153,   188,    97,
+      98,   155,    97,    98,    97,    98,   138,   139,    97,    98,
+     156,   102,   157,   200,   201,   158,    66,    97,    98,    97,
+      98,   159,    97,    98,   160,   101,   161,    67,    97,    98,
+     162,    97,    98,    97,    98,   163,    68,    97,    98,   171,
+     105,   172,    97,    98,   176,    69,    97,    98,    97,    98,
+     189,    97,    98,   190,   143,   194,    70,    97,    98,   195,
+      97,    98,    97,    98,   196,    71,    97,    98,   197,   178,
+     198,    97,    98,   199,    72,    97,    98,    97,    98,   202,
+      97,    98,   203,    96,    97,    98,    97,    98,    73,    97,
+      98,     4,     5,     6,     7,     8,     9,   164,    74,   165,
+      75,    97,    98,    97,    98,   166,    76,   167,    77,    97,
+      98,    97,    98,   170,    78,   173,    79,    97,    98,    97,
+      98,   177,    80,   193,    81,    97,    98,    97,    98,    82,
+      99,   100,    83,   140,   141,    84,    85,    86,    87,    88,
+      89,    90,    91,    92,    93,    94,    58,   144,   142
   };
 
   /* YYCHECK.  */
   const unsigned char
   y_parser::yycheck_[] =
   {
-        52,     0,    65,    44,     3,     4,     5,     6,     7,     8,
-      51,    52,    51,    52,    65,    67,    68,    69,    70,    71,
-      72,    73,    74,    75,    76,    77,    78,    79,    80,    81,
-      82,    83,    84,    85,    86,    87,    88,    89,    90,    91,
-      92,    93,    94,    95,    96,    97,    10,    11,    12,    13,
+        49,    44,     0,    44,    47,    44,    47,    65,    51,    52,
+      51,    52,    51,    52,    65,    64,    65,    66,    67,    68,
+      69,    70,    71,    72,    73,    74,    75,    76,    77,    78,
+      79,    80,    81,    82,    83,    84,    85,    86,    87,    88,
+      89,    90,    91,    92,    93,    94,    10,    11,    12,    13,
       14,    15,    16,    17,    18,    19,    20,    21,    22,    23,
       24,    25,    26,    27,    28,    29,    30,    31,    32,    33,
       34,    35,    36,    37,    38,    39,    40,     9,    44,    43,
-      65,    47,    44,    41,    44,    51,    52,    47,    44,    51,
-      52,    51,    52,    50,    44,    51,    52,    47,    62,    63,
-      64,    51,    52,    47,    44,   157,    44,    51,    52,    50,
-      42,    51,    52,    51,    52,   167,   168,   169,   170,    50,
-     172,   173,    44,    62,   176,    44,   178,    44,    43,    51,
-      52,    44,    51,    52,    51,    52,    62,    44,    51,    52,
-      44,    43,   194,   195,    51,    52,    44,    51,    52,    44,
-      58,    44,    43,    51,    52,    44,    51,    52,    51,    52,
-      44,    43,    51,    52,    44,    50,    44,    51,    52,    44,
-      43,    51,    52,    51,    52,    44,    51,    52,    44,    50,
-      44,    43,    51,    52,    44,    51,    52,    51,    52,    44,
-      43,    51,    52,    44,    50,    44,    51,    52,    44,     8,
-      51,    52,    51,    52,    44,    51,    52,    44,    65,    44,
-      43,    51,    52,    44,    51,    52,    51,    52,    44,    47,
-      51,    52,    43,    51,    52,    51,    52,    47,    43,    47,
+      65,    47,    44,    41,    44,    51,    52,    44,    62,    51,
+      52,    51,    52,    43,    51,    52,    44,    50,    62,    63,
+      64,    44,    43,    51,    52,   154,    44,    47,    51,    52,
+      42,    51,    52,    51,    52,   164,   165,   166,   167,    50,
+     169,   170,    44,    50,   173,    44,   175,    44,   177,    51,
+      52,    44,    51,    52,    51,    52,    97,    98,    51,    52,
+      44,    62,    44,   192,   193,    44,    43,    51,    52,    51,
+      52,    44,    51,    52,    44,    58,    44,    43,    51,    52,
+      44,    51,    52,    51,    52,    44,    43,    51,    52,    44,
+      50,    44,    51,    52,    44,    43,    51,    52,    51,    52,
+      44,    51,    52,    44,    50,    44,    43,    51,    52,    44,
+      51,    52,    51,    52,    44,    43,    51,    52,    44,    50,
+      44,    51,    52,    44,    43,    51,    52,    51,    52,    44,
+      51,    52,    44,    50,    51,    52,    51,    52,    43,    51,
+      52,     3,     4,     5,     6,     7,     8,    47,    43,    47,
       43,    51,    52,    51,    52,    47,    43,    47,    43,    51,
       52,    51,    52,    47,    43,    47,    43,    51,    52,    51,
-      52,    43,    53,    54,    99,   100,    43,   101,   102,    43,
-      43,    43,    43,    43,    43,    43,    43,    43,    43,    43,
-      43,    43,    43,   103
+      52,    47,    43,    47,    43,    51,    52,    51,    52,    43,
+      53,    54,    43,    99,   100,    43,    43,    43,    43,    43,
+      43,    43,    43,    43,    43,    43,     9,    65,   101
   };
 
   /* STOS_[STATE-NUM] -- The (internal number of the) accessing
@@ -785,27 +1147,27 @@ namespace y {
   const unsigned char
   y_parser::yystos_[] =
   {
-         0,    67,     0,     3,     4,     5,     6,     7,     8,    68,
-      69,    70,    71,    72,    73,    74,    65,    65,    65,    41,
-      75,    10,    11,    12,    13,    14,    15,    16,    17,    18,
-      19,    20,    21,    22,    23,    24,    25,    26,    27,    28,
-      29,    30,    31,    32,    33,    34,    35,    36,    37,    38,
-      39,    40,    43,    62,    63,    64,    78,    79,    80,    81,
-      82,    75,    50,    50,    50,    76,    62,    43,    43,    43,
+         0,    67,    68,     0,     3,     4,     5,     6,     7,     8,
+      69,    70,    71,    65,    65,    65,    41,    72,    10,    11,
+      12,    13,    14,    15,    16,    17,    18,    19,    20,    21,
+      22,    23,    24,    25,    26,    27,    28,    29,    30,    31,
+      32,    33,    34,    35,    36,    37,    38,    39,    40,    43,
+      62,    63,    64,    74,    75,    76,    77,    78,    72,    50,
+      50,    50,    73,    62,    43,    43,    43,    43,    43,    43,
       43,    43,    43,    43,    43,    43,    43,    43,    43,    43,
       43,    43,    43,    43,    43,    43,    43,    43,    43,    43,
-      43,    43,    43,    43,    43,    43,    43,    43,    78,    51,
-      52,    53,    54,    58,    62,     9,    42,    77,    50,    78,
-      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
-      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
-      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
-      44,    79,    79,    80,    80,    81,    50,    65,    44,    44,
-      44,    44,    44,    44,    44,    44,    44,    47,    44,    44,
-      44,    44,    44,    44,    44,    44,    44,    47,    47,    47,
-      47,    44,    47,    47,    44,    44,    47,    44,    47,    44,
-      44,    50,    78,    78,    78,    78,    78,    78,    78,    78,
-      78,    44,    44,    44,    47,    47,    44,    44,    44,    44,
-      44,    78,    78,    44,    44
+      43,    43,    43,    43,    43,    74,    50,    51,    52,    53,
+      54,    58,    62,     9,    42,    50,    74,    74,    74,    74,
+      74,    74,    74,    74,    74,    74,    74,    74,    74,    74,
+      74,    74,    74,    74,    74,    74,    74,    74,    74,    74,
+      74,    74,    74,    74,    74,    74,    74,    44,    75,    75,
+      76,    76,    77,    50,    65,    44,    44,    44,    44,    44,
+      44,    44,    44,    44,    47,    44,    44,    44,    44,    44,
+      44,    44,    44,    44,    47,    47,    47,    47,    44,    47,
+      47,    44,    44,    47,    44,    47,    44,    47,    50,    74,
+      74,    74,    74,    74,    74,    74,    74,    74,    74,    44,
+      44,    44,    47,    47,    44,    44,    44,    44,    44,    44,
+      74,    74,    44,    44
   };
 
 #if YYDEBUG
@@ -828,26 +1190,26 @@ namespace y {
   const unsigned char
   y_parser::yyr1_[] =
   {
-         0,    66,    67,    67,    68,    68,    68,    68,    68,    68,
-      69,    70,    71,    72,    73,    74,    75,    75,    76,    76,
-      77,    78,    78,    78,    79,    79,    79,    80,    80,    81,
-      81,    81,    81,    81,    82,    82,    82,    82,    82,    82,
-      82,    82,    82,    82,    82,    82,    82,    82,    82,    82,
-      82,    82,    82,    82,    82,    82,    82,    82,    82,    82,
-      82,    82,    82,    82,    82,    82,    82,    82
+         0,    66,    67,    68,    68,    68,    68,    68,    68,    69,
+      69,    70,    71,    72,    72,    73,    73,    74,    74,    74,
+      75,    75,    75,    76,    76,    77,    77,    77,    77,    77,
+      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
+      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
+      78,    78,    78,    78,    78,    78,    78,    78,    78,    78,
+      78,    78,    78,    78
   };
 
   /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
   const unsigned char
   y_parser::yyr2_[] =
   {
-         0,     2,     2,     0,     1,     1,     1,     1,     1,     1,
-       3,     3,     3,     4,     4,     2,     3,     0,     2,     0,
-       3,     1,     3,     3,     1,     3,     3,     1,     3,     1,
-       1,     1,     1,     3,     4,     4,     4,     4,     4,     4,
-       4,     4,     4,     6,     4,     4,     4,     4,     4,     4,
-       4,     4,     4,     6,     6,     8,     8,     6,     4,     6,
-       6,     4,     4,     6,     4,     6,     4,     4
+         0,     2,     1,     2,     4,     4,     4,     4,     0,     1,
+       1,     4,     4,     3,     0,     4,     0,     1,     3,     3,
+       1,     3,     3,     1,     3,     1,     1,     1,     1,     3,
+       4,     4,     4,     4,     4,     4,     4,     4,     4,     6,
+       4,     4,     4,     4,     4,     4,     4,     4,     4,     6,
+       6,     8,     8,     6,     4,     6,     6,     4,     4,     6,
+       4,     6,     4,     6
   };
 
 #if YYDEBUG
@@ -865,11 +1227,10 @@ namespace y {
   "open_square", "close_square", "comma", "period", "colon", "semicolon",
   "plus", "minus", "star", "backslash", "foreslash", "tilde", "ampersand",
   "circumflex", "ampersat", "ellipsis", "rightarrow", "identifier",
-  "integer", "decimal", "string", "$accept", "script", "declaration",
-  "name_declaration", "author_declaration", "tag_declaration",
-  "field_declaration", "parameter_declaration", "potential_declaration",
-  "info_block", "info_declarations", "info_declaration", "expression",
-  "term", "factor", "leaf", "built_in_function", YY_NULL
+  "integer", "decimal", "string", "$accept", "program", "script",
+  "declaration", "field_decl", "parameter_decl", "attribute_block",
+  "attributes", "expression", "term", "factor", "leaf",
+  "built_in_function", YY_NULL
   };
 
 
@@ -877,35 +1238,35 @@ namespace y {
   const y_parser::rhs_number_type
   y_parser::yyrhs_[] =
   {
-        67,     0,    -1,    67,    68,    -1,    -1,    69,    -1,    70,
-      -1,    71,    -1,    72,    -1,    73,    -1,    74,    -1,     3,
-      65,    50,    -1,     4,    65,    50,    -1,     5,    65,    50,
-      -1,     6,    75,    62,    50,    -1,     8,    75,    62,    50,
-      -1,     7,    78,    -1,    41,    76,    42,    -1,    -1,    76,
-      77,    -1,    -1,     9,    65,    50,    -1,    79,    -1,    78,
-      51,    79,    -1,    78,    52,    79,    -1,    80,    -1,    79,
-      53,    80,    -1,    79,    54,    80,    -1,    81,    -1,    81,
-      58,    81,    -1,    63,    -1,    64,    -1,    62,    -1,    82,
-      -1,    43,    78,    44,    -1,    10,    43,    78,    44,    -1,
-      11,    43,    78,    44,    -1,    12,    43,    78,    44,    -1,
-      13,    43,    78,    44,    -1,    14,    43,    78,    44,    -1,
-      15,    43,    78,    44,    -1,    16,    43,    78,    44,    -1,
-      17,    43,    78,    44,    -1,    18,    43,    78,    44,    -1,
-      19,    43,    78,    47,    78,    44,    -1,    20,    43,    78,
-      44,    -1,    21,    43,    78,    44,    -1,    22,    43,    78,
-      44,    -1,    23,    43,    78,    44,    -1,    24,    43,    78,
-      44,    -1,    25,    43,    78,    44,    -1,    26,    43,    78,
-      44,    -1,    27,    43,    78,    44,    -1,    28,    43,    78,
-      44,    -1,    29,    43,    78,    47,    78,    44,    -1,    30,
-      43,    78,    47,    78,    44,    -1,    30,    43,    78,    47,
-      78,    47,    78,    44,    -1,    31,    43,    78,    47,    78,
-      47,    78,    44,    -1,    32,    43,    78,    47,    78,    44,
-      -1,    33,    43,    78,    44,    -1,    33,    43,    78,    47,
-      78,    44,    -1,    34,    43,    78,    47,    78,    44,    -1,
-      35,    43,    78,    44,    -1,    36,    43,    78,    44,    -1,
-      37,    43,    78,    47,    78,    44,    -1,    38,    43,    78,
-      44,    -1,    38,    43,    78,    47,    78,    44,    -1,    39,
-      43,    78,    44,    -1,    40,    43,    78,    44,    -1
+        67,     0,    -1,    68,    -1,    68,    69,    -1,    68,     7,
+      74,    50,    -1,    68,     3,    65,    50,    -1,    68,     4,
+      65,    50,    -1,    68,     5,    65,    50,    -1,    -1,    70,
+      -1,    71,    -1,     6,    72,    62,    50,    -1,     8,    72,
+      62,    50,    -1,    41,    73,    42,    -1,    -1,    73,     9,
+      65,    50,    -1,    -1,    75,    -1,    74,    51,    75,    -1,
+      74,    52,    75,    -1,    76,    -1,    75,    53,    76,    -1,
+      75,    54,    76,    -1,    77,    -1,    77,    58,    77,    -1,
+      63,    -1,    64,    -1,    62,    -1,    78,    -1,    43,    74,
+      44,    -1,    10,    43,    74,    44,    -1,    11,    43,    74,
+      44,    -1,    12,    43,    74,    44,    -1,    13,    43,    74,
+      44,    -1,    14,    43,    74,    44,    -1,    15,    43,    74,
+      44,    -1,    16,    43,    74,    44,    -1,    17,    43,    74,
+      44,    -1,    18,    43,    74,    44,    -1,    19,    43,    74,
+      47,    74,    44,    -1,    20,    43,    74,    44,    -1,    21,
+      43,    74,    44,    -1,    22,    43,    74,    44,    -1,    23,
+      43,    74,    44,    -1,    24,    43,    74,    44,    -1,    25,
+      43,    74,    44,    -1,    26,    43,    74,    44,    -1,    27,
+      43,    74,    44,    -1,    28,    43,    74,    44,    -1,    29,
+      43,    74,    47,    74,    44,    -1,    30,    43,    74,    47,
+      74,    44,    -1,    30,    43,    74,    47,    74,    47,    74,
+      44,    -1,    31,    43,    74,    47,    74,    47,    74,    44,
+      -1,    32,    43,    74,    47,    74,    44,    -1,    33,    43,
+      74,    44,    -1,    33,    43,    74,    47,    74,    44,    -1,
+      34,    43,    74,    47,    74,    44,    -1,    35,    43,    74,
+      44,    -1,    36,    43,    74,    44,    -1,    37,    43,    74,
+      47,    74,    44,    -1,    38,    43,    74,    44,    -1,    38,
+      43,    74,    47,    74,    44,    -1,    39,    43,    74,    44,
+      -1,    40,    43,    74,    47,    74,    44,    -1
   };
 
   /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
@@ -913,26 +1274,26 @@ namespace y {
   const unsigned short int
   y_parser::yyprhs_[] =
   {
-         0,     0,     3,     6,     7,     9,    11,    13,    15,    17,
-      19,    23,    27,    31,    36,    41,    44,    48,    49,    52,
-      53,    57,    59,    63,    67,    69,    73,    77,    79,    83,
-      85,    87,    89,    91,    95,   100,   105,   110,   115,   120,
-     125,   130,   135,   140,   147,   152,   157,   162,   167,   172,
-     177,   182,   187,   192,   199,   206,   215,   224,   231,   236,
-     243,   250,   255,   260,   267,   272,   279,   284
+         0,     0,     3,     5,     8,    13,    18,    23,    28,    29,
+      31,    33,    38,    43,    47,    48,    53,    54,    56,    60,
+      64,    66,    70,    74,    76,    80,    82,    84,    86,    88,
+      92,    97,   102,   107,   112,   117,   122,   127,   132,   137,
+     144,   149,   154,   159,   164,   169,   174,   179,   184,   189,
+     196,   203,   212,   221,   228,   233,   240,   247,   252,   257,
+     264,   269,   276,   281
   };
 
   /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
   const unsigned char
   y_parser::yyrline_[] =
   {
-         0,   113,   113,   114,   117,   118,   119,   120,   121,   122,
-     125,   128,   131,   134,   137,   140,   143,   144,   147,   148,
-     151,   154,   155,   156,   159,   160,   161,   164,   165,   168,
-     169,   170,   171,   172,   175,   176,   177,   178,   179,   180,
-     181,   182,   183,   184,   185,   186,   187,   188,   189,   190,
-     191,   192,   193,   194,   195,   196,   197,   198,   199,   200,
-     201,   202,   203,   204,   205,   206,   207,   208
+         0,   130,   130,   133,   134,   135,   136,   137,   138,   141,
+     142,   145,   148,   151,   152,   155,   156,   159,   160,   161,
+     164,   165,   166,   169,   170,   173,   174,   175,   176,   177,
+     180,   181,   182,   183,   184,   185,   186,   187,   188,   189,
+     190,   191,   192,   193,   194,   195,   196,   197,   198,   199,
+     200,   201,   202,   203,   204,   205,   206,   207,   208,   209,
+     210,   211,   212,   213
   };
 
   // Print the state stack on the debug stream.
@@ -1013,10 +1374,10 @@ namespace y {
   }
 
   const int y_parser::yyeof_ = 0;
-  const int y_parser::yylast_ = 273;
-  const int y_parser::yynnts_ = 17;
+  const int y_parser::yylast_ = 278;
+  const int y_parser::yynnts_ = 13;
   const int y_parser::yyempty_ = -2;
-  const int y_parser::yyfinal_ = 2;
+  const int y_parser::yyfinal_ = 3;
   const int y_parser::yyterror_ = 1;
   const int y_parser::yyerrcode_ = 256;
   const int y_parser::yyntokens_ = 66;
@@ -1028,13 +1389,13 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 1135 of lalr1.cc  */
-#line 1032 "y_parser.tab.cc"
+#line 1393 "y_parser.tab.cc"
 /* Line 1136 of lalr1.cc  */
-#line 210 "y_parser.yy"
+#line 215 "y_parser.yy"
 
 
 void y::y_parser::error(const y::y_parser::location_type &l,
                         const std::string& err_message)
   {
-    ::error(err_message); // :: forces link to default namespace, so finds error.h implementation
+    this->driver->error(err_message);
   }

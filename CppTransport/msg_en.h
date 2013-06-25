@@ -17,6 +17,13 @@
 #define ERROR_EXPECTED_CLOSE_QUOTE "Unterminated string literal"
 #define ERROR_EXPECTED_ELLIPSIS    "Expected '...', not '..'"
 
+#define ERROR_SYMBOL_EXISTS        "Redefinition of existing symbol"
+#define ERROR_IDENTIFIER_LOOKUP    "Lookup of identifier name failed"
+#define ERROR_STRING_LOOKUP        "Lookup of string literal value failed"
+#define ERROR_INTEGER_LOOKUP       "Lookup of integer literal value failed"
+#define ERROR_DECIMAL_LOOKUP       "Lookup of decimal literal value failed"
+#define ERROR_UNKNOWN_IDENTIFIER   "Undeclared identifier"
+
 #define WARNING_HEX_CONVERSION_A   "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B   "indicates hex, but did not convert: treated as decmial"
 #define WARNING_OCTAL_CONVERSION_A "Leading '0' in "

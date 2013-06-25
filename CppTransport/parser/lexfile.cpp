@@ -20,7 +20,7 @@
 lexfile::lexfile(std::string fnam)
   : file(fnam), line(0), c(0), state(lexfile_unready)
   {
-    stream.open(fnam);
+    stream.open(fnam.c_str());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
     assert(stream.is_open());
   }
 

@@ -27,13 +27,13 @@ namespace y
     class y_lexer
       {
         public:
-          y_lexer(lexstream<enum keyword_type, enum symbol_type>* s);
+          y_lexer(lexstream<enum keyword_type, enum character_type>* s);
           ~y_lexer();
 
           int yylex(y::y_parser::semantic_type* lval);
 
         private:
-			    lexstream<enum keyword_type, enum symbol_type>* stream;
+			    lexstream<enum keyword_type, enum character_type>* stream;
       };
 
   }

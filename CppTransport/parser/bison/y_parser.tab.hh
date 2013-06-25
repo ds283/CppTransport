@@ -48,6 +48,8 @@
     #include "parse_tree.h"
     #include "lexical.h"
 
+    #include "ginac/ginac.h"
+
     namespace y {
         class y_driver;
         class y_lexer;
@@ -55,7 +57,7 @@
 
 
 /* Line 33 of lalr1.cc  */
-#line 59 "y_parser.tab.hh"
+#line 61 "y_parser.tab.hh"
 
 
 #include <string>
@@ -72,7 +74,7 @@
 #line 5 "y_parser.yy"
 namespace y {
 /* Line 33 of lalr1.cc  */
-#line 76 "y_parser.tab.hh"
+#line 78 "y_parser.tab.hh"
 
   /// A Bison parser.
   class y_parser
@@ -83,14 +85,16 @@ namespace y {
     union semantic_type
     {
 /* Line 33 of lalr1.cc  */
-#line 42 "y_parser.yy"
+#line 46 "y_parser.yy"
 
-    lexeme<enum keyword_type, enum symbol_type>* lex;
-    parse_tree*                                  tree;
+    lexeme::lexeme<enum keyword_type, enum character_type>* lex;
+    declaration*                                            d;
+    attributes*                                             a;
+    GiNaC::ex*                                              x;
 
 
 /* Line 33 of lalr1.cc  */
-#line 94 "y_parser.tab.hh"
+#line 98 "y_parser.tab.hh"
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -345,7 +349,7 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 33 of lalr1.cc  */
-#line 349 "y_parser.tab.hh"
+#line 353 "y_parser.tab.hh"
 
 
 

@@ -61,7 +61,7 @@ bool finder::fqpn(std::string leaf, std::string& fqpn)
         path << this->paths[i] << "/" << leaf;
 
         std::ifstream stream;
-        stream.open(path.str());
+        stream.open(path.str().c_str());  // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
 
         if(stream.is_open())
           {
