@@ -32,8 +32,8 @@ namespace y
 
           script*      get_script         ();
 
-          declaration* make_field         (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
-          declaration* make_parameter     (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
+          void         add_field          (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
+          void         add_parameter      (lexeme::lexeme<keyword_type, character_type>* lex, attributes* a);
 
           void         set_name           (lexeme::lexeme<keyword_type, character_type> *lex);
           void         set_author         (lexeme::lexeme<keyword_type, character_type> *lex);

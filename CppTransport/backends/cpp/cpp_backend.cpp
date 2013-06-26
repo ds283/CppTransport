@@ -17,28 +17,33 @@
 static const std::string macros[] =
   {
     "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
-    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER", "CPP"
+    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER", "CPP",
+    "NUMBER_FIELDS", "FIELD_NAME_LIST", "LATEX_NAME_LIST"
   };
 
 static const unsigned int macro_lengths[] =
   {
     4, 7, 5, 4, 6,
-    4, 6, 3, 5, 6, 3
+    4, 6, 3, 5, 6, 3,
+    13, 15, 15
   };
 
 typedef std::string (*replacement_function)(script* source, std::string hname, std::string cname, std::string source_file);
 
-static std::string replace_tool(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_version(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_guard(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_date(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_source(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_name(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_author(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_tag(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_model(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_header(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_cpp(script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_tool         (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_version      (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_guard        (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_date         (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_source       (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_name         (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_author       (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_tag          (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_model        (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_header       (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_cpp          (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_number_fields(script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_field_list   (script* source, std::string hname, std::string cname, std::string source_file);
+static std::string replace_latex_list   (script* source, std::string hname, std::string cname, std::string source_file);
 
 
 static replacement_function macro_replacements[] =
@@ -47,7 +52,7 @@ static replacement_function macro_replacements[] =
     replace_name, replace_author, replace_tag, replace_model, replace_header, replace_cpp
   };
 
-#define NUMBER_MACROS (11)
+#define NUMBER_MACROS (14)
 
 
 // ******************************************************************
@@ -102,10 +107,10 @@ bool cpp_backend(struct input& data, finder* path)
       {
         rval = process(data.output + ".h", header_template, source, header_template, class_template, data.name);
       }
-    if(rval)
-      {
-        rval = process(data.output + ".cpp", class_template, source, header_template, class_template, data.name);
-      }
+//    if(rval)
+//      {
+//        rval = process(data.output + ".cpp", class_template, source, header_template, class_template, data.name);
+//      }
 
     return(rval);
   }
@@ -186,7 +191,7 @@ static std::string replace_version(script* source, std::string hname, std::strin
 
 static std::string replace_guard(script* source, std::string hname, std::string cname, std::string source_file)
   {
-    return "__" + source->get_model() + "_H_";
+    return "__CPP_TRANSPORT_" + source->get_model() + "_H_";
   }
 
 static std::string replace_date(script* source, std::string hname, std::string cname, std::string source_file)
@@ -235,4 +240,21 @@ static std::string replace_header(script* source, std::string hname, std::string
 static std::string replace_cpp(script* source, std::string hname, std::string cname, std::string source_file)
   {
     return(cname);
+  }
+
+static std::string replace_number_fields(script* source, std::string hname, std::string cname, std::string source_file)
+  {
+    std::ostringstream out;
+
+
+  }
+
+static std::string replace_field_list(script* source, std::string hname, std::string cname, std::string source_file)
+  {
+
+  }
+
+static std::string replace_latex_list(script* source, std::string hname, std::string cname, std::string source_file)
+  {
+
   }

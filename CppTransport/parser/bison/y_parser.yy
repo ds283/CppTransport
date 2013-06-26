@@ -45,7 +45,6 @@
 
 %union {
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
-    declaration*                                            d;
     attributes*                                             a;
     GiNaC::ex*                                              x;
 }
@@ -116,9 +115,6 @@
 %token <lex>    decimal
 %token <lex>    string
 
-%type  <d>      declaration
-%type  <d>      field_decl
-%type  <d>      parameter_decl
 %type  <a>      attribute_block
 %type  <a>      attributes
 %type  <x>      expression
@@ -132,24 +128,15 @@
 program: script
         ;
 
-script: script declaration                                          { driver->get_script()->add_declaration($2); }
-        | script potential expression semicolon                     { driver->get_script()->set_potential($3); }
+script: script potential expression semicolon                       { driver->get_script()->set_potential($3); }
         | script name string semicolon                              { driver->set_name($3); }
         | script author string semicolon                            { driver->set_author($3); }
         | script tag string semicolon                               { driver->set_tag($3); }
         | script k_class string semicolon                           { driver->set_class($3); }
         | script model string semicolon                             { driver->set_model($3); }
+        | script field attribute_block identifier semicolon         { driver->add_field($4, $3); }
+        | script parameter attribute_block identifier semicolon     { driver->add_parameter($4, $3); }
         |
-        ;
-
-declaration: field_decl                                             { $$ = $1; }
-        | parameter_decl                                            { $$ = $1; }
-        ;
-
-field_decl: field attribute_block identifier semicolon              { $$ = driver->make_field($3, $2); }
-        ;
-
-parameter_decl: parameter attribute_block identifier semicolon      { $$ = driver->make_parameter($3, $2); }
         ;
 
 attribute_block: open_brace attributes close_brace                  { $$ = $2; }

@@ -88,13 +88,12 @@ namespace y {
 #line 46 "y_parser.yy"
 
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
-    declaration*                                            d;
     attributes*                                             a;
     GiNaC::ex*                                              x;
 
 
 /* Line 33 of lalr1.cc  */
-#line 98 "y_parser.tab.hh"
+#line 97 "y_parser.tab.hh"
     };
 #else
     typedef YYSTYPE semantic_type;
@@ -351,7 +350,7 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 33 of lalr1.cc  */
-#line 355 "y_parser.tab.hh"
+#line 354 "y_parser.tab.hh"
 
 
 

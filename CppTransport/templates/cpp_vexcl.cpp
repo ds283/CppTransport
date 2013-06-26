@@ -8,13 +8,3 @@
 
 using namespace transport;
 
-$$__MODEL::$$__MODEL()
-  {
-
-  }
-
-
-$$__MODEL::~$$__MODEL()
-  {
-
-  }

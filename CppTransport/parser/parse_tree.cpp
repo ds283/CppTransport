@@ -101,9 +101,13 @@ script::~script()
   {
     // the only record of the various declarations which have been
     // set up is via our list, so we must delete them:
-    for(int i = 0; i < this->decls.size(); i++)
+    for(int i = 0; i < this->fields.size(); i++)
       {
-        delete this->decls[i];
+        delete this->fields[i];
+      }
+    for(int i = 0; i < this->parameters.size(); i++)
+      {
+        delete this->parameters[i];
       }
 
     // delete symbol table
@@ -215,7 +219,7 @@ void script::print(std::ostream& stream)
   }
 
 
-bool script::add_declaration(declaration* d)
+bool script::add_field(field_declaration* d)
   {
     // search for an existing entry in the symbol table
     quantity* p;
@@ -234,16 +238,44 @@ bool script::add_declaration(declaration* d)
         this->table->insert(d->get_quantity());
 
         // add declaration to list
-        this->decls.push_back(d);
+        this->fields.push_back(d);
       }
 
     return(!exists);  // caller must delete d explicitly if returns false
   }
 
+
+bool script::add_parameter(parameter_declaration* d)
+  {
+    // search for an existing entry in the symbol table
+    quantity* p;
+    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
+
+    if(exists)
+      {
+        std::ostringstream msg;
+
+        msg << ERROR_SYMBOL_EXISTS << " '" << d->get_quantity()->get_name() << "'";
+        error(msg.str());
+      }
+    else
+      {
+        // insert symbol in symbol table
+        this->table->insert(d->get_quantity());
+
+        // add declaration to list
+        this->parameters.push_back(d);
+      }
+
+    return(!exists);  // caller must delete d explicitly if returns false
+  }
+
+
 bool script::lookup_symbol(std::string id, quantity *& s)
   {
     return(this->table->find(id, s));
   }
+
 
 void script::set_potential(GiNaC::ex* V)
   {

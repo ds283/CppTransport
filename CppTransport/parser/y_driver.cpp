@@ -36,18 +36,22 @@ namespace y
           return(this->root);
         }
 
-      declaration* y_driver::make_field(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
+      void y_driver::add_field(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
         {
           // extract identifier name from lexeme
-          std::string  id;
-          bool         ok = lex->get_identifier(id);
-			    declaration* d  = NULL;
+          std::string        id;
+          bool               ok = lex->get_identifier(id);
+          field_declaration* d  = NULL;
 
           if(ok)
             {
               quantity s(id, *a, lex->get_line(), lex->get_path());
 
               d = new field_declaration(s, lex->get_line(), lex->get_path());
+              if(this->root->add_field(d) == false)
+                {
+                  delete d;
+                }
             }
           else
             {
@@ -55,22 +59,24 @@ namespace y
             }
 
           delete a; // otherwise, attributes block would never be deallocated
-			 
-			    return(d);
         }
 
-      declaration* y_driver::make_parameter(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
+      void y_driver::add_parameter(lexeme::lexeme<enum keyword_type, enum character_type>* lex, attributes* a)
         {
           // extract identifier name from lexeme
-          std::string  id;
-          bool         ok = lex->get_identifier(id);
-			    declaration* d  = NULL;
+          std::string            id;
+          bool                   ok = lex->get_identifier(id);
+          parameter_declaration* d  = NULL;
 
           if(ok)
             {
               quantity s(id, *a, lex->get_line(), lex->get_path());
 
               d = new parameter_declaration(s, lex->get_line(), lex->get_path());
+              if(this->root->add_parameter(d) == false)
+                {
+                  delete d;
+                }
             }
           else
             {
@@ -78,8 +84,6 @@ namespace y
             }
 
           delete a; // otherwise, attributes block would never be deallocated
-			 
-			    return(d);
         }
 
       void y_driver::add_latex_attribute(attributes *a, lexeme::lexeme<keyword_type, character_type> *lex)
