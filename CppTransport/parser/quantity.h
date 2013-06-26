@@ -43,12 +43,12 @@ class quantity
 
         void                                print(std::ostream& stream);
 
-                                            std::string get_name();
+        const std::string                   get_name();
+        const std::string                   get_latex_name();
 
         const GiNaC::symbol*                get_ginac_symbol();
 
         unsigned int                        get_line();
-
         const std::deque<struct inclusion>& get_path();
 
     protected:

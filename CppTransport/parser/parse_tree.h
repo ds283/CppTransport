@@ -67,6 +67,9 @@ class script
 
       bool                               lookup_symbol     (std::string id, quantity*& s);
 
+      unsigned int                       get_number_fields ();
+      unsigned int                       get_number_params ();
+
       std::vector<std::string>           get_field_list    ();
       std::vector<std::string>           get_latex_list    ();
       std::vector<std::string>           get_param_list    ();

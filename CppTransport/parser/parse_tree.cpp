@@ -194,18 +194,30 @@ void script::print(std::ostream& stream)
     stream << "  Author = '" << this->author << "'\n";
     stream << "  Tag    = '" << this->tag << "'\n";
     stream << "  Class  = '" << this->cls << "'\n";
+    stream << "\n";
 
-    stream << "\nDeclarations:\n";
-    stream <<   "=============\n";
-    for(std::deque<declaration*>::iterator ptr = this->decls.begin();
-        ptr != this->decls.end(); ptr++)
+    stream << "Fields:\n";
+    stream << "=======\n";
+    for(std::deque<field_declaration*>::iterator ptr = this->fields.begin();
+        ptr != this->fields.end(); ptr++)
       {
         (*ptr)->print(stream);
       }
+    stream << "\n";
 
-    stream << "\nSymbol table:\n";
-    stream <<   "=============\n";
+    stream << "Parameters:\n";
+    stream << "===========\n";
+    for(std::deque<parameter_declaration*>::iterator ptr = this->parameters.begin();
+        ptr != this->parameters.end(); ptr++)
+      {
+        (*ptr)->print(stream);
+      }
+    stream << "\n";
+
+    stream << "Symbol table:\n";
+    stream << "=============\n";
     this->table->print(stream);
+    stream << "\n";
 
     if(this->potential_set)
       {
@@ -216,6 +228,7 @@ void script::print(std::ostream& stream)
       {
         stream << "Potential unset\n";
       }
+    stream << "\n";
   }
 
 
@@ -274,6 +287,70 @@ bool script::add_parameter(parameter_declaration* d)
 bool script::lookup_symbol(std::string id, quantity *& s)
   {
     return(this->table->find(id, s));
+  }
+
+
+unsigned int script::get_number_fields()
+  {
+    return(this->fields.size());
+  }
+
+
+unsigned int script::get_number_params()
+  {
+    return(this->parameters.size());
+  }
+
+
+std::vector<std::string> script::get_field_list()
+  {
+    std::vector<std::string> rval;
+
+    for(int i = 0; i < this->fields.size(); i++)
+      {
+        rval.push_back(this->fields[i]->get_quantity()->get_name());
+      }
+
+    return(rval);
+  }
+
+
+std::vector<std::string> script::get_latex_list()
+  {
+    std::vector<std::string> rval;
+
+    for(int i = 0; i < this->fields.size(); i++)
+      {
+        rval.push_back(this->fields[i]->get_quantity()->get_latex_name());
+      }
+
+    return(rval);
+  }
+
+
+std::vector<std::string> script::get_param_list()
+  {
+    std::vector<std::string> rval;
+
+    for(int i = 0; i < this->parameters.size(); i++)
+      {
+        rval.push_back(this->parameters[i]->get_quantity()->get_name());
+      }
+
+    return(rval);
+  }
+
+
+std::vector<std::string> script::get_platx_list()
+  {
+    std::vector<std::string> rval;
+
+    for(int i = 0; i < this->parameters.size(); i++)
+      {
+        rval.push_back(this->parameters[i]->get_quantity()->get_latex_name());
+      }
+
+    return(rval);
   }
 
 

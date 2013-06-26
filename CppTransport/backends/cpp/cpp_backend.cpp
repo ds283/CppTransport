@@ -10,55 +10,90 @@
 #include <time.h>
 
 #include "cpp_backend.h"
+#include "to_printable.h"
 
 #define MACRO_PREFIX "$$__"
 #define MACRO_PREFIX_LENGTH (4)
 
+#define UNROLL_PREFIX "!!__"
+#define UNROLL_PREFIX_LENGTH (4)
+
+struct replacement_data
+  {
+    script*     source;
+    std::string hname;
+    std::string source_file;
+  };
+
+
 static const std::string macros[] =
   {
     "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
-    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER", "CPP",
-    "NUMBER_FIELDS", "FIELD_NAME_LIST", "LATEX_NAME_LIST"
+    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER",
+    "NUMBER_FIELDS", "NUMBER_PARAMS",
+    "FIELD_NAME_LIST", "LATEX_NAME_LIST",
+    "PARAM_NAME_LIST", "PLATX_NAME_LIST",
+    "SR_VELOCITY"
   };
 
 static const unsigned int macro_lengths[] =
   {
     4, 7, 5, 4, 6,
-    4, 6, 3, 5, 6, 3,
-    13, 15, 15
+    4, 6, 3, 5, 6,
+    13, 13,
+    15, 15,
+    15, 15,
+    11
   };
 
-typedef std::string (*replacement_function)(script* source, std::string hname, std::string cname, std::string source_file);
+static const unsigned int macro_iterations[] =
+  {
+    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0,
+    0, 0,
+    0, 0,
+    0, 0,
+    1
+  };
 
-static std::string replace_tool         (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_version      (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_guard        (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_date         (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_source       (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_name         (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_author       (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_tag          (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_model        (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_header       (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_cpp          (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_number_fields(script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_field_list   (script* source, std::string hname, std::string cname, std::string source_file);
-static std::string replace_latex_list   (script* source, std::string hname, std::string cname, std::string source_file);
 
+typedef std::string (*replacement_function)(struct replacement_data& data);
+
+static std::string replace_tool         (struct replacement_data& data);
+static std::string replace_version      (struct replacement_data& data);
+static std::string replace_guard        (struct replacement_data& data);
+static std::string replace_date         (struct replacement_data& data);
+static std::string replace_source       (struct replacement_data& data);
+static std::string replace_name         (struct replacement_data& data);
+static std::string replace_author       (struct replacement_data& data);
+static std::string replace_tag          (struct replacement_data& data);
+static std::string replace_model        (struct replacement_data& data);
+static std::string replace_header       (struct replacement_data& data);
+static std::string replace_number_fields(struct replacement_data& data);
+static std::string replace_number_params(struct replacement_data& data);
+static std::string replace_field_list   (struct replacement_data& data);
+static std::string replace_latex_list   (struct replacement_data& data);
+static std::string replace_param_list   (struct replacement_data& data);
+static std::string replace_platx_list   (struct replacement_data& data);
+static std::string replace_sr_velocity  (struct replacement_data& data);
 
 static replacement_function macro_replacements[] =
   {
     replace_tool, replace_version, replace_guard, replace_date, replace_source,
-    replace_name, replace_author, replace_tag, replace_model, replace_header, replace_cpp
+    replace_name, replace_author, replace_tag, replace_model, replace_header,
+    replace_number_fields, replace_number_params,
+    replace_field_list, replace_latex_list,
+    replace_param_list, replace_platx_list,
+    replace_sr_velocity
   };
 
-#define NUMBER_MACROS (14)
+#define NUMBER_MACROS (17)
 
 
 // ******************************************************************
 
 
-static bool process(std::string output, std::string input, script* source, std::string hname, std::string cname, std::string source_file);
+static bool process(std::string output, std::string input, struct replacement_data& d);
 
 
 // ******************************************************************
@@ -105,12 +140,13 @@ bool cpp_backend(struct input& data, finder* path)
 
     if(rval)
       {
-        rval = process(data.output + ".h", header_template, source, header_template, class_template, data.name);
+        struct replacement_data d;
+
+        d.source      = source;
+        d.hname       = data.output + ".h";
+        d.source_file = data.name;
+        rval = process(data.output + ".h", header_template, d);
       }
-//    if(rval)
-//      {
-//        rval = process(data.output + ".cpp", class_template, source, header_template, class_template, data.name);
-//      }
 
     return(rval);
   }
@@ -119,9 +155,11 @@ bool cpp_backend(struct input& data, finder* path)
 // ******************************************************************
 
 
-static bool process(std::string output, std::string input, script* source, std::string hname, std::string cname, std::string source_file)
+static bool process(std::string output, std::string input, struct replacement_data& d)
   {
     bool rval = true;
+
+    unsigned int N_f = d.source->get_number_fields();
 
     std::ofstream out;
     out.open(output.c_str());
@@ -144,7 +182,7 @@ static bool process(std::string output, std::string input, script* source, std::
                     size_t pos;
                     if((pos = line.find(MACRO_PREFIX + macros[i])) != std::string::npos)
                       {
-                        line.replace(pos, macro_lengths[i] + MACRO_PREFIX_LENGTH, (*(macro_replacements[i]))(source, hname, cname, source_file));
+                        line.replace(pos, macro_lengths[i] + MACRO_PREFIX_LENGTH, (*(macro_replacements[i]))(d));
                         replace = true;
                       }
                   }
@@ -179,22 +217,27 @@ static bool process(std::string output, std::string input, script* source, std::
     return(rval);
   }
 
-static std::string replace_tool(script* source, std::string hname, std::string cname, std::string source_file)
+
+// ********************************************************************************
+// REPLACEMENT RULES
+
+
+static std::string replace_tool(struct replacement_data& d)
   {
     return CPPTRANSPORT_NAME;
   }
 
-static std::string replace_version(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_version(struct replacement_data& d)
   {
     return CPPTRANSPORT_VERSION;
   }
 
-static std::string replace_guard(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_guard(struct replacement_data& d)
   {
-    return "__CPP_TRANSPORT_" + source->get_model() + "_H_";
+    return "__CPP_TRANSPORT_" + d.source->get_model() + "_H_";
   }
 
-static std::string replace_date(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_date(struct replacement_data& d)
   {
     time_t     now = time(0);
     struct tm  tstruct;
@@ -202,59 +245,140 @@ static std::string replace_date(script* source, std::string hname, std::string c
     tstruct = *localtime(&now);
     // Visit http://www.cplusplus.com/reference/clibrary/ctime/strftime/
     // for more information about date/time format
-    strftime(buf, sizeof(buf), "%Y-%m-%d.%X", &tstruct);
+    strftime(buf, sizeof(buf), "%X on %d %m %Y", &tstruct);
 
     return buf;
   }
 
-static std::string replace_source(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_source(struct replacement_data& d)
   {
-    return(source_file);
+    return(d.source_file);
   }
 
-static std::string replace_name(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_name(struct replacement_data& d)
   {
-    return(source->get_name());
+    return(d.source->get_name());
   }
 
-static std::string replace_author(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_author(struct replacement_data& d)
   {
-    return(source->get_author());
+    return(d.source->get_author());
   }
 
-static std::string replace_tag(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_tag(struct replacement_data& d)
   {
-    return(source->get_tag());
+    return(d.source->get_tag());
   }
 
-static std::string replace_model(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_model(struct replacement_data& d)
   {
-    return(source->get_model());
+    return(d.source->get_model());
   }
 
-static std::string replace_header(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_header(struct replacement_data& d)
   {
-    return(hname);
+    return(d.hname);
   }
 
-static std::string replace_cpp(script* source, std::string hname, std::string cname, std::string source_file)
-  {
-    return(cname);
-  }
-
-static std::string replace_number_fields(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_number_fields(struct replacement_data& d)
   {
     std::ostringstream out;
 
+    out << d.source->get_number_fields();
 
+    return(out.str());
   }
 
-static std::string replace_field_list(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_number_params(struct replacement_data& d)
   {
+    std::ostringstream out;
 
+    out << d.source->get_number_params();
+
+    return(out.str());
   }
 
-static std::string replace_latex_list(script* source, std::string hname, std::string cname, std::string source_file)
+static std::string replace_field_list(struct replacement_data& d)
   {
+    std::vector<std::string> list = d.source->get_field_list();
+    std::ostringstream out;
 
+    out << "{ ";
+
+    for(int i = 0; i < list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << ", ";
+          }
+        out << to_printable(list[i]);
+      }
+    out << " }";
+
+    return(out.str());
+  }
+
+static std::string replace_latex_list(struct replacement_data& d)
+  {
+    std::vector<std::string> list = d.source->get_latex_list();
+    std::ostringstream out;
+
+    out << "{ ";
+
+    for(int i = 0; i < list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << ", ";
+          }
+        out << to_printable(list[i]);
+      }
+    out << " }";
+
+    return(out.str());
+  }
+
+static std::string replace_param_list(struct replacement_data& d)
+  {
+    std::vector<std::string> list = d.source->get_param_list();
+    std::ostringstream out;
+
+    out << "{ ";
+
+    for(int i = 0; i < list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << ", ";
+          }
+        out << to_printable(list[i]);
+      }
+    out << " }";
+
+    return(out.str());
+  }
+
+static std::string replace_platx_list(struct replacement_data& d)
+  {
+    std::vector<std::string> list = d.source->get_platx_list();
+    std::ostringstream out;
+
+    out << "{ ";
+
+    for(int i = 0; i < list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << ", ";
+          }
+        out << to_printable(list[i]);
+      }
+    out << " }";
+
+    return(out.str());
+  }
+
+static std::string replace_sr_velocity(struct replacement_data& d)
+  {
+    return("");
   }

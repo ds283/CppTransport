@@ -102,9 +102,22 @@ const std::deque<struct inclusion>& quantity::get_path()
     return(this->path);
   }
 
-std::string quantity::get_name()
+const std::string quantity::get_name()
   {
     return(this->name);
+  }
+
+const std::string quantity::get_latex_name()
+  {
+    std::string latex_name;
+    bool        ok = this->attrs.get_latex(latex_name);
+
+    if(!ok)
+      {
+        latex_name = this->name;
+      }
+
+    return(latex_name);
   }
 
 const GiNaC::symbol* quantity::get_ginac_symbol()
