@@ -35,6 +35,10 @@
 #define ERROR_DECIMAL_LOOKUP       "Lookup of decimal literal value failed"
 #define ERROR_UNKNOWN_IDENTIFIER   "Undeclared identifier"
 
+#define ERROR_TOO_FEW_INDICES      "Too few indices supplied to iterative macro"
+#define ERROR_EXPECTED_OPEN_ARGL   "Expected argument list beginning with '[' for iterative macro"
+#define ERROR_EXPECTED_CLOSE_ARGL  "Expected close of argument list ']' for iterative macro"
+
 #define WARNING_HEX_CONVERSION_A   "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B   "indicates hex, but did not convert: treated as decmial"
 #define WARNING_OCTAL_CONVERSION_A "Leading '0' in "

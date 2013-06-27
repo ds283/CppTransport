@@ -11,53 +11,14 @@
 
 #include "cpp_backend.h"
 #include "to_printable.h"
+#include "macro.h"
 
 #define MACRO_PREFIX "$$__"
-#define MACRO_PREFIX_LENGTH (4)
+#define LINE_SPLIT   "$$//"
 
-#define UNROLL_PREFIX "!!__"
-#define UNROLL_PREFIX_LENGTH (4)
-
-struct replacement_data
-  {
-    script*     source;
-    std::string hname;
-    std::string source_file;
-  };
-
-
-static const std::string macros[] =
-  {
-    "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
-    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER",
-    "NUMBER_FIELDS", "NUMBER_PARAMS",
-    "FIELD_NAME_LIST", "LATEX_NAME_LIST",
-    "PARAM_NAME_LIST", "PLATX_NAME_LIST",
-    "SR_VELOCITY"
-  };
-
-static const unsigned int macro_lengths[] =
-  {
-    4, 7, 5, 4, 6,
-    4, 6, 3, 5, 6,
-    13, 13,
-    15, 15,
-    15, 15,
-    11
-  };
-
-static const unsigned int macro_iterations[] =
-  {
-    0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
-    0, 0,
-    0, 0,
-    0, 0,
-    1
-  };
-
-
-typedef std::string (*replacement_function)(struct replacement_data& data);
+#define SR_U_NAME    "__sr_u"
+#define U2_NAME      "__u2"
+#define U3_NAME      "__u3"
 
 static std::string replace_tool         (struct replacement_data& data);
 static std::string replace_version      (struct replacement_data& data);
@@ -75,25 +36,78 @@ static std::string replace_field_list   (struct replacement_data& data);
 static std::string replace_latex_list   (struct replacement_data& data);
 static std::string replace_param_list   (struct replacement_data& data);
 static std::string replace_platx_list   (struct replacement_data& data);
-static std::string replace_sr_velocity  (struct replacement_data& data);
 
-static replacement_function macro_replacements[] =
+static std::string replace_sr_velocity  (struct replacement_data& data, std::vector<struct index_assignment> args);
+static std::string replace_u2_tensor    (struct replacement_data& data, std::vector<struct index_assignment> args);
+static std::string replace_u3_tensor    (struct replacement_data& data, std::vector<struct index_assignment> args);
+
+
+static const std::string macros[] =
+  {
+    "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
+    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER",
+    "NUMBER_FIELDS", "NUMBER_PARAMS",
+    "FIELD_NAME_LIST", "LATEX_NAME_LIST",
+    "PARAM_NAME_LIST", "PLATX_NAME_LIST"
+  };
+
+
+static const replacement_function macro_replacements[] =
   {
     replace_tool, replace_version, replace_guard, replace_date, replace_source,
     replace_name, replace_author, replace_tag, replace_model, replace_header,
     replace_number_fields, replace_number_params,
     replace_field_list, replace_latex_list,
-    replace_param_list, replace_platx_list,
+    replace_param_list, replace_platx_list
+  };
+
+
+static const std::string field_iters[] =
+  {
+    "SR_VELOCITY"
+  };
+
+
+static const unsigned int field_iter_args[] =
+  {
+    1
+  };
+
+
+static const replacement_function_iter field_iter_replacements[] =
+  {
     replace_sr_velocity
   };
 
-#define NUMBER_MACROS (17)
+
+static const std::string all_iters[] =
+  {
+    "U2_TENSOR", "U3_TENSOR"
+  };
+
+
+static const unsigned int all_iter_args[] =
+  {
+    2, 3
+  };
+
+
+static const replacement_function_iter all_iter_replacements[] =
+  {
+    replace_u2_tensor, replace_u3_tensor
+  };
+
+
+#define NUMBER_MACROS     (16)
+#define NUMBER_FIELD_ITER (1)
+#define NUMBER_ALL_ITER   (2)
 
 
 // ******************************************************************
 
 
-static bool process(std::string output, std::string input, struct replacement_data& d);
+static bool process     (std::string output, std::string input, struct replacement_data& d);
+static void apply_macros(struct replacement_data& d, std::string& line);
 
 
 // ******************************************************************
@@ -111,7 +125,6 @@ bool cpp_backend(struct input& data, finder* path)
 
     std::string class_name = source->get_class();
     std::string header_template;
-    std::string class_template;
 
     if(source->get_class() == "")
       {
@@ -120,17 +133,7 @@ bool cpp_backend(struct input& data, finder* path)
       }
     else
       {
-        rval = path->fqpn(class_name + ".h", header_template);
-        if(rval)
-          {
-            if((rval = path->fqpn(class_name + ".cpp", class_template)) == false)
-              {
-                std::ostringstream msg;
-                msg << ERROR_MISSING_CPP_CLASS << " '" << class_name << ".cpp'";
-                error(msg.str());
-              }
-          }
-        else
+        if((rval = path->fqpn(class_name + ".h", header_template)) == false)
           {
             std::ostringstream msg;
             msg << ERROR_MISSING_CPP_HEADER << " '" << class_name << ".h'";
@@ -167,6 +170,11 @@ static bool process(std::string output, std::string input, struct replacement_da
     std::ifstream in;
     in.open(input.c_str());
 
+    struct macro_package ms(d.source->get_number_fields(), MACRO_PREFIX, LINE_SPLIT, d,
+      NUMBER_MACROS, macros, macro_replacements,
+      NUMBER_FIELD_ITER, field_iters, field_iter_args, field_iter_replacements,
+      NUMBER_ALL_ITER, all_iters, all_iter_args, all_iter_replacements);
+
     if(in.is_open())
       {
         while(in.eof() == false && in.fail() == false)
@@ -174,23 +182,7 @@ static bool process(std::string output, std::string input, struct replacement_da
             std::string line;
             std::getline(in, line);
 
-            while(line.find(MACRO_PREFIX) != std::string::npos)
-              {
-                bool replace = false;
-                for(int i = 0; i < NUMBER_MACROS; i++)
-                  {
-                    size_t pos;
-                    if((pos = line.find(MACRO_PREFIX + macros[i])) != std::string::npos)
-                      {
-                        line.replace(pos, macro_lengths[i] + MACRO_PREFIX_LENGTH, (*(macro_replacements[i]))(d));
-                        replace = true;
-                      }
-                  }
-                if(replace == false)          // failed to find a macro to match
-                  {
-                    break;
-                  }
-              }
+            ms.apply(line);
 
             if(out.fail() == false)
               {
@@ -378,7 +370,38 @@ static std::string replace_platx_list(struct replacement_data& d)
     return(out.str());
   }
 
-static std::string replace_sr_velocity(struct replacement_data& d)
+static std::string replace_sr_velocity(struct replacement_data& d, std::vector<struct index_assignment> args)
   {
-    return("");
+    std::string rval = SR_U_NAME;
+
+    for(int i = 0; i < args.size(); i++)
+      {
+        rval = rval + "_" + index_stringize(args[i]);
+      }
+
+    return(rval);
+  }
+
+static std::string replace_u2_tensor(struct replacement_data& d, std::vector<struct index_assignment> args)
+  {
+    std::string rval = U2_NAME;
+
+    for(int i = 0; i < args.size(); i++)
+      {
+        rval = rval + "_" + index_stringize(args[i]);
+      }
+
+    return(rval);
+  }
+
+static std::string replace_u3_tensor(struct replacement_data& d, std::vector<struct index_assignment> args)
+  {
+    std::string rval = U3_NAME;
+
+    for(int i = 0; i < args.size(); i++)
+      {
+        rval = rval + "_" + index_stringize(args[i]);
+      }
+
+    return(rval);
   }

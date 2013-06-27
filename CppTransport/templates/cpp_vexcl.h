@@ -23,7 +23,7 @@ namespace transport
             $$__MODEL(const std::vector<number>& p);
             ~$$__MODEL();
 
-            const std::vector<number>&                get_parameters();
+            const std::vector<number>& get_parameters();
 
             // Integration of the model
             // ========================
@@ -80,7 +80,8 @@ namespace transport
           if(ics.size() == this->N_fields)  // initial conditions for momenta were not supplied
             {
               // supply the missing initial conditions using a slow-roll approximation
-              rics.push_back($$__SR_VELOCITY); // !!__1
+              rics.push_back($$__SR_VELOCITY[A]); // $$__A
+              dxdt = 0 $$// + $$__U2_TENSOR[AB] SIGMA[$$__A X] SIGMA[$$__B Y]
             }
           else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {
