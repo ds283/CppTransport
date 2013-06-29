@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <time.h>
 
+#include "core.h"
 #include "cpp_backend.h"
 #include "to_printable.h"
 #include "macro.h"
@@ -42,7 +43,7 @@ static std::string replace_u2_tensor    (struct replacement_data& data, std::vec
 static std::string replace_u3_tensor    (struct replacement_data& data, std::vector<struct index_assignment> args);
 
 
-static const std::string macros[] =
+static const std::string simple_macros[] =
   {
     "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
     "NAME", "AUTHOR", "TAG", "MODEL", "HEADER",
@@ -51,8 +52,7 @@ static const std::string macros[] =
     "PARAM_NAME_LIST", "PLATX_NAME_LIST"
   };
 
-
-static const replacement_function macro_replacements[] =
+static const replacement_function_simple simple_macro_replacements[] =
   {
     replace_tool, replace_version, replace_guard, replace_date, replace_source,
     replace_name, replace_author, replace_tag, replace_model, replace_header,
@@ -61,52 +61,35 @@ static const replacement_function macro_replacements[] =
     replace_param_list, replace_platx_list
   };
 
-
-static const std::string field_iters[] =
+static const std::string index_macros[] =
   {
-    "SR_VELOCITY"
+    "SR_VELOCITY", "U2_TENSOR", "U3_TENSOR"
+  };
+
+static const unsigned int index_macro_indices[] =
+  {
+    1, 2, 3
+  };
+
+static const unsigned int index_macro_ranges[] =
+  {
+    1, 2, 2
+  };
+
+static const replacement_function_index index_macro_replacements[] =
+  {
+    replace_sr_velocity, replace_u2_tensor, replace_u3_tensor
   };
 
 
-static const unsigned int field_iter_args[] =
-  {
-    1
-  };
-
-
-static const replacement_function_iter field_iter_replacements[] =
-  {
-    replace_sr_velocity
-  };
-
-
-static const std::string all_iters[] =
-  {
-    "U2_TENSOR", "U3_TENSOR"
-  };
-
-
-static const unsigned int all_iter_args[] =
-  {
-    2, 3
-  };
-
-
-static const replacement_function_iter all_iter_replacements[] =
-  {
-    replace_u2_tensor, replace_u3_tensor
-  };
-
-
-#define NUMBER_MACROS     (16)
-#define NUMBER_FIELD_ITER (1)
-#define NUMBER_ALL_ITER   (2)
+#define NUMBER_SIMPLE_MACROS (16)
+#define NUMBER_INDEX_MACROS  (3)
 
 
 // ******************************************************************
 
 
-static bool process     (std::string output, std::string input, struct replacement_data& d);
+static bool process     (struct replacement_data& d);
 static void apply_macros(struct replacement_data& d, std::string& line);
 
 
@@ -124,7 +107,7 @@ bool cpp_backend(struct input& data, finder* path)
     script* source = data.driver->get_script();
 
     std::string class_name = source->get_class();
-    std::string header_template;
+    std::string h_template;
 
     if(source->get_class() == "")
       {
@@ -133,7 +116,7 @@ bool cpp_backend(struct input& data, finder* path)
       }
     else
       {
-        if((rval = path->fqpn(class_name + ".h", header_template)) == false)
+        if((rval = path->fqpn(class_name + ".h", h_template)) == false)
           {
             std::ostringstream msg;
             msg << ERROR_MISSING_CPP_HEADER << " '" << class_name << ".h'";
@@ -145,10 +128,13 @@ bool cpp_backend(struct input& data, finder* path)
       {
         struct replacement_data d;
 
-        d.source      = source;
-        d.hname       = data.output + ".h";
-        d.source_file = data.name;
-        rval = process(data.output + ".h", header_template, d);
+        d.source        = source;
+        d.source_file   = data.name;
+
+        d.output_file   = data.output + ".h";
+        d.template_file = h_template;
+
+        rval = process(d);
       }
 
     return(rval);
@@ -158,22 +144,34 @@ bool cpp_backend(struct input& data, finder* path)
 // ******************************************************************
 
 
-static bool process(std::string output, std::string input, struct replacement_data& d)
+static bool process(struct replacement_data& d)
   {
     bool rval = true;
 
-    unsigned int N_f = d.source->get_number_fields();
+    unsigned int current_line = 1;
+    std::deque<struct inclusion> path;
 
     std::ofstream out;
-    out.open(output.c_str());
+    out.open(d.output_file.c_str());
+    if(out.fail())
+      {
+        std::ostringstream msg;
+        msg << ERROR_BACKEND_OUTPUT << " '" << d.output_file << "'";
+        error(msg.str());
+      }
 
     std::ifstream in;
-    in.open(input.c_str());
+    in.open(d.template_file.c_str());
+
+    // set up a deque of inclusions for error reporting purposes
+    struct inclusion inc;
+    inc.line = 0;               // line number is irrelevant; we just set it to zero
+    inc.name = d.template_file;
+    path.push_back(inc);
 
     struct macro_package ms(d.source->get_number_fields(), MACRO_PREFIX, LINE_SPLIT, d,
-      NUMBER_MACROS, macros, macro_replacements,
-      NUMBER_FIELD_ITER, field_iters, field_iter_args, field_iter_replacements,
-      NUMBER_ALL_ITER, all_iters, all_iter_args, all_iter_replacements);
+      NUMBER_SIMPLE_MACROS, simple_macros, simple_macro_replacements,
+      NUMBER_INDEX_MACROS, index_macros, index_macro_indices, index_macro_ranges, index_macro_replacements);
 
     if(in.is_open())
       {
@@ -182,18 +180,20 @@ static bool process(std::string output, std::string input, struct replacement_da
             std::string line;
             std::getline(in, line);
 
-            ms.apply(line);
+            ms.apply(line, current_line, path);
 
             if(out.fail() == false)
               {
                 out << line << "\n";
               }
+
+            current_line++;
           }
       }
     else
       {
         std::ostringstream msg;
-        msg << ERROR_CPP_TEMPLATE_READ << " '" << input << "'";
+        msg << ERROR_CPP_TEMPLATE_READ << " '" << d.template_file << "'";
         error(msg.str());
         rval = false;
       }
@@ -269,7 +269,7 @@ static std::string replace_model(struct replacement_data& d)
 
 static std::string replace_header(struct replacement_data& d)
   {
-    return(d.hname);
+    return(d.output_file);
   }
 
 static std::string replace_number_fields(struct replacement_data& d)

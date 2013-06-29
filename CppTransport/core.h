@@ -8,6 +8,8 @@
 #ifndef __core_H_
 #define __core_H_
 
+#include <string>
+
 #include "msg_en.h"
 
 #define CPPTRANSPORT_NAME            "CppTransport"

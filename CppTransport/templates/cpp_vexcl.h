@@ -80,8 +80,11 @@ namespace transport
           if(ics.size() == this->N_fields)  // initial conditions for momenta were not supplied
             {
               // supply the missing initial conditions using a slow-roll approximation
-              rics.push_back($$__SR_VELOCITY[A]); // $$__A
+              rics.push_back($$__SR_VELOCITY[a]);
+
               dxdt = 0 $$// + $$__U2_TENSOR[AB] SIGMA[$$__A X] SIGMA[$$__B Y]
+
+              alpha($$__A, $$__B, $$__C) += $$// $$__U3_TENSOR[APQ] sigma($$__B, $$__P) sigma($$__C, $$__Q)
             }
           else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {

@@ -18,8 +18,9 @@
 #define ERROR_UNKNOWN_BACKEND      "Requested unknown backend"
 #define ERROR_BACKEND_FAILURE      "Failed to generate output for backend"
 
+#define ERROR_BACKEND_OUTPUT       "Error opening backend output file"
+
 #define ERROR_NO_CPP_TEMPLATE      "No C++ template specified"
-#define ERROR_MISSING_CPP_CLASS    "Could not find specified C++ class template"
 #define ERROR_MISSING_CPP_HEADER   "Could not find specified C++ header template"
 #define ERROR_CPP_TEMPLATE_READ    "Error reading from C++ template file"
 
@@ -35,9 +36,11 @@
 #define ERROR_DECIMAL_LOOKUP       "Lookup of decimal literal value failed"
 #define ERROR_UNKNOWN_IDENTIFIER   "Undeclared identifier"
 
-#define ERROR_TOO_FEW_INDICES      "Too few indices supplied to iterative macro"
+#define ERROR_EXPECTED_INDEX       "Expected index label following prefix"
+#define ERROR_TOO_FEW_INDICES      "Too few indices supplied to summation-convention object"
 #define ERROR_EXPECTED_OPEN_ARGL   "Expected argument list beginning with '[' for iterative macro"
 #define ERROR_EXPECTED_CLOSE_ARGL  "Expected close of argument list ']' for iterative macro"
+#define ERROR_DUPLICATE_INDEX      "Duplicate declaration of lvalue summation convention index"
 
 #define WARNING_HEX_CONVERSION_A   "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B   "indicates hex, but did not convert: treated as decmial"

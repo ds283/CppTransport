@@ -15,11 +15,16 @@
 #include <string>
 
 
-enum field_trait { index_field, index_momentum };
+#define INDEX_RANGE_UNKNOWN (0)
+
+enum index_trait
+  {
+    index_field, index_momentum, index_unknown
+  };
 
 struct index_assignment
   {
-    enum field_trait trait;       // index value - field or momentum?
+    enum index_trait trait;       // index value - field or momentum?
     unsigned int     species;     // index value - species
 
     char             label;       // index identifier - alphanumeric label
@@ -28,23 +33,30 @@ struct index_assignment
     unsigned int     num_fields;  // number of fields
   };
 
+struct index_abstract
+  {
+    char                    label;       // index label
+    unsigned int            range;       // how many values does this index assume? this is a multiplier for the total number of fields
+
+    bool                    assign;      // should this index be included when generating assignments?
+    struct index_assignment assignment;  // if assign = false, use this fixed assignment instead
+  };
+
 
 class assignment_package
   {
     public:
-      assignment_package(unsigned int f, const std::vector<char>& l) : num_fields(f), labels(l) {}
+      assignment_package(unsigned int f) : num_fields(f) {}
 
-      std::vector< std::vector<struct index_assignment> > fields   ();
-      std::vector< std::vector<struct index_assignment> > all      ();
+      std::vector< std::vector<struct index_assignment> > assign(const std::vector<struct index_abstract>& indices);
 
     private:
       const unsigned int      num_fields;
-      const std::vector<char> labels;
   };
 
 
-std::string  index_stringize(struct index_assignment& index);
-unsigned int index_numeric  (struct index_assignment& index);
+std::string  index_stringize(const struct index_assignment& index);
+unsigned int index_numeric  (const struct index_assignment& index);
 
 
 #endif //__index_assignment_H_

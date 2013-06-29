@@ -8,7 +8,6 @@
 
 #include <assert.h>
 #include <sstream>
-#include <math.h>
 
 #include "index_assignment.h"
 
@@ -17,26 +16,37 @@
 #define MOMENTUM_STRING "p"
 
 
-static std::vector<unsigned int>            make_assignment      (unsigned int max, unsigned int indices, unsigned int i);
-static std::vector<struct index_assignment> make_index_assignment(unsigned int max, const std::vector<unsigned int>& assignment, const std::vector<char>& labels);
-static bool                                 is_ordered           (std::vector<unsigned int>& a);
+static std::vector<unsigned int>            make_assignment(unsigned int max,
+  const std::vector<struct index_abstract>& indices, unsigned int i);
+
+static std::vector<struct index_assignment> make_index_assignment(unsigned int max,
+  const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices);
+
+static bool                                 is_ordered(std::vector<unsigned int>& a,
+  const std::vector<struct index_abstract>& indices);
 
 
 // **************************************************************************************
 
 
-std::vector< std::vector<struct index_assignment> > assignment_package::fields()
+std::vector< std::vector<struct index_assignment> > assignment_package::assign(const std::vector<struct index_abstract>& indices)
   {
     std::vector< std::vector<struct index_assignment> > rval;
 
-    for(int i = 0; i < (int)pow(this->num_fields, this->labels.size()); i++)
+    unsigned int limit = 1;
+    for(int i = 0; i < indices.size(); i++)
       {
-        std::vector<unsigned int> assignment = make_assignment(this->num_fields, this->labels.size(), i);
-        assert(assignment.size() == this->labels.size());
+        limit *= this->num_fields * indices[i].range;
+      }
 
-        if(is_ordered(assignment))
+    for(int i = 0; i < limit; i++)
+      {
+        std::vector<unsigned int> assignment = make_assignment(this->num_fields, indices, i);
+        assert(assignment.size() == indices.size());
+
+        if(is_ordered(assignment, indices))
           {
-            rval.push_back(make_index_assignment(this->num_fields, assignment, this->labels));
+            rval.push_back(make_index_assignment(this->num_fields, assignment, indices));
           }
       }
 
@@ -46,28 +56,7 @@ std::vector< std::vector<struct index_assignment> > assignment_package::fields()
   }
 
 
-std::vector< std::vector<struct index_assignment> > assignment_package::all()
-  {
-    std::vector< std::vector<struct index_assignment> > rval;
-
-    for(int i = 0; i < (int)pow(2*this->num_fields, this->labels.size()); i++)
-      {
-        std::vector<unsigned int> assignment = make_assignment(2*this->num_fields, this->labels.size(), i);
-        assert(assignment.size() == this->labels.size());
-
-        if(is_ordered(assignment))
-          {
-            rval.push_back(make_index_assignment(this->num_fields, assignment, this->labels));
-          }
-      }
-
-    assert(rval.size() > 0);
-
-    return(rval);
-  }
-
-
-std::string index_stringize(struct index_assignment& index)
+std::string index_stringize(const struct index_assignment& index)
   {
     std::ostringstream rval;
 
@@ -88,7 +77,7 @@ std::string index_stringize(struct index_assignment& index)
     return(rval.str());
   }
 
-unsigned int index_numeric(struct index_assignment& index)
+unsigned int index_numeric(const struct index_assignment& index)
   {
     unsigned int rval = 0;
 
@@ -113,14 +102,15 @@ unsigned int index_numeric(struct index_assignment& index)
 // / **************************************************************************************
 
 
-static std::vector<unsigned int> make_assignment(unsigned int max, unsigned int indices, unsigned int i)
+static std::vector<unsigned int> make_assignment(unsigned int max,
+  const std::vector<struct index_abstract>& indices, unsigned int i)
   {
     std::vector<unsigned int> rval;
 
-    for(int j = 0; j < indices; j++)
+    for(int j = 0; j < indices.size(); j++)
       {
-        unsigned int this_index = i % max;     // max is maximum value assumed by each index
-        i                       = i / max;
+        unsigned int this_index = i % (indices[j].range * max);
+        i                       = i / (indices[j].range * max);
 
         rval.push_back(this_index);
       }
@@ -128,18 +118,20 @@ static std::vector<unsigned int> make_assignment(unsigned int max, unsigned int 
     return(rval);
   }
 
-static std::vector<struct index_assignment> make_index_assignment(unsigned int max, const std::vector<unsigned int>& assignment, const std::vector<char>& labels)
+
+static std::vector<struct index_assignment> make_index_assignment(unsigned int max,
+  const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices)
   {
     std::vector<struct index_assignment> rval;
 
-    assert(assignment.size() == labels.size());
+    assert(assignment.size() == indices.size());
 
     for(int i = 0; i < assignment.size(); i++)
       {
         struct index_assignment index;
 
         index.species = assignment[i];
-        if(index.species >= max)               // this time, max is the total number of fields!
+        if(index.species >= max)
           {
             index.trait   = index_momentum;
             index.species -= max;
@@ -149,7 +141,7 @@ static std::vector<struct index_assignment> make_index_assignment(unsigned int m
             index.trait = index_field;
           }
         index.number     = i;
-        index.label      = labels[i];
+        index.label      = indices[i].label;
         index.num_fields = max;
 
         rval.push_back(index);
@@ -158,16 +150,49 @@ static std::vector<struct index_assignment> make_index_assignment(unsigned int m
     return(rval);
   }
 
-static bool is_ordered (std::vector<unsigned int>& a)
+static bool is_ordered (std::vector<unsigned int>& a,
+  const std::vector<struct index_abstract>& indices)
   {
     bool rval = true;
 
-    for(int i = 0; i < a.size()-1; i++)
+    assert(a.size() == indices.size());
+
+    for(int i = 0; i < a.size(); i++)
       {
-        if(a[i] < a[i+1])
+        if(indices[i].assign)
           {
-            rval = false;
-            break;
+            if(i < a.size()-1)
+              {
+                if(a[i] < a[i+1])
+                  {
+                    rval = false;
+                    break;
+                  }
+              }
+          }
+        else
+          {
+            unsigned int count = 0;
+
+            switch(indices[i].assignment.trait)
+              {
+                case index_field:
+                  count = indices[i].assignment.species;
+                  break;
+
+                case index_momentum:
+                  count = indices[i].assignment.species + indices[i].assignment.num_fields;
+                  break;
+
+                case index_unknown:
+                default:
+                  assert(false);
+              }
+
+            if(a[i] != count)
+              {
+                rval = false;
+              }
           }
       }
 

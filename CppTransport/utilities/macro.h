@@ -13,62 +13,65 @@
 #include <iostream>
 #include <vector>
 
+#include "core.h"
 #include "parse_tree.h"
 #include "index_assignment.h"
 
 
 struct replacement_data
   {
-    script*     source;
-    std::string hname;
-    std::string source_file;
+    script*     source;           // parse tree corresponding to input script
+    std::string source_file;      // name of input script
+
+    std::string output_file;      // output file being written
+    std::string template_file;    // template file being used to produce output
   };
 
 
-typedef std::string (*replacement_function)     (struct replacement_data& data);
-typedef std::string (*replacement_function_iter)(struct replacement_data& data, std::vector<struct index_assignment> indices);
+typedef std::string (*replacement_function_simple)(struct replacement_data& data);
+typedef std::string (*replacement_function_index) (struct replacement_data& data, std::vector<struct index_assignment> indices);
 
 
 class macro_package
   {
     public:
-      macro_package                    (unsigned int N_f, std::string pf, std::string sp, struct replacement_data& d,
-        unsigned int N1, const std::string* n1, const replacement_function* f1,
-        unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_iter* f2,
-        unsigned int N3, const std::string* n3, const unsigned int* a3, const replacement_function_iter* f3)
+      macro_package                       (unsigned int N_f, std::string pf, std::string sp, struct replacement_data& d,
+        unsigned int N1, const std::string* n1, const replacement_function_simple* f1,
+        unsigned int N2, const std::string* n2, const unsigned int* i2, const unsigned int* r2, const replacement_function_index* f2)
       : fields(N_f), prefix(pf), split(sp), data(d),
-        sz1(N1), nm1(n1), fn1(f1),
-        sz2(N2), nm2(n2), ag2(a2), fn2(f2),
-        sz3(N3), nm3(n3), ag3(a3), fn3(f3)
+        N_simple(N1), simple_names(n1), simple_replacements(f1),
+        N_index(N2), index_names(n2), index_indices(i2), index_ranges(r2), index_replacements(f2)
       {}
 
-      void apply                       (std::string& line);
+      void apply                          (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
 
     private:
 
-      void apply_simple                (std::string& line);
-      void apply_iterative_fields      (std::string& line);
-      void apply_iterative_all         (std::string& line);
+      void apply_simple                   (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
+      void apply_index                    (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
+                                           unsigned int current_line, const std::deque<struct inclusion>& path);
 
-      unsigned int                     fields;
-      struct replacement_data&         data;
+      std::vector<struct index_abstract>
+            get_lhs_indices               (std::string lhs, unsigned int current_line, const std::deque<struct inclusion>& path);
+      void
+            assign_lhs_index_types        (std::string rhs, std::vector<struct index_abstract>& lhs_indices,
+                                           unsigned int current_line, const std::deque<struct inclusion>& path);
 
-      unsigned int                     sz1;
-      const std::string*               nm1;
-      const replacement_function*      fn1;
+      unsigned int                        fields;
+      struct replacement_data&            data;
 
-      unsigned int                     sz2;
-      const std::string*               nm2;
-      const unsigned int*              ag2;
-      const replacement_function_iter* fn2;
+      const std::string                   prefix;
+      const std::string                   split;
 
-      unsigned int                     sz3;
-      const std::string*               nm3;
-      const unsigned int*              ag3;
-      const replacement_function_iter* fn3;
+      unsigned int                        N_simple;
+      const std::string*                  simple_names;
+      const replacement_function_simple*  simple_replacements;
 
-      const std::string                prefix;
-      const std::string                split;
+      unsigned int                        N_index;
+      const std::string*                  index_names;
+      const unsigned int*                 index_indices;
+      const unsigned int*                 index_ranges;
+      const replacement_function_index*   index_replacements;
   };
 
 
