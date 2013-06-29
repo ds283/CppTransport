@@ -70,7 +70,7 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
           {
             new_line += "\n";
           }
-        new_line += cur_line_prefix + "\n" + cur_line;
+        new_line += cur_line_prefix + (cur_line_prefix != "" ? "\n" : "") + cur_line;
       }
 
     line = new_line;
@@ -154,17 +154,6 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
 
                     // map indices associated with this macro
                     map_indices(temp_line, this->prefix, assgn[j]);
-
-//                    // replace indices associated with the macro
-//                    for(int k = 0; k < indices.size(); k++)
-//                      {
-//                        size_t index_pos;
-//
-//                        while((index_pos = temp_line.find(this->prefix + indices[k].label)) != std::string::npos)
-//                          {
-//                            temp_line.replace(index_pos, this->prefix.size() + 1, index_stringize((assgn[j])[k]));
-//                          }
-//                      }
 
                     // add this line
                     if(j != 0)
@@ -357,7 +346,9 @@ static void map_indices(std::string& line, std::string prefix, const std::vector
 
         while((index_pos = line.find(prefix + assignment[k].label)) != std::string::npos)
           {
-            line.replace(index_pos, prefix.size() + 1, index_stringize(assignment[k]));
+            std::ostringstream replacement;
+            replacement << index_numeric(assignment[k]);
+            line.replace(index_pos, prefix.size() + 1, replacement.str());
           }
       }
   }
