@@ -17,13 +17,11 @@ namespace transport
       static std::vector<std::string> $$__MODEL_platx_names = $$__PLATX_NAME_LIST;
 
       template <typename number>
-      class $$__MODEL : public canonical_model
+      class $$__MODEL : public canonical_model<number>
         {
           public:
-            $$__MODEL(const std::vector<number>& p);
+            $$__MODEL(const std::vector<number>& ps);
             ~$$__MODEL();
-
-            const std::vector<number>& get_parameters();
 
             // Integration of the model
             // ========================
@@ -42,18 +40,13 @@ namespace transport
 
 
       template <typename number>
-      $$__MODEL<number>::$$__MODEL(const std::vector<number>& p)
-        : canonical_model("$$__NAME", "$$__AUTHOR", "$$__TAG",
-                          $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
-                          $$__MODEL_field_names, $$__MODEL_latex_names,
-                          $$__MODEL_param_names, $$__MODEL_platx_names),
-          params(p)
+      $$__MODEL<number>::$$__MODEL(const std::vector<number>& ps)
+        : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG",
+                                  $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
+                                  $$__MODEL_field_names, $$__MODEL_latex_names,
+                                  $$__MODEL_param_names, $$__MODEL_platx_names, ps),
+          params(ps)
         {
-          if(params.size() != $$__NUMBER_PARAMS)
-            {
-              std::cerr << "Error: unexpected number of parameters supplied (expected " << $$__NUMBER_PARAMS << ")\n";
-              exit(EXIT_FAILURE);
-            }
           return;
         }
 
@@ -64,13 +57,6 @@ namespace transport
           return;
         }
 
-
-      template <typename number>
-      const std::vector<number>& $$__MODEL<number>::get_parameters()
-        {
-          return(this->params);
-        }
-      
       
       template <typename number>
       std::vector< std::vector<number> > $$__MODEL<number>::background(vex::Context ctx,
@@ -80,11 +66,6 @@ namespace transport
           if(ics.size() == this->N_fields)  // initial conditions for momenta were not supplied
             {
               // supply the missing initial conditions using a slow-roll approximation
-              rics.push_back($$__SR_VELOCITY[a]);
-
-              dxdt = 0 $$// + $$__U2_TENSOR[AB] SIGMA[$$__A X] SIGMA[$$__B Y]
-
-              alpha($$__A, $$__B, $$__C) += $$// $$__U3_TENSOR[APQ] sigma($$__B, $$__P) sigma($$__C, $$__Q)
             }
           else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {
