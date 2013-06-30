@@ -7,6 +7,8 @@
 #ifndef $$__GUARD
 #define $$__GUARD
 
+#include <math.h>
+
 #include "transport/transport.h"
 
 namespace transport
@@ -20,8 +22,11 @@ namespace transport
       class $$__MODEL : public canonical_model<number>
         {
           public:
-            $$__MODEL(const std::vector<number>& ps);
+            $$__MODEL(<number> Mp, const std::vector<number>& ps);
             ~$$__MODEL();
+
+            // Functions inherited from canonical_model
+            number                             V(std::vector<number> fields);
 
             // Integration of the model
             // ========================
@@ -36,12 +41,14 @@ namespace transport
             const std::vector<number> params;
         };
 
+
       // IMPLEMENTATION -- CLASS $$__MODEL
+      // ==============
 
 
       template <typename number>
-      $$__MODEL<number>::$$__MODEL(const std::vector<number>& ps)
-        : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG",
+      $$__MODEL<number>::$$__MODEL(<number> Mp, const std::vector<number>& ps)
+        : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
                                   $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
                                   $$__MODEL_field_names, $$__MODEL_latex_names,
                                   $$__MODEL_param_names, $$__MODEL_platx_names, ps),
@@ -57,6 +64,19 @@ namespace transport
           return;
         }
 
+
+      template <typename number>
+      number $$__MODEL<number>::V(std::vector<number> fields)
+        {
+          assert(fields.size() == $$__NUMBER_FIELDS);
+          $$__SET_PARAMETERS{number,this->parameters}
+          $$__SET_FIELDS{number,fields}
+
+          number rval = $$__V;
+
+          return(rval);
+        }
+
       
       template <typename number>
       std::vector< std::vector<number> > $$__MODEL<number>::background(vex::Context ctx,
@@ -66,6 +86,10 @@ namespace transport
           if(ics.size() == this->N_fields)  // initial conditions for momenta were not supplied
             {
               // supply the missing initial conditions using a slow-roll approximation
+              $$__SET_PARAMETERS{number,this->parameters}
+              $$__SET_FIELDS{number,ics}
+              $$__SET_SR_VELOCITY
+              rics.push_back($$__SR_VELOCITY[a]);
             }
           else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {

@@ -15,6 +15,7 @@
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/numeric/odeint/external/vexcl/vexcl_resize.hpp"
+
 namespace transport
   {
       // basic class from which all other model representations are derived
@@ -22,7 +23,7 @@ namespace transport
       class model
         {
           public:
-            model(const std::string& n, const std::string& a, const std::string& t,
+            model(const std::string& n, const std::string& a, const std::string& t, <number> Mp,
                   unsigned int N_f, unsigned int N_p,
                   const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
                   const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
@@ -45,7 +46,7 @@ namespace transport
           protected:
             const std::string               name;                 // name of model
             const std::string               author;               // authors
-            const std::string               tag;                  // tagline, perhaps used to indicate works to reference
+            const std::string               tag;                  // tagline, perhaps used to indicate citations
 
             const unsigned int              N_fields;             // number of fields in the model
             const unsigned int              N_params;             // number of parameters in the model
@@ -56,20 +57,24 @@ namespace transport
             std::vector<std::string>        param_names;          // vector of parameter names
             std::vector<std::string>        p_latex_names;        // vector of parameter LaTeX names
 
+            <number>                        M_Planck;             // Planck mass (in arbitrary user-chosen units)
             std::vector<number>             parameters;           // parameter values
         };
 
-      // a canonical model: allows an arbitrary number of fields, but flat field-space metric
-      // only has a potential
+      // a canonical model: allows an arbitrary number of fields, but flat field-space metric.
+      // Has a potential but no other structure
       template <typename number>
       class canonical_model : public model<number>
         {
           public:
-            canonical_model(const std::string& n, const std::string &a, const std::string& t,
+            canonical_model(const std::string& n, const std::string &a, const std::string& t, <number> Mp,
                             unsigned int N_f, unsigned int N_p,
                             const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
                             const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
                             const std::vector<number>& ps);
+
+            // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
+            virtual number                  V(std::vector<number> fields) = 0;
         };
 
 
@@ -77,35 +82,51 @@ namespace transport
 
 
       template <typename number>
-      model<number>::model(const std::string& n, const std::string& a, const std::string& t,
+      model<number>::model(const std::string& n, const std::string& a, const std::string& t, <number> Mp,
                            unsigned int N, unsigned int N_p,
                            const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
                            const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
                            const std::vector<number>& ps)
-        : name(n), author(a), tag(t), N_fields(N), N_params(N_p),
+        : name(n), author(a), tag(t), M_Planck(Mp),
+          N_fields(N), N_params(N_p),
           field_names(f_names), f_latex_names(fl_names),
           param_names(p_names), p_latex_names(pl_names),
           parameters(ps)
         {
-          if(field_names.size()   != f_latex_names.size() ||
-             field_names.size()   != N_fields ||
-             f_latex_names.size() != N_fields)
+          // Perform basic validation of initial data
+
+          if(field_names.size()   != N_fields)
             {
-              std::cerr << "Error: supplied number of field names (or LaTeX versions) do not match expected number of fields\n";
+              std::cerr << "Error: supplied number of field names [= " << field_names.size() << "]"
+                        << " does not match expected number of fields [= " << N_fields << "]\n";
               exit(EXIT_FAILURE);
             }
 
-          if(param_names.size()   != p_latex_names.size() ||
-             param_names.size()   != N_params ||
-             p_latex_names.size() != N_params)
+          if(f_latex_names.size() != N_fields)
             {
-              std::cerr << "Error: supplied number of parameter names (or LaTeX versions) do not match expected number of fields\n";
+              std::cerr << "Error: supplied number of LaTeX field names [= " << f_latex_names.size() << "]"
+                        << " does not match expected number of fields [= " << N_fields << "]\n";
+              exit(EXIT_FAILURE);
+            }
+
+          if(param_names.size()   != N_params)
+            {
+              std::cerr << "Error: supplied number of parameter names [= " << param_names.size() << "]"
+                        << " does not match expected number of parameters [= " << N_params << "]\n";
+              exit(EXIT_FAILURE);
+            }
+
+          if(p_latex_names.size() != N_params)
+            {
+              std::cerr << "Error: supplied number of LaTeX parameter names [= " << p_latex_names.size() << "]"
+                        << " does not match expected number of parameters [= " << N_params << "]\n";
               exit(EXIT_FAILURE);
             }
 
           if(parameters.size()    != N_params)
             {
-              std::cerr << "Error: unexpected number of parameters supplied\n";
+              std::cerr << "Error: supplied number of parameters [= " << parameters.size() << "]"
+                        << " does not match expected number [= " << N_params << "]\n";
               exit(EXIT_FAILURE);
             }
 
@@ -185,12 +206,13 @@ namespace transport
 
 
       template <typename number>
-      canonical_model<number>::canonical_model(const std::string& n, const std::string& a, const std::string& t,
+      canonical_model<number>::canonical_model(const std::string& n, const std::string& a, const std::string& t, <number> Mp,
                                                unsigned int N_f, unsigned int N_p,
                                                const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
                                                const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
                                                const std::vector<number>& ps)
-        : model<number>(n, a, t, N_f, N_p, f_names, fl_names, p_names, pl_names, ps)   // invoke constructor of parent class to initialize const members
+        : model<number>(n, a, t, Mp, N_f, N_p, f_names, fl_names, p_names, pl_names, ps)
+          // invoke constructor of parent class to initialize const members
         {
           return;
         }
@@ -199,4 +221,4 @@ namespace transport
   } // namespace transport
 
 
-#endif __CPP_TRANSPORT_TRANSPORT_H_
+#endif // __CPP_TRANSPORT_TRANSPORT_H_

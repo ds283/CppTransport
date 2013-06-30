@@ -7,14 +7,19 @@
 
 
 #include <assert.h>
+#include <ctype.h>
 
 #include "macro.h"
 
 
-static std::vector<struct index_abstract> get_index_set(std::string line, size_t pos, std::string name, unsigned int indices,
+static std::vector<std::string>           get_argument_list (std::string& line, size_t pos,
+  unsigned int current_line, const std::deque<struct inclusion>& path,
+  unsigned int num_args, std::string macro_name);
+
+static std::vector<struct index_abstract> get_index_set     (std::string line, size_t pos, std::string name, unsigned int indices,
   unsigned int range, unsigned int current_line, const std::deque<struct inclusion>& path);
 
-static void                               map_indices  (std::string& line, std::string prefx,
+static void                               map_indices       (std::string& line, std::string prefx,
   const std::vector<struct index_assignment>& assignment);
 
 // **************************************************************************************
@@ -88,8 +93,11 @@ void macro_package::apply_simple(std::string& line, unsigned int current_line, c
 
             if((pos = line.find(this->prefix + this->simple_names[i])) != std::string::npos)
               {
+                std::vector<std::string> arg_list = get_argument_list(line, pos + this->prefix.size() + this->simple_names[i].size(),
+                                                                      current_line, path, this->simple_args[i], this->simple_names[i]);
+
                 // found a simple macro; replace it with its value
-                line.replace(pos, this->prefix.size() + this->simple_names[i].size(), (*(this->simple_replacements[i]))(this->data));
+                line.replace(pos, this->prefix.size() + this->simple_names[i].size(), (*(this->simple_replacements[i]))(this->data, arg_list));
                 fail = false;
               }
           }
@@ -149,8 +157,13 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
 
                     // replace macro
                     temp_line = line;
+
+                    std::vector<std::string> arg_list = get_argument_list(temp_line,
+                      pos + this->prefix.size() + this->index_names[i].size() + 2 + this->index_indices[i],
+                      current_line, path, this->simple_args[i], this->simple_names[i]);
+
                     temp_line.replace(pos, this->prefix.size() + this->index_names[i].size() + 2 + this->index_indices[i],
-                      (*(this->index_replacements[i]))(this->data, assgn[j]));
+                      (*(this->index_replacements[i]))(this->data, arg_list, assgn[j]));
 
                     // map indices associated with this macro
                     map_indices(temp_line, this->prefix, assgn[j]);
@@ -284,6 +297,63 @@ void macro_package::assign_lhs_index_types(std::string rhs, std::vector<struct i
   }
 
 
+// **************************************************************************************
+
+
+static std::vector<std::string> get_argument_list(std::string& line, size_t pos,
+  unsigned int current_line, const std::deque<struct inclusion>& path,
+  unsigned int num_args, std::string macro_name)
+  {
+    std::vector<std::string> rval;
+    size_t                   length = 0;
+
+    if(line[pos] == '{')   // an argument list follows
+      {
+        length++;
+        std::string arg;
+
+        while(pos + length < line.size() && line[pos + length] != '}')
+          {
+            if(line[pos + length] == ',')
+              {
+                rval.push_back(arg);
+                arg = "";
+              }
+            else
+              {
+                if(!isspace(line[pos + length]))
+                  {
+                    arg += line[pos + length];
+                  }
+              }
+            length++;
+          }
+        if(pos + length >= line.size())
+          {
+            error(ERROR_EXPECTED_CLOSE_ARGL, current_line, path);
+          }
+        else
+          {
+            length++;
+          }
+
+        if(arg != "")
+          {
+            rval.push_back(arg);
+          }
+      }
+
+    if(rval.size() != num_args)
+      {
+        std::ostringstream msg;
+        msg << ERROR_WRONG_ARG_NUM << " '" << macro_name << "' (" << ERROR_WRONG_ARG_NUM_EXPECT << " " << num_args << ")";
+        error(msg.str(), current_line, path);
+      }
+
+    line.replace(pos, length, "");
+    return(rval);
+  }
+
 static std::vector<struct index_abstract> get_index_set(std::string line, size_t pos, std::string name, unsigned int indices,
   unsigned int range, unsigned int current_line, const std::deque<struct inclusion>& path)
   {
@@ -298,7 +368,7 @@ static std::vector<struct index_abstract> get_index_set(std::string line, size_t
     if(line[pos] != '[')
       {
         std::ostringstream msg;
-        msg << ERROR_EXPECTED_OPEN_ARGL << " '" << name << "'";
+        msg << ERROR_EXPECTED_OPEN_IDXL << " '" << name << "'";
         error(msg.str(), current_line, path);
       }
     else
@@ -330,7 +400,7 @@ static std::vector<struct index_abstract> get_index_set(std::string line, size_t
     if(line[pos] != ']')
       {
         std::ostringstream msg;
-        msg << ERROR_EXPECTED_CLOSE_ARGL << " '" << name << "'";
+        msg << ERROR_EXPECTED_CLOSE_IDXL << " '" << name << "'";
         error(msg.str(), current_line, path);
       }
 

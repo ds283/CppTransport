@@ -24,6 +24,8 @@
 #define ERROR_MISSING_CPP_HEADER   "Could not find specified C++ header template"
 #define ERROR_CPP_TEMPLATE_READ    "Error reading from C++ template file"
 
+#define ERROR_MISSING_POTENTIAL    "No potential specified"
+
 #define ERROR_UNRECOGNIZED_NUMBER  "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL  "Unrecognized character"
 #define ERROR_EXPECTED_CLOSE_QUOTE "Unterminated string literal"
@@ -38,14 +40,17 @@
 
 #define ERROR_EXPECTED_INDEX       "Expected index label following prefix"
 #define ERROR_TOO_FEW_INDICES      "Too few indices supplied to summation-convention object"
-#define ERROR_EXPECTED_OPEN_ARGL   "Expected argument list beginning with '[' for iterative macro"
-#define ERROR_EXPECTED_CLOSE_ARGL  "Expected close of argument list ']' for iterative macro"
+#define ERROR_EXPECTED_OPEN_IDXL   "Expected index list beginning with '[' for indexed macro"
+#define ERROR_EXPECTED_CLOSE_IDXL  "Expected close of index list ']' for indexed macro"
 #define ERROR_DUPLICATE_INDEX      "Duplicate declaration of lvalue summation convention index"
+#define ERROR_EXPECTED_CLOSE_ARGL  "Expected close of argument list '}'"
+#define ERROR_WRONG_ARG_NUM        "Unexpected number of arguments to macro"
+#define ERROR_WRONG_ARG_NUM_EXPECT "expected"
 
 #define WARNING_HEX_CONVERSION_A   "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B   "indicates hex, but did not convert: treated as decmial"
 #define WARNING_OCTAL_CONVERSION_A "Leading '0' in "
-#define WARNING_OCTAL_CONVESRION_B "indicates octal, but did not convert: treated as decimal"
+#define WARNING_OCTAL_CONVERSION_B "indicates octal, but did not convert: treated as decimal"
 
 #define WARNING_LEXEME_KEYWORD     "Internal error: attempt to get keyword type for non-keyword lexeme"
 #define WARNING_LEXEME_SYMBOL      "Internal error: attempt to get symbol type for non-symbol lexeme"

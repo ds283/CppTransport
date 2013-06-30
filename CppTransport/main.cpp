@@ -168,7 +168,7 @@ int main(int argc, const char *argv[])
                 warn(WARNING_PARSING_FAILED + (std::string)(" '") + in.name + (std::string)("'"));
               }
 
-            in.driver->get_script()->print(std::cerr);
+            // in.driver->get_script()->print(std::cerr);
             in.output = mangle_output_name(in.name);
 
             inputs.push_back(in);

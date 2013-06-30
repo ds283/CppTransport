@@ -28,19 +28,21 @@ struct replacement_data
   };
 
 
-typedef std::string (*replacement_function_simple)(struct replacement_data& data);
-typedef std::string (*replacement_function_index) (struct replacement_data& data, std::vector<struct index_assignment> indices);
+typedef std::string (*replacement_function_simple)(struct replacement_data& data, const std::vector<std::string>& args);
+typedef std::string (*replacement_function_index) (struct replacement_data& data, const std::vector<std::string>& args,
+                                                   std::vector<struct index_assignment> indices);
 
 
 class macro_package
   {
     public:
       macro_package                       (unsigned int N_f, std::string pf, std::string sp, struct replacement_data& d,
-        unsigned int N1, const std::string* n1, const replacement_function_simple* f1,
-        unsigned int N2, const std::string* n2, const unsigned int* i2, const unsigned int* r2, const replacement_function_index* f2)
+        unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
+        unsigned int N2, const std::string* n2, const unsigned int* i2, const unsigned int* r2,
+        const unsigned int* a2, const replacement_function_index* f2)
       : fields(N_f), prefix(pf), split(sp), data(d),
-        N_simple(N1), simple_names(n1), simple_replacements(f1),
-        N_index(N2), index_names(n2), index_indices(i2), index_ranges(r2), index_replacements(f2)
+        N_simple(N1), simple_names(n1), simple_args(a1), simple_replacements(f1),
+        N_index(N2), index_names(n2), index_indices(i2), index_ranges(r2), index_args(a2), index_replacements(f2)
       {}
 
       void apply                          (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
@@ -65,12 +67,14 @@ class macro_package
 
       unsigned int                        N_simple;
       const std::string*                  simple_names;
+      const unsigned int*                 simple_args;
       const replacement_function_simple*  simple_replacements;
 
       unsigned int                        N_index;
       const std::string*                  index_names;
       const unsigned int*                 index_indices;
       const unsigned int*                 index_ranges;
+      const unsigned int*                 index_args;
       const replacement_function_index*   index_replacements;
   };
 
