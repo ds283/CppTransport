@@ -28,6 +28,8 @@ const std::string keyword_table[] =
   {
       "name", "author", "tag", "field", "potential",
       "parameter", "latex", "class", "model",
+      "abserr", "relerr", "stepper", "stepsize",
+      "background", "perturbations",
       "abs", "step", "sqrt", "sin", "cos", "tan",
       "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
       "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G", "S", "H",
@@ -38,6 +40,8 @@ const enum keyword_type keyword_map[] =
   {
       k_name, k_author, k_tag, k_field, k_potential,
       k_parameter, k_latex, k_class, k_model,
+      k_abserr, k_relerr, k_stepper, k_stepsize,
+      k_background, k_perturbations,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
@@ -52,7 +56,7 @@ const std::string character_table[] =
   {
       "{", "}", "(", ")",
       "[", "]", ",", ".", ":", ";",
-      "+", "-", "*", "/", "\\", "~",
+      "=", "+", "-", "*", "/", "\\", "~",
       "&", "^", "@", "...", "->"
   };
 
@@ -60,7 +64,7 @@ const enum character_type character_map[] =
    {
        open_brace, close_brace, open_bracket, close_bracket,
        open_square, close_square, comma, period, colon, semicolon,
-       plus, minus, star, backslash, foreslash, tilde,
+       equals, plus, minus, star, backslash, foreslash, tilde,
        ampersand, circumflex, ampersat, ellipsis, rightarrow
    };
 

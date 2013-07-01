@@ -20,17 +20,12 @@ class u_tensor_factory
     public:
       u_tensor_factory(script* r);
 
-      //  CALCULATE DERIVED QUANTITIES
+      virtual std::vector<GiNaC::ex>                               compute_sr_u() = 0;
+      virtual std::vector<GiNaC::ex>                               compute_u1  () = 0;
+      virtual std::vector< std::vector<GiNaC::ex> >                compute_u2  () = 0;
+      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3  () = 0;
 
-      std::vector<GiNaC::ex>                                compute_sr_u();
-
-      std::vector<GiNaC::ex>                                compute_u1  ();
-
-      std::vector< std::vector<GiNaC::ex> >                 compute_u2  ();
-
-      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3  ();
-
-    private:
+    protected:
       script*                          root;
 
       const unsigned int               num_fields;
@@ -39,9 +34,26 @@ class u_tensor_factory
 
       const std::vector<GiNaC::symbol> field_list;
       const std::vector<GiNaC::symbol> deriv_list;
-
-    GiNaC::ex epsilon();
   };
+
+class canonical_u_tensor_factory : public u_tensor_factory
+  {
+    public:
+      canonical_u_tensor_factory(script* r) : u_tensor_factory(r) {}
+
+      //  CALCULATE DERIVED QUANTITIES
+      std::vector<GiNaC::ex>                                compute_sr_u();
+      std::vector<GiNaC::ex>                                compute_u1  ();
+      std::vector< std::vector<GiNaC::ex> >                 compute_u2  ();
+      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3  ();
+
+    private:
+      GiNaC::ex epsilon();
+  };
+
+
+// factory function to manufacture a u_tensor_factory instance
+u_tensor_factory* make_u_tensor_factory(script* script);
 
 
 #endif //__u_tensor_factory_H_

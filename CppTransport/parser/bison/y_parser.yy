@@ -46,6 +46,7 @@
 %union {
     lexeme::lexeme<enum keyword_type, enum character_type>* lex;
     attributes*                                             a;
+    stepper*                                                s;
     GiNaC::ex*                                              x;
 }
 
@@ -57,6 +58,12 @@
 %token          parameter
 %token          latex
 %token          k_class
+%token          abserr
+%token          relerr
+%token          stepper
+%token          stepsize
+%token          background
+%token          perturbations
 %token          model
 %token          abs
 %token          step
@@ -99,6 +106,7 @@
 %token          period
 %token          colon
 %token          semicolon
+%token          equals
 %token          plus
 %token          minus
 %token          star
@@ -117,6 +125,8 @@
 
 %type  <a>      attribute_block
 %type  <a>      attributes
+%type  <s>      stepper_block
+%type  <s>      stepper_attributes
 %type  <x>      expression
 %type  <x>      term
 %type  <x>      factor
@@ -128,44 +138,55 @@
 program: script
         ;
 
-script: script potential expression semicolon                       { driver->get_script()->set_potential($3); }
-        | script name string semicolon                              { driver->set_name($3); }
-        | script author string semicolon                            { driver->set_author($3); }
-        | script tag string semicolon                               { driver->set_tag($3); }
-        | script k_class string semicolon                           { driver->set_class($3); }
-        | script model string semicolon                             { driver->set_model($3); }
-        | script field attribute_block identifier semicolon         { driver->add_field($4, $3); }
-        | script parameter attribute_block identifier semicolon     { driver->add_parameter($4, $3); }
+script: script potential expression semicolon                                           { driver->get_script()->set_potential($3); }
+        | script name string semicolon                                                  { driver->set_name($3); }
+        | script author string semicolon                                                { driver->set_author($3); }
+        | script tag string semicolon                                                   { driver->set_tag($3); }
+        | script k_class string semicolon                                               { driver->set_class($3); }
+        | script model string semicolon                                                 { driver->set_model($3); }
+        | script field attribute_block identifier semicolon                             { driver->add_field($4, $3); }
+        | script parameter attribute_block identifier semicolon                         { driver->add_parameter($4, $3); }
+        | script background stepper_block semicolon                                     { driver->set_background_stepper($3); }
+        | script perturbations stepper_block semicolon                                  { driver->set_perturbations_stepper($3); }
         |
         ;
 
-attribute_block: open_brace attributes close_brace                  { $$ = $2; }
-        |                                                           { $$ = new attributes; }
+attribute_block: open_brace attributes close_brace                                      { $$ = $2; }
+        |                                                                               { $$ = new attributes; }
         ;
 
-attributes: attributes latex string semicolon                       { driver->add_latex_attribute($1, $3); $$ = $1; }
-        |                                                           { $$ = new attributes; }
+attributes: attributes latex string semicolon                                           { driver->add_latex_attribute($1, $3); $$ = $1; }
+        |                                                                               { $$ = new attributes; }
         ;
 
-expression: term                                                    { $$ = $1; }
-        | expression plus term                                      { $$ = driver->add($1, $3); }
-        | expression minus term                                     { $$ = driver->sub($1, $3); }
+stepper_block: open_brace stepper_attributes close_brace                                { $$ = $2; }
+
+stepper_attributes: stepper_attributes abserr equals decimal semicolon                  { driver->set_abserr($1, $4); $$ = $1; }
+        | stepper_attributes relerr equals decimal semicolon                            { driver->set_relerr($1, $4); $$ = $1; }
+        | stepper_attributes stepper equals string semicolon                            { driver->set_stepper($1, $4); $$ = $1; }
+        | stepper_attributes stepsize equals decimal semicolon                          { driver->set_stepsize($1, $4); $$ = $1; }
+        |                                                                               { $$ = new stepper; }
+        ;
+
+expression: term                                                                        { $$ = $1; }
+        | expression plus term                                                          { $$ = driver->add($1, $3); }
+        | expression minus term                                                         { $$ = driver->sub($1, $3); }
         ;
         
-term: factor                                                        { $$ = $1; }
-        | term star factor                                          { $$ = driver->mul($1, $3); }
-        | term backslash factor                                     { $$ = driver->div($1, $3); }
+term: factor                                                                            { $$ = $1; }
+        | term star factor                                                              { $$ = driver->mul($1, $3); }
+        | term backslash factor                                                         { $$ = driver->div($1, $3); }
         ;
 
-factor: leaf                                                        { $$ = $1; }
-        | leaf circumflex leaf                                      { $$ = driver->pow($1, $3); }
+factor: leaf                                                                            { $$ = $1; }
+        | leaf circumflex leaf                                                          { $$ = driver->pow($1, $3); }
         ;
 
-leaf: integer                                                       { $$ = driver->get_integer($1); }
-        | decimal                                                   { $$ = driver->get_decimal($1); }
-        | identifier                                                { $$ = driver->get_identifier($1); }
-        | built_in_function                                         { $$ = $1; }
-        | open_bracket expression close_bracket                     { $$ = $2; }
+leaf: integer                                                                           { $$ = driver->get_integer($1); }
+        | decimal                                                                       { $$ = driver->get_decimal($1); }
+        | identifier                                                                    { $$ = driver->get_identifier($1); }
+        | built_in_function                                                             { $$ = $1; }
+        | open_bracket expression close_bracket                                         { $$ = $2; }
         ;
 
 built_in_function: abs open_bracket expression close_bracket                            { $$ = driver->abs($3); }

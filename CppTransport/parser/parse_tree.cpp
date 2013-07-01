@@ -109,6 +109,14 @@ script::script()
     quantity Mp(MPLANCK_TEXT_NAME, attrs, M_Planck);
 
     this->table->insert(&Mp);
+
+    // set up default values for the steppers
+    this->background_stepper.abserr    = DEFAULT_ABS_ERR;
+    this->background_stepper.relerr    = DEFAULT_REL_ERR;
+    this->background_stepper.name      = DEFAULT_STEPPER;
+    this->perturbations_stepper.abserr = DEFAULT_ABS_ERR;
+    this->perturbations_stepper.relerr = DEFAULT_REL_ERR;
+    this->perturbations_stepper.name   = DEFAULT_STEPPER;
   }
 
 script::~script()
@@ -299,6 +307,30 @@ bool script::add_parameter(parameter_declaration* d)
       }
 
     return(!exists);  // caller must delete d explicitly if returns false
+  }
+
+
+void script::set_background_stepper(stepper*s)
+  {
+    this->background_stepper = *s;
+  }
+
+
+void script::set_perturbations_stepper(stepper *s)
+  {
+    this->perturbations_stepper = *s;
+  }
+
+
+const struct stepper& script::get_background_stepper()
+  {
+    return(this->background_stepper);
+  }
+
+
+const struct stepper& script::get_perturbations_stepper()
+  {
+    return(this->perturbations_stepper);
   }
 
 

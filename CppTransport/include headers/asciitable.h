@@ -29,18 +29,22 @@ namespace transport
           void write(std::string x_name, const std::vector<std::string>& columns,
             const std::vector<number>& xs, const std::vector< std::vector<number> >& ys);
 
+          void set_precision(unsigned int p);
+
           protected:
             std::ostream& stream;
             unsigned int  precision;
         };
 
+
       // IMPLEMENTATION -- CLASS asciitable
+
 
       template <typename number>
       void asciitable<number>::write(std::string x_name,
         const std::vector<std::string>& columns, const std::vector<number>& xs, const std::vector< std::vector<number> >& ys)
         {
-          size_t max = this->precision;
+          size_t max = this->precision+1;
 
           assert(xs.size() == ys.size());
 
@@ -74,6 +78,14 @@ namespace transport
               this->stream << std::endl;
             }
         }
+
+
+      template <typename number>
+      void asciitable<number>::set_precision(unsigned int p)
+        {
+          this->precision = p;
+        }
+
 
   }   // namespace transport
 

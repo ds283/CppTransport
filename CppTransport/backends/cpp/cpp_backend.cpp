@@ -13,7 +13,6 @@
 #include "cpp_backend.h"
 #include "to_printable.h"
 #include "macro.h"
-#include "u_tensor_factory.h"
 
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
@@ -50,9 +49,14 @@ static std::string replace_set_sr_u     (struct replacement_data& data, const st
 static std::string replace_set_u1       (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_set_u2       (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_set_u3       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_init_step    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_abs_err    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_rel_err    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_step       (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_stepper    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_abs_err    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_rel_err    (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_step       (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_stepper    (struct replacement_data& data, const std::vector<std::string>& args);
 
 
 static std::string replace_sr_velocity  (struct replacement_data& data, const std::vector<std::string>& args, std::vector<struct index_assignment> indices);
@@ -72,7 +76,8 @@ static const std::string simple_macros[] =
     "SET_PARAMETERS", "SET_FIELDS", "SET_ALL", "V",
     "SET_SR_VELOCITY",
     "SET_U1_TENSOR", "SET_U2_TENSOR", "SET_U3_TENSOR",
-    "ABS_ERR", "REL_ERR", "INITIAL_STEP_SIZE"
+    "BACKG_ABS_ERR", "BACKG_REL_ERR", "BACKG_STEP_SIZE", "BACKG_STEPPER",
+    "PERT_ABS_ERR", "PERT_REL_ERR", "PERT_STEP_SIZE", "PERT_STEPPER"
   };
 
 static const replacement_function_simple simple_macro_replacements[] =
@@ -86,7 +91,8 @@ static const replacement_function_simple simple_macro_replacements[] =
     replace_parameters, replace_fields, replace_all, replace_V,
     replace_set_sr_u,
     replace_set_u1, replace_set_u2, replace_set_u3,
-    replace_abs_err, replace_rel_err, replace_init_step
+    replace_b_abs_err, replace_b_rel_err, replace_b_step, replace_b_stepper,
+    replace_p_abs_err, replace_p_rel_err, replace_p_step, replace_p_stepper
   };
 
 static const unsigned int simple_macro_args[] =
@@ -100,7 +106,8 @@ static const unsigned int simple_macro_args[] =
     2, 2, 2, 0,
     1,
     1, 1, 1,
-    0, 0, 0
+    0, 0, 0, 0,
+    0, 0, 0, 0
   };
 
 static const std::string index_macros[] =
@@ -129,7 +136,7 @@ static const unsigned int index_macro_args[] =
   };
 
 
-#define NUMBER_SIMPLE_MACROS (28)
+#define NUMBER_SIMPLE_MACROS (33)
 #define NUMBER_INDEX_MACROS  (4)
 
 
@@ -176,13 +183,17 @@ bool cpp_backend(struct input& data, finder* path)
       {
         struct replacement_data d;
 
+        // set up replacement data, including manufacture of a u_tensor_factory
         d.source        = source;
         d.source_file   = data.name;
+        d.u_factory     = make_u_tensor_factory(source);
 
         d.output_file   = data.output + ".h";
         d.template_file = h_template;
 
         rval = process(d);
+
+        delete d.u_factory;
       }
 
     return(rval);
@@ -615,8 +626,7 @@ static std::string replace_set_sr_u(struct replacement_data& data, const std::ve
     assignment_package assigner(data.source->get_number_fields());
     std::vector< std::vector<struct index_assignment> > field_assignment = assigner.assign(field_indices);
 
-    u_tensor_factory u(data.source);
-    std::vector<GiNaC::ex> sr_velocity = u.compute_sr_u();
+    std::vector<GiNaC::ex> sr_velocity = data.u_factory->compute_sr_u();
 
     // now, loop over this assignment, generating the appropriate SR expressions as we go
     for(int i = 0; i < field_assignment.size(); i++)
@@ -655,8 +665,7 @@ static std::string replace_set_u1(struct replacement_data& data, const std::vect
     assignment_package assigner(data.source->get_number_fields());
     std::vector< std::vector<struct index_assignment> > index_assignment = assigner.assign(indices);
 
-    u_tensor_factory u(data.source);
-    std::vector<GiNaC::ex> u1 = u.compute_u1();
+    std::vector<GiNaC::ex> u1 = data.u_factory->compute_u1();
 
     // now, loop over this assignment
     for(int i = 0; i < index_assignment.size(); i++)
@@ -692,27 +701,79 @@ static std::string replace_set_u3(struct replacement_data& data, const std::vect
     return(rval);
   }
 
-static std::string replace_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
   {
-    std::string rval = "1E-6";
+    const struct stepper s = data.source->get_background_stepper();
 
-    return(rval);
+    std::ostringstream out;
+    out << s.abserr;
+
+    return(out.str());
   }
 
-static std::string replace_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
   {
-    std::string rval = "1E-6";
+    const struct stepper s = data.source->get_background_stepper();
 
-    return(rval);
+    std::ostringstream out;
+    out << s.relerr;
+
+    return(out.str());
   }
 
-static std::string replace_init_step(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_step(struct replacement_data& data, const std::vector<std::string>& args)
   {
-    std::string rval = "1E-2";
+    const struct stepper s = data.source->get_background_stepper();
 
-    return(rval);
+    std::ostringstream out;
+    out << s.stepsize;
+
+    return(out.str());
   }
 
+static std::string replace_b_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_background_stepper();
+
+    return(s.name);
+  }
+
+static std::string replace_p_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_perturbations_stepper();
+
+    std::ostringstream out;
+    out << s.abserr;
+
+    return(out.str());
+  }
+
+static std::string replace_p_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_perturbations_stepper();
+
+    std::ostringstream out;
+    out << s.relerr;
+
+    return(out.str());
+  }
+
+static std::string replace_p_step(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_perturbations_stepper();
+
+    std::ostringstream out;
+    out << s.stepsize;
+
+    return(out.str());
+  }
+
+static std::string replace_p_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_perturbations_stepper();
+
+    return(s.name);
+  }
 // ******************************************************************
 
 

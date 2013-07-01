@@ -64,10 +64,11 @@ namespace transport
       class $$__MODEL_background_observer
         {
           public:
-            $$__MODEL_background_observer(std::vector< std::vector<number> >& h) : history(h) {}
+            $$__MODEL_background_observer(std::vector<number>& s, std::vector< std::vector<number> >& h) : slices(s), history(h) {}
             void operator()(const std::vector<number>& x, double t);
 
           private:
+            std::vector<number>&                slices;
             std::vector< std::vector<number> >& history;
         };
 
@@ -118,19 +119,19 @@ namespace transport
           fix_initial_conditions(ics, x);
           write_initial_conditions(x, std::cout);
 
+          std::vector<number>                slices;
           std::vector< std::vector<number> > history;
 
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
           // that doesn't seem to work (maybe related to the way odeint uses templates?)
-          $$__MODEL_background_observer<number> obs(history);
+          $$__MODEL_background_observer<number> obs(slices, history);
           $$__MODEL_background_functor<number>  system(this->parameters, this->M_Planck);
 
-          integrate_times( make_dense_output< runge_kutta_dopri5< std::vector<number> > >($$__ABS_ERR, $$__REL_ERR),
-            system, x, times.begin(), times.end(), $$__INITIAL_STEP_SIZE, obs);
+          integrate_times( make_dense_output< $$__BACKG_STEPPER< std::vector<number> > >($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR),
+            system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
-          transport::background<number> backg(2*$$__NUMBER_FIELDS, $$__MODEL_state_names,
-                                              times, history);
+          transport::background<number> backg(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, slices, history);
 
           return(backg);
         }
@@ -190,6 +191,7 @@ namespace transport
       template <typename number>
       void $$__MODEL_background_observer<number>::operator()(const std::vector<number>& x, double t)
         {
+          this->slices.push_back(t);
           this->history.push_back(x);
         }
 

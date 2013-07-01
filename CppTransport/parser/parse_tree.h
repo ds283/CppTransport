@@ -52,6 +52,20 @@ class parameter_declaration: public declaration
       void print(std::ostream& stream);
   };
 
+#define DEFAULT_ABS_ERR   (1E-6)
+#define DEFAULT_REL_ERR   (1E-6)
+#define DEFAULT_STEP_SIZE (1E-2)
+#define DEFAULT_STEPPER   "runge_kutta_dopri5"
+
+struct stepper
+  {
+    double      abserr;
+    double      relerr;
+    double      stepsize;
+    std::string name;
+  };
+
+
 #define SYMBOL_TABLE_SIZE (1024)
 
 class script
@@ -60,45 +74,51 @@ class script
       script();
       ~script();
 
-      void                               print             (std::ostream& stream);
+      void                               print                    (std::ostream& stream);
 
-      bool                               add_field         (field_declaration* d);
-      bool                               add_parameter     (parameter_declaration* d);
+      bool                               add_field                (field_declaration* d);
+      bool                               add_parameter            (parameter_declaration* d);
 
-      bool                               lookup_symbol     (std::string id, quantity*& s);
+      void                               set_background_stepper   (stepper* s);
+      void                               set_perturbations_stepper(stepper* s);
 
-      unsigned int                       get_number_fields ();
-      unsigned int                       get_number_params ();
+      const struct stepper&              get_background_stepper   ();
+      const struct stepper&              get_perturbations_stepper();
 
-      std::vector<std::string>           get_field_list    ();
-      std::vector<std::string>           get_latex_list    ();
-      std::vector<std::string>           get_param_list    ();
-      std::vector<std::string>           get_platx_list    ();
+      bool                               lookup_symbol            (std::string id, quantity*& s);
 
-      std::vector<GiNaC::symbol>         get_field_symbols ();
-      std::vector<GiNaC::symbol>         get_deriv_symbols ();
-      std::vector<GiNaC::symbol>         get_param_symbols ();
+      unsigned int                       get_number_fields        ();
+      unsigned int                       get_number_params        ();
 
-      const GiNaC::symbol&               get_Mp_symbol     ();
+      std::vector<std::string>           get_field_list           ();
+      std::vector<std::string>           get_latex_list           ();
+      std::vector<std::string>           get_param_list           ();
+      std::vector<std::string>           get_platx_list           ();
 
-      void                               set_name          (const std::string n);
-      const std::string                  get_name          ();
+      std::vector<GiNaC::symbol>         get_field_symbols        ();
+      std::vector<GiNaC::symbol>         get_deriv_symbols        ();
+      std::vector<GiNaC::symbol>         get_param_symbols        ();
 
-      void                               set_author        (const std::string a);
-      const std::string                  get_author        ();
+      const GiNaC::symbol&               get_Mp_symbol            ();
 
-      void                               set_tag           (const std::string t);
-      const std::string                  get_tag           ();
+      void                               set_name                 (const std::string n);
+      const std::string                  get_name                 ();
 
-      void                               set_class         (const std::string c);
-      const std::string                  get_class         ();
+      void                               set_author               (const std::string a);
+      const std::string                  get_author               ();
 
-      void                               set_model         (const std::string m);
-      const std::string                  get_model         ();
+      void                               set_tag                  (const std::string t);
+      const std::string                  get_tag                  ();
 
-      void                               set_potential     (GiNaC::ex* V);
-      GiNaC::ex                          get_potential     ();
-      void                               unset_potential   ();
+      void                               set_class                (const std::string c);
+      const std::string                  get_class                ();
+
+      void                               set_model                (const std::string m);
+      const std::string                  get_model                ();
+
+      void                               set_potential            (GiNaC::ex* V);
+      GiNaC::ex                          get_potential            ();
+      void                               unset_potential          ();
 
     private:
       // blank out copying options, to avoid multiple aliasing of the
@@ -111,6 +131,9 @@ class script
       std::string                        tag;
       std::string                        cls;
       std::string                        model;
+
+      struct stepper                     background_stepper;
+      struct stepper                     perturbations_stepper;
 
       std::deque<field_declaration*>     fields;
       std::deque<parameter_declaration*> parameters;

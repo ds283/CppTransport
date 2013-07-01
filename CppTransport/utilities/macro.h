@@ -16,15 +16,17 @@
 #include "core.h"
 #include "parse_tree.h"
 #include "index_assignment.h"
+#include "u_tensor_factory.h"
 
 
 struct replacement_data
   {
-    script*     source;           // parse tree corresponding to input script
-    std::string source_file;      // name of input script
+    script*           source;           // parse tree corresponding to input script
+    std::string       source_file;      // name of input script
+    u_tensor_factory* u_factory;        // manufactured u_tensor factory
 
-    std::string output_file;      // output file being written
-    std::string template_file;    // template file being used to produce output
+    std::string       output_file;      // output file being written
+    std::string       template_file;    // template file being used to produce output
   };
 
 

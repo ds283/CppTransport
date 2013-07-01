@@ -10,9 +10,6 @@
 #include <sstream>
 
 #include "y_driver.h"
-#include "error.h"
-
-#include "ginac/ginac.h"
 
 namespace y
   {
@@ -86,7 +83,7 @@ namespace y
           delete a; // otherwise, attributes block would never be deallocated
         }
 
-      void y_driver::add_latex_attribute(attributes *a, lexeme::lexeme<keyword_type, character_type> *lex)
+      void y_driver::add_latex_attribute(attributes *a, lexeme::lexeme<keyword_type, character_type>* lex)
         {
           // extract string name from lexeme
           std::string latex_name;
@@ -100,6 +97,84 @@ namespace y
             {
               ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
             }
+        }
+
+      void y_driver::set_abserr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+        {
+          // extract decimal value from lexeme
+          double d  = DEFAULT_ABS_ERR;
+          bool   ok = lex->get_decimal(d);
+
+          if(ok)
+            {
+              s->abserr = fabs(d);
+            }
+          else
+            {
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
+      void y_driver::set_relerr(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+        {
+          // extract decimal value from lexeme
+          double d  = DEFAULT_REL_ERR;
+          bool   ok = lex->get_decimal(d);
+
+          if(ok)
+            {
+              s->relerr = fabs(d);
+            }
+          else
+            {
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
+      void y_driver::set_stepper(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+        {
+          // extract string name from lexeme
+          std::string stepper_name = DEFAULT_STEPPER;
+          bool        ok = lex->get_string(stepper_name);
+
+          if(ok)
+            {
+              s->name = stepper_name;
+            }
+          else
+            {
+              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
+      void y_driver::set_stepsize(struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex)
+        {
+          // extract decimal value from lexeme
+          double d  = DEFAULT_STEP_SIZE;
+          bool   ok = lex->get_decimal(d);
+
+          if(ok)
+            {
+              s->stepsize = d;
+            }
+          else
+            {
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+            }
+        }
+
+      void y_driver::set_background_stepper(struct stepper* s)
+        {
+          this->root->set_background_stepper(s);
+
+          delete s;
+        }
+
+      void y_driver::set_perturbations_stepper(struct stepper* s)
+        {
+          this->root->set_perturbations_stepper(s);
+
+          delete s;
         }
 
       void y_driver::set_name(lexeme::lexeme<keyword_type, character_type> *lex)

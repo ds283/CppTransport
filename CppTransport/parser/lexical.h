@@ -16,6 +16,8 @@ enum keyword_type
   {
       k_name, k_author, k_tag, k_field, k_potential,
       k_parameter, k_latex, k_class, k_model,
+      k_abserr, k_relerr, k_stepper, k_stepsize,
+      k_background, k_perturbations,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
@@ -26,17 +28,17 @@ enum keyword_type
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-#define NUMBER_KEYWORDS (40)
+#define NUMBER_KEYWORDS (46)
 
 enum character_type
   {
       open_brace, close_brace, open_bracket, close_bracket,
       open_square, close_square, comma, period, colon, semicolon,
-      plus, minus, star, backslash, foreslash, tilde,
+      equals, plus, minus, star, backslash, foreslash, tilde,
       ampersand, circumflex, ampersat, ellipsis, rightarrow
   };
 
-#define NUMBER_CHARACTERS (21)
+#define NUMBER_CHARACTERS (22)
 
 
 #endif //__lexical_H_
