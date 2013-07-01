@@ -58,19 +58,19 @@ symbol_table<container>::~symbol_table()
 template <class container>
 void symbol_table<container>::print(std::ostream& stream)
   {
-    stream << "Symbol table size = " << this->size << "\n";
+    stream << "Symbol table size = " << this->size << std::endl;
 
     for(int i = 0; i < this->size; i++)
       {
         if(this->table[i].size() > 0)
           {
-            stream << "Hash table entry " << i << " is not empty:\n";
+            stream << "Hash table entry " << i << " is not empty:" << std::endl;
             for(typename std::deque<container>::iterator ptr = this->table[i].begin();
                 ptr != this->table[i].end(); ptr++)
               {
                 (*ptr).print(stream);
               }
-            stream << "\n";
+            stream << std::endl;
           }
       }
   }

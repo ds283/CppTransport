@@ -216,7 +216,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
               assert(this->k >= 0);
               assert(this->k < this->Nk);
 
-              stream << "'" << this->ktable[(int) this->k] << "'\n";
+              stream << "'" << this->ktable[(int) this->k] << "'" << std::endl;
               break;
 
               case character:
@@ -225,27 +225,27 @@ namespace lexeme    // package in a unique namespace to protect common words lik
               assert(this->s >= 0);
               assert(this->s < this->Nc);
 
-              stream << "'" << this->ctable[(int) this->s] << "'\n";
+              stream << "'" << this->ctable[(int) this->s] << "'" << std::endl;
               break;
 
               case ident:
-                stream << "identifier '" << this->str << "'\n";
+                stream << "identifier '" << this->str << "'" << std::endl;
               break;
 
               case integer:
-                stream << "integer literal '" << this->z << "'\n";
+                stream << "integer literal '" << this->z << "'" << std::endl;
               break;
 
               case decimal:
-                stream << "decimal literal '" << this->d << "'\n";
+                stream << "decimal literal '" << this->d << "'" << std::endl;
               break;
 
               case string:
-                stream << "string literal '" << this->str << "'\n";
+                stream << "string literal '" << this->str << "'" << std::endl;
               break;
 
               case unknown:
-                stream << "UNKNOWN LEXEME\n";
+                stream << "UNKNOWN LEXEME" << std::endl;
               break;
 
               default:
@@ -348,7 +348,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         {
           bool rval = false;
 
-          if (this->type == d)
+          if (this->type == decimal)
             {
               d    = this->d;
               rval = true;

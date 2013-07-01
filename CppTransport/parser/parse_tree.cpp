@@ -10,6 +10,7 @@
 #include "parse_tree.h"
 
 #define DEFAULT_MODEL_NAME "inflationary_model"
+#define DERIV_PREFIX       "__d"
 
 // ******************************************************************
 
@@ -32,6 +33,7 @@ field_declaration::field_declaration(const quantity& o, unsigned int l, const st
   {
   }
 
+
 field_declaration::~field_declaration()
   {
     delete this->obj;
@@ -39,28 +41,31 @@ field_declaration::~field_declaration()
     return;
   }
 
+
 void field_declaration::print(std::ostream& stream)
   {
     stream << "Field declaration for symbol '" << this->obj->get_name()
-           << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'\n";
+           << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << line;
     if(this->path.size() >= 1)
       {
         stream << " of '" << path[0].name << "'";
       }
-    stream << "\n";
+    stream << std::endl;
 
     for(int i = 1; i < this->path.size(); i++)
       {
-        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'\n";
+        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'" << std::endl;
       }
   }
+
 
 parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
   : declaration(o, l, p)
   {
   }
+
 
 parameter_declaration::~parameter_declaration()
   {
@@ -69,21 +74,22 @@ parameter_declaration::~parameter_declaration()
     return;
   }
 
+
 void parameter_declaration::print(std::ostream& stream)
   {
     stream << "Parameter declaration for symbol '" << this->obj->get_name()
-      << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'\n";
+      << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << line;
     if(this->path.size() >= 1)
       {
         stream << " of '" << path[0].name << "'";
       }
-    stream << "\n";
+    stream << std::endl;
 
     for(int i = 1; i < this->path.size(); i++)
       {
-        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'\n";
+        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'" << std::endl;
       }
   }
 
@@ -92,9 +98,17 @@ void parameter_declaration::print(std::ostream& stream)
 
 
 script::script()
-  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME)
+  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL)
   {
     this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
+
+    // insert M_Planck symbol into the symbol table
+    attributes attrs;
+    attrs.set_latex(MPLANCK_LATEX_SYMBOL);
+
+    quantity Mp(MPLANCK_TEXT_NAME, attrs, M_Planck);
+
+    this->table->insert(&Mp);
   }
 
 script::~script()
@@ -187,48 +201,48 @@ const std::string script::get_model()
 
 void script::print(std::ostream& stream)
   {
-    stream << "Script summary:\n";
-    stream << "===============\n";
-    stream << "  Name   = '" << this->name << "'\n";
-    stream << "  Model  = '" << this->model << "'\n";
-    stream << "  Author = '" << this->author << "'\n";
-    stream << "  Tag    = '" << this->tag << "'\n";
-    stream << "  Class  = '" << this->cls << "'\n";
-    stream << "\n";
+    stream << "Script summary:" << std::endl;
+    stream << "===============" << std::endl;
+    stream << "  Name   = '" << this->name << "'" << std::endl;
+    stream << "  Model  = '" << this->model << "'" << std::endl;
+    stream << "  Author = '" << this->author << "'" << std::endl;
+    stream << "  Tag    = '" << this->tag << "'" << std::endl;
+    stream << "  Class  = '" << this->cls << "'" << std::endl;
+    stream << std::endl;
 
-    stream << "Fields:\n";
-    stream << "=======\n";
+    stream << "Fields:" << std::endl;
+    stream << "=======" << std::endl;
     for(std::deque<field_declaration*>::iterator ptr = this->fields.begin();
         ptr != this->fields.end(); ptr++)
       {
         (*ptr)->print(stream);
       }
-    stream << "\n";
+    stream << std::endl;
 
-    stream << "Parameters:\n";
-    stream << "===========\n";
+    stream << "Parameters:" << std::endl;
+    stream << "===========" << std::endl;
     for(std::deque<parameter_declaration*>::iterator ptr = this->parameters.begin();
         ptr != this->parameters.end(); ptr++)
       {
         (*ptr)->print(stream);
       }
-    stream << "\n";
+    stream << std::endl;
 
-    stream << "Symbol table:\n";
-    stream << "=============\n";
+    stream << "Symbol table:" << std::endl;
+    stream << "=============" << std::endl;
     this->table->print(stream);
-    stream << "\n";
+    stream << std::endl;
 
     if(this->potential_set)
       {
         assert(this->potential != NULL);
-        stream << "** Potential = " << *this->potential << "\n";
+        stream << "** Potential = " << *this->potential << std::endl;
       }
     else
       {
-        stream << "Potential unset\n";
+        stream << "Potential unset" << std::endl;
       }
-    stream << "\n";
+    stream << std::endl;
   }
 
 
@@ -252,6 +266,10 @@ bool script::add_field(field_declaration* d)
 
         // add declaration to list
         this->fields.push_back(d);
+
+        // also need to generate a symbol for the momentum corresponding to this field
+        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d->get_quantity()->get_ginac_symbol()->get_name());
+        this->deriv_symbols.push_back(deriv_symbol);
       }
 
     return(!exists);  // caller must delete d explicitly if returns false
@@ -354,6 +372,44 @@ std::vector<std::string> script::get_platx_list()
   }
 
 
+std::vector<GiNaC::symbol> script::get_field_symbols()
+  {
+    std::vector<GiNaC::symbol> rval;
+
+    for(int i = 0; i < this->fields.size(); i++)
+      {
+        rval.push_back(*(this->fields[i]->get_quantity()->get_ginac_symbol()));
+      }
+
+    return(rval);
+  }
+
+
+std::vector<GiNaC::symbol> script::get_deriv_symbols()
+  {
+    return(this->deriv_symbols);
+  }
+
+
+std::vector<GiNaC::symbol> script::get_param_symbols()
+  {
+    std::vector<GiNaC::symbol> rval;
+
+    for(int i = 0; i < this->parameters.size(); i++)
+      {
+        rval.push_back(*(this->parameters[i]->get_quantity()->get_ginac_symbol()));
+      }
+
+    return(rval);
+  }
+
+
+const GiNaC::symbol& script::get_Mp_symbol()
+  {
+    return(this->M_Planck);
+  }
+
+
 void script::set_potential(GiNaC::ex* V)
   {
     if(this->potential_set)
@@ -364,18 +420,20 @@ void script::set_potential(GiNaC::ex* V)
     this->potential     = V;
     this->potential_set = true;
 
-    // std::cerr << "Set potential to be V = " << *this->potential << "\n";
+    // std::cerr << "Set potential to be V = " << *this->potential << std::endl;
   }
 
 
-bool script::get_potential(GiNaC::ex*& V)
+GiNaC::ex script::get_potential()
   {
+    GiNaC::ex V = GiNaC::numeric(0);    // returned in case no potential has been set
+
     if(this->potential_set)
       {
-        V = this->potential;
+        V = *this->potential;
       }
 
-    return(this->potential_set);
+    return(V);
   }
 
 

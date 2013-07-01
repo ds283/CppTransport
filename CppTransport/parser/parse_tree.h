@@ -75,6 +75,12 @@ class script
       std::vector<std::string>           get_param_list    ();
       std::vector<std::string>           get_platx_list    ();
 
+      std::vector<GiNaC::symbol>         get_field_symbols ();
+      std::vector<GiNaC::symbol>         get_deriv_symbols ();
+      std::vector<GiNaC::symbol>         get_param_symbols ();
+
+      const GiNaC::symbol&               get_Mp_symbol     ();
+
       void                               set_name          (const std::string n);
       const std::string                  get_name          ();
 
@@ -91,7 +97,7 @@ class script
       const std::string                  get_model         ();
 
       void                               set_potential     (GiNaC::ex* V);
-      bool                               get_potential     (GiNaC::ex*& V);
+      GiNaC::ex                          get_potential     ();
       void                               unset_potential   ();
 
     private:
@@ -111,6 +117,10 @@ class script
 
       bool                               potential_set;
       GiNaC::ex*                         potential;
+
+      // reserved symbols
+      GiNaC::symbol                      M_Planck;
+      std::vector<GiNaC::symbol>         deriv_symbols;
 
       symbol_table<quantity>*            table;
   };

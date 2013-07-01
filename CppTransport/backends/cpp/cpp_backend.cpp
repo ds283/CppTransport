@@ -13,13 +13,17 @@
 #include "cpp_backend.h"
 #include "to_printable.h"
 #include "macro.h"
+#include "u_tensor_factory.h"
 
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
 
 #define SR_U_NAME    "__sr_u"
+#define U1_NAME      "__u1"
 #define U2_NAME      "__u2"
 #define U3_NAME      "__u3"
+
+#define MAX_INDEX    (26)
 
 static std::string replace_tool         (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_version      (struct replacement_data& data, const std::vector<std::string>& args);
@@ -37,14 +41,22 @@ static std::string replace_field_list   (struct replacement_data& data, const st
 static std::string replace_latex_list   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_param_list   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_platx_list   (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_state_list   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_parameters   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_fields       (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_all          (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_V            (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_set_sr_u     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_set_u1       (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_set_u2       (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_set_u3       (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_init_step    (struct replacement_data& data, const std::vector<std::string>& args);
+
 
 static std::string replace_sr_velocity  (struct replacement_data& data, const std::vector<std::string>& args, std::vector<struct index_assignment> indices);
+static std::string replace_u1_tensor    (struct replacement_data& data, const std::vector<std::string>& args, std::vector<struct index_assignment> indices);
 static std::string replace_u2_tensor    (struct replacement_data& data, const std::vector<std::string>& args, std::vector<struct index_assignment> indices);
 static std::string replace_u3_tensor    (struct replacement_data& data, const std::vector<std::string>& args, std::vector<struct index_assignment> indices);
 
@@ -56,8 +68,11 @@ static const std::string simple_macros[] =
     "NUMBER_FIELDS", "NUMBER_PARAMS",
     "FIELD_NAME_LIST", "LATEX_NAME_LIST",
     "PARAM_NAME_LIST", "PLATX_NAME_LIST",
-    "SET_PARAMETERS", "SET_FIELDS", "V",
-    "SET_SR_VELOCITY", "SET_U2_TENSOR", "SET_U3_TENSOR"
+    "STATE_NAME_LIST",
+    "SET_PARAMETERS", "SET_FIELDS", "SET_ALL", "V",
+    "SET_SR_VELOCITY",
+    "SET_U1_TENSOR", "SET_U2_TENSOR", "SET_U3_TENSOR",
+    "ABS_ERR", "REL_ERR", "INITIAL_STEP_SIZE"
   };
 
 static const replacement_function_simple simple_macro_replacements[] =
@@ -67,8 +82,11 @@ static const replacement_function_simple simple_macro_replacements[] =
     replace_number_fields, replace_number_params,
     replace_field_list, replace_latex_list,
     replace_param_list, replace_platx_list,
-    replace_parameters, replace_fields, replace_V,
-    replace_set_sr_u, replace_set_u2, replace_set_u3
+    replace_state_list,
+    replace_parameters, replace_fields, replace_all, replace_V,
+    replace_set_sr_u,
+    replace_set_u1, replace_set_u2, replace_set_u3,
+    replace_abs_err, replace_rel_err, replace_init_step
   };
 
 static const unsigned int simple_macro_args[] =
@@ -78,46 +96,50 @@ static const unsigned int simple_macro_args[] =
     0, 0,
     0, 0,
     0, 0,
-    2, 2, 0,
+    0,
+    2, 2, 2, 0,
+    1,
+    1, 1, 1,
     0, 0, 0
   };
 
 static const std::string index_macros[] =
   {
-    "SR_VELOCITY", "U2_TENSOR", "U3_TENSOR"
+    "SR_VELOCITY", "U1_TENSOR", "U2_TENSOR", "U3_TENSOR"
   };
 
 static const unsigned int index_macro_indices[] =
   {
-    1, 2, 3
+    1, 1, 2, 3
   };
 
 static const unsigned int index_macro_ranges[] =
   {
-    1, 2, 2
+    1, 2, 2, 2
   };
 
 static const replacement_function_index index_macro_replacements[] =
   {
-    replace_sr_velocity, replace_u2_tensor, replace_u3_tensor
+    replace_sr_velocity, replace_u1_tensor, replace_u2_tensor, replace_u3_tensor
   };
 
 static const unsigned int index_macro_args[] =
   {
-    0, 0, 0
+    0, 0, 0, 0
   };
 
 
-#define NUMBER_SIMPLE_MACROS (22)
-#define NUMBER_INDEX_MACROS  (3)
+#define NUMBER_SIMPLE_MACROS (28)
+#define NUMBER_INDEX_MACROS  (4)
 
 
 // ******************************************************************
 
 
-static bool process     (struct replacement_data& d);
-static void apply_macros(struct replacement_data& d, std::string& line);
+static bool                                 process           (struct replacement_data& d);
 
+static std::vector<index_abstract>          make_field_indices(struct replacement_data& data);
+static std::vector<index_abstract>          make_u_indices    (struct replacement_data& data, unsigned int num);
 
 // ******************************************************************
 
@@ -210,7 +232,7 @@ static bool process(struct replacement_data& d)
 
             if(out.fail() == false)
               {
-                out << line << "\n";
+                out << line << std::endl;
               }
 
             current_line++;
@@ -231,6 +253,54 @@ static bool process(struct replacement_data& d)
 
     in.close();
     out.close();
+
+    return(rval);
+  }
+
+
+// ******************************************************************
+
+
+static std::vector<index_abstract> make_field_indices(struct replacement_data& d)
+  {
+    assert(d.source != NULL);
+
+    std::vector<struct index_abstract> rval;
+
+    struct index_abstract index;
+
+    index.label   = 'a';
+    index.assign  = true;
+    index.range   = 1;      // ranges only over fields, not fields + momenta
+
+    rval.push_back(index);
+
+    return(rval);
+  }
+
+
+static std::vector<index_abstract> make_u_indices(struct replacement_data& data, unsigned int num)
+  {
+    assert(data.source != NULL);
+
+    std::vector<struct index_abstract> rval;
+
+    if(num > MAX_INDEX)
+      {
+        error(ERROR_INDEX_OUT_OF_RANGE);
+        num = MAX_INDEX;
+      }
+
+    for(int i = 0; i < num; i++)
+      {
+        struct index_abstract index;
+
+        index.label   = 'A' + i;
+        index.assign  = true;
+        index.range   = 2;
+
+        rval.push_back(index);
+      }
 
     return(rval);
   }
@@ -396,6 +466,33 @@ static std::string replace_platx_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
+static std::string replace_state_list(struct replacement_data& d, const std::vector<std::string>& args)
+  {
+    std::vector<GiNaC::symbol> f_list = d.source->get_field_symbols();
+    std::vector<GiNaC::symbol> d_list = d.source->get_deriv_symbols();
+
+    std::ostringstream out;
+
+    out << "{ ";
+
+    for(int i = 0; i < f_list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << ", ";
+          }
+        out << to_printable(f_list[i].get_name());
+      }
+    for(int i = 0; i < d_list.size(); i++)
+      {
+        out << ", " << to_printable(d_list[i].get_name());
+      }
+
+    out << " }";
+
+    return(out.str());
+  }
+
 static std::string replace_parameters(struct replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<std::string> list = d.source->get_param_list();
@@ -415,37 +512,75 @@ static std::string replace_parameters(struct replacement_data& d, const std::vec
       {
         if(i > 0)
           {
-            out << "\n";
+            out << std::endl;
           }
         out << type_name << " " << list[i] << " = " << param_name << "[" << i << "];";
       }
+
+    out << std::endl << type_name << " __Mp = this->M_Planck;";
 
     return(out.str());
   }
 
 static std::string replace_fields(struct replacement_data& d, const std::vector<std::string>& args)
   {
-    std::vector<std::string> list = d.source->get_field_list();
+    std::vector<GiNaC::symbol> list = d.source->get_field_symbols();
     std::ostringstream out;
 
-    std::string type_name  = "number";
-    std::string field_name = "fields";
+    std::string type_name      = "number";
+    std::string container_name = "fields";
     if(args.size() >= 1)
       {
         type_name = args[0];
       }
     if(args.size() >= 2)
       {
-        field_name = args[1];
+        container_name = args[1];
       }
 
     for(int i = 0; i < list.size(); i++)
       {
         if(i > 0)
           {
-            out << "\n";
+            out << std::endl;
           }
-        out << type_name << " " << list[i] << " = " + field_name + "[" << i << "];";
+        out << GiNaC::csrc << type_name << " " << list[i] << " = " << container_name << "[" << i << "];";
+      }
+
+    return(out.str());
+  }
+
+static std::string replace_all(struct replacement_data& d, const std::vector<std::string>& args)
+  {
+    std::vector<GiNaC::symbol> f_list = d.source->get_field_symbols();
+    std::vector<GiNaC::symbol> d_list = d.source->get_deriv_symbols();
+    std::ostringstream out;
+
+    std::string type_name      = "number";
+    std::string container_name = "fields";
+
+    if(args.size() >= 1)
+      {
+        type_name = args[0];
+      }
+    if(args.size() >= 2)
+      {
+        container_name = args[1];
+      }
+
+    for(int i = 0; i < f_list.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << std::endl;
+          }
+        out << GiNaC::csrc << type_name << " " << f_list[i] << " = " << container_name << "[" << i << "];";
+      }
+
+    for(int i = 0; i < d_list.size(); i++)
+      {
+        out << std::endl;
+        out << GiNaC::csrc << type_name << " " << d_list[i] << " = " << container_name << "[" << f_list.size() + i << "];";
       }
 
     return(out.str());
@@ -453,35 +588,94 @@ static std::string replace_fields(struct replacement_data& d, const std::vector<
 
 static std::string replace_V(struct replacement_data& d, const std::vector<std::string>& args)
   {
-    GiNaC::ex* potential = NULL;
-    bool ok = d.source->get_potential(potential);
+    std::string rval;
+    GiNaC::ex potential = d.source->get_potential();
 
-    std::string rval = "/* ERROR */";
-
-    if(ok)
-      {
-        std::ostringstream out;
-        out << GiNaC::csrc << *potential;
-        rval = out.str();
-      }
-    else
-      {
-        error(ERROR_MISSING_POTENTIAL);
-      }
+    std::ostringstream out;
+    out << GiNaC::csrc << potential;
+    rval = out.str();
 
     return(rval);
   }
 
 static std::string replace_set_sr_u(struct replacement_data& data, const std::vector<std::string>& args)
   {
-    std::string rval = "";
+    std::ostringstream out;
+
+    std::string type_name = "number";
 
     if(args.size() >= 1)
       {
-        rval = "ARGUMENT " + args[0];
+        type_name = args[0];
       }
 
-    return(rval);
+    // set up an assignment over a field index
+    std::vector<struct index_abstract> field_indices = make_field_indices(data);
+
+    assignment_package assigner(data.source->get_number_fields());
+    std::vector< std::vector<struct index_assignment> > field_assignment = assigner.assign(field_indices);
+
+    u_tensor_factory u(data.source);
+    std::vector<GiNaC::ex> sr_velocity = u.compute_sr_u();
+
+    // now, loop over this assignment, generating the appropriate SR expressions as we go
+    for(int i = 0; i < field_assignment.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << std::endl;
+          }
+
+        out << type_name << " " << SR_U_NAME;
+        for(int j = 0; j < field_assignment[i].size(); j++)
+          {
+            out << "_" << index_stringize((field_assignment[i])[j]);
+          }
+
+        out << " = " << GiNaC::csrc << sr_velocity[i] << " ;";
+      }
+
+    return(out.str());
+  }
+
+static std::string replace_set_u1(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    std::ostringstream out;
+
+    std::string type_name = "number";
+
+    if(args.size() >= 1)
+      {
+        type_name = args[0];
+      }
+
+    // set up an assignment over a single phase space index
+    std::vector<struct index_abstract> indices                           = make_u_indices(data, 1);
+
+    assignment_package assigner(data.source->get_number_fields());
+    std::vector< std::vector<struct index_assignment> > index_assignment = assigner.assign(indices);
+
+    u_tensor_factory u(data.source);
+    std::vector<GiNaC::ex> u1 = u.compute_u1();
+
+    // now, loop over this assignment
+    for(int i = 0; i < index_assignment.size(); i++)
+      {
+        if(i > 0)
+          {
+            out << std::endl;
+          }
+
+        out << type_name << " " << U1_NAME;
+        for(int j = 0; j < index_assignment[i].size(); j++)
+          {
+            out << "_" << index_stringize((index_assignment[i])[j]);
+          }
+
+        out << " = " << GiNaC::csrc << u1[i] << " ;";
+      }
+
+    return(out.str());
   }
 
 static std::string replace_set_u2(struct replacement_data& data, const std::vector<std::string>& args)
@@ -494,6 +688,27 @@ static std::string replace_set_u2(struct replacement_data& data, const std::vect
 static std::string replace_set_u3(struct replacement_data& data, const std::vector<std::string>& args)
   {
     std::string rval = "";
+
+    return(rval);
+  }
+
+static std::string replace_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    std::string rval = "1E-6";
+
+    return(rval);
+  }
+
+static std::string replace_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    std::string rval = "1E-6";
+
+    return(rval);
+  }
+
+static std::string replace_init_step(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    std::string rval = "1E-2";
 
     return(rval);
   }
@@ -513,9 +728,25 @@ static std::string replace_sr_velocity(struct replacement_data& d, const std::ve
     return(rval);
   }
 
+static std::string replace_u1_tensor(struct replacement_data& d, const std::vector<std::string>& args, std::vector<struct index_assignment> indices)
+  {
+    std::string rval = U1_NAME;
+
+    assert(indices.size() == 1);
+
+    for(int i = 0; i < indices.size(); i++)
+      {
+        rval = rval + "_" + index_stringize(indices[i]);
+      }
+
+    return(rval);
+  }
+
 static std::string replace_u2_tensor(struct replacement_data& d, const std::vector<std::string>& args, std::vector<struct index_assignment> indices)
   {
     std::string rval = U2_NAME;
+
+    assert(indices.size() == 2);
 
     for(int i = 0; i < indices.size(); i++)
       {
@@ -528,6 +759,8 @@ static std::string replace_u2_tensor(struct replacement_data& d, const std::vect
 static std::string replace_u3_tensor(struct replacement_data& d, const std::vector<std::string>& args, std::vector<struct index_assignment> indices)
   {
     std::string rval = U3_NAME;
+
+    assert(indices.size() == 3);
 
     for(int i = 0; i < indices.size(); i++)
       {

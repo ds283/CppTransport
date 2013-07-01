@@ -95,7 +95,7 @@ static std::string mangle_output_name(std::string input);
 
 int main(int argc, const char *argv[])
   {
-    std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << "\n";
+    std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
 
     // set up the initial search path to consist only of CWD
     finder path("~");

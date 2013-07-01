@@ -73,9 +73,9 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
 
         if(i > 0)
           {
-            new_line += "\n";
+            new_line += NEWLINE_CHAR;
           }
-        new_line += cur_line_prefix + (cur_line_prefix != "" ? "\n" : "") + cur_line;
+        new_line += cur_line_prefix + (cur_line_prefix != "" ? NEWLINE_CHAR : "") + cur_line;
       }
 
     line = new_line;
@@ -171,7 +171,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                     // add this line
                     if(j != 0)
                       {
-                        new_line += "\n";
+                        new_line += NEWLINE_CHAR;
                       }
                     new_line += temp_line;
                   }
@@ -359,7 +359,7 @@ static std::vector<struct index_abstract> get_index_set(std::string line, size_t
   {
     std::vector<struct index_abstract> rhs_indices;
 
-    if(line.size() < pos + 2 + indices + 1)
+    if(line.size() < pos + 2 + indices)
       {
         std::ostringstream msg;
         msg << ERROR_TOO_FEW_INDICES << " '" << name << "'";

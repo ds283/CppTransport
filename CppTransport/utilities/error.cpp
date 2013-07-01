@@ -18,7 +18,7 @@ void warn(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << WARNING_TOKEN << msg;
-    std::cerr << out.str() << "\n";
+    std::cerr << out.str() << std::endl;
   }
 
 void error(std::string const msg)
@@ -26,7 +26,7 @@ void error(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << ERROR_TOKEN << msg;
-    std::cerr << out.str() << "\n";
+    std::cerr << out.str() << std::endl;
   }
 
 void warn(std::string const msg, unsigned int line, std::deque<inclusion> const &path)
@@ -53,11 +53,11 @@ void warn(std::string const msg, unsigned int line, std::deque<inclusion> const 
       {
         out << " of '" << path[0].name << "'";
       }
-    std::cerr << out.str() << "\n";
+    std::cerr << out.str() << std::endl;
 
     for(int i = 1; i < level; i++)
       {
-        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
+        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'" << std::endl;
       }
   }
 
@@ -75,10 +75,10 @@ void error(std::string const msg, unsigned int line, std::deque<inclusion> const
       {
         out << " of '" << path[0].name << "'";
       }
-    std::cerr << out.str() << "\n";
+    std::cerr << out.str() << std::endl;
 
     for(int i = 1; i < level; i++)
       {
-        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'\n";
+        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'" << std::endl;
       }
   }

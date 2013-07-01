@@ -7,7 +7,6 @@
 
 
 #include <iostream>
-#include <assert.h>
 
 #include "y_lexer.h"
 
@@ -158,7 +157,7 @@ namespace y
             /* return eof? */
           }
 
-        // std::cerr << "Returning token number " << rval << "\n";
+        // std::cerr << "Returning token number " << rval << std::endl;
 
         return(rval);
       }

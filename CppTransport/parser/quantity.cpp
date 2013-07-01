@@ -60,8 +60,6 @@ quantity::quantity(std::string n, attributes& a, unsigned int l, const std::dequ
     std::string latex_name;
     bool        latex_set = attrs.get_latex(latex_name);
 
-    GiNaC::symbol phi("phi", "\\phi");
-
     if(latex_set)
       {
         ginac_symbol = GiNaC::symbol(n, latex_name);
@@ -72,23 +70,27 @@ quantity::quantity(std::string n, attributes& a, unsigned int l, const std::dequ
       }
   }
 
+quantity::quantity(std::string n, attributes&a, GiNaC::symbol&s)
+  : name(n), attrs(a), line(0), ginac_symbol(s)
+  {
+  }
+
 quantity::~quantity()
   {
-    return;
   }
 
 void quantity::print(std::ostream& stream)
   {
-    stream << "Quantity '" << this->name << "'\n";
+    stream << "Quantity '" << this->name << "'" << std::endl;
 
-    stream << "  GiNaC symbol = '" << this->ginac_symbol << "'\n";
+    stream << "  GiNaC symbol = '" << this->ginac_symbol << "'" << std::endl;
 
     std::string latex_name;
     bool        latex_set = this->attrs.get_latex(latex_name);
 
     if(latex_set)
       {
-        stream << "  LaTeX name = '" << latex_name << "'\n";
+        stream << "  LaTeX name = '" << latex_name << "'" << std::endl;
       }
   }
 

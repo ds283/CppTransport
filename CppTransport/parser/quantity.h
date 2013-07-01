@@ -37,28 +37,29 @@ class attributes
 class quantity
   {
     public:
-        quantity(std::string n, unsigned int l, const std::deque<struct inclusion>& p);                 // basic constructor
-        quantity(std::string n, attributes& a, unsigned int l, const std::deque<struct inclusion>& p);  // constructor with attributes
-        ~quantity();
+      quantity(std::string n, unsigned int l, const std::deque<struct inclusion>& p);                 // basic constructor
+      quantity(std::string n, attributes& a, unsigned int l, const std::deque<struct inclusion>& p);  // constructor with attributes
+      quantity(std::string n, attributes& a, GiNaC::symbol& s);                                       // constructor with GiNaC symbol
+      ~quantity();
 
-        void                                print(std::ostream& stream);
+      void                                print(std::ostream& stream);
 
-        const std::string                   get_name();
-        const std::string                   get_latex_name();
+      const std::string                   get_name();
+      const std::string                   get_latex_name();
 
-        const GiNaC::symbol*                get_ginac_symbol();
+      const GiNaC::symbol*                get_ginac_symbol();
 
-        unsigned int                        get_line();
-        const std::deque<struct inclusion>& get_path();
+      unsigned int                        get_line();
+      const std::deque<struct inclusion>& get_path();
 
     protected:
-        std::string                         name;
+      std::string                         name;
 
-        const unsigned int                  line;
-        const std::deque<struct inclusion>  path;
+      const unsigned int                  line;
+      const std::deque<struct inclusion>  path;
 
-        attributes                          attrs;
-        GiNaC::symbol                       ginac_symbol;
+      attributes                          attrs;
+      GiNaC::symbol                       ginac_symbol;
   };
 
 
