@@ -49,6 +49,7 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
     private:
       GiNaC::ex epsilon();
+      GiNaC::ex Hubble_square();
   };
 
 

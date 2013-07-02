@@ -24,5 +24,9 @@
 #define __CPP_TRANSPORT_WRONG_ICS_C           " or "
 
 #define __CPP_TRANSPORT_SOLVING_ICS_MESSAGE   "Solving for background evolution using initial conditions"
+#define __CPP_TRANSPORT_STEPPER_MESSAGE       "  -- stepper "
+#define __CPP_TRANSPORT_ABS_ERR               "abs err"
+#define __CPP_TRANSPORT_REL_ERR               "rel err"
+#define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

@@ -33,6 +33,7 @@ std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_u1()
     // set up a GiNaC symbol to represent epsilon = -dot(H)/H^2
 
     GiNaC::ex epsilon = this->epsilon();
+    GiNaC::ex Hsq     = this->Hubble_square();
 
     for(int i = 0; i < this->num_fields; i++)
       {
@@ -40,7 +41,7 @@ std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_u1()
       }
     for(int i = 0; i < this-> num_fields; i++)
       {
-        GiNaC::ex d_deriv = -(3-epsilon)*this->deriv_list[i] - diff(this->V, this->field_list[i]);
+        GiNaC::ex d_deriv = -(3-epsilon)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
         rval.push_back(d_deriv);
       }
 
@@ -80,4 +81,19 @@ GiNaC::ex canonical_u_tensor_factory::epsilon()
     GiNaC::ex eps = 3 * (sum_momenta_sq /2) / (sum_momenta_sq /2 + this->V/Hsq);
 
     return(eps);
+  }
+
+
+GiNaC::ex canonical_u_tensor_factory::Hubble_square()
+  {
+    GiNaC::ex sum_momenta_sq(0);
+
+    for(int i = 0; i < this->deriv_list.size(); i++)
+      {
+        sum_momenta_sq += GiNaC::pow(this->deriv_list[i], 2);
+      }
+
+    GiNaC::ex Hsq = (sum_momenta_sq /2 + this->V)/(3*GiNaC::pow(this->M_Planck, 2));
+
+    return(Hsq);
   }
