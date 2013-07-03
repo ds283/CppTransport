@@ -12,18 +12,21 @@
 #include "index_assignment.h"
 
 
-#define FIELD_STRING    "f"
-#define MOMENTUM_STRING "p"
+#define FIELD_STRING     "f"
+#define MOMENTUM_STRING  "p"
+#define PARAMETER_STRING "param"
 
 
-static std::vector<unsigned int>            make_assignment(unsigned int max,
+static std::vector<unsigned int>
+  make_assignment(unsigned int fields, unsigned int parameters,
   const std::vector<struct index_abstract>& indices, unsigned int i);
 
-static std::vector<struct index_assignment> make_index_assignment(unsigned int max,
+static std::vector<struct index_assignment>
+  make_index_assignment(unsigned int fields, unsigned int parameters,
   const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices);
 
-static bool                                 is_ordered(std::vector<unsigned int>& a,
-  const std::vector<struct index_abstract>& indices);
+static bool
+  is_ordered(std::vector<unsigned int>& a, const std::vector<struct index_abstract>& indices);
 
 
 // **************************************************************************************
@@ -36,17 +39,24 @@ std::vector< std::vector<struct index_assignment> > assignment_package::assign(c
     unsigned int limit = 1;
     for(int i = 0; i < indices.size(); i++)
       {
-        limit *= this->num_fields * indices[i].range;
+        if(indices[i].range == INDEX_RANGE_PARAMETER)
+          {
+            limit *= this->num_parameters;
+          }
+        else
+          {
+            limit *= this->num_fields * indices[i].range;
+          }
       }
 
     for(int i = 0; i < limit; i++)
       {
-        std::vector<unsigned int> assignment = make_assignment(this->num_fields, indices, i);
+        std::vector<unsigned int> assignment = make_assignment(this->num_fields, this->num_parameters, indices, i);
         assert(assignment.size() == indices.size());
 
         if(is_ordered(assignment, indices))
           {
-            rval.push_back(make_index_assignment(this->num_fields, assignment, indices));
+            rval.push_back(make_index_assignment(this->num_fields, this->num_parameters, assignment, indices));
           }
       }
 
@@ -70,6 +80,10 @@ std::string index_stringize(const struct index_assignment& index)
           rval << MOMENTUM_STRING << index.species;
           break;
 
+        case index_parameter:
+          rval << PARAMETER_STRING << index.species;
+          break;
+
         default:
           assert(false);
       }
@@ -91,6 +105,10 @@ unsigned int index_numeric(const struct index_assignment& index)
           rval = index.num_fields + index.species;
           break;
 
+        case index_parameter:
+          rval = index.species;
+          break;
+
         default:
           assert(false);
       }
@@ -102,15 +120,26 @@ unsigned int index_numeric(const struct index_assignment& index)
 // / **************************************************************************************
 
 
-static std::vector<unsigned int> make_assignment(unsigned int max,
+static std::vector<unsigned int> make_assignment(unsigned int fields, unsigned int parameters,
   const std::vector<struct index_abstract>& indices, unsigned int i)
   {
     std::vector<unsigned int> rval;
 
     for(int j = 0; j < indices.size(); j++)
       {
-        unsigned int this_index = i % (indices[j].range * max);
-        i                       = i / (indices[j].range * max);
+        unsigned int size = 1;
+
+        if(indices[j].range == INDEX_RANGE_PARAMETER)
+          {
+            size = parameters;
+          }
+        else
+          {
+            size = indices[j].range * fields;
+          }
+
+        unsigned int this_index = i % size;
+        i                       = i / size;
 
         rval.push_back(this_index);
       }
@@ -119,7 +148,7 @@ static std::vector<unsigned int> make_assignment(unsigned int max,
   }
 
 
-static std::vector<struct index_assignment> make_index_assignment(unsigned int max,
+static std::vector<struct index_assignment> make_index_assignment(unsigned int fields, unsigned int parameters,
   const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices)
   {
     std::vector<struct index_assignment> rval;
@@ -131,18 +160,39 @@ static std::vector<struct index_assignment> make_index_assignment(unsigned int m
         struct index_assignment index;
 
         index.species = assignment[i];
-        if(index.species >= max)
+        if (indices[i].range == INDEX_RANGE_PARAMETER)
           {
-            index.trait   = index_momentum;
-            index.species -= max;
+            index.trait = index_parameter;
+            assert(index.species < parameters);
+          }
+        else if(indices[i].range == 2)
+          {
+            if(index.species >= fields)
+              {
+                index.trait = index_momentum;
+                index.species -= fields;
+              }
+            else
+              {
+                index.trait = index_field;
+              }
+
+            assert(index.species < fields);
+          }
+        else if (indices[i].range == 1)
+          {
+            index.trait = index_field;
+            assert(index.species < fields);
           }
         else
           {
-            index.trait = index_field;
+            assert(false);
           }
+
         index.number     = i;
         index.label      = indices[i].label;
-        index.num_fields = max;
+        index.num_fields = fields;
+        index.num_params = parameters;
 
         rval.push_back(index);
       }
@@ -161,14 +211,17 @@ static bool is_ordered (std::vector<unsigned int>& a,
       {
         if(indices[i].assign)
           {
-            if(i < a.size()-1)
-              {
-                if(a[i] < a[i+1])
-                  {
-                    rval = false;
-                    break;
-                  }
-              }
+            // UNCOMMENT TO ENFORCE ONLY ORDERED INDEX PAIRS
+            // (that's not usually what we want; we want full summation convention expressions)
+            //
+//            if(i < a.size()-1)
+//              {
+//                if(a[i] < a[i+1])
+//                  {
+//                    rval = false;
+//                    break;
+//                  }
+//              }
           }
         else
           {
@@ -182,6 +235,10 @@ static bool is_ordered (std::vector<unsigned int>& a,
 
                 case index_momentum:
                   count = indices[i].assignment.species + indices[i].assignment.num_fields;
+                  break;
+
+                case index_parameter:
+                  count = indices[i].assignment.species;
                   break;
 
                 case index_unknown:

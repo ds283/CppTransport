@@ -41,7 +41,6 @@ namespace transport
               background(const std::vector<number>& ics, const std::vector<double>& times);
 
             // Integrate background and 2-point function on the GPU
-
             transport::twopf<number>
               twopf(vex::Context& ctx, const std::vector<double>& ks, const std::vector<number>& ics, const std::vector<double>& times);
 
@@ -59,7 +58,7 @@ namespace transport
         {
           public:
             $$__MODEL_background_functor(const std::vector<number>& p, number Mp) : parameters(p), M_Planck(Mp) {}
-            void operator()(const std::vector<number>& x, std::vector<number>& dxdt, double t);
+            void operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
 
           private:
             const number              M_Planck;
@@ -86,14 +85,17 @@ namespace transport
       class $$__MODEL_twopf_functor
         {
           public:
-            $$__MODEL_twopf_functor(const vex::vector<number>& p, const vex::vector<number>& Mp, const vex::vector<double>& ks)
-            : parameters(p), M_Planck(Mp), k_list(ks) {}
-            void operator()(const twopf_state& x, twopf_state& dxdt, double t);
+            $$__MODEL_twopf_functor(const std::vector<number>& p, const number Mp,
+              const vex::vector<double>& ks,
+              vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)>& u2)
+              : parameters(p), M_Planck(Mp), k_list(ks), u2_tensor(u2) {}
+            void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
 
           private:
-            const vex::vector<number>& M_Planck;
-            const vex::vector<number>& parameters;
-            const vex::vector<double>& k_list;
+            const number						                                               M_Planck;
+            const std::vector<number>&                                             parameters;
+            const vex::vector<double>&                                             k_list;
+            vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)>& u2_tensor;
         };
 
 
@@ -104,13 +106,16 @@ namespace transport
           public:
             $$__MODEL_twopf_observer(std::vector<double>& s,
               std::vector< std::vector<number> >& bh,
-              std::vector< std::vector< std::vector<number> > >& tpfh) : slices(s), background_history(bh), twopf_history(tpfh) {}
+              std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks)
+              : slices(s), background_history(bh), twopf_history(tpfh), k_size(ks) {}
             void operator()(const twopf_state& x, double t);
 
           private:
             std::vector<double>&                               slices;
             std::vector< std::vector<number> >&                background_history;
             std::vector< std::vector< std::vector<number> > >& twopf_history;
+
+            const unsigned int                                 k_size;    // number of k-modes we are integrating
         };
 
 
@@ -140,8 +145,10 @@ namespace transport
       number $$__MODEL<number>::V(std::vector<number> fields)
         {
           assert(fields.size() == $$__NUMBER_FIELDS);
-          $$__SET_PARAMETERS{number, this->parameters}
-          $$__SET_FIELDS{number, fields}
+
+          auto $$__PARAMETER[1] = this->parameters[$$__1];
+          auto $$__FIELD[a]     = fields[$$__a];
+          auto __Mp             = this->M_Planck;
 
           number rval = $$__V;
 
@@ -195,24 +202,20 @@ namespace transport
           fix_initial_conditions(ics, hst_x);
           write_initial_conditions(hst_x, std::cout);
 
-          // initialize device copy of Planck masses
-          std::vector<number> hst_M_Planck(1, this->M_Planck);
-          vex::vector<number> dev_M_Planck(ctx, hst_M_Planck);
-
-          // initialize device copy of parameter vector
-          vex::vector<number> dev_params(ctx, this->parameters);
-
           // initialize device copy of k list
-          vex::vector<double> dev_ks(ctx, ks);
+          vex::vector<double> dev_ks(ctx.queue(), ks);
+          
+          // set up space for the u2-tensor
+          vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> u2_tensor(ctx.queue(), ks.size());
 
           // set up a functor to evolve this system
-          $$__MODEL_twopf_functor<number> system(dev_params, dev_M_Planck, dev_ks);
+          $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, dev_ks, u2_tensor);
 
           // work out how much space we need to store background + 2pf
           const unsigned int state_size = 2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
           const unsigned int num_ks     = ks.size();
 
-          twopf_state dev_x(ctx, num_ks);
+          twopf_state dev_x(ctx.queue(), num_ks);
 
           // initialize the initial state
           for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
@@ -228,12 +231,18 @@ namespace transport
           std::vector<double>                               slices;
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
-          $$__MODEL_twopf_observer<number> obs(slices, background_history, twopf_history);
+          $$__MODEL_twopf_observer<number> obs(slices, background_history, twopf_history, ks.size());
 
-          integrate_times( make_dense_output< $$__PERT_STEPPER< std::vector<number> > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
-            system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          $$__PERT_STEPPER<twopf_state, double, twopf_state, double,
+            boost::numeric::odeint::vector_space_algebra,
+            boost::numeric::odeint::default_operations> stepper;
 
-          transport::twopf<number> tpf(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, slices, background_history, twopf_history);
+          integrate_times(stepper, system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+//          integrate_times( make_dense_output< $$__PERT_STEPPER< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
+//            system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+          transport::twopf<number> tpf(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, ks, slices, background_history, twopf_history);
 
           return(tpf);
         }
@@ -248,9 +257,10 @@ namespace transport
           if(ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
             {
               // supply the missing initial conditions using a slow-roll approximation
-              $$__SET_PARAMETERS{number, this->parameters}
-              $$__SET_FIELDS{number,ics}
-              $$__SET_SR_VELOCITY{number}
+              auto $$__PARAMETER[1] = this->parameters[$$__1];
+              auto $$__FIELD[a]     = ics[$$__a];
+              auto __Mp             = this->M_Planck;
+
               rics.push_back($$__SR_VELOCITY[a]);
             }
           else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
@@ -292,12 +302,13 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL_background_functor<number>::operator()(const std::vector<number>& x, std::vector<number>& dxdt, double t)
+      void $$__MODEL_background_functor<number>::operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t)
         {
-          $$__SET_PARAMETERS{number, this->parameters}
-          $$__SET_ALL{number, x}
-          $$__SET_U1_TENSOR{number}
-          dxdt[$$__A] = $$__U1_TENSOR[A];
+          auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          auto $$__COORDINATE[A] = __x[$$__A];
+          auto __Mp              = this->M_Planck;
+
+          __dxdt[$$__A]          = $$__U1_TENSOR[A];
         }
 
 
@@ -316,12 +327,31 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL_twopf_functor<number>::operator()(const twopf_state& x, twopf_state& dxdt, double t)
+      void $$__MODEL_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
-          $$__SET_PARAMETERS{number, this->parameters}
-          $$__SET_ALL{number, x}
-          $$__SET_U1_TENSOR{number}
-          dxdt($$__A) = $$__U1_TENSOR[A];
+          auto $$__PARAMETER[1]  = vex::tag<$$__UNIQUE>(this->parameters[$$__1]);
+          auto $$__COORDINATE[A] = vex::tag<$$__UNIQUE>(__x($$__A));
+          auto __Mp              = vex::tag<$$__UNIQUE>(this->M_Planck);
+          auto __k               = vex::tag<$$__UNIQUE>(this->k_list);
+          auto __a               = vex::tag<$$__UNIQUE>(exp(__t));
+
+          const unsigned int start_background = 0;
+          const unsigned int start_twopf      = 2*$$__NUMBER_FIELDS;
+
+          auto __tpf_$$__A_$$__B = $$// vex::tag<$$__UNIQUE>(__x(start_twopf+(2*$$__NUMBER_FIELDS*$$__A)+$$__B));
+          auto __u2_$$__A_$$__B  = $$// vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B));
+
+          #define __background(a) __dxdt(start_background + a)
+          #define __dtwopf(a,b)   __dxdt(start_twopf + (2*$$__NUMBER_FIELDS*a) + b)
+
+          // evolve the background
+          __background($$__A) = $$__U1_TENSOR[A];
+
+          // set up a k-dependent u2 tensor
+          __u2_$$__A_$$__B = $$__U2_TENSOR[AB];
+
+          // evolve the 2pf
+          __dtwopf($$__A,$$__B) = $$// $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B + $$__U2_NAME[BD]{__u2}*__tpf_$$__A_$$__D;
         }
 
 
@@ -346,13 +376,15 @@ namespace transport
           // first, background
           for(int i = 0; i < background_state_size; i++)
             {
-              hst_background_state.push_back(x(i)[0]);
+              hst_background_state[i] = x(i)[0];  // only need to make a copy for one k-mode; the rest are all the same
             }
           this->background_history.push_back(hst_background_state);
 
           // then, two pf
           for(int i = 0; i < twopf_state_size; i++)
             {
+              // ensure destination is sufficiently large
+              hst_state[i].resize(this->k_size);
               vex::copy(x(background_state_size + i), hst_state[i]);
             }
 

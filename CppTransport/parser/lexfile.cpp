@@ -6,8 +6,6 @@
 //
 
 
-#include <assert.h>
-
 #include <iostream>
 #include <fstream>
 
@@ -41,6 +39,12 @@ char lexfile::get(enum lexfile_outcome& state)
     switch(this->state)
       {
         case lexfile_unready:                       // this will be the most common case; we need to read a new char
+          if(this->stream.eof())
+            {
+              this->state = lexfile_eof;
+              this->c     = 0;
+              break;
+            }
           while(this->state == lexfile_unready)
             {
               assert(this->stream.is_open());

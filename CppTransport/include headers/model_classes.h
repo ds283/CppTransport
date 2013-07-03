@@ -70,15 +70,15 @@ namespace transport
       template <typename number>
       class canonical_model : public model<number>
         {
-      public:
-          canonical_model(const std::string& n, const std::string &a, const std::string& t, number Mp,
-            unsigned int N_f, unsigned int N_p,
-            const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-            const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-            const std::vector<number>& ps);
+          public:
+            canonical_model(const std::string& n, const std::string &a, const std::string& t, number Mp,
+              unsigned int N_f, unsigned int N_p,
+              const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
+              const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
+              const std::vector<number>& ps);
 
-          // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
-          virtual number                  V(std::vector<number> fields) = 0;
+            // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
+            virtual number                  V(std::vector<number> fields) = 0;
         };
 
 

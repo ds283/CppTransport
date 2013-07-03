@@ -15,11 +15,12 @@
 #include <string>
 
 
-#define INDEX_RANGE_UNKNOWN (0)
+#define INDEX_RANGE_UNKNOWN   (0)
+#define INDEX_RANGE_PARAMETER (1000)
 
 enum index_trait
   {
-    index_field, index_momentum, index_unknown
+    index_field, index_momentum, index_parameter, index_unknown
   };
 
 struct index_assignment
@@ -30,13 +31,15 @@ struct index_assignment
     char             label;       // index identifier - alphanumeric label
     unsigned int     number;      // index identifier - serial number
 
-    unsigned int     num_fields;  // number of fields
+    unsigned int     num_fields;  // total number of fields
+    unsigned int     num_params;  // total number of parameters
   };
 
 struct index_abstract
   {
     char                    label;       // index label
     unsigned int            range;       // how many values does this index assume? this is a multiplier for the total number of fields
+                                         // UNLESS it is INDEX_RANGE_PARAMETER, in which case this is a parameter index
 
     bool                    assign;      // should this index be included when generating assignments?
     struct index_assignment assignment;  // if assign = false, use this fixed assignment instead
@@ -46,12 +49,13 @@ struct index_abstract
 class assignment_package
   {
     public:
-      assignment_package(unsigned int f) : num_fields(f) {}
+      assignment_package(unsigned int f, unsigned int p) : num_fields(f), num_parameters(p) {}
 
       std::vector< std::vector<struct index_assignment> > assign(const std::vector<struct index_abstract>& indices);
 
     private:
-      const unsigned int      num_fields;
+      const unsigned int num_fields;
+      const unsigned int num_parameters;
   };
 
 

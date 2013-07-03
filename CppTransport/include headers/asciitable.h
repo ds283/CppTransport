@@ -58,10 +58,10 @@ namespace transport
             }
           max++;
 
-          this->stream << std::right << std::setw(max) << x_name;
+          this->stream << std::right << std::setw((unsigned int)max) << x_name;
           for(int i = 0; i < columns.size(); i++)
             {
-              this->stream << std::right << std::setw(max) << columns[i];
+              this->stream << std::right << std::setw((unsigned int)max) << columns[i];
             }
           this->stream << std::endl;
 
@@ -69,11 +69,11 @@ namespace transport
             {
               assert(columns.size() == ys[i].size());
 
-              this->stream << " " << std::right << std::setw(max-1) << xs[i];
+              this->stream << " " << std::right << std::setw((unsigned int)(max-1)) << xs[i];
 
               for(int j = 0; j < ys[i].size(); j++)
                 {
-                  this->stream << " " << std::right << std::setw(max-1) << (ys[i])[j];
+                  this->stream << " " << std::right << std::setw((unsigned int)(max-1)) << (ys[i])[j];
                 }
               this->stream << std::endl;
             }
