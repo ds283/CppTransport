@@ -25,6 +25,8 @@ class u_tensor_factory
       virtual std::vector< std::vector<GiNaC::ex> >                compute_u2  () = 0;
       virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3  () = 0;
 
+      virtual GiNaC::ex                                            compute_Hsq () = 0;
+
     protected:
       script*                          root;
 
@@ -46,6 +48,8 @@ class canonical_u_tensor_factory : public u_tensor_factory
       std::vector<GiNaC::ex>                                compute_u1  ();
       std::vector< std::vector<GiNaC::ex> >                 compute_u2  ();
       std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3  ();
+
+      GiNaC::ex                                             compute_Hsq ();
 
     private:
       GiNaC::ex epsilon();

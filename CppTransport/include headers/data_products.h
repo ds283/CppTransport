@@ -9,6 +9,7 @@
 #define __CPP_TRANSPORT_DATA_PRODUCTS_H_
 
 #include <string>
+#include <sstream>
 #include <vector>
 
 #include "asciitable.h"
@@ -51,7 +52,8 @@ namespace transport
             const std::vector<double>                sample_points;     // list of times at which we hold samples for the background
 
             const std::vector< std::vector<number> > samples;           // list of samples
-            // samples are tuples of the for (fields, d(fields)/dN)
+              // first index: time of observation
+              // second index: field label
         };
 
       template <typename number>
@@ -77,6 +79,9 @@ namespace transport
 
             background<number>                                      backg;             // container for background
             const std::vector< std::vector< std::vector<number> > > samples;           // list of samples of 2pf
+              // first index: time of observation
+              // second index: 2pf component
+              // third index: k
         };
 
 //  IMPLEMENTATION -- CLASS background
@@ -98,7 +103,43 @@ namespace transport
         {
           transport::asciitable<number> writer(out);
 
-          out << obj.backg;
+          out << obj.backg << std::endl;
+
+          std::vector<std::string> labels;
+          for(int i = 0; i < obj.N_fields; i++)
+            {
+              for(int j = 0; j < obj.N_fields; j++)
+                {
+                  std::ostringstream l;
+                  l << obj.field_names[i] << ", " << obj.field_names[j];
+                  labels.push_back(l.str());
+                }
+            }
+
+          std::vector< std::vector<number> > twopf_components(obj.sample_points.size());
+          for(int i = 0; i < obj.sample_ks.size(); i++)
+            {
+              out << "k = " << obj.sample_ks[i] << std::endl << std::endl;
+
+              for(int j = 0; j < obj.sample_points.size(); j++)
+                {
+                  twopf_components[j].resize(obj.N_fields * obj.N_fields);
+
+                  for(int m = 0; m < obj.N_fields; m++)
+                    {
+                      for(int n = 0; n < obj.N_fields; n++)
+                        {
+                          unsigned int index = obj.N_fields*m + n;
+
+                          number temp = obj.samples[j][index][i];
+
+                          twopf_components[j][index] = temp;
+                        }
+                    }
+                }
+
+              writer.write("e-folds", labels, obj.sample_points, twopf_components);
+            }
 
           return(out);
         }

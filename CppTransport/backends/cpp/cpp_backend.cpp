@@ -17,7 +17,6 @@
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
 
-#define U2_NAME      "__u2"
 #define U3_NAME      "__u3"
 
 #define MAX_INDEX    (26)
@@ -40,6 +39,7 @@ static std::string replace_param_list   (struct replacement_data& data, const st
 static std::string replace_platx_list   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_state_list   (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_V            (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_Hsq          (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_b_abs_err    (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_b_rel_err    (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_b_step       (struct replacement_data& data, const std::vector<std::string>& args);
@@ -75,7 +75,7 @@ static const std::string pre_macros[] =
     "NUMBER_FIELDS", "NUMBER_PARAMS",
     "FIELD_NAME_LIST", "LATEX_NAME_LIST",
     "PARAM_NAME_LIST", "PLATX_NAME_LIST",
-    "STATE_NAME_LIST", "V",
+    "STATE_NAME_LIST", "V", "HUBBLE_SQ",
     "BACKG_ABS_ERR", "BACKG_REL_ERR", "BACKG_STEP_SIZE", "BACKG_STEPPER",
     "PERT_ABS_ERR", "PERT_REL_ERR", "PERT_STEP_SIZE", "PERT_STEPPER"
   };
@@ -92,7 +92,7 @@ static const replacement_function_simple pre_macro_replacements[] =
     replace_number_fields, replace_number_params,
     replace_field_list, replace_latex_list,
     replace_param_list, replace_platx_list,
-    replace_state_list, replace_V,
+    replace_state_list, replace_V, replace_Hsq,
     replace_b_abs_err, replace_b_rel_err, replace_b_step, replace_b_stepper,
     replace_p_abs_err, replace_p_rel_err, replace_p_step, replace_p_stepper,
   };
@@ -109,7 +109,7 @@ static const unsigned int pre_macro_args[] =
     0, 0,
     0, 0,
     0, 0,
-    0, 0,
+    0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0
   };
@@ -155,7 +155,7 @@ static const unsigned int index_macro_args[] =
   };
 
 
-#define NUMBER_PRE_MACROS    (26)
+#define NUMBER_PRE_MACROS    (27)
 #define NUMBER_POST_MACROS   (1)
 #define NUMBER_INDEX_MACROS  (8)
 
@@ -166,7 +166,7 @@ static const unsigned int index_macro_args[] =
 static bool                                 process           (struct replacement_data& d);
 
 static std::vector<index_abstract>          make_field_indices(struct replacement_data& data);
-static std::vector<index_abstract>          make_u_indices    (struct replacement_data& data, unsigned int num);
+
 
 // ******************************************************************
 
@@ -314,34 +314,9 @@ static std::vector<index_abstract> make_field_indices(struct replacement_data& d
   }
 
 
-static std::vector<index_abstract> make_u_indices(struct replacement_data& data, unsigned int num)
-  {
-    assert(data.source != NULL);
-
-    std::vector<struct index_abstract> rval;
-
-    if(num > MAX_INDEX)
-      {
-        error(ERROR_INDEX_OUT_OF_RANGE);
-        num = MAX_INDEX;
-      }
-
-    for(int i = 0; i < num; i++)
-      {
-        struct index_abstract index;
-
-        index.label   = 'A' + i;
-        index.assign  = true;
-        index.range   = 2;
-
-        rval.push_back(index);
-      }
-
-    return(rval);
-  }
-
-
 // ********************************************************************************
+
+
 // REPLACEMENT RULES
 
 
@@ -369,7 +344,9 @@ static std::string replace_date(struct replacement_data& d, const std::vector<st
 
     strftime(buf, sizeof(buf), "%X on %d %m %Y", &tstruct);
 
-    return(buf);
+    std::string rval(buf);
+
+    return(rval);
   }
 
 static std::string replace_source(struct replacement_data& d, const std::vector<std::string>& args)
@@ -529,14 +506,23 @@ static std::string replace_state_list(struct replacement_data& d, const std::vec
 
 static std::string replace_V(struct replacement_data& d, const std::vector<std::string>& args)
   {
-    std::string rval;
     GiNaC::ex potential = d.source->get_potential();
 
     std::ostringstream out;
     out << GiNaC::csrc << potential;
-    rval = out.str();
 
-    return(rval);
+    return(out.str());
+  }
+
+static std::string replace_Hsq(struct replacement_data& d, const std::vector<std::string>& args)
+  {
+    std::string rval;
+    GiNaC::ex Hsq = d.u_factory->compute_Hsq();
+
+    std::ostringstream out;
+    out << GiNaC::csrc << Hsq;
+
+    return(out.str());
   }
 
 static std::string replace_b_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
@@ -625,92 +611,6 @@ static std::string replace_unique(struct replacement_data& data, const std::vect
 
 // ******************************************************************
 
-
-static std::string replace_parameters(struct replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<GiNaC::symbol> list = d.source->get_param_symbols();
-    std::ostringstream out;
-
-    std::string container_name = "parameters";
-    std::string open_bracket   = "[";
-    std::string close_bracket  = "[";
-
-    if(args.size() >= 1) container_name = args[0];
-    if(args.size() >= 2) open_bracket   = args[1];
-    if(args.size() >= 3) close_bracket  = args[2];
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << std::endl;
-          }
-        out << GiNaC::csrc << "auto " << list[i] << " = vex::tag<" << d.unique++ << ">"
-          << "(" << container_name << open_bracket << i << close_bracket << ");";
-      }
-
-    return(out.str());
-  }
-
-static std::string replace_fields(struct replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<GiNaC::symbol> list = d.source->get_field_symbols();
-    std::ostringstream out;
-
-    std::string container_name = "fields";
-    std::string open_bracket   = "[";
-    std::string close_bracket  = "[";
-
-    if(args.size() >= 1) container_name = args[0];
-    if(args.size() >= 2) open_bracket   = args[1];
-    if(args.size() >= 3) close_bracket  = args[2];
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << std::endl;
-          }
-        out << GiNaC::csrc << "auto " << list[i] << " = vex::tag<" << d.unique++ << ">"
-          << "(" << container_name << open_bracket << i << close_bracket << ");";
-      }
-
-    return(out.str());
-  }
-
-static std::string replace_all(struct replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<GiNaC::symbol> f_list = d.source->get_field_symbols();
-    std::vector<GiNaC::symbol> d_list = d.source->get_deriv_symbols();
-    std::ostringstream out;
-
-    std::string container_name = "fields";
-    std::string open_bracket   = "[";
-    std::string close_bracket  = "[";
-
-    if(args.size() >= 1) container_name = args[0];
-    if(args.size() >= 2) open_bracket   = args[1];
-    if(args.size() >= 3) close_bracket  = args[2];
-
-    for(int i = 0; i < f_list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << std::endl;
-          }
-        out << GiNaC::csrc << "auto " << f_list[i] << " = vex::tag<" << d.unique++ << ">"
-          << "(" << container_name << open_bracket << i << close_bracket << ");";
-      }
-
-    for(int i = 0; i < d_list.size(); i++)
-      {
-        out << std::endl;
-        out << GiNaC::csrc << "auto " << d_list[i] << " = vex::tag<" << d.unique++ << ">"
-          << "(" << container_name << open_bracket << f_list.size() + i << close_bracket << ");";
-      }
-
-    return(out.str());
-  }
 
 static std::string replace_parameter(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)

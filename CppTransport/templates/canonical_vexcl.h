@@ -42,13 +42,20 @@ namespace transport
 
             // Integrate background and 2-point function on the GPU
             transport::twopf<number>
-              twopf(vex::Context& ctx, const std::vector<double>& ks, const std::vector<number>& ics, const std::vector<double>& times);
+              twopf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
+                const std::vector<number>& ics, const std::vector<double>& times);
 
           protected:
             void
-              fix_initial_conditions(const std::vector<number>& ics, std::vector<number>& rics);
+              fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
             void
               write_initial_conditions(const std::vector<number>& rics, std::ostream& stream);
+            void
+              make_tpf_ic(unsigned int i, unsigned int j, const std::vector<double>& __ks, double __Nstar,
+                const std::vector<number>& __fields, std::vector<double>& __tpf);
+            void
+              rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+                double __Nstar, const std::vector<number>& __fields);
         };
 
 
@@ -166,8 +173,8 @@ namespace transport
 
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> x = ics;
-          fix_initial_conditions(ics, x);
-          write_initial_conditions(x, std::cout);
+          this->fix_initial_conditions(ics, x);
+          this->write_initial_conditions(x, std::cout);
 
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
@@ -192,46 +199,52 @@ namespace transport
 
 
       template <typename number>
-      transport::twopf<number> $$__MODEL<number>::twopf(vex::Context& ctx, const std::vector<double>& ks,
+      transport::twopf<number> $$__MODEL<number>::twopf(vex::Context& ctx,
+        const std::vector<double>& ks, double Nstar,
         const std::vector<number>& ics, const std::vector<double>& times)
         {
           using namespace boost::numeric::odeint;
 
           // validate initial conditions (or set up ics for momenta if necessary)
-          std::vector<number> hst_x = ics;
-          fix_initial_conditions(ics, hst_x);
-          write_initial_conditions(hst_x, std::cout);
+          std::vector<number> hst_bg = ics;
+          this->fix_initial_conditions(ics, hst_bg);
+          this->write_initial_conditions(hst_bg, std::cout);
+
+          // set up vector of ks corresponding to honest comoving momenta
+          std::vector<double> real_ks(ks.size());
+          this->rescale_ks(ks, real_ks, Nstar, hst_bg);
 
           // initialize device copy of k list
-          vex::vector<double> dev_ks(ctx.queue(), ks);
+          vex::vector<double> dev_ks(ctx.queue(), real_ks);
           
           // set up space for the u2-tensor
-          vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> u2_tensor(ctx.queue(), ks.size());
+          vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> u2_tensor(ctx.queue(), real_ks.size());
 
           // set up a functor to evolve this system
           $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, dev_ks, u2_tensor);
 
-          // work out how much space we need to store background + 2pf
-          const unsigned int state_size = 2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
-          const unsigned int num_ks     = ks.size();
+          twopf_state dev_x(ctx.queue(), real_ks.size());
 
-          twopf_state dev_x(ctx.queue(), num_ks);
+          // fix initial conditions for the background + 2pf
+          // -- background first
+          dev_x($$__A) = $$// hst_bg[$$__A];
 
-          // initialize the initial state
+          // now for 2pf
+          std::vector<double> hst_tp(real_ks.size());
           for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
             {
-              dev_x(i) = hst_x[i];
-            }
-          for(int i = 2*$$__NUMBER_FIELDS; i < state_size; i++)
-            {
-              dev_x(i) = 0;
+              for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
+                {
+                  this->make_tpf_ic(i, j, real_ks, Nstar, hst_bg, hst_tp);
+                  vex::copy(hst_tp, dev_x(2*$$__NUMBER_FIELDS+(2*$$__NUMBER_FIELDS*i)+j));
+                }
             }
 
           // set up functor to observe the integration
           std::vector<double>                               slices;
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
-          $$__MODEL_twopf_observer<number> obs(slices, background_history, twopf_history, ks.size());
+          $$__MODEL_twopf_observer<number>                  obs(slices, background_history, twopf_history, ks.size());
 
           $$__PERT_STEPPER<twopf_state, double, twopf_state, double,
             boost::numeric::odeint::vector_space_algebra,
@@ -252,24 +265,24 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::fix_initial_conditions(const std::vector<number>& ics, std::vector<number>& rics)
+      void $$__MODEL<number>::fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics)
         {
-          if(ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
+          if(__ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
             {
               // supply the missing initial conditions using a slow-roll approximation
               auto $$__PARAMETER[1] = this->parameters[$$__1];
-              auto $$__FIELD[a]     = ics[$$__a];
+              auto $$__FIELD[a]     = __ics[$$__a];
               auto __Mp             = this->M_Planck;
 
-              rics.push_back($$__SR_VELOCITY[a]);
+              __rics.push_back($$__SR_VELOCITY[a]);
             }
-          else if(ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
+          else if(__ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {
               // need do nothing
             }
           else
             {
-              std::cerr << __CPP_TRANSPORT_WRONG_ICS_A << ics.size()
+              std::cerr << __CPP_TRANSPORT_WRONG_ICS_A << __ics.size()
                         << __CPP_TRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
                         << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << ")" << std::endl;
               exit(EXIT_FAILURE);
@@ -297,6 +310,78 @@ namespace transport
           stream << std::endl;
         }
 
+
+      template <typename number>
+      void $$__MODEL<number>::make_tpf_ic(unsigned int __i, unsigned int __j,
+        const std::vector<double>& __ks, double __Nstar,
+        const std::vector<number>& __fields, std::vector<double>& __tpf)
+        {
+          auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          auto $$__COORDINATE[A] = __fields[$$__A];
+          auto __Mp              = this->M_Planck;
+
+          auto __Hsq             = $$__HUBBLE_SQ;
+
+          for(int __n = 0; __n < __ks.size(); __n++)
+            {
+              if(__i < $$__NUMBER_FIELDS && __j < $$__NUMBER_FIELDS)        // field-field correlation function
+                {
+                  if(__i == __j)
+                    {
+                      __tpf[__n] = (1.0/(2.0*__ks[__n])) * exp(2.0 * __Nstar);
+                    }
+                  else
+                    {
+                      __tpf[__n] = 0.0;
+                    }
+                }
+              else if((__i < $$__NUMBER_FIELDS && __j >= $$__NUMBER_FIELDS)   // field-momentum correlation function
+                      || (__i >= $$__NUMBER_FIELDS && __j < $$__NUMBER_FIELDS))
+                {
+                  if(__i >= $$__NUMBER_FIELDS) __i -= $$__NUMBER_FIELDS;
+                  if(__j >= $$__NUMBER_FIELDS) __j -= $$__NUMBER_FIELDS;
+
+                  if(__i == __j)
+                    {
+                      __tpf[__n] = -(1.0/(2.0*__ks[__n])) * exp(2.0 * __Nstar);
+                    }
+                  else
+                    {
+                      __tpf[__n] = 0.0;
+                    }
+                }
+              else if(__i >= $$__NUMBER_FIELDS && __j >= $$__NUMBER_FIELDS)   // momentum-momentum correlation function
+                {
+                  if(__i == __j)
+                    {
+                      __tpf[__n] = (__ks[__n]/(2.0*__Hsq)) * exp(4.0 * __Nstar);
+                    }
+                  else
+                    {
+                      __tpf[__n] = 0.0;
+                    }
+                }
+            }
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+        double __Nstar, const std::vector<number>& __fields)
+        {
+          auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          auto $$__COORDINATE[A] = __fields[$$__A];
+          auto __Mp              = this->M_Planck;
+
+          auto __Hsq             = $$__HUBBLE_SQ;
+
+          assert(__ks.size() == __real_ks.size());
+
+          for(int __n = 0; __n < __ks.size(); __n++)
+            {
+              __real_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
+            }
+        }
 
       // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
 

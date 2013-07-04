@@ -136,6 +136,12 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
   }
 
 
+GiNaC::ex canonical_u_tensor_factory::compute_Hsq()
+  {
+    return(this->Hubble_square());
+  }
+
+
 // *****************************************************************************
 
 
