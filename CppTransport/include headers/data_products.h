@@ -15,6 +15,8 @@
 #include "asciitable.h"
 #include "messages_en.h"
 
+#include "plot_maker.h"
+
 namespace transport
   {
       // DATA PRODUCTS -- objects wrapping the various data products produced by each model
@@ -42,6 +44,8 @@ namespace transport
               : N_fields(N_f), field_names(f_names), sample_points(sp), samples(s)
               {}
 
+            void plot(plot_maker<number>* maker, std::string output, std::string title = "");
+
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
 
@@ -67,6 +71,8 @@ namespace transport
                 backg(N_f, f_names, sp, b), samples(twopf)
               {}
 
+            void time_history(plot_maker<number>* maker, std::string output);
+
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
 
@@ -87,6 +93,12 @@ namespace transport
 //  IMPLEMENTATION -- CLASS background
 
       template <typename number>
+      void background<number>::plot(plot_maker<number>* maker, std::string output, std::string title)
+        {
+          maker->plot(output, title, this->sample_points, this->samples, this->field_names, "N", "fields", false, false);
+        }
+
+      template <typename number>
       std::ostream& operator<<(std::ostream& out, background<number>& obj)
         {
           transport::asciitable<number> writer(out);
@@ -97,6 +109,54 @@ namespace transport
         }
 
 //  IMPLEMENTATION -- CLASS twopf
+
+      template <typename number>
+      void twopf<number>::time_history(plot_maker<number>* maker, std::string output)
+        {
+          // loop over k-modes
+          for(int i = 0; i < this->sample_ks.size(); i++)
+            {
+              std::vector< std::vector<number> > data(this->sample_points.size());
+
+              // we want data to be a time series of the 2pf components,
+              // and there are N_fields^2 of those
+              for(int j = 0; j < this->sample_points.size(); j++)
+                {
+                  data[j].resize(this->N_fields*this->N_fields/4);
+
+                  // now, for this k-mode, slice up the time series
+                  for(int m = 0; m < this->N_fields/2; m++)
+                    {
+                      for(int n = 0; n < this->N_fields/2; n++)
+                        {
+                          unsigned int samples_index = this->N_fields*m + n;
+                          unsigned int data_index    = this->N_fields*m/2 + n;
+
+                          data[j][data_index] = this->samples[j][samples_index][i];
+                        }
+                    }
+                }
+
+              std::ostringstream fnam;
+              fnam << output << "_" << i << ".pdf";
+
+              std::ostringstream title;
+              title << "k = " << this->sample_ks[i];
+
+              std::vector<std::string> labels(this->N_fields*this->N_fields/4);
+              for(int i = 0; i < this->N_fields/2; i++)
+                {
+                  for(int j = 0; j < this->N_fields/2; j++)
+                    {
+                      std::ostringstream l;
+                      l << this->field_names[i] << ", " << this->field_names[j];
+                      labels[this->N_fields*i/2+j] = l.str();
+                    }
+                }
+
+              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "N", "two-point function", false, true);
+            }
+        }
 
       template <typename number>
       std::ostream& operator<<(std::ostream& out, twopf<number>& obj)
@@ -119,6 +179,7 @@ namespace transport
           std::vector< std::vector<number> > twopf_components(obj.sample_points.size());
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
+              if(i > 0) out << std::endl;
               out << "k = " << obj.sample_ks[i] << std::endl << std::endl;
 
               for(int j = 0; j < obj.sample_points.size(); j++)

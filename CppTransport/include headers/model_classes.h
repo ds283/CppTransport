@@ -11,11 +11,6 @@
 #include <string>
 #include <vector>
 
-#include "vexcl/vexcl.hpp"
-
-#include "boost/numeric/odeint.hpp"
-#include "boost/numeric/odeint/external/vexcl/vexcl_resize.hpp"
-
 #include "messages_en.h"
 
 namespace transport
@@ -26,43 +21,43 @@ namespace transport
       template <typename number>
       class model
         {
-      public:
-          model(const std::string& n, const std::string& a, const std::string& t, number Mp,
-            unsigned int N_f, unsigned int N_p,
-            const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-            const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-            const std::vector<number>& ps);
+          public:
+              model(const std::string& n, const std::string& a, const std::string& t, number Mp,
+                unsigned int N_f, unsigned int N_p,
+                const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
+                const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
+                const std::vector<number>& ps);
 
-          const std::string&              get_name();           // return name of model implemented by this instance
-          const std::string&              get_author();         // return authors of model implemented by this instance
-          const std::string&              get_tag();            // return tagline for model implemented by this instance
+              const std::string&              get_name();           // return name of model implemented by this instance
+              const std::string&              get_author();         // return authors of model implemented by this instance
+              const std::string&              get_tag();            // return tagline for model implemented by this instance
 
-          unsigned int                    get_N_fields();       // return number of fields
-          unsigned int                    get_N_params();       // return number of parameters
+              unsigned int                    get_N_fields();       // return number of fields
+              unsigned int                    get_N_params();       // return number of parameters
 
-          const std::vector<std::string>& get_field_names();    // return vector of field names
-          const std::vector<std::string>& get_f_latex_names();  // return vector of LaTeX field names
-          const std::vector<std::string>& get_param_names();    // return vector of parameter names
-          const std::vector<std::string>& get_p_latex_names();  // return vector of LaTeX parameter names
+              const std::vector<std::string>& get_field_names();    // return vector of field names
+              const std::vector<std::string>& get_f_latex_names();  // return vector of LaTeX field names
+              const std::vector<std::string>& get_param_names();    // return vector of parameter names
+              const std::vector<std::string>& get_p_latex_names();  // return vector of LaTeX parameter names
 
-          const std::vector<number>&      get_parameters();
+              const std::vector<number>&      get_parameters();
 
-      protected:
-          const std::string               name;                 // name of model
-          const std::string               author;               // authors
-          const std::string               tag;                  // tagline, perhaps used to indicate citations
+          protected:
+              const std::string               name;                 // name of model
+              const std::string               author;               // authors
+              const std::string               tag;                  // tagline, perhaps used to indicate citations
 
-          const unsigned int              N_fields;             // number of fields in the model
-          const unsigned int              N_params;             // number of parameters in the model
+              const unsigned int              N_fields;             // number of fields in the model
+              const unsigned int              N_params;             // number of parameters in the model
 
-          std::vector<std::string>        field_names;          // vector of field names
-          std::vector<std::string>        f_latex_names;        // vector of LaTeX names for fields
+              std::vector<std::string>        field_names;          // vector of field names
+              std::vector<std::string>        f_latex_names;        // vector of LaTeX names for fields
 
-          std::vector<std::string>        param_names;          // vector of parameter names
-          std::vector<std::string>        p_latex_names;        // vector of parameter LaTeX names
+              std::vector<std::string>        param_names;          // vector of parameter names
+              std::vector<std::string>        p_latex_names;        // vector of parameter LaTeX names
 
-          number                          M_Planck;             // Planck mass (in arbitrary user-chosen units)
-          std::vector<number>             parameters;           // parameter values
+              number                          M_Planck;             // Planck mass (in arbitrary user-chosen units)
+              std::vector<number>             parameters;           // parameter values
         };
 
       // a canonical model: allows an arbitrary number of fields, but flat field-space metric.

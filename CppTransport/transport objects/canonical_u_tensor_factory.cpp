@@ -96,22 +96,22 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2()
                     c = 0;
                     if(i - this->num_fields == j)
                       {
-                        c += (k*k) / (a*a * Hsq);
+                        c -= (k*k) / (a*a * Hsq);
                       }
 
-                    GiNaC::ex Vab = diff(diff(this->V, this->field_list[i - this->num_fields]), this->field_list[j]);
-                    GiNaC::ex Va  = diff(this->V, this->field_list[i - this->num_fields]);
+                    GiNaC::ex Vab = diff(diff(this->V, this->field_list[i-this->num_fields]), this->field_list[j]);
+                    GiNaC::ex Va  = diff(this->V, this->field_list[i-this->num_fields]);
                     GiNaC::ex Vb  = diff(this->V, this->field_list[j]);
 
-                    c += Vab/Hsq;
-                    c += (3-epsilon)*this->deriv_list[i - this->num_fields]*this->deriv_list[j]/pow(this->M_Planck,2);
-                    c += 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[i - this->num_fields]*Vb + this->deriv_list[j]*Va);
+                    c -= Vab/Hsq;
+                    c -= (3-epsilon)*this->deriv_list[i-this->num_fields]*this->deriv_list[j]/pow(this->M_Planck,2);
+                    c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[i-this->num_fields]*Vb + this->deriv_list[j]*Va);
                   }
                 else
                   {
                     if(i == j)
                       {
-                        c = (3 - epsilon);
+                        c = (epsilon - 3);
                       }
                     else
                       {
@@ -154,8 +154,7 @@ GiNaC::ex canonical_u_tensor_factory::epsilon()
         sum_momenta_sq += GiNaC::pow(this->deriv_list[i], 2);
       }
 
-    GiNaC::ex Hsq = (sum_momenta_sq /2 + this->V)/(3*GiNaC::pow(this->M_Planck, 2));
-    GiNaC::ex eps = 3 * (sum_momenta_sq /2) / (sum_momenta_sq /2 + this->V/Hsq);
+    GiNaC::ex eps = sum_momenta_sq/(2*GiNaC::pow(this->M_Planck,2));
 
     return(eps);
   }
@@ -163,14 +162,9 @@ GiNaC::ex canonical_u_tensor_factory::epsilon()
 
 GiNaC::ex canonical_u_tensor_factory::Hubble_square()
   {
-    GiNaC::ex sum_momenta_sq(0);
+    GiNaC::ex eps = this->epsilon();
 
-    for(int i = 0; i < this->deriv_list.size(); i++)
-      {
-        sum_momenta_sq += GiNaC::pow(this->deriv_list[i], 2);
-      }
-
-    GiNaC::ex Hsq = (sum_momenta_sq /2 + this->V)/(3*GiNaC::pow(this->M_Planck, 2));
+    GiNaC::ex Hsq = this->V / (GiNaC::pow(this->M_Planck,2)*(3-eps));
 
     return(Hsq);
   }

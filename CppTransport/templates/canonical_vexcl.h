@@ -9,6 +9,11 @@
 
 #include <math.h>
 
+#include "vexcl/vexcl.hpp"
+
+#include "boost/numeric/odeint.hpp"
+#include "boost/numeric/odeint/external/vexcl/vexcl_resize.hpp"
+
 #include "transport/transport.h"
 
 namespace transport
@@ -153,9 +158,9 @@ namespace transport
         {
           assert(fields.size() == $$__NUMBER_FIELDS);
 
-          auto $$__PARAMETER[1] = this->parameters[$$__1];
-          auto $$__FIELD[a]     = fields[$$__a];
-          auto __Mp             = this->M_Planck;
+          const auto $$__PARAMETER[1] = this->parameters[$$__1];
+          const auto $$__FIELD[a]     = fields[$$__a];
+          const auto __Mp             = this->M_Planck;
 
           number rval = $$__V;
 
@@ -246,14 +251,12 @@ namespace transport
           std::vector< std::vector< std::vector<number> > > twopf_history;
           $$__MODEL_twopf_observer<number>                  obs(slices, background_history, twopf_history, ks.size());
 
-          $$__PERT_STEPPER<twopf_state, double, twopf_state, double,
+          typedef runge_kutta_dopri5<twopf_state, double, twopf_state, double,
             boost::numeric::odeint::vector_space_algebra,
             boost::numeric::odeint::default_operations> stepper;
 
-          integrate_times(stepper, system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-
-//          integrate_times( make_dense_output< $$__PERT_STEPPER< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
-//            system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times( make_dense_output<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
+            system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::twopf<number> tpf(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, ks, slices, background_history, twopf_history);
 
@@ -270,9 +273,9 @@ namespace transport
           if(__ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
             {
               // supply the missing initial conditions using a slow-roll approximation
-              auto $$__PARAMETER[1] = this->parameters[$$__1];
-              auto $$__FIELD[a]     = __ics[$$__a];
-              auto __Mp             = this->M_Planck;
+              const auto $$__PARAMETER[1] = this->parameters[$$__1];
+              const auto $$__FIELD[a]     = __ics[$$__a];
+              const auto __Mp             = this->M_Planck;
 
               __rics.push_back($$__SR_VELOCITY[a]);
             }
@@ -294,10 +297,6 @@ namespace transport
       void $$__MODEL<number>::write_initial_conditions(const std::vector<number>& ics, std::ostream& stream)
         {
           stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
-          stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << "$$__BACKG_STEPPER"
-                 << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << $$__BACKG_ABS_ERR
-                 << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << $$__BACKG_REL_ERR
-                 << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << $$__BACKG_STEP_SIZE << std::endl;
 
           assert(ics.size() == 2*this->N_fields);
 
@@ -306,6 +305,11 @@ namespace transport
               stream << "  " << this->field_names[i] << " = " << ics[i]
                      << "; d(" << this->field_names[i] << ")/dN = " << ics[this->N_fields+i] << std::endl;
             }
+
+          stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << "$$__BACKG_STEPPER"
+            << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << $$__BACKG_ABS_ERR
+            << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << $$__BACKG_REL_ERR
+            << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << $$__BACKG_STEP_SIZE << std::endl;
 
           stream << std::endl;
         }
@@ -316,11 +320,11 @@ namespace transport
         const std::vector<double>& __ks, double __Nstar,
         const std::vector<number>& __fields, std::vector<double>& __tpf)
         {
-          auto $$__PARAMETER[1]  = this->parameters[$$__1];
-          auto $$__COORDINATE[A] = __fields[$$__A];
-          auto __Mp              = this->M_Planck;
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __fields[$$__A];
+          const auto __Mp              = this->M_Planck;
 
-          auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __Hsq             = $$__HUBBLE_SQ;
 
           for(int __n = 0; __n < __ks.size(); __n++)
             {
@@ -361,6 +365,10 @@ namespace transport
                       __tpf[__n] = 0.0;
                     }
                 }
+              else
+                {
+                  assert(false);
+                }
             }
         }
 
@@ -369,11 +377,11 @@ namespace transport
       void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
         double __Nstar, const std::vector<number>& __fields)
         {
-          auto $$__PARAMETER[1]  = this->parameters[$$__1];
-          auto $$__COORDINATE[A] = __fields[$$__A];
-          auto __Mp              = this->M_Planck;
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __fields[$$__A];
+          const auto __Mp              = this->M_Planck;
 
-          auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __Hsq             = $$__HUBBLE_SQ;
 
           assert(__ks.size() == __real_ks.size());
 
@@ -389,11 +397,11 @@ namespace transport
       template <typename number>
       void $$__MODEL_background_functor<number>::operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t)
         {
-          auto $$__PARAMETER[1]  = this->parameters[$$__1];
-          auto $$__COORDINATE[A] = __x[$$__A];
-          auto __Mp              = this->M_Planck;
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __x[$$__A];
+          const auto __Mp              = this->M_Planck;
 
-          __dxdt[$$__A]          = $$__U1_TENSOR[A];
+          __dxdt[$$__A]                = $$__U1_TENSOR[A];
         }
 
 
@@ -414,17 +422,17 @@ namespace transport
       template <typename number>
       void $$__MODEL_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
-          auto $$__PARAMETER[1]  = vex::tag<$$__UNIQUE>(this->parameters[$$__1]);
-          auto $$__COORDINATE[A] = vex::tag<$$__UNIQUE>(__x($$__A));
-          auto __Mp              = vex::tag<$$__UNIQUE>(this->M_Planck);
-          auto __k               = vex::tag<$$__UNIQUE>(this->k_list);
-          auto __a               = vex::tag<$$__UNIQUE>(exp(__t));
+          const auto $$__PARAMETER[1]  = vex::tag<$$__UNIQUE>(this->parameters[$$__1]);
+          const auto $$__COORDINATE[A] = vex::tag<$$__UNIQUE>(__x($$__A));
+          const auto __Mp              = vex::tag<$$__UNIQUE>(this->M_Planck);
+          const auto __k               = vex::tag<$$__UNIQUE>(this->k_list);
+          const auto __a               = vex::tag<$$__UNIQUE>(exp(__t));
 
           const unsigned int start_background = 0;
           const unsigned int start_twopf      = 2*$$__NUMBER_FIELDS;
 
-          auto __tpf_$$__A_$$__B = $$// vex::tag<$$__UNIQUE>(__x(start_twopf+(2*$$__NUMBER_FIELDS*$$__A)+$$__B));
-          auto __u2_$$__A_$$__B  = $$// vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B));
+          const auto __tpf_$$__A_$$__B = $$// vex::tag<$$__UNIQUE>(__x(start_twopf+(2*$$__NUMBER_FIELDS*$$__A)+$$__B));
+          auto __u2_$$__A_$$__B        = $$// vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B));
 
           #define __background(a) __dxdt(start_background + a)
           #define __dtwopf(a,b)   __dxdt(start_twopf + (2*$$__NUMBER_FIELDS*a) + b)
@@ -436,7 +444,8 @@ namespace transport
           __u2_$$__A_$$__B = $$__U2_TENSOR[AB];
 
           // evolve the 2pf
-          __dtwopf($$__A,$$__B) = $$// $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B + $$__U2_NAME[BD]{__u2}*__tpf_$$__A_$$__D;
+          __dtwopf($$__A,$$__B) = 0 $$// + $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B
+          __dtwopf($$__A,$$__B) += 0 $$// + $$__U2_NAME[BD]{__u2}*__tpf_$$__A_$$__D
         }
 
 
@@ -446,31 +455,28 @@ namespace transport
       template <typename number>
       void $$__MODEL_twopf_observer<number>::operator()(const twopf_state& x, double t)
         {
-          const unsigned int background_state_size = 2*$$__NUMBER_FIELDS;
-          const unsigned int twopf_state_size      = (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
-
           this->slices.push_back(t);
 
           // allocate storage for state
-          std::vector<number>                hst_background_state(background_state_size);
-          std::vector< std::vector<number> > hst_state(twopf_state_size);
+          std::vector<number>                hst_background_state(2*$$__NUMBER_FIELDS);
+          std::vector< std::vector<number> > hst_state(2*SS__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
           // copy device state into local storage, and then push it into the history
           // (** TODO how slow is this?)
 
           // first, background
-          for(int i = 0; i < background_state_size; i++)
+          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
             {
               hst_background_state[i] = x(i)[0];  // only need to make a copy for one k-mode; the rest are all the same
             }
           this->background_history.push_back(hst_background_state);
 
           // then, two pf
-          for(int i = 0; i < twopf_state_size; i++)
+          for(int i = 0; i < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; i++)
             {
               // ensure destination is sufficiently large
               hst_state[i].resize(this->k_size);
-              vex::copy(x(background_state_size + i), hst_state[i]);
+              vex::copy(x(2*$$__NUMBER_FIELDS + i), hst_state[i]);
             }
 
           this->twopf_history.push_back(hst_state);

@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <assert.h>
 
 #include "lexfile.h"
 
