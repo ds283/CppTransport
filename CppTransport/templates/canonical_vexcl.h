@@ -13,6 +13,7 @@
 
 #include "boost/numeric/odeint.hpp"
 #include "boost/numeric/odeint/external/vexcl/vexcl_resize.hpp"
+#include "boost/numeric/odeint/external/vexcl/vexcl_norm_inf.hpp"
 
 #include "transport/transport.h"
 
@@ -459,7 +460,7 @@ namespace transport
 
           // allocate storage for state
           std::vector<number>                hst_background_state(2*$$__NUMBER_FIELDS);
-          std::vector< std::vector<number> > hst_state(2*SS__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+          std::vector< std::vector<number> > hst_state(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
           // copy device state into local storage, and then push it into the history
           // (** TODO how slow is this?)
