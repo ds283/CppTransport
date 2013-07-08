@@ -56,7 +56,7 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 55;         // end at time t = 55
+    const double       tmax = 50;         // end at time t = 50
     const unsigned int tN   = 100;        // record 100 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)
@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
 
     // integrate two-point function
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
-    const double       kmax = exp(2.0);   // end with the mode which exited the horizon 3 e-folds later
+    const double       kmax = exp(2.0);   // end with the mode which exited the horizon 2 e-folds later
     const unsigned int kN   = 3;          // number of k-points
     std::vector<double> ks;
     for(int i = 0; i <= kN; i++)
@@ -93,7 +93,7 @@ int main(int argc, const char* argv[])
     {
       boost::timer::auto_cpu_timer timer;
 
-      transport::twopf<double> tpf = model.twopf(ks, 7.0, init_values, times);
+      transport::twopf<double> tpf = model.twopf(ctx, ks, 7.0, init_values, times);
 
       timer.stop();
       timer.report();
