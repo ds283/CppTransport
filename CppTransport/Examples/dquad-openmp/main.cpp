@@ -8,6 +8,8 @@
 
 #include <iostream>
 
+#include <boost/timer/timer.hpp>
+
 #include "dq.h"
 
 
@@ -56,11 +58,19 @@ int main(int argc, const char* argv[])
         times.push_back(tmin + ((tmax-tmin)/tN)*i);
       }
 
-    // integrate background
-    transport::background<double> backg = model.background(init_values, times);
-    std::cout << backg;
-	 
-	  backg.plot(&plt, "/Users/ds283/Desktop/background.pdf", "Double-quadratic inflation");
+    std::cout << "Integrating background" << std::endl;
+    {
+      boost::timer::auto_cpu_timer timer;
+
+      // integrate background
+      transport::background<double> backg = model.background(init_values, times);
+
+      timer.stop();
+      timer.report();
+//    std::cout << backg;
+
+      backg.plot(&plt, "/Users/ds283/Desktop/background.pdf", "Double-quadratic inflation");
+    }
 
     // integrate two-point function
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
@@ -73,11 +83,18 @@ int main(int argc, const char* argv[])
       }
 		
 	  std::cout << std::endl;
-		
-    transport::twopf<double> tpf = model.twopf(ks, 7.0, init_values, times);
+    std::cout << "Integrating two-point function" << std::endl;
+    {
+      boost::timer::auto_cpu_timer timer;
+
+      transport::twopf<double> tpf = model.twopf(ks, 7.0, init_values, times);
+
+      timer.stop();
+      timer.report();
 //    std::cout << tpf;
 
-    tpf.time_history(&plt, "/Users/ds283/Desktop/kplots/k_mode");
+      tpf.time_history(&plt, "/Users/ds283/Desktop/kplots/k_mode");
+    }
 
     return(EXIT_SUCCESS);
   }
