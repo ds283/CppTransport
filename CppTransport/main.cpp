@@ -219,7 +219,7 @@ static std::string mangle_output_name(std::string input)
 
     if((pos = input.find(MODEL_SCRIPT_SUFFIX)) != std::string::npos)
       {
-        if(pos = input.length() - MODEL_SCRIPT_SUFFIX_LENGTH)
+        if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH)
           {
             output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos);
           }
