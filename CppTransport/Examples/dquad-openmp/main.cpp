@@ -42,17 +42,18 @@ int main(int argc, const char* argv[])
     // using doubles, with given parameter choices
     const std::vector<double> init_params = { m_phi, m_chi };
     transport::dquad<double> model(M_Planck, init_params);
-	 
-	  python_plot_maker<double> plt("/opt/local/bin/python2.7");
 
     output_info(model);
 
-    if(argc != 2)
+    if(argc != 3)
       {
-        std::cerr << "Expected name of output directory" << std::endl;
+        std::cerr << "syntax: dquad-openmp <output directory> <python interpreter>" << std::endl;
       }
 
     std::string output(argv[1]);
+    std::string python(argv[2]);
+
+    python_plot_maker<double> plt(python);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
