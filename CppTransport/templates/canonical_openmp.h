@@ -257,7 +257,7 @@ namespace transport
                 {
                   for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
                     {
-                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_tpf_ic(j, k, real_ks[i], Nstar, ics);
+                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_tpf_ic(j, k, real_ks[i], Nstar, real_ics);
                     }
                 }
 

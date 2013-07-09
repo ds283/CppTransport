@@ -47,7 +47,7 @@ int main(int argc, const char* argv[])
 
     if(argc != 3)
       {
-        std::cerr << "syntax: dquad-openmp <output directory> <python interpreter>" << std::endl;
+        std::cerr << "syntax: dquad-vexcl <output directory> <python interpreter>" << std::endl;
       }
 
     std::string output(argv[1]);
