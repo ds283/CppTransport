@@ -1,5 +1,5 @@
 //
-//  main.cpp
+//  main.cpp (dquad-openmp)
 //  dquad
 //
 //  Created by David Seery on 26/06/2013.
@@ -43,9 +43,16 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_params = { m_phi, m_chi };
     transport::dquad<double> model(M_Planck, init_params);
 	 
-	 python_plot_maker<double> plt("/opt/local/bin/python2.7");
+	  python_plot_maker<double> plt("/opt/local/bin/python2.7");
 
     output_info(model);
+
+    if(argc != 2)
+      {
+        std::cerr << "Expected name of output directory" << std::endl;
+      }
+
+    std::string output(argv[1]);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -69,7 +76,7 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << backg;
 
-      backg.plot(&plt, "/Users/ds283/Desktop/background.pdf", "Double-quadratic inflation");
+      backg.plot(&plt, output + "/background.pdf", "Double-quadratic inflation");
     }
 
     // integrate two-point function
@@ -93,7 +100,7 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << tpf;
 
-      tpf.time_history(&plt, "/Users/ds283/Desktop/kplots/k_mode");
+      tpf.time_history(&plt, output + "/k_mode");
     }
 
     return(EXIT_SUCCESS);
