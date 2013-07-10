@@ -2,7 +2,7 @@
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY CppTransport 0.02
 //
 // 'dq.h' generated from 'dq.model'
-// processed on 21:58:38 on 08 07 2013
+// processed on 13:54:21 on 10 07 2013
 
 #ifndef __CPP_TRANSPORT_dquad_H_   // avoid multiple inclusion
 #define __CPP_TRANSPORT_dquad_H_
@@ -55,7 +55,8 @@ namespace transport
             void
               fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
             void
-              write_initial_conditions(const std::vector<number>& rics, std::ostream& stream);
+              write_initial_conditions(const std::vector<number>& rics, std::ostream& stream,
+              double abs_err, double rel_err, double step_size);
             void
               make_tpf_ic(unsigned int i, unsigned int j, const std::vector<double>& __ks, double __Nstar,
                 const std::vector<number>& __fields, std::vector<double>& __tpf);
@@ -165,7 +166,7 @@ namespace transport
           const auto chi     = fields[1];;
           const auto __Mp             = this->M_Planck;
 
-          number rval =  (M_phi*M_phi)*(phi*phi)/2.0+(chi*chi)*(M_chi*M_chi)/2.0;
+          number rval =  (M_chi*M_chi)*(chi*chi)/2.0+(M_phi*M_phi)*(phi*phi)/2.0;
 
           return(rval);
         }
@@ -182,7 +183,7 @@ namespace transport
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> x = ics;
           this->fix_initial_conditions(ics, x);
-          this->write_initial_conditions(x, std::cout);
+          this->write_initial_conditions(x, std::cout, 1e-06, 1e-06, 0.01);
 
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
@@ -216,7 +217,7 @@ namespace transport
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> hst_bg = ics;
           this->fix_initial_conditions(ics, hst_bg);
-          this->write_initial_conditions(hst_bg, std::cout);
+          this->write_initial_conditions(hst_bg, std::cout, 1e-08, 1e-08, 0.001);
 
           // set up vector of ks corresponding to honest comoving momenta
           std::vector<double> real_ks(ks.size());
@@ -285,8 +286,8 @@ namespace transport
               const auto chi     = __ics[1];;
               const auto __Mp             = this->M_Planck;
 
-              __rics.push_back(-2.0*(M_phi*M_phi)*phi/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp));
-              __rics.push_back(-2.0*chi/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp)*(M_chi*M_chi));;
+              __rics.push_back(-2.0*(__Mp*__Mp)*(M_phi*M_phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*phi);
+              __rics.push_back(-2.0*(__Mp*__Mp)*(M_chi*M_chi)*chi/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi)));;
             }
           else if(__ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
             {
@@ -303,7 +304,8 @@ namespace transport
 
 
       template <typename number>
-      void dquad<number>::write_initial_conditions(const std::vector<number>& ics, std::ostream& stream)
+      void dquad<number>::write_initial_conditions(const std::vector<number>& ics, std::ostream& stream,
+        double abs_err, double rel_err, double step_size)
         {
           stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
 
@@ -316,9 +318,9 @@ namespace transport
             }
 
           stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << "runge_kutta_dopri5"
-            << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << 1e-06
-            << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << 1e-06
-            << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << 0.01 << std::endl;
+            << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
+            << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
+            << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size << std::endl;
 
           stream << std::endl;
         }
@@ -337,7 +339,7 @@ namespace transport
           const auto __dchi = __fields[3];;
           const auto __Mp              = this->M_Planck;
 
-          const auto __Hsq             = -1.0/( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))/(__Mp*__Mp);
+          const auto __Hsq             = -1.0/(__Mp*__Mp)*( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))/( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0);
 
           for(int __n = 0; __n < __ks.size(); __n++)
             {
@@ -398,7 +400,7 @@ namespace transport
           const auto __dchi = __fields[3];;
           const auto __Mp              = this->M_Planck;
 
-          const auto __Hsq             = -1.0/( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))/(__Mp*__Mp);
+          const auto __Hsq             = -1.0/(__Mp*__Mp)*( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))/( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0);
 
           assert(__ks.size() == __real_ks.size());
 
@@ -424,8 +426,8 @@ namespace transport
 
           __dxdt[0]                = __dphi;
           __dxdt[1]                = __dchi;
-          __dxdt[2]                =  ( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dphi/2.0+(M_phi*M_phi)*phi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp);
-          __dxdt[3]                =  chi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp)*(M_chi*M_chi)+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dchi/2.0;;
+          __dxdt[2]                =  __dphi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0+(__Mp*__Mp)*(M_phi*M_phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*phi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0);
+          __dxdt[3]                =  (__Mp*__Mp)*(M_chi*M_chi)*chi/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+__dchi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0;;
         }
 
 
@@ -498,26 +500,26 @@ namespace transport
           // evolve the background
           __background(0) = __dphi;
           __background(1) = __dchi;
-          __background(2) =  ( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dphi/2.0+(M_phi*M_phi)*phi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp);
-          __background(3) =  chi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp)*(M_chi*M_chi)+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dchi/2.0;;
+          __background(2) =  __dphi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0+(__Mp*__Mp)*(M_phi*M_phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*phi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0);
+          __background(3) =  (__Mp*__Mp)*(M_chi*M_chi)*chi/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+__dchi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0;;
 
           // set up a k-dependent u2 tensor
           __u2_0_0 = 0.0;
           __u2_1_0 = 0.0;
-          __u2_2_0 =  2.0*(M_phi*M_phi)*phi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*__dphi+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*(__k*__k)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))/(__a*__a)*(__Mp*__Mp)+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*(__dphi*__dphi)/(__Mp*__Mp)/2.0+(M_phi*M_phi)*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp);
-          __u2_3_0 =  ( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dchi*__dphi/(__Mp*__Mp)/2.0+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*( (M_phi*M_phi)*phi*__dchi+chi*__dphi*(M_chi*M_chi));
+          __u2_2_0 =  (__Mp*__Mp)*(M_phi*M_phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+2.0*__dphi*(M_phi*M_phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*phi*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+1.0/(__a*__a)*(__Mp*__Mp)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*(__k*__k)*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+(__dphi*__dphi)/(__Mp*__Mp)*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0;
+          __u2_3_0 =  ( __dphi*(M_chi*M_chi)*chi+__dchi*(M_phi*M_phi)*phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+__dchi*__dphi/(__Mp*__Mp)*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0;
           __u2_0_1 = 0.0;
           __u2_1_1 = 0.0;
-          __u2_2_1 =  ( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*__dchi*__dphi/(__Mp*__Mp)/2.0+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*( (M_phi*M_phi)*phi*__dchi+chi*__dphi*(M_chi*M_chi));
-          __u2_3_1 =  ( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__k*__k)*(__Mp*__Mp)/(__a*__a)+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*(__Mp*__Mp)*(M_chi*M_chi)+( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)*(__dchi*__dchi)/(__Mp*__Mp)/2.0+2.0*chi*( ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)-6.0)/( (M_phi*M_phi)*(phi*phi)+(chi*chi)*(M_chi*M_chi))*__dchi*(M_chi*M_chi);
+          __u2_2_1 =  ( __dphi*(M_chi*M_chi)*chi+__dchi*(M_phi*M_phi)*phi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+__dchi*__dphi/(__Mp*__Mp)*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0;
+          __u2_3_1 =  (__dchi*__dchi)/(__Mp*__Mp)*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)/2.0+2.0*__dchi*(M_chi*M_chi)*chi/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)+(__Mp*__Mp)/(__a*__a)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0)*(__k*__k)+(__Mp*__Mp)*(M_chi*M_chi)/( (M_chi*M_chi)*(chi*chi)+(M_phi*M_phi)*(phi*phi))*( 1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))-6.0);
           __u2_0_2 = 1.0;
           __u2_1_2 = 0.0;
-          __u2_2_2 =  ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)/2.0-3.0;
+          __u2_2_2 =  1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))/2.0-3.0;
           __u2_3_2 = 0.0;
           __u2_0_3 = 0.0;
           __u2_1_3 = 1.0;
           __u2_2_3 = 0.0;
-          __u2_3_3 =  ( (__dchi*__dchi)+(__dphi*__dphi))/(__Mp*__Mp)/2.0-3.0;;
+          __u2_3_3 =  1.0/(__Mp*__Mp)*( (__dphi*__dphi)+(__dchi*__dchi))/2.0-3.0;;
 
           // evolve the 2pf
           __dtwopf(0,0) = 0  + __u2_0_0*__tpf_0_0
