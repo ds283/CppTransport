@@ -105,6 +105,7 @@ int main(int argc, const char *argv[])
     finder path;
 
     std::deque<struct input> inputs;
+    std::string              current_output = "";
 
     for(int i = 1; i < argc; i++)
       {
@@ -118,6 +119,19 @@ int main(int argc, const char *argv[])
               {
                 std::ostringstream msg;
                 msg << ERROR_MISSING_PATHNAME << " -I";
+                error(msg.str());
+              }
+          }
+        else if(strcmp(argv[i], "-o") == 0)
+          {
+            if(i + 1 < argc)
+              {
+                current_output = (std::string)argv[++i];
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << ERROR_MISSING_PATHNAME << " -o";
                 error(msg.str());
               }
           }
@@ -173,7 +187,15 @@ int main(int argc, const char *argv[])
               }
 
             // in.driver->get_script()->print(std::cerr);
-            in.output = mangle_output_name(in.name);
+            if(current_output != "")
+              {
+                in.output = current_output;
+                current_output = "";
+              }
+            else
+              {
+                in.output = mangle_output_name(in.name);
+              }
 
             inputs.push_back(in);
           }
