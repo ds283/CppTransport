@@ -11,11 +11,18 @@
 
 #include "finder.h"
 
+#include "boost/filesystem/operations.hpp"
+#include "boost/filesystem/path.hpp"
+
 // ******************************************************************
 
 finder::finder()
   {
-    return;
+    using namespace boost::filesystem;
+
+    path cwd(initial_path<path>());
+
+    paths.push_back(cwd.string());
   }
 
 finder::finder(std::string path)
@@ -25,7 +32,6 @@ finder::finder(std::string path)
 
 finder::~finder()
   {
-    return;
   }
 
 // ******************************************************************
