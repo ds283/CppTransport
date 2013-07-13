@@ -14,6 +14,7 @@
 #include "plot_maker.h"
 #include "python_plot_maker.h"
 
+#include "gauge_xfm_gadget.h"
 #include "data_products.h"
 #include "model_classes.h"
 

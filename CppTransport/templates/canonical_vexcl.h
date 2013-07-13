@@ -28,6 +28,29 @@ namespace transport
       // set up a state type for GPU integration
       typedef vex::multivector<double, 2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> twopf_state;
 
+
+      // *********************************************************************************************
+
+
+      // gauge transformation gadget
+      template <typename number>
+      class $$__MODEL_gauge_xfm_gadget : public gauge_xfm_gadget<number>
+        {
+      public:
+          $$__MODEL_gauge_xfm_gadget(number Mp, const std::vector<number>& ps) : gauge_xfm_gadget<number>(Mp, ps) {}
+
+          void compute_gauge_xfm_1(const std::vector<number>& __state,
+            std::vector<number>& __dN);
+          void compute_gauge_xfm_2(const std::vector<number>& __state,
+            std::vector< std::vector<number> >& __ddN);
+          void compute_gauge_xfm_3(const std::vector<number>& __state,
+            std::vector< std::vector< std::vector<number> > >& __dddN);
+        };
+
+
+      // *********************************************************************************************
+
+
       template <typename number>
       class $$__MODEL : public canonical_model<number>
         {
@@ -54,9 +77,9 @@ namespace transport
             // Calculation of gauge-transformation coefficients (to zeta)
             // ==========================================================
 
-            void compute_gauge_xfm_first  (const std::vector<number> __state, std::vector<number>& __dN);
-            void compute_gauge_xfm_second (const std::vector<number> __state, std::vector< std::vector<number> >& __ddN);
-            void compute_gauge_xfm_third  (const std::vector<number> __state, std::vector< std::vector< std::vector<number> > >& __dddN);
+            void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
+            void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+            void compute_gauge_xfm_3(const std::vector<number>& __state, std::vector< std::vector< std::vector<number> > >& __dddN);
 
           protected:
             void
@@ -70,6 +93,8 @@ namespace transport
             void
               rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
                 double __Nstar, const std::vector<number>& __fields);
+
+            $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
 
 
@@ -147,9 +172,10 @@ namespace transport
       template <typename number>
       $$__MODEL<number>::$$__MODEL(number Mp, const std::vector<number>& ps)
         : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
-                                  $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
-                                  $$__MODEL_field_names, $$__MODEL_latex_names,
-                                  $$__MODEL_param_names, $$__MODEL_platx_names, ps)
+            $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
+            $$__MODEL_field_names, $$__MODEL_latex_names,
+            $$__MODEL_param_names, $$__MODEL_platx_names, ps),
+          gauge_xfm(Mp, ps)
         {
           return;
         }
@@ -203,7 +229,8 @@ namespace transport
           integrate_times( make_dense_output< $$__BACKG_STEPPER< std::vector<number> > >($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR),
             system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
-          transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_LATEX_NAMES, slices, history);
+          transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names,
+            $$__MODEL_latex_names, slices, history);
 
           return(backg);
         }
@@ -267,8 +294,9 @@ namespace transport
           integrate_times( make_dense_output<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
             system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
+          transport::dquad_gauge_xfm_gadget<number>* gauge_xfm = new dquad_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
           transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, Nstar,
-            slices, background_history, twopf_history);
+            slices, background_history, twopf_history, gauge_xfm);
 
           return(tpf);
         }
@@ -498,7 +526,35 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::compute_gauge_xfm_first(const std::vector<number> __state, std::vector<number>& __dN)
+      void $$__MODEL<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
+        std::vector<number>& __dN)
+        {
+          this->gauge_xfm.compute_gauge_xfm_1(__state, __dN);
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
+        std::vector< std::vector<number> >& __ddN)
+        {
+          this->gauge_xfm.compute_gauge_xfm_2(__state, __ddN);
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::compute_gauge_xfm_3(const std::vector<number>& __state,
+        std::vector< std::vector< std::vector<number> > >& __dddN)
+        {
+          this->gauge_xfm.compute_gauge_xfm_3(__state, __dddN);
+        }
+
+
+      // IMPLEMENTATION - GAUGE TRANSFORMATION GADGET
+
+
+      template <typename number>
+      void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
+        std::vector<number>& __dN)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
           const auto $$__COORDINATE[A] = __state[$$__A];
@@ -510,7 +566,8 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::compute_gauge_xfm_second(const std::vector<number> __state, std::vector< std::vector<number> >& __ddN)
+      void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
+        std::vector< std::vector<number> >& __ddN)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
           const auto $$__COORDINATE[A] = __state[$$__A];
@@ -527,7 +584,7 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::compute_gauge_xfm_third(const std::vector<number> __state,
+      void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_3(const std::vector<number>& __state,
         std::vector< std::vector< std::vector<number> > >& __dddN)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];

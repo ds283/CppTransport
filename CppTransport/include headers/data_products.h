@@ -16,8 +16,10 @@
 #include "messages_en.h"
 
 #include "plot_maker.h"
+#include "gauge_xfm_gadget.h"
 
 #define TWOPF_SYMBOL "\\Sigma"
+#define ZETA_SYMBOL  "\\zeta"
 
 namespace transport
   {
@@ -46,7 +48,9 @@ namespace transport
               : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s)
               {}
 
-            void plot(plot_maker<number>* maker, std::string output, std::string title = "");
+            void                        plot      (plot_maker<number>* maker, std::string output, std::string title = "");
+
+            const std::vector<number>&  get_value (unsigned int n);
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
@@ -70,13 +74,16 @@ namespace transport
             twopf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
               const std::vector<double>& ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
-              const std::vector< std::vector< std::vector<number> > >& twopf)
+              const std::vector< std::vector< std::vector<number> > >& twopf,
+              gauge_xfm_gadget<number>* gx)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks),
-                backg(N_f, f_names, l_names, sp, b), samples(twopf)
+                backg(N_f, f_names, l_names, sp, b), samples(twopf),
+                gauge_xfm(gx)
               {}
 
-            void time_history(plot_maker<number>* maker, std::string output);
+            void fields_time_history(plot_maker<number>* maker, std::string output);
+            void zeta_time_history  (plot_maker<number>* maker, std::string output);
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
@@ -85,6 +92,8 @@ namespace transport
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
             const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
+
+            gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
@@ -107,6 +116,14 @@ namespace transport
         }
 
       template <typename number>
+      const std::vector<number>& background<number>::get_value(unsigned int n)
+        {
+          assert(n < this->sample_points.size());
+
+          return(this->samples[n]);
+        }
+
+      template <typename number>
       std::ostream& operator<<(std::ostream& out, background<number>& obj)
         {
           transport::asciitable<number> writer(out);
@@ -119,7 +136,7 @@ namespace transport
 //  IMPLEMENTATION -- CLASS twopf
 
       template <typename number>
-      void twopf<number>::time_history(plot_maker<number>* maker, std::string output)
+      void twopf<number>::fields_time_history(plot_maker<number>* maker, std::string output)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -161,6 +178,49 @@ namespace transport
                       labels[this->N_fields*i+j] = l.str();
                     }
                 }
+
+              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
+            }
+        }
+
+      template <typename number>
+      void twopf<number>::zeta_time_history(plot_maker<number>* maker, std::string output)
+        {
+          // loop over k-modes
+          for(int i = 0; i < this->sample_ks.size(); i++)
+            {
+              std::vector< std::vector<number> > data(this->sample_points.size());
+
+              // now arrange data to consist of the <zeta zeta> 2pf
+              for(int j = 0; j < this->sample_points.size(); j++)
+                {
+                  data[j].resize(1);    // only one components of <zeta zeta>
+
+                  // compute gauge transformation
+                  std::vector<number> dN;
+                  this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+
+                  data[j][0] = 0;
+                  for(int m = 0; m < 2*this->N_fields; m++)
+                    {
+                      for(int n = 0; n < 2*this->N_fields; n++)
+                        {
+                          unsigned int samples_index = 2*this->N_fields*m + n;
+                          data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
+                        }
+                    }
+                }
+
+              std::ostringstream fnam;
+              fnam << output << "_" << i << ".pdf";
+
+              std::ostringstream title;
+              title << "$k = " << this->sample_ks[i] << "$";
+
+              std::vector<std::string> labels(1);
+              std::ostringstream l;
+              l << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+              labels[0] = l.str();
 
               maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }

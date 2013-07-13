@@ -43,9 +43,12 @@ namespace transport
               const std::vector<number>&      get_parameters();     // return vector of parameter values associated with this instance
 
               // calculate gauge transformations; pure virtual, so must be overridden by derived class
-              virtual void                    compute_gauge_xfm_first (const std::vector<number> __state, std::vector<number>& __dN)                                 = 0;
-              virtual void                    compute_gauge_xfm_second(const std::vector<number> __state, std::vector< std::vector<number> >& __ddN)                 = 0;
-              virtual void                    compute_gauge_xfm_third (const std::vector<number> __state, std::vector< std::vector< std::vector<number> > >& __dddN) = 0;
+              virtual void                    compute_gauge_xfm_1(const std::vector<number>& __state,
+                std::vector<number>& __dN)                                 = 0;
+              virtual void                    compute_gauge_xfm_2(const std::vector<number>& __state,
+                std::vector< std::vector<number> >& __ddN)                 = 0;
+              virtual void                    compute_gauge_xfm_3(const std::vector<number>& __state,
+                std::vector< std::vector< std::vector<number> > >& __dddN) = 0;
 
           protected:
               const std::string               name;                 // name of model
@@ -82,7 +85,7 @@ namespace transport
         };
 
 
-//  IMPLEMENTATION -- CLASS MODEL
+    //  IMPLEMENTATION -- CLASS MODEL
 
 
       template <typename number>
@@ -206,7 +209,7 @@ namespace transport
         }
 
 
-//  IMPLEMENTATION -- CLASS CANONICAL_MODEL
+      //  IMPLEMENTATION -- CLASS CANONICAL_MODEL
 
 
       template <typename number>
