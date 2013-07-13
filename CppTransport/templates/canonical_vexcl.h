@@ -203,7 +203,7 @@ namespace transport
           integrate_times( make_dense_output< $$__BACKG_STEPPER< std::vector<number> > >($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR),
             system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
-          transport::background<number> backg(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, slices, history);
+          transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_LATEX_NAMES, slices, history);
 
           return(backg);
         }
@@ -267,7 +267,8 @@ namespace transport
           integrate_times( make_dense_output<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
             system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
-          transport::twopf<number> tpf(2*$$__NUMBER_FIELDS, $$__MODEL_state_names, ks, slices, background_history, twopf_history);
+          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, Nstar,
+            slices, background_history, twopf_history);
 
           return(tpf);
         }

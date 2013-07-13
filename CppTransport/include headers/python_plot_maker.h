@@ -80,7 +80,7 @@ void python_plot_maker<number>::plot(std::string output, std::string title,
         out << " ]" << std::endl;
 
         out << "plt.errorbar(x, y" << i
-            << ", label='" << to_printable(labels[i]) << "')" << std::endl;
+            << ", label=r'" << labels[i] << "')" << std::endl;
       }
 
     out << "ax = plt.gca()" << std::endl;
@@ -89,17 +89,17 @@ void python_plot_maker<number>::plot(std::string output, std::string title,
     out << "y_labels = [ ";
     for(int i = 0; i < labels.size(); i++)
       {
-        out << (i > 0 ? ", " : "") << "'" << to_printable(labels[i]) << "'";
+        out << (i > 0 ? ", " : "") << "r'" << labels[i] << "'";
       }
     out << " ]" << std::endl;
 
     out << "plt.legend(handles, y_labels, frameon=False)" << std::endl;
 
-    out << "plt.xlabel('"  << to_printable(xlabel) << "')" << std::endl;
-    out << "plt.ylabel('"  << to_printable(ylabel) << "')" << std::endl;
-    out << "plt.title('"   << to_printable(title)  << "')" << std::endl;
-    out << "plt.savefig('" << to_printable(output) << "')" << std::endl;
-    out << "plt.close()"   << std::endl;
+    out << "plt.xlabel(r'"  << xlabel << "')" << std::endl;
+    out << "plt.ylabel(r'"  << ylabel << "')" << std::endl;
+    out << "plt.title(r'"   << title  << "')" << std::endl;
+    out << "plt.savefig('"  << output << "')" << std::endl;
+    out << "plt.close()"    << std::endl;
 
     out.close();
 

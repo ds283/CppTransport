@@ -17,6 +17,8 @@
 
 #include "plot_maker.h"
 
+#define TWOPF_SYMBOL "\\Sigma"
+
 namespace transport
   {
       // DATA PRODUCTS -- objects wrapping the various data products produced by each model
@@ -39,9 +41,9 @@ namespace transport
       class background
         {
           public:
-            background(unsigned int N_f, const std::vector<std::string>& f_names,
+            background(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
               const std::vector<double>& sp, const std::vector< std::vector<number> >& s)
-              : N_fields(N_f), field_names(f_names), sample_points(sp), samples(s)
+              : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s)
               {}
 
             void plot(plot_maker<number>* maker, std::string output, std::string title = "");
@@ -51,7 +53,8 @@ namespace transport
 
           protected:
             unsigned int                             N_fields;          // number of fields
-            const std::vector<std::string>           field_names;       // vector of field names
+            const std::vector<std::string>           field_names;       // vector of names - includes momenta
+            const std::vector<std::string>           latex_names;       // vector of LaTeX names - excludes momenta
 
             const std::vector<double>                sample_points;     // list of times at which we hold samples for the background
 
@@ -64,11 +67,13 @@ namespace transport
       class twopf
         {
           public:
-            twopf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<double> ks,
+            twopf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
+              const std::vector<double>& ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf)
-              : N_fields(N_f), field_names(f_names), sample_points(sp), sample_ks(ks),
-                backg(N_f, f_names, sp, b), samples(twopf)
+              : N_fields(N_f), field_names(f_names), latex_names(l_names),
+                Nstar(Nst), sample_points(sp), sample_ks(ks),
+                backg(N_f, f_names, l_names, sp, b), samples(twopf)
               {}
 
             void time_history(plot_maker<number>* maker, std::string output);
@@ -78,7 +83,10 @@ namespace transport
 
           protected:
             unsigned int                                            N_fields;          // number of fields
-            const std::vector<std::string>                          field_names;       // vector of field names
+            const std::vector<std::string>                          field_names;       // vector of names - includes momenta
+            const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
+
+            const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
             const std::vector<double>                               sample_points;     // list of times at which we hold samples
             const std::vector<double>                               sample_ks;         // list of ks for which we hold samples
@@ -122,15 +130,15 @@ namespace transport
               // and there are N_fields^2 of those
               for(int j = 0; j < this->sample_points.size(); j++)
                 {
-                  data[j].resize(this->N_fields*this->N_fields/4);
+                  data[j].resize(this->N_fields*this->N_fields);
 
                   // now, for this k-mode, slice up the time series
-                  for(int m = 0; m < this->N_fields/2; m++)
+                  for(int m = 0; m < this->N_fields; m++)
                     {
-                      for(int n = 0; n < this->N_fields/2; n++)
+                      for(int n = 0; n < this->N_fields; n++)
                         {
-                          unsigned int samples_index = this->N_fields*m + n;
-                          unsigned int data_index    = this->N_fields*m/2 + n;
+                          unsigned int samples_index = 2*this->N_fields*m + n;
+                          unsigned int data_index    = this->N_fields*m + n;
 
                           data[j][data_index] = this->samples[j][samples_index][i];
                         }
@@ -141,20 +149,20 @@ namespace transport
               fnam << output << "_" << i << ".pdf";
 
               std::ostringstream title;
-              title << "k = " << this->sample_ks[i];
+              title << "$k = " << this->sample_ks[i] << "$";
 
-              std::vector<std::string> labels(this->N_fields*this->N_fields/4);
-              for(int i = 0; i < this->N_fields/2; i++)
+              std::vector<std::string> labels(this->N_fields*this->N_fields);
+              for(int i = 0; i < this->N_fields; i++)
                 {
-                  for(int j = 0; j < this->N_fields/2; j++)
+                  for(int j = 0; j < this->N_fields; j++)
                     {
                       std::ostringstream l;
-                      l << this->field_names[i] << ", " << this->field_names[j];
-                      labels[this->N_fields*i/2+j] = l.str();
+                      l << "$" << TWOPF_SYMBOL << "_{" << this->latex_names[i] << " " << this->latex_names[j] << "}$";
+                      labels[this->N_fields*i+j] = l.str();
                     }
                 }
 
-              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "N", "two-point function", false, true);
+              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }
         }
 
@@ -166,9 +174,9 @@ namespace transport
           out << obj.backg << std::endl;
 
           std::vector<std::string> labels;
-          for(int i = 0; i < obj.N_fields; i++)
+          for(int i = 0; i < 2*obj.N_fields; i++)
             {
-              for(int j = 0; j < obj.N_fields; j++)
+              for(int j = 0; j < 2*obj.N_fields; j++)
                 {
                   std::ostringstream l;
                   l << obj.field_names[i] << ", " << obj.field_names[j];
@@ -184,13 +192,13 @@ namespace transport
 
               for(int j = 0; j < obj.sample_points.size(); j++)
                 {
-                  twopf_components[j].resize(obj.N_fields * obj.N_fields);
+                  twopf_components[j].resize(2*obj.N_fields * 2*obj.N_fields);
 
-                  for(int m = 0; m < obj.N_fields; m++)
+                  for(int m = 0; m < 2*obj.N_fields; m++)
                     {
-                      for(int n = 0; n < obj.N_fields; n++)
+                      for(int n = 0; n < 2*obj.N_fields; n++)
                         {
-                          unsigned int index = obj.N_fields*m + n;
+                          unsigned int index = 2*obj.N_fields*m + n;
 
                           number temp = obj.samples[j][index][i];
 
