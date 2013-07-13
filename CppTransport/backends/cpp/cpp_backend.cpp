@@ -66,6 +66,12 @@ static std::string replace_u3_tensor    (struct replacement_data& data, const st
   std::vector<struct index_assignment> indices);
 static std::string replace_u2_name      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_1   (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_2   (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_3   (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
 
 
 static const std::string pre_macros[] =
@@ -123,49 +129,54 @@ static const std::string index_macros[] =
   {
     "PARAMETER", "FIELD", "COORDINATE",
     "SR_VELOCITY", "U1_TENSOR", "U2_TENSOR", "U3_TENSOR",
-    "U2_NAME"
+    "U2_NAME",
+    "ZETA_XFM_1", "ZETA_XFM_2", "ZETA_XFM_3"
   };
 
 static const unsigned int index_macro_indices[] =
   {
     1, 1, 1,
     1, 1, 2, 3,
-    2
+    2,
+    1, 2, 3
   };
 
 static const unsigned int index_macro_ranges[] =
   {
     INDEX_RANGE_PARAMETER, 1, 2,
     1, 2, 2, 2,
-    2
+    2,
+    2, 2, 2
   };
 
 static const replacement_function_index index_macro_replacements[] =
   {
     replace_parameter, replace_field, replace_coordinate,
     replace_sr_velocity, replace_u1_tensor, replace_u2_tensor, replace_u3_tensor,
-    replace_u2_name
+    replace_u2_name,
+    replace_zeta_xfm_1, replace_zeta_xfm_2, replace_zeta_xfm_3
   };
 
 static const unsigned int index_macro_args[] =
   {
     0, 0, 0,
     0, 0, 0, 0,
-    1
+    1,
+    0, 0, 0
   };
 
 
 #define NUMBER_PRE_MACROS    (27)
 #define NUMBER_POST_MACROS   (1)
-#define NUMBER_INDEX_MACROS  (8)
+#define NUMBER_INDEX_MACROS  (11)
 
 
 // ******************************************************************
 
 
-static bool                                 process           (struct replacement_data& d);
+static bool                                 process        (struct replacement_data& d);
 
-static std::vector<index_abstract>          make_field_indices(struct replacement_data& data);
+static unsigned int                         get_index_label(struct index_assignment& index);
 
 
 // ******************************************************************
@@ -296,21 +307,26 @@ static bool process(struct replacement_data& d)
 // ******************************************************************
 
 
-static std::vector<index_abstract> make_field_indices(struct replacement_data& d)
+static unsigned int get_index_label(struct index_assignment& index)
   {
-    assert(d.source != NULL);
+    unsigned int label = 0;
 
-    std::vector<struct index_abstract> rval;
+    switch(index.trait)
+      {
+        case index_field:
+          label = index.species;
+        break;
 
-    struct index_abstract index;
+        case index_momentum:
+          label = index.species + index.num_fields;
+        break;
 
-    index.label   = 'a';
-    index.assign  = true;
-    index.range   = 1;      // ranges only over fields, not fields + momenta
+        case index_parameter:
+        default:
+          assert(false);
+      }
 
-    rval.push_back(index);
-
-    return(rval);
+    return(label);
   }
 
 
@@ -801,3 +817,62 @@ static std::string replace_u2_name(struct replacement_data& d, const std::vector
 
     return(out.str());
   }
+
+
+static std::string replace_zeta_xfm_1(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 1);
+    assert(indices[0].species < d.source->get_number_fields());
+
+    std::vector<GiNaC::ex> dN = d.u_factory->compute_zeta_xfm_1();
+
+    unsigned int i_label = get_index_label(indices[0]);
+
+    out << GiNaC::csrc << dN[i_label];
+
+    return(out.str());
+  }
+
+static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 2);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+
+    std::vector< std::vector<GiNaC::ex> > ddN = d.u_factory->compute_zeta_xfm_2();
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+
+    out << GiNaC::csrc << (ddN[i_label])[j_label];
+
+    return(out.str());
+  }
+
+static std::string replace_zeta_xfm_3(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > dddN = d.u_factory->compute_zeta_xfm_3();
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << ((dddN[i_label])[j_label])[k_label];
+
+    return(out.str());
+  }
+

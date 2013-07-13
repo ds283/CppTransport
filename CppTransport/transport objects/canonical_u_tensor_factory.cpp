@@ -52,6 +52,7 @@ std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_u1()
 std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2()
   {
     std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
+
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         rval[i].resize(2*this->num_fields);
@@ -134,6 +135,98 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
 
     return(rval);
   }
+
+
+// *****************************************************************************
+
+
+std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1()
+  {
+    std::vector<GiNaC::ex> rval;
+
+    GiNaC::ex epsilon = this->epsilon();
+    GiNaC::ex Hsq     = this->Hubble_square();
+    GiNaC::ex dotH    = -epsilon*Hsq;
+
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        rval.push_back( -(1/(2*dotH)) * diff(Hsq, this->field_list[i]) );
+      }
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        rval.push_back( -(1/(2*dotH)) * diff(Hsq, this->deriv_list[i]) );
+      }
+
+    return(rval);
+  }
+
+
+std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_xfm_2()
+  {
+    std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
+
+    GiNaC::ex epsilon = this->epsilon();
+    GiNaC::ex Hsq     = this->Hubble_square();
+    GiNaC::ex dotH    = -epsilon*Hsq;
+
+    for(int i = 0; i < 2*this->num_fields; i++)
+      {
+        rval[i].resize(2*this->num_fields);
+        for(int j = 0; j < 2*this->num_fields; j++)
+          {
+            rval[i][j] = 0;
+          }
+      }
+
+    GiNaC::ex p_sum(0);
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        p_sum += 1/(2*dotH) * diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
+      }
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        GiNaC::ex dXdN = (epsilon-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
+        p_sum += 1/(2*dotH) * diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
+      }
+
+    #define COORDINATE(i) (i < this->num_fields ? this->field_list[i] : this->deriv_list[i-this->num_fields])
+    for(int i = 0; i < 2*this->num_fields; i++)
+      {
+        for(int j = 0; j < 2*this->num_fields; j++)
+          {
+            rval[i][j] = -1/(2*dotH) * diff(diff(Hsq, COORDINATE(i)), COORDINATE(j))
+              - diff(1/(2*dotH), COORDINATE(i)) * diff(Hsq, COORDINATE(j))
+              - diff(1/(2*dotH), COORDINATE(j)) * diff(Hsq, COORDINATE(i))
+              + p_sum * diff(Hsq, COORDINATE(i)) * diff(Hsq, COORDINATE(j));
+          }
+      }
+
+    return(rval);
+  }
+
+
+std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_zeta_xfm_3()
+  {
+    std::vector< std::vector< std::vector<GiNaC::ex> > > rval(2*this->num_fields);
+
+    for(int i = 0; i < 2*this->num_fields; i++)
+      {
+        rval[i].resize(2*this->num_fields);
+        for(int j = 0; j < 2*this->num_fields; j++)
+          {
+            rval[i][j].resize(2*this->num_fields);
+            for(int k = 0; k < 2*this->num_fields; k++)
+              {
+                rval[i][j][k] = 0;
+              }
+          }
+      }
+
+    return(rval);
+  }
+
+
+// *****************************************************************************
 
 
 GiNaC::ex canonical_u_tensor_factory::compute_Hsq()

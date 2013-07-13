@@ -48,6 +48,13 @@ namespace transport
                 twopf(const std::vector<double>& ks, double Nstar,
                 const std::vector<number>& ics, const std::vector<double>& times);
 
+              // Calculation of gauge-transformation coefficients (to zeta)
+              // ==========================================================
+
+              void compute_gauge_xfm_first  (const std::vector<number> __state, std::vector<number>& __dN);
+              void compute_gauge_xfm_second (const std::vector<number> __state, std::vector< std::vector<number> >& __ddN);
+              void compute_gauge_xfm_third  (const std::vector<number> __state, std::vector< std::vector< std::vector<number> > >& __dddN);
+
           protected:
               void
                 fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
@@ -498,6 +505,60 @@ namespace transport
               tpf_x[i] = x[2*$$__NUMBER_FIELDS + i];
             }
           this->twopf_history.push_back(tpf_x);
+        }
+
+
+      // IMPLEMENTATION -- GAUGE TRANSFORMATIONS
+
+
+      template <typename number>
+      void $$__MODEL<number>::compute_gauge_xfm_first(const std::vector<number> __state, std::vector<number>& __dN)
+        {
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __state[$$__A];
+          const auto __Mp              = this->M_Planck;
+
+          __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
+          __dN[$$__A] = $$__ZETA_XFM_1[A];
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::compute_gauge_xfm_second(const std::vector<number> __state, std::vector< std::vector<number> >& __ddN)
+        {
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __state[$$__A];
+          const auto __Mp              = this->M_Planck;
+
+          __ddN.resize(2*$$__NUMBER_FIELDS);
+          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+            {
+              __ddN[i].resize(2*$$__NUMBER_FIELDS);
+            }
+
+          __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB];
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::compute_gauge_xfm_third(const std::vector<number> __state,
+        std::vector< std::vector< std::vector<number> > >& __dddN)
+        {
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __state[$$__A];
+          const auto __Mp              = this->M_Planck;
+
+          __dddN.resize(2*$$__NUMBER_FIELDS);
+          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+            {
+              __dddN[i].resize(2*$$__NUMBER_FIELDS);
+              for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
+                {
+                  __dddN[i][j].resize(2*$$__NUMBER_FIELDS);
+                }
+            }
+
+          __dddN[$$__A][$$__B][$$__C] = $$__ZETA_XFM_3[ABC];
         }
 
 

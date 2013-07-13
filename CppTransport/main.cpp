@@ -170,9 +170,9 @@ int main(int argc, const char *argv[])
 
             // lexicalize this input file
             in.name   = (std::string)argv[i];
-            in.stream = new lexstream<enum keyword_type, enum character_type>((std::string)argv[i], &path,
-                                                                              keyword_table, keyword_map, NUMBER_KEYWORDS,
-                                                                              character_table, character_map, NUMBER_CHARACTERS);
+            in.stream = new lexstream<keyword_type, character_type>((std::string) argv[i], &path,
+              keyword_table, keyword_map, NUMBER_KEYWORDS,
+              character_table, character_map, NUMBER_CHARACTERS);
 
             // in.stream->print(std::cerr);
 

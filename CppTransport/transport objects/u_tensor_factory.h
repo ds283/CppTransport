@@ -20,12 +20,16 @@ class u_tensor_factory
     public:
       u_tensor_factory(script* r);
 
-      virtual std::vector<GiNaC::ex>                               compute_sr_u() = 0;
-      virtual std::vector<GiNaC::ex>                               compute_u1  () = 0;
-      virtual std::vector< std::vector<GiNaC::ex> >                compute_u2  () = 0;
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3  () = 0;
+      virtual std::vector<GiNaC::ex>                               compute_sr_u      () = 0;
+      virtual std::vector<GiNaC::ex>                               compute_u1        () = 0;
+      virtual std::vector< std::vector<GiNaC::ex> >                compute_u2        () = 0;
+      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3        () = 0;
 
-      virtual GiNaC::ex                                            compute_Hsq () = 0;
+      virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1() = 0;
+      virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2() = 0;
+      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_zeta_xfm_3() = 0;
+
+      virtual GiNaC::ex                                            compute_Hsq       () = 0;
 
     protected:
       script*                          root;
@@ -38,18 +42,24 @@ class u_tensor_factory
       const std::vector<GiNaC::symbol> deriv_list;
   };
 
+
 class canonical_u_tensor_factory : public u_tensor_factory
   {
     public:
       canonical_u_tensor_factory(script* r) : u_tensor_factory(r) {}
 
       //  CALCULATE DERIVED QUANTITIES
-      std::vector<GiNaC::ex>                                compute_sr_u();
-      std::vector<GiNaC::ex>                                compute_u1  ();
-      std::vector< std::vector<GiNaC::ex> >                 compute_u2  ();
-      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3  ();
+      std::vector<GiNaC::ex>                                compute_sr_u      ();
+      std::vector<GiNaC::ex>                                compute_u1        ();
+      std::vector< std::vector<GiNaC::ex> >                 compute_u2        ();
+      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3        ();
 
-      GiNaC::ex                                             compute_Hsq ();
+      //  CALCULATE GAUGE TRANSFORMATIONS
+      std::vector<GiNaC::ex>                                compute_zeta_xfm_1();
+      std::vector< std::vector<GiNaC::ex> >                 compute_zeta_xfm_2();
+      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_zeta_xfm_3();
+
+      GiNaC::ex                                             compute_Hsq       ();
 
     private:
       GiNaC::ex epsilon();

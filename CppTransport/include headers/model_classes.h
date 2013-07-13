@@ -40,7 +40,12 @@ namespace transport
               const std::vector<std::string>& get_param_names();    // return vector of parameter names
               const std::vector<std::string>& get_p_latex_names();  // return vector of LaTeX parameter names
 
-              const std::vector<number>&      get_parameters();
+              const std::vector<number>&      get_parameters();     // return vector of parameter values associated with this instance
+
+              // calculate gauge transformations; pure virtual, so must be overridden by derived class
+              virtual void                    compute_gauge_xfm_first (const std::vector<number> __state, std::vector<number>& __dN)                                 = 0;
+              virtual void                    compute_gauge_xfm_second(const std::vector<number> __state, std::vector< std::vector<number> >& __ddN)                 = 0;
+              virtual void                    compute_gauge_xfm_third (const std::vector<number> __state, std::vector< std::vector< std::vector<number> > >& __dddN) = 0;
 
           protected:
               const std::string               name;                 // name of model
