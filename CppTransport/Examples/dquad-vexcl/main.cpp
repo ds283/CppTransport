@@ -107,7 +107,8 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << tpf;
 
-      tpf.time_history(&plt, output + "/k_mode");
+      tpf.fields_time_history(&plt, output + "/k_mode");
+      tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
     }
 
     return(EXIT_SUCCESS);
