@@ -68,14 +68,9 @@ void python_plot_maker<number>::plot(std::string output, std::string title,
 
         for(int j = 0; j < ys.size(); j++)
           {
-            if(ys[j].size() != labels.size())
-              {
-                std::cerr << ys[j].size() << std::endl;
-                std::cerr << labels.size() << std::endl;
-              }
             assert(ys[j].size() == labels.size());
 
-            out << (j > 0 ? ", " : "") << (logy ? fabs(ys[j][i]) : ys[j][i]) ;
+            out << (j > 0 ? ", " : "") << (logy ? fabs(ys[j][i]) : ys[j][i]);
           }
         out << " ]" << std::endl;
 
