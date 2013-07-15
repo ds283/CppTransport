@@ -82,8 +82,8 @@ namespace transport
                 gauge_xfm(gx)
               {}
 
-            void fields_time_history(plot_maker<number>* maker, std::string output);
-            void zeta_time_history  (plot_maker<number>* maker, std::string output);
+            void fields_time_history(plot_maker<number>* maker, std::string output, std::string format = "pdf");
+            void zeta_time_history  (plot_maker<number>* maker, std::string output, std::string format = "pdf");
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
@@ -136,7 +136,7 @@ namespace transport
 //  IMPLEMENTATION -- CLASS twopf
 
       template <typename number>
-      void twopf<number>::fields_time_history(plot_maker<number>* maker, std::string output)
+      void twopf<number>::fields_time_history(plot_maker<number>* maker, std::string output, std::string format)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -163,7 +163,7 @@ namespace transport
                 }
 
               std::ostringstream fnam;
-              fnam << output << "_" << i << ".pdf";
+              fnam << output << "_" << i;
 
               std::ostringstream title;
               title << "$k = " << this->sample_ks[i] << "$";
@@ -179,12 +179,13 @@ namespace transport
                     }
                 }
 
+              maker->set_format(format);
               maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }
         }
 
       template <typename number>
-      void twopf<number>::zeta_time_history(plot_maker<number>* maker, std::string output)
+      void twopf<number>::zeta_time_history(plot_maker<number>* maker, std::string output, std::string format)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -212,7 +213,7 @@ namespace transport
                 }
 
               std::ostringstream fnam;
-              fnam << output << "_" << i << ".pdf";
+              fnam << output << "_" << i;
 
               std::ostringstream title;
               title << "$k = " << this->sample_ks[i] << "$";
@@ -222,6 +223,7 @@ namespace transport
               l << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
               labels[0] = l.str();
 
+              maker->set_format(format);
               maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }
         }

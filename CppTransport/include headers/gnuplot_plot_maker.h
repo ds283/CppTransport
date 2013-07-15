@@ -25,10 +25,21 @@ template <typename number>
 class gnuplot_plot_maker : public plot_maker<number>
   {
     public:
+      gnuplot_plot_maker() : plot_maker<number>("") {}
+
       void plot(std::string output, std::string title,
         const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
         std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
+
+      virtual void set_format(std::string f);
   };
+
+
+template <typename number>
+void gnuplot_plot_maker<number>::set_format(std::string f)
+  {
+    // do nothing; we can only output .ps format
+  }
 
 
 template <typename number>
@@ -66,6 +77,11 @@ void gnuplot_plot_maker<number>::plot(std::string output, std::string title,
             gplot.set_smooth().plot_xy(x, y, labels[i]);
           }
 
+        if(this->format != "")  // but this should never really happen; we can only handle .ps format
+          {
+            output += "." + this->format;
+          }
+//        gplot.savetops(output);
       }
     catch (GnuplotException ge)
       {

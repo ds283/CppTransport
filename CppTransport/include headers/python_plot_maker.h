@@ -23,7 +23,7 @@ template <typename number>
 class python_plot_maker : public plot_maker<number>
   {
     public:
-      python_plot_maker(std::string i) : interpreter(i) {}
+      python_plot_maker(std::string i, std::string f = "pdf") : plot_maker<number>(f), interpreter(i) {}
 
       void plot(std::string output, std::string title,
                 const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
@@ -93,7 +93,12 @@ void python_plot_maker<number>::plot(std::string output, std::string title,
     out << "plt.xlabel(r'"  << xlabel << "')" << std::endl;
     out << "plt.ylabel(r'"  << ylabel << "')" << std::endl;
     out << "plt.title(r'"   << title  << "')" << std::endl;
-    out << "plt.savefig('"  << output << "')" << std::endl;
+    out << "plt.savefig('"  << output;
+    if(this->format != "")
+      {
+        out << "." << this->format;
+      }
+    out << "')" << std::endl;
     out << "plt.close()"    << std::endl;
 
     out.close();
