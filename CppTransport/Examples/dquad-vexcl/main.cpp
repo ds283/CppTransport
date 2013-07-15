@@ -54,6 +54,7 @@ int main(int argc, const char* argv[])
     std::string python(argv[2]);
 
     python_plot_maker<double> plt(python);
+//    gnuplot_plot_maker<double> plt;
 
     // set up an OpenCL context and work queue which can
     // be used by boost::odeint to schedule computations

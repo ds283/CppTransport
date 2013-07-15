@@ -54,6 +54,7 @@ int main(int argc, const char* argv[])
     std::string python(argv[2]);
 
     python_plot_maker<double> plt(python);
+//    gnuplot_plot_maker<double> plt;
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
