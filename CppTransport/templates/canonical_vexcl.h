@@ -91,7 +91,7 @@ namespace transport
               make_tpf_ic(unsigned int i, unsigned int j, const std::vector<double>& __ks, double __Nstar,
                 const std::vector<number>& __fields, std::vector<double>& __tpf);
             void
-              rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+              rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
                 double __Nstar, const std::vector<number>& __fields);
 
             $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
@@ -252,31 +252,31 @@ namespace transport
           this->write_initial_conditions(hst_bg, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE);
 
           // set up vector of ks corresponding to honest comoving momenta
-          std::vector<double> real_ks(ks.size());
-          this->rescale_ks(ks, real_ks, Nstar, hst_bg);
+          std::vector<double> com_ks(ks.size());
+          this->rescale_ks(ks, com_ks, Nstar, hst_bg);
 
           // initialize device copy of k list
-          vex::vector<double> dev_ks(ctx.queue(), real_ks);
+          vex::vector<double> dev_ks(ctx.queue(), com_ks);
           
           // set up space for the u2-tensor
-          vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> u2_tensor(ctx.queue(), real_ks.size());
+          vex::multivector<double, (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)> u2_tensor(ctx.queue(), com_ks.size());
 
           // set up a functor to evolve this system
           $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, dev_ks, u2_tensor);
 
-          twopf_state dev_x(ctx.queue(), real_ks.size());
+          twopf_state dev_x(ctx.queue(), com_ks.size());
 
           // fix initial conditions for the background + 2pf
           // -- background first
           dev_x($$__A) = $$// hst_bg[$$__A];
 
           // now for 2pf
-          std::vector<double> hst_tp(real_ks.size());
+          std::vector<double> hst_tp(com_ks.size());
           for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
             {
               for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
                 {
-                  this->make_tpf_ic(i, j, real_ks, Nstar, hst_bg, hst_tp);
+                  this->make_tpf_ic(i, j, com_ks, Nstar, hst_bg, hst_tp);
                   vex::copy(hst_tp, dev_x(2*$$__NUMBER_FIELDS+(2*$$__NUMBER_FIELDS*i)+j));
                 }
             }
@@ -295,7 +295,7 @@ namespace transport
             system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::dquad_gauge_xfm_gadget<number>* gauge_xfm = new dquad_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
-          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, Nstar,
+          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
             slices, background_history, twopf_history, gauge_xfm);
 
           return(tpf);
@@ -371,7 +371,7 @@ namespace transport
                 {
                   if(__i == __j)
                     {
-                      __tpf[__n] = (1.0/(2.0*__ks[__n])) * exp(2.0 * __Nstar);
+                      __tpf[__n] = (1.0/(2.0*__ks[__n]));
                     }
                   else
                     {
@@ -386,7 +386,7 @@ namespace transport
 
                   if(__i == __j)
                     {
-                      __tpf[__n] = -(1.0/(2.0*__ks[__n])) * exp(2.0 * __Nstar);
+                      __tpf[__n] = -(1.0/(2.0*__ks[__n]));
                     }
                   else
                     {
@@ -397,7 +397,7 @@ namespace transport
                 {
                   if(__i == __j)
                     {
-                      __tpf[__n] = (__ks[__n]/(2.0*__Hsq)) * exp(4.0 * __Nstar);
+                      __tpf[__n] = (__ks[__n]/(2.0*__Hsq));
                     }
                   else
                     {
@@ -413,7 +413,7 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+      void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
         double __Nstar, const std::vector<number>& __fields)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
@@ -422,11 +422,11 @@ namespace transport
 
           const auto __Hsq             = $$__HUBBLE_SQ;
 
-          assert(__ks.size() == __real_ks.size());
+          assert(__ks.size() == __com_ks.size());
 
           for(int __n = 0; __n < __ks.size(); __n++)
             {
-              __real_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
+              __com_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
             }
         }
 

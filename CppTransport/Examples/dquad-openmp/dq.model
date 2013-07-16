@@ -16,8 +16,8 @@ background
  };
 
 perturbations
- { abserr   = 1E-8;
-   relerr   = 1E-8;
+ { abserr   = 1E-10;
+   relerr   = 1E-10;
    stepsize = 1E-4;
    stepper  = "runge_kutta_dopri5";
  };

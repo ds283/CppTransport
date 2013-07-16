@@ -96,7 +96,7 @@ int main(int argc, const char* argv[])
     {
       boost::timer::auto_cpu_timer timer;
 
-      transport::twopf<double> tpf = model.twopf(ks, 7.0, init_values, times);
+      transport::twopf<double> tpf = model.twopf(ks, 8.0, init_values, times);
 
       timer.stop();
       timer.report();

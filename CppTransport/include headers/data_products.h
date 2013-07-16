@@ -12,14 +12,17 @@
 #include <sstream>
 #include <vector>
 
+#include <math.h>
+
 #include "asciitable.h"
 #include "messages_en.h"
 
 #include "plot_gadget.h"
 #include "gauge_xfm_gadget.h"
 
-#define TWOPF_SYMBOL "\\Sigma"
-#define ZETA_SYMBOL  "\\zeta"
+#define TWOPF_SYMBOL               "\\Sigma"
+#define ZETA_SYMBOL                "\\zeta"
+#define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
 
 namespace transport
   {
@@ -48,7 +51,7 @@ namespace transport
               : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s)
               {}
 
-            void                        plot      (plot_gadget<number>* maker, std::string output, std::string title = "");
+            void                        plot      (plot_gadget<number>*gadget, std::string output, std::string title = "");
 
             const std::vector<number>&  get_value (unsigned int n);
 
@@ -72,18 +75,20 @@ namespace transport
         {
           public:
             twopf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
-              const std::vector<double>& ks, double Nst,
+              const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf,
               gauge_xfm_gadget<number>* gx)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
-                Nstar(Nst), sample_points(sp), sample_ks(ks),
+                Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b), samples(twopf),
                 gauge_xfm(gx)
               {}
 
-            void fields_time_history(plot_gadget<number>* maker, std::string output, std::string format = "pdf");
-            void zeta_time_history  (plot_gadget<number>* maker, std::string output, std::string format = "pdf");
+            void fields_time_history(plot_gadget<number>*gadget, std::string output,
+              std::string format = "pdf");
+            void zeta_time_history  (plot_gadget<number>*gadget, std::string output,
+              std::string format = "pdf", bool dimensionless = true);
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
@@ -98,7 +103,9 @@ namespace transport
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
             const std::vector<double>                               sample_points;     // list of times at which we hold samples
-            const std::vector<double>                               sample_ks;         // list of ks for which we hold samples
+            const std::vector<double>                               sample_ks;         // list of ks for which we hold samples,
+                                                                                       // normalized to horizon crossing
+            const std::vector<double>                               sample_com_ks;     // list of ks, in comoving units
 
             background<number>                                      backg;             // container for background
             const std::vector< std::vector< std::vector<number> > > samples;           // list of samples of 2pf
@@ -110,9 +117,9 @@ namespace transport
 //  IMPLEMENTATION -- CLASS background
 
       template <typename number>
-      void background<number>::plot(plot_gadget<number>* maker, std::string output, std::string title)
+      void background<number>::plot(plot_gadget<number>* gadget, std::string output, std::string title)
         {
-          maker->plot(output, title, this->sample_points, this->samples, this->field_names, "N", "fields", false, false);
+          gadget->plot(output, title, this->sample_points, this->samples, this->field_names, "N", "fields", false, false);
         }
 
       template <typename number>
@@ -136,7 +143,7 @@ namespace transport
 //  IMPLEMENTATION -- CLASS twopf
 
       template <typename number>
-      void twopf<number>::fields_time_history(plot_gadget<number>* maker, std::string output, std::string format)
+      void twopf<number>::fields_time_history(plot_gadget<number>* gadget, std::string output, std::string format)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -179,13 +186,14 @@ namespace transport
                     }
                 }
 
-              maker->set_format(format);
-              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }
         }
 
       template <typename number>
-      void twopf<number>::zeta_time_history(plot_gadget<number>* maker, std::string output, std::string format)
+      void twopf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
+        std::string format, bool dimensionless)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -210,6 +218,11 @@ namespace transport
                           data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
                         }
                     }
+
+                  if(dimensionless)   // plotting the dimensionless power spectrum?
+                    {
+                      data[j][0] *= pow(this->sample_com_ks[i], 3.0) / (2.0*M_PI*M_PI);
+                    }
                 }
 
               std::ostringstream fnam;
@@ -220,11 +233,18 @@ namespace transport
 
               std::vector<std::string> labels(1);
               std::ostringstream l;
-              l << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+              if(dimensionless)
+                {
+                  l << "$" << DIMENSIONLESS_TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << "}$";
+                }
+              else
+                {
+                  l << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+                }
               labels[0] = l.str();
 
-              maker->set_format(format);
-              maker->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
             }
         }
 

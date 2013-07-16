@@ -88,7 +88,7 @@ namespace transport
               double
                 make_tpf_ic(unsigned int i, unsigned int j, double k, double __Nstar, const std::vector<number>& __fields);
               void
-                rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+                rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
                   double __Nstar, const std::vector<number>& __fields);
 
               $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
@@ -244,9 +244,15 @@ namespace transport
           this->fix_initial_conditions(ics, real_ics);
           this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE);
 
+          // solve for the background, so that we get a good estimate of
+          // H_exit -- needed to normalize the comoving momenta k
+          std::vector<number> backg_times;
+          backg_times.push_back(Nstar);
+          transport::background<number> backg_evo = this->background(real_ics, backg_times);
+
           // set up vector of ks corresponding to honest comoving momenta
-          std::vector<double> real_ks(ks.size());
-          this->rescale_ks(ks, real_ks, Nstar, real_ics);
+          std::vector<double> com_ks(ks.size());
+          this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
 
           // space for storing the solution
           std::vector<double>                               slices;
@@ -264,14 +270,14 @@ namespace transport
               twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2$$__NUMBER_FIELDS);
               for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
                 {
-                  twopf_history[i][j].resize(real_ks.size());
+                  twopf_history[i][j].resize(com_ks.size());
                 }
             }
 
           for(int i = 0; i < ks.size(); i++)
             {
               // set up a functor to evolve this system
-              $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, real_ks[i]);
+              $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, com_ks[i]);
 
               // set up a functor to observe the integration
               std::vector<double>                kmode_slices;
@@ -293,7 +299,7 @@ namespace transport
                 {
                   for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
                     {
-                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_tpf_ic(j, k, real_ks[i], Nstar, real_ics);
+                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_tpf_ic(j, k, com_ks[i], Nstar, real_ics);
                     }
                 }
 
@@ -317,7 +323,7 @@ namespace transport
             }
 
           transport::dquad_gauge_xfm_gadget<number>* gauge_xfm = new dquad_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
-          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, Nstar,
+          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
             slices, background_history, twopf_history, gauge_xfm);
 
           return(tpf);
@@ -392,7 +398,7 @@ namespace transport
             {
               if(__i == __j)
                 {
-                  __tpf = (1.0/(2.0*__k)) * exp(2.0 * __Nstar);
+                  __tpf = (1.0/(2.0*__k));
                 }
               else
                 {
@@ -407,7 +413,7 @@ namespace transport
 
               if(__i == __j)
                 {
-                  __tpf = -(1.0/(2.0*__k)) * exp(2.0 * __Nstar);
+                  __tpf = -(1.0/(2.0*__k));
                 }
               else
                 {
@@ -418,7 +424,7 @@ namespace transport
             {
               if(__i == __j)
                 {
-                  __tpf = (__k/(2.0*__Hsq)) * exp(4.0 * __Nstar);
+                  __tpf = (__k/(2.0*__Hsq));
                 }
               else
                 {
@@ -435,20 +441,21 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __real_ks,
+      void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
         double __Nstar, const std::vector<number>& __fields)
         {
+          assert(__fields.size() == 2*$$__NUMBER_FIELDS);
+          assert(__ks.size() == __com_ks.size());
+
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
           const auto $$__COORDINATE[A] = __fields[$$__A];
           const auto __Mp              = this->M_Planck;
 
           const auto __Hsq             = $$__HUBBLE_SQ;
 
-          assert(__ks.size() == __real_ks.size());
-
           for(int __n = 0; __n < __ks.size(); __n++)
             {
-              __real_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
+              __com_ks[__n] = __ks[__n] * sqrt(__Hsq);
             }
         }
 
