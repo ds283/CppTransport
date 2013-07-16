@@ -451,11 +451,14 @@ namespace transport
           const auto $$__COORDINATE[A] = __fields[$$__A];
           const auto __Mp              = this->M_Planck;
 
+          // __fields should be the field configuration at horizon
+          // exit, so that __Hsq gives the Hubble rate there
+          // (not at the start of the integration)
           const auto __Hsq             = $$__HUBBLE_SQ;
 
           for(int __n = 0; __n < __ks.size(); __n++)
             {
-              __com_ks[__n] = __ks[__n] * sqrt(__Hsq);
+              __com_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
             }
         }
 
@@ -469,7 +472,7 @@ namespace transport
           const auto $$__COORDINATE[A] = __x[$$__A];
           const auto __Mp              = this->M_Planck;
 
-          __dxdt[$$__A]          = $$__U1_TENSOR[A];
+          __dxdt[$$__A]                = $$__U1_TENSOR[A];
         }
 
 

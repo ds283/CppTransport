@@ -251,9 +251,15 @@ namespace transport
           this->fix_initial_conditions(ics, hst_bg);
           this->write_initial_conditions(hst_bg, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE);
 
+          // solve for the background, so that we get a good estimate of
+          // H_exit -- needed to normalize the comoving momenta k
+          std::vector<number> backg_times;
+          backg_times.push_back(Nstar);
+          transport::background<number> backg_evo = this->background(real_ics, backg_times);
+
           // set up vector of ks corresponding to honest comoving momenta
           std::vector<double> com_ks(ks.size());
-          this->rescale_ks(ks, com_ks, Nstar, hst_bg);
+          this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
 
           // initialize device copy of k list
           vex::vector<double> dev_ks(ctx.queue(), com_ks);
@@ -416,13 +422,17 @@ namespace transport
       void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
         double __Nstar, const std::vector<number>& __fields)
         {
+          assert(__fields.size() == 2*$$__NUMBER_FIELDS);
+          assert(__ks.size() == __com_ks.size());
+
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
           const auto $$__COORDINATE[A] = __fields[$$__A];
           const auto __Mp              = this->M_Planck;
 
+          // __fields should be the field configuration at horizon
+          // exit, so that __Hsq gives the Hubble rate there
+          // (not at the start of the integration)
           const auto __Hsq             = $$__HUBBLE_SQ;
-
-          assert(__ks.size() == __com_ks.size());
 
           for(int __n = 0; __n < __ks.size(); __n++)
             {
