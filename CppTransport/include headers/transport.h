@@ -11,9 +11,9 @@
 
 #include "messages_en.h"
 
-#include "plot_maker.h"
-#include "python_plot_maker.h"
-#include "gnuplot_plot_maker.h"
+#include "plot_gadget.h"
+#include "python_plot_gadget.h"
+#include "gnuplot_plot_gadget.h"
 
 #include "gauge_xfm_gadget.h"
 #include "data_products.h"

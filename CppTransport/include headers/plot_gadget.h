@@ -18,10 +18,10 @@
 
 
 template <typename number>
-class plot_maker
+class plot_gadget
   {
     public:
-      plot_maker(std::string f = "pdf") : format(f) {}
+      plot_gadget(std::string f = "pdf") : format(f) {}
 
       virtual void plot(std::string output, std::string title,
         const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
@@ -36,13 +36,13 @@ class plot_maker
   };
 
 template <typename number>
-void plot_maker<number>::set_format(std::string f)
+void plot_gadget<number>::set_format(std::string f)
   {
     this->format = f;
   }
 
 template <typename number>
-const std::string& plot_maker<number>::get_format()
+const std::string& plot_gadget<number>::get_format()
   {
     return(this->format);
   }

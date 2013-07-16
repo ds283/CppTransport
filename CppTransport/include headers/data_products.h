@@ -15,7 +15,7 @@
 #include "asciitable.h"
 #include "messages_en.h"
 
-#include "plot_maker.h"
+#include "plot_gadget.h"
 #include "gauge_xfm_gadget.h"
 
 #define TWOPF_SYMBOL "\\Sigma"
@@ -48,7 +48,7 @@ namespace transport
               : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s)
               {}
 
-            void                        plot      (plot_maker<number>* maker, std::string output, std::string title = "");
+            void                        plot      (plot_gadget<number>* maker, std::string output, std::string title = "");
 
             const std::vector<number>&  get_value (unsigned int n);
 
@@ -82,8 +82,8 @@ namespace transport
                 gauge_xfm(gx)
               {}
 
-            void fields_time_history(plot_maker<number>* maker, std::string output, std::string format = "pdf");
-            void zeta_time_history  (plot_maker<number>* maker, std::string output, std::string format = "pdf");
+            void fields_time_history(plot_gadget<number>* maker, std::string output, std::string format = "pdf");
+            void zeta_time_history  (plot_gadget<number>* maker, std::string output, std::string format = "pdf");
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
@@ -110,7 +110,7 @@ namespace transport
 //  IMPLEMENTATION -- CLASS background
 
       template <typename number>
-      void background<number>::plot(plot_maker<number>* maker, std::string output, std::string title)
+      void background<number>::plot(plot_gadget<number>* maker, std::string output, std::string title)
         {
           maker->plot(output, title, this->sample_points, this->samples, this->field_names, "N", "fields", false, false);
         }
@@ -136,7 +136,7 @@ namespace transport
 //  IMPLEMENTATION -- CLASS twopf
 
       template <typename number>
-      void twopf<number>::fields_time_history(plot_maker<number>* maker, std::string output, std::string format)
+      void twopf<number>::fields_time_history(plot_gadget<number>* maker, std::string output, std::string format)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -185,7 +185,7 @@ namespace transport
         }
 
       template <typename number>
-      void twopf<number>::zeta_time_history(plot_maker<number>* maker, std::string output, std::string format)
+      void twopf<number>::zeta_time_history(plot_gadget<number>* maker, std::string output, std::string format)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)

@@ -16,14 +16,14 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "plot_maker.h"
+#include "plot_gadget.h"
 
 
 template <typename number>
-class python_plot_maker : public plot_maker<number>
+class python_plot_gadget : public plot_gadget<number>
   {
     public:
-      python_plot_maker(std::string i, std::string f = "pdf") : plot_maker<number>(f), interpreter(i) {}
+      python_plot_gadget(std::string i, std::string f = "pdf") : plot_gadget<number>(f), interpreter(i) {}
 
       void plot(std::string output, std::string title,
                 const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
@@ -35,7 +35,7 @@ class python_plot_maker : public plot_maker<number>
 
 
 template <typename number>
-void python_plot_maker<number>::plot(std::string output, std::string title,
+void python_plot_gadget<number>::plot(std::string output, std::string title,
   const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
   const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
   {

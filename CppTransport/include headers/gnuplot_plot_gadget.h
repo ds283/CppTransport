@@ -18,14 +18,14 @@
 
 #include "gnuplot_i.hpp"
 
-#include "plot_maker.h"
+#include "plot_gadget.h"
 
 
 template <typename number>
-class gnuplot_plot_maker : public plot_maker<number>
+class gnuplot_plot_gadget : public plot_gadget<number>
   {
     public:
-      gnuplot_plot_maker() : plot_maker<number>("") {}
+      gnuplot_plot_gadget() : plot_gadget<number>("") {}
 
       void plot(std::string output, std::string title,
         const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
@@ -36,14 +36,14 @@ class gnuplot_plot_maker : public plot_maker<number>
 
 
 template <typename number>
-void gnuplot_plot_maker<number>::set_format(std::string f)
+void gnuplot_plot_gadget<number>::set_format(std::string f)
   {
     // do nothing; we can only output .ps format
   }
 
 
 template <typename number>
-void gnuplot_plot_maker<number>::plot(std::string output, std::string title,
+void gnuplot_plot_gadget<number>::plot(std::string output, std::string title,
   const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
   const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
   {
