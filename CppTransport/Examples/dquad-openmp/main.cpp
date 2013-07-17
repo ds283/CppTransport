@@ -55,6 +55,7 @@ int main(int argc, const char* argv[])
 
     python_plot_gadget<double> plt(python);
 //    gnuplot_plot_gadget<double> plt;
+//    asciitable_plot_gadget<double> plt;
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
