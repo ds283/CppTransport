@@ -11,7 +11,9 @@
 #include <string>
 #include <sstream>
 #include <vector>
+#include <array>
 
+#include <assert.h>
 #include <math.h>
 
 #include "asciitable.h"
@@ -23,6 +25,7 @@
 #define TWOPF_SYMBOL               "\\Sigma"
 #define ZETA_SYMBOL                "\\zeta"
 #define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
+#define PRIME_SYMBOL               "\\prime"
 
 namespace transport
   {
@@ -41,6 +44,98 @@ namespace transport
 
       template <typename number>
       std::ostream& operator<<(std::ostream& out, twopf<number>& obj);
+
+      template <unsigned int indices>
+      class index_selector
+        {
+          public:
+            index_selector(unsigned int N_f);
+
+            void none     ();
+            void all      ();
+            void set_on   (std::array<unsigned int, indices>& which);
+            void set_off  (std::array<unsigned int, indices>& which);
+
+            bool is_on    (std::array<unsigned int, indices>& which);
+
+          protected:
+            const unsigned int        N_fields;
+            unsigned int              size;
+            std::vector<bool>         enabled;
+            std::vector<unsigned int> displacements;
+        };
+
+      template <unsigned int indices>
+      index_selector<indices>::index_selector(unsigned int N_f)
+        : N_fields(N_f)
+        {
+          size = 1;
+          for(int i = 0; i < indices; i++)
+            {
+              size *= 2*N_fields;
+            }
+          enabled.assign(size, true);   // by default, plot all components
+
+          displacements.resize(indices);
+          unsigned int count = 1;
+          for(int i = 0; i < indices; i++)
+            {
+              displacements[indices-i-1] = count;
+              count *= 2*this->N_fields;
+            }
+        };
+
+      template <unsigned int indices>
+      void index_selector<indices>::none()
+        {
+          enabled.assign(size, false);
+        }
+
+      template <unsigned int indices>
+      void index_selector<indices>::all()
+        {
+          enabled.assign(size, true);
+        }
+
+      template <unsigned int indices>
+      void index_selector<indices>::set_on(std::array<unsigned int, indices>& which)
+        {
+          unsigned int index = 0;
+          for(int i = 0; i < indices; i++)
+            {
+              index += displacements[i] * which[i];
+            }
+
+          assert(index < this->size);
+          this->enabled[index] = true;
+        }
+
+      template <unsigned int indices>
+      void index_selector<indices>::set_off(std::array<unsigned int, indices>& which)
+        {
+          unsigned int index = 0;
+          for(int i = 0; i < indices; i++)
+            {
+              index += displacements[i] * which[i];
+            }
+
+          assert(index < this->size);
+          this->enabled[index] = false;
+        }
+
+      template <unsigned int indices>
+      bool index_selector<indices>::is_on(std::array<unsigned int, indices>& which)
+        {
+          unsigned int index = 0;
+          for(int i = 0; i < indices; i++)
+            {
+              index += displacements[i] * which[i];
+            }
+
+          assert(index < this->size);
+          return(this->enabled[index]);
+        }
+
 
       template <typename number>
       class background
@@ -85,10 +180,12 @@ namespace transport
                 gauge_xfm(gx)
               {}
 
-            void fields_time_history(plot_gadget<number>*gadget, std::string output,
-              std::string format = "pdf");
-            void zeta_time_history  (plot_gadget<number>*gadget, std::string output,
-              std::string format = "pdf", bool dimensionless = true);
+            void components_time_history(plot_gadget<number>*gadget, std::string output,
+              index_selector<2>* selector, std::string format = "pdf", bool logy=true);
+            void zeta_time_history      (plot_gadget<number>*gadget, std::string output,
+              std::string format = "pdf", bool dimensionless = true, bool logy=true);
+
+            index_selector<2>* manufacture_selector();
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
@@ -143,7 +240,8 @@ namespace transport
 //  IMPLEMENTATION -- CLASS twopf
 
       template <typename number>
-      void twopf<number>::fields_time_history(plot_gadget<number>* gadget, std::string output, std::string format)
+      void twopf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
+        index_selector<2>* selector, std::string format, bool logy)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -151,20 +249,21 @@ namespace transport
               std::vector< std::vector<number> > data(this->sample_points.size());
 
               // we want data to be a time series of the 2pf components,
-              // and there are N_fields^2 of those
+              // depending whether they are enabled by the index_selector
               for(int j = 0; j < this->sample_points.size(); j++)
                 {
-                  data[j].resize(this->N_fields*this->N_fields);
-
                   // now, for this k-mode, slice up the time series
-                  for(int m = 0; m < this->N_fields; m++)
+                  for(int m = 0; m < 2*this->N_fields; m++)
                     {
-                      for(int n = 0; n < this->N_fields; n++)
+                      for(int n = 0; n < 2*this->N_fields; n++)
                         {
-                          unsigned int samples_index = 2*this->N_fields*m + n;
-                          unsigned int data_index    = this->N_fields*m + n;
+                          std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n };
+                          if(selector->is_on(index_set))
+                            {
+                              unsigned int samples_index = 2*this->N_fields*m + n;
 
-                          data[j][data_index] = this->samples[j][samples_index][i];
+                              data[j].push_back(this->samples[j][samples_index][i]);
+                            }
                         }
                     }
                 }
@@ -175,25 +274,32 @@ namespace transport
               std::ostringstream title;
               title << "$k = " << this->sample_ks[i] << "$";
 
-              std::vector<std::string> labels(this->N_fields*this->N_fields);
-              for(int i = 0; i < this->N_fields; i++)
+              std::vector<std::string> labels;
+
+              for(int i = 0; i < 2*this->N_fields; i++)
                 {
-                  for(int j = 0; j < this->N_fields; j++)
+                  for(int j = 0; j < 2*this->N_fields; j++)
                     {
-                      std::ostringstream l;
-                      l << "$" << TWOPF_SYMBOL << "_{" << this->latex_names[i] << " " << this->latex_names[j] << "}$";
-                      labels[this->N_fields*i+j] = l.str();
+                      std::array<unsigned int, 2> index_set = { (unsigned int)i, (unsigned int)j };
+                      if(selector->is_on(index_set))
+                        {
+                          std::ostringstream l;
+                          l << "$" << TWOPF_SYMBOL << "_{"
+                            << this->latex_names[i % this->N_fields] << (i >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                            << this->latex_names[j % this->N_fields] << (j >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                          labels.push_back(l.str());
+                        }
                     }
                 }
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
             }
         }
 
       template <typename number>
       void twopf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
-        std::string format, bool dimensionless)
+        std::string format, bool dimensionless, bool logy)
         {
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -244,8 +350,14 @@ namespace transport
               labels[0] = l.str();
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, true);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
             }
+        }
+
+      template<typename number>
+      index_selector<2>* twopf<number>::manufacture_selector()
+        {
+          return new index_selector<2>(this->N_fields);
         }
 
       template <typename number>

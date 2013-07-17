@@ -60,8 +60,8 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 50;         // end at time t = 50
-    const unsigned int tN   = 500;        // record 500 samples
+    const double       tmax = 4;         // end at time t = 50
+    const unsigned int tN   = 1000;        // record 500 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)
       {
@@ -103,8 +103,13 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << tpf;
 
-      tpf.fields_time_history(&plt, output + "/k_mode");
+      std::array<unsigned int, 2> on_set = { 0, 1 };
+      transport::index_selector<2>* selector = tpf.manufacture_selector();
+      selector->none();
+      selector->set_on(on_set);
+      tpf.components_time_history(&plt, output + "/k_mode", selector, "pdf", false);
       tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
+      delete selector;
     }
 
     return(EXIT_SUCCESS);

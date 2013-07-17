@@ -55,6 +55,7 @@ int main(int argc, const char* argv[])
 
     python_plot_gadget<double> plt(python);
 //    gnuplot_plot_gadget<double> plt;
+//    asciitable_plot_gadget<double> plt;
 
     // set up an OpenCL context and work queue which can
     // be used by boost::odeint to schedule computations
@@ -108,8 +109,13 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << tpf;
 
-      tpf.fields_time_history(&plt, output + "/k_mode");
+      std::array<unsigned int, 2> on_set = { 0, 1 };
+      transport::index_selector<2>* selector = tpf.manufacture_selector();
+      selector->none();
+      selector->set_on(on_set);
+      tpf.components_time_history(&plt, output + "/k_mode", selector);
       tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
+      delete selector;
     }
 
     return(EXIT_SUCCESS);
