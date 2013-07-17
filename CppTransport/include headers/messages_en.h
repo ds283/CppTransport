@@ -29,8 +29,6 @@
 #define __CPP_TRANSPORT_REL_ERR               "rel err"
 #define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
 
-#define __CPP_TRANSPORT_GNUPLOT_FORMAT        "Error: gnuplot gadget can only produce .ps output"
-#define __CPP_TRANSPORT_ASCIITABLE_FORMAT     "Error: asciitable gadget can only produce .txt output"
 #define __CPP_TRANSPORT_ASCIITABLE_OUTPUT     "Error: could not open asciitable gadget output"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_
