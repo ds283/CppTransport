@@ -1,0 +1,48 @@
+model   "dquad";
+name    "Double Quadratic Inflation";
+
+author  "David Seery and others 2013";
+tag     "please cite arXiv:XXXX.YYYY";
+
+% specify which class template should be used with this model
+class   "canonical_openmp";
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-6;
+   relerr   = 1E-6;
+   stepsize = 1E-2;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-8;
+   relerr   = 1E-8;
+   stepsize = 1E-4;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+% set up the fields
+field
+ { latex "\phi";
+ } phi;
+ 
+field
+ { latex "\chi";
+ } chi;
+
+% set up the parameters of the model
+parameter
+ { latex "M_{\phi}";
+ } M_phi;
+ 
+parameter
+ { latex "M_{\chi}";
+ } M_chi;
+
+% set up the potential
+% note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
+
+% potential (1/2)*M_phi^2*phi^2 + (1/2)*M_chi^2*chi^2 + (1E-10)*(M_P^4)*cos((chi/M_P)^3);
+
+potential (1/2)*M_phi^2*phi^2 + (1/2)*M_chi^2*chi^2;
