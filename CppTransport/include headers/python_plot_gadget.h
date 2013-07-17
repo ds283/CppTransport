@@ -7,8 +7,8 @@
 
 
 
-#ifndef __python_plot_maker_H_
-#define __python_plot_maker_H_
+#ifndef __python_plot_gadget_H_
+#define __python_plot_gadget_H_
 
 #include <iostream>
 #include <assert.h>
@@ -108,4 +108,4 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
   }
 
 
-#endif //__python_plot_maker_H_
+#endif // __python_plot_gadget_H_

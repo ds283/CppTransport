@@ -7,8 +7,8 @@
 
 
 
-#ifndef __gnuplot_plot_maker_H_
-#define __gnuplot_plot_maker_H_
+#ifndef __gnuplot_plot_gadget_H_
+#define __gnuplot_plot_gadget_H_
 
 #include <iostream>
 #include <assert.h>
@@ -19,6 +19,7 @@
 #include "gnuplot_i.hpp"
 
 #include "plot_gadget.h"
+#include "messages_en.h"
 
 
 template <typename number>
@@ -87,8 +88,7 @@ void gnuplot_plot_gadget<number>::plot(std::string output, std::string title,
       {
         std::cerr << ge.what() << std::endl;
       }
-
   }
 
 
-#endif //__python_plot_maker_H_
+#endif // __gnuplot_plot_gadget_H_

@@ -14,6 +14,7 @@
 #include "plot_gadget.h"
 #include "python_plot_gadget.h"
 #include "gnuplot_plot_gadget.h"
+#include "asciitable_plot_gadget.h"
 
 #include "gauge_xfm_gadget.h"
 #include "data_products.h"
