@@ -350,7 +350,7 @@ void macro_package::assign_index_defaults(std::vector<struct index_abstract>& lh
               {
                 lhs_indices[i].range = 1;
               }
-            else if (isnumber(lhs_indices[i].label))  // assume numeric labels range over parameters
+            else if (isdigit(lhs_indices[i].label))  // assume numeric labels range over parameters
               {
                 lhs_indices[i].range = INDEX_RANGE_PARAMETER;
               }
