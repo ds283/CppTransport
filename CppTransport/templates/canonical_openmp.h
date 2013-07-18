@@ -303,8 +303,45 @@ namespace transport
                     }
                 }
 
-              integrate_times( make_dense_output< $$__PERT_STEPPER< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
-                system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+              // note that we need a generic stepper which works with an arbitrary state type; see
+              // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/concepts/system.html
+              // we can't use things like rosenbrock4 which works only with boost matrices
+
+              // exactly when the steppers call the observer functor depends which stepper is in use; see
+              // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/integrate_functions.html
+
+              // to summarize the discussion there:
+              //  ** If stepper is a Stepper or Error Stepper dt is the step size used for integration.
+              //     However, whenever a time point from the sequence is approached the step size dt will
+              //     be reduced to obtain the state x(t) exactly at the time point.
+              //  ** If stepper is a Controlled Stepper then dt is the initial step size. The actual step
+              //     size is adjusted during integration according to error control.
+              //     However, if a time point from the sequence is approached the step size is
+              //     reduced to obtain the state x(t) exactly at the time point. [runge_kutta_fehlberg78]
+              //  ** If stepper is a Dense Output Stepper then dt is the initial step size. The actual step
+              //     size is adjusted during integration according to error control. Dense output is used
+              //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
+
+              if((std::string)"$$__PERT_STEPPER" == (std::string)"runge_kutta_dopri5")
+                {
+                  integrate_times( make_dense_output< runge_kutta_dopri5< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
+                                   system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+                }
+              else if((std::string)"$$__PERT_STEPPER" == (std::string)"bulirsch_stoer_dense_out")
+                {
+                  bulirsch_stoer_dense_out< twopf_state > stepper($$__PERT_ABS_ERR, $$__PERT_REL_ERR);
+                  integrate_times( stepper, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+                }
+              else if((std::string)"$$__PERT_STEPPER" == (std::string)"runge_kutta_fehlberg78")
+                {
+                  auto stepper = make_controlled< runge_kutta_fehlberg78< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR);
+                  integrate_times( stepper, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+                }
+              else
+                {
+                  std::cerr << __CPP_TRANSPORT_UNKNOWN_SOLVER << "'$$__PERT_STEPPER'" << std::endl;
+                  exit(1);
+                }
 
               if(i == 0)  // store the background
                 {

@@ -23,6 +23,8 @@
 #define __CPP_TRANSPORT_WRONG_ICS_B           ", expected "
 #define __CPP_TRANSPORT_WRONG_ICS_C           " or "
 
+#define __CPP_TRANSPORT_UNKNOWN_SOLVER        "Error: Unknown odeint-v2 solver"
+
 #define __CPP_TRANSPORT_SOLVING_ICS_MESSAGE   "Solving for background evolution using initial conditions"
 #define __CPP_TRANSPORT_STEPPER_MESSAGE       "  -- stepper "
 #define __CPP_TRANSPORT_ABS_ERR               "abs err"
