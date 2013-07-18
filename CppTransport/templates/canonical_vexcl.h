@@ -86,7 +86,7 @@ namespace transport
               fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
             void
               write_initial_conditions(const std::vector<number>& rics, std::ostream& stream,
-              double abs_err, double rel_err, double step_size);
+              double abs_err, double rel_err, double step_size, std::string stepper_name);
             void
               make_tpf_ic(unsigned int i, unsigned int j, const std::vector<double>& __ks, double __Nstar,
                 const std::vector<number>& __fields, std::vector<double>& __tpf);
@@ -214,7 +214,7 @@ namespace transport
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> x = ics;
           this->fix_initial_conditions(ics, x);
-          this->write_initial_conditions(x, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE);
+          this->write_initial_conditions(x, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
 
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
@@ -249,7 +249,7 @@ namespace transport
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> hst_bg = ics;
           this->fix_initial_conditions(ics, hst_bg);
-          this->write_initial_conditions(hst_bg, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE);
+          this->write_initial_conditions(hst_bg, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
           // solve for the background, so that we get a good estimate of
           // H_exit -- needed to normalize the comoving momenta k
@@ -339,7 +339,7 @@ namespace transport
 
       template <typename number>
       void $$__MODEL<number>::write_initial_conditions(const std::vector<number>& ics, std::ostream& stream,
-        double abs_err, double rel_err, double step_size)
+        double abs_err, double rel_err, double step_size, std::string stepper_name)
         {
           stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
 
@@ -351,7 +351,7 @@ namespace transport
                      << "; d(" << this->field_names[i] << ")/dN = " << ics[this->N_fields+i] << std::endl;
             }
 
-          stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << "$$__BACKG_STEPPER"
+          stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
             << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
             << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
             << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size << std::endl;
