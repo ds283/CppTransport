@@ -255,7 +255,7 @@ namespace transport
           // H_exit -- needed to normalize the comoving momenta k
           std::vector<number> backg_times;
           backg_times.push_back(Nstar);
-          transport::background<number> backg_evo = this->background(real_ics, backg_times);
+          transport::background<number> backg_evo = this->background(hst_bg, backg_times);
 
           // set up vector of ks corresponding to honest comoving momenta
           std::vector<double> com_ks(ks.size());
