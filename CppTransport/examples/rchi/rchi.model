@@ -1,0 +1,29 @@
+model "rad_higgs";
+name  "Radiatively-corrected Higgs Inflation (RCHI) - p.31 of Martin et al.";
+
+class "canonical_openmp";
+
+% fix properties of the steppers
+background
+ { abserr   = 1E-6;
+   relerr   = 1E-6;
+   stepsize = 1E-2;
+   stepper  = "runge_kutta_dopri5";
+ };
+
+perturbations
+ { abserr   = 1E-8;
+   relerr   = 1E-8;
+   stepsize = 1E-4;
+   stepper  = "runge_kutta_fehlberg78";
+ };
+ 
+field h;
+
+parameter lambda;
+parameter xi;
+parameter mu;
+parameter A;
+parameter C;
+
+potential (M_P^4*lambda/(4*xi^2)) * (xi^2 * h^4 / (1 + xi*h^2)^2) * (1 - (xi*h^2/(1+xi*h^2))*(C/(8*3.141*xi))*log(M_P^2*h^2/mu^2) + (A/(32*3.141*3.141))*log(M_P^2*h^2/mu^2));

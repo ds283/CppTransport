@@ -300,7 +300,7 @@ namespace transport
           integrate_times( make_dense_output<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
             system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
-          transport::dquad_gauge_xfm_gadget<number>* gauge_xfm = new dquad_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
+          transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
           transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
             slices, background_history, twopf_history, gauge_xfm);
 
