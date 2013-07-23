@@ -282,7 +282,7 @@ namespace transport
             {
               for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
                 {
-                  this->make_tpf_ic(i, j, com_ks, Nstar, hst_bg, hst_tp);
+                  this->make_twopf_ic(i, j, com_ks, Nstar, hst_bg, hst_tp);
                   vex::copy(hst_tp, dev_x(2*$$__NUMBER_FIELDS+(2*$$__NUMBER_FIELDS*i)+j));
                 }
             }

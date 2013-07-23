@@ -70,6 +70,12 @@ namespace transport
                 twopf(const std::vector<double>& ks, double Nstar,
                 const std::vector<number>& ics, const std::vector<double>& times);
 
+              // Integrate background, 2-point function and three-point function on the CPU, using OpenMP
+              // this simple implementation works on a cubic lattice of k-modes
+              transport::threepf<number>
+                threepf(const std::vector<double>& ks, double Nstar,
+                const std::vector<number>& ics, const std::vector<double>& times);
+
               // Calculation of gauge-transformation coefficients (to zeta)
               // ==========================================================
 
@@ -83,7 +89,7 @@ namespace transport
                 write_initial_conditions(const std::vector<number>& rics, std::ostream& stream,
                   double abs_err, double rel_err, double step_size, std::string stepper_name);
               double
-                make_tpf_ic(unsigned int i, unsigned int j, double k, double __Nstar, const std::vector<number>& __fields);
+                make_twopf_ic(unsigned int i, unsigned int j, double k, double __Nstar, const std::vector<number>& __fields);
               void
                 rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
                   double __Nstar, const std::vector<number>& __fields);
@@ -296,7 +302,7 @@ namespace transport
                 {
                   for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
                     {
-                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_tpf_ic(j, k, com_ks[i], Nstar, real_ics);
+                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_twopf_ic(j, k, com_ks[i], Nstar, real_ics);
                     }
                 }
 
@@ -417,7 +423,7 @@ namespace transport
 
 
       template <typename number>
-      double $$__MODEL<number>::make_tpf_ic(unsigned int __i, unsigned int __j,
+      double $$__MODEL<number>::make_twopf_ic(unsigned int __i, unsigned int __j,
         double __k, double __Nstar, const std::vector<number>& __fields)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
