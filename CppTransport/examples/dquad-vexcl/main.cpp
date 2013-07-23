@@ -85,7 +85,7 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << backg;
 
-      backg.plot(&plt, output + "/background.pdf", "Double-quadratic inflation");
+      backg.plot(&plt, output + "/background", "Double-quadratic inflation");
     }
 
     // integrate two-point function

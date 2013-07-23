@@ -18,20 +18,37 @@
 class u_tensor_factory
   {
     public:
-      u_tensor_factory(script* r);
+    u_tensor_factory(script* r);
 
-      virtual std::vector<GiNaC::ex>                               compute_sr_u      () = 0;
-      virtual std::vector<GiNaC::ex>                               compute_u1        () = 0;
-      virtual std::vector< std::vector<GiNaC::ex> >                compute_u2        () = 0;
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3        () = 0;
+    virtual std::vector<GiNaC::ex>                               compute_sr_u() = 0;
 
-      virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1() = 0;
-      virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2() = 0;
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_zeta_xfm_3() = 0;
+    virtual std::vector<GiNaC::ex>                               compute_u1() = 0;
+    virtual std::vector<GiNaC::ex>                               compute_u1
+      (GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
-      virtual GiNaC::ex                                            compute_Hsq       () = 0;
+    virtual std::vector< std::vector<GiNaC::ex> >                compute_u2
+      (GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+    virtual std::vector< std::vector<GiNaC::ex> >                compute_u2
+      (GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
-    protected:
+    virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3
+      (GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+    virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3
+      (GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+       GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+
+    virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1() = 0;
+    virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1
+      (GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+    virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2() = 0;
+    virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2
+      (GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+    virtual GiNaC::ex compute_Hsq() = 0;
+    virtual GiNaC::ex compute_eps() = 0;
+
+protected:
       script*                          root;
 
       const unsigned int               num_fields;
@@ -46,24 +63,52 @@ class u_tensor_factory
 class canonical_u_tensor_factory : public u_tensor_factory
   {
     public:
-      canonical_u_tensor_factory(script* r) : u_tensor_factory(r) {}
+      canonical_u_tensor_factory(script* r) : u_tensor_factory(r)
+        {
+        }
 
       //  CALCULATE DERIVED QUANTITIES
-      std::vector<GiNaC::ex>                                compute_sr_u      ();
-      std::vector<GiNaC::ex>                                compute_u1        ();
-      std::vector< std::vector<GiNaC::ex> >                 compute_u2        ();
-      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_u3        ();
+      std::vector<GiNaC::ex>                               compute_sr_u();
+
+      std::vector<GiNaC::ex>                               compute_u1
+        ();
+      std::vector<GiNaC::ex>                               compute_u1
+        (GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+      std::vector< std::vector<GiNaC::ex> >                compute_u2
+        (GiNaC::symbol& k, GiNaC::symbol& a);
+      std::vector< std::vector<GiNaC::ex> >                compute_u2
+        (GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3
+        (GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3
+        (GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
+         GiNaC::ex& Hsq, GiNaC::ex& eps);
 
       //  CALCULATE GAUGE TRANSFORMATIONS
-      std::vector<GiNaC::ex>                                compute_zeta_xfm_1();
-      std::vector< std::vector<GiNaC::ex> >                 compute_zeta_xfm_2();
-      std::vector< std::vector< std::vector<GiNaC::ex> > >  compute_zeta_xfm_3();
+      std::vector<GiNaC::ex>                               compute_zeta_xfm_1();
+      std::vector<GiNaC::ex>                               compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps);
 
-      GiNaC::ex                                             compute_Hsq       ();
+      std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2();
+      std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2(GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+      GiNaC::ex compute_Hsq();
+      GiNaC::ex compute_eps();
 
     private:
-      GiNaC::ex epsilon();
-      GiNaC::ex Hubble_square();
+
+      GiNaC::ex compute_A(unsigned int i, GiNaC::symbol& k1,
+        unsigned int j, GiNaC::symbol& k2,
+        unsigned int k, GiNaC::symbol& k3);
+
+      GiNaC::ex compute_B(unsigned int i, GiNaC::symbol& k1,
+        unsigned int j, GiNaC::symbol& k2,
+        unsigned int k, GiNaC::symbol& k3);
+
+      GiNaC::ex compute_C(unsigned int i, GiNaC::symbol& k1,
+        unsigned int j, GiNaC::symbol& k2,
+        unsigned int k, GiNaC::symbol& k3);
   };
 
 

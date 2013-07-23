@@ -17,60 +17,81 @@
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
 
-#define U3_NAME      "__u3"
+#define DEFAULT_U2_NAME "__u2"
+#define DEFAULT_U3_NAME "__u3"
+#define DEFAULT_K_NAME  "__k"
+#define DEFAULT_K1_NAME "__k1"
+#define DEFAULT_K2_NAME "__k2"
+#define DEFAULT_K3_NAME "__k3"
+#define DEFAULT_A_NAME  "__a"
 
-#define MAX_INDEX    (26)
+#define DEFAULT_HSQ_NAME "__Hsq"
+#define DEFAULT_EPS_NAME "__eps"
 
-static std::string replace_tool         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_version      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_guard        (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_date         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_source       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_name         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_author       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_tag          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_model        (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_header       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_fields(struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_params(struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_field_list   (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_latex_list   (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_param_list   (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_platx_list   (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_state_list   (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_V            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_Hsq          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_abs_err    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_rel_err    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_step       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_stepper    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_abs_err    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_rel_err    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_step       (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_stepper    (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_unique       (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_tool           (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_version        (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_guard          (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_date           (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_source         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_name           (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_author         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_tag            (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_model          (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_header         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_number_fields  (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_number_params  (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_field_list     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_latex_list     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_param_list     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_platx_list     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_state_list     (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_V              (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_Hsq            (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_step         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_stepper      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_step         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_stepper      (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_unique         (struct replacement_data& data, const std::vector<std::string>& args);
 
-static std::string replace_parameter    (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_parameter      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_field        (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_field          (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_coordinate   (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_coordinate     (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_sr_velocity  (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_sr_velocity    (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_u1_tensor    (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u1_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_u2_tensor    (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u2_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_u3_tensor    (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u3_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_u2_name      (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u1_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_zeta_xfm_1   (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u2_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_zeta_xfm_2   (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u3_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
-static std::string replace_zeta_xfm_3   (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_u2_name        (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_u3_name        (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_1     (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_2     (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_3     (struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_1_sexp(struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_2_sexp(struct replacement_data& data, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices);
+static std::string replace_zeta_xfm_3_sexp(struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
 
 
@@ -129,46 +150,56 @@ static const std::string index_macros[] =
   {
     "PARAMETER", "FIELD", "COORDINATE",
     "SR_VELOCITY", "U1_TENSOR", "U2_TENSOR", "U3_TENSOR",
-    "U2_NAME",
-    "ZETA_XFM_1", "ZETA_XFM_2", "ZETA_XFM_3"
+    "U1_TENSOR_SEXPR", "U2_TENSOR_SEXPR", "U3_TENSOR_SEXPR",
+    "U2_NAME", "U3_NAME",
+    "ZETA_XFM_1", "ZETA_XFM_2",
+    "ZETA_XFM_2_SEXPR", "ZETA_XFM_2_SEXPR"
   };
 
 static const unsigned int index_macro_indices[] =
   {
     1, 1, 1,
     1, 1, 2, 3,
-    2,
-    1, 2, 3
+    1, 2, 3,
+    2, 3,
+    1, 2,
+    1, 2
   };
 
 static const unsigned int index_macro_ranges[] =
   {
     INDEX_RANGE_PARAMETER, 1, 2,
     1, 2, 2, 2,
-    2,
-    2, 2, 2
+    2, 2, 2,
+    2, 2,
+    2, 2,
+    2, 2,
   };
 
 static const replacement_function_index index_macro_replacements[] =
   {
     replace_parameter, replace_field, replace_coordinate,
     replace_sr_velocity, replace_u1_tensor, replace_u2_tensor, replace_u3_tensor,
-    replace_u2_name,
-    replace_zeta_xfm_1, replace_zeta_xfm_2, replace_zeta_xfm_3
+    replace_u1_sexp_tensor, replace_u2_sexp_tensor, replace_u3_sexp_tensor,
+    replace_u2_name, replace_u3_name,
+    replace_zeta_xfm_1, replace_zeta_xfm_2,
+    replace_zeta_xfm_1_sexp, replace_zeta_xfm_2_sexp,
   };
 
 static const unsigned int index_macro_args[] =
   {
     0, 0, 0,
-    0, 0, 0, 0,
-    1,
-    0, 0, 0
+    0, 0, 2, 4,
+    2, 4, 6,
+    1, 1,
+    0, 0,
+    2, 2
   };
 
 
 #define NUMBER_PRE_MACROS    (27)
 #define NUMBER_POST_MACROS   (1)
-#define NUMBER_INDEX_MACROS  (11)
+#define NUMBER_INDEX_MACROS  (16)
 
 
 // ******************************************************************
@@ -710,20 +741,32 @@ static std::string replace_u1_tensor(struct replacement_data& d, const std::vect
     assert(indices[0].species < d.source->get_number_fields());
 
     std::vector<GiNaC::ex> u1 = d.u_factory->compute_u1();
-    switch(indices[0].trait)
-      {
-        case index_field:
-          out << GiNaC::csrc << u1[indices[0].species];
-          break;
 
-        case index_momentum:
-          out << GiNaC::csrc << u1[indices[0].species + indices[0].num_fields];
-          break;
+    unsigned int i_label = get_index_label(indices[0]);
 
-        case index_parameter:
-        default:
-          assert(false);
-      }
+    out << GiNaC::csrc << u1[i_label];
+
+    return(out.str());
+  }
+
+static std::string replace_u1_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 1);
+    assert(indices[0].species < d.source->get_number_fields());
+
+    assert(args.size() == 2);
+
+    GiNaC::symbol Hsq(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps(args.size() >= 2 ? args[1] : DEFAULT_EPS_NAME);
+
+    std::vector<GiNaC::ex> u1 = d.u_factory->compute_u1(Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+
+    out << GiNaC::csrc << u1[i_label];
 
     return(out.str());
   }
@@ -737,40 +780,41 @@ static std::string replace_u2_tensor(struct replacement_data& d, const std::vect
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
 
-    std::vector< std::vector<GiNaC::ex> > u2 = d.u_factory->compute_u2();
+    assert(args.size() == 2);
 
-    unsigned int i_label;
-    unsigned int j_label;
+    GiNaC::symbol k(args.size() >= 1 ? args[0] : DEFAULT_K_NAME);
+    GiNaC::symbol a(args.size() >= 2 ? args[1] : DEFAULT_A_NAME);
 
-    switch(indices[0].trait)
-      {
-        case index_field:
-          i_label = indices[0].species;
-          break;
+    std::vector< std::vector<GiNaC::ex> > u2 = d.u_factory->compute_u2(k, a);
 
-        case index_momentum:
-          i_label = indices[0].species + indices[0].num_fields;
-          break;
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
 
-        case index_parameter:
-        default:
-          assert(false);
-      }
+    out << GiNaC::csrc << (u2[i_label])[j_label];
 
-    switch(indices[1].trait)
-      {
-        case index_field:
-          j_label = indices[1].species;
-        break;
+    return(out.str());
+  }
 
-        case index_momentum:
-          j_label = indices[1].species + indices[1].num_fields;
-        break;
+static std::string replace_u2_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
 
-        case index_parameter:
-        default:
-          assert(false);
-      }
+    assert(indices.size() == 2);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+
+    assert(args.size() == 4);
+
+    GiNaC::symbol k  (args.size() >= 1 ? args[0] : DEFAULT_K_NAME);
+    GiNaC::symbol a  (args.size() >= 2 ? args[1] : DEFAULT_A_NAME);
+    GiNaC::symbol Hsq(args.size() >= 3 ? args[2] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps(args.size() >= 4 ? args[3] : DEFAULT_EPS_NAME);
+
+    std::vector< std::vector<GiNaC::ex> > u2 = d.u_factory->compute_u2(k, a, Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
 
     out << GiNaC::csrc << (u2[i_label])[j_label];
 
@@ -780,22 +824,64 @@ static std::string replace_u2_tensor(struct replacement_data& d, const std::vect
 static std::string replace_u3_tensor(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
-    std::string rval = U3_NAME;
+    std::ostringstream out;
 
     assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
 
-    for(int i = 0; i < indices.size(); i++)
-      {
-        rval = rval + "_" + index_stringize(indices[i]);
-      }
+    assert(args.size() == 4);
 
-    return(rval);
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > u3 = d.u_factory->compute_u3(k1, k2, k3, a);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << u3[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+static std::string replace_u3_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1 (args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2 (args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3 (args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a (args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+    GiNaC::symbol Hsq(args.size() >= 3 ? args[2] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps(args.size() >= 4 ? args[3] : DEFAULT_EPS_NAME);
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > u3 = d.u_factory->compute_u3(k1, k2, k3, a, Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << u3[i_label][j_label][k_label];
+
+    return(out.str());
   }
 
 static std::string replace_u2_name(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
-    std::string name = "__u2";
     std::ostringstream out;
 
     assert(indices.size() == 2);
@@ -803,12 +889,8 @@ static std::string replace_u2_name(struct replacement_data& d, const std::vector
     assert(indices[1].species < d.source->get_number_fields());
 
     assert(args.size() == 1);
-    if(args.size() >= 1)
-      {
-        name = args[0];
-      }
 
-    out << name << "_";
+    out << (args.size() >= 1 ? args[0] : DEFAULT_U2_NAME) << "_";
 
     for(int i = 0; i < indices.size(); i++)
       {
@@ -818,6 +900,27 @@ static std::string replace_u2_name(struct replacement_data& d, const std::vector
     return(out.str());
   }
 
+static std::string replace_u3_name(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+
+    assert(args.size() == 1);
+
+    out << (args.size() >= 1 ? args[0] : DEFAULT_U3_NAME) << "_";
+
+    for(int i = 0; i < indices.size(); i++)
+      {
+        out << (i > 0 ? "_" : "") << index_numeric(indices[i]);
+      }
+
+    return(out.str());
+  }
 
 static std::string replace_zeta_xfm_1(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
@@ -836,6 +939,28 @@ static std::string replace_zeta_xfm_1(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
+static std::string replace_zeta_xfm_1_sexpr(struct replacement_data& d, const std::vector<std::string>& args,
+  std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 1);
+    assert(indices[0].species < d.source->get_number_fields());
+
+    assert(args.size() == 2);
+
+    GiNaC::symbol Hsq(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps(args.size() >= 2 ? args[2] : DEFAULT_EPS_NAME);
+
+    std::vector<GiNaC::ex> dN = d.u_factory->compute_zeta_xfm_1(Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+
+    out << GiNaC::csrc << dN[i_label];
+
+    return(out.str());
+  }
+
 static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
@@ -845,7 +970,12 @@ static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vec
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
 
-    std::vector< std::vector<GiNaC::ex> > ddN = d.u_factory->compute_zeta_xfm_2();
+    assert(args.size() == 2);
+
+    GiNaC::symbol Hsq(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps(args.size() >= 2 ? args[2] : DEFAULT_EPS_NAME);
+
+    std::vector< std::vector<GiNaC::ex> > ddN = d.u_factory->compute_zeta_xfm_2(Hsq, eps);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
@@ -854,25 +984,3 @@ static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vec
 
     return(out.str());
   }
-
-static std::string replace_zeta_xfm_3(struct replacement_data& d, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices)
-  {
-    std::ostringstream out;
-
-    assert(indices.size() == 3);
-    assert(indices[0].species < d.source->get_number_fields());
-    assert(indices[1].species < d.source->get_number_fields());
-    assert(indices[2].species < d.source->get_number_fields());
-
-    std::vector< std::vector< std::vector<GiNaC::ex> > > dddN = d.u_factory->compute_zeta_xfm_3();
-
-    unsigned int i_label = get_index_label(indices[0]);
-    unsigned int j_label = get_index_label(indices[1]);
-    unsigned int k_label = get_index_label(indices[2]);
-
-    out << GiNaC::csrc << ((dddN[i_label])[j_label])[k_label];
-
-    return(out.str());
-  }
-
