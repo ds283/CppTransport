@@ -490,7 +490,7 @@ namespace transport
           __background($$__A) = $$__U1_TENSOR[A];
 
           // set up a k-dependent u2 tensor
-          __u2_$$__A_$$__B = $$__U2_TENSOR[AB];
+          __u2_$$__A_$$__B = $$__U2_TENSOR[AB]{__k,__a};
 
           // evolve the 2pf
           __dtwopf($$__A,$$__B) = 0 $$// + $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B

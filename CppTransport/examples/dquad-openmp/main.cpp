@@ -60,7 +60,7 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 4;         // end at time t = 50
+    const double       tmax = 50;         // end at time t = 50
     const unsigned int tN   = 1000;        // record 500 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)

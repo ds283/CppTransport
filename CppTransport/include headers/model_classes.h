@@ -47,8 +47,6 @@ namespace transport
                 std::vector<number>& __dN)                                 = 0;
               virtual void                    compute_gauge_xfm_2(const std::vector<number>& __state,
                 std::vector< std::vector<number> >& __ddN)                 = 0;
-              virtual void                    compute_gauge_xfm_3(const std::vector<number>& __state,
-                std::vector< std::vector< std::vector<number> > >& __dddN) = 0;
 
           protected:
               const std::string               name;                 // name of model

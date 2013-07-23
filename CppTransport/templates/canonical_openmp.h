@@ -40,8 +40,6 @@ namespace transport
               std::vector<number>& __dN);
             void compute_gauge_xfm_2(const std::vector<number>& __state,
               std::vector< std::vector<number> >& __ddN);
-            void compute_gauge_xfm_3(const std::vector<number>& __state,
-              std::vector< std::vector< std::vector<number> > >& __dddN);
         };
 
 
@@ -77,7 +75,6 @@ namespace transport
 
               void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
               void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
-              void compute_gauge_xfm_3(const std::vector<number>& __state, std::vector< std::vector< std::vector<number> > >& __dddN);
 
           protected:
               void
@@ -509,7 +506,10 @@ namespace transport
           const auto $$__COORDINATE[A] = __x[$$__A];
           const auto __Mp              = this->M_Planck;
 
-          __dxdt[$$__A]                = $$__U1_TENSOR[A];
+          const auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __eps             = $$__EPSILON;
+
+          __dxdt[$$__A]                = $$__U1_PREDEF[A]{__Hsq,__eps};
         }
 
 
@@ -535,6 +535,8 @@ namespace transport
           const auto __Mp              = this->M_Planck;
           const auto __k               = this->k_mode;
           const auto __a               = exp(__t);
+          const auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __eps             = $$__EPSILON;
 
           const unsigned int start_background = 0;
           const unsigned int start_twopf      = 2*$$__NUMBER_FIELDS;
@@ -545,10 +547,10 @@ namespace transport
           #define __dtwopf(a,b)     __dxdt[start_twopf + (2*$$__NUMBER_FIELDS*a) + b]
 
           // evolve the background
-          __background($$__A) = $$__U1_TENSOR[A];
+          __background($$__A) = $$__U1_PREDEF[A]{__Hsq,__eps};
 
           // set up components of the u2 tensor
-          const auto __u2_$$__A_$$__B = $$__U2_TENSOR[AB];
+          const auto __u2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k,__a,__Hsq,__eps};
 
           // evolve the 2pf
           __dtwopf($$__A,$$__B) = 0 $$// + $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B
@@ -604,14 +606,6 @@ namespace transport
         }
 
 
-      template <typename number>
-      void $$__MODEL<number>::compute_gauge_xfm_3(const std::vector<number>& __state,
-        std::vector< std::vector< std::vector<number> > >& __dddN)
-        {
-          this->gauge_xfm.compute_gauge_xfm_3(__state, __dddN);
-        }
-
-
       // IMPLEMENTATION - GAUGE TRANSFORMATION GADGET
 
 
@@ -643,28 +637,6 @@ namespace transport
             }
 
           __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB];
-        }
-
-
-      template <typename number>
-      void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_3(const std::vector<number>& __state,
-        std::vector< std::vector< std::vector<number> > >& __dddN)
-        {
-          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-          const auto $$__COORDINATE[A] = __state[$$__A];
-          const auto __Mp              = this->M_Planck;
-
-          __dddN.resize(2*$$__NUMBER_FIELDS);
-          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
-            {
-              __dddN[i].resize(2*$$__NUMBER_FIELDS);
-              for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-                {
-                  __dddN[i][j].resize(2*$$__NUMBER_FIELDS);
-                }
-            }
-
-          __dddN[$$__A][$$__B][$$__C] = $$__ZETA_XFM_3[ABC];
         }
 
 
