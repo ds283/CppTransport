@@ -11,6 +11,10 @@
 // *****************************************************************************
 
 
+#define SPECIES(z)    (z >= this->num_fields ? z - this->num_fields : z)
+#define COORDINATE(z) (z < this->num_fields ? this->field_list[z] : this->deriv_list[z-this->num_fields])
+
+
 std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_sr_u()
   {
     std::vector<GiNaC::ex> rval;
@@ -73,60 +77,40 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiN
         rval[i].resize(2*this->num_fields);
       }
 
-    // set up GiNaC symbols to represent epsilon and H^2
-
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         for(int j = 0; j < 2*this->num_fields; j++)
           {
             GiNaC::ex c = 0;
 
-            if(i < this->num_fields)  // a field
+            if(i < this->num_fields)  // first index is a field
               {
-                if(j < this->num_fields)
+                if(j < this->num_fields)  // second index is a field
                   {
                     c = 0;
                   }
-                else
+                else                      // second index is a momentum
                   {
-                    if(i == j - this->num_fields)
-                      {
-                        c = 1;
-                      }
-                    else
-                      {
-                        c = 0;
-                      }
+                    c = (SPECIES(i) == SPECIES(j) ? 1 : 0);
                   }
               }
-            else                      // a momentum
+            else                      // first index is a momentum
               {
-                if(j < this->num_fields)
+                if(j < this->num_fields)  // second index is a field
                   {
-                    c = 0;
-                    if(i - this->num_fields == j)
-                      {
-                        c -= (k*k) / (a*a * Hsq);
-                      }
+                    c = (SPECIES(i) == SPECIES(j) ? -(k*k) / (a*a * Hsq) : 0 );
 
-                    GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i-this->num_fields]), this->field_list[j]);
-                    GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[i-this->num_fields]);
-                    GiNaC::ex Vb  = GiNaC::diff(this->V, this->field_list[j]);
+                    GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[SPECIES(i)]), this->field_list[SPECIES(j)]);
+                    GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[SPECIES(i)]);
+                    GiNaC::ex Vb  = GiNaC::diff(this->V, this->field_list[SPECIES(j)]);
 
                     c -= Vab/Hsq;
-                    c -= (3-eps)*this->deriv_list[i-this->num_fields]*this->deriv_list[j]/pow(this->M_Planck,2);
-                    c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[i-this->num_fields]*Vb + this->deriv_list[j]*Va);
+                    c -= (3-eps)*this->deriv_list[SPECIES(i)]*this->deriv_list[SPECIES(j)]/pow(this->M_Planck,2);
+                    c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[SPECIES(i)]*Vb + this->deriv_list[SPECIES(j)]*Va);
                   }
-                else
+                else                      // second index is a momentum
                   {
-                    if(i == j)
-                      {
-                        c = (eps - 3);
-                      }
-                    else
-                      {
-                        c = 0;
-                      }
+                    c = (SPECIES(i) == SPECIES(j) ? (eps-3) : 0);
                   }
               }
 
@@ -177,18 +161,18 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = -(1/2) * this->compute_B(j, k2, k, k3, i, k1);
+                            c = -(1/2) * this->compute_B(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, +1, +1);
                           }
                         else                            // third index is a momentum
                           {
-                            c = -(1/2) * this->compute_C(i, k1, j, -k2, k, k3);
+                            c = -(1/2) * this->compute_C(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, +1);
                           }
                       }
                     else                              // second index is a momentum
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = -(1/2) * this->compute_C(i, k1, k, -k3, j, k2);
+                            c = -(1/2) * this->compute_C(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, +1);
                           }
                         else                            // third index is a momentum
                           {
@@ -202,22 +186,22 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = (3/2) * this->compute_A(i, -k1, j, k2, k, k3);
+                            c = (3/2) * this->compute_A(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, +1);
                           }
                         else                            // third index is a momentum
                           {
-                            c = (1/2) * this->compute_B(i, -k1, j, k2, k, -k3);
+                            c = (1/2) * this->compute_B(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, -1);
                           }
                       }
                     else                              // second index is a momentum
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = (1/2) * this->compute_B(i, -k1, k, k3, j, -k2);
+                            c = (1/2) * this->compute_B(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, +1, -1);
                           }
                         else                            // third index is a momentum
                           {
-                            c = (1/2) * this->compute_C(j, -k2, k, -k3, i, -k1);
+                            c = (1/2) * this->compute_C(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1);
                           }
                       }
                   }
@@ -236,16 +220,10 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
 
 std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1()
   {
+    std::vector<GiNaC::ex> rval;
+
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
-
-    return(this->compute_zeta_xfm_1(Hsq, eps));
-  }
-
-
-std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps)
-  {
-    std::vector<GiNaC::ex> rval;
 
     GiNaC::ex dotH    = -eps*Hsq;
 
@@ -264,16 +242,10 @@ std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex&
 
 std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_xfm_2()
   {
+    std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
+
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
-
-    return(this->compute_zeta_xfm_2(Hsq, eps));
-  }
-
-
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::ex& Hsq, GiNaC::ex& eps)
-  {
-    std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
 
     GiNaC::ex dotH    = -eps*Hsq;
 
@@ -297,7 +269,6 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
         p_sum += 1/(2*dotH) * diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
       }
 
-    #define COORDINATE(i) (i < this->num_fields ? this->field_list[i] : this->deriv_list[i-this->num_fields])
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         for(int j = 0; j < 2*this->num_fields; j++)
@@ -347,32 +318,123 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 GiNaC::ex canonical_u_tensor_factory::compute_A(unsigned int i, GiNaC::symbol& k1,
   unsigned int j, GiNaC::symbol& k2,
   unsigned int k, GiNaC::symbol& k3,
-  GiNaC::ex& Hsq, GiNaC::ex& eps)
+  GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  int k1_sign, int k2_sign, int k3_sign)
   {
+    assert(i < this->num_fields);
+    assert(j < this->num_fields);
+    assert(k < this->num_fields);
+
     GiNaC::ex Vijk = GiNaC::diff(GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]), this->field_list[k]);
     GiNaC::ex Vij  = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]);
     GiNaC::ex Vik  = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[k]);
     GiNaC::ex Vjk  = GiNaC::diff(GiNaC::diff(this->V, this->field_list[j]), this->field_list[k]);
 
-    GiNaC::ex xi_i = this->compute_xi(i);
-    GiNaC::ex xi_j = this->compute_xi(j);
-    GiNaC::ex xi_k = this->compute_xi(k);
+    GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps);
+    GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
+    GiNaC::ex xi_k = this->compute_xi(k, Hsq, eps);
+
+    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+
+    GiNaC::ex c = -(1/3) * Vijk / Hsq;
+
+    c -=   (1/3) * (this->deriv_list[i]/(2*pow(this->M_Planck,2))) * (Vjk / Hsq)
+         + (1/3) * (this->deriv_list[j]/(2*pow(this->M_Planck,2))) * (Vik / Hsq)
+         + (1/3) * (this->deriv_list[k]/(2*pow(this->M_Planck,2))) * (Vij / Hsq);
+
+    c +=   (1/3) * (this->deriv_list[i]*this->deriv_list[j]*xi_k)/(8*pow(this->M_Planck,4))
+         + (1/3) * (this->deriv_list[i]*this->deriv_list[k]*xi_j)/(8*pow(this->M_Planck,4))
+         + (1/3) * (this->deriv_list[j]*this->deriv_list[k]*xi_i)/(8*pow(this->M_Planck,4));
+
+    c +=   (1/3) * (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,4))
+         + (1/3) * (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,4))
+         + (1/3) * (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,4));
+
+    c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * (6 - 2*eps);
+
+    if(j == k) c += (1/3) * this->deriv_list[i]/(2*pow(this->M_Planck,2)) * k2dotk3/(pow(a,2)*Hsq);
+    if(i == k) c += (1/3) * this->deriv_list[j]/(2*pow(this->M_Planck,2)) * k1dotk3/(pow(a,2)*Hsq);
+    if(i == j) c += (1/3) * this->deriv_list[k]/(2*pow(this->M_Planck,2)) * k1dotk2/(pow(a,2)*Hsq);
+
+    c -=   (1/3) * (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,2)) * k2dotk3 / (k2*k2*k3*k3)
+         + (1/3) * (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,2)) * k1dotk3 / (k1*k1*k3*k3)
+         + (1/3) * (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,2)) * k1dotk2 / (k1*k1*k2*k2);
+
+    return(c);
   }
 
 
 GiNaC::ex canonical_u_tensor_factory::compute_B(unsigned int i, GiNaC::symbol& k1,
   unsigned int j, GiNaC::symbol& k2,
   unsigned int k, GiNaC::symbol& k3,
-  GiNaC::ex& Hsq, GiNaC::ex& eps)
+  GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  int k1_sign, int k2_sign, int k3_sign)
   {
+    assert(i < this->num_fields);
+    assert(j < this->num_fields);
+    assert(k < this->num_fields);
 
+    GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps);
+    GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
+    GiNaC::ex xi_k = this->compute_xi(k, Hsq, eps);
+
+    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+
+    GiNaC::ex c = this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(4*pow(this->M_Planck,4));
+
+    c -=   (1/2) * this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4))
+         + (1/2) * this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4));
+
+    if(j == k) c -= (1/2) * (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1);
+    if(i == k) c -= (1/2) * (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2);
+
+    c +=   (1/2) * this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k2dotk3/(k2*k3),2)
+         + (1/2) * this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k1dotk3/(k1*k3),2);
+
+    return(c);
   }
 
 
 GiNaC::ex canonical_u_tensor_factory::compute_C(unsigned int i, GiNaC::symbol& k1,
   unsigned int j, GiNaC::symbol& k2,
   unsigned int k, GiNaC::symbol& k3,
-  GiNaC::ex& Hsq, GiNaC::ex& eps)
+  GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  int k1_sign, int k2_sign, int k3_sign)
   {
+    assert(i < this->num_fields);
+    assert(j < this->num_fields);
+    assert(k < this->num_fields);
 
+    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+
+    GiNaC::ex c = 0;
+
+    if(i == j) c -= (1/2) * this->deriv_list[k] / pow(this->M_Planck,2);
+
+    c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(8*pow(this->M_Planck,4));
+
+    c -= this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k1dotk2/(k1*k2),2);
+
+    if(j == k) c += (1/2) * (this->deriv_list[i]/pow(this->M_Planck,2)) * k1dotk2/(k1*k1);
+    if(i == k) c += (1/2) * (this->deriv_list[j]/pow(this->M_Planck,2)) * k1dotk2/(k2*k2);
+
+    return(c);
+  }
+
+
+GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    GiNaC::ex c  = -6 * this->deriv_list[i];
+    GiNaC::ex Vi = GiNaC::diff(this->V, this->field_list[i]);
+
+    c -= 2 * Vi/Hsq;
+    c += this->deriv_list[i] * 2*eps;
+
+    return(c);
   }

@@ -29,7 +29,7 @@ class u_tensor_factory
     virtual std::vector< std::vector<GiNaC::ex> >                compute_u2
       (GiNaC::symbol& k, GiNaC::symbol& a) = 0;
     virtual std::vector< std::vector<GiNaC::ex> >                compute_u2
-      (GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      (GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
     virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3
       (GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
@@ -38,12 +38,8 @@ class u_tensor_factory
        GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
     virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1() = 0;
-    virtual std::vector<GiNaC::ex>                               compute_zeta_xfm_1
-      (GiNaC::ex& Hsq, GiNaC::ex& eps);
 
     virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2() = 0;
-    virtual std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2
-      (GiNaC::ex& Hsq, GiNaC::ex& eps);
 
     virtual GiNaC::ex compute_Hsq() = 0;
     virtual GiNaC::ex compute_eps() = 0;
@@ -88,27 +84,37 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
       //  CALCULATE GAUGE TRANSFORMATIONS
       std::vector<GiNaC::ex>                               compute_zeta_xfm_1();
-      std::vector<GiNaC::ex>                               compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps);
 
       std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2();
-      std::vector< std::vector<GiNaC::ex> >                compute_zeta_xfm_2(GiNaC::ex& Hsq, GiNaC::ex& eps);
 
       GiNaC::ex compute_Hsq();
       GiNaC::ex compute_eps();
 
     private:
 
+      // compute A/H^2 [in the notation of the written notes]
       GiNaC::ex compute_A(unsigned int i, GiNaC::symbol& k1,
         unsigned int j, GiNaC::symbol& k2,
-        unsigned int k, GiNaC::symbol& k3);
+        unsigned int k, GiNaC::symbol& k3,
+        GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+        int k1_sign, int k2_sign, int k3_sign);
 
+      // compute B/H [in the notation of the written notes]
       GiNaC::ex compute_B(unsigned int i, GiNaC::symbol& k1,
         unsigned int j, GiNaC::symbol& k2,
-        unsigned int k, GiNaC::symbol& k3);
+        unsigned int k, GiNaC::symbol& k3,
+        GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+        int k1_sign, int k2_sign, int k3_sign);
 
+      // compute C [in the notation of the written notes]
       GiNaC::ex compute_C(unsigned int i, GiNaC::symbol& k1,
         unsigned int j, GiNaC::symbol& k2,
-        unsigned int k, GiNaC::symbol& k3);
+        unsigned int k, GiNaC::symbol& k3,
+        GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+        int k1_sign, int k2_sing, int k3_sign);
+
+      // compute xi/H^2 [in the notation of the written notes]
+      GiNaC::ex compute_xi(unsigned int i, GiNaC::ex& Hsq, GiNaC::ex& eps);
   };
 
 
