@@ -225,7 +225,7 @@ int main(int argc, const char *argv[])
     timer.stop();
     std::cout << MESSAGE_PROCESSING_COMPLETE_A
               << " " << inputs.size() << " "
-              << (inputs.size() != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_PLURAL)
+              << (inputs.size() != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
               << " " << MESSAGE_PROCESSING_COMPLETE_B;
     timer.report();
 
