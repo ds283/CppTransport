@@ -46,7 +46,6 @@
 #define ERROR_EXPECTED_CLOSE_ARGL             "Expected close of argument list '}'"
 #define ERROR_WRONG_ARG_NUM                   "Unexpected number of arguments to macro"
 #define ERROR_WRONG_ARG_NUM_EXPECT            "expected"
-#define ERROR_INDEX_OUT_OF_RANGE              "Index dimension out of range"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
@@ -66,5 +65,7 @@
 #define MESSAGE_PROCESSING_SINGULAR           "file"
 #define MESSAGE_PROCESSING_PLURAL             "files"
 #define MESSAGE_PROCESSING_COMPLETE_B         "in time"
+
+#define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
 
 #endif //__msg_H_

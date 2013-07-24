@@ -23,13 +23,13 @@
 #define __CPP_TRANSPORT_WRONG_ICS_B           ", expected "
 #define __CPP_TRANSPORT_WRONG_ICS_C           " or "
 
-#define __CPP_TRANSPORT_UNKNOWN_SOLVER        "Error: Unknown odeint-v2 solver"
-
 #define __CPP_TRANSPORT_SOLVING_ICS_MESSAGE   "Solving for background evolution using initial conditions"
 #define __CPP_TRANSPORT_STEPPER_MESSAGE       "  -- stepper "
 #define __CPP_TRANSPORT_ABS_ERR               "abs err"
 #define __CPP_TRANSPORT_REL_ERR               "rel err"
 #define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
+
+#define __CPP_TRANSPORT_NO_TIMES              "Error: no times specified for integration"
 
 #define __CPP_TRANSPORT_ASCIITABLE_OUTPUT     "Error: could not open asciitable gadget output"
 

@@ -79,8 +79,9 @@ namespace transport
               // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
               // this simple implementation works on a cubic lattice of k-modes
 //              transport::threepf<number>
-//                threepf(const std::vector<double>& ks, double Nstar,
-//                const std::vector<number>& ics, const std::vector<double>& times);
+              void
+                threepf(const std::vector<double>& ks, double Nstar,
+                const std::vector<number>& ics, const std::vector<double>& times);
 
               // Calculation of gauge-transformation coefficients (to zeta)
               // ==========================================================
@@ -89,22 +90,28 @@ namespace transport
               void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
 
           protected:
-              void
-                fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
-              void
-                write_initial_conditions(const std::vector<number>& rics, std::ostream& stream,
-                  double abs_err, double rel_err, double step_size, std::string stepper_name);
+            void                twopf_kmode               (double kmode, const std::vector<double>& times,
+                                                           const std::vector<number>& ics, std::vector<double>& slices,
+                                                           std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history);
 
-              double
-                make_twopf_re_ic(unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
-              double
-                make_twopf_im_ic(unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
+            void                fix_initial_conditions    (const std::vector<number>& __ics, std::vector<number>& __rics);
 
-              void
-                rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
-                  double __Nstar, const std::vector<number>& __fields);
+            void                write_initial_conditions  (const std::vector<number>& rics, std::ostream& stream,
+                                                           double abs_err, double rel_err, double step_size, std::string stepper_name);
 
-              $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
+            double              make_twopf_re_ic          (unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
+
+            double              make_twopf_im_ic          (unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
+
+            void                validate_times            (const std::vector<double>& times);
+            std::vector<double> normalize_comoving_ks     (const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
+            void                rescale_ks                (const std::vector<double>& __ks, std::vector<double>& __com_ks,
+                                                           double __Nstar, const std::vector<number>& __fields);
+
+				    void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
+				                                                   const std::vector<double>& times, const std::vector<double>& ks);
+
+            $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
 
 
@@ -252,8 +259,7 @@ namespace transport
           // set up a functor to evolve this system
           $$__MODEL_background_functor<number>  system(this->parameters, this->M_Planck);
 
-          integrate_times( make_dense_output< $$__BACKG_STEPPER< std::vector<number> > >($$__BACKG_ABS_ERR, $$__BACKG_REL_ERR),
-            system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
+          integrate_times( $$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
           transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names,
             $$__MODEL_latex_names, slices, history);
@@ -269,117 +275,35 @@ namespace transport
       transport::twopf<number> $$__MODEL<number>::twopf(const std::vector<double>& ks, double Nstar,
         const std::vector<number>& ics, const std::vector<double>& times)
         {
-          using namespace boost::numeric::odeint;
-
-          if(times.size() == 0)
-            {
-              std::cout << __CPP_TRANSPORT_NO_TIMES << std::endl;
-              exit(1);
-            }
+          this->validate_times(times);
 
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> real_ics = ics;
           this->fix_initial_conditions(ics, real_ics);
           this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
-          // solve for the background, so that we get a good estimate of
-          // H_exit -- needed to normalize the comoving momenta k
-          std::vector<number> backg_times;
-          backg_times.push_back(Nstar);
-          transport::background<number> backg_evo = this->background(real_ics, backg_times);
-
-          // set up vector of ks corresponding to honest comoving momenta
-          std::vector<double> com_ks(ks.size());
-          this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
+          std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, Nstar);
 
           // space for storing the solution
-          std::vector<double>                               slices;
+          std::vector<double>                               slices;               // record times at which we sample the solution
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
 
           // ensure there is sufficient space for the solution
-          // the index convention there is:
+          // the index convention is:
           //   first index  - time
           //   second index - component number
           //   third index  - k mode
-          twopf_history.resize(times.size());
-          for(int i = 0; i < times.size(); i++)
-            {
-              twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2$$__NUMBER_FIELDS);
-              for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
-                {
-                  twopf_history[i][j].resize(com_ks.size());
-                }
-            }
+			    this->resize_twopf_history(twopf_history, times, ks);
 
           for(int i = 0; i < ks.size(); i++)
             {
-              // set up a functor to evolve this system
-              $$__MODEL_twopf_functor<number> system(this->parameters, this->M_Planck, com_ks[i]);
-
-              // set up a functor to observe the integration
               std::vector<double>                kmode_slices;
               std::vector< std::vector<number> > kmode_background_history;
               std::vector< std::vector<number> > kmode_twopf_history;
 
-              // ensure there is enough space in twopf_history
-              $$__MODEL_twopf_observer<number>   obs(kmode_slices, kmode_background_history, kmode_twopf_history);
-
-              // set up a state vector
-              twopf_state x;
-              x.resize(2*$$__NUMBER_FIELDS + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS);
-
-              // fix initial conditions - background
-              x[$$__A] = $$// real_ics[$$__A];
-
-              // fix initial conditions - 2pf
-              for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-                {
-                  for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
-                    {
-                      x[2*$$__NUMBER_FIELDS + (2*$$__NUMBER_FIELDS*j)+k] = make_twopf_re_ic(j, k, com_ks[i], *times.begin(), real_ics);
-                    }
-                }
-
-              // note that we need a generic stepper which works with an arbitrary state type; see
-              // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/concepts/system.html
-              // we can't use things like rosenbrock4 which works only with boost matrices
-
-              // exactly when the steppers call the observer functor depends which stepper is in use; see
-              // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/integrate_functions.html
-
-              // to summarize the discussion there:
-              //  ** If stepper is a Stepper or Error Stepper dt is the step size used for integration.
-              //     However, whenever a time point from the sequence is approached the step size dt will
-              //     be reduced to obtain the state x(t) exactly at the time point.
-              //  ** If stepper is a Controlled Stepper then dt is the initial step size. The actual step
-              //     size is adjusted during integration according to error control.
-              //     However, if a time point from the sequence is approached the step size is
-              //     reduced to obtain the state x(t) exactly at the time point. [runge_kutta_fehlberg78]
-              //  ** If stepper is a Dense Output Stepper then dt is the initial step size. The actual step
-              //     size is adjusted during integration according to error control. Dense output is used
-              //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
-
-              if((std::string)"$$__PERT_STEPPER" == (std::string)"runge_kutta_dopri5")
-                {
-                  integrate_times( make_dense_output< runge_kutta_dopri5< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
-                                   system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-                }
-              else if((std::string)"$$__PERT_STEPPER" == (std::string)"bulirsch_stoer_dense_out")
-                {
-                  bulirsch_stoer_dense_out< twopf_state > stepper($$__PERT_ABS_ERR, $$__PERT_REL_ERR);
-                  integrate_times( stepper, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-                }
-              else if((std::string)"$$__PERT_STEPPER" == (std::string)"runge_kutta_fehlberg78")
-                {
-                  auto stepper = make_controlled< runge_kutta_fehlberg78< twopf_state > >($$__PERT_ABS_ERR, $$__PERT_REL_ERR);
-                  integrate_times( stepper, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-                }
-              else
-                {
-                  std::cerr << __CPP_TRANSPORT_UNKNOWN_SOLVER << "'$$__PERT_STEPPER'" << std::endl;
-                  exit(1);
-                }
+              // write the time history for this particular k-mode into kmode_background_history, kmode_twopf_history
+              this->twopf_kmode(com_ks[i], times, real_ics, kmode_slices, kmode_background_history, kmode_twopf_history);
 
               if(i == 0)  // store the background
                 {
@@ -404,6 +328,88 @@ namespace transport
           return(tpf);
         }
 
+
+      template <typename number>
+      void $$__MODEL<number>::twopf_kmode(double kmode, const std::vector<double>& times,
+        const std::vector<number>& ics, std::vector<double>& slices,
+        std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history)
+        {
+          using namespace boost::numeric::odeint;
+
+          // set up a functor to evolve this system
+          $$__MODEL_twopf_functor<number>  system(this->parameters, this->M_Planck, kmode);
+
+          // set up a functor to observe the integration
+          $$__MODEL_twopf_observer<number> obs(slices, background_history, twopf_history);
+
+          const auto background_start = 0;
+          const auto background_size  = 2*$$__NUMBER_FIELDS;
+          const auto twopf_start      = background_start + background_size;
+          const auto twopf_size       = (2*$$__NUMBER_FIELDS) * (2*$$__NUMBER_FIELDS);
+
+          // set up a state vector
+          twopf_state x;
+          x.resize(background_size + twopf_size);
+
+          // fix initial conditions - background
+          x[background_start + $$__A] = $$// ics[$$__A];
+
+          // fix initial conditions - 2pf
+          for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
+            {
+              for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
+                {
+                  x[twopf_start + (2*$$__NUMBER_FIELDS*j)+k] = make_twopf_re_ic(j, k, kmode, *times.begin(), ics);
+                }
+            }
+
+          integrate_times( $$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        }
+
+      template <typename number>
+      void $$__MODEL<number>::validate_times(const std::vector<double>& times)
+        {
+          if(times.size() == 0)
+            {
+              std::cout << __CPP_TRANSPORT_NO_TIMES << std::endl;
+              exit(1);
+            }
+        }
+
+
+      template <typename number>
+      std::vector<double> $$__MODEL<number>::normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks,
+        double Nstar)
+        {
+          // solve for the background, so that we get a good estimate of
+          // H_exit -- needed to normalize the comoving momenta k
+          std::vector<number> backg_times;
+          backg_times.push_back(Nstar);
+          transport::background<number> backg_evo = this->background(ics, backg_times);
+
+          // set up vector of ks corresponding to honest comoving momenta
+          std::vector<double> com_ks(ks.size());
+
+          this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
+
+          return(com_ks);
+        }
+
+
+      template <typename number>
+      void $$__MODEL<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf_history, const std::vector<double>& times,
+        const std::vector<double>& ks)
+        {
+          twopf_history.resize(times.size());
+          for(int i = 0; i < times.size(); i++)
+            {
+              twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+              for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
+                {
+                  twopf_history[i][j].resize(ks.size());
+                }
+            }
+        }
 
       // Handle initial conditions
 
@@ -552,12 +558,37 @@ namespace transport
       // This version does a cubic lattice of k-modes
 
 
-//      template <typename number>
+      template <typename number>
 //      transport::threepf<number> $$__MODEL<number>::threepf(const std::vector<double>& ks, double Nstar,
-//        const std::vector<number>& ics, const std::vector<double>& times)
-//        {
-//
-//        }
+      void $$__MODEL<number>::threepf(const std::vector<double>& ks, double Nstar,
+        const std::vector<number>& ics, const std::vector<double>& times)
+        {
+          using namespace boost::numeric::odeint;
+
+          this->validate_times(times);
+
+          // validate initial conditions (or set up ics for momenta if necessary)
+          std::vector<number> real_ics = ics;
+          this->fix_initial_conditions(ics, real_ics);
+          this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+
+          std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, Nstar);
+
+          // space for storing the solution
+          std::vector<double>                               slices;                 // record times at which we sample the solution
+          std::vector< std::vector<number> >                background_history;
+          std::vector< std::vector< std::vector<number> > > twopf_history;
+          std::vector< std::vector< std::vector<number> > > threepf_history;
+
+          // ensure there is enough space to store the solution
+          // the index convention is
+          //   first index  - time
+          //   second index - component number
+          //   third index  - k mode
+          //                  for the 2pf this corresponds to the list in ks (real_ks)
+          //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
+			    this->resize_twopf_history(twopf_history, times, ks);
+        }
 
 
       // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION

@@ -28,6 +28,8 @@
 #define DEFAULT_HSQ_NAME "__Hsq"
 #define DEFAULT_EPS_NAME "__eps"
 
+#define DEFAULT_STEPPER_STATE_NAME "<UNKNOWN_STATE_TYPE>"
+
 static std::string replace_tool           (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_version        (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_guard          (struct replacement_data& data, const std::vector<std::string>& args);
@@ -57,6 +59,8 @@ static std::string replace_p_rel_err      (struct replacement_data& data, const 
 static std::string replace_p_step         (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_p_stepper      (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_unique         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_backg_stepper  (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_pert_stepper   (struct replacement_data& data, const std::vector<std::string>& args);
 
 static std::string replace_parameter      (struct replacement_data& data, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices);
@@ -97,7 +101,8 @@ static const std::string pre_macros[] =
     "PARAM_NAME_LIST", "PLATX_NAME_LIST",
     "STATE_NAME_LIST", "V", "HUBBLE_SQ", "EPSILON",
     "BACKG_ABS_ERR", "BACKG_REL_ERR", "BACKG_STEP_SIZE", "BACKG_STEPPER",
-    "PERT_ABS_ERR", "PERT_REL_ERR", "PERT_STEP_SIZE", "PERT_STEPPER"
+    "PERT_ABS_ERR", "PERT_REL_ERR", "PERT_STEP_SIZE", "PERT_STEPPER",
+    "MAKE_BACKG_STEPPER", "MAKE_PERT_STEPPER"
   };
 
 static const std::string post_macros[] =
@@ -115,6 +120,7 @@ static const replacement_function_simple pre_macro_replacements[] =
     replace_state_list, replace_V, replace_Hsq, replace_eps,
     replace_b_abs_err, replace_b_rel_err, replace_b_step, replace_b_stepper,
     replace_p_abs_err, replace_p_rel_err, replace_p_step, replace_p_stepper,
+    replace_backg_stepper, replace_pert_stepper
   };
 
 static const replacement_function_simple post_macro_replacements[] =
@@ -131,7 +137,8 @@ static const unsigned int pre_macro_args[] =
     0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
-    0, 0, 0, 0
+    0, 0, 0, 0,
+    1, 1
   };
 
 static const unsigned int post_macro_args[] =
@@ -185,7 +192,7 @@ static const unsigned int index_macro_args[] =
   };
 
 
-#define NUMBER_PRE_MACROS    (28)
+#define NUMBER_PRE_MACROS    (30)
 #define NUMBER_POST_MACROS   (1)
 #define NUMBER_INDEX_MACROS  (14)
 
@@ -193,9 +200,11 @@ static const unsigned int index_macro_args[] =
 // ******************************************************************
 
 
-static bool                                 process        (struct replacement_data& d);
+static bool         process        (struct replacement_data& d);
 
-static unsigned int                         get_index_label(struct index_assignment& index);
+static unsigned int get_index_label(struct index_assignment& index);
+
+static std::string  replace_stepper(const struct stepper& s, std::string state_name);
 
 
 // ******************************************************************
@@ -346,6 +355,56 @@ static unsigned int get_index_label(struct index_assignment& index)
       }
 
     return(label);
+  }
+
+
+// ********************************************************************************
+
+
+static std::string replace_stepper(const struct stepper& s, std::string state_name)
+  {
+    std::ostringstream out;
+
+    // note that we need a generic stepper which works with an arbitrary state type; see
+    // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/concepts/system.html
+    // we can't use things like rosenbrock4 or the implicit euler methods which work only with boost matrices
+
+    // exactly when the steppers call the observer functor depends which stepper is in use; see
+    // http://headmyshoulder.github.io/odeint-v2/doc/boost_numeric_odeint/odeint_in_detail/integrate_functions.html
+
+    // to summarize the discussion there:
+    //  ** If stepper is a Stepper or Error Stepper dt is the step size used for integration.
+    //     However, whenever a time point from the sequence is approached the step size dt will
+    //     be reduced to obtain the state x(t) exactly at the time point.
+    //  ** If stepper is a Controlled Stepper then dt is the initial step size. The actual step
+    //     size is adjusted during integration according to error control.
+    //     However, if a time point from the sequence is approached the step size is
+    //     reduced to obtain the state x(t) exactly at the time point. [runge_kutta_fehlberg78]
+    //  ** If stepper is a Dense Output Stepper then dt is the initial step size. The actual step
+    //     size is adjusted during integration according to error control. Dense output is used
+    //     to obtain the states x(t) at the time points from the sequence. [runge_kutta_dopri5, bulirsch_stoer]
+
+    if(s.name == "runge_kutta_dopri5")
+      {
+        out << "make_dense_output< runge_kutta_dopri5< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+      }
+    else if(s.name == "bulirsch_stoer_dense_out")
+      {
+        out << "bulirsch_stoer_dense_out< " << state_name << " >(" << s.abserr << ", " << s.relerr << ")";
+      }
+    else if(s.name == "runge_kutta_fehlberg78")
+      {
+        out << "make_controlled< runge_kutta_fehlberg78< " << state_name << " > >(" << s.abserr << ", " << s.relerr << ")";
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << ERROR_UNKNOWN_STEPPER << " '" << s.name << "'";
+        error(msg.str());
+        out << "<UNKNOWN_STEPPER>";
+      }
+
+    return(out.str());
   }
 
 
@@ -654,6 +713,25 @@ static std::string replace_unique(struct replacement_data& data, const std::vect
     return(out.str());
   }
 
+static std::string replace_backg_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_background_stepper();
+
+    assert(args.size() == 1);
+    std::string state_name = (args.size() >= 1 ? args[0] : DEFAULT_STEPPER_STATE_NAME);
+
+    return(replace_stepper(s, state_name));
+  }
+
+static std::string replace_pert_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+  {
+    const struct stepper s = data.source->get_perturbations_stepper();
+
+    assert(args.size() == 1);
+    std::string state_name = (args.size() >= 1 ? args[0] : DEFAULT_STEPPER_STATE_NAME);
+
+    return(replace_stepper(s, state_name));
+  }
 
 // ******************************************************************
 
