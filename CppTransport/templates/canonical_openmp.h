@@ -42,10 +42,8 @@ namespace transport
           public:
             $$__MODEL_gauge_xfm_gadget(number Mp, const std::vector<number>& ps) : gauge_xfm_gadget<number>(Mp, ps) {}
 
-            void compute_gauge_xfm_1(const std::vector<number>& __state,
-              std::vector<number>& __dN);
-            void compute_gauge_xfm_2(const std::vector<number>& __state,
-              std::vector< std::vector<number> >& __ddN);
+            void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
+            void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
         };
 
 
@@ -57,44 +55,43 @@ namespace transport
       class $$__MODEL : public canonical_model<number>
         {
           public:
-              $$__MODEL(number Mp, const std::vector<number>& ps);
-              ~$$__MODEL();
+            $$__MODEL(number Mp, const std::vector<number>& ps);
+            ~$$__MODEL();
 
-              // Functions inherited from canonical_model
-              number
-                V(std::vector<number> fields);
+            // Functions inherited from canonical_model
+            number V(std::vector<number> fields);
 
-              // Integration of the model
-              // ========================
+            // Integration of the model
+            // ========================
 
-              // Integrate the background on the CPU
-              transport::background<number>
-                background(const std::vector<number>& ics, const std::vector<double>& times);
+            // Integrate the background on the CPU
+            transport::background<number>
+              background(const std::vector<number>& ics, const std::vector<double>& times);
 
-              // Integrate background and 2-point function on the CPU, using OpenMP
-              transport::twopf<number>
-                twopf(const std::vector<double>& ks, double Nstar,
-                const std::vector<number>& ics, const std::vector<double>& times);
+            // Integrate background and 2-point function on the CPU, using OpenMP
+            transport::twopf<number>
+              twopf(const std::vector<double>& ks, double Nstar,
+              const std::vector<number>& ics, const std::vector<double>& times);
 
-              // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
-              // this simple implementation works on a cubic lattice of k-modes
+            // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
+            // this simple implementation works on a cubic lattice of k-modes
 //              transport::threepf<number>
-              void
-                threepf(const std::vector<double>& ks, double Nstar,
-                const std::vector<number>& ics, const std::vector<double>& times);
+            void
+              threepf(const std::vector<double>& ks, double Nstar,
+              const std::vector<number>& ics, const std::vector<double>& times);
 
-              // Calculation of gauge-transformation coefficients (to zeta)
-              // ==========================================================
+            // Calculation of gauge-transformation coefficients (to zeta)
+            // ==========================================================
 
-              void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
-              void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+            void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
+            void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
 
           protected:
             void                twopf_kmode               (double kmode, const std::vector<double>& times,
                                                            const std::vector<number>& ics, std::vector<double>& slices,
                                                            std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history);
             void                threepf_kmode             (double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
-                                                           const std::vector<numner>& ics, std::vector<double>& slices,
+                                                           const std::vector<number>& ics, std::vector<double>& slices,
                                                            std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history,
                                                            std::vector< std::vector<number> >& threepf_history);
 
@@ -103,16 +100,23 @@ namespace transport
             void                write_initial_conditions  (const std::vector<number>& rics, std::ostream& stream,
                                                            double abs_err, double rel_err, double step_size, std::string stepper_name);
 
-            double              make_twopf_re_ic          (unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
+            void                populate_twopf_ic         (twopf_state& x, unsigned int start, double kmode, double Ninit,
+                                                           const std::vector<number>& ic, bool imaginary=false);
+            void                populate_threepf_ic       (threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
+                                                           double Ninit, const std::vector<number>& ic);
 
-            double              make_twopf_im_ic          (unsigned int i, unsigned int j, double k, double __Ninit, const std::vector<number>& __fields);
+            number              make_twopf_re_ic          (unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
+            number              make_twopf_im_ic          (unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
+
+            number              make_threepf_ic           (unsigned int __i, unsigned int __j, unsigned int __k,
+                                                           double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
 
             void                validate_times            (const std::vector<double>& times);
             std::vector<double> normalize_comoving_ks     (const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
             void                rescale_ks                (const std::vector<double>& __ks, std::vector<double>& __com_ks,
                                                            double __Nstar, const std::vector<number>& __fields);
 
-				    void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
+            void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
 				                                                   const std::vector<double>& times, const std::vector<double>& ks);
             void                resize_threepf_history    (std::vector< std::vector< std::vector<number> > >& threepf_history,
                                                            const std::vector<double>& times, const std::vector<double>& ks);
@@ -174,7 +178,7 @@ namespace transport
             $$__MODEL_twopf_observer(std::vector<double>& s,
               std::vector< std::vector<number> >& bh,
               std::vector< std::vector<number> >& tpfh)
-            : slices(s), background_history(bh), twopf_history(tpfh) {}
+              : slices(s), background_history(bh), twopf_history(tpfh) {}
 
             void operator()(const twopf_state& x, double t);
 
@@ -201,6 +205,27 @@ namespace transport
             const double               kmode_1;
             const double               kmode_2;
             const double               kmode_3;
+        };
+    
+    
+      // integration - observer object for 3pf
+      template <typename number>
+      class $$__MODEL_threepf_observer
+        {
+          public:
+            $$__MODEL_threepf_observer(std::vector<double>& s,
+              std::vector< std::vector<number> >& bh,
+              std::vector< std::vector<number> >& twopfh,
+              std::vector< std::vector<number> >& threepfh)
+              : slices(s), background_history(bh), twopf_history(twopfh), threepf_history(threepfh) {}
+          
+            void operator()(const threepf_state& x, double t);
+          
+          private:
+            std::vector<double>&                slices;
+            std::vector< std::vector<number> >& background_history;
+            std::vector< std::vector<number> >& twopf_history;
+            std::vector< std::vector<number> >& threepf_history;
         };
 
 
@@ -352,25 +377,38 @@ namespace transport
           const auto background_size  = 2*$$__NUMBER_FIELDS;
           const auto twopf_start      = background_start + background_size;
           const auto twopf_size       = (2*$$__NUMBER_FIELDS) * (2*$$__NUMBER_FIELDS);
+          
+          const auto twopf_state_size = background_size + twopf_size;
 
           // set up a state vector
           twopf_state x;
-          x.resize(background_size + twopf_size);
+          x.resize(twopf_state_size);
 
           // fix initial conditions - background
           x[background_start + $$__A] = $$// ics[$$__A];
 
           // fix initial conditions - 2pf
+          this->populate_twopf_ic(x, twopf_start, kmode, *times.begin(), ics);
+
+          integrate_times( $$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        }
+
+    
+      template <typename number>
+      void $$__MODEL<number>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit, const std::vector<number>& ics, bool imaginary)
+        {
+          assert(x.size() >= start);
+          assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+
           for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
             {
               for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
                 {
-                  x[twopf_start + (2*$$__NUMBER_FIELDS*j)+k] = make_twopf_re_ic(j, k, kmode, *times.begin(), ics);
+                  x[start + (2*$$__NUMBER_FIELDS*j)+k] = imaginary ? make_twopf_im_ic(j, k, kmode, Ninit, ics) : make_twopf_re_ic(j, k, kmode, Ninit, ics);
                 }
             }
-
-          integrate_times( $$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
         }
+
 
       template <typename number>
       void $$__MODEL<number>::validate_times(const std::vector<double>& times)
@@ -393,7 +431,8 @@ namespace transport
           backg_times.push_back(Nstar);
           transport::background<number> backg_evo = this->background(ics, backg_times);
 
-          // set up vector of ks corresponding to honest comoving momenta
+          // set up vector of ks corresponding to the correctly-normalized comoving momenta
+          // (remember we use the convention a = exp(t), for whatever values of t the user supplies)
           std::vector<double> com_ks(ks.size());
 
           this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
@@ -406,14 +445,19 @@ namespace transport
       void $$__MODEL<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf_history, const std::vector<double>& times,
         const std::vector<double>& ks)
         {
+          const auto twopf_components_size = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          const auto twopf_kmodes_size     = ks.size();
+
           twopf_history.resize(times.size());
 
           for(int i = 0; i < times.size(); i++)
             {
-              twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
-              for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
+              twopf_history[i].resize(twopf_components_size);
+
+              for(int j = 0; j < twopf_components_size; j++)
                 {
-                  twopf_history[i][j].resize(ks.size());
+                  // we need one copy of the components for each k
+                  twopf_history[i][j].resize(twopf_kmodes_size);
                 }
             }
         }
@@ -473,7 +517,7 @@ namespace transport
 
       // set up initial conditions for the real part of the equal-time two-point function
       template <typename number>
-      double $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
+      number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
         double __k, double __Ninit, const std::vector<number>& __fields)
         {
           const auto $$__PARAMETER[1]  = this->parameters[$$__1];
@@ -483,7 +527,7 @@ namespace transport
           const auto __Hsq             = $$__HUBBLE_SQ;
           const auto __ainit           = exp(__Ninit);
 
-          double     __tpf             = 0.0;
+          number     __tpf             = 0.0;
 
           // NOTE - conventions for the scale factor are
           //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -513,7 +557,7 @@ namespace transport
 
     // set up initial conditions for the imaginary part of the equal-time two-point function
     template <typename number>
-    double $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
+    number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
       double __k, double __Ninit, const std::vector<number>& __fields)
       {
         const auto $$__PARAMETER[1]  = this->parameters[$$__1];
@@ -523,7 +567,7 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __ainit           = exp(__Ninit);
 
-        double     __tpf             = 0.0;
+        number     __tpf             = 0.0;
 
         // only the field-momentum and momentum-field correlation functions have imgainary parts
         if(IS_FIELD(__i) && IS_MOMENTUM(__j))
@@ -643,8 +687,54 @@ namespace transport
         const std::vector<number>& ics, std::vector<double>& slices,
         std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history,
         std::vector< std::vector<number> >& threepf_history)
-
-
+        {
+          using namespace boost::numeric::odeint;
+          
+          // set up a functor to evolve this system
+          $$__MODEL_threepf_functor<number>  system(this->parameters, this->M_Planck, kmode_1, kmode_2, kmode_3);
+          
+          // set up a functor to observe the integration
+          $$__MODEL_threepf_observer<number> obs(slices, background_history, twopf_history, threepf_history);
+          
+          // we have to store:
+          //   - 1 copy of the background
+          //   - the real 2pf for 3 kmodes
+          //   - the imaginary 2pf for 3 kmodes
+          //   - the real 3pf for (k1,k2,k3)
+          const auto background_start  = 0;
+          const auto background_size   = 2*$$__NUMBER_FIELDS;
+          const auto twopf_size        = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          const auto twopf_re_k1_start = background_start  + background_size;
+          const auto twopf_im_k1_start = twopf_re_k1_start + twopf_size;
+          const auto twopf_re_k2_start = twopf_im_k1_start + twopf_size;
+          const auto twopf_im_k2_start = twopf_re_k2_start + twopf_size;
+          const auto twopf_re_k3_start = twopf_im_k2_start + twopf_size;
+          const auto twopf_im_k3_start = twopf_re_k3_start + twopf_size;
+          const auto threepf_start     = twopf_im_k3_start + twopf_size;
+          const auto threepf_size      = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          
+          // set up a state vector
+          threepf_state x;
+          x.resize(threepf_size);
+          
+          // fix initial conditions - background
+          x[background_start + $$__A] = $$// ics[$$__A];
+          
+          // fix initial conditions - real 2pfs
+          this->populate_twopf_ic(x, twopf_re_k1_start, kmode_1, *times.begin(), ics, false);
+          this->populate_twopf_ic(x, twopf_re_k2_start, kmode_2, *times.begin(), ics, false);
+          this->populate_twopf_ic(x, twopf_re_k3_start, kmode_3, *times.begin(), ics, false);
+          
+          // fix initial conditions - imaginary 2pfs
+          this->populate_twopf_ic(x, twopf_im_k1_start, kmode_1, *times.begin(), ics, true);
+          this->populate_twopf_ic(x, twopf_im_k2_start, kmode_2, *times.begin(), ics, true);
+          this->populate_twopf_ic(x, twopf_im_k3_start, kmode_3, *times.begin(), ics, true);
+          
+          // fix initial conditions - threepf
+          this->populate_threepf_ic(x, threepf_start, kmode_1, kmode_2, kmode_3, *times.begin(), ics);
+          
+          integrate_times( $$__MAKE_PERT_STEPPER{threepf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        }
 
 
       template <typename number>
@@ -656,17 +746,59 @@ namespace transport
           //   second index - component number
           //   third index  - k mode
           //                  this is an index into the lattice ks^3, remembering that we insist on the k-modes being ordered
+          //                  in that case, there are N(N+1)(N+2)/6 distinct k-modes
+          const auto threepf_components_size = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          const auto threepf_kmodes_size     = ks.size() * (ks.size() + 1) * (ks.size() + 2) / 6;
 
           threepf_history.resize(times.size());
 
           for(int i = 0; i < times.size(); i++)
             {
-              twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
-              for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
+              threepf_history[i].resize(threepf_components_size);
+              
+              for(int j = 0; j < threepf_components_size; j++)
                 {
-                  twopf_history[i][j].resize(ks.size());
+                  threepf_history[i][j].resize(threepf_kmodes_size);
                 }
             }
+        }
+    
+    
+      template <typename number>
+      void $$__MODEL<number>::populate_threepf_ic(threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
+                                                  double Ninit, const std::vector<number>& ics)
+        {
+          assert(x.size() >= start);
+          assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+          
+          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+            {
+              for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
+                {
+                  for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
+                    {
+                      x[start + (2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k] =
+                        make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics);
+                    }
+                }
+            }
+        }
+    
+    
+      template <typename number>
+      number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
+        double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
+        {
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __fields[$$__A];
+          const auto __Mp              = this->M_Planck;
+          
+          const auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __ainit           = exp(__Ninit);
+          
+          number     __tpf             = 0.0;
+          
+          return(__tpf);
         }
 
 
@@ -746,22 +878,27 @@ namespace transport
         {
           this->slices.push_back(t);
 
+          const unsigned int size_background   = 2*$$__NUMBER_FIELDS;
+          const unsigned int size_twopf        = (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
+
+          const unsigned int start_background  = 0;
+          const unsigned int start_twopf       = start_background + size_background;
+
           // allocate storage for state
-          std::vector<number> bg_x (2*$$__NUMBER_FIELDS);
-          std::vector<number> tpf_x(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+          std::vector<number> bg_x (size_background);
+          std::vector<number> tpf_x(size_twopf);
 
           // first, background
-          for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+          for(int i = 0; i < size_background; i++)
             {
               bg_x[i] = x[i];
             }
           this->background_history.push_back(bg_x);
 
-          // then, 2pf - we do this for every k number, and we're entitled to assume
-          // that there is enough space in this->twopf_history
-          for(int i = 0; i < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; i++)
+          // then, 2pf
+          for(int i = 0; i < size_twopf; i++)
             {
-              tpf_x[i] = x[2*$$__NUMBER_FIELDS + i];
+              tpf_x[i] = x[start_twopf + i];
             }
           this->twopf_history.push_back(tpf_x);
         }
@@ -801,6 +938,8 @@ namespace transport
           const auto __twopf_im_k2_$$__A_$$__B   = $$// __x[__start_twopf_im_k2 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B];
           const auto __twopf_re_k3_$$__A_$$__B   = $$// __x[__start_twopf_re_k3 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B];
           const auto __twopf_im_k3_$$__A_$$__B   = $$// __x[__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B];
+          
+          const auto __threepf_$$__A_$$__B_$$__C = $$// __x[__start_threepf     + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C];
 
           #undef __background
           #undef __dtwopf_re_k1
@@ -809,6 +948,7 @@ namespace transport
           #undef __dtwopf_im_k2
           #undef __dtwopf_re_k3
           #undef __dtwopf_im_k3
+          #undef __dthreepf
           #define __background(a)      __dxdt[__start_background  + a]
           #define __dtwopf_re_k1(a,b)  __dxdt[__start_twopf_re_k1 + (2*$$__NUMBER_FIELDS*a) + b]
           #define __dtwopf_im_k1(a,b)  __dxdt[__start_twopf_im_k1 + (2*$$__NUMBER_FIELDS*a) + b]
@@ -816,6 +956,7 @@ namespace transport
           #define __dtwopf_im_k2(a,b)  __dxdt[__start_twopf_im_k2 + (2*$$__NUMBER_FIELDS*a) + b]
           #define __dtwopf_re_k3(a,b)  __dxdt[__start_twopf_re_k3 + (2*$$__NUMBER_FIELDS*a) + b]
           #define __dtwopf_im_k3(a,b)  __dxdt[__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*a) + b]
+          #define __dthreepf(a,b,c)    __dxdt[__start_threepf     + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*a + (2*$$__NUMBER_FIELDS)*b + c]
 
           // evolve the background
           __background($$__A) = $$__U1_PREDEF[A]{__Hsq,__eps};
@@ -826,7 +967,9 @@ namespace transport
           const auto __u2_k3_$$__A_$$__B = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
           // set up components of the u3 tensor
-          const auto __u3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+          const auto __u3_k1k2k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+          const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+          const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
           // evolve the real and imaginary components of the 2pf
           // for the imaginary parts, index placement does matter
@@ -849,6 +992,68 @@ namespace transport
           __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_im_k3_$$__A_$$__C
 
           // evolve the components of the 3pf
+          __dthreepf($$__A, $$__B, $$__C) = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__C*__twopf_im_k3_$$__N_$$__C
+          
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C
+          
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N
+        }
+
+
+      // IMPLEMENTATION - FUNCTOR FOR 3PF OBSERVATION
+
+
+      template <typename number>
+      void $$__MODEL_threepf_observer<number>::operator()(const twopf_state& x, double t)
+        {
+          this->slices.push_back(t);
+
+          const unsigned int size_background   = 2*$$__NUMBER_FIELDS;
+          const unsigned int size_twopf        = (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
+          const unsigned int size_threepf      = (2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS);
+
+          const unsigned int start_background  = 0;
+          const unsigned int start_twopf_re_k1 = start_background  + size_background;
+          const unsigned int start_twopf_im_k1 = start_twopf_re_k1 + size_twopf;
+          const unsigned int start_twopf_re_k2 = start_twopf_im_k1 + size_twopf;
+          const unsigned int start_twopf_im_k2 = start_twopf_re_k2 + size_twopf;
+          const unsigned int start_twopf_re_k3 = start_twopf_im_k2 + size_twopf;
+          const unsigned int start_twopf_im_k3 = start_twopf_re_k3 + size_twopf;
+          const unsigned int start_threepf     = start_twopf_im_k3 + size_twopf;
+          
+          const unsigned int start_twopf       = start_twopf_re_k1;     // the twopf we want to store is the real one associated with k1
+
+          // allocate storage for state
+          std::vector<number> bg_x     (size_background);
+          std::vector<number> twopf_x  (size_twopf);
+          std::vector<number> threepf_x(size_threepf);
+
+          // first, background
+          for(int i = 0; i < size_background; i++)
+            {
+              bg_x[i] = x[i];
+            }
+          this->background_history.push_back(bg_x);
+
+          // then, 2pf
+          for(int i = 0; i < size_twopf; i++)
+            {
+              twopf_x[i] = x[start_twopf + i];
+            }
+          this->twopf_history.push_back(twopf_x);
+          
+          // finally, 3pf
+          for(int i = 0; i < size_threepf; i++)
+            {
+              threepf_x[i] = x[start_threepf + i];
+            }
+          this->threepf_history.push_back(threepf_x);
         }
 
 
