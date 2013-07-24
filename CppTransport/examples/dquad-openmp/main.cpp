@@ -103,15 +103,15 @@ int main(int argc, const char* argv[])
       timer.report();
 //    std::cout << tpf;
 
-//      std::array<unsigned int, 2> index_set_a = { 0, 0 };
+      std::array<unsigned int, 2> index_set_a = { 0, 0 };
       std::array<unsigned int, 2> index_set_b = { 0, 1 };
-//      std::array<unsigned int, 2> index_set_c = { 1, 1 };
+      std::array<unsigned int, 2> index_set_c = { 1, 1 };
 
       transport::index_selector<2>* selector = tpf.manufacture_selector();
       selector->none();
-//      selector->set_on(index_set_a);
+      selector->set_on(index_set_a);
       selector->set_on(index_set_b);
-//      selector->set_on(index_set_c);
+      selector->set_on(index_set_c);
 
       tpf.components_time_history(&plt, output + "/k_mode", selector, "pdf", false);
       tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
