@@ -161,18 +161,18 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = -(1/2) * this->compute_B(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, +1, +1);
+                            c = -this->compute_B(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, +1, +1)/2;
                           }
                         else                            // third index is a momentum
                           {
-                            c = -(1/2) * this->compute_C(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, +1);
+                            c = -this->compute_C(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, +1)/2;
                           }
                       }
                     else                              // second index is a momentum
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = -(1/2) * this->compute_C(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, +1);
+                            c = -this->compute_C(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, +1)/2;
                           }
                         else                            // third index is a momentum
                           {
@@ -186,22 +186,22 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = (3/2) * this->compute_A(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, +1);
+                            c = 3*this->compute_A(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, +1)/2;
                           }
                         else                            // third index is a momentum
                           {
-                            c = (1/2) * this->compute_B(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, -1);
+                            c = this->compute_B(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, -1)/2;
                           }
                       }
                     else                              // second index is a momentum
                       {
                         if(k < this->num_fields)        // and third index is a field
                           {
-                            c = (1/2) * this->compute_B(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, +1, -1);
+                            c = this->compute_B(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, +1, -1)/2;
                           }
                         else                            // third index is a momentum
                           {
-                            c = (1/2) * this->compute_C(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1);
+                            c = this->compute_C(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
                           }
                       }
                   }
@@ -378,7 +378,6 @@ GiNaC::ex canonical_u_tensor_factory::compute_B(unsigned int i, GiNaC::symbol& k
 
     GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps);
     GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
-    GiNaC::ex xi_k = this->compute_xi(k, Hsq, eps);
 
     GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
     GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
@@ -410,8 +409,6 @@ GiNaC::ex canonical_u_tensor_factory::compute_C(unsigned int i, GiNaC::symbol& k
     assert(k < this->num_fields);
 
     GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
-    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
-    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
 
     GiNaC::ex c = 0;
 
