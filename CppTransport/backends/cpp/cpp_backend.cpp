@@ -63,33 +63,45 @@ static std::string replace_backg_stepper  (struct replacement_data& data, const 
 static std::string replace_pert_stepper   (struct replacement_data& data, const std::vector<std::string>& args);
 
 static std::string replace_parameter      (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_field          (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_coordinate     (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_sr_velocity    (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_u1_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_u2_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_u3_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
-static std::string replace_u1_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
-static std::string replace_u2_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
-static std::string replace_u3_sexp_tensor (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_u1_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_u2_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_u3_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_u2_name        (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_u3_name        (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_zeta_xfm_1     (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
 static std::string replace_zeta_xfm_2     (struct replacement_data& data, const std::vector<std::string>& args,
-  std::vector<struct index_assignment> indices);
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_A_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_B_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_C_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_A_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_B_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_C_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
 
 
 static const std::string pre_macros[] =
@@ -149,19 +161,25 @@ static const unsigned int post_macro_args[] =
 static const std::string index_macros[] =
   {
     "PARAMETER", "FIELD", "COORDINATE",
-    "SR_VELOCITY", "U1_TENSOR", "U2_TENSOR", "U3_TENSOR",
+    "SR_VELOCITY",
+    "U1_TENSOR", "U2_TENSOR", "U3_TENSOR",
     "U1_PREDEF", "U2_PREDEF", "U3_PREDEF",
     "U2_NAME", "U3_NAME",
-    "ZETA_XFM_1", "ZETA_XFM_2"
+    "ZETA_XFM_1", "ZETA_XFM_2",
+    "A_TENSOR", "B_TENSOR", "C_TENSOR",
+    "A_PREDEF", "B_PREDEF", "C_PREDEF",
   };
 
 static const unsigned int index_macro_indices[] =
   {
     1, 1, 1,
-    1, 1, 2, 3,
+    1,
+    1, 2, 3,
     1, 2, 3,
     2, 3,
-    1, 2
+    1, 2,
+    3, 3, 3,
+    3, 3, 3
   };
 
 static const unsigned int index_macro_ranges[] =
@@ -170,16 +188,21 @@ static const unsigned int index_macro_ranges[] =
     1, 2, 2, 2,
     2, 2, 2,
     2, 2,
-    2, 2
+    2, 2,
+    1, 1, 1,
+    1, 1, 1
   };
 
 static const replacement_function_index index_macro_replacements[] =
   {
     replace_parameter, replace_field, replace_coordinate,
-    replace_sr_velocity, replace_u1_tensor, replace_u2_tensor, replace_u3_tensor,
-    replace_u1_sexp_tensor, replace_u2_sexp_tensor, replace_u3_sexp_tensor,
+    replace_sr_velocity,
+    replace_u1_tensor, replace_u2_tensor, replace_u3_tensor,
+    replace_u1_predef, replace_u2_predef, replace_u3_predef,
     replace_u2_name, replace_u3_name,
-    replace_zeta_xfm_1, replace_zeta_xfm_2
+    replace_zeta_xfm_1, replace_zeta_xfm_2,
+    replace_A_tensor, replace_B_tensor, replace_C_tensor,
+    replace_A_predef, replace_B_predef, replace_C_predef,
   };
 
 static const unsigned int index_macro_args[] =
@@ -188,13 +211,15 @@ static const unsigned int index_macro_args[] =
     0, 0, 2, 4,
     2, 4, 6,
     1, 1,
-    0, 0
+    0, 0,
+    4, 4, 4,
+    6, 6, 6
   };
 
 
 #define NUMBER_PRE_MACROS    (30)
 #define NUMBER_POST_MACROS   (1)
-#define NUMBER_INDEX_MACROS  (14)
+#define NUMBER_INDEX_MACROS  (20)
 
 
 // ******************************************************************
@@ -802,6 +827,7 @@ static std::string replace_sr_velocity(struct replacement_data& d, const std::ve
 
     assert(indices.size() == 1);
     assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
 
     std::vector<GiNaC::ex> sr_velocity = d.u_factory->compute_sr_u();
     out << GiNaC::csrc << sr_velocity[indices[0].species];
@@ -826,7 +852,7 @@ static std::string replace_u1_tensor(struct replacement_data& d, const std::vect
     return(out.str());
   }
 
-static std::string replace_u1_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u1_predef(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
     std::ostringstream out;
@@ -874,7 +900,7 @@ static std::string replace_u2_tensor(struct replacement_data& d, const std::vect
     return(out.str());
   }
 
-static std::string replace_u2_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u2_predef(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
     std::ostringstream out;
@@ -931,7 +957,7 @@ static std::string replace_u3_tensor(struct replacement_data& d, const std::vect
     return(out.str());
   }
 
-static std::string replace_u3_sexp_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u3_predef(struct replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices)
   {
     std::ostringstream out;
@@ -1039,6 +1065,210 @@ static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vec
     unsigned int j_label = get_index_label(indices[1]);
 
     out << GiNaC::csrc << (ddN[i_label])[j_label];
+
+    return(out.str());
+  }
+
+
+static std::string replace_A_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 4);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > A = d.u_factory->compute_A(k1, k2, k3, a);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << A[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+static std::string replace_A_predef(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > A = d.u_factory->compute_A(k1, k2, k3, a, Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << A[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+
+static std::string replace_B_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 4);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > B = d.u_factory->compute_B(k1, k2, k3, a);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << B[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+static std::string replace_B_predef(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > B = d.u_factory->compute_B(k1, k2, k3, a, Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << B[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+
+static std::string replace_C_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 4);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > C = d.u_factory->compute_C(k1, k2, k3, a);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << C[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+static std::string replace_C_predef(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 3);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[2].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+    assert(indices[2].trait == index_field);
+
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector< std::vector< std::vector<GiNaC::ex> > > C = d.u_factory->compute_C(k1, k2, k3, a, Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+    unsigned int k_label = get_index_label(indices[2]);
+
+    out << GiNaC::csrc << C[i_label][j_label][k_label];
 
     return(out.str());
   }

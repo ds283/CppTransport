@@ -118,6 +118,17 @@ int main(int argc, const char* argv[])
 
       delete selector;
     }
+    
+    std::cout << std::endl;
+    std::cout << "Integrating three-point function" << std::endl;
+    {
+      boost::timer::auto_cpu_timer timer;
+      
+      model.threepf(ks, 7.0, init_values, times);
+      
+      timer.stop();
+      timer.report();
+    }
 
     return(EXIT_SUCCESS);
   }

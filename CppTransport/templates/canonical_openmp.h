@@ -15,6 +15,7 @@
 #include "transport/transport.h"
 
 #define SPECIES(z)     (z >= $$__NUMBER_FIELDS ? z-$$__NUMBER_FIELDS : z)
+#define MOMENTUM(z)    (SPECIES(z) + $$__NUMBER_FIELDS)
 #define IS_FIELD(z)    (z >= 0 && z < $$__NUMBER_FIELDS)
 #define IS_MOMENTUM(z) (z >= $$__NUMBER_FIELDS && z < 2*$$__NUMBER_FIELDS)
 
@@ -643,6 +644,7 @@ namespace transport
           this->resize_threepf_history(threepf_history, times, ks);
           
           // step through the lattice of k-modes, solving the for three-point function on each go
+          unsigned int loc = 0;   // keep track of where we are in the ordered set of (k1,k2,k3)
           for(int i = 0; i < ks.size(); i++)
             {
               for(int j = 0; j <= i; j++)
@@ -674,6 +676,15 @@ namespace transport
                                 }
                             }
                         }
+                      
+                      for(int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
+                        {
+                          for(int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
+                            {
+                              threepf_history[m][n][loc] = kmode_threepf_history[m][n];
+                            }
+                        }
+                      loc++;  // increment location in the array of (k1,k2,k3) values
                     }
                 }
             }
@@ -701,21 +712,23 @@ namespace transport
           //   - the real 2pf for 3 kmodes
           //   - the imaginary 2pf for 3 kmodes
           //   - the real 3pf for (k1,k2,k3)
-          const auto background_start  = 0;
-          const auto background_size   = 2*$$__NUMBER_FIELDS;
-          const auto twopf_size        = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
-          const auto twopf_re_k1_start = background_start  + background_size;
-          const auto twopf_im_k1_start = twopf_re_k1_start + twopf_size;
-          const auto twopf_re_k2_start = twopf_im_k1_start + twopf_size;
-          const auto twopf_im_k2_start = twopf_re_k2_start + twopf_size;
-          const auto twopf_re_k3_start = twopf_im_k2_start + twopf_size;
-          const auto twopf_im_k3_start = twopf_re_k3_start + twopf_size;
-          const auto threepf_start     = twopf_im_k3_start + twopf_size;
-          const auto threepf_size      = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          const auto background_start   = 0;
+          const auto background_size    = 2*$$__NUMBER_FIELDS;
+          const auto twopf_size         = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          const auto twopf_re_k1_start  = background_start  + background_size;
+          const auto twopf_im_k1_start  = twopf_re_k1_start + twopf_size;
+          const auto twopf_re_k2_start  = twopf_im_k1_start + twopf_size;
+          const auto twopf_im_k2_start  = twopf_re_k2_start + twopf_size;
+          const auto twopf_re_k3_start  = twopf_im_k2_start + twopf_size;
+          const auto twopf_im_k3_start  = twopf_re_k3_start + twopf_size;
+          const auto threepf_start      = twopf_im_k3_start + twopf_size;
+          const auto threepf_size       = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
+          
+          const auto threepf_state_size = background_size + 6*twopf_size + threepf_size;
           
           // set up a state vector
           threepf_state x;
-          x.resize(threepf_size);
+          x.resize(threepf_state_size);
           
           // fix initial conditions - background
           x[background_start + $$__A] = $$// ics[$$__A];
@@ -789,15 +802,86 @@ namespace transport
       number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
         double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
         {
-          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-          const auto $$__COORDINATE[A] = __fields[$$__A];
-          const auto __Mp              = this->M_Planck;
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
           
-          const auto __Hsq             = $$__HUBBLE_SQ;
-          const auto __ainit           = exp(__Ninit);
-          
-          number     __tpf             = 0.0;
-          
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __ainit                = exp(__Ninit);
+
+          const auto __kt                   = __kmode_1 + __kmode_2 + __kmode_3;
+          const auto __kprod3               = 4.0 * __kmode_1*__kmode_1*__kmode_1 * __kmode_2*__kmode_2*__kmode_2 * __kmode_3*__kmode_3*__kmode_3;
+
+          const auto __k2dotk3              = (__kmode_1*__kmode_1 - __kmode_2*__kmode_2 - __kmode_3*__kmode_3)/2.0;
+          const auto __k1dotk3              = (__kmode_2*__kmode_2 - __kmode_1*__kmode_1 - __kmode_3*__kmode_3)/2.0;
+          const auto __k1dotk2              = (__kmode_3*__kmode_3 - __kmode_1*__kmode_1 - __kmode_2*__kmode_2)/2.0;
+
+          number     __tpf                  = 0.0;
+
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3;
+
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2;
+
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1;
+
+          __A_k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          __B_k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          __C_k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+
+          __A_k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+          __B_k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+          __C_k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+
+          __A_k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __B_k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __C_k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+
+          unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
+          unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
+
+          assert(total_fields + total_momenta == 3);
+
+          switch(total_fields)
+            {
+              case 3:
+                {
+                  auto __prefactor = (__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __ainit*__ainit*__ainit*__ainit);
+                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / 2.0;
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / 2.0;
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / 2.0;
+                  __tpf -= __C_k3[__i][__j][__k]*__kmode_1*__kmode_2/2.0 + __C_k3[__j][__i][__k]*__kmode_1*__kmode_2/2.0;
+                  __tpf -= __C_k2[__i][__k][__j]*__kmode_1*__kmode_3/2.0 + __C_k2[__k][__i][__j]*__kmode_1*__kmode_3/2.0;
+                  __tpf -= __C_k1[__j][__k][__i]*__kmode_2*__kmode_3/2.0 + __C_k1[__k][__j][__i]*__kmode_2*__kmode_3/2.0;
+                  __tpf *= __prefactor / __kprod3;
+                  break;
+                }
+
+              case 2:
+                {
+                  break;
+                }
+
+              case 1:
+                {
+                  break;
+                }
+
+              case 0:
+                {
+                  break;
+                }
+
+              default:
+                assert(false);
+            }
+
           return(__tpf);
         }
 
