@@ -93,6 +93,10 @@ namespace transport
             void                twopf_kmode               (double kmode, const std::vector<double>& times,
                                                            const std::vector<number>& ics, std::vector<double>& slices,
                                                            std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history);
+            void                threepf_kmode             (double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
+                                                           const std::vector<numner>& ics, std::vector<double>& slices,
+                                                           std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history,
+                                                           std::vector< std::vector<number> >& threepf_history);
 
             void                fix_initial_conditions    (const std::vector<number>& __ics, std::vector<number>& __rics);
 
@@ -110,6 +114,8 @@ namespace transport
 
 				    void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
 				                                                   const std::vector<double>& times, const std::vector<double>& ks);
+            void                resize_threepf_history    (std::vector< std::vector< std::vector<number> > >& threepf_history,
+                                                           const std::vector<double>& times, const std::vector<double>& ks);
 
             $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
@@ -305,16 +311,16 @@ namespace transport
               // write the time history for this particular k-mode into kmode_background_history, kmode_twopf_history
               this->twopf_kmode(com_ks[i], times, real_ics, kmode_slices, kmode_background_history, kmode_twopf_history);
 
-              if(i == 0)  // store the background
+              if(i == 0)  // store the background for the first k-mode only (it's the same each time)
                 {
                   slices = kmode_slices;
                   background_history = kmode_background_history;
                 }
 
               // store this twopf history in the twopf_history object
-              for(int j = 0; j < kmode_twopf_history.size(); j++)
+              for(int j = 0; j < kmode_twopf_history.size(); j++)             // j steps through the time-slices
                 {
-                  for(int k = 0; k < kmode_twopf_history[j].size(); k++)
+                  for(int k = 0; k < kmode_twopf_history[j].size(); k++)      // k steps through the components
                     {
                       twopf_history[j][k][i] = kmode_twopf_history[j][k];
                     }
@@ -401,6 +407,7 @@ namespace transport
         const std::vector<double>& ks)
         {
           twopf_history.resize(times.size());
+
           for(int i = 0; i < times.size(); i++)
             {
               twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
@@ -411,6 +418,7 @@ namespace transport
             }
         }
 
+    
       // Handle initial conditions
 
 
@@ -588,6 +596,77 @@ namespace transport
           //                  for the 2pf this corresponds to the list in ks (real_ks)
           //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
 			    this->resize_twopf_history(twopf_history, times, ks);
+          this->resize_threepf_history(threepf_history, times, ks);
+          
+          // step through the lattice of k-modes, solving the for three-point function on each go
+          for(int i = 0; i < ks.size(); i++)
+            {
+              for(int j = 0; j <= i; j++)
+                {
+                  for(int k = 0; k <= j; k++)
+                    {
+                      std::vector<double>                kmode_slices;
+                      std::vector< std::vector<number> > kmode_background_history;
+                      std::vector< std::vector<number> > kmode_twopf_history;
+                      std::vector< std::vector<number> > kmode_threepf_history;
+                    
+                      // write the time history for this k-mode
+                      this->threepf_kmode(com_ks[i], com_ks[j], com_ks[k], times, real_ics,
+                                          kmode_slices, kmode_background_history, kmode_twopf_history, kmode_threepf_history);
+                    
+                      if(i == 0 && j == 0 && k == 0)    // store the background for the first lattice point only (it's the same each time)
+                        {
+                          slices = kmode_slices;
+                          background_history = kmode_background_history;
+                        }
+                    
+                      if(j == 0 && k == 0)              // store the twopf corresponding to com_ks[i] (it's the same for all j and k)
+                        {
+                          for(int m = 0; m < kmode_twopf_history.size(); m++)           // m steps through the time-slices
+                            {
+                              for(int n = 0; n < kmode_twopf_history[m].size(); n++)    // n steps through the components
+                                {
+                                  twopf_history[m][n][i] = kmode_twopf_history[m][n];
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        
+          transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
+        }
+  
+  
+      template <typename number>
+      void $$__MODEL<number>::threepf_kmode(double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
+        const std::vector<number>& ics, std::vector<double>& slices,
+        std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history,
+        std::vector< std::vector<number> >& threepf_history)
+
+
+
+
+      template <typename number>
+      void $$__MODEL<number>::resize_threepf_history(std::vector< std::vector< std::vector<number> > >& threepf_history, const std::vector<double>& times,
+        const std::vector<double>& ks)
+        {
+          // the index convention for the threepf history is:
+          //   first index  - time
+          //   second index - component number
+          //   third index  - k mode
+          //                  this is an index into the lattice ks^3, remembering that we insist on the k-modes being ordered
+
+          threepf_history.resize(times.size());
+
+          for(int i = 0; i < times.size(); i++)
+            {
+              twopf_history[i].resize(2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
+              for(int j = 0; j < 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS; j++)
+                {
+                  twopf_history[i][j].resize(ks.size());
+                }
+            }
         }
 
 
@@ -750,6 +829,7 @@ namespace transport
           const auto __u3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
 
           // evolve the real and imaginary components of the 2pf
+          // for the imaginary parts, index placement does matter
           __dtwopf_re_k1($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B
           __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_re_k1_$$__A_$$__C
 
