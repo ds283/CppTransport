@@ -62,4 +62,9 @@
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"
 
+#define MESSAGE_PROCESSING_COMPLETE_A         "Processed"
+#define MESSAGE_PROCESSING_SINGULAR           "file"
+#define MESSAGE_PROCESSING_PLURAL             "files"
+#define MESSAGE_PROCESSING_COMPLETE_B         "in time"
+
 #endif //__msg_H_
