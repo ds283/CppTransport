@@ -9,6 +9,8 @@
 #include <iostream>
 #include <deque>
 
+#include <boost/timer/timer.hpp>
+
 #include "core.h"
 #include "input.h"
 #include "backends.h"
@@ -32,8 +34,8 @@ const std::string keyword_table[] =
       "background", "perturbations",
       "abs", "step", "sqrt", "sin", "cos", "tan",
       "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-      "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G", "S", "H",
-      "zeta", "zetaderiv", "tgamma", "lgamma", "beta", "psi", "factorial", "binomial"
+      "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G_func", "S_func", "H_func",
+      "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
   };
 
 const enum keyword_type keyword_map[] =
@@ -100,6 +102,8 @@ static std::string mangle_output_name(std::string input);
 int main(int argc, const char *argv[])
   {
     std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
+
+    boost::timer::auto_cpu_timer timer;
 
     // set up the initial search path to consist only of CWD
     finder path;
@@ -217,6 +221,13 @@ int main(int argc, const char *argv[])
               }
           }
       }
+
+    timer.stop();
+    std::cout << MESSAGE_PROCESSING_COMPLETE_A
+              << " " << inputs.size() << " "
+              << (inputs.size() != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_PLURAL)
+              << " " << MESSAGE_PROCESSING_COMPLETE_B;
+    timer.report();
 
     // deallocate  storage
     for(int i = 0; i < inputs.size(); i++)
