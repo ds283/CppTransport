@@ -859,7 +859,7 @@ namespace transport
                   __tpf -= __C_k3[__i][__j][__k]*__kmode_1*__kmode_2/2.0 + __C_k3[__j][__i][__k]*__kmode_1*__kmode_2/2.0;
                   __tpf -= __C_k2[__i][__k][__j]*__kmode_1*__kmode_3/2.0 + __C_k2[__k][__i][__j]*__kmode_1*__kmode_3/2.0;
                   __tpf -= __C_k1[__j][__k][__i]*__kmode_2*__kmode_3/2.0 + __C_k1[__k][__j][__i]*__kmode_2*__kmode_3/2.0;
-                  __tpf *= __prefactor / __kprod3;
+                  __tpf *= __prefactor / __kprod3 / (__Mp*__Mp);
                   break;
                 }
 
