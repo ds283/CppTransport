@@ -811,6 +811,7 @@ namespace transport
           const auto __ainit                = exp(__Ninit);
 
           const auto __kt                   = __kmode_1 + __kmode_2 + __kmode_3;
+          const auto __Ksq                  = __kmode_1*__kmode_2 + __kmode_1*__kmode_3 + __kmode_2*__kmode_3;
           const auto __kprod3               = 4.0 * __kmode_1*__kmode_1*__kmode_1 * __kmode_2*__kmode_2*__kmode_2 * __kmode_3*__kmode_3*__kmode_3;
 
           const auto __k2dotk3              = (__kmode_1*__kmode_1 - __kmode_2*__kmode_2 - __kmode_3*__kmode_3)/2.0;
@@ -850,31 +851,115 @@ namespace transport
 
           switch(total_fields)
             {
-              case 3:
+              case 3:   // field-field-field correlation function
                 {
+                  // prefactor here is dimension 5
                   auto __prefactor = (__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __ainit*__ainit*__ainit*__ainit);
-                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / 2.0;
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / 2.0;
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / 2.0;
-                  __tpf -= __C_k3[__i][__j][__k]*__kmode_1*__kmode_2/2.0 + __C_k3[__j][__i][__k]*__kmode_1*__kmode_2/2.0;
-                  __tpf -= __C_k2[__i][__k][__j]*__kmode_1*__kmode_3/2.0 + __C_k2[__k][__i][__j]*__kmode_1*__kmode_3/2.0;
-                  __tpf -= __C_k1[__j][__k][__i]*__kmode_2*__kmode_3/2.0 + __C_k1[__k][__j][__i]*__kmode_2*__kmode_3/2.0;
-                  __tpf *= __prefactor / __kprod3 / (__Mp*__Mp);
+
+                  // these components are dimension 3, so suppress by two powers of Mp
+                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+
+                  // these components are dimension 1
+                  __tpf -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_2/2.0;
+                  __tpf -= (__C_k2[__i][__k][__j] + __C_k2[__i][__k][__j])*__kmode_1*__kmode_3/2.0;
+                  __tpf -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_3/2.0;
+
+                  __tpf *= __prefactor / __kprod3;
                   break;
                 }
 
-              case 2:
+              case 2:   // field-field-momentum correlation function
                 {
+                  auto __momentum_k   = (IS_MOMENTUM(__i) ? __kmode_1 : 0.0)           + (IS_MOMENTUM(__j) ? __kmode_2 : 0.0)           + (IS_MOMENTUM(__k) ? __kmode_3 : 0.0);
+                  auto __sum_field_ks = (IS_MOMENTUM(__i) ? __kmode_2+__kmode_3 : 0.0) + (IS_MOMENTUM(__j) ? __kmode_1+__kmode_3 : 0.0) + (IS_MOMENTUM(__k) ? __kmode_1+__kmode_2 : 0.0);
+                  
+                  // note the leading + sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
+                  // this prefactor has dimension 2
+                  auto __prefactor_1 = __momentum_k*__momentum_k*(__sum_field_ks) / (__kt * __ainit*__ainit*__ainit*__ainit);
+                  
+                  // these components are dimension 6, so suppress by two powers of Mp
+                  auto __tpf_1  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_1 += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_1 += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
+                  
+                  // these components are dimension 4
+                       __tpf_1 -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3;
+                       __tpf_1 -= (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2;
+                       __tpf_1 -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1;
+                  
+                  __tpf = __prefactor_1 * __tpf_1;
+                  
+                  // this prefactor has dimension 3; the leading minus sign is again switched
+                  auto __prefactor_2 = __momentum_k*__kmode_1*__kmode_2*__kmode_3 / (__kt * __ainit*__ainit*__ainit*__ainit);
+                  
+                  // these components are dimension 5, so suppress by two powers of Mp
+                  auto __tpf_2  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_2 += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_2 += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                  
+                  // these componennts are dimension 3
+                       __tpf_2 += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                       __tpf_2 += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                       __tpf_2 += (__C_k1[__j][__i][__k] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
+                  
+                  // these components are dimension 3
+                       __tpf_2 += (__B_k1[__j][__k][__i] + __B_k1[__k][__j][__i])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
+                       __tpf_2 += (__B_k2[__i][__k][__j] + __B_k2[__k][__i][__j])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
+                       __tpf_2 += (__B_k3[__i][__j][__k] + __B_k3[__j][__i][__k])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+                  
+                  __tpf += __prefactor_2 * __tpf_2;
+                  
+                  __tpf *= (1.0 / __kprod3);
                   break;
                 }
 
-              case 1:
+              case 1:   // field-momentum-momentum correlation function
                 {
+                  auto __field_k = (IS_FIELD(__i) ? __kmode_1 : 0.0) + (IS_FIELD(__j) ? __kmode_2 : 0.0) + (IS_FIELD(__k) ? __kmode_3 : 0.0);
+                
+                  // this prefactor has dimension 3
+                  auto __prefactor = - (__kmode_1*__kmode_1 * __kmode_2*__kmode_2 * __kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
+                
+                  // this term (really another part of the prefactor) has dimension 2)
+                  auto __mom_factor = __kmode_1*__kmode_2*__kmode_3 / __field_k;
+                
+                  // these components have dimension 3, so suppress by two powers of Mp
+                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                
+                  // these components have dimension 1
+                  __tpf -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k]) * __kmode_1*__kmode_2;
+                  __tpf -= (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j]) * __kmode_1*__kmode_3;
+                  __tpf -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i]) * __kmode_2*__kmode_3;
+                
+                  __tpf *= __prefactor * __mom_factor / __kprod3;
                   break;
                 }
 
-              case 0:
+              case 0:   // momentum-momentum-momentum correlation function
                 {
+                  // prefactor is dimension 3; note the leading - sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
+                  auto __prefactor = -(__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
+
+                  // these components are dimension 5, so suppress by two powers of Mp
+                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * (-__Ksq*__k2dotk3 / (__Mp*__Mp));
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * (-__Ksq*__k1dotk3 / (__Mp*__Mp));
+                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * (-__Ksq*__k1dotk2 / (__Mp*__Mp));
+
+                  // these components are dimension 2
+                  __tpf += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2/2.0;
+                  __tpf += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3/2.0;
+                  __tpf += (__C_k1[__j][__k][__i] + __C_k2[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3/2.0;
+
+                  // these components are dimension 2
+                  __tpf += (__B_k1[__j][__k][__i] + __B_k1[__k][__j][__i])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
+                  __tpf += (__B_k2[__i][__k][__j] + __B_k2[__k][__i][__j])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
+                  __tpf += (__B_k3[__i][__j][__k] + __B_k3[__j][__i][__k])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+
+                  __tpf *= __prefactor / __kprod3;
                   break;
                 }
 
