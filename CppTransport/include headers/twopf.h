@@ -57,6 +57,8 @@ namespace transport
                 gauge_xfm(gx)
               {}
 
+            background<number>& get_background();
+
             void components_time_history(plot_gadget<number>*gadget, std::string output,
               index_selector<2>* selector, std::string format = "pdf", bool logy=true);
             void zeta_time_history      (plot_gadget<number>*gadget, std::string output,
@@ -211,6 +213,12 @@ namespace transport
       index_selector<2>* twopf<number>::manufacture_selector()
         {
           return new index_selector<2>(this->N_fields);
+        }
+
+      template <typename number>
+      background<number>& twopf<number>::get_background()
+        {
+          return(this->background);
         }
 
       template <typename number>
