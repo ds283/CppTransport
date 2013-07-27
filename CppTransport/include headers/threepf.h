@@ -153,9 +153,9 @@ namespace transport
                                     {
                                       std::ostringstream label;
                                       label << "$" << THREEPF_SYMBOL << "_{"
-                                            << this->latex_names[i % this->N_fields] << (i >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                            << this->latex_names[j % this->N_fields] << (j >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                            << this->latex_names[k % this->N_fields] << (k >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                                            << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                            << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                            << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
                                       labels.push_back(label.str());
                                     }
                                 }
