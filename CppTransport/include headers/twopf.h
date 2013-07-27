@@ -102,6 +102,7 @@ namespace transport
           for(int i = 0; i < this->sample_ks.size(); i++)
             {
               std::vector< std::vector<number> > data(this->sample_points.size());
+              std::vector< std::string >         labels;
 
               // we want data to be a time series of the 2pf components,
               // depending whether they are enabled by the index_selector
@@ -123,29 +124,27 @@ namespace transport
                     }
                 }
 
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
+                      if(selector->is_on(index_set))
+                        {
+                          std::ostringstream label;
+                          label << "$" << TWOPF_SYMBOL << "_{"
+                                << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                          labels.push_back(label.str());
+                        }
+                    }
+                }
+
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
               std::ostringstream title;
               title << "$k = " << this->sample_ks[i] << "$";
-
-              std::vector<std::string> labels;
-
-              for(int i = 0; i < 2*this->N_fields; i++)
-                {
-                  for(int j = 0; j < 2*this->N_fields; j++)
-                    {
-                      std::array<unsigned int, 2> index_set = { (unsigned int)i, (unsigned int)j };
-                      if(selector->is_on(index_set))
-                        {
-                          std::ostringstream l;
-                          l << "$" << TWOPF_SYMBOL << "_{"
-                            << this->latex_names[i % this->N_fields] << (i >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                            << this->latex_names[j % this->N_fields] << (j >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                          labels.push_back(l.str());
-                        }
-                    }
-                }
 
               gadget->set_format(format);
               gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);

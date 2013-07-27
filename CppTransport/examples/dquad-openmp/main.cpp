@@ -62,8 +62,8 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 8;         // end at time t = 50
-    const unsigned int tN   = 1000;        // record 500 samples
+    const double       tmax = 0.01;         // end at time t = 50
+    const unsigned int tN   = 100;        // record 500 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)
       {
@@ -115,7 +115,7 @@ int main(int argc, const char* argv[])
       selector->set_on(index_set_b);
       selector->set_on(index_set_c);
 
-      tpf.components_time_history(&plt, output + "/k_mode", selector, "pdf", false);
+      tpf.components_time_history(&plt, output + "/k_mode", selector);
       tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
 
       delete selector;
@@ -138,13 +138,42 @@ int main(int argc, const char* argv[])
       std::array<unsigned int, 2> index_set_b = { 0, 1 };
       std::array<unsigned int, 2> index_set_c = { 1, 1 };
 
-      transport::index_selector<2>* selector = twopf_re.manufacture_selector();
-      selector->none();
-      selector->set_on(index_set_a);
-      selector->set_on(index_set_b);
-      selector->set_on(index_set_c);
-      twopf_re.components_time_history(&plt, output + "/re_k_mode", selector, "pdf", false);
-      twopf_im.components_time_history(&plt, output + "/im_k_mode", selector, "pdf", false);
+      std::array<unsigned int, 2> index_set_d = { 2, 0 };
+      std::array<unsigned int, 2> index_set_e = { 3, 1 };
+
+      std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
+      std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
+      std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
+      std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
+
+      transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
+      transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
+      transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
+
+      twopf_re_selector->none();
+      twopf_re_selector->set_on(index_set_a);
+      twopf_re_selector->set_on(index_set_b);
+      twopf_re_selector->set_on(index_set_c);
+
+      twopf_im_selector->none();
+      twopf_im_selector->set_on(index_set_b);
+      twopf_im_selector->set_on(index_set_d);
+      twopf_im_selector->set_on(index_set_e);
+
+      threepf_selector->none();
+      threepf_selector->set_on(three_set_a);
+      threepf_selector->set_on(three_set_b);
+      threepf_selector->set_on(three_set_c);
+      threepf_selector->set_on(three_set_d);
+
+      twopf_re.components_time_history(&plt, output + "/re_k_mode", twopf_re_selector);
+      twopf_im.components_time_history(&plt, output + "/im_k_mode", twopf_im_selector, "pdf", false);
+
+      threepf.components_time_history(&plt, output + "/threepf_mode", threepf_selector);
+
+      delete twopf_re_selector;
+      delete twopf_im_selector;
+      delete threepf_selector;
     }
 
     return(EXIT_SUCCESS);
