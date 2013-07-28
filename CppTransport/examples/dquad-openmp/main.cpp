@@ -55,15 +55,15 @@ int main(int argc, const char* argv[])
     std::string output(argv[1]);
     std::string python(argv[2]);
 
-//    python_plot_gadget<double> plt(python);
+    python_plot_gadget<double> plt(python);
 //    gnuplot_plot_gadget<double> plt;
-    asciitable_plot_gadget<double> plt;
+//    asciitable_plot_gadget<double> plt;
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 0.01;       // end at time t = 50
-    const unsigned int tN   = 100;        // record 500 samples
+    const double       tmax = 50;         // end at time t = 50
+    const unsigned int tN   = 500;        // record 500 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)
       {
@@ -87,9 +87,9 @@ int main(int argc, const char* argv[])
     // integrate two-point function
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
     const double       kmax = exp(2.0);   // end with the mode which exited the horizon 2 e-folds later
-    const unsigned int kN   = 3;          // number of k-points
+    const unsigned int kN   = 1;          // number of k-points
     std::vector<double> ks;
-    for(int i = 0; i <= kN; i++)
+    for(int i = 0; i < kN; i++)
       {
         ks.push_back(kmin * pow(kmax/kmin, ((double)i/(double)kN)));
       }
@@ -103,7 +103,7 @@ int main(int argc, const char* argv[])
 
       timer.stop();
       timer.report();
-      std::cout << tpf;
+//      std::cout << tpf;
 
       std::array<unsigned int, 2> index_set_a = { 0, 0 };
       std::array<unsigned int, 2> index_set_b = { 0, 1 };
@@ -130,7 +130,7 @@ int main(int argc, const char* argv[])
 
       timer.stop();
       timer.report();
-      std::cout << threepf;
+//      std::cout << threepf;
 
       transport::twopf<double> twopf_re  = threepf.get_real_twopf();
       transport::twopf<double> twopf_im  = threepf.get_imag_twopf();
