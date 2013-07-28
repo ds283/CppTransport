@@ -44,6 +44,15 @@ namespace transport
       std::ostream& operator<<(std::ostream& out, threepf<number>& obj);
 
 
+      struct threepf_kconfig
+        {
+          std::array<unsigned int, 3> indices;
+
+          double                      k_t;
+          double                      alpha;
+          double                      beta;
+        };
+
       template <typename number>
       class threepf
         {
@@ -54,13 +63,14 @@ namespace transport
               const std::vector< std::vector< std::vector<number> > >& tpf_re,
               const std::vector< std::vector< std::vector<number> > >& tpf_im,
               const std::vector< std::vector< std::vector<number> > >& thpf,
+              const std::vector< struct threepf_kconfig >& kl,
               gauge_xfm_gadget<number>* gx)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b),
                 twopf_re(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_re, gx),
                 twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx),
-                samples(thpf),
+                samples(thpf), kconfig_list(kl),
                 gauge_xfm(gx)
               {}
 
@@ -98,7 +108,8 @@ namespace transport
             const std::vector< std::vector< std::vector<number> > > samples;           // list of samples of 3pf
               // first index: time of observation
               // second index: 2pf component
-              // third index: k
+              // third index: k (ordered according to 'kconfig_list' below)
+            const std::vector< struct threepf_kconfig >             kconfig_list;      // list of k-configurations, in the same order as 'samples'
         };
 
 
@@ -110,76 +121,63 @@ namespace transport
         index_selector<3>* selector, std::string format, bool logy)
         {
           // loop over all combinations of k-modes
-          unsigned int count = 0;
-          for(int i = 0; i < this->sample_ks.size(); i++)
+          for(int i = 0; i < this->kconfig_list.size(); i++)
             {
-              for(int j = 0; j <= i; j++)
+              std::vector< std::vector<number> > data(this->sample_points.size());
+              std::vector< std::string >         labels;
+
+              // we want data to be a time series of the 3pf components,
+              // depending whether they are enabled by the index_selector
+              for(int l = 0; l < this->sample_points.size(); l++)
                 {
-                  for(int k = 0; k <= j; k++)
+                  for(int m = 0; m < 2*this->N_fields; m++)
                     {
-                      std::vector< std::vector<number> > data(this->sample_points.size());
-                      std::vector< std::string >         labels;
-
-                      // we want data to be a time series of the 3pf components,
-                      // depending whether they are enabled by the index_selector
-                      for(int l = 0; l < this->sample_points.size(); l++)
+                      for(int n = 0; n < 2*this->N_fields; n++)
                         {
-                          for(int m = 0; m < 2*this->N_fields; m++)
+                          for(int r = 0; r < 2*this->N_fields; r++)
                             {
-                              for(int n = 0; n < 2*this->N_fields; n++)
+                              std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
+                              if(selector->is_on(index_set))
                                 {
-                                  for(int r = 0; r < 2*this->N_fields; r++)
-                                    {
-                                      std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
-                                      if(selector->is_on(index_set))
-                                        {
-                                          unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + 2*this->N_fields*n + r;
+                                  unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + 2*this->N_fields*n + r;
 
-                                          data[l].push_back(this->samples[l][samples_index][count]);
-                                        }
-                                    }
+                                  data[l].push_back(this->samples[l][samples_index][i]);
                                 }
                             }
                         }
-
-                      for(int m = 0; m < 2*this->N_fields; m++)
-                        {
-                          for(int n = 0; n < 2*this->N_fields; n++)
-                            {
-                              for(int r = 0; r < 2*this->N_fields; r++)
-                                {
-                                  std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
-                                  if(selector->is_on(index_set))
-                                    {
-                                      std::ostringstream label;
-                                      label << "$" << THREEPF_SYMBOL << "_{"
-                                            << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                            << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                            << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                                      labels.push_back(label.str());
-                                    }
-                                }
-                            }
-                        }
-
-                      std::ostringstream fnam;
-                      fnam << output << "_" << count;
-
-                      auto kt    = this->sample_ks[i] + this->sample_ks[j] + this->sample_ks[k];
-                      auto beta  = 1.0 - 2.0*this->sample_ks[k]/kt;
-                      auto alpha = 4.0*this->sample_ks[i]/kt - 1.0 - beta;
-
-                      std::ostringstream title;
-                      title << "$" << KT_SYMBOL        << " = " << kt << "$, "
-                            << "$" << FLS_ALPHA_SYMBOL << " = " << alpha << "$, "
-                            << "$" << FLS_BETA_SYMBOL  << " = " << beta << "$";
-
-                      gadget->set_format(format);
-                      gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
-
-                      count++;
                     }
                 }
+
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      for(int r = 0; r < 2*this->N_fields; r++)
+                        {
+                          std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
+                          if(selector->is_on(index_set))
+                            {
+                              std::ostringstream label;
+                              label << "$" << THREEPF_SYMBOL << "_{"
+                                    << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                    << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                    << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                              labels.push_back(label.str());
+                            }
+                        }
+                    }
+                }
+
+              std::ostringstream fnam;
+              fnam << output << "_" << i;
+
+              std::ostringstream title;
+              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
+                    << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
+                    << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
+
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
             }
         }
 

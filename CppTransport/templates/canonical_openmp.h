@@ -13,6 +13,7 @@
 #include "boost/numeric/odeint.hpp"
 
 #include "transport/transport.h"
+#import "threepf.h"
 
 #define SPECIES(z)     (z >= $$__NUMBER_FIELDS ? z-$$__NUMBER_FIELDS : z)
 #define MOMENTUM(z)    (SPECIES(z) + $$__NUMBER_FIELDS)
@@ -634,6 +635,7 @@ namespace transport
           std::vector< std::vector< std::vector<number> > > twopf_re_history;
           std::vector< std::vector< std::vector<number> > > twopf_im_history;
           std::vector< std::vector< std::vector<number> > > threepf_history;
+          std::vector< struct threepf_kconfig >              kconfig_list;
 
           // ensure there is enough space to store the solution
           // the index convention is
@@ -647,9 +649,12 @@ namespace transport
           this->resize_threepf_history(threepf_history, times, ks);
           
           // step through the lattice of k-modes, solving the for three-point function on each go
-          unsigned int loc = 0;   // keep track of where we are in the ordered set of (k1,k2,k3)
+          bool stored_background = false;   // have we stored the background yet?
+          unsigned int loc = 0;             // keep track of where we are in the ordered set of (k1,k2,k3)
           for(int i = 0; i < ks.size(); i++)
             {
+              bool stored_twopf = false;
+
               for(int j = 0; j <= i; j++)
                 {
                   for(int k = 0; k <= j; k++)
@@ -659,44 +664,76 @@ namespace transport
                       std::vector< std::vector<number> > kmode_twopf_re_history;
                       std::vector< std::vector<number> > kmode_twopf_im_history;
                       std::vector< std::vector<number> > kmode_threepf_history;
-                    
-                      // write the time history for this k-mode
-                      this->threepf_kmode(com_ks[i], com_ks[j], com_ks[k], times, real_ics,
-                                          kmode_slices, kmode_background_history, kmode_twopf_re_history, kmode_twopf_im_history, kmode_threepf_history);
-                    
-                      if(i == 0 && j == 0 && k == 0)    // store the background for the first lattice point only (it's the same each time)
+
+                      struct threepf_kconfig kconfig;
+
+                      kconfig.k_t        = com_ks[i] + com_ks[j] + com_ks[k];
+
+                      auto maxij  = (com_ks[i] > com_ks[j] ? com_ks[i] : com_ks[j]);
+                      auto maxijk = (maxij     > com_ks[k] ? maxij     : com_ks[k]);
+
+                      if(kconfig.k_t >= 2.0*maxijk)   // impose the triangle conditions
                         {
-                          slices = kmode_slices;
-                          background_history = kmode_background_history;
-                        }
-                    
-                      if(j == 0 && k == 0)              // store the twopf corresponding to com_ks[i] (it's the same for all j and k)
-                        {
-                          for(int m = 0; m < kmode_twopf_re_history.size(); m++)           // m steps through the time-slices
+                          kconfig.indices[0] = i;
+                          kconfig.indices[1] = j;
+                          kconfig.indices[2] = k;
+
+                          kconfig.beta  = 1.0 - 2.0*com_ks[k]/kconfig.k_t;
+                          kconfig.alpha = 4.0*com_ks[i]/kconfig.k_t - 1.0 - kconfig.beta;
+
+                          // write the time history for this k-mode
+                          this->threepf_kmode(com_ks[i], com_ks[j], com_ks[k], times, real_ics,
+                                              kmode_slices, kmode_background_history, kmode_twopf_re_history, kmode_twopf_im_history, kmode_threepf_history);
+
+                          if(stored_background == false)    // store the background for the first lattice point only (it's the same each time)
                             {
-                              for(int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
+                              slices = kmode_slices;
+                              background_history = kmode_background_history;
+                              stored_background = true;
+                            }
+
+                          if(stored_twopf == false)         // store the twopf corresponding to com_ks[i] (it's the same for all j and k)
+                            {
+                              for(int m = 0; m < kmode_twopf_re_history.size(); m++)           // m steps through the time-slices
                                 {
-                                  twopf_re_history[m][n][i] = kmode_twopf_re_history[m][n];
-                                  twopf_im_history[m][n][i] = kmode_twopf_im_history[m][n];
+                                  for(int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
+                                    {
+                                      twopf_re_history[m][n][i] = kmode_twopf_re_history[m][n];
+                                      twopf_im_history[m][n][i] = kmode_twopf_im_history[m][n];
+                                    }
+                                }
+                              stored_twopf = true;
+                            }
+
+                          for(int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
+                            {
+                              for(int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
+                                {
+                                  threepf_history[m][n][loc] = kmode_threepf_history[m][n];
                                 }
                             }
+                          loc++;  // increment location in the array of (k1,k2,k3) values
+                          kconfig_list.push_back(kconfig);
                         }
-                      
-                      for(int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
-                        {
-                          for(int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
-                            {
-                              threepf_history[m][n][loc] = kmode_threepf_history[m][n];
-                            }
-                        }
-                      loc++;  // increment location in the array of (k1,k2,k3) values
                     }
                 }
+
+              if(stored_twopf == false)
+                {
+                  // error
+                  exit(1);
+                }
+            }
+
+          if(stored_background == false)
+            {
+              // error
+              exit(1);
             }
         
           transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
           transport::threepf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-            slices, background_history, twopf_re_history, twopf_im_history, threepf_history, gauge_xfm);
+            slices, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, gauge_xfm);
         
           return(tpf);
         }
