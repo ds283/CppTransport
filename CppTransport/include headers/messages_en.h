@@ -8,6 +8,10 @@
 #ifndef __CPP_TRANSPORT_MESSAGES_EN_H_
 #define __CPP_TRANSPORT_MESSAGES_EN_H_
 
+#define __CPP_TRANSPORT_EFOLDS                "e-folds"
+#define __CPP_TRANSPORT_TWOPF_MESSAGE         "Two-point function for"
+#define __CPP_TRANSPORT_THREEPF_MESSAGE       "Three-point function for"
+
 #define __CPP_TRANSPORT_WRONG_FIELD_NAMES_A   "Error: supplied number of field names [= "
 #define __CPP_TRANSPORT_WRONG_FIELD_NAMES_B   " does not match expected number of fields [= "
 #define __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_A "Error: supplied number of LaTeX field names [= "

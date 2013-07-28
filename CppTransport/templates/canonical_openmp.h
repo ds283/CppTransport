@@ -635,7 +635,7 @@ namespace transport
           std::vector< std::vector< std::vector<number> > > twopf_re_history;
           std::vector< std::vector< std::vector<number> > > twopf_im_history;
           std::vector< std::vector< std::vector<number> > > threepf_history;
-          std::vector< struct threepf_kconfig >              kconfig_list;
+          std::vector< struct threepf_kconfig >             kconfig_list;
 
           // ensure there is enough space to store the solution
           // the index convention is

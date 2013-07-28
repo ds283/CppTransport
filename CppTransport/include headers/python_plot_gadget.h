@@ -29,6 +29,8 @@ class python_plot_gadget : public plot_gadget<number>
                 const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
                 std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
 
+      bool latex_labels() { return(true); }
+
     protected:
       std::string interpreter;
   };

@@ -15,7 +15,9 @@
 #include <vector>
 
 
-#define DEFAULT_PRECISION (12)
+#define DEFAULT_PRECISION     (12)
+#define DEFAULT_DISPLAY_WIDTH (80)
+#define DEFAULT_WRAP_WIDTH    (true)
 
 namespace transport
   {
@@ -24,16 +26,25 @@ namespace transport
       class asciitable
         {
           public:
-            asciitable(std::ostream& s) : stream(s), precision(DEFAULT_PRECISION) {}
+            asciitable(std::ostream& s)
+              : stream(s), precision(DEFAULT_PRECISION), display_width(DEFAULT_DISPLAY_WIDTH), wrap_width(DEFAULT_WRAP_WIDTH) {}
 
           void write(std::string x_name, const std::vector<std::string>& columns,
             const std::vector<number>& xs, const std::vector< std::vector<number> >& ys);
 
           void set_precision(unsigned int p);
 
+          void         set_display_width(unsigned int width);
+          unsigned int get_display_width();
+
+          void         set_wrap_status(bool wrap);
+          bool         get_wrap_status();
+
           protected:
             std::ostream& stream;
-            unsigned int  precision;
+            unsigned int  precision;        // precision with which to output numbers
+            unsigned int  display_width;    // display size in columns
+            bool          wrap_width;       // whether to wrap - good for display, bad for files
         };
 
 
@@ -44,7 +55,9 @@ namespace transport
       void asciitable<number>::write(std::string x_name,
         const std::vector<std::string>& columns, const std::vector<number>& xs, const std::vector< std::vector<number> >& ys)
         {
-          size_t max = this->precision+1;
+          // a number with specified precision may have that many digits, plus a decimal point
+          // plus possible a mantissa 'e+XXX', plus a leading sign
+          size_t max = this->precision + 1 + 5 + 1;
 
           assert(xs.size() == ys.size());
 
@@ -58,24 +71,50 @@ namespace transport
             }
           max++;
 
-          this->stream << std::right << std::setw((unsigned int)max) << x_name;
-          for(int i = 0; i < columns.size(); i++)
+          // max is the column width
+          // if we are going to wrap, want to work out how many columns we can fit
+          unsigned int columns_per_display = this->display_width / max;
+          if(columns_per_display < 1) columns_per_display = 1;
+          if(!wrap_width)             columns_per_display = columns.size();     // if not wrapping, then output all columns at once
+
+          unsigned int columns_output = 0;
+          while(columns_output < columns.size())
             {
-              this->stream << std::right << std::setw((unsigned int)max) << columns[i];
-            }
-          this->stream << std::endl;
+              // insert blank line if this is a continuation
+              if(columns_output > 0) this->stream << std::endl;
 
-          for(int i = 0; i < ys.size(); i++)
-            {
-              assert(columns.size() == ys[i].size());
+              // how many columns to output on this go?
+              unsigned int columns_left     = columns.size() - columns_output;
+              unsigned int columns_to_print = (columns_left < columns_per_display ? columns_left : columns_per_display);
 
-              this->stream << " " << std::right << std::setw((unsigned int)(max-1)) << xs[i];
-
-              for(int j = 0; j < ys[i].size(); j++)
+              // write out column headings
+              this->stream << std::right << std::setw((unsigned int)max) << x_name;
+              for(int i = 0; i < columns_to_print; i++)
                 {
-                  this->stream << " " << std::right << std::setw((unsigned int)(max-1)) << (ys[i])[j];
+                  this->stream << std::right << std::setw((unsigned int)max) << columns[columns_output + i];
                 }
               this->stream << std::endl;
+
+              // write out data
+              for(int i = 0; i < ys.size(); i++)
+                {
+                  assert(columns.size() == ys[i].size());
+
+                  this->stream << " "
+                               << std::right << std::setw((unsigned int)(max-1))
+                               << std::scientific
+                               << std::setprecision(this->precision-1) << xs[i];
+
+                  for(int j = 0; j < columns_to_print; j++)
+                    {
+                      this->stream << " "
+                                   << std::right << std::setw((unsigned int)(max-1))
+                                   << std::scientific
+                                   << std::setprecision(this->precision-1) << (ys[i])[columns_output + j];
+                    }
+                  this->stream << std::endl;
+                }
+              columns_output += columns_to_print;
             }
         }
 
@@ -84,6 +123,30 @@ namespace transport
       void asciitable<number>::set_precision(unsigned int p)
         {
           this->precision = p;
+        }
+
+      template <typename number>
+      void asciitable<number>::set_display_width(unsigned int width)
+        {
+          this->display_width = (width > 1 ? width : 1);
+        }
+
+      template <typename number>
+      unsigned int asciitable<number>::get_display_width()
+        {
+          return(this->display_width);
+        }
+
+      template <typename number>
+      void asciitable<number>::set_wrap_status(bool wrap)
+        {
+          this->wrap_width = wrap;
+        }
+
+      template <typename number>
+      bool asciitable<number>::get_wrap_status()
+        {
+          return(this->wrap_width);
         }
 
 

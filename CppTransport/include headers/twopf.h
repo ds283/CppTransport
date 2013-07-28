@@ -28,6 +28,7 @@
 #define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
 #define PRIME_SYMBOL               "\\prime"
 
+#define DEFAULT_WRAP_WIDTH         (135)
 
 namespace transport
   {
@@ -54,7 +55,8 @@ namespace transport
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b), samples(twopf),
-                gauge_xfm(gx)
+                gauge_xfm(gx),
+                wrap_width(DEFAULT_WRAP_WIDTH)
               {}
 
             background<number>& get_background();
@@ -69,7 +71,15 @@ namespace transport
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, twopf& obj);
 
+            unsigned int get_wrap_width();
+            void         set_wrap_width(unsigned int w);
+
           protected:
+            // make a list of labels for the chosen index selection
+            std::vector< std::string>          make_labels(index_selector<2>* selector, bool latex);
+            // return a time history for a given set of components and a fixed k-number
+            std::vector< std::vector<number> > construct_kmode_time_history(index_selector<2>* selector, unsigned int i);
+
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
             const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
@@ -88,6 +98,8 @@ namespace transport
               // first index: time of observation
               // second index: 2pf component
               // third index: k
+
+            unsigned int                                            wrap_width;        // position to wrap when output to stream
         };
 
 
@@ -98,47 +110,12 @@ namespace transport
       void twopf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
         index_selector<2>* selector, std::string format, bool logy)
         {
+          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
             {
-              std::vector< std::vector<number> > data(this->sample_points.size());
-              std::vector< std::string >         labels;
-
-              // we want data to be a time series of the 2pf components,
-              // depending whether they are enabled by the index_selector
-              for(int j = 0; j < this->sample_points.size(); j++)
-                {
-                  // now, for this k-mode, slice up the time series
-                  for(int m = 0; m < 2*this->N_fields; m++)
-                    {
-                      for(int n = 0; n < 2*this->N_fields; n++)
-                        {
-                          std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n };
-                          if(selector->is_on(index_set))
-                            {
-                              unsigned int samples_index = 2*this->N_fields*m + n;
-
-                              data[j].push_back(this->samples[j][samples_index][i]);
-                            }
-                        }
-                    }
-                }
-
-              for(int m = 0; m < 2*this->N_fields; m++)
-                {
-                  for(int n = 0; n < 2*this->N_fields; n++)
-                    {
-                      std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
-                      if(selector->is_on(index_set))
-                        {
-                          std::ostringstream label;
-                          label << "$" << TWOPF_SYMBOL << "_{"
-                                << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                          labels.push_back(label.str());
-                        }
-                    }
-                }
+              std::vector< std::vector<number> > data = this->construct_kmode_time_history(selector, i);
 
               std::ostringstream fnam;
               fnam << output << "_" << i;
@@ -150,6 +127,70 @@ namespace transport
               gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
             }
         }
+
+
+      template <typename number>
+      std::vector< std::string > twopf<number>::make_labels(index_selector<2>* selector, bool latex)
+      {
+        std::vector< std::string > labels;
+
+        for(int m = 0; m < 2*this->N_fields; m++)
+          {
+            for(int n = 0; n < 2*this->N_fields; n++)
+              {
+                std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
+                if(selector->is_on(index_set))
+                  {
+                    std::ostringstream label;
+
+                    if(latex)
+                      {
+                        label << "$" << TWOPF_SYMBOL << "_{"
+                              << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                              << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                      }
+                    else
+                      {
+                        label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
+                              << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "");
+                      }
+                    labels.push_back(label.str());
+                  }
+              }
+          }
+
+          return(labels);
+      }
+
+
+      // for a specific k-mode, return the time history of a set of components
+      // (index order: first index = time, second index = component)
+      template <typename number>
+      std::vector< std::vector<number> > twopf<number>::construct_kmode_time_history(index_selector<2>* selector, unsigned int i)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          for(int j = 0; j < this->sample_points.size(); j++)
+            {
+              // now, for the chosen k-mode i, slice up the time series
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n };
+                      if(selector->is_on(index_set))
+                        {
+                          unsigned int samples_index = 2*this->N_fields*m + n;
+
+                          data[j].push_back(this->samples[j][samples_index][i]);
+                        }
+                    }
+                }
+             }
+
+           return(data);
+        }
+
 
       template <typename number>
       void twopf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
@@ -220,51 +261,40 @@ namespace transport
           return(this->background);
         }
 
+
       template <typename number>
       std::ostream& operator<<(std::ostream& out, twopf<number>& obj)
         {
           transport::asciitable<number> writer(out);
+          writer.set_display_width(obj.get_wrap_width());
 
-          out << obj.backg << std::endl;
+          index_selector<2>* selector = obj.manufacture_selector();
 
-          std::vector<std::string> labels;
-          for(int i = 0; i < 2*obj.N_fields; i++)
-            {
-              for(int j = 0; j < 2*obj.N_fields; j++)
-                {
-                  std::ostringstream l;
-                  l << obj.field_names[i] << ", " << obj.field_names[j];
-                  labels.push_back(l.str());
-                }
-            }
+          std::vector<std::string> labels = obj.make_labels(selector, false);
 
-          std::vector< std::vector<number> > twopf_components(obj.sample_points.size());
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
               if(i > 0) out << std::endl;
-              out << "k = " << obj.sample_ks[i] << std::endl << std::endl;
+              out << __CPP_TRANSPORT_TWOPF_MESSAGE << " k = " << obj.sample_ks[i] << std::endl << std::endl;
 
-              for(int j = 0; j < obj.sample_points.size(); j++)
-                {
-                  twopf_components[j].resize(2*obj.N_fields * 2*obj.N_fields);
+              std::vector< std::vector<number> > data = obj.construct_kmode_time_history(selector, i);
 
-                  for(int m = 0; m < 2*obj.N_fields; m++)
-                    {
-                      for(int n = 0; n < 2*obj.N_fields; n++)
-                        {
-                          unsigned int index = 2*obj.N_fields*m + n;
-
-                          number temp = obj.samples[j][index][i];
-
-                          twopf_components[j][index] = temp;
-                        }
-                    }
-                }
-
-              writer.write("e-folds", labels, obj.sample_points, twopf_components);
+              writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
             }
 
           return(out);
+        }
+
+      template <typename number>
+      void twopf<number>::set_wrap_width(unsigned int w)
+        {
+          this->wrap_width = (w > 0 ? w : this->wrap_width);
+        }
+
+       template <typename number>
+       unsigned int twopf<number>::get_wrap_width()
+        {
+          return(this->wrap_width);
         }
 
 

@@ -13,6 +13,7 @@
 
 #include "asciitable.h"
 #include "plot_gadget.h"
+#include "messages_en.h"
 
 
 namespace transport
@@ -79,7 +80,7 @@ namespace transport
         {
           transport::asciitable<number> writer(out);
 
-          writer.write("e-folds", obj.field_names, obj.sample_points, obj.samples);
+          writer.write(__CPP_TRANSPORT_EFOLDS, obj.field_names, obj.sample_points, obj.samples);
 
           return(out);
         }

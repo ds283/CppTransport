@@ -27,9 +27,12 @@ class plot_gadget
         const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
         std::string xlabel, std::string ylabel, bool logx, bool logy) = 0;
 
-    virtual void               set_format(std::string f);
+    virtual void               set_format(std::string f);         // set current output format (PDF, PNG, ... ) if supported by the gadget
 
-    virtual const std::string& get_format();
+    virtual const std::string& get_format();                      // get current output format
+
+    virtual bool               latex_labels() { return(false); }  // gadget supports or expects labels in LaTeX format?
+                                                                  // by default false, but can be overridden by derived classes
 
     protected:
       std::string format;
@@ -46,7 +49,6 @@ const std::string& plot_gadget<number>::get_format()
   {
     return(this->format);
   }
-
 
 inline void open_tempfile(std::string& path)
   {
