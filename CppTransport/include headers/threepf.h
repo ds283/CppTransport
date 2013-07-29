@@ -382,6 +382,8 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i)
         {
+          assert(i < this->kconfig_list.size());
+
           std::vector< std::vector<number> > data(this->sample_points.size());
 
           for(int l = 0; l < this->sample_points.size(); l++)
@@ -436,12 +438,14 @@ namespace transport
       double threepf<number>::dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
                                            unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos)
         {
-          assert( __pos < 3);
-        
+          assert(__pos < 3);
+
           std::vector<number> __fields = this->backg.get_value(__time_slice);
 
-          std::vector< std::vector< std::vector<number> > > __B = this->tensors->B(__fields, __kmode_n, __kmode_r, __kmode_m, this->sample_points[__time_slice]);
-          std::vector< std::vector< std::vector<number> > > __C = this->tensors->C(__fields, __kmode_m, __kmode_n, __kmode_r, this->sample_points[__time_slice]);
+          std::vector< std::vector< std::vector<number> > > __B =
+            this->tensors->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time_slice]);
+          std::vector< std::vector< std::vector<number> > > __C =
+            this->tensors->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time_slice]);
           
           std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time_slice, __kmode_n);
           std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time_slice, __kmode_r);
@@ -502,7 +506,7 @@ namespace transport
                                        + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_field_twopf_index_r]
                                        - __twopf_im_n[__i_field_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
                                        - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_field_twopf_index_r]);
-                  
+
                   rval += __C[__m_species][__i][__j]
                                     * (  __twopf_re_n[__i_dotfield_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
                                        + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_dotfield_twopf_index_r]
@@ -510,7 +514,7 @@ namespace transport
                                        - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_dotfield_twopf_index_r]);
                 }
             }
-          
+
           return(rval);
         }
 
