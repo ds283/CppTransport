@@ -87,7 +87,7 @@ namespace transport
               index_selector<3>* selector, std::string format = "pdf", bool logy=true);
 
             void zeta_time_history(plot_gadget<number>* gadget, std::string output,
-              std::string format = "pdf", bool dimensionless = true, bool logy=true);
+              std::string format = "pdf", bool logy=true);
 
             index_selector<3>* manufacture_selector();
 
@@ -191,6 +191,71 @@ namespace transport
 
               gadget->set_format(format);
               gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
+            }
+        }
+
+
+      template <typename number>
+      void threepf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
+        std::string format, bool logy)
+        {
+          // loop over all combinations of k-modes
+          for(int i = 0; i < this->kconfig_list.size(); i++)
+            {
+              std::vector< std::vector<number> > data(this->sample_points.size());
+
+              for(int j = 0; j < this->sample_points.size(); j++)
+                {
+                  data[j].resize(1);    // only one components of < zeta zeta zeta >
+
+                  // compute gauge transformations
+                  std::vector<number> dN;
+                  std::vector< std::vector<number> > ddN;
+
+                  this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+                  this->gauge_xfm->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
+
+                  // get twopf values for this timeslices and appropriate k-modes
+                  std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
+                  std::vector<number> twopf_im_ke = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
+                  std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].indices[1]);
+                  std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].indices[1]);
+                  std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].indices[2]);
+                  std::vector<number> twopf_im_k3 = this->twopf_im.get_value(j, kconfig_list[i].indices[2]);
+
+                  // intrinsic threepf
+                  data[j][0] = 0;
+                  for(int m = 0; m < 2*this->N_fields; m++)
+                    {
+                      for(int n = 0; n < 2*this->N_fields; n++)
+                        {
+                          for(int r = 0; r < 2*this->N_fields; r++)
+                            {
+                              unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + (2*this->N_fields)*n + r;
+                              data[j][0] += dN[m]*dN[n]*dN[r]*this->samples[j][samples_index][i];
+                            }
+                        }
+                    }
+
+                  // gauge transformation contribution
+                  for(int l = 0; l < 2*this->N_fields; l++)
+                    {
+                      for(int m = 0; m < 2*this->N_fields; m++)
+                        {
+                          for(int n = 0; n < 2*this->N_fields; n++)
+                            {
+                              for(int r = 0; r < 2*this->N_fields; r++)
+                                {
+                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_index]*twopf_re_k3[mr_index]
+                                                                                   + twopf_re_k2[lr_index]*twopf_re_k3[mn_index]
+                                                                                   - twopf_im_k2[ln_index]*twopf_im_k3[mr_index]
+                                                                                   - twopf_im_k2[lr_index]*twopf_im_k3[mn_index]);
+                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[lm])
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
 
