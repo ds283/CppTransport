@@ -217,7 +217,7 @@ namespace transport
 
                   // get twopf values for this timeslices and appropriate k-modes
                   std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
-                  std::vector<number> twopf_im_ke = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
+                  std::vector<number> twopf_im_k1 = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
                   std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].indices[1]);
                   std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].indices[1]);
                   std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].indices[2]);
@@ -246,16 +246,60 @@ namespace transport
                             {
                               for(int r = 0; r < 2*this->N_fields; r++)
                                 {
-                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_index]*twopf_re_k3[mr_index]
-                                                                                   + twopf_re_k2[lr_index]*twopf_re_k3[mn_index]
-                                                                                   - twopf_im_k2[ln_index]*twopf_im_k3[mr_index]
-                                                                                   - twopf_im_k2[lr_index]*twopf_im_k3[mn_index]);
-                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[lm])
+                                  // l, m to left of n and r
+                                  unsigned int ln_1_index = (2*this->N_fields)*l + n;
+                                  unsigned int lr_1_index = (2*this->N_fields)*l + r;
+                                  unsigned int mn_1_index = (2*this->N_fields)*m + n;
+                                  unsigned int mr_1_index = (2*this->N_fields)*m + r;
+
+                                  // l, m to left of r but right of n
+                                  unsigned int ln_2_index = (2*this->N_fields)*n + l;
+                                  unsigned int lr_2_index = (2*this->N_fields)*l + r;
+                                  unsigned int mn_2_index = (2*this->N_fields)*n + m;
+                                  unsigned int mr_2_index = (2*this->N_fields)*l + r;
+
+                                  // l, m to right of n and r
+                                  unsigned int ln_3_index = (2*this->N_fields)*n + l;
+                                  unsigned int lr_3_index = (2*this->N_fields)*r + l;
+                                  unsigned int mn_3_index = (2*this->N_fields)*n + m;
+                                  unsigned int mr_3_index = (2*this->N_fields)*r + m;
+
+                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
+                                                                                   + twopf_re_k2[lr_1_index]*twopf_re_k3[mn_1_index]
+                                                                                   - twopf_im_k2[ln_1_index]*twopf_im_k3[mr_1_index]
+                                                                                   - twopf_im_k2[lr_1_index]*twopf_im_k3[mn_1_index]);
+
+                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_2_index]*twopf_re_k3[mr_2_index]
+                                                                                   + twopf_re_k1[lr_2_index]*twopf_re_k3[mn_2_index]
+                                                                                   - twopf_im_k1[ln_2_index]*twopf_im_k3[mr_2_index]
+                                                                                   - twopf_im_k1[lr_2_index]*twopf_im_k3[mn_2_index]);
+
+                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_3_index]*twopf_re_k2[mr_3_index]
+                                                                                   + twopf_re_k1[lr_3_index]*twopf_re_k2[mn_3_index]
+                                                                                   - twopf_im_k1[ln_3_index]*twopf_im_k2[mr_3_index]
+                                                                                   - twopf_im_k1[lr_3_index]*twopf_im_k2[mn_3_index]);
                                 }
                             }
                         }
                     }
                 }
+
+              std::ostringstream fnam;
+              fnam << output << "_" << i;
+
+              std::ostringstream title;
+              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
+                << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
+                << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
+
+              std::vector<std::string> labels(1);
+              std::ostringstream l;
+
+              l << "$" << THREEPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+              labels[0] = l.str();
+
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
             }
         }
 

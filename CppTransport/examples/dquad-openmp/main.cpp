@@ -170,6 +170,7 @@ int main(int argc, const char* argv[])
 
       threepf.components_time_history(&plt, output + "/threepf_mode", threepf_selector);
       threepf.components_dotphi_time_history(&plt, output + "/threepf_dotphi_mode", threepf_selector);
+      threepf.zeta_time_history(&plt, output + "/zeta_threepf_mode");
 
       delete twopf_re_selector;
       delete twopf_im_selector;
