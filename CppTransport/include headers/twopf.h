@@ -28,7 +28,7 @@
 #define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
 #define PRIME_SYMBOL               "\\prime"
 
-#define DEFAULT_WRAP_WIDTH         (135)
+#define DEFAULT_TWOPF_WRAP_WIDTH   (135)
 
 namespace transport
   {
@@ -36,8 +36,7 @@ namespace transport
 
       // handle weirdness with friend template functions
       // see http://www.cplusplus.com/forum/general/45776/
-      template <typename number>
-      class twopf;
+      template <typename number> class twopf;
 
       template <typename number>
       std::ostream& operator<<(std::ostream& out, twopf<number>& obj);
@@ -56,14 +55,14 @@ namespace transport
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b), samples(twopf),
                 gauge_xfm(gx),
-                wrap_width(DEFAULT_WRAP_WIDTH)
+                wrap_width(DEFAULT_TWOPF_WRAP_WIDTH)
               {}
 
             background<number>& get_background();
 
-            void components_time_history(plot_gadget<number>*gadget, std::string output,
+            void components_time_history(plot_gadget<number>* gadget, std::string output,
               index_selector<2>* selector, std::string format = "pdf", bool logy=true);
-            void zeta_time_history      (plot_gadget<number>*gadget, std::string output,
+            void zeta_time_history      (plot_gadget<number>* gadget, std::string output,
               std::string format = "pdf", bool dimensionless = true, bool logy=true);
 
             index_selector<2>* manufacture_selector();
@@ -73,12 +72,17 @@ namespace transport
 
             unsigned int get_wrap_width();
             void         set_wrap_width(unsigned int w);
+          
+            friend class threepf<number>;
 
           protected:
             // make a list of labels for the chosen index selection
             std::vector< std::string>          make_labels(index_selector<2>* selector, bool latex);
             // return a time history for a given set of components and a fixed k-number
             std::vector< std::vector<number> > construct_kmode_time_history(index_selector<2>* selector, unsigned int i);
+          
+            // return values for a given kvalue and timeslice
+            std::vector< number >              get_value(unsigned int time, unsigned int kmode);
 
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
@@ -283,6 +287,22 @@ namespace transport
             }
 
           return(out);
+        }
+
+      template <typename number>
+      std::vector<number> twopf<number>::get_value(unsigned int time, unsigned int kmode)
+        {
+          std::vector<number> rval(2*this->N_fields * 2*this->N_fields);
+          
+          assert(time < this->sample_points.size());
+          assert(kmode < this->sample_ks.size());
+          
+          for(int i = 0; i < 2*this->N_fields*2*this->N_fields; i++)
+            {
+              rval[i] = this->samples[time][i][kmode];
+            }
+          
+          return(rval);
         }
 
       template <typename number>

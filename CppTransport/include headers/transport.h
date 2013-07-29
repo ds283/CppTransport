@@ -17,6 +17,7 @@
 #include "asciitable_plot_gadget.h"
 
 #include "gauge_xfm_gadget.h"
+#include "tensor_gadget.h"
 #include "data_products.h"
 #include "model_classes.h"
 

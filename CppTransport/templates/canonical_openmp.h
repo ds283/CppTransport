@@ -49,6 +49,22 @@ namespace transport
         };
 
 
+      // tensor calculation gadget
+      template <typename number>
+      class $$__MODEL_tensor_gadget : public tensor_gadget<number>
+        {
+          public:
+            $$__MODEL_tensor_gadget(number Mp, const std::vector<number>& ps) : tensor_gadget<number>(Mp, ps) {}
+
+          std::vector< std::vector< std::vector<number> > >
+            A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+          std::vector< std::vector< std::vector<number> > >
+            B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+          std::vector< std::vector< std::vector<number> > >
+            C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+        };
+
+
       // *********************************************************************************************
 
 
@@ -439,7 +455,7 @@ namespace transport
           // (remember we use the convention a = exp(t), for whatever values of t the user supplies)
           std::vector<double> com_ks(ks.size());
 
-          this->rescale_ks(ks, com_ks, Nstar, backg_evo.get_value(0));
+          this->rescale_ks(ks, com_ks, Nstar, backg_evo.__INTERNAL_ONLY_get_value(0));
 
           return(com_ks);
         }
@@ -732,8 +748,10 @@ namespace transport
             }
         
           transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
+          transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
+
           transport::threepf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-            slices, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, gauge_xfm);
+            slices, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, gauge_xfm, tensor);
         
           return(tpf);
         }
@@ -1332,6 +1350,96 @@ namespace transport
             }
 
           __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB];
+        }
+
+
+      // IMPLEMENTATION - TENSOR CALCULATION GADGET
+
+
+      template <typename number>
+      std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::A(const std::vector<number>& __fields,
+        double __km, double __kn, double __kr, double __N)
+        {
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
+
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __a                    = exp(__N);
+
+          std::vector< std::vector< std::vector<number> > > __A($$__NUMBER_FIELDS);
+          
+          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+            {
+              __A[__i].resize($$__NUMBER_FIELDS);
+              for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+                {
+                  __A[__i][__j].resize($$__NUMBER_FIELDS);
+                }
+            }
+          
+          __A[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+
+          return(__A);
+        }
+
+
+      template <typename number>
+      std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::B(const std::vector<number>& __fields,
+        double __km, double __kn, double __kr, double __N)
+        {
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
+
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __a                    = exp(__N);
+
+          std::vector< std::vector< std::vector<number> > > __B($$__NUMBER_FIELDS);
+          
+          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+            {
+              __B[__i].resize($$__NUMBER_FIELDS);
+              for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+                {
+                  __B[__i][__j].resize($$__NUMBER_FIELDS);
+                }
+            }
+          
+          __B[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+
+          return(__B);
+        }
+
+
+      template <typename number>
+      std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::C(const std::vector<number>& __fields,
+        double __km, double __kn, double __kr, double __N)
+        {
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
+
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __a                    = exp(__N);
+
+          std::vector< std::vector< std::vector<number> > > __C($$__NUMBER_FIELDS);
+          
+          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+            {
+              __C[__i].resize($$__NUMBER_FIELDS);
+              for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+                {
+                  __C[__i][__j].resize($$__NUMBER_FIELDS);
+                }
+            }
+          
+          __C[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+
+          return(__C);
         }
 
 

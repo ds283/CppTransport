@@ -55,6 +55,10 @@ namespace transport
       void asciitable<number>::write(std::string x_name,
         const std::vector<std::string>& columns, const std::vector<number>& xs, const std::vector< std::vector<number> >& ys)
         {
+          // save current precision
+          std::streamsize         prev_precision = this->stream.precision();
+          std::ios_base::fmtflags prev_flags     = this->stream.flags();
+
           // a number with specified precision may have that many digits, plus a decimal point
           // plus possible a mantissa 'e+XXX', plus a leading sign
           size_t max = this->precision + 1 + 5 + 1;
@@ -116,6 +120,9 @@ namespace transport
                 }
               columns_output += columns_to_print;
             }
+
+          this->stream.precision(prev_precision);
+          this->stream.flags(prev_flags);
         }
 
 

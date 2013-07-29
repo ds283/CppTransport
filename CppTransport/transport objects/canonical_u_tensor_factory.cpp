@@ -502,9 +502,15 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
     c -=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2
          + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2;
 
-    if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
-    if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
+    // sign flips in this expression come from integrating out
+    // B_ijk < Sigma_j m > < Sigma_k m >
+    // which sets k_j + k_m = 0, hence k_j = -k_m, not +k_m
+    // this flips the 2, 3 momenta with respect to the 1 momentum
+    if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * (-1)*k1dotk2 / (k1*k1) /2;
+    if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * (-1)*k1dotk2 / (k2*k2) /2;
 
+    // this term is unaffected by sign flips, because it involves the jk momenta
+    // which both flip
     c +=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k2dotk3/(k2*k3),2) /2
          + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k1dotk3/(k1*k3),2) /2;
 
@@ -526,10 +532,15 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     c += this->deriv_list[i] * this->deriv_list[j] * this->deriv_list[k] / (8 * pow(this->M_Planck, 4));
 
+    // this term in affected by sign flips in the momenta
     c -= this->deriv_list[i] * this->deriv_list[j] * this->deriv_list[k] / (8 * pow(this->M_Planck, 4)) * pow(k1dotk2 / (k1*k2), 2);
 
-    if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * k1dotk2 / (k1 * k1) /2;
-    if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * k1dotk2 / (k2 * k2) /2;
+    // sign flips in this expression come from integrating out
+    // C_ijk < Sigma_j m > < Sigma_k m >
+    // which sets k_j + k_m = 0, hence k_j = -k_m, not +k_m
+    // this flips the 2, 3 momenta with respect to the 1 momentum
+    if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * (-1)*k1dotk2 / (k1 * k1) /2;
+    if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * (-1)*k1dotk2 / (k2 * k2) /2;
 
     return (c);
   }

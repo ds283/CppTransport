@@ -30,8 +30,8 @@
 #define FLS_ALPHA_SYMBOL           "\\alpha"
 #define FLS_BETA_SYMBOL            "\\beta"
 
-#define DEFAULT_WRAP_WIDTH         (135)
-
+#define DEFAULT_THREEPF_WRAP_WIDTH (135)
+#define DEFAULT_OUTPUT_DOTPHI      (true)
 
 namespace transport
   {
@@ -39,12 +39,10 @@ namespace transport
 
       // handle weirdness with friend template functions
       // see http://www.cplusplus.com/forum/general/45776/
-      template <typename number>
-      class threepf;
+      template <typename number> class threepf;
 
       template <typename number>
       std::ostream& operator<<(std::ostream& out, threepf<number>& obj);
-
 
       struct threepf_kconfig
         {
@@ -66,24 +64,29 @@ namespace transport
               const std::vector< std::vector< std::vector<number> > >& tpf_im,
               const std::vector< std::vector< std::vector<number> > >& thpf,
               const std::vector< struct threepf_kconfig >& kl,
-              gauge_xfm_gadget<number>* gx)
+              gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b),
                 twopf_re(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_re, gx),
                 twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx),
                 samples(thpf), kconfig_list(kl),
-                gauge_xfm(gx),
-                wrap_width(DEFAULT_WRAP_WIDTH)
+                gauge_xfm(gx), tensors(t),
+                wrap_width(DEFAULT_THREEPF_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI)
               {}
+            ~threepf() { delete gauge_xfm; delete tensors; }
 
             background<number>& get_background();
             twopf<number>&      get_real_twopf();
             twopf<number>&      get_imag_twopf();
 
-            void components_time_history(plot_gadget<number>*gadget, std::string output,
+            void components_time_history(plot_gadget<number>* gadget, std::string output,
               index_selector<3>* selector, std::string format = "pdf", bool logy=true);
-            void zeta_time_history      (plot_gadget<number>*gadget, std::string output,
+
+            void components_dotphi_time_history(plot_gadget<number>* gadget, std::string output,
+              index_selector<3>* selector, std::string format = "pdf", bool logy=true);
+
+            void zeta_time_history(plot_gadget<number>* gadget, std::string output,
               std::string format = "pdf", bool dimensionless = true, bool logy=true);
 
             index_selector<3>* manufacture_selector();
@@ -95,16 +98,28 @@ namespace transport
             void         set_wrap_width(unsigned int w);
 
           protected:
+
             // make a list of labels for the chosen index selection
             std::vector< std::string>          make_labels(index_selector<3>* selector, bool latex);
+
             // return a time history for a given set of components and a fixed k-configuration
             std::vector< std::vector<number> > construct_kconfig_time_history(index_selector<3>* selector, unsigned int i);
 
+            // return a time history for correlation functions of \dot{\phi}_i (rather than the canonical momentum p_i)
+            // for a given set of components and fixed k-configuration
+            std::vector< std::vector<number> > construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i);
+
+            // compute the shift in the correlation function when changing from momentum to d/dN
+            double dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
+                                unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos);
+          
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
             const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
 
             gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
+          
+            tensor_gadget<number>*                                  tensors;           // tensor calculation gadget
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
@@ -124,11 +139,11 @@ namespace transport
                                                                                        // in the same order as third index of 'samples'
 
             unsigned int                                            wrap_width;        // position to wrap when output to stream
+            bool                                                    output_dotphi;     // output correlation funtions of dot(phi), or the canonical momentum?
         };
 
 
 //  IMPLEMENTATION -- CLASS threepf
-
 
       template <typename number>
       void threepf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
@@ -141,7 +156,6 @@ namespace transport
             {
               std::vector< std::vector<number> > data = this->construct_kconfig_time_history(selector, i);
 
-
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
@@ -149,6 +163,31 @@ namespace transport
               title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
                     << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
                     << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
+
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
+            }
+        }
+
+
+      template <typename number>
+      void threepf<number>::components_dotphi_time_history(plot_gadget<number>* gadget, std::string output,
+                                                           index_selector<3>* selector, std::string format, bool logy)
+        {
+          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+
+          // loop over all combinations of k-modes
+          for(int i = 0; i < this->kconfig_list.size(); i++)
+            {
+              std::vector< std::vector<number> > data = this->construct_kconfig_dotphi_time_history(selector, i);
+
+              std::ostringstream fnam;
+              fnam << output << "_" << i;
+
+              std::ostringstream title;
+              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
+                << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
+                << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
 
               gadget->set_format(format);
               gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
@@ -227,7 +266,147 @@ namespace transport
           return(data);
         }
 
-      template<typename number>
+
+      // for a specific k-configuration, return the time history of a set of components of correlation
+      // functions involving \dot{\phi} (rather than the Hamiltonian momentum, which is what is actually calculated)
+      // (index order: first index = time, second index = component)
+      template <typename number>
+      std::vector< std::vector<number> > threepf<number>::construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          for(int l = 0; l < this->sample_points.size(); l++)
+            {
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      for(int r = 0; r < 2*this->N_fields; r++)
+                        {
+                          std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
+                          if(selector->is_on(index_set))
+                            {
+                              unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + 2*this->N_fields*n + r;
+
+                              number value = this->samples[l][samples_index][i];
+
+                              // now shift the correlation function if it involves momentum indices
+                              if (m >= this->N_fields)
+                                {
+                                  value += this->dotphi_shift(m, this->kconfig_list[i].indices[0],
+                                                              n, this->kconfig_list[i].indices[1],
+                                                              r, this->kconfig_list[i].indices[2], l, 0);
+                                }
+                              if (n >= this->N_fields)
+                                {
+                                  value += this->dotphi_shift(n, this->kconfig_list[i].indices[1],
+                                                              m, this->kconfig_list[i].indices[0],
+                                                              r, this->kconfig_list[i].indices[2], l, 1);
+                                }
+                              if (r >= this->N_fields)
+                                {
+                                  value += this->dotphi_shift(r, this->kconfig_list[i].indices[2],
+                                                              m, this->kconfig_list[i].indices[0],
+                                                              n, this->kconfig_list[i].indices[1], l, 2);
+                                }
+
+                              data[l].push_back(value);
+                            }
+                        }
+                    }
+                }
+            }
+
+          return(data);
+        }
+
+
+      // compute the shift in a correlation function from the canonical momentum p_i to the time derivative q'_i,
+      // ' = d/dN
+      template <typename number>
+      double threepf<number>::dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
+                                           unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos)
+        {
+          assert( __pos < 3);
+        
+          std::vector<number> __fields = this->backg.get_value(__time_slice);
+
+          std::vector< std::vector< std::vector<number> > > __B = this->tensors->B(__fields, __kmode_n, __kmode_r, __kmode_m, this->sample_points[__time_slice]);
+          std::vector< std::vector< std::vector<number> > > __C = this->tensors->C(__fields, __kmode_m, __kmode_n, __kmode_r, this->sample_points[__time_slice]);
+          
+          std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time_slice, __kmode_n);
+          std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time_slice, __kmode_r);
+          std::vector<number> __twopf_im_n = this->twopf_im.get_value(__time_slice, __kmode_n);
+          std::vector<number> __twopf_im_r = this->twopf_im.get_value(__time_slice, __kmode_r);
+          
+          double rval = 0.0;
+          
+          assert(__m >= this->N_fields);
+          auto __m_species = __m % this->N_fields;
+          
+          for(int __i = 0; __i < this->N_fields; __i++)
+            {
+              for(int __j = 0; __j < this->N_fields; __j++)
+                {
+                  unsigned int __i_field_twopf_index_r    = 0;
+                  unsigned int __i_field_twopf_index_n    = 0;
+                  unsigned int __j_field_twopf_index_r    = 0;
+                  unsigned int __j_field_twopf_index_n    = 0;
+                  unsigned int __i_dotfield_twopf_index_r = 0;
+                  unsigned int __i_dotfield_twopf_index_n = 0;
+
+                  switch(__pos)
+                    {
+                      case 0: // index __m is on the far left, to the left of both __n and __r
+                        __i_field_twopf_index_n    = (2*this->N_fields)*__i + __n;
+                        __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
+                        __j_field_twopf_index_n    = (2*this->N_fields)*__j + __n;
+                        __j_field_twopf_index_r    = (2*this->N_fields)*__j + __r;
+                        __i_dotfield_twopf_index_n = (2*this->N_fields)*(__i + this->N_fields) + __n;
+                        __i_dotfield_twopf_index_r = (2*this->N_fields)*(__i + this->N_fields) + __r;
+                        break;
+                      
+                      case 1: // index __m is in the middle, to the left of __n but the right of __r
+                        __i_field_twopf_index_n    = (2*this->N_fields)*__i + __n;
+                        __i_field_twopf_index_r    = (2*this->N_fields)*__r + __i;
+                        __j_field_twopf_index_n    = (2*this->N_fields)*__j + __n;
+                        __j_field_twopf_index_r    = (2*this->N_fields)*__r + __j;
+                        __i_dotfield_twopf_index_n = (2*this->N_fields)*(__i + this->N_fields) + __n;
+                        __i_dotfield_twopf_index_r = (2*this->N_fields)*__r + (__i + this->N_fields);
+                        break;
+                      
+                      case 2: // index __m is on the far right, to the right of both __n and __r
+                        __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
+                        __i_field_twopf_index_r    = (2*this->N_fields)*__r + __i;
+                        __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
+                        __j_field_twopf_index_r    = (2*this->N_fields)*__r + __j;
+                        __i_dotfield_twopf_index_n = (2*this->N_fields)*__n + (__i + this->N_fields);
+                        __i_dotfield_twopf_index_r = (2*this->N_fields)*__r + (__i + this->N_fields);
+                        break;
+                        
+                      default:
+                        assert(false);
+                    }
+
+                  rval += (1.0/2.0) * __B[__i][__j][__m_species]
+                                    * (  __twopf_re_n[__i_field_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
+                                       + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_field_twopf_index_r]
+                                       - __twopf_im_n[__i_field_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
+                                       - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_field_twopf_index_r]);
+                  
+                  rval += __C[__m_species][__i][__j]
+                                    * (  __twopf_re_n[__i_dotfield_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
+                                       + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_dotfield_twopf_index_r]
+                                       - __twopf_im_n[__i_dotfield_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
+                                       - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_dotfield_twopf_index_r]);
+                }
+            }
+          
+          return(rval);
+        }
+
+
+      template <typename number>
       index_selector<3>* threepf<number>::manufacture_selector()
         {
           return new index_selector<3>(this->N_fields);
@@ -269,9 +448,16 @@ namespace transport
                                                      << " beta = " << obj.kconfig_list[i].beta
                                                      << std::endl << std::endl;
 
-              std::vector< std::vector<number> > data = obj.construct_kconfig_time_history(selector, i);
-
-              writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
+              if(obj.output_dotphi)
+                {
+                  std::vector< std::vector<number> > data = obj.construct_kconfig_dotphi_time_history(selector, i);
+                  writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
+                }
+              else
+                {
+                  std::vector< std::vector<number> > data = obj.construct_kconfig_time_history(selector, i);
+                  writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
+                }
             }
 
           return(out);

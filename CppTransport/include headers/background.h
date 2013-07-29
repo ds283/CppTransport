@@ -15,6 +15,7 @@
 #include "plot_gadget.h"
 #include "messages_en.h"
 
+#define DEFAULT_BACKGROUND_WRAP_WIDTH (135)
 
 namespace transport
   {
@@ -22,8 +23,9 @@ namespace transport
 
       // handle weirdness with friend template functions
       // see http://www.cplusplus.com/forum/general/45776/
-      template <typename number>
-      class background;
+      template <typename number> class background;
+      template <typename number> class twopf;
+      template <typename number> class threepf;
 
       template <typename number>
       std::ostream& operator<<(std::ostream& out, background<number>& obj);
@@ -35,17 +37,28 @@ namespace transport
           public:
             background(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
               const std::vector<double>& sp, const std::vector< std::vector<number> >& s)
-              : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s)
+              : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s),
+                wrap_width(DEFAULT_BACKGROUND_WRAP_WIDTH)
               {}
 
             void                        plot      (plot_gadget<number>*gadget, std::string output, std::string title = "");
 
-            const std::vector<number>&  get_value (unsigned int n);
-
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
 
+            // need to find a better way of solving this problem
+            // this is needed to normalize the comoving ks correctly in each $$__MODEL class
+            const std::vector<number>&  __INTERNAL_ONLY_get_value (unsigned int n);
+
+            unsigned int get_wrap_width();
+            void         set_wrap_width(unsigned int w);
+
+            friend class twopf<number>;
+            friend class threepf<number>;
+
           protected:
+            const std::vector<number>&  get_value (unsigned int n);
+
             unsigned int                             N_fields;          // number of fields
             const std::vector<std::string>           field_names;       // vector of names - includes momenta
             const std::vector<std::string>           latex_names;       // vector of LaTeX names - excludes momenta
@@ -55,6 +68,8 @@ namespace transport
             const std::vector< std::vector<number> > samples;           // list of samples
               // first index: time of observation
               // second index: field label
+
+            unsigned int                             wrap_width;        // position to wrap when output to stream
         };
 
 
@@ -76,13 +91,32 @@ namespace transport
         }
 
       template <typename number>
+      const std::vector<number>& background<number>::__INTERNAL_ONLY_get_value(unsigned int n)
+        {
+          return(this->get_value(n));
+        }
+
+      template <typename number>
       std::ostream& operator<<(std::ostream& out, background<number>& obj)
         {
           transport::asciitable<number> writer(out);
+          writer.set_display_width(obj.get_wrap_width());
 
           writer.write(__CPP_TRANSPORT_EFOLDS, obj.field_names, obj.sample_points, obj.samples);
 
           return(out);
+        }
+
+      template <typename number>
+      void background<number>::set_wrap_width(unsigned int w)
+        {
+          this->wrap_width = (w > 0 ? w : this->wrap_width);
+        }
+
+      template <typename number>
+      unsigned int background<number>::get_wrap_width()
+        {
+          return(this->wrap_width);
         }
 
 

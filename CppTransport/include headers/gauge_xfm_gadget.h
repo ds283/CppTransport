@@ -8,6 +8,7 @@
 #ifndef __CPP_TRANSPORT_GAUGE_XFM_GADGET_H_
 #define __CPP_TRANSPORT_GAUGE_XFM_GADGET_H_
 
+#include <vector>
 
 namespace transport
   {

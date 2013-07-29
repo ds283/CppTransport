@@ -18,21 +18,31 @@
 
 #include "plot_gadget.h"
 
+#define DEFAULT_SCRIPT_OUTPUT (false)
 
 template <typename number>
 class python_plot_gadget : public plot_gadget<number>
   {
     public:
-      python_plot_gadget(std::string i, std::string f = "pdf") : plot_gadget<number>(f), interpreter(i) {}
+      python_plot_gadget(std::string i, std::string f = "pdf")
+        : plot_gadget<number>(f), interpreter(i), script_output(DEFAULT_SCRIPT_OUTPUT) {}
 
       void plot(std::string output, std::string title,
                 const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
                 std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
 
-      bool latex_labels() { return(true); }
+      // we want LaTeX labels to be provided
+      bool latex_labels()             { return(true); }
+
+      // the output can be a python script, if desired, for further editing
+      // if so, set this option to 'true'
+      bool get_script_output()        { return(this->script_output); }
+      void set_script_output(bool s)  { this->script_output = s; }
 
     protected:
       std::string interpreter;
+
+      bool        script_output;
   };
 
 
@@ -42,7 +52,15 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
   const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
   {
     std::string filename = "/tmp";
-    open_tempfile(filename);
+
+    if(script_output)
+      {
+        filename = output + ".py";
+      }
+    else
+      {
+        open_tempfile(filename);
+      }
 
     std::ofstream out;
     out.open(filename.c_str(), std::ios_base::trunc | std::ios_base::out);
@@ -105,8 +123,11 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
 
     out.close();
 
-    system((this->interpreter + " " + filename).c_str());
-    remove(filename.c_str());
+    if(!script_output)
+      {
+        system((this->interpreter + " " + filename).c_str());
+        remove(filename.c_str());
+      }
   }
 
 

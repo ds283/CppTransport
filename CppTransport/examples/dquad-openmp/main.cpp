@@ -11,8 +11,6 @@
 #include <boost/timer/timer.hpp>
 
 #include "dq.h"
-#import "threepf.h"
-#import "twopf.h"
 
 
 // ****************************************************************************
@@ -24,9 +22,9 @@
 
 const double M_Planck = 1.0;
 
-const double M		    = 1E-5 * M_Planck;
-const double m_phi    = 9.0 * M;
-const double m_chi    = 1.0 * M;
+const double mass		  = 1E-5 * M_Planck;
+const double m_phi    = 9.0 * mass;
+const double m_chi    = 1.0 * mass;
 
 const double phi_init = 8.2;
 const double chi_init = 12.9;
@@ -157,7 +155,7 @@ int main(int argc, const char* argv[])
       twopf_re_selector->set_on(index_set_c);
 
       twopf_im_selector->none();
-      twopf_im_selector->set_on(index_set_b);
+//      twopf_im_selector->set_on(index_set_b);
       twopf_im_selector->set_on(index_set_d);
       twopf_im_selector->set_on(index_set_e);
 
@@ -168,9 +166,10 @@ int main(int argc, const char* argv[])
       threepf_selector->set_on(three_set_d);
 
       twopf_re.components_time_history(&plt, output + "/re_k_mode", twopf_re_selector);
-      twopf_im.components_time_history(&plt, output + "/im_k_mode", twopf_im_selector, "pdf", false);
+      twopf_im.components_time_history(&plt, output + "/im_k_mode", twopf_im_selector);
 
       threepf.components_time_history(&plt, output + "/threepf_mode", threepf_selector);
+      threepf.components_dotphi_time_history(&plt, output + "/threepf_dotphi_mode", threepf_selector);
 
       delete twopf_re_selector;
       delete twopf_im_selector;
