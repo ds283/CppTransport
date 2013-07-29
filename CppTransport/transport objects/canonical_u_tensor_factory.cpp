@@ -11,9 +11,11 @@
 // *****************************************************************************
 
 
-#define SPECIES(z)    (z >= this->num_fields ? z - this->num_fields : z)
-#define COORDINATE(z) (z < this->num_fields ? this->field_list[z] : this->deriv_list[z-this->num_fields])
+#define SPECIES(z)     (z >= this->num_fields ? z - this->num_fields : z)
+#define COORDINATE(z)  (z < this->num_fields ? this->field_list[z] : this->deriv_list[z-this->num_fields])
 
+#define IS_FIELD(z)    (z >= 0 && z < this->num_fields)
+#define IS_MOMENTUM(z) (z >= this->num_fields && z < 2*this->num_fields)
 
 std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_sr_u()
   {
@@ -83,35 +85,34 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiN
           {
             GiNaC::ex c = 0;
 
-            if(i < this->num_fields)  // first index is a field
+            if(IS_FIELD(i) && IS_FIELD(j))
               {
-                if(j < this->num_fields)  // second index is a field
-                  {
-                    c = 0;
-                  }
-                else                      // second index is a momentum
-                  {
-                    c = (SPECIES(i) == SPECIES(j) ? 1 : 0);
-                  }
+                c = 0;
               }
-            else                      // first index is a momentum
+            else if(IS_FIELD(i) && IS_MOMENTUM(j))
               {
-                if(j < this->num_fields)  // second index is a field
-                  {
-                    c = (SPECIES(i) == SPECIES(j) ? -(k*k) / (a*a * Hsq) : 0 );
+                c = (SPECIES(i) == SPECIES(j) ? 1 : 0);
+              }
+            else if(IS_MOMENTUM(i) && IS_FIELD(j))
+              {
+                c = (SPECIES(i) == SPECIES(j) ? -(k*k) / (a*a * Hsq) : 0 );
 
-                    GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[SPECIES(i)]), this->field_list[SPECIES(j)]);
-                    GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[SPECIES(i)]);
-                    GiNaC::ex Vb  = GiNaC::diff(this->V, this->field_list[SPECIES(j)]);
+                GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[SPECIES(i)]), this->field_list[SPECIES(j)]);
+                GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[SPECIES(i)]);
+                GiNaC::ex Vb  = GiNaC::diff(this->V, this->field_list[SPECIES(j)]);
 
-                    c -= Vab/Hsq;
-                    c -= (3-eps)*this->deriv_list[SPECIES(i)]*this->deriv_list[SPECIES(j)]/pow(this->M_Planck,2);
-                    c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[SPECIES(i)]*Vb + this->deriv_list[SPECIES(j)]*Va);
-                  }
-                else                      // second index is a momentum
-                  {
-                    c = (SPECIES(i) == SPECIES(j) ? (eps-3) : 0);
-                  }
+                c -= Vab/Hsq;
+                c -= (3-eps)*this->deriv_list[SPECIES(i)]*this->deriv_list[SPECIES(j)]/pow(this->M_Planck,2);
+                c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[SPECIES(i)]*Vb + this->deriv_list[SPECIES(j)]*Va);
+
+              }
+            else if(IS_MOMENTUM(i) && IS_MOMENTUM(j))
+              {
+                c = (SPECIES(i) == SPECIES(j) ? (eps-3) : 0);
+              }
+            else
+              {
+                assert(false);
               }
 
             (rval[i])[j] = c;
@@ -155,55 +156,45 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
               {
                 GiNaC::ex c = 0;
 
-                if(i < this->num_fields)            // first index is a field
+                // note that we flip the sign of momenta attached to the j, k components
+                // compared to the analytic definition of the tensor
+                // this accounts for integrating out the delta-functions when
+                // contracting u3 with something else
+                if(IS_FIELD(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    if(j < this->num_fields)          // second index is a field
-                      {
-                        if(k < this->num_fields)        // and third index is a field
-                          {
-                            c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, +1, +1)/2;
-                          }
-                        else                            // third index is a momentum
-                          {
-                            c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, +1)/2;
-                          }
-                      }
-                    else                              // second index is a momentum
-                      {
-                        if(k < this->num_fields)        // and third index is a field
-                          {
-                            c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, +1)/2;
-                          }
-                        else                            // third index is a momentum
-                          {
-                            c = 0;
-                          }
-                      }
+                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, -1, -1)/2;
                   }
-                else                                // first index is a momentum
+                else if(IS_FIELD(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    if(j < this->num_fields)          // second index is a field
-                      {
-                        if(k < this->num_fields)        // and third index is a field
-                          {
-                            c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, +1)/2;
-                          }
-                        else                            // third index is a momentum
-                          {
-                            c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, +1, -1)/2;
-                          }
-                      }
-                    else                              // second index is a momentum
-                      {
-                        if(k < this->num_fields)        // and third index is a field
-                          {
-                            c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, +1, -1)/2;
-                          }
-                        else                            // third index is a momentum
-                          {
-                            c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
-                          }
-                      }
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, +1, -1)/2;
+                  }
+                else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_FIELD(k))
+                  {
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, +1, -1)/2;
+                  }
+                else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
+                  {
+                    c = 0;
+                  }
+                else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_FIELD(k))
+                  {
+                    c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
+                  }
+                else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_MOMENTUM(k))
+                  {
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, +1)/2;
+                  }
+                else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_FIELD(k))
+                  {
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, +1)/2;
+                  }
+                else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
+                  {
+                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, +1, +1)/2;
+                  }
+                else
+                  {
+                    assert(false);
                   }
 
                 rval[i][j][k] = c;
@@ -502,15 +493,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
     c -=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2
          + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2;
 
-    // sign flips in this expression come from integrating out
-    // B_ijk < Sigma_j m > < Sigma_k m >
-    // which sets k_j + k_m = 0, hence k_j = -k_m, not +k_m
-    // this flips the 2, 3 momenta with respect to the 1 momentum
-    if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * (-1)*k1dotk2 / (k1*k1) /2;
-    if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * (-1)*k1dotk2 / (k2*k2) /2;
+    if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
+    if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
 
-    // this term is unaffected by sign flips, because it involves the jk momenta
-    // which both flip
     c +=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k2dotk3/(k2*k3),2) /2
          + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k1dotk3/(k1*k3),2) /2;
 
@@ -524,23 +509,20 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
     assert(j < this->num_fields);
     assert(k < this->num_fields);
 
-    GiNaC::ex k1dotk2 = k1_sign * k2_sign * (k3 * k3 - k1 * k1 - k2 * k2) / 2;
+    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
 
     GiNaC::ex c = 0;
 
-    if (i == j) c -= this->deriv_list[k] / pow(this->M_Planck, 2) /2;
+    if (i == j) c -= this->deriv_list[k] / (2*pow(this->M_Planck, 2));
 
-    c += this->deriv_list[i] * this->deriv_list[j] * this->deriv_list[k] / (8 * pow(this->M_Planck, 4));
+    c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4));
 
-    // this term in affected by sign flips in the momenta
-    c -= this->deriv_list[i] * this->deriv_list[j] * this->deriv_list[k] / (8 * pow(this->M_Planck, 4)) * pow(k1dotk2 / (k1*k2), 2);
+    c -= this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4)) * pow(k1dotk2 / (k1*k2), 2);
 
-    // sign flips in this expression come from integrating out
-    // C_ijk < Sigma_j m > < Sigma_k m >
-    // which sets k_j + k_m = 0, hence k_j = -k_m, not +k_m
-    // this flips the 2, 3 momenta with respect to the 1 momentum
-    if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * (-1)*k1dotk2 / (k1 * k1) /2;
-    if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * (-1)*k1dotk2 / (k2 * k2) /2;
+    if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * k1dotk3 / (k1*k1) /2;
+    if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * k2dotk3 / (k2*k2) /2;
 
     return (c);
   }
