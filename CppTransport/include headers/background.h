@@ -296,7 +296,7 @@ namespace transport
 
           for(int i = 0; i < this->sample_points.size(); i++)
             {
-              std::vector< std::vector<number> > u3 = this->tensors->u3(this->samples[i], k1, k2, k3, this->sample_points[i]);
+              std::vector< std::vector< std::vector<number> > > u3 = this->tensors->u3(this->samples[i], k1, k2, k3, this->sample_points[i]);
 
               for(int m = 0; m < 2*this->N_fields; m++)
                 {
