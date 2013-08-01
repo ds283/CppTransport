@@ -528,7 +528,7 @@ namespace transport
       template <typename number>
       background<number>& threepf<number>::get_background()
         {
-          return(this->background);
+          return(this->backg);
         }
 
       template <typename number>

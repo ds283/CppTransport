@@ -1022,14 +1022,14 @@ namespace transport
                   auto __prefactor = -(__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
 
                   // these components are dimension 5, so suppress by two powers of Mp
-                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * (-__Ksq*__k2dotk3 / (__Mp*__Mp));
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * (-__Ksq*__k1dotk3 / (__Mp*__Mp));
-                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * (-__Ksq*__k1dotk2 / (__Mp*__Mp));
+                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                   // these components are dimension 2
-                  __tpf += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2/2.0;
-                  __tpf += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3/2.0;
-                  __tpf += (__C_k1[__j][__k][__i] + __C_k2[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3/2.0;
+                  __tpf += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k1[__j][__k][__i] + __C_k2[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
 
                   // these components are dimension 2
                   __tpf += (__B_k1[__j][__k][__i] + __B_k1[__k][__j][__i])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
