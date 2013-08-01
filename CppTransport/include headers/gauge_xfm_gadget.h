@@ -21,6 +21,8 @@ namespace transport
           public:
             gauge_xfm_gadget(number Mp, const std::vector<number>& ps) : M_Planck(Mp), parameters(ps) {}
 
+            virtual gauge_xfm_gadget* clone() = 0;
+
             virtual void compute_gauge_xfm_1(const std::vector<number>& __state,
               std::vector<number>& __dN)                                 = 0;
             virtual void compute_gauge_xfm_2(const std::vector<number>& __state,

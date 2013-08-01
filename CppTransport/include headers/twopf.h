@@ -57,6 +57,7 @@ namespace transport
                 gauge_xfm(gx),
                 wrap_width(DEFAULT_TWOPF_WRAP_WIDTH)
               {}
+            ~twopf() { /*delete this->gauge_xfm;*/ }
 
             background<number>& get_background();
 

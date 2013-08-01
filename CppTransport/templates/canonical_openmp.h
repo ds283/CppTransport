@@ -44,6 +44,8 @@ namespace transport
           public:
             $$__MODEL_gauge_xfm_gadget(number Mp, const std::vector<number>& ps) : gauge_xfm_gadget<number>(Mp, ps) {}
 
+            $$__MODEL_gauge_xfm_gadget* clone() { return(new $$__MODEL_gauge_xfm_gadget(this->M_Planck, this->parameters)); }
+
             void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
             void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
         };
@@ -55,6 +57,8 @@ namespace transport
         {
           public:
             $$__MODEL_tensor_gadget(number Mp, const std::vector<number>& ps) : tensor_gadget<number>(Mp, ps) {}
+
+            $$__MODEL_tensor_gadget* clone() { return(new $$__MODEL_tensor_gadget(this->M_Planck, this->parameters)); }
 
             std::vector< std::vector<number> >
               u2(const std::vector<number>& __fields, double __k, double __N);
