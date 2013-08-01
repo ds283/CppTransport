@@ -20,6 +20,41 @@
 
 #define DEFAULT_SCRIPT_OUTPUT (false)
 
+
+template <typename number>
+bool check_log_scale(const std::vector<number>& x, bool strict)
+  {
+    bool ok = false;
+
+    if(strict)
+      {
+        ok = true;
+        for(int i = 0; i < x.size(); i++)
+          {
+            if(x[i] <= 0.0)
+              {
+                ok = false;   // require all values to be > 0
+                break;
+              }
+          }
+      }
+    else
+      {
+        ok = false;
+        for(int i = 0; i < x.size(); i++)
+          {
+            if(x[i] > 0.0)
+              {
+                ok = true;  // require at least one nonzero value
+                break;
+              }
+          }
+      }
+
+    return(ok);
+  }
+
+
 template <typename number>
 class python_plot_gadget : public plot_gadget<number>
   {
@@ -51,82 +86,123 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
   const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
   const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
   {
-    std::string filename = "/tmp";
-
-    if(script_output)
+    bool ok = true;
+    if(logx)
       {
-        filename = output + ".py";
-      }
-    else
-      {
-        open_tempfile(filename);
-      }
-
-    std::ofstream out;
-    out.open(filename.c_str(), std::ios_base::trunc | std::ios_base::out);
-	 
-	 // x and ys should be the same
-	 assert(x.size() == ys.size());
-	 
-    out << "import matplotlib.pyplot as plt" << std::endl;
-    out << "plt.figure()" << std::endl;
-
-    if(logx) out << "plt.xscale('log')" << std::endl;
-    if(logy) out << "plt.yscale('log')" << std::endl;
-
-    out << "x = [ ";
-    for(int i = 0; i < x.size(); i++)
-      {
-        out << (i > 0 ? ", " : "") << x[i];
-      }
-    out << " ]" << std::endl;
-	 
-	 // there should be labels.size() lines stored in ys
-    for(int i = 0; i < labels.size(); i++)
-      {
-        out << "y" << i << " = [ ";
-
-        for(int j = 0; j < ys.size(); j++)
+        if((ok = check_log_scale(x, true)) == false)
           {
-            assert(ys[j].size() == labels.size());
+            std::cout << __CPP_TRANSPORT_LOGX_ERROR_A << " '" << title << "' (" << output << "); "
+                      << __CPP_TRANSPORT_LOGX_ERROR_B << std::endl;
+          }
+      }
 
-            out << (j > 0 ? ", " : "") << (logy ? fabs(ys[j][i]) : ys[j][i]);
+    if(ok)
+      {
+        std::string filename = "/tmp";
+
+        if(script_output)
+          {
+            filename = output + ".py";
+          }
+        else
+          {
+            open_tempfile(filename);
+          }
+
+        std::ofstream out;
+        out.open(filename.c_str(), std::ios_base::trunc | std::ios_base::out);
+
+        // x and ys should be the same
+        assert(x.size() == ys.size());
+
+        out << "import matplotlib.pyplot as plt" << std::endl;
+        out << "plt.figure()" << std::endl;
+
+        if(logx) out << "plt.xscale('log')" << std::endl;
+        if(logy) out << "plt.yscale('log')" << std::endl;
+
+        out << "x = [ ";
+        for(int i = 0; i < x.size(); i++)
+          {
+            out << (i > 0 ? ", " : "") << x[i];
           }
         out << " ]" << std::endl;
 
-        out << "plt.errorbar(x, y" << i
-            << ", label=r'" << labels[i] << "')" << std::endl;
-      }
+        std::vector<bool> plotted(labels.size());
 
-    out << "ax = plt.gca()" << std::endl;
-    out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
+        // there should be labels.size() lines stored in ys
+        for(int i = 0; i < labels.size(); i++)
+          {
+            bool line_ok = true;
+            std::vector<number> y_line(ys.size());
 
-    out << "y_labels = [ ";
-    for(int i = 0; i < labels.size(); i++)
-      {
-        out << (i > 0 ? ", " : "") << "r'" << labels[i] << "'";
-      }
-    out << " ]" << std::endl;
+            for(int j = 0; j < ys.size(); j++)
+              {
+                y_line[j] = (logy ? fabs(ys[j][i]) : ys[j][i]);
+              }
 
-    out << "plt.legend(handles, y_labels, frameon=False)" << std::endl;
+            if(logy)
+              {
+                if((line_ok = check_log_scale(y_line, false)) == false)
+                  {
+                    std::cout << __CPP_TRANSPORT_LOGY_ERROR_A << " '" << labels[i] << "' (" << output << "); "
+                              << __CPP_TRANSPORT_LOGY_ERROR_B << std::endl;
+                  }
+              }
 
-    out << "plt.xlabel(r'"  << xlabel << "')" << std::endl;
-    out << "plt.ylabel(r'"  << ylabel << "')" << std::endl;
-    out << "plt.title(r'"   << title  << "')" << std::endl;
-    out << "plt.savefig('"  << output;
-    if(this->format != "")
-      {
-        out << "." << this->format;
-      }
-    out << "')" << std::endl;
-    out << "plt.close()"    << std::endl;
+            if(line_ok)
+              {
+                out << "y" << i << " = [ ";
 
-    out.close();
+                for(int j = 0; j < ys.size(); j++)
+                  {
+                    assert(ys[j].size() == labels.size());
 
-    if(!script_output)
-      {
-        system((this->interpreter + " " + filename).c_str());
-        remove(filename.c_str());
+                    out << (j > 0 ? ", " : "") << y_line[j];
+                  }
+                out << " ]" << std::endl;
+
+                out << "plt.errorbar(x, y" << i
+                  << ", label=r'" << labels[i] << "')" << std::endl;
+
+                plotted[i] = true;
+              }
+            else
+              {
+                plotted[i] = false;
+              }
+          }
+
+        out << "ax = plt.gca()" << std::endl;
+        out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
+
+        out << "y_labels = [ ";
+        for(int i = 0; i < labels.size(); i++)
+          {
+            if(plotted[i]) out << (i > 0 ? ", " : "") << "r'" << labels[i] << "'";
+          }
+        out << " ]" << std::endl;
+
+        out << "plt.legend(handles, y_labels, frameon=False)" << std::endl;
+
+        out << "plt.xlabel(r'"  << xlabel << "')" << std::endl;
+        out << "plt.ylabel(r'"  << ylabel << "')" << std::endl;
+        out << "plt.title(r'"   << title  << "')" << std::endl;
+        out << "plt.savefig('"  << output;
+        if(this->format != "")
+          {
+            out << "." << this->format;
+          }
+        out << "')" << std::endl;
+        out << "plt.close()"    << std::endl;
+
+        out.close();
+
+        if(!script_output)
+          {
+            system((this->interpreter + " " + filename).c_str());
+            remove(filename.c_str());
+          }
       }
   }
 
