@@ -937,12 +937,11 @@ namespace transport
 
               case 2:   // field-field-momentum correlation function
                 {
-                  auto __momentum_k   = (IS_MOMENTUM(__i) ? __kmode_1 : 0.0)           + (IS_MOMENTUM(__j) ? __kmode_2 : 0.0)           + (IS_MOMENTUM(__k) ? __kmode_3 : 0.0);
-                  auto __sum_field_ks = (IS_MOMENTUM(__i) ? __kmode_2+__kmode_3 : 0.0) + (IS_MOMENTUM(__j) ? __kmode_1+__kmode_3 : 0.0) + (IS_MOMENTUM(__k) ? __kmode_1+__kmode_2 : 0.0);
-                  
+                  auto __momentum_k = (IS_MOMENTUM(__i) ? __kmode_1 : 0.0) + (IS_MOMENTUM(__j) ? __kmode_2 : 0.0) + (IS_MOMENTUM(__k) ? __kmode_3 : 0.0);
+
                   // note the leading + sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
                   // this prefactor has dimension 2
-                  auto __prefactor_1 = __momentum_k*__momentum_k*(__sum_field_ks) / (__kt * __ainit*__ainit*__ainit*__ainit);
+                  auto __prefactor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k) / (__kt * __ainit*__ainit*__ainit*__ainit);
                   
                   // these components are dimension 6, so suppress by two powers of Mp
                   auto __tpf_1  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
@@ -1201,9 +1200,18 @@ namespace transport
           const auto __u2_k3_$$__A_$$__B = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
           // set up components of the u3 tensor
-          const auto __u3_k1k2k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-          const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-          const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+          const auto __u3_k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+          const auto __u3_k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+          const auto __u3_k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+
+          const auto __u3_k1s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k1, __k3, __k2, __a, __Hsq, __eps};
+          const auto __u3_k2s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k2, __k3, __k1, __a, __Hsq, __eps};
+          const auto __u3_k3s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k3, __k2, __k1, __a, __Hsq, __eps};
+
+          // check that the u3 tensor is sufficiently symmetric
+          assert(fabs(__u3_k1_$$__A_$$__B_$$__C - __u3_k1s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
+          assert(fabs(__u3_k2_$$__A_$$__B_$$__C - __u3_k2s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
+          assert(fabs(__u3_k3_$$__A_$$__B_$$__C - __u3_k3s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
 
           // evolve the real and imaginary components of the 2pf
           // for the imaginary parts, index placement does matter
@@ -1227,16 +1235,16 @@ namespace transport
 
           // evolve the components of the 3pf
           __dthreepf($$__A, $$__B, $$__C) = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C
           
           __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C
           
           __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N
-          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N
+          __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N
         }
 
 
