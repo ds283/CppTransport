@@ -53,9 +53,9 @@ int main(int argc, const char* argv[])
     std::string output(argv[1]);
     std::string python(argv[2]);
 
-    python_plot_gadget<double> plt(python);
+    python_plot_gadget<double>     py_plt(python);
+    asciitable_plot_gadget<double> text_plt;
 //    gnuplot_plot_gadget<double> plt;
-//    asciitable_plot_gadget<double> plt;
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -68,21 +68,6 @@ int main(int argc, const char* argv[])
         times.push_back(tmin + ((tmax-tmin)/tN)*i);
       }
 
-    std::cout << "Integrating background" << std::endl;
-    {
-      boost::timer::auto_cpu_timer timer;
-
-      // integrate background
-      transport::background<double> backg = model.background(init_values, times);
-
-      timer.stop();
-      timer.report();
-//    std::cout << backg;
-
-      backg.plot(&plt, output + "/background", "Double-quadratic inflation");
-    }
-
-    // integrate two-point function
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
     const double       kmax = exp(2.0);   // end with the mode which exited the horizon 2 e-folds later
     const unsigned int kN   = 1;          // number of k-points
@@ -91,91 +76,100 @@ int main(int argc, const char* argv[])
       {
         ks.push_back(kmin * pow(kmax/kmin, ((double)i/(double)kN)));
       }
-		
-	  std::cout << std::endl;
-    std::cout << "Integrating two-point function" << std::endl;
-    {
-      boost::timer::auto_cpu_timer timer;
 
-      transport::twopf<double> tpf = model.twopf(ks, 7.0, init_values, times);
+    boost::timer::auto_cpu_timer timer;
 
-      timer.stop();
-      timer.report();
-//      std::cout << tpf;
+    // integrate background, 2pf and 3pf together
+    transport::threepf<double> threepf = model.threepf(ks, 7.0, init_values, times);
 
-      std::array<unsigned int, 2> index_set_a = { 0, 0 };
-      std::array<unsigned int, 2> index_set_b = { 0, 1 };
-      std::array<unsigned int, 2> index_set_c = { 1, 1 };
-
-      transport::index_selector<2>* selector = tpf.manufacture_selector();
-      selector->none();
-      selector->set_on(index_set_a);
-      selector->set_on(index_set_b);
-      selector->set_on(index_set_c);
-
-      tpf.components_time_history(&plt, output + "/k_mode", selector);
-      tpf.zeta_time_history(&plt, output + "/zeta_k_mode");
-
-      delete selector;
-    }
-    
-    std::cout << std::endl;
-    std::cout << "Integrating three-point function" << std::endl;
-    {
-      boost::timer::auto_cpu_timer timer;
-
-      transport::threepf<double> threepf = model.threepf(ks, 7.0, init_values, times);
-
-      timer.stop();
-      timer.report();
+    timer.stop();
+    timer.report();
 //      std::cout << threepf;
 
-      transport::twopf<double> twopf_re  = threepf.get_real_twopf();
-      transport::twopf<double> twopf_im  = threepf.get_imag_twopf();
+    transport::background<double> backg = threepf.get_background();
 
-      std::array<unsigned int, 2> index_set_a = { 0, 0 };
-      std::array<unsigned int, 2> index_set_b = { 0, 1 };
-      std::array<unsigned int, 2> index_set_c = { 1, 1 };
+    transport::twopf<double> twopf_re   = threepf.get_real_twopf();
+    transport::twopf<double> twopf_im   = threepf.get_imag_twopf();
 
-      std::array<unsigned int, 2> index_set_d = { 2, 0 };
-      std::array<unsigned int, 2> index_set_e = { 3, 1 };
+    std::array<unsigned int, 2> index_set_a = { 0, 0 };
+    std::array<unsigned int, 2> index_set_b = { 0, 1 };
+    std::array<unsigned int, 2> index_set_c = { 1, 1 };
 
-      std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
-      std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
-      std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
-      std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
+    std::array<unsigned int, 2> index_set_d = { 2, 0 };
+    std::array<unsigned int, 2> index_set_e = { 2, 1 };
+    std::array<unsigned int, 2> index_set_f = { 3, 0 };
+    std::array<unsigned int, 2> index_set_g = { 3, 1 };
 
-      transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
-      transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
-      transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
+    std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
+    std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
+    std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
+    std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
+    std::array<unsigned int, 3> three_set_e = { 0, 2, 0 };
+    std::array<unsigned int, 3> three_set_f = { 0, 2, 1 };
+    std::array<unsigned int, 3> three_set_g = { 0, 3, 0 };
+    std::array<unsigned int, 3> three_set_h = { 0, 3, 1 };
+    std::array<unsigned int, 3> three_set_i = { 1, 2, 0 };
+    std::array<unsigned int, 3> three_set_j = { 1, 2, 1 };
+    std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
+    std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
 
-      twopf_re_selector->none();
-      twopf_re_selector->set_on(index_set_a);
-      twopf_re_selector->set_on(index_set_b);
-      twopf_re_selector->set_on(index_set_c);
+    transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
+    transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
+    transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
+    transport::index_selector<2>* u2_selector       = backg.manufacture_2_selector();
+    transport::index_selector<3>* u3_selector       = backg.manufacture_3_selector();
 
-      twopf_im_selector->none();
-//      twopf_im_selector->set_on(index_set_b);
-      twopf_im_selector->set_on(index_set_d);
-      twopf_im_selector->set_on(index_set_e);
+    twopf_re_selector->none();
+    twopf_re_selector->set_on(index_set_a);
+    twopf_re_selector->set_on(index_set_b);
+    twopf_re_selector->set_on(index_set_c);
 
-      threepf_selector->none();
-      threepf_selector->set_on(three_set_a);
-      threepf_selector->set_on(three_set_b);
-      threepf_selector->set_on(three_set_c);
-      threepf_selector->set_on(three_set_d);
+    twopf_im_selector->none();
+    twopf_im_selector->set_on(index_set_d);
+    twopf_im_selector->set_on(index_set_e);
+    twopf_im_selector->set_on(index_set_f);
+    twopf_im_selector->set_on(index_set_g);
 
-      twopf_re.components_time_history(&plt, output + "/re_k_mode", twopf_re_selector);
-      twopf_im.components_time_history(&plt, output + "/im_k_mode", twopf_im_selector);
+    threepf_selector->none();
+    threepf_selector->set_on(three_set_a);
+    threepf_selector->set_on(three_set_b);
+    threepf_selector->set_on(three_set_c);
+    threepf_selector->set_on(three_set_d);
 
-      threepf.components_time_history(&plt, output + "/threepf_mode", threepf_selector);
-      threepf.components_dotphi_time_history(&plt, output + "/threepf_dotphi_mode", threepf_selector);
-      threepf.zeta_time_history(&plt, output + "/zeta_threepf_mode");
+    u2_selector->none();
+    u2_selector->set_on(index_set_d);
+    u2_selector->set_on(index_set_e);
+    u2_selector->set_on(index_set_f);
+    u2_selector->set_on(index_set_g);
 
-      delete twopf_re_selector;
-      delete twopf_im_selector;
-      delete threepf_selector;
-    }
+    u3_selector->none();
+    u3_selector->set_on(three_set_e);
+    u3_selector->set_on(three_set_f);
+    u3_selector->set_on(three_set_g);
+    u3_selector->set_on(three_set_h);
+    u3_selector->set_on(three_set_i);
+    u3_selector->set_on(three_set_j);
+    u3_selector->set_on(three_set_k);
+    u3_selector->set_on(three_set_l);
+
+    backg.plot(&py_plt, output + "/background");
+
+    twopf_re.components_time_history(&py_plt, output + "/re_k_mode", twopf_re_selector);
+    twopf_im.components_time_history(&py_plt, output + "/im_k_mode", twopf_im_selector);
+
+    backg.plot_u2(&py_plt, 0.3, output + "/u2_fields_k=pt3", u2_selector);
+    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
+
+    u3_selector->all();
+    backg.plot_u3(&text_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
+
+    threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
+    threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
+    threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
+
+    delete twopf_re_selector;
+    delete twopf_im_selector;
+    delete threepf_selector;
 
     return(EXIT_SUCCESS);
   }
