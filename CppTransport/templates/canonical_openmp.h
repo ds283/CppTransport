@@ -1389,11 +1389,11 @@ namespace transport
           const auto __eps                  = $$__EPSILON;
           const auto __a                    = exp(__N);
 
-          std::vector< std::vector<number> > __u2($$__NUMBER_FIELDS);
+          std::vector< std::vector<number> > __u2(2*$$__NUMBER_FIELDS);
 
-          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+          for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
             {
-              __u2[__i].resize($$__NUMBER_FIELDS);
+              __u2[__i].resize(2*$$__NUMBER_FIELDS);
             }
 
           __u2[$$__a][$$__b] = $$__U2_PREDEF[ab]{__k, __a, __Hsq, __eps};
@@ -1414,14 +1414,14 @@ namespace transport
           const auto __eps                  = $$__EPSILON;
           const auto __a                    = exp(__N);
 
-          std::vector< std::vector< std::vector<number> > > __u3($$__NUMBER_FIELDS);
+          std::vector< std::vector< std::vector<number> > > __u3(2*$$__NUMBER_FIELDS);
 
-          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+          for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
             {
-              __u3[__i].resize($$__NUMBER_FIELDS);
-              for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+              __u3[__i].resize(2*$$__NUMBER_FIELDS);
+              for(int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
                 {
-                  __u3[__i][__j].resize($$__NUMBER_FIELDS);
+                  __u3[__i][__j].resize(2*$$__NUMBER_FIELDS);
                 }
             }
 
