@@ -21,6 +21,11 @@ namespace transport
           public:
             tensor_gadget(number Mp, const std::vector<number>& ps) : M_Planck(Mp), parameters(ps) {}
 
+            virtual std::vector< std::vector<number> >
+              u2(const std::vector<number>& __fields, double __k, double __N) = 0;
+            virtual std::vector< std::vector< std::vector<number> > >
+              u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N) = 0;
+
             virtual std::vector< std::vector< std::vector<number> > >
               A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N) = 0;
             virtual std::vector< std::vector< std::vector<number> > >

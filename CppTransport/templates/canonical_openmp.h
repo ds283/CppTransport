@@ -56,12 +56,17 @@ namespace transport
           public:
             $$__MODEL_tensor_gadget(number Mp, const std::vector<number>& ps) : tensor_gadget<number>(Mp, ps) {}
 
-          std::vector< std::vector< std::vector<number> > >
-            A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-          std::vector< std::vector< std::vector<number> > >
-            B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-          std::vector< std::vector< std::vector<number> > >
-            C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+            std::vector< std::vector<number> >
+              u2(const std::vector<number>& __fields, double __k, double __N);
+            std::vector< std::vector< std::vector<number> > >
+              u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+
+            std::vector< std::vector< std::vector<number> > >
+              A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+            std::vector< std::vector< std::vector<number> > >
+              B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
+            std::vector< std::vector< std::vector<number> > >
+              C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
         };
 
 
@@ -1362,6 +1367,60 @@ namespace transport
 
 
       // IMPLEMENTATION - TENSOR CALCULATION GADGET
+
+
+      template <typename number>
+      std::vector< std::vector<number> > $$__MODEL_tensor_gadget<number>::u2(const std::vector<number>& __fields,
+        double __k, double __N)
+        {
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
+
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __a                    = exp(__N);
+
+          std::vector< std::vector<number> > __u2($$__NUMBER_FIELDS);
+
+          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+            {
+              __u2[__i].resize($$__NUMBER_FIELDS);
+            }
+
+          __u2[$$__a][$$__b] = $$__U2_PREDEF[ab]{__k, __a, __Hsq, __eps};
+
+          return(__u2);
+        }
+
+
+      template <typename number>
+      std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::u3(const std::vector<number>& __fields,
+        double __km, double __kn, double __kr, double __N)
+        {
+          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+          const auto $$__COORDINATE[A]      = __fields[$$__A];
+          const auto __Mp                   = this->M_Planck;
+
+          const auto __Hsq                  = $$__HUBBLE_SQ;
+          const auto __eps                  = $$__EPSILON;
+          const auto __a                    = exp(__N);
+
+          std::vector< std::vector< std::vector<number> > > __u3($$__NUMBER_FIELDS);
+
+          for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
+            {
+              __u3[__i].resize($$__NUMBER_FIELDS);
+              for(int __j = 0; __j < $$__NUMBER_FIELDS; __j++)
+                {
+                  __u3[__i][__j].resize($$__NUMBER_FIELDS);
+                }
+            }
+
+          __u3[$$__a][$$__b][$$__c] = $$__U3_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+
+          return(__u3);
+        }
 
 
       template <typename number>
