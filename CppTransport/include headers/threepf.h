@@ -67,9 +67,9 @@ namespace transport
               gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(N_f, f_names, l_names, sp, b),
-                twopf_re(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_re, gx->clone()),
-                twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx->clone()),
+                backg(N_f, f_names, l_names, sp, b, t->clone()),
+                twopf_re(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_re, gx->clone(), t->clone()),
+                twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx->clone(), t->clone()),
                 samples(thpf), kconfig_list(kl),
                 gauge_xfm(gx), tensors(t),
                 wrap_width(DEFAULT_THREEPF_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI)

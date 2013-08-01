@@ -321,8 +321,10 @@ namespace transport
 
           integrate_times( $$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
+          transport::$$__MODEL_tensor_gadget<number>* tensor = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
+
           transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names,
-            $$__MODEL_latex_names, slices, history);
+            $$__MODEL_latex_names, slices, history, tensor);
 
           return(backg);
         }
@@ -382,8 +384,10 @@ namespace transport
             }
 
           transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
+          transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
+
           transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-            slices, background_history, twopf_history, gauge_xfm);
+            slices, background_history, twopf_history, gauge_xfm, tensor);
 
           return(tpf);
         }

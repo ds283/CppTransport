@@ -50,14 +50,14 @@ namespace transport
               const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf,
-              gauge_xfm_gadget<number>* gx)
+              gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
               : N_fields(N_f), field_names(f_names), latex_names(l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(N_f, f_names, l_names, sp, b), samples(twopf),
-                gauge_xfm(gx),
+                backg(N_f, f_names, l_names, sp, b, t->clone()), samples(twopf),
+                gauge_xfm(gx), tensors(t),
                 wrap_width(DEFAULT_TWOPF_WRAP_WIDTH)
               {}
-            ~twopf() { /*delete this->gauge_xfm;*/ }
+            ~twopf() { /*delete this->gauge_xfm; delete this->tensors*/ }
 
             background<number>& get_background();
 
@@ -90,6 +90,8 @@ namespace transport
             const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
 
             gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
+
+            tensor_gadget<number>*                                  tensors;           // tensor calculation gadget
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
