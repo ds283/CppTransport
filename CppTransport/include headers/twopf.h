@@ -17,6 +17,7 @@
 #include <math.h>
 
 #include "asciitable.h"
+#include "latex_output.h"
 #include "messages_en.h"
 
 #include "plot_gadget.h"
@@ -24,11 +25,24 @@
 
 
 #define TWOPF_SYMBOL               "\\Sigma"
+#define TWOPF_NAME                 "Sigma"
 #define ZETA_SYMBOL                "\\zeta"
+#define ZETA_NAME                  "zeta"
 #define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
+#define DIMENSIONLESS_TWOPF_NAME   "P"
 #define PRIME_SYMBOL               "\\prime"
+#define PRIME_NAME                 "'"
+#define K_SYMBOL                   "k"
+#define K_NAME                     "k"
+
+#define N_LABEL_LATEX              "$N$"
+#define N_LABEL                    "N"
+#define TWOPF_LABEL                "two-point function"
+
+#define PICK_N_LABEL               (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
 
 #define DEFAULT_TWOPF_WRAP_WIDTH   (135)
+#define DEFAULT_TWOPF_PRECISION    (3)
 
 namespace transport
   {
@@ -79,6 +93,10 @@ namespace transport
           protected:
             // make a list of labels for the chosen index selection
             std::vector< std::string>          make_labels(index_selector<2>* selector, bool latex);
+            std::string                        make_zeta_label(bool dimensionless, bool latex);
+
+            std::string                        make_twopf_title(double k, bool latex);
+
             // return a time history for a given set of components and a fixed k-number
             std::vector< std::vector<number> > construct_kmode_time_history(index_selector<2>* selector, unsigned int i);
           
@@ -127,47 +145,96 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
-              std::ostringstream title;
-              title << "$k = " << this->sample_ks[i] << "$";
-
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
+              gadget->plot(fnam.str(), this->make_twopf_title(this->sample_ks[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
             }
         }
 
 
       template <typename number>
       std::vector< std::string > twopf<number>::make_labels(index_selector<2>* selector, bool latex)
-      {
-        std::vector< std::string > labels;
+        {
+          std::vector< std::string > labels;
 
-        for(int m = 0; m < 2*this->N_fields; m++)
-          {
-            for(int n = 0; n < 2*this->N_fields; n++)
-              {
-                std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
-                if(selector->is_on(index_set))
-                  {
-                    std::ostringstream label;
+          for(int m = 0; m < 2*this->N_fields; m++)
+            {
+              for(int n = 0; n < 2*this->N_fields; n++)
+                {
+                  std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
+                  if(selector->is_on(index_set))
+                    {
+                      std::ostringstream label;
 
-                    if(latex)
-                      {
-                        label << "$" << TWOPF_SYMBOL << "_{"
-                              << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                              << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                      }
-                    else
-                      {
-                        label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                              << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "");
-                      }
-                    labels.push_back(label.str());
-                  }
-              }
-          }
+                      if(latex)
+                        {
+                          label << "$" << TWOPF_SYMBOL << "_{"
+                                << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                        }
+                      else
+                        {
+                          label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_NAME : "") << ", "
+                                << this->field_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_NAME : "");
+                        }
+                      labels.push_back(label.str());
+                    }
+                }
+            }
 
           return(labels);
-      }
+        }
+
+
+      template <typename number>
+      std::string twopf<number>::make_zeta_label(bool dimensionless, bool latex)
+        {
+          std::ostringstream label;
+
+          if(latex)
+            {
+              if(dimensionless)
+                {
+                  label << "$" << DIMENSIONLESS_TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << "}$";
+                }
+              else
+                {
+                  label << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+                }
+            }
+          else
+            {
+              if(dimensionless)
+                {
+                  label << DIMENSIONLESS_TWOPF_NAME << "(" << ZETA_NAME << ")";
+                }
+              else
+                {
+                  label << TWOPF_NAME << "(" << ZETA_NAME << ")";
+                }
+            }
+
+          return(label.str());
+        }
+
+
+      template <typename number>
+      std::string twopf<number>::make_twopf_title(double k, bool latex)
+        {
+          std::ostringstream title;
+
+          if(latex)
+            {
+              title << "$" << K_SYMBOL << " = " << output_latex_number(k, DEFAULT_TWOPF_PRECISION) << "$";
+            }
+          else
+            {
+              title << std::setprecision(DEFAULT_TWOPF_PRECISION);
+              title << K_NAME << " = " << k;
+            }
+
+          return(title.str());
+        }
 
 
       // for a specific k-mode, return the time history of a set of components
@@ -236,23 +303,12 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
-              std::ostringstream title;
-              title << "$k = " << this->sample_ks[i] << "$";
-
               std::vector<std::string> labels(1);
-              std::ostringstream l;
-              if(dimensionless)
-                {
-                  l << "$" << DIMENSIONLESS_TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << "}$";
-                }
-              else
-                {
-                  l << "$" << TWOPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
-                }
-              labels[0] = l.str();
+              labels[0] = this->make_zeta_label(dimensionless, gadget->latex_labels());
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "two-point function", false, logy);
+              gadget->plot(fnam.str(), this->make_twopf_title(this->sample_ks[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
             }
         }
 

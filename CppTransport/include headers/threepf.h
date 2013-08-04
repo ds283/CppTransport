@@ -16,6 +16,8 @@
 #include <assert.h>
 #include <math.h>
 
+#include "latex_output.h"
+
 #include "asciitable.h"
 #include "messages_en.h"
 
@@ -23,15 +25,29 @@
 #include "gauge_xfm_gadget.h"
 
 #define THREEPF_SYMBOL             "\\alpha"
+#define THREEPF_NAME               "3pf"
 #define ZETA_SYMBOL                "\\zeta"
+#define ZETA_NAME                  "zeta"
 #define PRIME_SYMBOL               "\\prime"
+#define PRIME_NAME                 "'"
 
 #define KT_SYMBOL                  "k_t"
+#define KT_NAME                    "kt"
 #define FLS_ALPHA_SYMBOL           "\\alpha"
+#define FLS_ALPHA_NAME             "alpha"
 #define FLS_BETA_SYMBOL            "\\beta"
+#define FLS_BETA_NAME              "beta"
+
+#define N_LABEL_LATEX              "$N$"
+#define N_LABEL                    "N"
+#define THREEPF_LABEL              "three-point function"
+
+#define PICK_N_LABEL               (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
 
 #define DEFAULT_THREEPF_WRAP_WIDTH (135)
 #define DEFAULT_OUTPUT_DOTPHI      (true)
+
+#define DEFAULT_THREEPF_PRECISION  (3)
 
 namespace transport
   {
@@ -100,7 +116,11 @@ namespace transport
           protected:
 
             // make a list of labels for the chosen index selection
-            std::vector< std::string>          make_labels(index_selector<3>* selector, bool latex);
+            std::vector<std::string>           make_labels(index_selector<3>* selector, bool latex);
+            std::string                        make_zeta_label(bool latex);
+
+            std::string                        make_threepf_title(const struct threepf_kconfig& config, bool latex);
+
 
             // return a time history for a given set of components and a fixed k-configuration
             std::vector< std::vector<number> > construct_kconfig_time_history(index_selector<3>* selector, unsigned int i);
@@ -159,13 +179,9 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
-              std::ostringstream title;
-              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
-                    << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
-                    << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
-
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
+              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
             }
         }
 
@@ -184,13 +200,9 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
-              std::ostringstream title;
-              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
-                << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
-                << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
-
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
+              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
             }
         }
 
@@ -287,60 +299,96 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
-              std::ostringstream title;
-              title << "$" << KT_SYMBOL        << " = " << this->kconfig_list[i].k_t   << "$, "
-                << "$" << FLS_ALPHA_SYMBOL << " = " << this->kconfig_list[i].alpha << "$, "
-                << "$" << FLS_BETA_SYMBOL  << " = " << this->kconfig_list[i].beta  << "$";
-
               std::vector<std::string> labels(1);
               std::ostringstream l;
 
-              l << "$" << THREEPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
-              labels[0] = l.str();
+              labels[0] = this->make_zeta_label(gadget->latex_labels());
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), title.str(), this->sample_points, data, labels, "$N$", "three-point function", false, logy);
+              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
             }
         }
 
 
       template <typename number>
       std::vector< std::string > threepf<number>::make_labels(index_selector<3>* selector, bool latex)
-      {
-        std::vector< std::string > labels;
+        {
+          std::vector< std::string > labels;
 
-        for(int m = 0; m < 2*this->N_fields; m++)
-          {
-            for(int n = 0; n < 2*this->N_fields; n++)
-              {
-                for(int r = 0; r < 2*this->N_fields; r++)
-                  {
-                    std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
-                    if(selector->is_on(index_set))
-                      {
-                        std::ostringstream label;
+          for(int m = 0; m < 2*this->N_fields; m++)
+            {
+              for(int n = 0; n < 2*this->N_fields; n++)
+                {
+                  for(int r = 0; r < 2*this->N_fields; r++)
+                    {
+                      std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
+                      if(selector->is_on(index_set))
+                        {
+                          std::ostringstream label;
 
-                        if(latex)
-                          {
-                            label << "$" << THREEPF_SYMBOL << "_{"
-                                  << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                  << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                  << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                          }
-                        else
-                          {
-                            label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                                  << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "") << ", "
-                                  << this->field_names[r % this->N_fields] << (r >= this->N_fields ? "'" : "");
-                          }
-                        labels.push_back(label.str());
-                      }
-                  }
-              }
-          }
+                          if(latex)
+                            {
+                              label << "$" << THREEPF_SYMBOL << "_{"
+                                    << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                    << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                    << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                            }
+                          else
+                            {
+                              label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_NAME : "") << ", "
+                                    << this->field_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_NAME : "") << ", "
+                                    << this->field_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_NAME : "");
+                            }
+                          labels.push_back(label.str());
+                        }
+                    }
+                }
+            }
 
-        return(labels);
-      }
+          return(labels);
+        }
+
+
+      template <typename number>
+      std::string threepf<number>::make_zeta_label(bool latex)
+        {
+          std::ostringstream label;
+
+          if(latex)
+            {
+              label << "$" << THREEPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+            }
+          else
+            {
+              label << THREEPF_NAME << "(" << ZETA_NAME << ", " << ZETA_NAME << ", " << ZETA_NAME << ")";
+            }
+
+          return(label.str());
+        }
+
+
+      template <typename number>
+      std::string threepf<number>::make_threepf_title(const struct threepf_kconfig& config, bool latex)
+        {
+          std::ostringstream title;
+
+          if(latex)
+            {
+              title << "$" << KT_SYMBOL        << " = " << output_latex_number(config.k_t, DEFAULT_THREEPF_PRECISION)   << "$, "
+                    << "$" << FLS_ALPHA_SYMBOL << " = " << output_latex_number(config.alpha, DEFAULT_THREEPF_PRECISION) << "$, "
+                    << "$" << FLS_BETA_SYMBOL  << " = " << output_latex_number(config.beta, DEFAULT_THREEPF_PRECISION)  << "$";
+            }
+          else
+            {
+              title << std::setprecision(DEFAULT_THREEPF_PRECISION);
+              title << KT_NAME        << " = " << config.k_t   << ", "
+                    << FLS_ALPHA_NAME << " = " << config.alpha << ", "
+                    << FLS_BETA_NAME  << " = " << config.beta;
+            }
+
+          return(title.str());
+        }
 
 
       // for a specific k-configuration, return the time history of a set of components

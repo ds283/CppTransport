@@ -12,16 +12,42 @@
 #include <assert.h>
 
 #include "asciitable.h"
+#include "latex_output.h"
 #include "plot_gadget.h"
 #include "index_selector.h"
 #include "tensor_gadget.h"
 #include "messages_en.h"
 
 #define U2_SYMBOL     "u"
+#define U2_NAME       "u2"
 #define U3_SYMBOL     "u"
+#define U3_NAME       "u3"
 #define PRIME_SYMBOL  "\\prime"
+#define PRIME_NAME    "'"
+
+#define K1_SYMBOL     "k_1"
+#define K1_NAME       "k1"
+#define K2_SYMBOL     "k_2"
+#define K2_NAME       "k2"
+#define K3_SYMBOL     "k_3"
+#define K3_NAME       "k3"
+#define K_SYMBOL      "k"
+#define K_NAME        "k"
+
+#define U2_LABEL_LATEX "$u_2$ tensor"
+#define U3_LABEL_LATEX "$u_3$ tensor"
+#define U2_LABEL       "u2 tensor"
+#define U3_LABEL       "u3 tensor"
+#define N_LABEL_LATEX  "$N$"
+#define N_LABEL        "N"
+#define FIELDS_LABEL   "fields"
+
+#define PICK_N_LABEL   (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
+#define PICK_U2_LABEL  (gadget->latex_labels() ? U2_LABEL_LATEX : U2_LABEL)
+#define PICK_U3_LABEL  (gadget->latex_labels() ? U3_LABEL_LATEX : U3_LABEL)
 
 #define DEFAULT_BACKGROUND_WRAP_WIDTH (135)
+#define DEFAULT_BACKGROUND_PRECISION  (3)
 
 namespace transport
   {
@@ -78,6 +104,9 @@ namespace transport
             std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
             std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
 
+            std::string                make_title(double k, bool latex);
+            std::string                make_title(double k1, double k2, double k3, bool latex);
+
             std::vector< std::vector<number> > construct_u2_time_history(index_selector<2>* selector, double k);
             std::vector< std::vector<number> > construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3);
 
@@ -104,7 +133,7 @@ namespace transport
       void background<number>::plot(plot_gadget<number>* gadget, std::string output, std::string title, std::string format, bool logy)
         {
           gadget->set_format(format);
-          gadget->plot(output, title, this->sample_points, this->samples, this->field_names, "N", "fields", false, logy);
+          gadget->plot(output, title, this->sample_points, this->samples, this->field_names, PICK_N_LABEL, FIELDS_LABEL, false, logy);
         }
 
       template <typename number>
@@ -231,6 +260,48 @@ namespace transport
 
 
       template <typename number>
+      std::string background<number>::make_title(double k, bool latex)
+        {
+          std::ostringstream title;
+
+          if(latex)
+            {
+              title << "$" << K_SYMBOL << " = " << output_latex_number(k, DEFAULT_BACKGROUND_PRECISION) << "$";
+            }
+          else
+            {
+              title << std::setprecision(DEFAULT_BACKGROUND_PRECISION);
+              title << K_NAME << " = " << k;
+            }
+
+          return(title.str());
+        }
+
+
+      template <typename number>
+      std::string background<number>::make_title(double k1, double k2, double k3, bool latex)
+        {
+          std::ostringstream title;
+
+          if(latex)
+            {
+              title << "$" << K1_SYMBOL << " = " << output_latex_number(k1, DEFAULT_BACKGROUND_PRECISION) << "$, "
+                    << "$" << K2_SYMBOL << " = " << output_latex_number(k2, DEFAULT_BACKGROUND_PRECISION) << "$, "
+                    << "$" << K3_SYMBOL << " = " << output_latex_number(k3, DEFAULT_BACKGROUND_PRECISION) << "$";
+            }
+          else
+            {
+              title << std::setprecision(DEFAULT_BACKGROUND_PRECISION);
+              title << K1_NAME << " = " << k1 << ", "
+                    << K2_NAME << " = " << k2 << ", "
+                    << K3_NAME << " = " << k3;
+            }
+
+          return(title.str());
+        }
+
+
+      template <typename number>
       void background<number>::plot_u2(plot_gadget<number>* gadget, double k,
         std::string output, index_selector<2>* selector, std::string title, std::string format, bool logy)
         {
@@ -238,11 +309,9 @@ namespace transport
 
           std::vector< std::vector<number> > data = this->construct_u2_time_history(selector, k);
 
-          std::ostringstream t;
-          t << "$k = " << k << "$";
-
           gadget->set_format(format);
-          gadget->plot(output, title != "" ? title : t.str(), this->sample_points, data, labels, "$N$", "u2-tensor", false, logy);
+          gadget->plot(output, title != "" ? title : this->make_title(k, gadget->latex_labels()),
+                       this->sample_points, data, labels, PICK_N_LABEL, PICK_U2_LABEL, false, logy);
         }
 
 
@@ -254,11 +323,9 @@ namespace transport
 
           std::vector< std::vector<number> > data = this->construct_u3_time_history(selector, k1, k2, k3);
 
-          std::ostringstream t;
-          t << "$k_1 = " << k1 << "$, $k_2 = " << k2 << "$, $k_3 = " << k3 << "$";
-
           gadget->set_format(format);
-          gadget->plot(output, title != "" ? title : t.str(), this->sample_points, data, labels, "$N$", "u3-tensor", false, logy);
+          gadget->plot(output, title != "" ? title : this->make_title(k1, k2, k3, gadget->latex_labels()),
+                       this->sample_points, data, labels, PICK_N_LABEL, PICK_U3_LABEL, false, logy);
         }
 
 
