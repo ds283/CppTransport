@@ -113,6 +113,13 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
     std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
 
+    std::array<unsigned int, 3> three_set_m = { 2, 0, 0 };
+    std::array<unsigned int, 3> three_set_n = { 2, 0, 1 };
+    std::array<unsigned int, 3> three_set_o = { 2, 1, 1 };
+    std::array<unsigned int, 3> three_set_p = { 3, 0, 0 };
+    std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
+    std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
+
     transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
     transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
     transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
@@ -136,11 +143,14 @@ int main(int argc, const char* argv[])
     threepf_selector->set_on(three_set_c);
     threepf_selector->set_on(three_set_d);
 
+    backg.plot(&py_plt, output + "/background");
+
     u2_selector->none();
     u2_selector->set_on(index_set_d);
     u2_selector->set_on(index_set_e);
     u2_selector->set_on(index_set_f);
     u2_selector->set_on(index_set_g);
+    backg.plot_u2(&py_plt, 0.3, output + "/u2_mom_k=pt3", u2_selector);
 
     u3_selector->none();
     u3_selector->set_on(three_set_e);
@@ -151,20 +161,24 @@ int main(int argc, const char* argv[])
     u3_selector->set_on(three_set_j);
     u3_selector->set_on(three_set_k);
     u3_selector->set_on(three_set_l);
+    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
 
-    backg.plot(&py_plt, output + "/background");
+    u3_selector->none();
+    u3_selector->set_on(three_set_m);
+    u3_selector->set_on(three_set_n);
+    u3_selector->set_on(three_set_o);
+    u3_selector->set_on(three_set_p);
+    u3_selector->set_on(three_set_q);
+    u3_selector->set_on(three_set_r);
+    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_mom_k=pt3", u3_selector);
 
     twopf_re.components_time_history(&py_plt, output + "/re_k_mode", twopf_re_selector);
     twopf_im.components_time_history(&py_plt, output + "/im_k_mode", twopf_im_selector);
-
-    backg.plot_u2(&py_plt, 0.3, output + "/u2_fields_k=pt3", u2_selector);
-    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
-
-    u3_selector->all();
-    backg.plot_u3(&text_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
+    twopf_re.zeta_time_history(&py_plt, output + "/zeta_twopf_mode");
 
     threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
     threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
+    threepf.components_dotphi_time_history(&text_plt, output + "/threepf_dotphi_mode", threepf_selector);
     threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
 
     delete twopf_re_selector;
