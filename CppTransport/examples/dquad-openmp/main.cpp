@@ -58,7 +58,7 @@ int main(int argc, const char* argv[])
     asciitable_plot_gadget<double> text_plt;
 //    gnuplot_plot_gadget<double> plt;
 
-    py_plt.set_use_latex(true);
+//    py_plt.set_use_latex(true);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -72,8 +72,8 @@ int main(int argc, const char* argv[])
       }
 
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
-    const double       kmax = exp(2.0);   // end with the mode which exited the horizon 2 e-folds later
-    const unsigned int kN   = 1;          // number of k-points
+    const double       kmax = exp(3.0);   // end with the mode which exited the horizon 2 e-folds later
+    const unsigned int kN   = 5;          // number of k-points
     std::vector<double> ks;
     for(int i = 0; i < kN; i++)
       {
@@ -182,12 +182,18 @@ int main(int argc, const char* argv[])
 
     threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
     threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
-    threepf.components_dotphi_time_history(&text_plt, output + "/threepf_dotphi_mode", threepf_selector);
     threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
 
+    transport::index_selector<3>* threepf_all = threepf.manufacture_selector();
+    threepf.components_time_history(&text_plt, output + "/threepf", threepf_all);
+    delete threepf_all;
+
+    delete backg_selector;
     delete twopf_re_selector;
     delete twopf_im_selector;
     delete threepf_selector;
+    delete u2_selector;
+    delete u3_selector;
 
     return(EXIT_SUCCESS);
   }
