@@ -15,10 +15,10 @@
 #include "transport/transport.h"
 #import "threepf.h"
 
-#define SPECIES(z)     (z >= $$__NUMBER_FIELDS ? z-$$__NUMBER_FIELDS : z)
+#define SPECIES(z)     ((z) >= $$__NUMBER_FIELDS ? ((z)-$$__NUMBER_FIELDS) : (z))
 #define MOMENTUM(z)    (SPECIES(z) + $$__NUMBER_FIELDS)
-#define IS_FIELD(z)    (z >= 0 && z < $$__NUMBER_FIELDS)
-#define IS_MOMENTUM(z) (z >= $$__NUMBER_FIELDS && z < 2*$$__NUMBER_FIELDS)
+#define IS_FIELD(z)    ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
+#define IS_MOMENTUM(z) ((z) >= $$__NUMBER_FIELDS && (z) < 2*$$__NUMBER_FIELDS)
 
 namespace transport
   {
@@ -935,14 +935,14 @@ namespace transport
                   auto __prefactor = (__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __ainit*__ainit*__ainit*__ainit);
 
                   // these components are dimension 3, so suppress by two powers of Mp
-                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                  __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                   // these components are dimension 1
-                  __tpf -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_2/2.0;
-                  __tpf -= (__C_k2[__i][__k][__j] + __C_k2[__i][__k][__j])*__kmode_1*__kmode_3/2.0;
-                  __tpf -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_3/2.0;
+                  __tpf -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_2/2.0;
+                  __tpf -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)])*__kmode_1*__kmode_3/2.0;
+                  __tpf -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_3/2.0;
 
                   __tpf *= __prefactor / __kprod3;
                   break;
@@ -957,14 +957,14 @@ namespace transport
                   auto __prefactor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k) / (__kt * __ainit*__ainit*__ainit*__ainit);
                   
                   // these components are dimension 6, so suppress by two powers of Mp
-                  auto __tpf_1  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
-                       __tpf_1 += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
-                       __tpf_1 += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
+                  auto __tpf_1  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_1 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
                   
                   // these components are dimension 4
-                       __tpf_1 -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3;
-                       __tpf_1 -= (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2;
-                       __tpf_1 -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1;
+                       __tpf_1 -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3;
+                       __tpf_1 -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2;
+                       __tpf_1 -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1;
                   
                   __tpf = __prefactor_1 * __tpf_1;
                   
@@ -972,19 +972,19 @@ namespace transport
                   auto __prefactor_2 = __momentum_k*__kmode_1*__kmode_2*__kmode_3 / (__kt * __ainit*__ainit*__ainit*__ainit);
                   
                   // these components are dimension 5, so suppress by two powers of Mp
-                  auto __tpf_2  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                       __tpf_2 += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                       __tpf_2 += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                  auto __tpf_2  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_2 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                       __tpf_2 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
                   
                   // these componennts are dimension 3
-                       __tpf_2 += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                       __tpf_2 += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
-                       __tpf_2 += (__C_k1[__j][__i][__k] + __C_k1[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
+                       __tpf_2 += (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                       __tpf_2 += (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                       __tpf_2 += (__C_k1[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
                   
                   // these components are dimension 3
-                       __tpf_2 += (__B_k1[__j][__k][__i] + __B_k1[__k][__j][__i])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
-                       __tpf_2 += (__B_k2[__i][__k][__j] + __B_k2[__k][__i][__j])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
-                       __tpf_2 += (__B_k3[__i][__j][__k] + __B_k3[__j][__i][__k])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+                       __tpf_2 += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
+                       __tpf_2 += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
+                       __tpf_2 += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
                   
                   __tpf += __prefactor_2 * __tpf_2;
                   
@@ -1003,14 +1003,14 @@ namespace transport
                   auto __mom_factor = __kmode_1*__kmode_2*__kmode_3 / __field_k;
 
                   // these components have dimension 3, so suppress by two powers of Mp
-                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                  __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
                 
                   // these components have dimension 1
-                  __tpf -= (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k]) * __kmode_1*__kmode_2;
-                  __tpf -= (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j]) * __kmode_1*__kmode_3;
-                  __tpf -= (__C_k1[__j][__k][__i] + __C_k1[__k][__j][__i]) * __kmode_2*__kmode_3;
+                  __tpf -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)]) * __kmode_1*__kmode_2;
+                  __tpf -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)]) * __kmode_1*__kmode_3;
+                  __tpf -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)]) * __kmode_2*__kmode_3;
                 
                   __tpf *= __prefactor * __mom_factor / __kprod3;
                   break;
@@ -1022,19 +1022,19 @@ namespace transport
                   auto __prefactor = -(__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
 
                   // these components are dimension 5, so suppress by two powers of Mp
-                  __tpf  = (__j == __k ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __k ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                  __tpf += (__i == __j ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                  __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                  __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                   // these components are dimension 2
-                  __tpf += (__C_k3[__i][__j][__k] + __C_k3[__j][__i][__k])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                  __tpf += (__C_k2[__i][__k][__j] + __C_k2[__k][__i][__j])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
-                  __tpf += (__C_k1[__j][__k][__i] + __C_k2[__k][__j][__i])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k2[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
 
                   // these components are dimension 2
-                  __tpf += (__B_k1[__j][__k][__i] + __B_k1[__k][__j][__i])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
-                  __tpf += (__B_k2[__i][__k][__j] + __B_k2[__k][__i][__j])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
-                  __tpf += (__B_k3[__i][__j][__k] + __B_k3[__j][__i][__k])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+                  __tpf += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
+                  __tpf += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
+                  __tpf += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
 
                   __tpf *= __prefactor / __kprod3;
                   break;
