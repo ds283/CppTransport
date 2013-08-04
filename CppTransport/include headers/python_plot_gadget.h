@@ -19,6 +19,7 @@
 #include "plot_gadget.h"
 
 #define DEFAULT_SCRIPT_OUTPUT (false)
+#define DEFAULT_USE_LATEX     (false)
 
 
 template <typename number>
@@ -60,7 +61,7 @@ class python_plot_gadget : public plot_gadget<number>
   {
     public:
       python_plot_gadget(std::string i, std::string f = "pdf")
-        : plot_gadget<number>(f), interpreter(i), script_output(DEFAULT_SCRIPT_OUTPUT) {}
+        : plot_gadget<number>(f), interpreter(i), script_output(DEFAULT_SCRIPT_OUTPUT), use_latex(DEFAULT_USE_LATEX) {}
 
       void plot(std::string output, std::string title,
                 const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
@@ -74,10 +75,15 @@ class python_plot_gadget : public plot_gadget<number>
       bool get_script_output()        { return(this->script_output); }
       void set_script_output(bool s)  { this->script_output = s; }
 
+      // control whether to use LaTeX to typeset all labels
+      bool get_use_latex()            { return(this->use_latex); }
+      void set_use_latex(bool s)      { this->use_latex = s; }
+
     protected:
       std::string interpreter;
 
       bool        script_output;
+      bool        use_latex;
   };
 
 
@@ -116,6 +122,12 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
         assert(x.size() == ys.size());
 
         out << "import matplotlib.pyplot as plt" << std::endl;
+
+        if(this->use_latex)
+          {
+            out << "plt.rc('text', usetex=True)" << std::endl;
+          }
+
         out << "plt.figure()" << std::endl;
 
         if(logx) out << "plt.xscale('log')" << std::endl;
@@ -200,7 +212,7 @@ void python_plot_gadget<number>::plot(std::string output, std::string title,
 
         if(!script_output)
           {
-            system((this->interpreter + " " + filename).c_str());
+            system(("source ~/.profile; " + this->interpreter + " " + filename).c_str());
             remove(filename.c_str());
           }
       }
