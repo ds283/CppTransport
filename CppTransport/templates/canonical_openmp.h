@@ -1483,7 +1483,7 @@ namespace transport
                 }
             }
           
-          __B[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+          __B[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
 
           return(__B);
         }
@@ -1512,7 +1512,7 @@ namespace transport
                 }
             }
           
-          __C[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+          __C[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
 
           return(__C);
         }
