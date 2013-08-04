@@ -11,6 +11,7 @@
 #include <boost/timer/timer.hpp>
 
 #include "dq.h"
+#import "background.h"
 
 
 // ****************************************************************************
@@ -56,6 +57,8 @@ int main(int argc, const char* argv[])
     python_plot_gadget<double>     py_plt(python);
     asciitable_plot_gadget<double> text_plt;
 //    gnuplot_plot_gadget<double> plt;
+
+    py_plt.set_use_latex(true);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -120,6 +123,7 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
     std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
 
+    transport::index_selector<1>* backg_selector    = backg.manufacture_selector();
     transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
     transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
     transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
@@ -143,7 +147,7 @@ int main(int argc, const char* argv[])
     threepf_selector->set_on(three_set_c);
     threepf_selector->set_on(three_set_d);
 
-    backg.plot(&py_plt, output + "/background");
+    backg.plot(&py_plt, output + "/background", backg_selector);
 
     u2_selector->none();
     u2_selector->set_on(index_set_d);
