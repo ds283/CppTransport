@@ -15,6 +15,8 @@
 #include "transport/transport.h"
 #import "threepf.h"
 
+#define CHECK_ZERO(c)  { if(fabs(c) > 1E-5) { std::cerr << "CHECK_ZERO fail: " #c " not zero (value=" << c << ")" << std::endl; exit(1); } }
+
 #define SPECIES(z)     ((z) >= $$__NUMBER_FIELDS ? ((z)-$$__NUMBER_FIELDS) : (z))
 #define MOMENTUM(z)    (SPECIES(z) + $$__NUMBER_FIELDS)
 #define IS_FIELD(z)    ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
@@ -682,6 +684,7 @@ namespace transport
           unsigned int loc = 0;             // keep track of where we are in the ordered set of (k1,k2,k3)
           for(int i = 0; i < ks.size(); i++)
             {
+              std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i << " " << __CPP_TRANSPORT_OF << " " << ks.size() << std::endl;
               bool stored_twopf = false;
 
               for(int j = 0; j <= i; j++)
@@ -1221,10 +1224,10 @@ namespace transport
           const auto __u3_k2s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k2, __k3, __k1, __a, __Hsq, __eps};
           const auto __u3_k3s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k3, __k2, __k1, __a, __Hsq, __eps};
 
-          // check that the u3 tensor is sufficiently symmetric
-          assert(fabs(__u3_k1_$$__A_$$__B_$$__C - __u3_k1s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
-          assert(fabs(__u3_k2_$$__A_$$__B_$$__C - __u3_k2s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
-          assert(fabs(__u3_k3_$$__A_$$__B_$$__C - __u3_k3s_$$__A_$$__B_$$__C) < 1E-10) $$// ;
+          // check that the u3 tensor is sufficiently symmetric, a fractional error of less than 1 part in 1E12
+          CHECK_ZERO((__u3_k1_$$__A_$$__B_$$__C - __u3_k1s_$$__A_$$__B_$$__C)/__u3_k1_$$__A_$$__B_$$__C) $$// ;
+          CHECK_ZERO((__u3_k2_$$__A_$$__B_$$__C - __u3_k2s_$$__A_$$__B_$$__C)/__u3_k2_$$__A_$$__B_$$__C) $$// ;
+          CHECK_ZERO((__u3_k3_$$__A_$$__B_$$__C - __u3_k3s_$$__A_$$__B_$$__C)/__u3_k3_$$__A_$$__B_$$__C) $$// ;
 
           // evolve the real and imaginary components of the 2pf
           // for the imaginary parts, index placement does matter

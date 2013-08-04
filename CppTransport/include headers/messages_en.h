@@ -33,6 +33,9 @@
 #define __CPP_TRANSPORT_REL_ERR               "rel err"
 #define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
 
+#define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
+#define __CPP_TRANSPORT_OF                    "of"
+
 #define __CPP_TRANSPORT_NO_TIMES              "Error: no times specified for integration"
 
 #define __CPP_TRANSPORT_ASCIITABLE_OUTPUT     "Error: could not open asciitable gadget output"
