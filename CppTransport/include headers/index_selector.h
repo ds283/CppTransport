@@ -16,20 +16,6 @@ namespace transport
   {
       // DATA PRODUCTS -- objects wrapping the various data products produced by each model
 
-      // handle weirdness with friend template functions
-      // see http://www.cplusplus.com/forum/general/45776/
-      template <typename number>
-      class background;
-
-      template <typename number>
-      std::ostream& operator<<(std::ostream& out, background<number>& obj);
-
-      template <typename number>
-      class twopf;
-
-      template <typename number>
-      std::ostream& operator<<(std::ostream& out, twopf<number>& obj);
-
       template <unsigned int indices>
       class index_selector
         {
