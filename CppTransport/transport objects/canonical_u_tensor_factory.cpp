@@ -162,15 +162,15 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                 // contracting u3 with something else
                 if(IS_FIELD(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, +1)/2;
+                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, +1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, +1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
@@ -182,15 +182,15 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                   }
                 else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, +1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, +1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, +1, +1, +1)/2;
+                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else
                   {
