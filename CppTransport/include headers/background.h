@@ -78,12 +78,15 @@ namespace transport
             index_selector<2>* manufacture_2_selector();
             index_selector<3>* manufacture_3_selector();
 
-            void plot(plot_gadget<number>*gadget, std::string output, std::string title="", std::string format="pdf", bool logy=false);
+            void plot(plot_gadget<number>*gadget, std::string output, index_selector<1>* selector,
+                      std::string title="", std::string format="pdf", bool logy=false);
 
             void plot_u2(plot_gadget<number>* gadget, double k,
                          std::string output, index_selector<2>* selector, std::string title="", std::string format="pdf", bool logy=true);
             void plot_u3(plot_gadget<number>* gadget, double k1, double k2, double k3,
                          std::string output, index_selector<3>* selector, std::string title="", std::string format="pdf", bool logy=true);
+
+            index_selector<1>* manufacture_selector();
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
@@ -101,11 +104,14 @@ namespace transport
           protected:
             const std::vector<number>& get_value (unsigned int n);
 
+            std::vector< std::string > make_labels(index_selector<1>* selector, bool latex);
             std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
             std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
 
             std::string                make_title(double k, bool latex);
             std::string                make_title(double k1, double k2, double k3, bool latex);
+
+            std::vector< std::vector<number> > construct_fields_time_history(index_selector<1>* selector);
 
             std::vector< std::vector<number> > construct_u2_time_history(index_selector<2>* selector, double k);
             std::vector< std::vector<number> > construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3);
@@ -130,11 +136,65 @@ namespace transport
 
 
       template <typename number>
-      void background<number>::plot(plot_gadget<number>* gadget, std::string output, std::string title, std::string format, bool logy)
+      void background<number>::plot(plot_gadget<number>* gadget, std::string output, index_selector<1>* selector,
+                                    std::string title, std::string format, bool logy)
         {
+          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+          std::vector< std::vector<number> > data = this->construct_fields_time_history(selector);
+
           gadget->set_format(format);
-          gadget->plot(output, title, this->sample_points, this->samples, this->field_names, PICK_N_LABEL, FIELDS_LABEL, false, logy);
+          gadget->plot(output, title, this->sample_points, data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
         }
+
+
+      template <typename number>
+      std::vector< std::string > background<number>::make_labels(index_selector<1>* selector, bool latex)
+        {
+          std::vector< std::string > labels;
+
+          for(int m = 0; m < 2*this->N_fields; m++)
+            {
+              std::array<unsigned int, 1> index_set = { (unsigned int)m };
+              if(selector->is_on(index_set))
+                {
+                  std::ostringstream label;
+
+                  if(latex)
+                    {
+                      label << "$" << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? "^{" PRIME_SYMBOL "}" : "") << "$";
+                    }
+                  else
+                    {
+                      label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_NAME : "");
+                    }
+                  labels.push_back(label.str());
+                }
+            }
+
+          return(labels);
+        }
+
+
+      template <typename number>
+      std::vector< std::vector<number> > background<number>::construct_fields_time_history(index_selector<1>* selector)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          for(int l = 0; l < this->sample_points.size(); l++)
+            {
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  std::array<unsigned int, 1> index_set = { (unsigned int)m };
+                  if(selector->is_on(index_set))
+                    {
+                      data[l].push_back(this->samples[l][m]);
+                    }
+                }
+            }
+
+          return(data);
+        }
+
 
       template <typename number>
       const std::vector<number>& background<number>::get_value(unsigned int n)
@@ -385,6 +445,12 @@ namespace transport
           return(data);
         }
 
+
+      template <typename number>
+      index_selector<1>* background<number>::manufacture_selector()
+        {
+          return new index_selector<1>(this->N_fields);
+        }
 
   }   // namespace transport
 
