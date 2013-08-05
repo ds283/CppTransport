@@ -122,8 +122,12 @@ namespace transport
             // for a given set of components and fixed k-configuration
             std::vector< std::vector<number> > construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i);
 
+            // compute the shift in the correlation function from p_i -> \dot{\phi}_i for a
+            // given index assignment, k-configuration and time
+            number construct_dotphi_shift(unsigned int i, unsigned int l, unsigned int m, unsigned int n, unsigned int r);
+
             // compute the shift in the correlation function when changing from momentum to d/dN
-            double dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
+            number dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
                                 unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos);
 
             // return a time history for the correlation function of zeta, for a fixed k-configuration
@@ -407,24 +411,9 @@ namespace transport
                               number value = this->samples[l][samples_index][i];
 
                               // now shift the correlation function if it involves momentum indices
-                              if (m >= this->N_fields)
-                                {
-                                  value += this->dotphi_shift(m, this->kconfig_list[i].indices[0],
-                                                              n, this->kconfig_list[i].indices[1],
-                                                              r, this->kconfig_list[i].indices[2], l, 0);
-                                }
-                              if (n >= this->N_fields)
-                                {
-                                  value += this->dotphi_shift(n, this->kconfig_list[i].indices[1],
-                                                              m, this->kconfig_list[i].indices[0],
-                                                              r, this->kconfig_list[i].indices[2], l, 1);
-                                }
-                              if (r >= this->N_fields)
-                                {
-                                  value += this->dotphi_shift(r, this->kconfig_list[i].indices[2],
-                                                              m, this->kconfig_list[i].indices[0],
-                                                              n, this->kconfig_list[i].indices[1], l, 2);
-                                }
+                              number shift = this->construct_dotphi_shift(i, l, m, n, r);
+
+                              value += shift;
 
                               data[l].push_back(value);
                             }
@@ -437,10 +426,38 @@ namespace transport
         }
 
 
+      template <typename number>
+      number threepf<number>::construct_dotphi_shift(unsigned int i, unsigned int l, unsigned int m, unsigned int n, unsigned int r)
+        {
+          number shift = 0.0;
+
+          if (m >= this->N_fields)
+            {
+              shift += this->dotphi_shift(m, this->kconfig_list[i].indices[0],
+                                          n, this->kconfig_list[i].indices[1],
+                                          r, this->kconfig_list[i].indices[2], l, 0);
+            }
+          if (n >= this->N_fields)
+            {
+              shift += this->dotphi_shift(n, this->kconfig_list[i].indices[1],
+                                          m, this->kconfig_list[i].indices[0],
+                                          r, this->kconfig_list[i].indices[2], l, 1);
+            }
+          if (r >= this->N_fields)
+            {
+              shift += this->dotphi_shift(r, this->kconfig_list[i].indices[2],
+                                          m, this->kconfig_list[i].indices[0],
+                                          n, this->kconfig_list[i].indices[1], l, 2);
+            }
+
+          return(shift);
+        }
+
+
       // compute the shift in a correlation function from the canonical momentum p_i to the time derivative q'_i,
       // ' = d/dN
       template <typename number>
-      double threepf<number>::dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
+      number threepf<number>::dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
                                            unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos)
         {
           assert(__pos < 3);
@@ -457,7 +474,7 @@ namespace transport
           std::vector<number> __twopf_im_n = this->twopf_im.get_value(__time_slice, __kmode_n);
           std::vector<number> __twopf_im_r = this->twopf_im.get_value(__time_slice, __kmode_r);
           
-          double rval = 0.0;
+          number rval = 0.0;
           
           assert(__m >= this->N_fields);
           auto __m_species = __m % this->N_fields;
@@ -556,12 +573,19 @@ namespace transport
                       for(int r = 0; r < 2*this->N_fields; r++)
                         {
                           unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + (2*this->N_fields)*n + r;
-                          data[j][0] += dN[m]*dN[n]*dN[r]*this->samples[j][samples_index][i];
+
+                          number value = this->samples[j][samples_index][i];
+
+                          // shift to dot(phi) if it involves momenta
+                          value += this->construct_dotphi_shift(i, j, m, n, r);
+
+                          data[j][0] += dN[m]*dN[n]*dN[r]*value;
                         }
                     }
                 }
 
               // compute contribution from gauge transformation
+              number shift = 0;
               for(int l = 0; l < 2*this->N_fields; l++)
                 {
                   for(int m = 0; m < 2*this->N_fields; m++)
@@ -588,24 +612,28 @@ namespace transport
                               unsigned int mn_3_index = (2*this->N_fields)*n + m;
                               unsigned int mr_3_index = (2*this->N_fields)*r + m;
 
-                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
-                                + twopf_re_k2[lr_1_index]*twopf_re_k3[mn_1_index]
-                                - twopf_im_k2[ln_1_index]*twopf_im_k3[mr_1_index]
-                                - twopf_im_k2[lr_1_index]*twopf_im_k3[mn_1_index]);
+                              shift += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*
+                                (  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
+                                 + twopf_re_k2[lr_1_index]*twopf_re_k3[mn_1_index]
+                                 - twopf_im_k2[ln_1_index]*twopf_im_k3[mr_1_index]
+                                 - twopf_im_k2[lr_1_index]*twopf_im_k3[mn_1_index]);
 
-                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_2_index]*twopf_re_k3[mr_2_index]
-                                + twopf_re_k1[lr_2_index]*twopf_re_k3[mn_2_index]
-                                - twopf_im_k1[ln_2_index]*twopf_im_k3[mr_2_index]
-                                - twopf_im_k1[lr_2_index]*twopf_im_k3[mn_2_index]);
+                              shift += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*
+                                (  twopf_re_k1[ln_2_index]*twopf_re_k3[mr_2_index]
+                                 + twopf_re_k1[lr_2_index]*twopf_re_k3[mn_2_index]
+                                 - twopf_im_k1[ln_2_index]*twopf_im_k3[mr_2_index]
+                                 - twopf_im_k1[lr_2_index]*twopf_im_k3[mn_2_index]);
 
-                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_3_index]*twopf_re_k2[mr_3_index]
-                                + twopf_re_k1[lr_3_index]*twopf_re_k2[mn_3_index]
-                                - twopf_im_k1[ln_3_index]*twopf_im_k2[mr_3_index]
-                                - twopf_im_k1[lr_3_index]*twopf_im_k2[mn_3_index]);
+                              shift += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*
+                                (  twopf_re_k1[ln_3_index]*twopf_re_k2[mr_3_index]
+                                 + twopf_re_k1[lr_3_index]*twopf_re_k2[mn_3_index]
+                                 - twopf_im_k1[ln_3_index]*twopf_im_k2[mr_3_index]
+                                 - twopf_im_k1[lr_3_index]*twopf_im_k2[mn_3_index]);
                             }
                         }
                     }
                 }
+              data[j][0] += shift;
             }
 
           return(data);
@@ -626,9 +654,9 @@ namespace transport
             {
               data[j].resize(1);    // only one component, fNL(k1, k2, k3)
               
-              number form_factor = twopf_k1[j][0]*twopf_k2[j][0] + twopf_k1[j][0]*twopf_k3[j][0] + twopf_k2[j][0]*twopf_k3[j][0];
+              number form_factor = (6.0/5.0) * (twopf_k1[j][0]*twopf_k2[j][0] + twopf_k1[j][0]*twopf_k3[j][0] + twopf_k2[j][0]*twopf_k3[j][0]);
               
-              data[j][0] = (5.0/6.0) * threepf[j][0] / form_factor;
+              data[j][0] = threepf[j][0] / form_factor;
             }
           
           return(data);
@@ -672,7 +700,7 @@ namespace transport
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
               if(i > 0) out << std::endl;
-              out << __CPP_TRANSPORT_THREEPF_MESSAGE << " " << KT_NAME        << " = " << obj.kconfig_list[i].k_t << ","
+              out << __CPP_TRANSPORT_THREEPF_MESSAGE << " " << KT_NAME        << " = " << obj.kconfig_list[i].k_t   << ","
                                                      << " " << FLS_ALPHA_NAME << " = " << obj.kconfig_list[i].alpha << ","
                                                      << " " << FLS_BETA_NAME  << " = " << obj.kconfig_list[i].beta
                                                      << std::endl << std::endl;
