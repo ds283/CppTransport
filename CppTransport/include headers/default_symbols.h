@@ -55,6 +55,9 @@
 #define U3_LABEL                   "u3 tensor"
 #define FIELDS_LABEL               "fields"
 
+#define REDUCED_BISPECTRUM_SYMBOL  "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
+#define REDUCED_BISPECTRUM_NAME    "fNL(k1,k2,k3)"
+
 #define N_LABEL_LATEX              "$N$"
 #define N_LABEL                    "N"
 
@@ -62,8 +65,6 @@
 
 #define PICK_U2_LABEL              (gadget->latex_labels() ? U2_LABEL_LATEX : U2_LABEL)
 #define PICK_U3_LABEL              (gadget->latex_labels() ? U3_LABEL_LATEX : U3_LABEL)
-
-
 
 #define DEFAULT_WRAP_WIDTH         (135)
 #define DEFAULT_PLOT_PRECISION     (3)

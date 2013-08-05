@@ -113,6 +113,7 @@ namespace transport
             // make a list of labels for the chosen index selection
             std::vector<std::string>           make_labels(index_selector<3>* selector, bool latex);
             std::string                        make_zeta_label(bool latex);
+            std::string                        make_reduced_bispectrum_label(bool latex);
 
             std::string                        make_threepf_title(const struct threepf_kconfig& config, bool latex);
 
@@ -128,8 +129,11 @@ namespace transport
             double dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
                                 unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos);
 
-            // return a time history for correlation function of zeta, for a fixed k-configuration
+            // return a time history for the correlation function of zeta, for a fixed k-configuration
             std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i);
+          
+            // return a time history for the reduced bispectrum of zeta and a fixed k-configuration
+            std::vector< std::vector<number> > construct_reduced_bispectrum_time_history(unsigned int i);
 
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
@@ -170,7 +174,7 @@ namespace transport
         {
           std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
 
-          // loop over all combinations of k-modes
+          // loop over all momentum configurations
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_kconfig_time_history(selector, i);
@@ -191,7 +195,7 @@ namespace transport
         {
           std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
 
-          // loop over all combinations of k-modes
+          // loop over all momentum configurations
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_kconfig_dotphi_time_history(selector, i);
@@ -210,7 +214,7 @@ namespace transport
       void threepf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
         std::string format, bool logy)
         {
-          // loop over all combinations of k-modes
+          // loop over all momentum configurations
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_zeta_time_history(i);
@@ -219,8 +223,6 @@ namespace transport
               fnam << output << "_" << i;
 
               std::vector<std::string> labels(1);
-              std::ostringstream l;
-
               labels[0] = this->make_zeta_label(gadget->latex_labels());
 
               gadget->set_format(format);
@@ -233,7 +235,23 @@ namespace transport
       template <typename number>
       void threepf<number>::reduced_bispectrum_time_history(plot_gadget<number> *gadget, std::string output, std::string format, bool logy)
         {
+          // loop over all momentum configurations
+          for(int i = 0; i < this->kconfig_list.size(); i++)
+            {
+              std::vector< std::vector<number> > data = this->construct_reduced_bispectrum_time_history(i);
+              
+              std::ostringstream fnam;
+              fnam << output << "_" << i;
+              
+              std::vector<std::string> labels(1);
+              labels[0] = this->make_reduced_bispectrum_label(gadget->latex_labels());
+              
+              gadget->set_format(format);
+              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
+                           this->sample_points, data, labels, PICK_N_LABEL, "", false, logy);
+            }
         }
+
 
       template <typename number>
       std::vector< std::string > threepf<number>::make_labels(index_selector<3>* selector, bool latex)
@@ -286,6 +304,24 @@ namespace transport
           else
             {
               label << THREEPF_NAME << "(" << ZETA_NAME << ", " << ZETA_NAME << ", " << ZETA_NAME << ")";
+            }
+
+          return(label.str());
+        }
+
+
+      template <typename number>
+      std::string threepf<number>::make_reduced_bispectrum_label(bool latex)
+        {
+          std::ostringstream label;
+
+          if(latex)
+            {
+              label << "$" << REDUCED_BISPECTRUM_SYMBOL << "}$";
+            }
+          else
+            {
+              label << REDUCED_BISPECTRUM_NAME;
             }
 
           return(label.str());
@@ -575,6 +611,29 @@ namespace transport
                 }
             }
 
+          return(data);
+        }
+    
+    
+      template <typename number>
+      std::vector< std::vector<number> > threepf<number>::construct_reduced_bispectrum_time_history(unsigned int i)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+          
+          std::vector< std::vector<number> > threepf  = this->construct_zeta_time_history(i);
+          std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[0]);
+          std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[1]);
+          std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[2]);
+          
+          for(int j = 0; j < this->sample_points.size(); j++)
+            {
+              data[j].resize(1);    // only one component, fNL(k1, k2, k3)
+              
+              number form_factor = twopf_k1[j][0]*twopf_k2[j][0] + twopf_k1[j][0]*twopf_k3[j][0] + twopf_k2[j][0]*twopf_k3[j][0];
+              
+              data[j][0] = (5.0/6.0) * threepf[j][0] / form_factor;
+            }
+          
           return(data);
         }
 

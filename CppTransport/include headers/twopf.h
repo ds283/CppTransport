@@ -78,8 +78,11 @@ namespace transport
 
             std::string                        make_twopf_title(double k, bool latex);
 
-            // return a time history for a given set of components and a fixed k-number
+            // return a time history for a given set of components and a fixed k-mode
             std::vector< std::vector<number> > construct_kmode_time_history(index_selector<2>* selector, unsigned int i);
+
+            // return a time history for the <zeta zeta> correlation function and a fixed k-mode
+            std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i, bool dimensionless=false);
           
             // return values for a given kvalue and timeslice
             std::vector< number >              get_value(unsigned int time, unsigned int kmode);
@@ -255,32 +258,7 @@ namespace transport
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
             {
-              std::vector< std::vector<number> > data(this->sample_points.size());
-
-              // now arrange data to consist of the <zeta zeta> 2pf
-              for(int j = 0; j < this->sample_points.size(); j++)
-                {
-                  data[j].resize(1);    // only one components of <zeta zeta>
-
-                  // compute gauge transformation
-                  std::vector<number> dN;
-                  this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
-
-                  data[j][0] = 0;
-                  for(int m = 0; m < 2*this->N_fields; m++)
-                    {
-                      for(int n = 0; n < 2*this->N_fields; n++)
-                        {
-                          unsigned int samples_index = 2*this->N_fields*m + n;
-                          data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
-                        }
-                    }
-
-                  if(dimensionless)   // plotting the dimensionless power spectrum?
-                    {
-                      data[j][0] *= pow(this->sample_com_ks[i], 3.0) / (2.0*M_PI*M_PI);
-                    }
-                }
+              std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, dimensionless);
 
               std::ostringstream fnam;
               fnam << output << "_" << i;
@@ -294,7 +272,42 @@ namespace transport
             }
         }
 
-      template<typename number>
+
+      template <typename number>
+      std::vector< std::vector<number> > twopf<number>::construct_zeta_time_history(unsigned int i, bool dimensionless)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          // now arrange data to consist of the <zeta zeta> 2pf
+          for(int j = 0; j < this->sample_points.size(); j++)
+            {
+              data[j].resize(1);    // only one components of <zeta zeta>
+
+              // compute gauge transformation
+              std::vector<number> dN;
+              this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+
+              data[j][0] = 0;
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      unsigned int samples_index = 2*this->N_fields*m + n;
+                      data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
+                    }
+                }
+
+              if(dimensionless)   // plotting the dimensionless power spectrum?
+                {
+                  data[j][0] *= pow(this->sample_com_ks[i], 3.0) / (2.0*M_PI*M_PI);
+                }
+            }
+
+          return(data);
+        }
+
+
+      template <typename number>
       index_selector<2>* twopf<number>::manufacture_selector()
         {
           return new index_selector<2>(this->N_fields);
