@@ -72,7 +72,7 @@ int main(int argc, const char* argv[])
       }
 
     const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
-    const double       kmax = exp(3.0);   // end with the mode which exited the horizon 2 e-folds later
+    const double       kmax = exp(3.0);   // end with the mode which exited the horizon 3 e-folds later
     const unsigned int kN   = 5;          // number of k-points
     std::vector<double> ks;
     for(int i = 0; i < kN; i++)
@@ -183,10 +183,7 @@ int main(int argc, const char* argv[])
     threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
     threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
     threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
-
-    transport::index_selector<3>* threepf_all = threepf.manufacture_selector();
-    threepf.components_time_history(&text_plt, output + "/threepf", threepf_all);
-    delete threepf_all;
+    threepf.reduced_bispectrum_time_history(&py_plt, output + "/redbisp");
 
     delete backg_selector;
     delete twopf_re_selector;
