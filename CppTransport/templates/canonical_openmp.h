@@ -702,11 +702,11 @@ namespace transport
                           kconfig_list.push_back(kconfig);
                         }
                     }
-                  if(stored_twopf == false)
-                    {
-                      std::cerr << __CPP_TRANSPORT_TWOPF_STORE << std::endl;
-                      exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
-                    }
+                }
+              if(stored_twopf == false)
+                {
+                  std::cerr << __CPP_TRANSPORT_TWOPF_STORE << std::endl;
+                  exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
                 }
             }
           if(stored_background == false)
