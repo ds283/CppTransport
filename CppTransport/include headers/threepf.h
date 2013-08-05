@@ -24,7 +24,7 @@
 #include "gauge_xfm_gadget.h"
 
 
-#define DEFAULT_OUTPUT_DOTPHI      (true)
+#define DEFAULT_OUTPUT_DOTPHI (true)
 
 
 namespace transport
