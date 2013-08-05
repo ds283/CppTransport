@@ -361,7 +361,7 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    GiNaC::ex dotH    = -eps*Hsq;
+    GiNaC::ex dotH = -eps*Hsq;
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
@@ -375,12 +375,12 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
     GiNaC::ex p_sum(0);
     for(int i = 0; i < this->num_fields; i++)
       {
-        p_sum += 1/(2*dotH) * diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
+        p_sum += diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
       }
     for(int i = 0; i < this->num_fields; i++)
       {
-        GiNaC::ex dXdN = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
-        p_sum += 1/(2*dotH) * diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
+        GiNaC::ex dXdN  = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
+        p_sum          += diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
       }
 
     for(int i = 0; i < 2*this->num_fields; i++)
@@ -388,9 +388,9 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
         for(int j = 0; j < 2*this->num_fields; j++)
           {
             rval[i][j] = -1/(2*dotH) * diff(diff(Hsq, COORDINATE(i)), COORDINATE(j))
-              - diff(1/(2*dotH), COORDINATE(i)) * diff(Hsq, COORDINATE(j))
-              - diff(1/(2*dotH), COORDINATE(j)) * diff(Hsq, COORDINATE(i))
-              + p_sum * diff(Hsq, COORDINATE(i)) * diff(Hsq, COORDINATE(j));
+                         - diff(1/(2*dotH), COORDINATE(i)) * diff(Hsq, COORDINATE(j))
+                         - diff(1/(2*dotH), COORDINATE(j)) * diff(Hsq, COORDINATE(i))
+                         + 1/(2*dotH) * p_sum * diff(Hsq, COORDINATE(i)) * diff(Hsq, COORDINATE(j));
           }
       }
 
@@ -429,7 +429,11 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 // *****************************************************************************
 
 
-GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, int k1_sign, int k2_sign, int k3_sign)
+GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC::symbol& k1,
+                                                          unsigned int j, GiNaC::symbol& k2,
+                                                          unsigned int k, GiNaC::symbol& k3,
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+                                                          int k1_sign, int k2_sign, int k3_sign)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -476,7 +480,11 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
   }
 
 
-GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, int k1_sign, int k2_sign, int k3_sign)
+GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC::symbol& k1,
+                                                          unsigned int j, GiNaC::symbol& k2,
+                                                          unsigned int k, GiNaC::symbol& k3,
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+                                                          int k1_sign, int k2_sign, int k3_sign)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -504,7 +512,11 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
   }
 
 
-GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, int k1_sign, int k2_sign, int k3_sign)
+GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC::symbol& k1,
+                                                          unsigned int j, GiNaC::symbol& k2,
+                                                          unsigned int k, GiNaC::symbol& k3,
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+                                                          int k1_sign, int k2_sign, int k3_sign)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
