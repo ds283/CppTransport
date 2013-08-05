@@ -148,7 +148,7 @@ namespace transport
             void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
 				                                                   const std::vector<double>& times, const std::vector<double>& ks);
             void                resize_threepf_history    (std::vector< std::vector< std::vector<number> > >& threepf_history,
-                                                           const std::vector<double>& times, const std::vector<double>& ks);
+                                                           const std::vector<double>& times, const std::vector< struct threepf_kconfig >& ks);
 
             $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
@@ -667,28 +667,18 @@ namespace transport
           std::vector< std::vector< std::vector<number> > > twopf_im_history;
           std::vector< std::vector< std::vector<number> > > threepf_history;
           std::vector< struct threepf_kconfig >             kconfig_list;
-
-          // ensure there is enough space to store the solution
-          // the index convention is
-          //   first index  - time
-          //   second index - component number
-          //   third index  - k mode
-          //                  for the 2pf this corresponds to the list in ks (real_ks)
-          //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
-			    this->resize_twopf_history(twopf_re_history, times, ks);
-			    this->resize_twopf_history(twopf_im_history, times, ks);
-          this->resize_threepf_history(threepf_history, times, ks);
           
           // step through the lattice of k-modes, recording which are viable triangular
           // configurations, and making a queue of work
+          // we insist on ordering, so i <= j <= k
           bool stored_background = false;
           for(int i = 0; i < ks.size(); i++)
             {
               bool stored_twopf = false;
 
-              for(int j = 0; j < ks.size(); j++)
+              for(int j = 0; j <= i; j++)
                 {
-                  for(int k = 0; k < ks.size(); k++)
+                  for(int k = 0; k <= j; k++)
                     {
                       struct threepf_kconfig kconfig;
 
@@ -714,22 +704,33 @@ namespace transport
                     }
                   if(stored_twopf == false)
                     {
-                      std::cerr << "Fatal: failed to find a configuration which would store the two-point function" << std::endl;
+                      std::cerr << __CPP_TRANSPORT_TWOPF_STORE << std::endl;
                       exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
                     }
                 }
             }
           if(stored_background == false)
             {
-              std::cerr << "Fatal: failed to find a configuration which would store the background" << std::endl;
+              std::cerr << __CPP_TRANSPORT_BACKGROUND_STORE << std::endl;
               exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
             }
 
+          // ensure there is enough space to store the solution
+          // the index convention is
+          //   first index  - time
+          //   second index - component number
+          //   third index  - k mode
+          //                  for the 2pf this corresponds to the list in ks (real_ks)
+          //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
+			    this->resize_twopf_history(twopf_re_history, times, ks);
+			    this->resize_twopf_history(twopf_im_history, times, ks);
+          this->resize_threepf_history(threepf_history, times, kconfig_list);
+
           // step through the queue, solving for the three-point functions in each case
 #pragma omp parallel for schedule(dynamic)
-          for (int i = 0; i < kconfig_list.size(); i++)
+          for(int i = 0; i < kconfig_list.size(); i++)
             {
-              std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i << " " __CPP_TRANSPORT_OF << " " << kconfig_list.size() << std::endl;
+              std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1 << " " __CPP_TRANSPORT_OF << " " << kconfig_list.size() << std::endl;
 
               std::vector<double>                kmode_slices;
               std::vector< std::vector<number> > kmode_background_history;
@@ -746,13 +747,17 @@ namespace transport
                                   kmode_twopf_re_history, kmode_twopf_im_history,
                                   kmode_threepf_history);
 
-              if (kconfig_list[i].store_background) background_history = kmode_background_history;
-
-              if (kconfig_list[i].store_twopf)
+              if(kconfig_list[i].store_background)
                 {
-                  for (int m = 0; m < kmode_twopf_re_history.size(); m++)           // m steps through the time-slices
+                  slices             = kmode_slices;
+                  background_history = kmode_background_history;
+                }
+
+              if(kconfig_list[i].store_twopf)
+                {
+                  for(int m = 0; m < kmode_twopf_re_history.size(); m++)           // m steps through the time-slices
                     {
-                      for (int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
+                      for(int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
                         {
                           twopf_re_history[m][n][kconfig_list[i].indices[0]] = kmode_twopf_re_history[m][n];
                           twopf_im_history[m][n][kconfig_list[i].indices[0]] = kmode_twopf_im_history[m][n];
@@ -760,9 +765,9 @@ namespace transport
                     }
                 }
 
-              for (int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
+              for(int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
                 {
-                  for (int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
+                  for(int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
                     {
                       threepf_history[m][n][i] = kmode_threepf_history[m][n];
                     }
@@ -839,7 +844,7 @@ namespace transport
 
       template <typename number>
       void $$__MODEL<number>::resize_threepf_history(std::vector< std::vector< std::vector<number> > >& threepf_history, const std::vector<double>& times,
-        const std::vector<double>& ks)
+        const std::vector< struct threepf_kconfig >& kconfig_list)
         {
           // the index convention for the threepf history is:
           //   first index  - time
@@ -848,7 +853,7 @@ namespace transport
           //                  this is an index into the lattice ks^3, remembering that we insist on the k-modes being ordered
           //                  in that case, there are N(N+1)(N+2)/6 distinct k-modes
           const auto threepf_components_size = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
-          const auto threepf_kmodes_size     = ks.size() * (ks.size() + 1) * (ks.size() + 2) / 6;
+          const auto threepf_kmodes_size     = kconfig_list.size();
 
           threepf_history.resize(times.size());
 
