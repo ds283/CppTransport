@@ -16,38 +16,16 @@
 #include <assert.h>
 #include <math.h>
 
+#include "default_symbols.h"
 #include "latex_output.h"
-
 #include "asciitable.h"
 #include "messages_en.h"
-
 #include "plot_gadget.h"
 #include "gauge_xfm_gadget.h"
 
-#define THREEPF_SYMBOL             "\\alpha"
-#define THREEPF_NAME               "3pf"
-#define ZETA_SYMBOL                "\\zeta"
-#define ZETA_NAME                  "zeta"
-#define PRIME_SYMBOL               "\\prime"
-#define PRIME_NAME                 "'"
 
-#define KT_SYMBOL                  "k_t"
-#define KT_NAME                    "kt"
-#define FLS_ALPHA_SYMBOL           "\\alpha"
-#define FLS_ALPHA_NAME             "alpha"
-#define FLS_BETA_SYMBOL            "\\beta"
-#define FLS_BETA_NAME              "beta"
-
-#define N_LABEL_LATEX              "$N$"
-#define N_LABEL                    "N"
-#define THREEPF_LABEL              "three-point function"
-
-#define PICK_N_LABEL               (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
-
-#define DEFAULT_THREEPF_WRAP_WIDTH (135)
 #define DEFAULT_OUTPUT_DOTPHI      (true)
 
-#define DEFAULT_THREEPF_PRECISION  (3)
 
 namespace transport
   {
@@ -91,7 +69,8 @@ namespace transport
                 twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx->clone(), t->clone()),
                 samples(thpf), kconfig_list(kl),
                 gauge_xfm(gx), tensors(t),
-                wrap_width(DEFAULT_THREEPF_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI)
+                wrap_width(DEFAULT_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI),
+                plot_precision(DEFAULT_PLOT_PRECISION)
               {}
             ~threepf() { /*delete this->gauge_xfm; delete this->tensors;*/ }
 
@@ -99,14 +78,27 @@ namespace transport
             twopf<number>&      get_real_twopf();
             twopf<number>&      get_imag_twopf();
 
+            // plot time evolution of the components of the 3pf
+            // here, this uses the (field, momentum) basis
             void components_time_history(plot_gadget<number>* gadget, std::string output,
               index_selector<3>* selector, std::string format = "pdf", bool logy=true);
 
+            // plot time evolution of the components of the 3pf
+            // here, this uses the (field, dot(field)) basis
             void components_dotphi_time_history(plot_gadget<number>* gadget, std::string output,
               index_selector<3>* selector, std::string format = "pdf", bool logy=true);
 
+            // plot time evolution of the <zeta zeta zeta> 3pf
             void zeta_time_history(plot_gadget<number>* gadget, std::string output,
               std::string format = "pdf", bool logy=true);
+
+            // plot time evolution of the 'reduced bispectrum', defined by
+            // (6/5) fNL_red(k1, k2, k3) ( P(k1) P(k2) + perms ) = B(k1, k2, k3)
+            // this coincides with fNL_local *if* the bispectrum B(k1, k2, k3)
+            // is itsels purely local. Otherwise, it is momentum dependent
+            // and fNL_local should instead be extracted via projection
+            void reduced_bispectrum_time_history(plot_gadget<number>* gadget, std::string output,
+              std::string format = "pdf", bool logy=false);
 
             index_selector<3>* manufacture_selector();
 
@@ -135,7 +127,10 @@ namespace transport
             // compute the shift in the correlation function when changing from momentum to d/dN
             double dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
                                 unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos);
-          
+
+            // return a time history for correlation function of zeta, for a fixed k-configuration
+            std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i);
+
             unsigned int                                            N_fields;          // number of fields
             const std::vector<std::string>                          field_names;       // vector of names - includes momenta
             const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
@@ -163,6 +158,7 @@ namespace transport
 
             unsigned int                                            wrap_width;        // position to wrap when output to stream
             bool                                                    output_dotphi;     // output correlation funtions of dot(phi), or the canonical momentum?
+            unsigned int                                            plot_precision;    // precision to use when making plot labels
         };
 
 
@@ -217,87 +213,7 @@ namespace transport
           // loop over all combinations of k-modes
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
-              std::vector< std::vector<number> > data(this->sample_points.size());
-
-              for(int j = 0; j < this->sample_points.size(); j++)
-                {
-                  data[j].resize(1);    // only one components of < zeta zeta zeta >
-
-                  // compute gauge transformations
-                  std::vector<number> dN;
-                  std::vector< std::vector<number> > ddN;
-
-                  this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
-                  this->gauge_xfm->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
-
-                  // get twopf values for this timeslices and appropriate k-modes
-                  std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
-                  std::vector<number> twopf_im_k1 = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
-                  std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].indices[1]);
-                  std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].indices[1]);
-                  std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].indices[2]);
-                  std::vector<number> twopf_im_k3 = this->twopf_im.get_value(j, kconfig_list[i].indices[2]);
-
-                  // intrinsic threepf
-                  data[j][0] = 0;
-                  for(int m = 0; m < 2*this->N_fields; m++)
-                    {
-                      for(int n = 0; n < 2*this->N_fields; n++)
-                        {
-                          for(int r = 0; r < 2*this->N_fields; r++)
-                            {
-                              unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + (2*this->N_fields)*n + r;
-                              data[j][0] += dN[m]*dN[n]*dN[r]*this->samples[j][samples_index][i];
-                            }
-                        }
-                    }
-
-                  // gauge transformation contribution
-                  for(int l = 0; l < 2*this->N_fields; l++)
-                    {
-                      for(int m = 0; m < 2*this->N_fields; m++)
-                        {
-                          for(int n = 0; n < 2*this->N_fields; n++)
-                            {
-                              for(int r = 0; r < 2*this->N_fields; r++)
-                                {
-                                  // l, m to left of n and r
-                                  unsigned int ln_1_index = (2*this->N_fields)*l + n;
-                                  unsigned int lr_1_index = (2*this->N_fields)*l + r;
-                                  unsigned int mn_1_index = (2*this->N_fields)*m + n;
-                                  unsigned int mr_1_index = (2*this->N_fields)*m + r;
-
-                                  // l, m to left of r but right of n
-                                  unsigned int ln_2_index = (2*this->N_fields)*n + l;
-                                  unsigned int lr_2_index = (2*this->N_fields)*l + r;
-                                  unsigned int mn_2_index = (2*this->N_fields)*n + m;
-                                  unsigned int mr_2_index = (2*this->N_fields)*l + r;
-
-                                  // l, m to right of n and r
-                                  unsigned int ln_3_index = (2*this->N_fields)*n + l;
-                                  unsigned int lr_3_index = (2*this->N_fields)*r + l;
-                                  unsigned int mn_3_index = (2*this->N_fields)*n + m;
-                                  unsigned int mr_3_index = (2*this->N_fields)*r + m;
-
-                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
-                                                                                   + twopf_re_k2[lr_1_index]*twopf_re_k3[mn_1_index]
-                                                                                   - twopf_im_k2[ln_1_index]*twopf_im_k3[mr_1_index]
-                                                                                   - twopf_im_k2[lr_1_index]*twopf_im_k3[mn_1_index]);
-
-                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_2_index]*twopf_re_k3[mr_2_index]
-                                                                                   + twopf_re_k1[lr_2_index]*twopf_re_k3[mn_2_index]
-                                                                                   - twopf_im_k1[ln_2_index]*twopf_im_k3[mr_2_index]
-                                                                                   - twopf_im_k1[lr_2_index]*twopf_im_k3[mn_2_index]);
-
-                                  data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_3_index]*twopf_re_k2[mr_3_index]
-                                                                                   + twopf_re_k1[lr_3_index]*twopf_re_k2[mn_3_index]
-                                                                                   - twopf_im_k1[ln_3_index]*twopf_im_k2[mr_3_index]
-                                                                                   - twopf_im_k1[lr_3_index]*twopf_im_k2[mn_3_index]);
-                                }
-                            }
-                        }
-                    }
-                }
+              std::vector< std::vector<number> > data = this->construct_zeta_time_history(i);
 
               std::ostringstream fnam;
               fnam << output << "_" << i;
@@ -313,6 +229,11 @@ namespace transport
             }
         }
 
+
+      template <typename number>
+      void threepf<number>::reduced_bispectrum_time_history(plot_gadget<number> *gadget, std::string output, std::string format, bool logy)
+        {
+        }
 
       template <typename number>
       std::vector< std::string > threepf<number>::make_labels(index_selector<3>* selector, bool latex)
@@ -378,13 +299,13 @@ namespace transport
 
           if(latex)
             {
-              title << "$" << KT_SYMBOL        << " = " << output_latex_number(config.k_t, DEFAULT_THREEPF_PRECISION)   << "$, "
-                    << "$" << FLS_ALPHA_SYMBOL << " = " << output_latex_number(config.alpha, DEFAULT_THREEPF_PRECISION) << "$, "
-                    << "$" << FLS_BETA_SYMBOL  << " = " << output_latex_number(config.beta, DEFAULT_THREEPF_PRECISION)  << "$";
+              title << "$" << KT_SYMBOL        << " = " << output_latex_number(config.k_t, this->plot_precision)   << "$, "
+                    << "$" << FLS_ALPHA_SYMBOL << " = " << output_latex_number(config.alpha, this->plot_precision) << "$, "
+                    << "$" << FLS_BETA_SYMBOL  << " = " << output_latex_number(config.beta, this->plot_precision)  << "$";
             }
           else
             {
-              title << std::setprecision(DEFAULT_THREEPF_PRECISION);
+              title << std::setprecision(this->plot_precision);
               title << KT_NAME        << " = " << config.k_t   << ", "
                     << FLS_ALPHA_NAME << " = " << config.alpha << ", "
                     << FLS_BETA_NAME  << " = " << config.beta;
@@ -567,6 +488,94 @@ namespace transport
             }
 
           return(rval);
+        }
+
+      template <typename number>
+      std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          for(int j = 0; j < this->sample_points.size(); j++)
+            {
+              data[j].resize(1);    // only one component of < zeta zeta zeta >
+
+              // compute gauge transformations
+              std::vector<number> dN;
+              std::vector< std::vector<number> > ddN;
+
+              this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+              this->gauge_xfm->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
+
+              // get twopf values for this timeslices and appropriate k-modes
+              std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
+              std::vector<number> twopf_im_k1 = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
+              std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].indices[1]);
+              std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].indices[1]);
+              std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].indices[2]);
+              std::vector<number> twopf_im_k3 = this->twopf_im.get_value(j, kconfig_list[i].indices[2]);
+
+              // compute contribution from intrinsic threepf
+              data[j][0] = 0;
+              for(int m = 0; m < 2*this->N_fields; m++)
+                {
+                  for(int n = 0; n < 2*this->N_fields; n++)
+                    {
+                      for(int r = 0; r < 2*this->N_fields; r++)
+                        {
+                          unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + (2*this->N_fields)*n + r;
+                          data[j][0] += dN[m]*dN[n]*dN[r]*this->samples[j][samples_index][i];
+                        }
+                    }
+                }
+
+              // compute contribution from gauge transformation
+              for(int l = 0; l < 2*this->N_fields; l++)
+                {
+                  for(int m = 0; m < 2*this->N_fields; m++)
+                    {
+                      for(int n = 0; n < 2*this->N_fields; n++)
+                        {
+                          for(int r = 0; r < 2*this->N_fields; r++)
+                            {
+                              // l, m to left of n and r
+                              unsigned int ln_1_index = (2*this->N_fields)*l + n;
+                              unsigned int lr_1_index = (2*this->N_fields)*l + r;
+                              unsigned int mn_1_index = (2*this->N_fields)*m + n;
+                              unsigned int mr_1_index = (2*this->N_fields)*m + r;
+
+                              // l, m to left of r but right of n
+                              unsigned int ln_2_index = (2*this->N_fields)*n + l;
+                              unsigned int lr_2_index = (2*this->N_fields)*l + r;
+                              unsigned int mn_2_index = (2*this->N_fields)*n + m;
+                              unsigned int mr_2_index = (2*this->N_fields)*l + r;
+
+                              // l, m to right of n and r
+                              unsigned int ln_3_index = (2*this->N_fields)*n + l;
+                              unsigned int lr_3_index = (2*this->N_fields)*r + l;
+                              unsigned int mn_3_index = (2*this->N_fields)*n + m;
+                              unsigned int mr_3_index = (2*this->N_fields)*r + m;
+
+                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
+                                + twopf_re_k2[lr_1_index]*twopf_re_k3[mn_1_index]
+                                - twopf_im_k2[ln_1_index]*twopf_im_k3[mr_1_index]
+                                - twopf_im_k2[lr_1_index]*twopf_im_k3[mn_1_index]);
+
+                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_2_index]*twopf_re_k3[mr_2_index]
+                                + twopf_re_k1[lr_2_index]*twopf_re_k3[mn_2_index]
+                                - twopf_im_k1[ln_2_index]*twopf_im_k3[mr_2_index]
+                                - twopf_im_k1[lr_2_index]*twopf_im_k3[mn_2_index]);
+
+                              data[j][0] += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*(  twopf_re_k1[ln_3_index]*twopf_re_k2[mr_3_index]
+                                + twopf_re_k1[lr_3_index]*twopf_re_k2[mn_3_index]
+                                - twopf_im_k1[ln_3_index]*twopf_im_k2[mr_3_index]
+                                - twopf_im_k1[lr_3_index]*twopf_im_k2[mn_3_index]);
+                            }
+                        }
+                    }
+                }
+            }
+
+          return(data);
         }
 
 

@@ -15,9 +15,9 @@
 #include <vector>
 
 
-#define DEFAULT_PRECISION     (12)
-#define DEFAULT_DISPLAY_WIDTH (80)
-#define DEFAULT_WRAP_WIDTH    (true)
+#define DEFAULT_ASCIITABLE_PRECISION     (12)
+#define DEFAULT_ASCIITABLE_DISPLAY_WIDTH (80)
+#define DEFAULT_ASCIITABLE_WRAP_WIDTH    (true)
 
 namespace transport
   {
@@ -27,7 +27,10 @@ namespace transport
         {
           public:
             asciitable(std::ostream& s)
-              : stream(s), precision(DEFAULT_PRECISION), display_width(DEFAULT_DISPLAY_WIDTH), wrap_width(DEFAULT_WRAP_WIDTH) {}
+              : stream(s), precision(DEFAULT_ASCIITABLE_PRECISION),
+                display_width(DEFAULT_ASCIITABLE_DISPLAY_WIDTH),
+                wrap_width(DEFAULT_ASCIITABLE_WRAP_WIDTH)
+              {}
 
           void write(std::string x_name, const std::vector<std::string>& columns,
             const std::vector<number>& xs, const std::vector< std::vector<number> >& ys);

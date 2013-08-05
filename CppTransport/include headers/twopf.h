@@ -16,33 +16,13 @@
 #include <assert.h>
 #include <math.h>
 
+#include "default_symbols.h"
 #include "asciitable.h"
 #include "latex_output.h"
 #include "messages_en.h"
-
 #include "plot_gadget.h"
 #include "gauge_xfm_gadget.h"
 
-
-#define TWOPF_SYMBOL               "\\Sigma"
-#define TWOPF_NAME                 "Sigma"
-#define ZETA_SYMBOL                "\\zeta"
-#define ZETA_NAME                  "zeta"
-#define DIMENSIONLESS_TWOPF_SYMBOL "\\mathcal{P}"
-#define DIMENSIONLESS_TWOPF_NAME   "P"
-#define PRIME_SYMBOL               "\\prime"
-#define PRIME_NAME                 "'"
-#define K_SYMBOL                   "k"
-#define K_NAME                     "k"
-
-#define N_LABEL_LATEX              "$N$"
-#define N_LABEL                    "N"
-#define TWOPF_LABEL                "two-point function"
-
-#define PICK_N_LABEL               (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
-
-#define DEFAULT_TWOPF_WRAP_WIDTH   (135)
-#define DEFAULT_TWOPF_PRECISION    (3)
 
 namespace transport
   {
@@ -69,7 +49,8 @@ namespace transport
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b, t->clone()), samples(twopf),
                 gauge_xfm(gx), tensors(t),
-                wrap_width(DEFAULT_TWOPF_WRAP_WIDTH)
+                wrap_width(DEFAULT_WRAP_WIDTH),
+                plot_precision(DEFAULT_PLOT_PRECISION)
               {}
             ~twopf() { /*delete this->gauge_xfm; delete this->tensors*/ }
 
@@ -125,6 +106,7 @@ namespace transport
               // third index: k
 
             unsigned int                                            wrap_width;        // position to wrap when output to stream
+            unsigned int                                            plot_precision;    // precision to use when making plot labels
         };
 
 
@@ -225,11 +207,11 @@ namespace transport
 
           if(latex)
             {
-              title << "$" << K_SYMBOL << " = " << output_latex_number(k, DEFAULT_TWOPF_PRECISION) << "$";
+              title << "$" << K_SYMBOL << " = " << output_latex_number(k, this->plot_precision) << "$";
             }
           else
             {
-              title << std::setprecision(DEFAULT_TWOPF_PRECISION);
+              title << std::setprecision(this->plot_precision);
               title << K_NAME << " = " << k;
             }
 

@@ -25,13 +25,13 @@
 // IEEE mandates that if you convert to a string with at least 17sf, then
 // convert back to a double, then you get the same number
 // so use this precision by default
-#define DEFAULT_PRECISION (17)
+#define DEFAULT_ASCIITABLE_PLOT_GADGET_PRECISION (17)
 
 template <typename number>
 class asciitable_plot_gadget : public plot_gadget<number>
   {
     public:
-      asciitable_plot_gadget() : plot_gadget<number>(""), precision(DEFAULT_PRECISION) {}
+      asciitable_plot_gadget() : plot_gadget<number>(""), precision(DEFAULT_ASCIITABLE_PLOT_GADGET_PRECISION) {}
 
       void plot(std::string output, std::string title,
         const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,

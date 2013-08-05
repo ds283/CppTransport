@@ -11,6 +11,7 @@
 #include <vector>
 #include <assert.h>
 
+#include "default_symbols.h"
 #include "asciitable.h"
 #include "latex_output.h"
 #include "plot_gadget.h"
@@ -18,36 +19,6 @@
 #include "tensor_gadget.h"
 #include "messages_en.h"
 
-#define U2_SYMBOL     "u"
-#define U2_NAME       "u2"
-#define U3_SYMBOL     "u"
-#define U3_NAME       "u3"
-#define PRIME_SYMBOL  "\\prime"
-#define PRIME_NAME    "'"
-
-#define K1_SYMBOL     "k_1"
-#define K1_NAME       "k1"
-#define K2_SYMBOL     "k_2"
-#define K2_NAME       "k2"
-#define K3_SYMBOL     "k_3"
-#define K3_NAME       "k3"
-#define K_SYMBOL      "k"
-#define K_NAME        "k"
-
-#define U2_LABEL_LATEX "$u_2$ tensor"
-#define U3_LABEL_LATEX "$u_3$ tensor"
-#define U2_LABEL       "u2 tensor"
-#define U3_LABEL       "u3 tensor"
-#define N_LABEL_LATEX  "$N$"
-#define N_LABEL        "N"
-#define FIELDS_LABEL   "fields"
-
-#define PICK_N_LABEL   (gadget->latex_labels() ? N_LABEL_LATEX : N_LABEL)
-#define PICK_U2_LABEL  (gadget->latex_labels() ? U2_LABEL_LATEX : U2_LABEL)
-#define PICK_U3_LABEL  (gadget->latex_labels() ? U3_LABEL_LATEX : U3_LABEL)
-
-#define DEFAULT_BACKGROUND_WRAP_WIDTH (135)
-#define DEFAULT_BACKGROUND_PRECISION  (3)
 
 namespace transport
   {
@@ -71,7 +42,8 @@ namespace transport
               const std::vector<double>& sp, const std::vector< std::vector<number> >& s, tensor_gadget<number>* t)
               : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s),
                 tensors(t),
-                wrap_width(DEFAULT_BACKGROUND_WRAP_WIDTH)
+                wrap_width(DEFAULT_WRAP_WIDTH),
+                plot_precision(DEFAULT_PLOT_PRECISION)
               {}
             ~background() { /*delete this->tensors;*/ }
 
@@ -129,6 +101,7 @@ namespace transport
               // second index: field label
 
             unsigned int                             wrap_width;        // position to wrap when output to stream
+            unsigned int                             plot_precision;    // precision to use when making plot labels
         };
 
 
@@ -326,11 +299,11 @@ namespace transport
 
           if(latex)
             {
-              title << "$" << K_SYMBOL << " = " << output_latex_number(k, DEFAULT_BACKGROUND_PRECISION) << "$";
+              title << "$" << K_SYMBOL << " = " << output_latex_number(k, this->plot_precision) << "$";
             }
           else
             {
-              title << std::setprecision(DEFAULT_BACKGROUND_PRECISION);
+              title << std::setprecision(this->plot_precision);
               title << K_NAME << " = " << k;
             }
 
@@ -345,13 +318,13 @@ namespace transport
 
           if(latex)
             {
-              title << "$" << K1_SYMBOL << " = " << output_latex_number(k1, DEFAULT_BACKGROUND_PRECISION) << "$, "
-                    << "$" << K2_SYMBOL << " = " << output_latex_number(k2, DEFAULT_BACKGROUND_PRECISION) << "$, "
-                    << "$" << K3_SYMBOL << " = " << output_latex_number(k3, DEFAULT_BACKGROUND_PRECISION) << "$";
+              title << "$" << K1_SYMBOL << " = " << output_latex_number(k1, this->plot_precision) << "$, "
+                    << "$" << K2_SYMBOL << " = " << output_latex_number(k2, this->plot_precision) << "$, "
+                    << "$" << K3_SYMBOL << " = " << output_latex_number(k3, this->plot_precision) << "$";
             }
           else
             {
-              title << std::setprecision(DEFAULT_BACKGROUND_PRECISION);
+              title << std::setprecision(this->plot_precision);
               title << K1_NAME << " = " << k1 << ", "
                     << K2_NAME << " = " << k2 << ", "
                     << K3_NAME << " = " << k3;
