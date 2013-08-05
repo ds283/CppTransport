@@ -1231,6 +1231,9 @@ namespace transport
           const auto __u3_k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
           const auto __u3_k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
+          // check that the u3 tensor is properly symmetric on its final two indices if desired
+#ifdef CHECK_U3_SYMMETRY
+          std::cout << "CHECK!" << std::endl;
           const auto __u3_k1s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k1, __k3, __k2, __a, __Hsq, __eps};
           const auto __u3_k2s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k2, __k3, __k1, __a, __Hsq, __eps};
           const auto __u3_k3s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k3, __k2, __k1, __a, __Hsq, __eps};
@@ -1239,6 +1242,7 @@ namespace transport
           CHECK_ZERO((__u3_k1_$$__A_$$__B_$$__C - __u3_k1s_$$__A_$$__B_$$__C)/__u3_k1_$$__A_$$__B_$$__C) $$// ;
           CHECK_ZERO((__u3_k2_$$__A_$$__B_$$__C - __u3_k2s_$$__A_$$__B_$$__C)/__u3_k2_$$__A_$$__B_$$__C) $$// ;
           CHECK_ZERO((__u3_k3_$$__A_$$__B_$$__C - __u3_k3s_$$__A_$$__B_$$__C)/__u3_k3_$$__A_$$__B_$$__C) $$// ;
+#endif
 
           // evolve the real and imaginary components of the 2pf
           // for the imaginary parts, index placement does matter
