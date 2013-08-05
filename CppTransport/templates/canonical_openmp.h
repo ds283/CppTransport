@@ -634,6 +634,9 @@ namespace transport
           // (not at the start of the integration)
           const auto __Hsq             = $$__HUBBLE_SQ;
 
+          // the convention for the 'unscaled' mode is that k=1
+          // corresponds to the mode which crosses the horizon at the
+          // N=Nstar
           for(int __n = 0; __n < __ks.size(); __n++)
             {
               __com_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);
@@ -730,7 +733,9 @@ namespace transport
 #pragma omp parallel for schedule(dynamic)
           for(int i = 0; i < kconfig_list.size(); i++)
             {
-              std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1 << " " __CPP_TRANSPORT_OF << " " << kconfig_list.size() << std::endl;
+              std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1
+                        << " " __CPP_TRANSPORT_OF << " " << kconfig_list.size()
+                        << std::endl;
 
               std::vector<double>                kmode_slices;
               std::vector< std::vector<number> > kmode_background_history;
