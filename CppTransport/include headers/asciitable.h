@@ -19,6 +19,7 @@
 #define DEFAULT_ASCIITABLE_DISPLAY_WIDTH (80)
 #define DEFAULT_ASCIITABLE_WRAP_WIDTH    (true)
 
+
 namespace transport
   {
 
