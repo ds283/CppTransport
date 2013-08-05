@@ -333,7 +333,7 @@ namespace transport
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
               if(i > 0) out << std::endl;
-              out << __CPP_TRANSPORT_TWOPF_MESSAGE << " k = " << obj.sample_ks[i] << std::endl << std::endl;
+              out << __CPP_TRANSPORT_TWOPF_MESSAGE << " " << K_NAME << " = " << obj.sample_ks[i] << std::endl << std::endl;
 
               std::vector< std::vector<number> > data = obj.construct_kmode_time_history(selector, i);
 

@@ -69,5 +69,7 @@
 #define DEFAULT_WRAP_WIDTH         (135)
 #define DEFAULT_PLOT_PRECISION     (3)
 
+#define DEFAULT_OUTPUT_DOTPHI      (true)
+
 
 #endif // __CPP_TRANSPORT_DEFAULT_SYMBOLS

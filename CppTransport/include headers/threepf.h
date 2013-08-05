@@ -24,9 +24,6 @@
 #include "gauge_xfm_gadget.h"
 
 
-#define DEFAULT_OUTPUT_DOTPHI (true)
-
-
 namespace transport
   {
       // DATA PRODUCTS -- objects wrapping the various data products produced by each model
@@ -675,9 +672,9 @@ namespace transport
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
               if(i > 0) out << std::endl;
-              out << __CPP_TRANSPORT_THREEPF_MESSAGE << " k_t = " << obj.kconfig_list[i].k_t << ","
-                                                     << " alpha = " << obj.kconfig_list[i].alpha << ","
-                                                     << " beta = " << obj.kconfig_list[i].beta
+              out << __CPP_TRANSPORT_THREEPF_MESSAGE << " " << KT_NAME        << " = " << obj.kconfig_list[i].k_t << ","
+                                                     << " " << FLS_ALPHA_NAME << " = " << obj.kconfig_list[i].alpha << ","
+                                                     << " " << FLS_BETA_NAME  << " = " << obj.kconfig_list[i].beta
                                                      << std::endl << std::endl;
 
               if(obj.output_dotphi)
