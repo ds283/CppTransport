@@ -17,6 +17,7 @@
 #define IS_FIELD(z)    (z >= 0 && z < this->num_fields)
 #define IS_MOMENTUM(z) (z >= this->num_fields && z < 2*this->num_fields)
 
+
 std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_sr_u()
   {
     std::vector<GiNaC::ex> rval;
