@@ -472,9 +472,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
     if(i == k) c += this->deriv_list[j]/(2*pow(this->M_Planck,2)) * k1dotk3/(pow(a,2)*Hsq)/3;
     if(i == j) c += this->deriv_list[k]/(2*pow(this->M_Planck,2)) * k1dotk2/(pow(a,2)*Hsq)/3;
 
-    c -=   (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,2)) * k2dotk3 / (k2*k2*k3*k3) /3
-         + (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,2)) * k1dotk3 / (k1*k1*k3*k3) /3
-         + (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,2)) * k1dotk2 / (k1*k1*k2*k2) /3;
+    c -=   (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,2)) * k2dotk3*k2dotk3 / (k2*k2*k3*k3) /3
+         + (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,2)) * k1dotk3*k1dotk3 / (k1*k1*k3*k3) /3
+         + (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,2)) * k1dotk2*k1dotk2 / (k1*k1*k2*k2) /3;
 
     return(c);
   }
@@ -505,8 +505,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
     if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
     if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
 
-    c +=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k2dotk3/(k2*k3),2) /2
-         + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * pow(k1dotk3/(k1*k3),2) /2;
+    c +=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * k2dotk3*k2dotk3 / (k2*k2*k3*k3) /2;
+         + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * k1dotk3*k1dotk3 / (k1*k1*k3*k3) /2;
 
     return(c);
   }
@@ -532,7 +532,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4));
 
-    c -= this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4)) * pow(k1dotk2 / (k1*k2), 2);
+    c -= this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4)) * k1dotk2*k1dotk2 / (k1*k1*k2*k2);
 
     if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * k1dotk3 / (k1*k1) /2;
     if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * k2dotk3 / (k2*k2) /2;
