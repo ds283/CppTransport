@@ -67,6 +67,9 @@ namespace transport
           double                      k_t;
           double                      alpha;
           double                      beta;
+          
+          bool                        store_background;
+          bool                        store_twopf;
         };
 
       template <typename number>
