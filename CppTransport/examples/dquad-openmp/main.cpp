@@ -62,18 +62,21 @@ int main(int argc, const char* argv[])
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double       tmin = 0;          // begin at time t = 0
-    const double       tmax = 50;         // end at time t = 50
-    const unsigned int tN   = 500;        // record 500 samples
+    const double        tmin = 0;          // begin at time t = 0
+    const double        tmax = 55;         // end at time t = 50
+    const unsigned int  tN   = 500;        // record 500 samples
     std::vector<double> times;
     for(int i = 0; i <= tN; i++)
       {
         times.push_back(tmin + ((tmax-tmin)/tN)*i);
       }
 
-    const double       kmin = exp(0.0);   // begin with the mode corresponding the horizon at the start of integration
-    const double       kmax = exp(3.0);   // end with the mode which exited the horizon 3 e-folds later
-    const unsigned int kN   = 5;          // number of k-points
+    // the conventions for k-numbers are as follows:
+    // k=1 is the mode which crosses the horizon at time N*,
+    // where N* is the 'offset' we pass to the integration method (see below)
+    const double        kmin = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
+    const double        kmax = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
+    const unsigned int  kN   = 5;          // number of k-points
     std::vector<double> ks;
     for(int i = 0; i < kN; i++)
       {
@@ -83,7 +86,8 @@ int main(int argc, const char* argv[])
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    transport::threepf<double> threepf = model.threepf(ks, 7.0, init_values, times);
+    const double Nstar = 7.0;
+    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
 
     timer.stop();
     timer.report();
@@ -184,6 +188,7 @@ int main(int argc, const char* argv[])
     threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
     threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
     threepf.reduced_bispectrum_time_history(&py_plt, output + "/redbisp");
+    threepf.reduced_bispectrum_time_history(&text_plt, output + "/redbisp");
 
     delete backg_selector;
     delete twopf_re_selector;
