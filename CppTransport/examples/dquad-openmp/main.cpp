@@ -12,6 +12,7 @@
 
 #include "dq.h"
 #import "background.h"
+#include "plot_gadget.h"
 
 
 // ****************************************************************************
@@ -65,11 +66,8 @@ int main(int argc, const char* argv[])
     const double        tmin = 0;          // begin at time t = 0
     const double        tmax = 55;         // end at time t = 50
     const unsigned int  tN   = 500;        // record 500 samples
-    std::vector<double> times;
-    for(int i = 0; i <= tN; i++)
-      {
-        times.push_back(tmin + ((tmax-tmin)/tN)*i);
-      }
+
+    sample_gadget<double> Nsample(tmin, tmax, tN);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -77,11 +75,11 @@ int main(int argc, const char* argv[])
     const double        kmin = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
     const double        kmax = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  kN   = 5;          // number of k-points
-    std::vector<double> ks;
-    for(int i = 0; i < kN; i++)
-      {
-        ks.push_back(kmin * pow(kmax/kmin, ((double)i/(double)kN)));
-      }
+
+    sample_gadget<double> ksample(kmin, kmax, kN);
+
+    std::vector<double> times = Nsample.linear_axis();
+    std::vector<double> ks    = ksample.logarithmic_axis();
 
     boost::timer::auto_cpu_timer timer;
 

@@ -17,6 +17,31 @@
 #include <string>
 
 
+#define DEFAULT_RESAMPLE_POINTS (500)
+
+
+template <typename number>
+class sample_gadget
+  {
+    public:
+      sample_gadget(number a, number b) : min(a), max(b), npoints(DEFAULT_RESAMPLE_POINTS) {}
+      sample_gadget(number a, number b, unsigned int N) : min(a), max(b), npoints(N)       {}
+
+      void set_limits(number a, number b)   { assert(a <= b); this->min = (a <= b ? a : b); this->max = (b >= a ? b : a); }
+      void get_limits(number& a, number& b) { a = this->min; b = this->max; }
+
+      std::vector<number> linear_axis();
+      std::vector<number> logarithmic_axis();
+
+      std::vector< std::vector<number> > resample(const std::vector< std::vector<number> >& sample);
+
+    protected:
+      number       min;
+      number       max;
+      unsigned int npoints;
+  };
+
+
 template <typename number>
 class plot_gadget
   {
@@ -38,6 +63,10 @@ class plot_gadget
       std::string format;
   };
 
+
+// IMPLEMENTATION -- PLOT_GADGET
+
+
 template <typename number>
 void plot_gadget<number>::set_format(std::string f)
   {
@@ -49,6 +78,43 @@ const std::string& plot_gadget<number>::get_format()
   {
     return(this->format);
   }
+
+
+// IMPLEMENTATION - RESAMPLE_GADGET
+
+
+template <typename number>
+std::vector<number> sample_gadget<number>::linear_axis()
+  {
+    std::vector<number> axis(this->npoints);   // the axis should contain npoints points
+
+    number step = (this->max - this->min) / this->npoints;
+
+    for(int i = 0; i < this->npoints; i++)
+      {
+        axis[i] = this->min + i*step;
+      }
+
+    return(axis);
+  }
+
+
+template <typename number>
+std::vector<number> sample_gadget<number>::logarithmic_axis()
+  {
+    std::vector<number> axis(this->npoints);
+
+    for(int i = 0; i < this->npoints; i++)
+      {
+        axis[i] = this->min * pow(this->max/this->min, (double)i/(double)this->npoints);
+      }
+
+    return(axis);
+  }
+
+
+// OTHER MISCELLANEOUS FUNCTIONS
+
 
 inline void open_tempfile(std::string& path)
   {
