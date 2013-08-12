@@ -8,7 +8,6 @@
 #ifndef __CPP_TRANSPORT_DATA_PRODUCTS_H_
 #define __CPP_TRANSPORT_DATA_PRODUCTS_H_
 
-#include "index_selector.h"
 #include "background.h"
 #include "twopf.h"
 #include "threepf.h"

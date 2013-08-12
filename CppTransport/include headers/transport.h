@@ -11,6 +11,8 @@
 
 #include "messages_en.h"
 
+#include "index_selector.h"
+#include "sample_gadget.h"
 #include "plot_gadget.h"
 #include "python_plot_gadget.h"
 #include "gnuplot_plot_gadget.h"
