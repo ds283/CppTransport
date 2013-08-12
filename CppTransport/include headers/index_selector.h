@@ -14,20 +14,80 @@
 
 namespace transport
   {
-      // DATA PRODUCTS -- objects wrapping the various data products produced by each model
+      // in this class, the functions are all defined inline in the class declaration
+      // ordinarily I would not do this, but template arguments could not be given
+      // default arguments until C++11, and neither of the default compilers shipped by
+      // Apple have been updated to handle this case. Changes have been made downstream,
+      // so when Apple release updated tools it will be possible to revert this.
 
-      template <unsigned int indices>
+      template <unsigned int indices, unsigned int dimension=2>
       class index_selector
         {
           public:
-            index_selector(unsigned int N_f);
+            index_selector(unsigned int N_f)
+              : N_fields(N_f)
+              {
+                // work out how many components this object has
+                size = 1;
+                for(int i = 0; i < indices; i++)
+                  {
+                    size *= dimension*N_fields;
+                  }
+                enabled.assign(size, true);   // by default, enable all components
 
-            void none     ();
-            void all      ();
-            void set_on   (std::array<unsigned int, indices>& which);
-            void set_off  (std::array<unsigned int, indices>& which);
+                displacements.resize(indices);
+                unsigned int count = 1;
+                for(int i = 0; i < indices; i++)
+                  {
+                    displacements[indices-i-1] = count;
+                    count *= dimension*this->N_fields;
+                  }
+              }
 
-            bool is_on    (std::array<unsigned int, indices>& which);
+            void none() { this->enabled.assign(size, false); }
+            void all()  { this->enabled.assign(size, true); }
+
+            void set_on(std::array<unsigned int, indices>& which)
+              {
+                unsigned int index = 0;
+                for(int i = 0; i < indices; i++)
+                  {
+                    assert(which[i] < dimension*this->N_fields);  // basic sanity check: TODO: add error handling
+
+                    index += displacements[i] * which[i];
+                  }
+
+                assert(index < this->size);
+                this->enabled[index] = true;
+              }
+
+            void set_off(std::array<unsigned int, indices>& which)
+              {
+                unsigned int index = 0;
+                for(int i = 0; i < indices; i++)
+                  {
+                    assert(which[i] < dimension*this->N_fields);  // basic sanity check: TODO: add error handling
+
+                    index += displacements[i] * which[i];
+                  }
+
+                assert(index < this->size);
+                this->enabled[index] = false;
+              }
+
+            bool is_on(std::array<unsigned int, indices>& which)
+              {
+                unsigned int index = 0;
+                for(int i = 0; i < indices; i++)
+                  {
+                    assert(which[i] < dimension*this->N_fields); // basic sanity check: TODO: add error handling
+
+                    index += displacements[i] * which[i];
+                  }
+
+                assert(index < this->size);
+                return(this->enabled[index]);
+              }
 
           protected:
             const unsigned int        N_fields;
@@ -35,77 +95,6 @@ namespace transport
             std::vector<bool>         enabled;
             std::vector<unsigned int> displacements;
         };
-
-      template <unsigned int indices>
-      index_selector<indices>::index_selector(unsigned int N_f)
-        : N_fields(N_f)
-        {
-          size = 1;
-          for(int i = 0; i < indices; i++)
-            {
-              size *= 2*N_fields;
-            }
-          enabled.assign(size, true);   // by default, plot all components
-
-          displacements.resize(indices);
-          unsigned int count = 1;
-          for(int i = 0; i < indices; i++)
-            {
-              displacements[indices-i-1] = count;
-              count *= 2*this->N_fields;
-            }
-        };
-
-      template <unsigned int indices>
-      void index_selector<indices>::none()
-        {
-          enabled.assign(size, false);
-        }
-
-      template <unsigned int indices>
-      void index_selector<indices>::all()
-        {
-          enabled.assign(size, true);
-        }
-
-      template <unsigned int indices>
-      void index_selector<indices>::set_on(std::array<unsigned int, indices>& which)
-        {
-          unsigned int index = 0;
-          for(int i = 0; i < indices; i++)
-            {
-              index += displacements[i] * which[i];
-            }
-
-          assert(index < this->size);
-          this->enabled[index] = true;
-        }
-
-      template <unsigned int indices>
-      void index_selector<indices>::set_off(std::array<unsigned int, indices>& which)
-        {
-          unsigned int index = 0;
-          for(int i = 0; i < indices; i++)
-            {
-              index += displacements[i] * which[i];
-            }
-
-          assert(index < this->size);
-          this->enabled[index] = false;
-        }
-
-      template <unsigned int indices>
-      bool index_selector<indices>::is_on(std::array<unsigned int, indices>& which)
-        {
-          unsigned int index = 0;
-          for(int i = 0; i < indices; i++)
-            {
-              index += displacements[i] * which[i];
-            }
-
-          assert(index < this->size);
-          return(this->enabled[index]);
-        }
 
 
   }	// namespace transport
