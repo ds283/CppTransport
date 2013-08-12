@@ -57,7 +57,8 @@
 %token          potential
 %token          parameter
 %token          latex
-%token          k_class
+%token          core
+%token          implementation
 %token          abserr
 %token          relerr
 %token          stepper
@@ -142,7 +143,8 @@ script: script potential expression semicolon                                   
         | script name string semicolon                                                  { driver->set_name($3); }
         | script author string semicolon                                                { driver->set_author($3); }
         | script tag string semicolon                                                   { driver->set_tag($3); }
-        | script k_class string semicolon                                               { driver->set_class($3); }
+        | script core string semicolon                                                  { driver->set_core($3); }
+        | script implementation string semicolon                                        { driver->set_implementation($3); }
         | script model string semicolon                                                 { driver->set_model($3); }
         | script field attribute_block identifier semicolon                             { driver->add_field($4, $3); }
         | script parameter attribute_block identifier semicolon                         { driver->add_parameter($4, $3); }

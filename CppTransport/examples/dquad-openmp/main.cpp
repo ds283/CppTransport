@@ -55,8 +55,8 @@ int main(int argc, const char* argv[])
     std::string output(argv[1]);
     std::string python(argv[2]);
 
-    python_plot_gadget<double>     py_plt(python);
-    asciitable_plot_gadget<double> text_plt;
+    transport::python_plot_gadget<double>     py_plt(python);
+    transport::asciitable_plot_gadget<double> text_plt;
 //    gnuplot_plot_gadget<double> plt;
 
 //    py_plt.set_use_latex(true);
@@ -67,7 +67,7 @@ int main(int argc, const char* argv[])
     const double        tmax = 55;         // end at time t = 50
     const unsigned int  tN   = 500;        // record 500 samples
 
-    sample_gadget<double> Nsample(tmin, tmax, tN);
+    transport::sample_gadget<double> Nsample(tmin, tmax, tN);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -76,7 +76,7 @@ int main(int argc, const char* argv[])
     const double        kmax = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  kN   = 5;          // number of k-points
 
-    sample_gadget<double> ksample(kmin, kmax, kN);
+    transport::sample_gadget<double> ksample(kmin, kmax, kN, );
 
     std::vector<double> times = Nsample.linear_axis();
     std::vector<double> ks    = ksample.logarithmic_axis();

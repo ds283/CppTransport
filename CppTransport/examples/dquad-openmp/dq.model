@@ -1,11 +1,12 @@
-model   "dquad";
-name    "Double Quadratic Inflation";
+model          "dquad";
+name           "Double Quadratic Inflation";
 
-author  "David Seery and others 2013";
-tag     "please cite arXiv:XXXX.YYYY";
+author         "David Seery and others 2013";
+tag            "please cite arXiv:XXXX.YYYY";
 
 % specify which class template should be used with this model
-class   "canonical_openmp";
+core           "canonical_core";
+implementation "canonical_basic";
 
 % fix properties of the steppers
 background

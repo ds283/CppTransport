@@ -102,19 +102,22 @@ class script
       const GiNaC::symbol&               get_Mp_symbol            ();
 
       void                               set_name                 (const std::string n);
-      const std::string                  get_name                 ();
+      const std::string&                 get_name                 ();
 
       void                               set_author               (const std::string a);
-      const std::string                  get_author               ();
+      const std::string&                 get_author               ();
 
       void                               set_tag                  (const std::string t);
-      const std::string                  get_tag                  ();
+      const std::string&                 get_tag                  ();
 
-      void                               set_class                (const std::string c);
-      const std::string                  get_class                ();
+      void                               set_core                 (const std::string c);
+      const std::string&                 get_core                 ();
+
+      void                               set_implementation       (const std::string i);
+      const std::string&                 get_implementation       ();
 
       void                               set_model                (const std::string m);
-      const std::string                  get_model                ();
+      const std::string&                 get_model                ();
 
       void                               set_potential            (GiNaC::ex* V);
       GiNaC::ex                          get_potential            ();
@@ -129,7 +132,8 @@ class script
       std::string                        name;
       std::string                        author;
       std::string                        tag;
-      std::string                        cls;
+      std::string                        core;
+      std::string                        implementation;
       std::string                        model;
 
       struct stepper                     background_stepper;

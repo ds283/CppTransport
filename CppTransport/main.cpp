@@ -29,7 +29,7 @@
 const std::string keyword_table[] =
   {
       "name", "author", "tag", "field", "potential",
-      "parameter", "latex", "class", "model",
+      "parameter", "latex", "core", "implementation", "model",
       "abserr", "relerr", "stepper", "stepsize",
       "background", "perturbations",
       "abs", "step", "sqrt", "sin", "cos", "tan",
@@ -41,7 +41,7 @@ const std::string keyword_table[] =
 const enum keyword_type keyword_map[] =
   {
       k_name, k_author, k_tag, k_field, k_potential,
-      k_parameter, k_latex, k_class, k_model,
+      k_parameter, k_latex, k_core, k_implementation, k_model,
       k_abserr, k_relerr, k_stepper, k_stepsize,
       k_background, k_perturbations,
       f_abs, f_step, f_sqrt,
@@ -93,7 +93,8 @@ bool backend_selector[] =
 // ******************************************************************
 
 
-static std::string mangle_output_name(std::string input);
+static std::string mangle_output_name(std::string input, std::string tag);
+static std::string mangle_input_name (std::string input);
 
 
 // ******************************************************************
@@ -109,7 +110,8 @@ int main(int argc, const char *argv[])
     finder path;
 
     std::deque<struct input> inputs;
-    std::string              current_output = "";
+    std::string              current_core = "";
+    std::string              current_implementation = "";
 
     for(int i = 1; i < argc; i++)
       {
@@ -126,16 +128,29 @@ int main(int argc, const char *argv[])
                 error(msg.str());
               }
           }
-        else if(strcmp(argv[i], "-o") == 0)
+        else if(strcmp(argv[i], "--core-output") == 0)
           {
             if(i + 1 < argc)
               {
-                current_output = (std::string)argv[++i];
+                current_core = (std::string)argv[++i];
               }
             else
               {
                 std::ostringstream msg;
-                msg << ERROR_MISSING_PATHNAME << " -o";
+                msg << ERROR_MISSING_PATHNAME << " --core-output";
+                error(msg.str());
+              }
+          }
+        else if(strcmp(argv[i], "--implementation-output") == 0)
+          {
+            if(i + 1 < argc)
+              {
+                current_implementation = (std::string)argv[++i];
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << ERROR_MISSING_PATHNAME << " --implementation-output";
                 error(msg.str());
               }
           }
@@ -191,14 +206,24 @@ int main(int argc, const char *argv[])
               }
 
             // in.driver->get_script()->print(std::cerr);
-            if(current_output != "")
+            if(current_core != "")
               {
-                in.output = current_output;
-                current_output = "";
+                in.core_output = current_core;
+                current_core = "";
               }
             else
               {
-                in.output = mangle_output_name(in.name);
+                in.core_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_core()));
+              }
+
+            if(current_implementation != "")
+              {
+                in.implementation_output = current_implementation;
+                current_implementation = "";
+              }
+            else
+              {
+                in.implementation_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_implementation()));
               }
 
             inputs.push_back(in);
@@ -212,7 +237,7 @@ int main(int argc, const char *argv[])
           {
             if(backend_selector[j])
               {
-                if((*(backend_dispatcher[j]))(inputs[i], &path) == false)
+                if((*(backend_dispatcher[j]))(inputs[i], path) == false)
                   {
                     std::ostringstream msg;
                     msg << ERROR_BACKEND_FAILURE << " '" << backend_table[j] << "'";
@@ -245,7 +270,7 @@ int main(int argc, const char *argv[])
 // ******************************************************************
 
 
-static std::string mangle_output_name(std::string input)
+static std::string mangle_output_name(std::string input, std::string tag)
   {
     size_t      pos = 0;
     std::string output;
@@ -254,12 +279,30 @@ static std::string mangle_output_name(std::string input)
       {
         if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH)
           {
-            output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos);
+            output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos) + "_" + tag;
           }
         else
           {
-            output = input;
+            output = input + "_" + tag;
           }
+      }
+
+    return(output);
+  }
+
+
+static std::string mangle_input_name(std::string input)
+  {
+    size_t      pos = 0;
+    std::string output;
+
+    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos)
+      {
+        output = input.erase(0, pos+1);
+      }
+    else
+      {
+        output = input;
       }
 
     return(output);

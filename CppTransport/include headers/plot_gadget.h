@@ -15,63 +15,68 @@
 #include <string>
 
 
-template <typename number>
-class plot_gadget
+namespace transport
   {
-    public:
-      plot_gadget(std::string f = "pdf") : format(f) {}
 
-      virtual void plot(std::string output, std::string title,
-        const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-        std::string xlabel, std::string ylabel, bool logx, bool logy) = 0;
+    template <typename number>
+    class plot_gadget
+      {
+      public:
+        plot_gadget(std::string f = "pdf") : format(f) {}
 
-    virtual void               set_format(std::string f);         // set current output format (PDF, PNG, ... ) if supported by the gadget
+        virtual void plot(std::string output, std::string title,
+                          const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
+                          std::string xlabel, std::string ylabel, bool logx, bool logy) = 0;
 
-    virtual const std::string& get_format();                      // get current output format
+        virtual void               set_format(std::string f);         // set current output format (PDF, PNG, ... ) if supported by the gadget
 
-    virtual bool               latex_labels() { return(false); }  // gadget supports or expects labels in LaTeX format?
-                                                                  // by default false, but can be overridden by derived classes
+        virtual const std::string& get_format();                      // get current output format
 
-    protected:
-      std::string format;
-  };
+        virtual bool               latex_labels() { return(false); }  // gadget supports or expects labels in LaTeX format?
+        // by default false, but can be overridden by derived classes
+
+      protected:
+        std::string format;
+      };
 
 
 // IMPLEMENTATION -- PLOT_GADGET
 
 
-template <typename number>
-void plot_gadget<number>::set_format(std::string f)
-  {
-    this->format = f;
-  }
+    template <typename number>
+    void plot_gadget<number>::set_format(std::string f)
+      {
+        this->format = f;
+      }
 
-template <typename number>
-const std::string& plot_gadget<number>::get_format()
-  {
-    return(this->format);
-  }
+    template <typename number>
+    const std::string& plot_gadget<number>::get_format()
+      {
+        return(this->format);
+      }
 
 
 // OTHER MISCELLANEOUS FUNCTIONS
 
 
-inline void open_tempfile(std::string& path)
-  {
-    path += "/XXXXXX";
-    std::vector<char> dst_path(path.begin(), path.end());
-    dst_path.push_back('\0');
-
-    int fd = mkstemp(&dst_path[0]);
-    if(fd != -1)
+    inline void open_tempfile(std::string& path)
       {
-        path.assign(dst_path.begin(), dst_path.end() - 1);
+        path += "/XXXXXX";
+        std::vector<char> dst_path(path.begin(), path.end());
+        dst_path.push_back('\0');
 
-        std::ofstream f;
-        f.open(path.c_str(), std::ios_base::trunc | std::ios_base::out);
-        f.close();
+        int fd = mkstemp(&dst_path[0]);
+        if(fd != -1)
+          {
+            path.assign(dst_path.begin(), dst_path.end() - 1);
+
+            std::ofstream f;
+            f.open(path.c_str(), std::ios_base::trunc | std::ios_base::out);
+            f.close();
+          }
       }
-  }
+
+  }   // namespace transport
 
 
 #endif //__plot_maker_H_

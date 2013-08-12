@@ -38,7 +38,8 @@ namespace y
           void         set_name                 (lexeme::lexeme<keyword_type, character_type>* lex);
           void         set_author               (lexeme::lexeme<keyword_type, character_type>* lex);
           void         set_tag                  (lexeme::lexeme<keyword_type, character_type>* lex);
-          void         set_class                (lexeme::lexeme<keyword_type, character_type>* lex);
+          void         set_core                 (lexeme::lexeme<keyword_type, character_type>* lex);
+          void         set_implementation       (lexeme::lexeme<keyword_type, character_type>* lex);
           void         set_model                (lexeme::lexeme<keyword_type, character_type>* lex);
 
           void         add_latex_attribute      (attributes* a, lexeme::lexeme<keyword_type, character_type> *lex);

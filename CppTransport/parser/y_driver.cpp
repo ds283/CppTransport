@@ -222,20 +222,35 @@ namespace y
             }
         }
 
-      void y_driver::set_class(lexeme::lexeme<keyword_type, character_type> *lex)
+      void y_driver::set_core(lexeme::lexeme<keyword_type, character_type> *lex)
         {
           std::string str;
           bool        ok = lex->get_string(str);
 
           if(ok)
             {
-              this->root->set_class(str);
+              this->root->set_core(str);
             }
           else
             {
               ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
             }
         }
+
+    void y_driver::set_implementation(lexeme::lexeme<keyword_type, character_type> *lex)
+      {
+        std::string str;
+        bool        ok = lex->get_string(str);
+
+        if(ok)
+          {
+            this->root->set_implementation(str);
+          }
+        else
+          {
+            ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+          }
+      }
 
       void y_driver::set_model(lexeme::lexeme<keyword_type, character_type> *lex)
         {

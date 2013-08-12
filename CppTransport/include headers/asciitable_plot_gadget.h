@@ -27,72 +27,77 @@
 // so use this precision by default
 #define DEFAULT_ASCIITABLE_PLOT_GADGET_PRECISION (17)
 
-template <typename number>
-class asciitable_plot_gadget : public plot_gadget<number>
+namespace transport
   {
-    public:
-      asciitable_plot_gadget() : plot_gadget<number>(""), precision(DEFAULT_ASCIITABLE_PLOT_GADGET_PRECISION) {}
 
-      void plot(std::string output, std::string title,
-        const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-        std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
-
-      virtual void set_format(std::string f);
-
-      unsigned int get_precision();
-      void         set_precision(unsigned int p);
-
-    protected:
-      unsigned int precision;
-  };
-
-
-template <typename number>
-void asciitable_plot_gadget<number>::set_format(std::string f)
-  {
-    // do nothing; we can only output .ps format
-  }
-
-
-template <typename number>
-void asciitable_plot_gadget<number>::plot(std::string output, std::string title,
-  const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
-  const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
-  {
-    // x and ys should be the same size
-    assert(x.size() == ys.size());
-
-    std::ofstream out;
-    out.open(output + ".txt");
-    if(out.is_open())
+    template <typename number>
+    class asciitable_plot_gadget : public plot_gadget<number>
       {
-        transport::asciitable<number> writer(out);
+      public:
+        asciitable_plot_gadget() : plot_gadget<number>(""), precision(DEFAULT_ASCIITABLE_PLOT_GADGET_PRECISION) {}
 
-        writer.set_wrap_status(false);  // don't want to wrap in a file
-        writer.set_precision(this->precision);
+        void plot(std::string output, std::string title,
+                  const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
+                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
 
-        writer.write("N", labels, x, ys);
-        // currently do nothing with xlabel, ylabel, title, logx, logy
-      }
-    else
+        virtual void set_format(std::string f);
+
+        unsigned int get_precision();
+        void         set_precision(unsigned int p);
+
+      protected:
+        unsigned int precision;
+      };
+
+
+    template <typename number>
+    void asciitable_plot_gadget<number>::set_format(std::string f)
       {
-        std::cout << __CPP_TRANSPORT_ASCIITABLE_OUTPUT << " '" << output << "'" << std::endl;
+        // do nothing; we can only output .ps format
       }
-  }
 
 
-template <typename number>
-void asciitable_plot_gadget<number>::set_precision(unsigned int p)
-  {
-    this->precision = (p > 0 ? p : this->precision);
-  }
+    template <typename number>
+    void asciitable_plot_gadget<number>::plot(std::string output, std::string title,
+                                              const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
+                                              const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
+      {
+        // x and ys should be the same size
+        assert(x.size() == ys.size());
+
+        std::ofstream out;
+        out.open(output + ".txt");
+        if(out.is_open())
+          {
+            transport::asciitable<number> writer(out);
+
+            writer.set_wrap_status(false);  // don't want to wrap in a file
+            writer.set_precision(this->precision);
+
+            writer.write("N", labels, x, ys);
+            // currently do nothing with xlabel, ylabel, title, logx, logy
+          }
+        else
+          {
+            std::cout << __CPP_TRANSPORT_ASCIITABLE_OUTPUT << " '" << output << "'" << std::endl;
+          }
+      }
 
 
-template <typename number>
-unsigned int asciitable_plot_gadget<number>::get_precision()
-  {
-    return(this->precision);
-  }
+    template <typename number>
+    void asciitable_plot_gadget<number>::set_precision(unsigned int p)
+      {
+        this->precision = (p > 0 ? p : this->precision);
+      }
+
+
+    template <typename number>
+    unsigned int asciitable_plot_gadget<number>::get_precision()
+      {
+        return(this->precision);
+      }
+
+  }   // namespace transport
 
 
 #endif //__asciitable_plot_gadget_H_

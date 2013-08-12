@@ -153,7 +153,7 @@ void script::set_name(const std::string n)
   }
 
 
-const std::string script::get_name()
+const std::string& script::get_name()
   {
     return(this->name);
   }
@@ -165,7 +165,7 @@ void script::set_author(const std::string a)
   }
 
 
-const std::string script::get_author()
+const std::string& script::get_author()
   {
     return(this->author);
   }
@@ -177,21 +177,33 @@ void script::set_tag(const std::string t)
   }
 
 
-const std::string script::get_tag()
+const std::string& script::get_tag()
   {
     return(this->tag);
   }
 
 
-void script::set_class(const std::string c)
+void script::set_core(const std::string c)
   {
-    this->cls = c;
+    this->core = c;
   }
 
 
-const std::string script::get_class()
+const std::string& script::get_core()
   {
-    return(this->cls);
+    return(this->core);
+  }
+
+
+void script::set_implementation(const std::string i)
+  {
+    this->implementation = i;
+  }
+
+
+const std::string& script::get_implementation()
+  {
+    return(this->implementation);
   }
 
 
@@ -201,7 +213,7 @@ void script::set_model(const std::string m)
   }
 
 
-const std::string script::get_model()
+const std::string& script::get_model()
   {
     return(this->model);
   }
@@ -211,11 +223,12 @@ void script::print(std::ostream& stream)
   {
     stream << "Script summary:" << std::endl;
     stream << "===============" << std::endl;
-    stream << "  Name   = '" << this->name << "'" << std::endl;
-    stream << "  Model  = '" << this->model << "'" << std::endl;
-    stream << "  Author = '" << this->author << "'" << std::endl;
-    stream << "  Tag    = '" << this->tag << "'" << std::endl;
-    stream << "  Class  = '" << this->cls << "'" << std::endl;
+    stream << "  Name           = '" << this->name << "'" << std::endl;
+    stream << "  Model          = '" << this->model << "'" << std::endl;
+    stream << "  Author         = '" << this->author << "'" << std::endl;
+    stream << "  Tag            = '" << this->tag << "'" << std::endl;
+    stream << "  Core           = '" << this->core << "'" << std::endl;
+    stream << "  Implementation = '" << this->implementation << "'" << std::endl;
     stream << std::endl;
 
     stream << "Fields:" << std::endl;

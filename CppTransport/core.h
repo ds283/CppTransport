@@ -19,6 +19,7 @@
 
 #define MODEL_SCRIPT_SUFFIX          ".model"
 #define MODEL_SCRIPT_SUFFIX_LENGTH   (6)
+#define TEMPLATE_TAG_SUFFIX          "_"
 
 #define NEWLINE_CHAR                 "\n"
 

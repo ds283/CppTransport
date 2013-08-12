@@ -26,7 +26,9 @@ struct replacement_data
     u_tensor_factory* u_factory;        // manufactured u_tensor factory
 
     std::string       output_file;      // output file being written
+    std::string       core_file;        // name of core .h file (whatever output file is being produced)
     std::string       template_file;    // template file being used to produce output
+    std::string       guard;            // tag for #ifndef guard
 
     unsigned int      unique;           // unique number used to keep track of tags
   };

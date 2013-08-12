@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <time.h>
 
+#include "boost/algorithm/string.hpp"
+
 #include "core.h"
 #include "cpp_backend.h"
 #include "to_printable.h"
@@ -40,6 +42,7 @@ static std::string replace_author         (struct replacement_data& data, const 
 static std::string replace_tag            (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_model          (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_header         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_core           (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_number_fields  (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_number_params  (struct replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_field_list     (struct replacement_data& data, const std::vector<std::string>& args);
@@ -107,7 +110,7 @@ static std::string replace_C_predef       (struct replacement_data& data, const 
 static const std::string pre_macros[] =
   {
     "TOOL", "VERSION", "GUARD", "DATE", "SOURCE",
-    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER",
+    "NAME", "AUTHOR", "TAG", "MODEL", "HEADER", "CORE",
     "NUMBER_FIELDS", "NUMBER_PARAMS",
     "FIELD_NAME_LIST", "LATEX_NAME_LIST",
     "PARAM_NAME_LIST", "PLATX_NAME_LIST",
@@ -125,7 +128,7 @@ static const std::string post_macros[] =
 static const replacement_function_simple pre_macro_replacements[] =
   {
     replace_tool, replace_version, replace_guard, replace_date, replace_source,
-    replace_name, replace_author, replace_tag, replace_model, replace_header,
+    replace_name, replace_author, replace_tag, replace_model, replace_header, replace_core,
     replace_number_fields, replace_number_params,
     replace_field_list, replace_latex_list,
     replace_param_list, replace_platx_list,
@@ -143,7 +146,7 @@ static const replacement_function_simple post_macro_replacements[] =
 static const unsigned int pre_macro_args[] =
   {
     0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0,
     0, 0,
     0, 0,
     0, 0,
@@ -217,19 +220,24 @@ static const unsigned int index_macro_args[] =
   };
 
 
-#define NUMBER_PRE_MACROS    (30)
+#define NUMBER_PRE_MACROS    (31)
 #define NUMBER_POST_MACROS   (1)
 #define NUMBER_INDEX_MACROS  (20)
 
 
 // ******************************************************************
 
+static bool         apply_replacement(const std::string& input, const std::string& output,
+                                      u_tensor_factory* u_factory,
+                                      const struct input& data, script* source, finder& path);
+static std::string  strip_dot_h      (const std::string& pathname);
+static std::string  leafname         (const std::string& pathname);
 
-static bool         process        (struct replacement_data& d);
+static bool         process          (struct replacement_data& d);
 
-static unsigned int get_index_label(struct index_assignment& index);
+static unsigned int get_index_label  (struct index_assignment& index);
 
-static std::string  replace_stepper(const struct stepper& s, std::string state_name);
+static std::string  replace_stepper  (const struct stepper& s, std::string state_name);
 
 
 // ******************************************************************
@@ -237,28 +245,41 @@ static std::string  replace_stepper(const struct stepper& s, std::string state_n
 
 // generate C++ output
 // returns 'false' if this fails
-bool cpp_backend(struct input& data, finder* path)
+bool cpp_backend(const struct input& data, finder& path)
   {
-    assert(path != NULL);
-
     bool rval = true;
 
     script* source = data.driver->get_script();
 
-    std::string class_name = source->get_class();
+    u_tensor_factory* u_factory = make_u_tensor_factory(source);
+
+    rval = apply_replacement(source->get_core(), data.core_output, u_factory, data, source, path);
+    if(rval) { rval = apply_replacement(source->get_implementation(), data.implementation_output, u_factory, data, source, path); }
+
+    delete u_factory;
+
+    return(rval);
+  }
+
+
+static bool apply_replacement(const std::string& input, const std::string& output,
+                              u_tensor_factory* u_factory,
+                              const struct input& data, script* source, finder& path)
+  {
+    bool rval = true;
     std::string h_template;
 
-    if(source->get_class() == "")
+    if(input == "")
       {
         error(ERROR_NO_CPP_TEMPLATE);
         rval = false;
       }
     else
       {
-        if((rval = path->fqpn(class_name + ".h", h_template)) == false)
+        if((rval = path.fqpn(input + ".h", h_template)) == false)
           {
             std::ostringstream msg;
-            msg << ERROR_MISSING_CPP_HEADER << " '" << class_name << ".h'";
+            msg << ERROR_MISSING_CPP_HEADER << " '" << input << ".h'";
             error(msg.str());
           }
       }
@@ -267,19 +288,59 @@ bool cpp_backend(struct input& data, finder* path)
       {
         struct replacement_data d;
 
-        // set up replacement data, including manufacture of a u_tensor_factory
+        // set up replacement data, including u_tensor_factory
         d.source        = source;
         d.source_file   = data.name;
-        d.u_factory     = make_u_tensor_factory(source);
+        d.u_factory     = u_factory;
 
-        d.output_file   = data.output + ".h";
+        d.output_file   = strip_dot_h(output) + ".h";
+        d.core_file     = strip_dot_h(data.core_output) + ".h";
+        d.guard         = boost::to_upper_copy(leafname(output));
         d.template_file = h_template;
 
         d.unique        = 0;
 
         rval = process(d);
+      }
 
-        delete d.u_factory;
+    return(rval);
+  }
+
+
+static std::string strip_dot_h(const std::string& pathname)
+  {
+    std::string rval;
+
+    if(pathname.substr(pathname.length() - 3) == ".h")
+      {
+        rval = pathname.substr(0, pathname.length() - 3);
+      }
+    else if(pathname.substr(pathname.length() - 5) == ".hpp")
+      {
+        rval = pathname.substr(0, pathname.length() - 5);
+      }
+    else
+      {
+        rval = pathname;
+      }
+
+    return(rval);
+  }
+
+
+static std::string leafname(const std::string& pathname)
+  {
+    std::string rval = pathname;
+    size_t      pos;
+
+    while((pos = rval.find("/")) != std::string::npos)
+      {
+        rval.erase(0, pos+1);
+      }
+
+    while((pos = rval.find(".")) != std::string::npos)
+      {
+        rval.erase(pos+1, rval.length()-pos-1);
       }
 
     return(rval);
@@ -451,7 +512,7 @@ static std::string replace_version(struct replacement_data& d, const std::vector
 
 static std::string replace_guard(struct replacement_data& d, const std::vector<std::string>& args)
   {
-    return "__CPP_TRANSPORT_" + d.source->get_model() + "_H_";
+    return "__CPP_TRANSPORT_" + d.guard + "_H_";
   }
 
 static std::string replace_date(struct replacement_data& d, const std::vector<std::string>& args)
@@ -496,6 +557,11 @@ static std::string replace_model(struct replacement_data& d, const std::vector<s
 static std::string replace_header(struct replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.output_file);
+  }
+
+static std::string replace_core(struct replacement_data& d, const std::vector<std::string>& args)
+  {
+    return(d.core_file);
   }
 
 static std::string replace_number_fields(struct replacement_data& d, const std::vector<std::string>& args)

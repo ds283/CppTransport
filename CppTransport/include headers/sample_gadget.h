@@ -16,62 +16,84 @@
 
 #include <math.h>
 
-#define DEFAULT_SAMPLE_POINTS (500)
+#define DEFAULT_SAMPLE_POINTS  (500)
+#define DEFAULT_SAMPLE_SPACING (sample_gadget_linear)
 
-
-template <typename number>
-class sample_gadget
+namespace transport
   {
-    public:
-    sample_gadget(number a, number b) : min(a), max(b), npoints(DEFAULT_SAMPLE_POINTS) {}
-    sample_gadget(number a, number b, unsigned int N) : min(a), max(b), npoints(N)       {}
 
-    void set_limits(number a, number b)   { assert(a <= b); this->min = (a <= b ? a : b); this->max = (b >= a ? b : a); }
-    void get_limits(number& a, number& b) { a = this->min; b = this->max; }
+    enum sample_gadget_spacing
+      {
+        sample_gadget_linear, sample_gadget_logarithmic
+      };
 
-    std::vector<number> linear_axis();
-    std::vector<number> logarithmic_axis();
+    template <typename number>
+    class sample_gadget
+      {
+      public:
+        sample_gadget(number a, number b, unsigned int N = DEFAULT_SAMPLE_POINTS,
+                      enum sample_gadget_spacing spc = DEFAULT_SAMPLE_SPACING)
+        : min(a), max(b), npoints(N), spacing(spc)
+          {
+            // set up axis; after creation, this cannot be changed - only resampled
+            axis.resize(npoints);
 
-    std::vector< std::vector<number> > resample(const std::vector< std::vector<number> >& sample);
+            switch(spacing)
+              {
+                case sample_gadget_linear:
+                  {
+                    for(int i = 0; i < npoints; i++)
+                      {
+                        axis[i] = min + (double) i * (max - min) / npoints;
+                      }
+                  }
+                break;
 
-    protected:
-    number       min;
-    number       max;
-    unsigned int npoints;
-  };
+                case sample_gadget_logarithmic:
+                  {
+                    for(int i = 0; i < npoints; i++)
+                      {
+                        axis[i] = min * pow(max / min, (double) i / (double) npoints);
+                      }
+                  }
+                break;
+
+                default:
+                  assert(false);
+              }
+          }
+
+        void get_limits(number& a, number& b)
+          {
+            a = this->min;
+            b = this->max;
+          }
+
+        enum sample_gadget_spacing get_spacing()
+          {
+            return (this->spacing);
+          }
+
+        const std::vector<number>& get_axis()
+          {
+            return (this->axis);
+          }
+
+      protected:
+        number min;
+        number max;
+
+        unsigned int               npoints;
+        enum sample_gadget_spacing spacing;
+
+        std::vector<number> axis;
+      };
 
 
 // IMPLEMENTATION - SAMPLE_GADGET
 
 
-template <typename number>
-std::vector<number> sample_gadget<number>::linear_axis()
-  {
-    std::vector<number> axis(this->npoints);   // the axis should contain npoints points
-
-    number step = (this->max - this->min) / this->npoints;
-
-    for(int i = 0; i < this->npoints; i++)
-      {
-        axis[i] = this->min + i*step;
-      }
-
-    return(axis);
-  }
-
-
-template <typename number>
-std::vector<number> sample_gadget<number>::logarithmic_axis()
-  {
-    std::vector<number> axis(this->npoints);
-
-    for(int i = 0; i < this->npoints; i++)
-      {
-        axis[i] = this->min * pow(this->max/this->min, (double)i/(double)this->npoints);
-      }
-
-    return(axis);
-  }
+  }   // namespace transport
 
 
 #endif // __sample_gadget_H_

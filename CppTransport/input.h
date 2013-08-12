@@ -23,7 +23,8 @@ struct input
     y::y_parser*                                       parser;
     std::string                                        name;
 
-    std::string                                        output;
+    std::string                                        core_output;
+    std::string                                        implementation_output;
   };
 
 
