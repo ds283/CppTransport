@@ -10,9 +10,7 @@
 
 #include <boost/timer/timer.hpp>
 
-#include "dq.h"
-#import "background.h"
-#include "plot_gadget.h"
+#include "dq_basic.h"
 
 
 // ****************************************************************************
@@ -43,7 +41,7 @@ int main(int argc, const char* argv[])
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
     const std::vector<double> init_params = { m_phi, m_chi };
-    transport::dquad<double> model(M_Planck, init_params);
+    transport::dquad_basic<double> model(M_Planck, init_params);
 
     output_info(model);
 
@@ -76,16 +74,14 @@ int main(int argc, const char* argv[])
     const double        kmax = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  kN   = 5;          // number of k-points
 
-    transport::sample_gadget<double> ksample(kmin, kmax, kN, );
-
-    std::vector<double> times = Nsample.linear_axis();
-    std::vector<double> ks    = ksample.logarithmic_axis();
+    transport::sample_gadget<double> ksample(kmin, kmax, kN, transport::sample_gadget_logarithmic);
+    transport::threepf_sample_gadget<double> threepf_ksample(ksample);
 
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
     const double Nstar = 7.0;
-    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
+    transport::threepf<double> threepf = model.threepf(threepf_ksample, Nstar, init_values, Nsample);
 
     timer.stop();
     timer.report();
