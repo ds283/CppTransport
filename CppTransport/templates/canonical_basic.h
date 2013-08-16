@@ -8,6 +8,8 @@
 #define $$__GUARD
 
 
+#include "transport/transport.h"
+
 #include "$$__CORE"
 
 
@@ -31,98 +33,130 @@ namespace transport
       {
       public:
         $$__MODEL_basic(number Mp, const std::vector<number>& ps)
-          : $$__MODEL(Mp, ps)
-          {}
+        : $$__MODEL(Mp, ps)
+          {
+          }
 
         // Integrate background and 2-point function on the CPU, using OpenMP
         transport::twopf<number>
-          twopf(const std::vector<double>& ks, double Nstar,
-                const std::vector<number>& ics, const std::vector<double>& times);
+          twopf(transport::sample_gadget<double>& ks, double Nstar,
+                const std::vector<number>& ics, transport::sample_gadget<double>& times);
 
         // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
         // this simple implementation works on a cubic lattice of k-modes
         transport::threepf<number>
-          threepf(const std::vector<double>& ks, double Nstar,
-                  const std::vector<number>& ics, const std::vector<double>& times);
+          threepf(transport::threepf_sample_gadget<double>& ks, double Nstar,
+                  const std::vector<number>& ics, transport::sample_gadget<double>& times);
+
+      protected:
+        void twopf_kmode(double kmode, const std::vector<double>& times,
+                         const std::vector<number>& ics, std::vector<double>& slices,
+                         std::vector <std::vector<number>>& background_history, std::vector <std::vector<number>>& twopf_history);
+
+        void threepf_kmode(double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
+                           const std::vector<number>& ics, std::vector<double>& slices,
+                           std::vector <std::vector<number>>& background_history,
+                           std::vector <std::vector<number>>& twopf_re_history, std::vector <std::vector<number>>& twopf_im_history,
+                           std::vector <std::vector<number>>& threepf_history);
+
+        void populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit,
+                               const std::vector<number>& ic, bool imaginary = false);
+
+        void populate_threepf_ic(threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
+                                 double Ninit, const std::vector<number>& ic);
+
+        void resize_twopf_history(std::vector <std::vector< std::vector<number> >>& twopf_history,
+                                  const std::vector<double>& times, const std::vector<double>& ks);
+
+        void resize_threepf_history(std::vector <std::vector< std::vector<number> >>& threepf_history,
+                                    const std::vector<double>& times, const std::vector< struct threepf_kconfig >& ks);
 
       };
 
 
     // integration - 2pf functor
     template <typename number>
-    class $$__MODEL_twopf_functor
+    class $$__MODEL_basic_twopf_functor
       {
       public:
-        $$__MODEL_twopf_functor(const std::vector<number>& p, const number Mp, double k)
-        : parameters(p), M_Planck(Mp), k_mode(k) {}
+        $$__MODEL_basic_twopf_functor(const std::vector<number>& p, const number Mp, double k)
+        : parameters(p), M_Planck(Mp), k_mode(k)
+          {
+          }
 
-        void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
+        void operator ()(const twopf_state& __x, twopf_state& __dxdt, double __t);
 
       private:
-        const number						   M_Planck;
+        const number M_Planck;
         const std::vector<number>& parameters;
-        const double               k_mode;
+        const double k_mode;
       };
 
 
     // integration - observer object for 2pf
     template <typename number>
-    class $$__MODEL_twopf_observer
+    class $$__MODEL_basic_twopf_observer
       {
       public:
-        $$__MODEL_twopf_observer(std::vector<double>& s,
-                                 std::vector< std::vector<number> >& bh,
-                                 std::vector< std::vector<number> >& tpfh)
-        : slices(s), background_history(bh), twopf_history(tpfh) {}
+        $$__MODEL_basic_twopf_observer(std::vector<double>& s,
+                                       std::vector <std::vector<number>>& bh,
+                                       std::vector <std::vector<number>>& tpfh)
+        : slices(s), background_history(bh), twopf_history(tpfh)
+          {
+          }
 
-        void operator()(const twopf_state& x, double t);
+        void operator ()(const twopf_state& x, double t);
 
       private:
-        std::vector<double>&                slices;
-        std::vector< std::vector<number> >& background_history;
-        std::vector< std::vector<number> >& twopf_history;
+        std::vector<double>& slices;
+        std::vector <std::vector<number>>& background_history;
+        std::vector <std::vector<number>>& twopf_history;
       };
 
 
     // integration - 3pf functor
     template <typename number>
-    class $$__MODEL_threepf_functor
+    class $$__MODEL_basic_threepf_functor
       {
       public:
-        $$__MODEL_threepf_functor(const std::vector<number>& p, const number Mp, double k1, double k2, double k3)
-        : parameters(p), M_Planck(Mp), kmode_1(k1), kmode_2(k2), kmode_3(k3) {}
+        $$__MODEL_basic_threepf_functor(const std::vector<number>& p, const number Mp, double k1, double k2, double k3)
+        : parameters(p), M_Planck(Mp), kmode_1(k1), kmode_2(k2), kmode_3(k3)
+          {
+          }
 
-        void operator()(const threepf_state& __x, threepf_state& __dxdt, double __dt);
+        void operator ()(const threepf_state& __x, threepf_state& __dxdt, double __dt);
 
       private:
-        const number               M_Planck;
+        const number M_Planck;
         const std::vector<number>& parameters;
-        const double               kmode_1;
-        const double               kmode_2;
-        const double               kmode_3;
+        const double kmode_1;
+        const double kmode_2;
+        const double kmode_3;
       };
 
 
     // integration - observer object for 3pf
     template <typename number>
-    class $$__MODEL_threepf_observer
+    class $$__MODEL_basic_threepf_observer
       {
       public:
-        $$__MODEL_threepf_observer(std::vector<double>& s,
-                                   std::vector< std::vector<number> >& bh,
-                                   std::vector< std::vector<number> >& twopfh_re,
-                                   std::vector< std::vector<number> >& twopfh_im,
-                                   std::vector< std::vector<number> >& threepfh)
-        : slices(s), background_history(bh), twopf_re_history(twopfh_re), twopf_im_history(twopfh_im), threepf_history(threepfh) {}
+        $$__MODEL_basic_threepf_observer(std::vector<double>& s,
+                                         std::vector <std::vector<number>>& bh,
+                                         std::vector <std::vector<number>>& twopfh_re,
+                                         std::vector <std::vector<number>>& twopfh_im,
+                                         std::vector <std::vector<number>>& threepfh)
+        : slices(s), background_history(bh), twopf_re_history(twopfh_re), twopf_im_history(twopfh_im), threepf_history(threepfh)
+          {
+          }
 
-        void operator()(const threepf_state& x, double t);
+        void operator ()(const threepf_state& x, double t);
 
       private:
-        std::vector<double>&                slices;
-        std::vector< std::vector<number> >& background_history;
-        std::vector< std::vector<number> >& twopf_re_history;
-        std::vector< std::vector<number> >& twopf_im_history;
-        std::vector< std::vector<number> >& threepf_history;
+        std::vector<double>& slices;
+        std::vector <std::vector<number>>& background_history;
+        std::vector <std::vector<number>>& twopf_re_history;
+        std::vector <std::vector<number>>& twopf_im_history;
+        std::vector <std::vector<number>>& threepf_history;
       };
 
 
@@ -190,22 +224,22 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::twopf_kmode(double kmode, const std::vector<double>& times,
-                                        const std::vector<number>& ics, std::vector<double>& slices,
-                                        std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history)
+    void $$__MODEL_basic<number>::twopf_kmode(double kmode, const std::vector<double>& times,
+                                              const std::vector<number>& ics, std::vector<double>& slices,
+                                              std::vector <std::vector<number>>& background_history, std::vector <std::vector<number>>& twopf_history)
       {
         using namespace boost::numeric::odeint;
 
         // set up a functor to evolve this system
-        $$__MODEL_twopf_functor<number>  system(this->parameters, this->M_Planck, kmode);
+        $$__MODEL_basic_twopf_functor<number> system(this->parameters, this->M_Planck, kmode);
 
         // set up a functor to observe the integration
-        $$__MODEL_twopf_observer<number> obs(slices, background_history, twopf_history);
+        $$__MODEL_basic_twopf_observer<number> obs(slices, background_history, twopf_history);
 
         const auto background_start = 0;
-        const auto background_size  = 2*$$__NUMBER_FIELDS;
+        const auto background_size  = 2 * $$__NUMBER_FIELDS;
         const auto twopf_start      = background_start + background_size;
-        const auto twopf_size       = (2*$$__NUMBER_FIELDS) * (2*$$__NUMBER_FIELDS);
+        const auto twopf_size       = (2 * $$__NUMBER_FIELDS) * (2 * $$__NUMBER_FIELDS);
 
         const auto twopf_state_size = background_size + twopf_size;
 
@@ -219,12 +253,12 @@ namespace transport
         // fix initial conditions - 2pf
         this->populate_twopf_ic(x, twopf_start, kmode, *times.begin(), ics);
 
-        integrate_times( $$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
       }
 
 
     template <typename number>
-    void $$__MODEL<number>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit, const std::vector<number>& ics, bool imaginary)
+    void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
@@ -240,8 +274,8 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf_history, const std::vector<double>& times,
-                                                 const std::vector<double>& ks)
+    void $$__MODEL_basic<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf_history, const std::vector<double>& times,
+                                                       const std::vector<double>& ks)
       {
         const auto twopf_components_size = 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS;
         const auto twopf_kmodes_size     = ks.size();
@@ -265,8 +299,8 @@ namespace transport
 
 
     template <typename number>
-    transport::threepf<number> $$__MODEL<number>::threepf(const std::vector<double>& ks, double Nstar,
-                                                          const std::vector<number>& ics, const std::vector<double>& times)
+    transport::threepf<number> $$__MODEL_basic<number>::threepf(const std::vector<double>& ks, double Nstar,
+                                                                const std::vector<number>& ics, const std::vector<double>& times)
       {
         using namespace boost::numeric::odeint;
 
@@ -406,19 +440,19 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::threepf_kmode(double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
-                                          const std::vector<number>& ics, std::vector<double>& slices,
-                                          std::vector< std::vector<number> >& background_history,
-                                          std::vector< std::vector<number> >& twopf_re_history, std::vector< std::vector<number> >& twopf_im_history,
-                                          std::vector< std::vector<number> >& threepf_history)
+    void $$__MODEL_basic<number>::threepf_kmode(double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
+                                                const std::vector<number>& ics, std::vector<double>& slices,
+                                                std::vector< std::vector<number> >& background_history,
+                                                std::vector< std::vector<number> >& twopf_re_history, std::vector< std::vector<number> >& twopf_im_history,
+                                                std::vector< std::vector<number> >& threepf_history)
       {
         using namespace boost::numeric::odeint;
 
         // set up a functor to evolve this system
-        $$__MODEL_threepf_functor<number>  system(this->parameters, this->M_Planck, kmode_1, kmode_2, kmode_3);
+        $$__MODEL_basic_threepf_functor<number>  system(this->parameters, this->M_Planck, kmode_1, kmode_2, kmode_3);
 
         // set up a functor to observe the integration
-        $$__MODEL_threepf_observer<number> obs(slices, background_history, twopf_re_history, twopf_im_history, threepf_history);
+        $$__MODEL_basic_threepf_observer<number> obs(slices, background_history, twopf_re_history, twopf_im_history, threepf_history);
 
         // we have to store:
         //   - 1 copy of the background
@@ -464,8 +498,8 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::resize_threepf_history(std::vector< std::vector< std::vector<number> > >& threepf_history, const std::vector<double>& times,
-                                                   const std::vector< struct threepf_kconfig >& kconfig_list)
+    void $$__MODEL_basic<number>::resize_threepf_history(std::vector< std::vector< std::vector<number> > >& threepf_history, const std::vector<double>& times,
+                                                         const std::vector< struct threepf_kconfig >& kconfig_list)
       {
         // the index convention for the threepf history is:
         //   first index  - time
@@ -491,8 +525,8 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::populate_threepf_ic(threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
-                                                double Ninit, const std::vector<number>& ics)
+    void $$__MODEL_basic<number>::populate_threepf_ic(threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
+                                                      double Ninit, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
@@ -515,7 +549,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
+    void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
       {
         const auto $$__PARAMETER[1]  = this->parameters[$$__1];
         const auto $$__COORDINATE[A] = __x[$$__A];
@@ -555,7 +589,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_twopf_observer<number>::operator()(const twopf_state& x, double t)
+    void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state& x, double t)
       {
         this->slices.push_back(t);
 
@@ -589,7 +623,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
+    void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
       {
         const auto $$__PARAMETER[1]  = this->parameters[$$__1];
         const auto $$__COORDINATE[A] = __x[$$__A];
@@ -704,7 +738,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_threepf_observer<number>::operator()(const twopf_state& x, double t)
+    void $$__MODEL_basic_threepf_observer<number>::operator()(const twopf_state& x, double t)
       {
         this->slices.push_back(t);
 

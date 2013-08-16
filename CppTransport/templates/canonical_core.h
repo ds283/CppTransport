@@ -75,96 +75,86 @@ namespace transport
 
 
       // CLASS FOR $$__MODEL CORE
-      // specific implementations (MPI, OpenMP, VexCL, ...) are later derived from this
-      // common core
+      // specific implementations (MPI, OpenMP, VexCL, ...) are later derived from this  common core
       template <typename number>
       class $$__MODEL : public canonical_model<number>
         {
-          public:
-            $$__MODEL(number Mp, const std::vector<number>& ps);
-            ~$$__MODEL();
+        public:
+          $$__MODEL(number Mp, const std::vector<number>& ps);
 
-            // Functions inherited from canonical_model
-            number V(std::vector<number> fields);
+          ~$$__MODEL();
 
-            // Integrate the background (on the CPU; can be overridden later if desired)
-            transport::background<number>
-              background(const std::vector<number>& ics, const std::vector<double>& times);
+          // Functions inherited from canonical_model
+          number V(std::vector<number> fields);
 
-            // Calculation of gauge-transformation coefficients (to zeta)
-            void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
-            void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+          // Integrate the background (on the CPU; can be overridden later if desired)
+          transport::background<number>
+            background(const std::vector<number>& ics, transport::sample_gadget<double>& times);
 
-          protected:
-            void                twopf_kmode               (double kmode, const std::vector<double>& times,
-                                                           const std::vector<number>& ics, std::vector<double>& slices,
-                                                           std::vector< std::vector<number> >& background_history, std::vector< std::vector<number> >& twopf_history);
-            void                threepf_kmode             (double kmode_1, double kmode_2, double kmode_3, const std::vector<double>& times,
-                                                           const std::vector<number>& ics, std::vector<double>& slices,
-                                                           std::vector< std::vector<number> >& background_history,
-                                                           std::vector< std::vector<number> >& twopf_re_history, std::vector< std::vector<number> >& twopf_im_history,
-                                                           std::vector< std::vector<number> >& threepf_history);
+          // Calculation of gauge-transformation coefficients (to zeta)
+          void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
 
-            void                fix_initial_conditions    (const std::vector<number>& __ics, std::vector<number>& __rics);
+          void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
 
-            void                write_initial_conditions  (const std::vector<number>& rics, std::ostream& stream,
-                                                           double abs_err, double rel_err, double step_size, std::string stepper_name);
+        protected:
 
-            void                populate_twopf_ic         (twopf_state& x, unsigned int start, double kmode, double Ninit,
-                                                           const std::vector<number>& ic, bool imaginary=false);
-            void                populate_threepf_ic       (threepf_state& x, unsigned int start, double kmode_1, double kmode_2, double kmode_3,
-                                                           double Ninit, const std::vector<number>& ic);
+          void fix_initial_conditions(const std::vector<number>& __ics, std::vector<number>& __rics);
 
-            number              make_twopf_re_ic          (unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
-            number              make_twopf_im_ic          (unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
+          void write_initial_conditions(const std::vector<number>& rics, std::ostream& stream,
+                                        double abs_err, double rel_err, double step_size, std::string stepper_name);
 
-            number              make_threepf_ic           (unsigned int __i, unsigned int __j, unsigned int __k,
-                                                           double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
+          number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
 
-            void                validate_times            (const std::vector<double>& times);
-            std::vector<double> normalize_comoving_ks     (const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
-            void                rescale_ks                (const std::vector<double>& __ks, std::vector<double>& __com_ks,
-                                                           double __Nstar, const std::vector<number>& __fields);
+          number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
 
-            void                resize_twopf_history      (std::vector< std::vector< std::vector<number> > >& twopf_history,
-				                                                   const std::vector<double>& times, const std::vector<double>& ks);
-            void                resize_threepf_history    (std::vector< std::vector< std::vector<number> > >& threepf_history,
-                                                           const std::vector<double>& times, const std::vector< struct threepf_kconfig >& ks);
+          number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
+                                 double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
 
-            $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
+          void                validate_times(const std::vector<double>& times);
+
+          std::vector<double> normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
+
+          void                rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
+                                         double __Nstar, const std::vector<number>& __fields);
+
+          $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
 
 
-      // integration - background functor
-      template <typename number>
-      class $$__MODEL_background_functor
-        {
-          public:
-              $$__MODEL_background_functor(const std::vector<number>& p, number Mp) : parameters(p), M_Planck(Mp) {}
-              void operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
+    // integration - background functor
+    template <typename number>
+    class $$__MODEL_background_functor
+      {
+      public:
+        $$__MODEL_background_functor(const std::vector<number>& p, number Mp) : parameters(p), M_Planck(Mp)
+          {
+          }
 
-          private:
-              const number              M_Planck;
-              const std::vector<number> parameters;
-        };
+        void operator ()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
 
-
-      // integration - observer object for background only
-      template <typename number>
-      class $$__MODEL_background_observer
-        {
-          public:
-              $$__MODEL_background_observer(std::vector<double>& s, std::vector< std::vector<number> >& h) : slices(s), history(h) {}
-              void operator()(const std::vector<number>& x, double t);
-
-          private:
-              std::vector<double>&                slices;
-              std::vector< std::vector<number> >& history;
-        };
+      private:
+        const number              M_Planck;
+        const std::vector<number> parameters;
+      };
 
 
-      // IMPLEMENTATION -- CLASS $$__MODEL
-      // ==============
+    // integration - observer object for background only
+    template <typename number>
+    class $$__MODEL_background_observer
+      {
+      public:
+        $$__MODEL_background_observer(std::vector< std::vector<number> >& h) : history(h)
+          {
+          }
+
+        void operator ()(const std::vector<number>& x, double t);
+
+      private:
+        std::vector< std::vector< std::vector<number> > >& history;
+      };
+
+
+    // IMPLEMENTATION -- CLASS $$__MODEL
 
 
       template <typename number>
@@ -206,7 +196,7 @@ namespace transport
 
 
       template <typename number>
-      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, const std::vector<double>& times)
+      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, transport::sample_gadget<double>& times)
         {
           using namespace boost::numeric::odeint;
 
@@ -220,17 +210,17 @@ namespace transport
           // that doesn't seem to work (maybe related to the way odeint uses templates?)
           std::vector<double>                slices;
           std::vector< std::vector<number> > history;
-          $$__MODEL_background_observer<number> obs(slices, history);
+          $$__MODEL_background_observer<number> obs(history);
 
           // set up a functor to evolve this system
           $$__MODEL_background_functor<number>  system(this->parameters, this->M_Planck);
 
-          integrate_times( $$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
+          integrate_times($$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.axis.begin(), times.axis.end(), $$__BACKG_STEP_SIZE, obs);
 
           transport::$$__MODEL_tensor_gadget<number>* tensor = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
 
           transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names,
-            $$__MODEL_latex_names, slices, history, tensor);
+            $$__MODEL_latex_names, times, history, tensor);
 
           return(backg);
         }
@@ -608,8 +598,15 @@ namespace transport
       template <typename number>
       void $$__MODEL_background_observer<number>::operator()(const std::vector<number>& x, double t)
         {
-          this->slices.push_back(t);
-          this->history.push_back(x);
+          std::vector< std::vector<number> > data(x.size());
+
+          for(int i = 0; i < x.size(); i++)
+            {
+              data[i].resize(1);
+              data[i][0] = x[i];
+            }
+
+          this->history.push_back(data);
         }
 
 
