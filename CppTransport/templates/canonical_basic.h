@@ -183,6 +183,7 @@ namespace transport
         //   third index  - k mode
         this->resize_twopf_history(twopf_history, times, ks);
 
+#pragma omp parallel for schedule(dynamic)
         for(int i = 0; i < ks.size(); i++)
           {
             std::vector< std::vector<number> > kmode_background_history;
