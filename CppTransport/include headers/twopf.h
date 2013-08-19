@@ -19,15 +19,18 @@
 #include "default_symbols.h"
 #include "asciitable.h"
 #include "latex_output.h"
-#include "messages_en.h"
+#include "label_gadget.h"
 #include "plot_gadget.h"
 #include "gauge_xfm_gadget.h"
+#include "index_selector.h"
+#include "tensor_gadget.h"
+#include "messages_en.h"
+
+#include "background.h"
 
 
 namespace transport
   {
-      // DATA PRODUCTS -- objects wrapping the various data products produced by each model
-
       // handle weirdness with friend template functions
       // see http://www.cplusplus.com/forum/general/45776/
       template <typename number> class twopf;
@@ -45,7 +48,7 @@ namespace transport
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf,
               gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
-              : N_fields(N_f), field_names(f_names), latex_names(l_names),
+              : N_fields(N_f), labels(N_f, f_names, l_names),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
                 backg(N_f, f_names, l_names, sp, b, t->clone()), samples(twopf),
                 gauge_xfm(gx), tensors(t),
@@ -73,7 +76,6 @@ namespace transport
 
           protected:
             // make a list of labels for the chosen index selection
-            std::vector< std::string>          make_labels(index_selector<2>* selector, bool latex);
             std::string                        make_zeta_label(bool dimensionless, bool latex);
 
             std::string                        make_twopf_title(double k, bool latex);
@@ -88,12 +90,11 @@ namespace transport
             std::vector< number >              get_value(unsigned int time, unsigned int kmode);
 
             unsigned int                                            N_fields;          // number of fields
-            const std::vector<std::string>                          field_names;       // vector of names - includes momenta
-            const std::vector<std::string>                          latex_names;       // vector of LaTeX names - excludes momenta
 
             gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
 
             tensor_gadget<number>*                                  tensors;           // tensor calculation gadget
+            label_gadget                                            labels;            // holds names (and LaTeX names) of fields
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
 
@@ -120,7 +121,7 @@ namespace transport
       void twopf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
         index_selector<2>* selector, std::string format, bool logy)
         {
-          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over k-modes
           for(int i = 0; i < this->sample_ks.size(); i++)
@@ -134,40 +135,6 @@ namespace transport
               gadget->plot(fnam.str(), this->make_twopf_title(this->sample_ks[i], gadget->latex_labels()),
                            this->sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
             }
-        }
-
-
-      template <typename number>
-      std::vector< std::string > twopf<number>::make_labels(index_selector<2>* selector, bool latex)
-        {
-          std::vector< std::string > labels;
-
-          for(int m = 0; m < 2*this->N_fields; m++)
-            {
-              for(int n = 0; n < 2*this->N_fields; n++)
-                {
-                  std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
-                  if(selector->is_on(index_set))
-                    {
-                      std::ostringstream label;
-
-                      if(latex)
-                        {
-                          label << "$" << TWOPF_SYMBOL << "_{"
-                                << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                        }
-                      else
-                        {
-                          label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_NAME : "") << ", "
-                                << this->field_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_NAME : "");
-                        }
-                      labels.push_back(label.str());
-                    }
-                }
-            }
-
-          return(labels);
         }
 
 

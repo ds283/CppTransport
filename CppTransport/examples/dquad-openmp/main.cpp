@@ -65,7 +65,11 @@ int main(int argc, const char* argv[])
     const double        tmax = 55;         // end at time t = 50
     const unsigned int  tN   = 500;        // record 500 samples
 
-    transport::sample_gadget<double> Nsample(tmin, tmax, tN);
+    std::vector<double> times;
+    for(int i = 0; i < tN; i++)
+      {
+        times.push_back(tmin + (tmax - tmin)*(double)i/(double)tN);
+      }
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -74,14 +78,17 @@ int main(int argc, const char* argv[])
     const double        kmax = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  kN   = 5;          // number of k-points
 
-    transport::sample_gadget<double> ksample(kmin, kmax, kN, transport::sample_gadget_logarithmic);
-    transport::threepf_sample_gadget<double> threepf_ksample(ksample);
+    std::vector<double> ks;
+    for(int i = 0; i < kN; i++)
+      {
+        ks.push_back(kmin * pow(kmax/kmin, (double)i/(double)kN));
+      }
 
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
     const double Nstar = 7.0;
-    transport::threepf<double> threepf = model.threepf(threepf_ksample, Nstar, init_values, Nsample);
+    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
 
     timer.stop();
     timer.report();

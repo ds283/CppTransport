@@ -28,7 +28,7 @@ namespace transport
 
         std::vector< std::string > make_labels(index_selector<1>* selector, bool latex);
         std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
-        std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
+        std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
 
       protected:
         unsigned int N_fields;                                                      // number of fields

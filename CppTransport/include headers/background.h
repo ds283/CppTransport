@@ -14,6 +14,7 @@
 #include "default_symbols.h"
 #include "asciitable.h"
 #include "latex_output.h"
+#include "label_gadget.h"
 #include "plot_gadget.h"
 #include "index_selector.h"
 #include "tensor_gadget.h"
@@ -40,13 +41,15 @@ namespace transport
           public:
             background(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
               const std::vector<double>& sp, const std::vector< std::vector<number> >& s, tensor_gadget<number>* t)
-              : N_fields(N_f), field_names(f_names), latex_names(l_names), sample_points(sp), samples(s),
+              : N_fields(N_f), labels(N_f, f_names, l_names),
+                sample_points(sp), samples(s),
                 tensors(t),
                 wrap_width(DEFAULT_WRAP_WIDTH),
                 plot_precision(DEFAULT_PLOT_PRECISION)
               {}
             ~background() { /*delete this->tensors;*/ }
 
+            index_selector<1>* manufacture_selector();
             index_selector<2>* manufacture_2_selector();
             index_selector<3>* manufacture_3_selector();
 
@@ -57,8 +60,6 @@ namespace transport
                          std::string output, index_selector<2>* selector, std::string title="", std::string format="pdf", bool logy=true);
             void plot_u3(plot_gadget<number>* gadget, double k1, double k2, double k3,
                          std::string output, index_selector<3>* selector, std::string title="", std::string format="pdf", bool logy=true);
-
-            index_selector<1>* manufacture_selector();
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
@@ -76,10 +77,6 @@ namespace transport
           protected:
             const std::vector<number>& get_value (unsigned int n);
 
-            std::vector< std::string > make_labels(index_selector<1>* selector, bool latex);
-            std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
-            std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
-
             std::string                make_title(double k, bool latex);
             std::string                make_title(double k1, double k2, double k3, bool latex);
 
@@ -89,10 +86,9 @@ namespace transport
             std::vector< std::vector<number> > construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3);
 
             unsigned int                             N_fields;          // number of fields
-            const std::vector<std::string>           field_names;       // vector of names - includes momenta
-            const std::vector<std::string>           latex_names;       // vector of LaTeX names - excludes momenta
 
             tensor_gadget<number>*                   tensors;           // tensor calculation gadget
+            label_gadget                             labels;            // holds names (and LaTeX names) of fields, and makes labels
 
             const std::vector<double>                sample_points;     // list of times at which we hold samples for the background
 
@@ -112,39 +108,11 @@ namespace transport
       void background<number>::plot(plot_gadget<number>* gadget, std::string output, index_selector<1>* selector,
                                     std::string title, std::string format, bool logy)
         {
-          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
           std::vector< std::vector<number> > data = this->construct_fields_time_history(selector);
 
           gadget->set_format(format);
           gadget->plot(output, title, this->sample_points, data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
-        }
-
-
-      template <typename number>
-      std::vector< std::string > background<number>::make_labels(index_selector<1>* selector, bool latex)
-        {
-          std::vector< std::string > labels;
-
-          for(int m = 0; m < 2*this->N_fields; m++)
-            {
-              std::array<unsigned int, 1> index_set = { (unsigned int)m };
-              if(selector->is_on(index_set))
-                {
-                  std::ostringstream label;
-
-                  if(latex)
-                    {
-                      label << "$" << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? "^{" PRIME_SYMBOL "}" : "") << "$";
-                    }
-                  else
-                    {
-                      label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_NAME : "");
-                    }
-                  labels.push_back(label.str());
-                }
-            }
-
-          return(labels);
         }
 
 
@@ -207,6 +175,12 @@ namespace transport
         }
 
       template <typename number>
+      index_selector<1>* background<number>::manufacture_selector()
+        {
+          return new index_selector<1>(this->N_fields);
+        }
+
+      template <typename number>
       index_selector<2>* background<number>::manufacture_2_selector()
         {
           return new index_selector<2>(this->N_fields);
@@ -216,79 +190,6 @@ namespace transport
       index_selector<3>* background<number>::manufacture_3_selector()
         {
           return new index_selector<3>(this->N_fields);
-        }
-
-
-      template <typename number>
-      std::vector< std::string > background<number>::make_labels(index_selector<2>* selector, bool latex)
-        {
-          std::vector< std::string > labels;
-
-          for(int m = 0; m < 2*this->N_fields; m++)
-            {
-              for(int n = 0; n < 2*this->N_fields; n++)
-                {
-                  std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n, };
-                  if(selector->is_on(index_set))
-                    {
-                      std::ostringstream label;
-
-                      if(latex)
-                        {
-                          label << "$" << U2_SYMBOL << "_{"
-                            << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                            << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                        }
-                      else
-                        {
-                          label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                            << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "");
-                        }
-                      labels.push_back(label.str());
-                    }
-                }
-            }
-
-          return(labels);
-        }
-
-
-      template <typename number>
-      std::vector< std::string > background<number>::make_labels(index_selector<3>* selector, bool latex)
-        {
-          std::vector< std::string > labels;
-
-          for(int m = 0; m < 2*this->N_fields; m++)
-            {
-              for(int n = 0; n < 2*this->N_fields; n++)
-                {
-                  for(int r = 0; r < 2*this->N_fields; r++)
-                    {
-                      std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
-                      if(selector->is_on(index_set))
-                        {
-                          std::ostringstream label;
-
-                          if(latex)
-                            {
-                              label << "$" << U3_SYMBOL << "_{"
-                                << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                                << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
-                            }
-                          else
-                            {
-                              label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                                    << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "") << ", "
-                                    << this->field_names[r % this->N_fields] << (r >= this->N_fields ? "'" : "");
-                            }
-                          labels.push_back(label.str());
-                        }
-                    }
-                }
-            }
-
-          return(labels);
         }
 
 
@@ -338,7 +239,7 @@ namespace transport
       void background<number>::plot_u2(plot_gadget<number>* gadget, double k,
         std::string output, index_selector<2>* selector, std::string title, std::string format, bool logy)
         {
-          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           std::vector< std::vector<number> > data = this->construct_u2_time_history(selector, k);
 
@@ -352,7 +253,7 @@ namespace transport
       void background<number>::plot_u3(plot_gadget<number>* gadget, double k1, double k2, double k3,
         std::string output, index_selector<3>* selector, std::string title, std::string format, bool logy)
         {
-          std::vector< std::string > labels = this->make_labels(selector, gadget->latex_labels());
+          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           std::vector< std::vector<number> > data = this->construct_u3_time_history(selector, k1, k2, k3);
 
@@ -418,12 +319,6 @@ namespace transport
           return(data);
         }
 
-
-      template <typename number>
-      index_selector<1>* background<number>::manufacture_selector()
-        {
-          return new index_selector<1>(this->N_fields);
-        }
 
   }   // namespace transport
 
