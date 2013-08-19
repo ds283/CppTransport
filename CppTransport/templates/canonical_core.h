@@ -89,7 +89,7 @@ namespace transport
 
           // Integrate the background (on the CPU; can be overridden later if desired)
           transport::background<number>
-            background(const std::vector<number>& ics, transport::sample_gadget<double>& times);
+            background(const std::vector<number>& ics, const std::vector<double>& times);
 
           // Calculation of gauge-transformation coefficients (to zeta)
           void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
@@ -110,12 +110,12 @@ namespace transport
           number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                  double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
 
-          void                validate_times(const std::vector<double>& times);
+          void validate_times(const std::vector<double>& times);
 
           std::vector<double> normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
 
-          void                rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
-                                         double __Nstar, const std::vector<number>& __fields);
+          void rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
+                          double __Nstar, const std::vector<number>& __fields);
 
           $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
@@ -150,7 +150,7 @@ namespace transport
         void operator ()(const std::vector<number>& x, double t);
 
       private:
-        std::vector< std::vector< std::vector<number> > >& history;
+        std::vector< std::vector< number> >& history;
       };
 
 
@@ -196,7 +196,7 @@ namespace transport
 
 
       template <typename number>
-      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, transport::sample_gadget<double>& times)
+      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, const std::vector<double>& times)
         {
           using namespace boost::numeric::odeint;
 
@@ -208,14 +208,13 @@ namespace transport
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
           // that doesn't seem to work (maybe related to the way odeint uses templates?)
-          std::vector<double>                slices;
           std::vector< std::vector<number> > history;
           $$__MODEL_background_observer<number> obs(history);
 
           // set up a functor to evolve this system
           $$__MODEL_background_functor<number>  system(this->parameters, this->M_Planck);
 
-          integrate_times($$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.axis.begin(), times.axis.end(), $$__BACKG_STEP_SIZE, obs);
+          integrate_times($$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
           transport::$$__MODEL_tensor_gadget<number>* tensor = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
 
@@ -509,9 +508,9 @@ namespace transport
                        __tpf_2 += (__C_k1[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
                   
                   // these components are dimension 3
-                       __tpf_2 += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
-                       __tpf_2 += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
-                       __tpf_2 += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+                       __tpf_2 += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
+                       __tpf_2 += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
+                       __tpf_2 += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
                   
                   __tpf += __prefactor_2 * __tpf_2;
                   
@@ -559,9 +558,9 @@ namespace transport
                   __tpf += (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k2[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
 
                   // these components are dimension 2
-                  __tpf += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3;
-                  __tpf += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3;
-                  __tpf += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2;
+                  __tpf += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
+                  __tpf += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
+                  __tpf += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
 
                   __tpf *= __prefactor / __kprod3;
                   break;
@@ -598,15 +597,7 @@ namespace transport
       template <typename number>
       void $$__MODEL_background_observer<number>::operator()(const std::vector<number>& x, double t)
         {
-          std::vector< std::vector<number> > data(x.size());
-
-          for(int i = 0; i < x.size(); i++)
-            {
-              data[i].resize(1);
-              data[i][0] = x[i];
-            }
-
-          this->history.push_back(data);
+          this->history.push_back(x);
         }
 
 
