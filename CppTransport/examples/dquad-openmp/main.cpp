@@ -63,7 +63,7 @@ int main(int argc, const char* argv[])
 
     const double        tmin = 0;          // begin at time t = 0
     const double        tmax = 55;         // end at time t = 50
-    const unsigned int  tN   = 500;        // record 500 samples
+    const unsigned int  tN   = 1000;        // record 500 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
