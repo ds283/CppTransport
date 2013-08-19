@@ -20,7 +20,7 @@ namespace transport
     class index_selector
       {
       public:
-        index_selector(unsigned int N_f, unsigned int dimension=2);
+        index_selector(unsigned int N_f, unsigned int d=2);
 
         void none   ();
         void all    ();
@@ -42,8 +42,8 @@ namespace transport
 
 
     template <unsigned int indices>
-    index_selector<indices>::index_selector(unsigned int N_f, unsigned int dimension)
-    : N_fields(N_f)
+    index_selector<indices>::index_selector(unsigned int N_f, unsigned int d)
+    : N_fields(N_f), dimension(d)
       {
         // work out how many components this object has
         size = 1;
