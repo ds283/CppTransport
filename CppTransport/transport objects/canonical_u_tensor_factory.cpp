@@ -163,15 +163,15 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
 
                 if(IS_FIELD(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, +1)/2;
+                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
@@ -179,19 +179,19 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                   }
                 else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, 1, -1, -1)/2;
+                    c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, +1, -1, -1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, +1, -1, -1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, +1)/2;
+                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
                   }
                 else
                   {
@@ -452,29 +452,25 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
     GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
     GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
 
-    GiNaC::ex c = -(Vijk / Hsq)/3;
+    GiNaC::ex c = - (Vijk / Hsq)/3;
 
-    c -=   (this->deriv_list[i]/(2*pow(this->M_Planck,2))) * (Vjk / Hsq)/3
-         + (this->deriv_list[j]/(2*pow(this->M_Planck,2))) * (Vik / Hsq)/3
-         + (this->deriv_list[k]/(2*pow(this->M_Planck,2))) * (Vij / Hsq)/3;
+    c += - (this->deriv_list[i]/(2*pow(this->M_Planck,2))) * (Vjk / Hsq)/3
+         - (this->deriv_list[j]/(2*pow(this->M_Planck,2))) * (Vik / Hsq)/3
+         - (this->deriv_list[k]/(2*pow(this->M_Planck,2))) * (Vij / Hsq)/3;
 
     c +=   (this->deriv_list[i]*this->deriv_list[j]*xi_k)/(8*pow(this->M_Planck,4))/3
          + (this->deriv_list[i]*this->deriv_list[k]*xi_j)/(8*pow(this->M_Planck,4))/3
          + (this->deriv_list[j]*this->deriv_list[k]*xi_i)/(8*pow(this->M_Planck,4))/3;
 
-    c +=   (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,4))/3
-         + (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,4))/3
-         + (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,4))/3;
+    c +=   (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,4)) * ( 1 - k2dotk3*k2dotk3 / (k2*k2*k3*k3) ) /3
+         + (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /3
+         + (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,4)) * ( 1 - k1dotk2*k1dotk2 / (k1*k1*k2*k2) ) /3;
 
     c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * (6 - 2*eps);
 
     if(j == k) c += this->deriv_list[i]/(2*pow(this->M_Planck,2)) * k2dotk3/(pow(a,2)*Hsq)/3;
     if(i == k) c += this->deriv_list[j]/(2*pow(this->M_Planck,2)) * k1dotk3/(pow(a,2)*Hsq)/3;
     if(i == j) c += this->deriv_list[k]/(2*pow(this->M_Planck,2)) * k1dotk2/(pow(a,2)*Hsq)/3;
-
-    c -=   (this->deriv_list[i]*xi_j*xi_k)/(32*pow(this->M_Planck,2)) * k2dotk3*k2dotk3 / (k2*k2*k3*k3) /3
-         + (this->deriv_list[j]*xi_i*xi_k)/(32*pow(this->M_Planck,2)) * k1dotk3*k1dotk3 / (k1*k1*k3*k3) /3
-         + (this->deriv_list[k]*xi_i*xi_j)/(32*pow(this->M_Planck,2)) * k1dotk2*k1dotk2 / (k1*k1*k2*k2) /3;
 
     return(c);
   }
@@ -499,14 +495,11 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(4*pow(this->M_Planck,4));
 
-    c -=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2
-         + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4))/2;
+    c += - this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * ( 1 - k2dotk3*k2dotk3 / (k2*k2*k3*k3) ) /2
+         - this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * ( 1 - k1dotk3*k1dotk3 / (k1*k1*k3*k3) ) /2;
 
-    if(j == k) c -= (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
-    if(i == k) c -= (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
-
-    c +=   this->deriv_list[i]*xi_j*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * k2dotk3*k2dotk3 / (k2*k2*k3*k3) /2;
-         + this->deriv_list[j]*xi_i*this->deriv_list[k]/(8*pow(this->M_Planck,4)) * k1dotk3*k1dotk3 / (k1*k1*k3*k3) /2;
+    if(j == k) c += - (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
+    if(i == k) c += - (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
 
     return(c);
   }
@@ -528,11 +521,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-    if (i == j) c -= this->deriv_list[k] / (2*pow(this->M_Planck, 2));
+    if (i == j) c += -this->deriv_list[k] / (2*pow(this->M_Planck, 2));
 
-    c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4));
-
-    c -= this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4)) * k1dotk2*k1dotk2 / (k1*k1*k2*k2);
+    c += this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4)) * ( 1 - k1dotk2*k1dotk2 / (k1*k1*k2*k2) );
 
     if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * k1dotk3 / (k1*k1) /2;
     if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * k2dotk3 / (k2*k2) /2;
@@ -543,11 +534,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
 GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
-    GiNaC::ex c  = -6 * this->deriv_list[i];
     GiNaC::ex Vi = GiNaC::diff(this->V, this->field_list[i]);
 
-    c -= 2 * Vi/Hsq;
-    c += this->deriv_list[i] * 2*eps;
+    GiNaC::ex c = -2*(3-eps)*this->deriv_list[i] - 2*Vi/Hsq;
 
     return(c);
   }
