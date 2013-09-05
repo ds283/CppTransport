@@ -40,13 +40,15 @@ namespace transport
         // Integrate background and 2-point function on the CPU, using OpenMP
         transport::twopf<number>
           twopf(const std::vector<double>& ks, double Nstar,
-                const std::vector<number>& ics, const std::vector<double>& times);
+                const std::vector<number>& ics, const std::vector<double>& times,
+                bool silent=false);
 
         // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
         // this simple implementation works on a cubic lattice of k-modes
         transport::threepf<number>
           threepf(const std::vector<double>& ks, double Nstar,
-                  const std::vector<number>& ics, const std::vector<double>& times);
+                  const std::vector<number>& ics, const std::vector<double>& times,
+                  bool silent=false);
 
       protected:
         void twopf_kmode(double kmode, const std::vector<double>& times,
@@ -159,20 +161,31 @@ namespace transport
     // TWO-POINT FUNCTION INTEGRATION
 
 
+    // ks    -- vector of *conventionally normalized* wavenumbers for which we wish to compute the twopf
+    //          (conventional normalization means k=1 is the mode which crosses the horizon at Nstar)
+    // Nstar -- horizon-exit of the mode with k-comoving = 1 takes place at Nstar e-folds
+    // ics   -- vector of initial conditions for background fields (or fields+momenta)
+    // times -- vector of times at which the solution will be recoreded
     template <typename number>
     transport::twopf<number> $$__MODEL_basic<number>::twopf(const std::vector<double>& ks, double Nstar,
-                                                            const std::vector<number>& ics, const std::vector<double>& times)
+                                                            const std::vector<number>& ics, const std::vector<double>& times,
+                                                            bool silent)
       {
-        this->validate_times(times);
+        this->validate_times(times, Nstar);
 
         // validate initial conditions (or set up ics for momenta if necessary)
         std::vector<number> real_ics = ics;
         this->fix_initial_conditions(ics, real_ics);
-        this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+        if(!silent)
+          {
+            this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+          }
 
-        std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, Nstar);
+        // convert conventionally-normalized wavenumbers to
+        // properly normalized comoving wavenumbers
+        std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, *(times.begin()), Nstar, silent);
 
-        // space for storing the solution
+        // allocate space for storing the solution
         std::vector< std::vector<number> >                background_history;
         std::vector< std::vector< std::vector<number> > > twopf_history;
 
@@ -212,6 +225,11 @@ namespace transport
       }
 
 
+    // kmode              -- *comoving normalized* wavenumber for which we will compute twopf
+    // times              -- vector of times at which the solution will be recorded
+    // ics                -- vector of initial conditions for the background fields (or fields+momenta)
+    // background_history -- allocated space for storing the time-history of the background
+    // twopf_history      -- allocated space for storing the time-history of the 2pf
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(double kmode, const std::vector<double>& times,
                                               const std::vector<number>& ics,
@@ -247,6 +265,13 @@ namespace transport
       }
 
 
+    // make initial conditions for each components of the 2pf
+    // x         - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
+    // start     - starting position of twopf components within the state vector
+    // kmode     - *comoving normalized* wavenumber for which we will compute the twopf
+    // Ninit     - initial time
+    // ics       - iniitial conditions for the background fields (or fields+momenta)
+    // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
     void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state& x, unsigned int start, double kmode, double Ninit, const std::vector<number>& ics, bool imaginary)
       {
@@ -290,18 +315,22 @@ namespace transport
 
     template <typename number>
     transport::threepf<number> $$__MODEL_basic<number>::threepf(const std::vector<double>& ks, double Nstar,
-                                                                const std::vector<number>& ics, const std::vector<double>& times)
+                                                                const std::vector<number>& ics, const std::vector<double>& times,
+                                                                bool silent)
       {
         using namespace boost::numeric::odeint;
 
-        this->validate_times(times);
+        this->validate_times(times, Nstar);
 
         // validate initial conditions (or set up ics for momenta if necessary)
         std::vector<number> real_ics = ics;
         this->fix_initial_conditions(ics, real_ics);
-        this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+        if(!silent)
+          {
+            this->write_initial_conditions(real_ics, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+          }
 
-        std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, Nstar);
+        std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, *(times.begin()), Nstar, silent);
 
         // space for storing the solution
         std::vector< std::vector<number> >                background_history;

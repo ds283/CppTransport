@@ -89,7 +89,7 @@ namespace transport
 
           // Integrate the background (on the CPU; can be overridden later if desired)
           transport::background<number>
-            background(const std::vector<number>& ics, const std::vector<double>& times);
+            background(const std::vector<number>& ics, const std::vector<double>& times, bool silent=false);
 
           // Calculation of gauge-transformation coefficients (to zeta)
           void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
@@ -110,12 +110,13 @@ namespace transport
           number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                  double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
 
-          void validate_times(const std::vector<double>& times);
+          void validate_times(const std::vector<double>& times, double Nstar);
 
-          std::vector<double> normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks, double Nstar);
+          std::vector<double> normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks,
+                                                    double Ninit, double Nstar, bool silent=false);
 
           void rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
-                          double __Nstar, const std::vector<number>& __fields);
+                          double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent=false);
 
           $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
@@ -196,14 +197,18 @@ namespace transport
 
 
       template <typename number>
-      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, const std::vector<double>& times)
+      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, const std::vector<double>& times,
+        bool silent)
         {
           using namespace boost::numeric::odeint;
 
           // validate initial conditions (or set up ics for momenta if necessary)
           std::vector<number> x = ics;
           this->fix_initial_conditions(ics, x);
-          this->write_initial_conditions(x, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+          if(!silent)
+            {
+              this->write_initial_conditions(x, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+            }
 
           // set up an observer which writes to this history vector
           // I'd prefer to encapsulate the history within the observer object, but for some reason
@@ -226,11 +231,25 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL<number>::validate_times(const std::vector<double>& times)
+      void $$__MODEL<number>::validate_times(const std::vector<double>& times, double Nstar)
         {
           if(times.size() == 0)
             {
-              std::cout << __CPP_TRANSPORT_NO_TIMES << std::endl;
+              std::cerr << __CPP_TRANSPORT_NO_TIMES << std::endl;
+              exit(1);
+            }
+
+          if(*(times.begin()) > Nstar)
+            {
+              std::cerr << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << *(times.begin()) << ", Nstar = " << Nstar << ")" << std::endl;
+              exit(1);
+            }
+
+          // remember that end() returns an iterator pointing past the end of the vector, so
+          // it must be decremented before it can be used
+          if(*(--times.end()) < Nstar)
+            {
+              std::cerr << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << *(--times.end()) << ", Nstar = " << Nstar << ")" << std::endl;
               exit(1);
             }
         }
@@ -238,19 +257,29 @@ namespace transport
 
       template <typename number>
       std::vector<double> $$__MODEL<number>::normalize_comoving_ks(const std::vector<number>& ics, const std::vector<double>& ks,
-        double Nstar)
+        double Ninit, double Nstar, bool silent)
         {
+          assert(Nstar > Ninit);
+
           // solve for the background, so that we get a good estimate of
           // H_exit -- needed to normalize the comoving momenta k
-          std::vector<number> backg_times;
-          backg_times.push_back(Nstar);
-          transport::background<number> backg_evo = this->background(ics, backg_times);
+          std::vector<double> backg_times;
+          const auto default_time_steps = 20;
+
+          for(int i = 0; i <= default_time_steps; i++)
+            {
+              backg_times.push_back(Ninit + (Nstar-Ninit)*((double)i/(double)default_time_steps));
+            }
+
+          transport::background<number> backg_evo = this->background(ics, backg_times, true); // enforce silent mode
 
           // set up vector of ks corresponding to the correctly-normalized comoving momenta
           // (remember we use the convention a = exp(t), for whatever values of t the user supplies)
           std::vector<double> com_ks(ks.size());
 
-          this->rescale_ks(ks, com_ks, Nstar, backg_evo.__INTERNAL_ONLY_get_value(0));
+          // the field configuration at time Nstar should be stored as the *second* entry
+          // in the background container
+          this->rescale_ks(ks, com_ks, Nstar, backg_evo.__INTERNAL_ONLY_get_value(default_time_steps), std::cout, silent);
 
           return(com_ks);
         }
@@ -309,6 +338,10 @@ namespace transport
 
 
       // set up initial conditions for the real part of the equal-time two-point function
+      // __i,__j  -- label component of the twopf for which we wish to compute initial conditions
+      // __k      -- *comoving normalized* wavenumber for which we wish to assign initial conditions
+      // __Ninit  -- initial time
+      // __fields -- vector of initial conditions for the background fields (or fields+momenta)
       template <typename number>
       number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
         double __k, double __Ninit, const std::vector<number>& __fields)
@@ -378,7 +411,7 @@ namespace transport
 
       template <typename number>
       void $$__MODEL<number>::rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
-        double __Nstar, const std::vector<number>& __fields)
+        double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent)
         {
           assert(__fields.size() == 2*$$__NUMBER_FIELDS);
           assert(__ks.size() == __com_ks.size());
@@ -392,9 +425,21 @@ namespace transport
           // (not at the start of the integration)
           const auto __Hsq             = $$__HUBBLE_SQ;
 
-          // the convention for the 'unscaled' mode is that k=1
-          // corresponds to the mode which crosses the horizon at the
-          // N=Nstar
+          if(!__silent)
+            {
+              __stream << "Normalization of comoving wavenumbers" << std::endl;
+
+              for(int i = 0; i < this->N_fields; i++)
+                {
+                  __stream << "  " << this->field_names[i] << " = " << __fields[i]
+                           << "; d(" << this->field_names[i] << ")/dN = " << __fields[this->N_fields+i] << std::endl;
+                }
+              __stream << "  H = " << sqrt(__Hsq) << std::endl << std::endl;
+            }
+
+          // the normalization convention for the 'unscaled'
+          // or comoving mode is that k-comoving = 1
+          // corresponds to the mode which crosses the horizon at N=Nstar
           for(int __n = 0; __n < __ks.size(); __n++)
             {
               __com_ks[__n] = __ks[__n] * sqrt(__Hsq) * exp(__Nstar);

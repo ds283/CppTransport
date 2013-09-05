@@ -36,7 +36,10 @@
 #define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
 #define __CPP_TRANSPORT_OF                    "of"
 
-#define __CPP_TRANSPORT_NO_TIMES              "Error: no times specified for integration"
+#define __CPP_TRANSPORT_NO_TIMES              "Fatal: no times specified for integration"
+#define __CPP_TRANSPORT_NSTAR_TOO_EARLY       "Fatal: Nstar is earlier than the start point of the integration"
+#define __CPP_TRANSPORT_NSTAR_TOO_LATE        "Fatal: Nstar is later than the end point of the integration"
+
 #define __CPP_TRANSPORT_TWOPF_STORE           "Fatal: failed to find a configuration which would store the two-point function"
 #define __CPP_TRANSPORT_BACKGROUND_STORE      "Fatal: failed to find a configuration which would store the background"
 
