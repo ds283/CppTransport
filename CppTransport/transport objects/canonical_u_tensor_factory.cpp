@@ -363,6 +363,8 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
 
     GiNaC::ex dotH = -eps*Hsq;
 
+    // formulae from arXiv:1302.3842, Eqs. (6.4) and (6.5)
+
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         rval[i].resize(2*this->num_fields);
