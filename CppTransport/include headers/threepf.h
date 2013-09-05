@@ -464,13 +464,13 @@ namespace transport
                         __i_dotfield_twopf_index_r = (2*this->N_fields)*(__i + this->N_fields) + __r;
                         break;
                       
-                      case 1: // index __m is in the middle, to the left of __n but the right of __r
-                        __i_field_twopf_index_n    = (2*this->N_fields)*__i + __n;
-                        __i_field_twopf_index_r    = (2*this->N_fields)*__r + __i;
-                        __j_field_twopf_index_n    = (2*this->N_fields)*__j + __n;
-                        __j_field_twopf_index_r    = (2*this->N_fields)*__r + __j;
-                        __i_dotfield_twopf_index_n = (2*this->N_fields)*(__i + this->N_fields) + __n;
-                        __i_dotfield_twopf_index_r = (2*this->N_fields)*__r + (__i + this->N_fields);
+                      case 1: // index __m is in the middle, to the left of __r but the right of __n
+                        __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
+                        __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
+                        __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
+                        __j_field_twopf_index_r    = (2*this->N_fields)*__j + __r;
+                        __i_dotfield_twopf_index_n = (2*this->N_fields)*__n + (__i + this->N_fields);
+                        __i_dotfield_twopf_index_r = (2*this->N_fields)*(__i + this->N_fields) + __r;
                         break;
                       
                       case 2: // index __m is on the far right, to the right of both __n and __r
@@ -494,9 +494,9 @@ namespace transport
 
                   rval += __C[__m_species][__i][__j]
                                     * (  __twopf_re_n[__i_dotfield_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
-                                       + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_dotfield_twopf_index_r]
+                                       + __twopf_re_n[__j_field_twopf_index_n]   *__twopf_re_r[__i_dotfield_twopf_index_r]
                                        - __twopf_im_n[__i_dotfield_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
-                                       - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_dotfield_twopf_index_r]);
+                                       - __twopf_im_n[__j_field_twopf_index_n]   *__twopf_im_r[__i_dotfield_twopf_index_r]);
                 }
             }
 
