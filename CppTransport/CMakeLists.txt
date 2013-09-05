@@ -1,7 +1,9 @@
 cmake_minimum_required(VERSION 2.6)
+
 project(CppTransport)
 
 add_definitions(-std=c++11)
+add_definitions(-fopenmp)
 
 include_directories(./ backends backends/cpp parser parser/bison "transport objects" utilities /usr/include /usr/local/include /usr/local/include/odeint-v2)
 
