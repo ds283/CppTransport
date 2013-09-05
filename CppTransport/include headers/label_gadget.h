@@ -87,14 +87,13 @@ namespace transport
 
                     if(latex)
                       {
-                        label << "$" << U2_SYMBOL << "_{"
-                          << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                          << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                        label << "$" << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                              << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "")        << "$";
                       }
                     else
                       {
                         label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                          << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "");
+                              << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "");
                       }
                     labels.push_back(label.str());
                   }
@@ -123,16 +122,15 @@ namespace transport
 
                         if(latex)
                           {
-                            label << "$" << U3_SYMBOL << "_{"
-                              << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                              << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "") << " "
-                              << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "") << "}$";
+                            label << "$" << this->latex_names[m % this->N_fields] << (m >= this->N_fields ? PRIME_SYMBOL : "") << " "
+                                  << this->latex_names[n % this->N_fields] << (n >= this->N_fields ? PRIME_SYMBOL : "")        << " "
+                                  << this->latex_names[r % this->N_fields] << (r >= this->N_fields ? PRIME_SYMBOL : "")        << "$";
                           }
                         else
                           {
                             label << this->field_names[m % this->N_fields] << (m >= this->N_fields ? "'" : "") << ", "
-                              << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "") << ", "
-                              << this->field_names[r % this->N_fields] << (r >= this->N_fields ? "'" : "");
+                                  << this->field_names[n % this->N_fields] << (n >= this->N_fields ? "'" : "") << ", "
+                                  << this->field_names[r % this->N_fields] << (r >= this->N_fields ? "'" : "");
                           }
                         labels.push_back(label.str());
                       }
