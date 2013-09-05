@@ -184,6 +184,7 @@ int main(int argc, const char* argv[])
     twopf_re.components_time_history(&py_plt, output + "/re_k_mode", twopf_re_selector);
     twopf_im.components_time_history(&py_plt, output + "/im_k_mode", twopf_im_selector);
     twopf_re.zeta_time_history(&py_plt, output + "/zeta_twopf_mode");
+    twopf_re.zeta_time_history(&text_plt, output + "/zeta_twopf_mode");
 
     threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
     threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
