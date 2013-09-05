@@ -58,6 +58,8 @@ int main(int argc, const char* argv[])
 //    gnuplot_plot_gadget<double> plt;
 
 //    py_plt.set_use_latex(true);
+    py_plt.set_min_x(10);
+    py_plt.set_max_x(28);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -186,8 +188,8 @@ int main(int argc, const char* argv[])
     twopf_re.zeta_time_history(&py_plt, output + "/zeta_twopf_mode");
     twopf_re.zeta_time_history(&text_plt, output + "/zeta_twopf_mode");
 
-    threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector);
-    threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector);
+    threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector, "pdf", false);
+    threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector, "pdf", false);
     threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
     threepf.reduced_bispectrum_time_history(&py_plt, output + "/redbisp");
     threepf.reduced_bispectrum_time_history(&text_plt, output + "/redbisp");

@@ -96,6 +96,7 @@ namespace transport
                                           const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
       {
         bool ok = true;
+
         if(logx)
           {
             if((ok = check_log_scale(x, true)) == false)
@@ -137,9 +138,14 @@ namespace transport
             if(logy) out << "plt.yscale('log')" << std::endl;
 
             out << "x = [ ";
+            unsigned int written = 0;
             for(int i = 0; i < x.size(); i++)
               {
-                out << (i > 0 ? ", " : "") << x[i];
+                if(this->is_allowed(x[i]))
+                  {
+                    out << (written > 0 ? ", " : "") << x[i];
+                    written++;
+                  }
               }
             out << " ]" << std::endl;
 
@@ -153,6 +159,8 @@ namespace transport
 
                 for(int j = 0; j < ys.size(); j++)
                   {
+                    assert(ys[j].size() == labels.size());
+
                     y_line[j] = (logy ? fabs(ys[j][i]) : ys[j][i]);
                   }
 
@@ -169,11 +177,14 @@ namespace transport
                   {
                     out << "y" << i << " = [ ";
 
+                    unsigned int written = 0;
                     for(int j = 0; j < ys.size(); j++)
                       {
-                        assert(ys[j].size() == labels.size());
-
-                        out << (j > 0 ? ", " : "") << y_line[j];
+                        if(this->is_allowed(x[j]))
+                          {
+                            out << (written > 0 ? ", " : "") << y_line[j];
+                            written++;
+                          }
                       }
                     out << " ]" << std::endl;
 
