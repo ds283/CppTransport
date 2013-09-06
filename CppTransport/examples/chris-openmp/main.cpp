@@ -9,8 +9,9 @@
 #include <iostream>
 
 #include <boost/timer/timer.hpp>
+#include "boost/filesystem/operations.hpp"
 
-#include "dq_basic.h"
+#include "chris_basic.h"
 
 
 // ****************************************************************************
@@ -21,14 +22,11 @@
 // we could choose something different
 
 const double M_Planck = 1.0;
+const double W0       = 1e-5;
+const double lambda   = 0.05;
 
-const double mass		  = 1E-5 * M_Planck;
-const double m_phi    = 9.0 * mass;
-const double m_chi    = 1.0 * mass;
-
-const double phi_init = 8.2;
-const double chi_init = 12.9;
-
+const double phi_init = 0.001;
+const double chi_init = 16.0;
 
 static void output_info(transport::canonical_model<double>& model);
 
@@ -40,31 +38,35 @@ int main(int argc, const char* argv[])
   {
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    const std::vector<double> init_params = { m_phi, m_chi };
-    transport::dquad_basic<double> model(M_Planck, init_params);
+    const std::vector<double> init_params = { W0, lambda };
+    transport::chris_basic<double> model(M_Planck, init_params);
 
     output_info(model);
 
     if(argc != 3)
       {
-        std::cerr << "syntax: dquad-openmp <output directory> <python interpreter>" << std::endl;
+        std::cerr << "syntax: chris-openmp <output directory> <python interpreter>" << std::endl;
       }
 
     std::string output(argv[1]);
     std::string python(argv[2]);
+
+    // ensure output directory exists
+    boost::filesystem::path output_path(output);
+//    boost::filesystem::create_directories(output_path);
 
     transport::python_plot_gadget<double>     py_plt(python);
     transport::asciitable_plot_gadget<double> text_plt;
 //    gnuplot_plot_gadget<double> plt;
 
 //    py_plt.set_use_latex(true);
-    py_plt.set_min_x(10);
-    py_plt.set_max_x(28);
+//    py_plt.set_min_x(10);
+//    py_plt.set_max_x(28);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double        tmin = 0;          // begin at time t = 0
-    const double        tmax = 55;         // end at time t = 50
+    const double        tmax = 60;         // end at time t = 50
     const unsigned int  tN   = 1000;        // record 500 samples
 
     std::vector<double> times;
@@ -172,14 +174,14 @@ int main(int argc, const char* argv[])
     sq_selector_b->set_on(sq_set_e);
     sq_selector_b->set_on(sq_set_f);
 
-    backg.plot(&py_plt, output + "/background", backg_selector);
+    backg.plot(&py_plt, output_path.string() + "/background", backg_selector);
 
     u2_selector->none();
     u2_selector->set_on(index_set_d);
     u2_selector->set_on(index_set_e);
     u2_selector->set_on(index_set_f);
     u2_selector->set_on(index_set_g);
-    backg.plot_u2(&py_plt, 0.3, output + "/u2_mom_k=pt3", u2_selector);
+    backg.plot_u2(&py_plt, 0.3, output_path.string() + "/u2_mom_k=pt3", u2_selector);
 
     u3_selector->none();
     u3_selector->set_on(three_set_e);
@@ -190,7 +192,7 @@ int main(int argc, const char* argv[])
     u3_selector->set_on(three_set_j);
     u3_selector->set_on(three_set_k);
     u3_selector->set_on(three_set_l);
-    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_fields_k=pt3", u3_selector);
+    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_fields_k=pt3", u3_selector);
 
     u3_selector->none();
     u3_selector->set_on(three_set_m);
@@ -199,21 +201,21 @@ int main(int argc, const char* argv[])
     u3_selector->set_on(three_set_p);
     u3_selector->set_on(three_set_q);
     u3_selector->set_on(three_set_r);
-    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output + "/u3_mom_k=pt3", u3_selector);
+    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_mom_k=pt3", u3_selector);
 
-    twopf_re.components_time_history(&py_plt, output + "/re_k_mode", twopf_re_selector);
-    twopf_im.components_time_history(&py_plt, output + "/im_k_mode", twopf_im_selector);
-    twopf_re.zeta_time_history(&py_plt, output + "/zeta_twopf_mode");
-    twopf_re.zeta_time_history(&text_plt, output + "/zeta_twopf_mode");
+    twopf_re.components_time_history(&py_plt, output_path.string() + "/re_k_mode", twopf_re_selector);
+    twopf_im.components_time_history(&py_plt, output_path.string() + "/im_k_mode", twopf_im_selector);
+    twopf_re.zeta_time_history(&py_plt, output_path.string() + "/zeta_twopf_mode");
+    twopf_re.zeta_time_history(&text_plt, output_path.string() + "/zeta_twopf_mode");
 
-    threepf.components_time_history(&py_plt, output + "/threepf_mode", threepf_selector, "pdf", false);
-    threepf.components_dotphi_time_history(&py_plt, output + "/threepf_dotphi_mode", threepf_selector, "pdf", false);
-    threepf.zeta_time_history(&py_plt, output + "/zeta_threepf_mode");
-    threepf.reduced_bispectrum_time_history(&py_plt, output + "/redbisp");
-    threepf.reduced_bispectrum_time_history(&text_plt, output + "/redbisp");
+    threepf.components_time_history(&py_plt, output_path.string() + "/threepf_mode", threepf_selector, "pdf", false);
+    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/threepf_dotphi_mode", threepf_selector, "pdf", false);
+    threepf.zeta_time_history(&py_plt, output_path.string() + "/zeta_threepf_mode");
+    threepf.reduced_bispectrum_time_history(&py_plt, output_path.string() + "/redbisp");
+    threepf.reduced_bispectrum_time_history(&text_plt, output_path.string() + "/redbisp");
 
-    threepf.components_dotphi_time_history(&py_plt, output + "/sq_config_a_mode", sq_selector_a, "pdf", false);
-    threepf.components_dotphi_time_history(&py_plt, output + "/sq_config_b_mode", sq_selector_b, "pdf", false);
+    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/sq_config_a_mode", sq_selector_a, "pdf", false);
+    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/sq_config_b_mode", sq_selector_b, "pdf", false);
 
     delete backg_selector;
     delete twopf_re_selector;

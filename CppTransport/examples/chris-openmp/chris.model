@@ -1,0 +1,28 @@
+model          "chris";
+name           "Chris' Exponential Model";
+
+% include details of library tags, stepper definitions, etc.
+#include "defaults.model"
+
+% set up the fields
+field
+ { latex "\phi";
+ } phi;
+ 
+field
+ { latex "\chi";
+ } chi;
+
+% set up the parameters of the model
+parameter
+ { latex "W_0";
+ } W0;
+ 
+parameter
+ { latex "\lambda";
+ } lambda;
+
+% set up the potential
+% note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
+
+potential W0 * chi^2 * exp(-lambda*phi^2);
