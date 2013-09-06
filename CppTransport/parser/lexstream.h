@@ -27,7 +27,7 @@ class lexstream
     public:
       lexstream(const std::string filename, finder* search,
 								const std::string* kt, const keywords* km, unsigned int num_k,
-								const std::string* ct, const characters* cm, unsigned int num_c);
+								const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
       ~lexstream();
 
       void							                    reset();
@@ -57,6 +57,7 @@ class lexstream
 
       const std::string*                                                    ctable;      // table of 'characters'
       const characters*                                                     cmap;        // table of character token types
+      const bool*                                                           ccontext;    // keeps track of 'unary' context; true if can precede a unary minus
       const unsigned int                                                    Nc;          // number of characters
   };
 
@@ -72,8 +73,8 @@ class lexstream
 template <class keywords, class characters>
 lexstream<keywords, characters>::lexstream(const std::string filename, finder* search,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
-                                           const std::string*ct, const characters*cm, unsigned int num_c)
-  : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c)
+                                           const std::string*ct, const characters*cm, const bool* ctx, unsigned int num_c)
+  : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx)
   {
     assert(search != NULL);
     assert(ktable != NULL);
@@ -204,19 +205,20 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
   {
     while(input.current_state() == lex_ok)
       {
-        enum lexeme::lexeme_buffer_type type;
-        std::string             word = get_lexeme(input, type, inclusions);
+        enum lexeme::lexeme_buffer_type   type;
+        enum lexeme::lexeme_minus_context context = lexeme::unary_context;      // keep track of whether we expect unary or binary minus sign
+        std::string word = get_lexeme(input, type, inclusions);
 
         if(word != "")
           {
             switch(type)
               {
                 case lexeme::buf_character:
-                  if(word == "#")                                     // treat as a preprocessor directive
+                  if(word == "#")                                               // treat as a preprocessor directive
                     {
-                      word = get_lexeme(input, type, inclusions);     // get next lexeme
+                      word = get_lexeme(input, type, inclusions);      // get next lexeme
 
-                      if(word == "include")                           // inclusion directive
+                      if(word == "include")                                     // inclusion directive
                         {
                           word = get_lexeme(input, type, inclusions);
 
@@ -226,7 +228,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                             }
                           else
                             {
-                              inclusions[0].line = input.current_line(); // update which line this file was included from
+                              inclusions[0].line = input.current_line();        // update which line this file was included from
                               if(parse(word, search, inclusions) == false)
                                 {
                                   std::ostringstream msg;
@@ -238,20 +240,22 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                     }
                   else
                     {
+                      // note: this updates context, depending what the lexeme is recognized as
                       lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                        (word, type, inclusions, input.current_line(), this->unique++,
+                        (word, type, context, inclusions, input.current_line(), this->unique++,
                           this->ktable, this->kmap, this->Nk,
-                          this->ctable, this->cmap, this->Nc));
+                          this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
                   break;
 
                 case lexeme::buf_string:
                 case lexeme::buf_number:
                 case lexeme::buf_string_literal:
+                  // note: this updates context, depending what the lexeme is recognized as
                   lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                    (word, type, inclusions, input.current_line(), this->unique++,
+                    (word, type, context, inclusions, input.current_line(), this->unique++,
                       this->ktable, this->kmap, this->Nk,
-                      this->ctable, this->cmap, this->Nc));
+                      this->ctable, this->cmap, this->ccontext, this->Nc));
                 break;
 
                 default:

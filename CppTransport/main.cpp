@@ -28,47 +28,59 @@
 
 const std::string keyword_table[] =
   {
-      "name", "author", "tag", "field", "potential",
-      "parameter", "latex", "core", "implementation", "model",
-      "abserr", "relerr", "stepper", "stepsize",
-      "background", "perturbations",
-      "abs", "step", "sqrt", "sin", "cos", "tan",
-      "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-      "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G_func", "S_func", "H_func",
-      "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
+    "name", "author", "tag", "field", "potential",
+    "parameter", "latex", "core", "implementation", "model",
+    "abserr", "relerr", "stepper", "stepsize",
+    "background", "perturbations",
+    "abs", "step", "sqrt", "sin", "cos", "tan",
+    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
+    "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G_func", "S_func", "H_func",
+    "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
   };
 
 const enum keyword_type keyword_map[] =
   {
-      k_name, k_author, k_tag, k_field, k_potential,
-      k_parameter, k_latex, k_core, k_implementation, k_model,
-      k_abserr, k_relerr, k_stepper, k_stepsize,
-      k_background, k_perturbations,
-      f_abs, f_step, f_sqrt,
-      f_sin, f_cos, f_tan,
-      f_asin, f_acos, f_atan, f_atan2,
-      f_sinh, f_cosh, f_tanh,
-      f_asinh, f_acosh, f_atanh,
-      f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
-      f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
-      f_beta, f_psi, f_factorial, f_binomial
+    k_name, k_author, k_tag, k_field, k_potential,
+    k_parameter, k_latex, k_core, k_implementation, k_model,
+    k_abserr, k_relerr, k_stepper, k_stepsize,
+    k_background, k_perturbations,
+    f_abs, f_step, f_sqrt,
+    f_sin, f_cos, f_tan,
+    f_asin, f_acos, f_atan, f_atan2,
+    f_sinh, f_cosh, f_tanh,
+    f_asinh, f_acosh, f_atanh,
+    f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
+    f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
+    f_beta, f_psi, f_factorial, f_binomial
   };
 
 const std::string character_table[] =
   {
-      "{", "}", "(", ")",
-      "[", "]", ",", ".", ":", ";",
-      "=", "+", "-", "*", "/", "\\", "~",
-      "&", "^", "@", "...", "->"
+    "{", "}", "(", ")",
+    "[", "]", ",", ".", ":", ";",
+    "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
+    "&", "^", "@", "...", "->"
   };
 
 const enum character_type character_map[] =
    {
-       open_brace, close_brace, open_bracket, close_bracket,
-       open_square, close_square, comma, period, colon, semicolon,
-       equals, plus, minus, star, backslash, foreslash, tilde,
-       ampersand, circumflex, ampersat, ellipsis, rightarrow
+     open_brace, close_brace, open_bracket, close_bracket,
+     open_square, close_square, comma, period, colon, semicolon,
+     equals, plus, binary_minus, unary_minus, star, backslash, foreslash, tilde,
+     ampersand, circumflex, ampersat, ellipsis, rightarrow
    };
+
+// keep track of which characters can precede a unary minus
+// this is an open bracket '(', and the binary operators
+// which bind tighter: *, /, ^
+// plus anything which isn't part of an expression
+const bool character_unary_context[] =
+  {
+    true, true, true, false,
+    true, true, true, true, true, true,
+    false, false, false, false, true, true, true, true,
+    true, true, true, true, true
+  };
 
 
 // ******************************************************************
@@ -191,7 +203,7 @@ int main(int argc, const char *argv[])
             in.name   = (std::string)argv[i];
             in.stream = new lexstream<keyword_type, character_type>((std::string) argv[i], &path,
               keyword_table, keyword_map, NUMBER_KEYWORDS,
-              character_table, character_map, NUMBER_CHARACTERS);
+              character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
 
             // in.stream->print(std::cerr);
 

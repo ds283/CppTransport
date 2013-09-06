@@ -165,20 +165,21 @@ namespace y {
      semicolon = 314,
      equals = 315,
      plus = 316,
-     minus = 317,
-     star = 318,
-     backslash = 319,
-     foreslash = 320,
-     tilde = 321,
-     ampersand = 322,
-     circumflex = 323,
-     ampersat = 324,
-     ellipsis = 325,
-     rightarrow = 326,
-     identifier = 327,
-     integer = 328,
-     decimal = 329,
-     string = 330
+     binary_minus = 317,
+     unary_minus = 318,
+     star = 319,
+     backslash = 320,
+     foreslash = 321,
+     tilde = 322,
+     ampersand = 323,
+     circumflex = 324,
+     ampersat = 325,
+     ellipsis = 326,
+     rightarrow = 327,
+     identifier = 328,
+     integer = 329,
+     decimal = 330,
+     string = 331
    };
 
     };
@@ -359,7 +360,7 @@ namespace y {
 #line 5 "y_parser.yy"
 } // y
 /* Line 33 of lalr1.cc  */
-#line 363 "y_parser.tab.hh"
+#line 364 "y_parser.tab.hh"
 
 
 

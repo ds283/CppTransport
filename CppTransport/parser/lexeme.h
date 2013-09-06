@@ -21,6 +21,11 @@
 #include "core.h"
 #include "error.h"
 
+#define UNARY_TAG         "@unary"
+#define LENGTH_UNARY_TAG  6
+#define BINARY_TAG        "@binary"
+#define LENGTH_BINARY_TAG 7
+
 namespace lexeme    // package in a unique namespace to protect common words like 'keyword', 'character' used below
   {
 
@@ -34,14 +39,20 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           keyword, character, ident, integer, decimal, string, unknown
         };
 
+      enum lexeme_minus_context
+        {
+          unary_context, binary_context
+        };
+
       template <class keywords, class characters>
       class lexeme
         {
           public:
           lexeme(const std::string buffer, const enum lexeme_buffer_type t,
+                 enum lexeme_minus_context& context,
                  const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
                  const std::string* kt, const keywords* km, unsigned int num_k,
-                 const std::string* ct, const characters* cm, unsigned int num_c);
+                 const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
           ~lexeme();
 
@@ -88,6 +99,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
           const std::string*                  ctable;
           const characters*                   cmap;
+          const bool*                         ccontext;
           unsigned int                        Nc;
         };
 
@@ -95,12 +107,13 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
       template <class keywords, class characters>
       lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
+                                           enum lexeme_minus_context& context,
                                            const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
-                                           const std::string* ct, const characters* cm, unsigned int num_c)
+                                           const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
       : path(p), line(l), unique(u),
         ktable(kt), kmap(km), Nk(num_k),
-        ctable(ct), cmap(cm), Nc(num_c)
+        ctable(ct), cmap(cm), ccontext(ctx), Nc(num_c)
         {
           bool ok     = false;
           int  offset = 0;
@@ -111,13 +124,16 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                 type = ident;
                 str  = buffer;
 
+                context = binary_context; // unary minus can't follow an identified
+
                 for (int i = 0; i < Nk; i++)
                   {
                     if (buffer == ktable[i])
                       {
-                        type = keyword;
-                        k    = km[i];
-                        str  = "";
+                        type    = keyword;
+                        k       = km[i];
+                        str     = "";
+                        context = unary_context; // unary minus can always follow a keyword (eg. built-in function)
                      }
                   }
                 break;
@@ -160,6 +176,8 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                     msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
                     warn(msg.str(), l, p);
                   }
+
+                context = binary_context; // unary minus can't follow a number
                 break;
 
               case buf_character:
@@ -167,25 +185,45 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
                 for(int i = 0; i < Nc; i++)
                   {
-                    if(buffer == ctable[i])
+                    bool unary  = false;
+                    bool binary = false;
+                    std::string match = ctable[i];
+                    size_t pos;
+
+                    if((pos = match.find(UNARY_TAG)) != std::string::npos)
                       {
-                        type = character;
-                        s    = cmap[i];
-                        ok   = true;
+                        unary = true;
+                        match.erase(pos, LENGTH_UNARY_TAG);
+                      }
+                    if((pos = match.find(BINARY_TAG)) != std::string::npos)
+                      {
+                        binary = true;
+                        match.erase(pos, LENGTH_BINARY_TAG);
+                      }
+                    if(buffer == match
+                       && (!unary  || (unary  && context == unary_context))
+                       && (!binary || (binary && context == binary_context)))
+                      {
+                        type    = character;
+                        s       = cmap[i];
+                        context = ccontext[i] ? unary_context : binary_context;
+                        ok      = true;
                       }
                   }
 
-                if(ok == false)
+                if(!ok)
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
                     error(msg.str(), l, p);
+                    context = unary_context; // reset the context
                   }
                 break;
 
               case buf_string_literal:
-                type = string;
-                str    = buffer;
+                type    = string;
+                str     = buffer;
+                context = unary_context; // binary minus can't follow a string
                 break;
 
               default:

@@ -34,11 +34,11 @@ enum character_type
   {
       open_brace, close_brace, open_bracket, close_bracket,
       open_square, close_square, comma, period, colon, semicolon,
-      equals, plus, minus, star, backslash, foreslash, tilde,
+      equals, plus, binary_minus, unary_minus, star, backslash, foreslash, tilde,
       ampersand, circumflex, ampersat, ellipsis, rightarrow
   };
 
-#define NUMBER_CHARACTERS (22)
+#define NUMBER_CHARACTERS (23)
 
 
 #endif //__lexical_H_

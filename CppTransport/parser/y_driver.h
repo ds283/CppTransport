@@ -61,6 +61,7 @@ namespace y
           GiNaC::ex*   mul                      (GiNaC::ex* l, GiNaC::ex* r);
           GiNaC::ex*   div                      (GiNaC::ex* l, GiNaC::ex* r);
           GiNaC::ex*   pow                      (GiNaC::ex* l, GiNaC::ex* r);
+          GiNaC::ex*   unary_minus              (GiNaC::ex* l);
           GiNaC::ex*   abs                      (GiNaC::ex* arg);
           GiNaC::ex*   step                     (GiNaC::ex* arg);
           GiNaC::ex*   sqrt                     (GiNaC::ex* arg);

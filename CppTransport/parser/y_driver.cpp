@@ -317,6 +317,15 @@ namespace y
           return(rval);
         }
 
+      GiNaC::ex* y_driver::unary_minus(GiNaC::ex* l)
+        {
+          GiNaC::ex* rval = new GiNaC::ex(-(*l));
+
+          delete l;
+
+          return(rval);
+        }
+
       GiNaC::ex* y_driver::abs(GiNaC::ex *arg)
         {
           GiNaC::ex* rval = new GiNaC::ex(GiNaC::abs(*arg));

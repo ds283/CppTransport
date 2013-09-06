@@ -109,7 +109,8 @@
 %token          semicolon
 %token          equals
 %token          plus
-%token          minus
+%token          binary_minus
+%token          unary_minus
 %token          star
 %token          backslash
 %token          foreslash
@@ -172,7 +173,7 @@ stepper_attributes: stepper_attributes abserr equals decimal semicolon          
 
 expression: term                                                                        { $$ = $1; }
         | expression plus term                                                          { $$ = driver->add($1, $3); }
-        | expression minus term                                                         { $$ = driver->sub($1, $3); }
+        | expression binary_minus term                                                  { $$ = driver->sub($1, $3); }
         ;
         
 term: factor                                                                            { $$ = $1; }
@@ -189,6 +190,7 @@ leaf: integer                                                                   
         | identifier                                                                    { $$ = driver->get_identifier($1); }
         | built_in_function                                                             { $$ = $1; }
         | open_bracket expression close_bracket                                         { $$ = $2; }
+        | unary_minus expression                                                        { $$ = driver->unary_minus($2); }
         ;
 
 built_in_function: abs open_bracket expression close_bracket                            { $$ = driver->abs($3); }
