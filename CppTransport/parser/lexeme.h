@@ -124,7 +124,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                 type = ident;
                 str  = buffer;
 
-                context = binary_context; // unary minus can't follow an identified
+                context = binary_context; // unary minus can't follow an identifier
 
                 for (int i = 0; i < Nk; i++)
                   {

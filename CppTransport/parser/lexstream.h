@@ -203,10 +203,11 @@ bool lexstream<keywords, characters>::parse(std::string file, finder* search, st
 template <class keywords, class characters>
 void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<struct inclusion>& inclusions, lexfile& input)
   {
+    enum lexeme::lexeme_minus_context context = lexeme::unary_context;      // keep track of whether we expect unary or binary minus sign
+
     while(input.current_state() == lex_ok)
       {
         enum lexeme::lexeme_buffer_type   type;
-        enum lexeme::lexeme_minus_context context = lexeme::unary_context;      // keep track of whether we expect unary or binary minus sign
         std::string word = get_lexeme(input, type, inclusions);
 
         if(word != "")
@@ -241,7 +242,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                   else
                     {
                       // note: this updates context, depending what the lexeme is recognized as
-                      lexeme_list.push_back(lexeme::lexeme<keywords, characters>
+                      this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
                         (word, type, context, inclusions, input.current_line(), this->unique++,
                           this->ktable, this->kmap, this->Nk,
                           this->ctable, this->cmap, this->ccontext, this->Nc));
@@ -252,7 +253,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                 case lexeme::buf_number:
                 case lexeme::buf_string_literal:
                   // note: this updates context, depending what the lexeme is recognized as
-                  lexeme_list.push_back(lexeme::lexeme<keywords, characters>
+                  this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
                     (word, type, context, inclusions, input.current_line(), this->unique++,
                       this->ktable, this->kmap, this->Nk,
                       this->ctable, this->cmap, this->ccontext, this->Nc));
