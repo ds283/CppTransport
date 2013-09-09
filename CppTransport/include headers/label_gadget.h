@@ -23,17 +23,21 @@ namespace transport
 
     class label_gadget
       {
-      public:
-        label_gadget(unsigned int N, const std::vector<std::string> f, const std::vector<std::string> l);
+        public:
+          label_gadget(unsigned int N, const std::vector<std::string> f, const std::vector<std::string> l);
 
-        std::vector< std::string > make_labels(index_selector<1>* selector, bool latex);
-        std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
-        std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
+          std::vector< std::string > make_labels(index_selector<1>* selector, bool latex);
+          std::vector< std::string > make_labels(index_selector<2>* selector, bool latex);
+          std::vector< std::string > make_labels(index_selector<3>* selector, bool latex);
 
-      protected:
-        unsigned int N_fields;                                                      // number of fields
-        const std::vector<std::string> field_names;                                 // vector of names - includes momenta
-        const std::vector<std::string> latex_names;                                 // vector of LaTeX names - excludes momenta
+          std::string make_zeta_bispectrum_label(bool latex);
+          std::string make_reduced_bispectrum_label(bool latex);
+          std::string make_shape_bispectrum_label(bool latex);
+
+        protected:
+          unsigned int                   N_fields;                                    // number of fields
+          const std::vector<std::string> field_names;                                 // vector of names - includes momenta
+          const std::vector<std::string> latex_names;                                 // vector of LaTeX names - excludes momenta
       };
 
 
@@ -139,6 +143,57 @@ namespace transport
           }
 
         return(labels);
+      }
+
+
+    inline std::string label_gadget::make_zeta_bispectrum_label(bool latex)
+      {
+        std::ostringstream label;
+
+        if(latex)
+          {
+            label << "$" << THREEPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
+          }
+        else
+          {
+            label << THREEPF_NAME << "(" << ZETA_NAME << ", " << ZETA_NAME << ", " << ZETA_NAME << ")";
+          }
+
+        return(label.str());
+      }
+
+
+    inline std::string label_gadget::make_reduced_bispectrum_label(bool latex)
+      {
+        std::ostringstream label;
+
+        if(latex)
+          {
+            label << "$" << REDUCED_BISPECTRUM_SYMBOL << "$";
+          }
+        else
+          {
+            label << REDUCED_BISPECTRUM_NAME;
+          }
+
+        return(label.str());
+      }
+
+
+    inline std::string label_gadget::make_shape_bispectrum_label(bool latex)
+      {
+        std::ostringstream label;
+
+        if(latex)
+          {
+            label << "$" << SHAPE_BISPECTRUM_SYMBOL << "$";
+          }
+        else
+          {
+            label << SHAPE_BISPECTRUM_NAME;
+          }
+
+        return(label.str());
       }
 
 

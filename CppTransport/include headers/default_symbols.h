@@ -43,6 +43,7 @@
 
 #define TWOPF_LABEL                "two-point function"
 #define THREEPF_LABEL              "three-point function"
+#define SHAPE_LABEL                "shape function"
 
 #define U2_SYMBOL                  "u"
 #define U2_NAME                    "u2"
@@ -57,6 +58,9 @@
 
 #define REDUCED_BISPECTRUM_SYMBOL  "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
 #define REDUCED_BISPECTRUM_NAME    "fNL(k1,k2,k3)"
+
+#define SHAPE_BISPECTRUM_SYMBOL    "S(k_1, k_2, k_3)"
+#define SHAPE_BISPECTRUM_NAME      "S(k1, k2, k3)"
 
 #define N_LABEL_LATEX              "$N$"
 #define N_LABEL                    "N"

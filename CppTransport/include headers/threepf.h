@@ -40,6 +40,15 @@ namespace transport
       template <typename number>
       std::ostream& operator<<(std::ostream& out, threepf<number>& obj);
 
+      class threepf_local_shape
+        {
+          public:
+            double operator()(double k1, double k2, double k3)
+              {
+                return( 1.0/(k1*k1*k1*k2*k2*k2) + 1.0/(k1*k1*k1*k3*k3*k3) + 1.0/(k2*k2*k2*k3*k3*k3));
+              }
+        };
+
       struct threepf_kconfig
         {
           std::array<unsigned int, 3> indices;
@@ -80,19 +89,30 @@ namespace transport
             twopf<number>&      get_real_twopf();
             twopf<number>&      get_imag_twopf();
 
-            // plot time evolution of the components of the 3pf
-            // here, this uses the (field, momentum) basis
-            void components_time_history(plot_gadget<number>* gadget, std::string output,
-              index_selector<3>* selector, std::string format = "pdf", bool logy=true);
+            // FLAT-HYPERSURFACE FIELD-FLUCTUATION THREE-POINT FUNCTIONS
 
             // plot time evolution of the components of the 3pf
-            // here, this uses the (field, dot(field)) basis
-            void components_dotphi_time_history(plot_gadget<number>* gadget, std::string output,
-              index_selector<3>* selector, std::string format = "pdf", bool logy=true);
+            // switch 'dotphi' to use either the (field, momentum) or (field, dot(field)) basis
+            void components_time_history(plot_gadget<number>* gadget, std::string output,
+              index_selector<3>* selector, std::string format="pdf", bool logy=true, bool dotphi=true);
+
+            // plot time evolution of a given shape, ie., the 3-point function normalized
+            // to a fixed reference bispectrum
+            template <typename ShapeFunctor>
+            void components_time_history(plot_gadget<number>* gadget, std::string output,
+              ShapeFunctor shape, index_selector<3>* selector, std::string format="pdf", bool logy=true, bool dotphi=true);
+
+            // ZETA THREE-POINT FUNCTIONS
 
             // plot time evolution of the <zeta zeta zeta> 3pf
             void zeta_time_history(plot_gadget<number>* gadget, std::string output,
-              std::string format = "pdf", bool logy=true);
+              std::string format="pdf", bool logy=true);
+
+            // plot time evolution of the <zeta zeta zeta> shape
+            template <typename ShapeFunctor>
+            void zeta_time_history(plot_gadget<number>* gadget, std::string output,
+              ShapeFunctor shape,
+              std::string format="pdf", bool logy=true);
 
             // plot time evolution of the 'reduced bispectrum', defined by
             // (6/5) fNL_red(k1, k2, k3) ( P(k1) P(k2) + perms ) = B(k1, k2, k3)
@@ -100,7 +120,7 @@ namespace transport
             // is itsels purely local. Otherwise, it is momentum dependent
             // and fNL_local should instead be extracted via projection
             void reduced_bispectrum_time_history(plot_gadget<number>* gadget, std::string output,
-              std::string format = "pdf", bool logy=false);
+              std::string format="pdf", bool logy=false);
 
             index_selector<3>* manufacture_selector();
 
@@ -112,18 +132,21 @@ namespace transport
 
           protected:
 
-            // make a list of labels for the chosen index selection
-            std::string                        make_zeta_label(bool latex);
-            std::string                        make_reduced_bispectrum_label(bool latex);
-
+            // make titles for plots, listing the momenta involved
             std::string                        make_threepf_title(const struct threepf_kconfig& config, bool latex);
 
             // return a time history for a given set of components and a fixed k-configuration
-            std::vector< std::vector<number> > construct_kconfig_time_history(index_selector<3>* selector, unsigned int i);
+            std::vector< std::vector<number> > construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i);
+
+            template <typename ShapeFunctor>
+            std::vector< std::vector<number> > construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape);
 
             // return a time history for correlation functions of \dot{\phi}_i (rather than the canonical momentum p_i)
             // for a given set of components and fixed k-configuration
             std::vector< std::vector<number> > construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i);
+
+            template <typename ShapeFunctor>
+            std::vector< std::vector<number> > construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape);
 
             // compute the shift in the correlation function from p_i -> \dot{\phi}_i for a
             // given index assignment, k-configuration and time
@@ -135,7 +158,12 @@ namespace transport
 
             // return a time history for the correlation function of zeta, for a fixed k-configuration
             std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i);
-          
+
+            // return a time history for a given shape function, ie., the bispectrum normalized to a specific reference
+            // bispectrum
+            template <typename ShapeFunctor>
+            std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i, ShapeFunctor shape);
+
             // return a time history for the reduced bispectrum of zeta and a fixed k-configuration
             std::vector< std::vector<number> > construct_reduced_bispectrum_time_history(unsigned int i);
 
@@ -171,16 +199,18 @@ namespace transport
 
 //  IMPLEMENTATION -- CLASS threepf
 
+
       template <typename number>
       void threepf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
-        index_selector<3>* selector, std::string format, bool logy)
+        index_selector<3>* selector, std::string format, bool logy, bool dotphi)
         {
-          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
+          std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
-              std::vector< std::vector<number> > data = this->construct_kconfig_time_history(selector, i);
+              std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i) :
+                                                                 this->construct_kconfig_momentum_time_history(selector, i);
 
               std::ostringstream fnam;
               fnam << output << "_" << i;
@@ -193,22 +223,24 @@ namespace transport
 
 
       template <typename number>
-      void threepf<number>::components_dotphi_time_history(plot_gadget<number>* gadget, std::string output,
-                                                           index_selector<3>* selector, std::string format, bool logy)
+      template <typename ShapeFunctor>
+      void threepf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
+        ShapeFunctor shape, index_selector<3>* selector, std::string format, bool logy, bool dotphi)
         {
-          std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
+          std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
-              std::vector< std::vector<number> > data = this->construct_kconfig_dotphi_time_history(selector, i);
+              std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i, shape) :
+                                                                 this->construct_kconfig_momentum_time_history(selector, i, shape);
 
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
               gadget->set_format(format);
               gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
+                this->sample_points, data, labels, PICK_N_LABEL, SHAPE_LABEL, false, logy);
             }
         }
 
@@ -226,13 +258,36 @@ namespace transport
               fnam << output << "_" << i;
 
               std::vector<std::string> labels(1);
-              labels[0] = this->make_zeta_label(gadget->latex_labels());
+              labels[0] = this->labels.make_zeta_bispectrum_label(gadget->latex_labels());
 
               gadget->set_format(format);
               gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
                            this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
             }
         }
+
+
+    template <typename number>
+    template <typename ShapeFunctor>
+    void threepf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
+      ShapeFunctor shape, std::string format, bool logy)
+      {
+        // loop over all momentum configurations
+        for(int i = 0; i < this->kconfig_list.size(); i++)
+          {
+            std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, shape);
+
+            std::ostringstream fnam;
+            fnam << output << "_" << i;
+
+            std::vector<std::string> labels(1);
+            labels[0] = this->labels.make_shape_bispectrum_label(gadget->latex_labels());
+
+            gadget->set_format(format);
+            gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
+              this->sample_points, data, labels, PICK_N_LABEL, "", false, logy);
+          }
+      }
 
 
       template <typename number>
@@ -247,48 +302,12 @@ namespace transport
               fnam << output << "_" << i;
               
               std::vector<std::string> labels(1);
-              labels[0] = this->make_reduced_bispectrum_label(gadget->latex_labels());
+              labels[0] = this->labels.make_reduced_bispectrum_label(gadget->latex_labels());
               
               gadget->set_format(format);
               gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
                            this->sample_points, data, labels, PICK_N_LABEL, "", false, logy);
             }
-        }
-
-
-      template <typename number>
-      std::string threepf<number>::make_zeta_label(bool latex)
-        {
-          std::ostringstream label;
-
-          if(latex)
-            {
-              label << "$" << THREEPF_SYMBOL << "_{" << ZETA_SYMBOL << " " << ZETA_SYMBOL << " " << ZETA_SYMBOL << "}$";
-            }
-          else
-            {
-              label << THREEPF_NAME << "(" << ZETA_NAME << ", " << ZETA_NAME << ", " << ZETA_NAME << ")";
-            }
-
-          return(label.str());
-        }
-
-
-      template <typename number>
-      std::string threepf<number>::make_reduced_bispectrum_label(bool latex)
-        {
-          std::ostringstream label;
-
-          if(latex)
-            {
-              label << "$" << REDUCED_BISPECTRUM_SYMBOL << "}$";
-            }
-          else
-            {
-              label << REDUCED_BISPECTRUM_NAME;
-            }
-
-          return(label.str());
         }
 
 
@@ -318,7 +337,7 @@ namespace transport
       // for a specific k-configuration, return the time history of a set of components
       // (index order: first index = time, second index = component)
       template <typename number>
-      std::vector< std::vector<number> > threepf<number>::construct_kconfig_time_history(index_selector<3>* selector, unsigned int i)
+      std::vector< std::vector<number> > threepf<number>::construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i)
         {
           std::vector< std::vector<number> > data(this->sample_points.size());
 
@@ -341,6 +360,33 @@ namespace transport
                             }
                         }
                     }
+                }
+            }
+
+          return(data);
+        }
+
+
+      template <typename number>
+      template <typename ShapeFunctor>
+      std::vector< std::vector<number> > threepf<number>::construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape)
+        {
+          std::vector< std::vector<number> > raw = this->construct_kconfig_momentum_time_history(selector, i);
+
+          std::vector< std::vector<number> > data(raw.size());
+
+          // normalize to the shape function
+          for(int l  = 0; l < raw.size(); l++)
+            {
+              data[l].resize(raw[l].size());
+
+              for(int m = 0; m < raw[l].size(); m++)
+                {
+                  number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
+                                             this->sample_com_ks[this->kconfig_list[i].indices[1]],
+                                             this->sample_com_ks[this->kconfig_list[i].indices[2]]);
+
+                  data[l][m] = raw[l][m] / form_factor;
                 }
             }
 
@@ -387,6 +433,33 @@ namespace transport
 
           return(data);
         }
+
+
+    template <typename number>
+    template <typename ShapeFunctor>
+    std::vector< std::vector<number> > threepf<number>::construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape)
+      {
+        std::vector< std::vector<number> > raw = this->construct_kconfig_dotphi_time_history(selector, i);
+
+        std::vector< std::vector<number> > data(raw.size());
+
+        // normalize to the shape function
+        for(int l  = 0; l < raw.size(); l++)
+          {
+            data[l].resize(raw[l].size());
+
+            for(int m = 0; m < raw[l].size(); m++)
+              {
+                number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
+                                           this->sample_com_ks[this->kconfig_list[i].indices[1]],
+                                           this->sample_com_ks[this->kconfig_list[i].indices[2]]);
+
+                data[l][m] = raw[l][m] / form_factor;
+              }
+          }
+
+        return(data);
+      }
 
 
       template <typename number>
@@ -601,8 +674,31 @@ namespace transport
 
           return(data);
         }
-    
-    
+
+
+      template <typename number>
+      template <typename ShapeFunctor>
+      std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i, ShapeFunctor shape)
+        {
+          std::vector< std::vector<number> > data(this->sample_points.size());
+
+          std::vector< std::vector<number> > threepf = this->construct_zeta_time_history(i);
+
+          for(int j = 0; j < this->sample_points.size(); j++)
+            {
+              data[j].resize(1);    // only one component
+
+              number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
+                this->sample_com_ks[this->kconfig_list[i].indices[1]],
+                this->sample_com_ks[this->kconfig_list[i].indices[1]]);
+
+              data[j][0] = threepf[j][0] / form_factor;
+            }
+
+          return(data);
+        }
+
+
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_reduced_bispectrum_time_history(unsigned int i)
         {
@@ -676,7 +772,7 @@ namespace transport
                 }
               else
                 {
-                  std::vector< std::vector<number> > data = obj.construct_kconfig_time_history(selector, i);
+                  std::vector< std::vector<number> > data = obj.construct_kconfig_momentum_time_history(selector, i);
                   writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
                 }
             }
