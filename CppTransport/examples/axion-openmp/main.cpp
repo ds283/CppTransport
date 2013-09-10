@@ -66,8 +66,12 @@ int main(int argc, const char* argv[])
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double        tmin = 0;          // begin at time t = 0
-    const double        tmax = 67;         // end at time t = 50
+    const double Ncross = 7.0; // horizon-crossing occurs at 7 e-folds from init_values
+    const double Npre   = 6.0; // how many e-folds do we wish to track the mode prior to horizon exit?
+    const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
+
+    const double        tmin = 0;           // begin Npre e-folds before horizon exit
+    const double        tmax = 60+Npre;     // end at fixed time N=60
     const unsigned int  tN   = 1000;        // record 500 samples
 
     std::vector<double> times;
@@ -92,8 +96,7 @@ int main(int argc, const char* argv[])
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    const double Nstar = 7.0;
-    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
+    transport::threepf<double> threepf = model.threepf(ks, Npre, ics, times);
 
     timer.stop();
     timer.report();

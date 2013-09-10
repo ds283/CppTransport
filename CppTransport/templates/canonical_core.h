@@ -21,6 +21,7 @@
 #define IS_FIELD(z)    ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
 #define IS_MOMENTUM(z) ((z) >= $$__NUMBER_FIELDS && (z) < 2*$$__NUMBER_FIELDS)
 
+#define DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 
 namespace transport
   {
@@ -80,6 +81,7 @@ namespace transport
       class $$__MODEL : public canonical_model<number>
         {
         public:
+
           $$__MODEL(number Mp, const std::vector<number>& ps);
 
           ~$$__MODEL();
@@ -88,8 +90,14 @@ namespace transport
           number V(std::vector<number> fields);
 
           // Integrate the background (on the CPU; can be overridden later if desired)
-          transport::background<number>
-            background(const std::vector<number>& ics, const std::vector<double>& times, bool silent=false);
+          transport::background<number> background(const std::vector<number>& ics, const std::vector<double>& times, bool silent=false);
+
+          // Compute initial conditions corresponding to some *fixed* set of ics at early times,
+          // plus a variable number of e-folds prior to horizon exit
+          //  Nstar -- take horizon-crossing at time Nstar
+          //  Npre  -- want to have Npre e-folds before horizon-crossing
+          // so this amounts to computing initial conditions at time N = Nstar - Npre, taking N=0 at the supplied ics
+          std::vector<number> find_ics(const std::vector<number>& ics, double Nstar, double Npre, double tolerance=DEFAULT_ICS_GAP_TOLERANCE);
 
           // Calculation of gauge-transformation coefficients (to zeta)
           void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
@@ -122,40 +130,40 @@ namespace transport
         };
 
 
-    // integration - background functor
-    template <typename number>
-    class $$__MODEL_background_functor
-      {
-      public:
-        $$__MODEL_background_functor(const std::vector<number>& p, number Mp) : parameters(p), M_Planck(Mp)
-          {
-          }
+      // integration - background functor
+      template <typename number>
+      class $$__MODEL_background_functor
+        {
+        public:
+          $$__MODEL_background_functor(const std::vector<number>& p, number Mp) : parameters(p), M_Planck(Mp)
+            {
+            }
 
-        void operator ()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
+          void operator ()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
 
-      private:
-        const number              M_Planck;
-        const std::vector<number> parameters;
-      };
-
-
-    // integration - observer object for background only
-    template <typename number>
-    class $$__MODEL_background_observer
-      {
-      public:
-        $$__MODEL_background_observer(std::vector< std::vector<number> >& h) : history(h)
-          {
-          }
-
-        void operator ()(const std::vector<number>& x, double t);
-
-      private:
-        std::vector< std::vector< number> >& history;
-      };
+        private:
+          const number              M_Planck;
+          const std::vector<number> parameters;
+        };
 
 
-    // IMPLEMENTATION -- CLASS $$__MODEL
+      // integration - observer object for background only
+      template <typename number>
+      class $$__MODEL_background_observer
+        {
+        public:
+          $$__MODEL_background_observer(std::vector< std::vector<number> >& h) : history(h)
+            {
+            }
+
+          void operator ()(const std::vector<number>& x, double t);
+
+        private:
+          std::vector< std::vector< number> >& history;
+        };
+
+
+      // IMPLEMENTATION -- CLASS $$__MODEL
 
 
       template <typename number>
@@ -197,8 +205,8 @@ namespace transport
 
 
       template <typename number>
-      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics, const std::vector<double>& times,
-        bool silent)
+      transport::background<number> $$__MODEL<number>::background(const std::vector<number>& ics,
+        const std::vector<double>& times, bool silent)
         {
           using namespace boost::numeric::odeint;
 
@@ -217,7 +225,7 @@ namespace transport
           $$__MODEL_background_observer<number> obs(history);
 
           // set up a functor to evolve this system
-          $$__MODEL_background_functor<number>  system(this->parameters, this->M_Planck);
+          $$__MODEL_background_functor<number> system(this->parameters, this->M_Planck);
 
           integrate_times($$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
@@ -227,6 +235,50 @@ namespace transport
             $$__MODEL_latex_names, times, history, tensor);
 
           return(backg);
+        }
+
+
+      template <typename number>
+      std::vector<number> $$__MODEL<number>::find_ics(const std::vector<number>& ics, double Ncross, double Npre, double tolerance)
+        {
+          using namespace boost::numeric::odeint;
+
+          assert(Ncross >= Npre);
+
+          std::vector<number> rval;
+
+          if(Ncross-Npre < tolerance)
+            {
+              rval = ics;
+            }
+          else
+            {
+              // validate initial conditions
+              std::vector<number> x = ics;
+              this->fix_initial_conditions(ics, x);
+
+              // set up observer
+              std::vector< std::vector<number> > history;
+              $$__MODEL_background_observer<number> obs(history);
+
+              // set up functor
+              $$__MODEL_background_functor<number> system(this->parameters, this->M_Planck);
+
+              // set up times
+              std::vector<double> times;
+              const auto default_time_steps = 20;
+
+              for(int i = 0; i <= default_time_steps; i++)
+                {
+                  times.push_back(0 + (Ncross-Npre)*((double)i/(double)default_time_steps));
+                }
+
+              transport::background<number> backg_evo = this->background(ics, times, true); // enforce silent mode
+
+              rval = backg_evo.__INTERNAL_ONLY_get_value(default_time_steps);
+            }
+
+          return(rval);
         }
 
 
