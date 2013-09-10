@@ -11,5 +11,10 @@ add_executable(CppTransport main.cpp backends/cpp/cpp_backend.cpp parser/bison/y
 target_link_libraries(CppTransport ginac cln boost_system boost_filesystem boost_timer)
 
 add_executable(dquad-openmp examples/dquad-openmp/main.cpp)
-target_link_libraries(dquad-openmp boost_system boost_timer)
+target_link_libraries(dquad-openmp boost_system boost_filesystem boost_timer)
 
+add_executable(chris-openmp examples/chris-openmp/main.cpp)
+target_link_libraries(chris-openmp boost_system boost_filesystem boost_timer)
+
+add_executabke(axion-openmp examples/axion-openmp/main.cpp)
+target_link_libraries(axion-openmp boost_system boost_filesystem boost_timer)
