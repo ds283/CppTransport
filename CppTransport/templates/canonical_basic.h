@@ -401,6 +401,7 @@ namespace transport
 #pragma omp parallel for schedule(dynamic)
         for(int i = 0; i < kconfig_list.size(); i++)
           {
+#pragma omp critical
             std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1
               << " " __CPP_TRANSPORT_OF << " " << kconfig_list.size()
               << std::endl;

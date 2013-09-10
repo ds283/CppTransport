@@ -207,6 +207,7 @@ namespace transport
           std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i) :
@@ -230,6 +231,7 @@ namespace transport
           std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i, shape) :
@@ -250,6 +252,7 @@ namespace transport
         std::string format, bool logy)
         {
           // loop over all momentum configurations
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_zeta_time_history(i);
@@ -273,6 +276,7 @@ namespace transport
       ShapeFunctor shape, std::string format, bool logy)
       {
         // loop over all momentum configurations
+#pragma omp for schedule(guided)
         for(int i = 0; i < this->kconfig_list.size(); i++)
           {
             std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, shape);
@@ -294,6 +298,7 @@ namespace transport
       void threepf<number>::reduced_bispectrum_time_history(plot_gadget<number> *gadget, std::string output, std::string format, bool logy)
         {
           // loop over all momentum configurations
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_reduced_bispectrum_time_history(i);
@@ -640,7 +645,7 @@ namespace transport
                               unsigned int ln_2_index = (2*this->N_fields)*n + l;
                               unsigned int lr_2_index = (2*this->N_fields)*l + r;
                               unsigned int mn_2_index = (2*this->N_fields)*n + m;
-                              unsigned int mr_2_index = (2*this->N_fields)*l + r;
+                              unsigned int mr_2_index = (2*this->N_fields)*m + r;
 
                               // l, m to right of n and r
                               unsigned int ln_3_index = (2*this->N_fields)*n + l;
@@ -689,8 +694,8 @@ namespace transport
               data[j].resize(1);    // only one component
 
               number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
-                this->sample_com_ks[this->kconfig_list[i].indices[1]],
-                this->sample_com_ks[this->kconfig_list[i].indices[1]]);
+                                         this->sample_com_ks[this->kconfig_list[i].indices[1]],
+                                         this->sample_com_ks[this->kconfig_list[i].indices[1]]);
 
               data[j][0] = threepf[j][0] / form_factor;
             }

@@ -124,6 +124,7 @@ namespace transport
           std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over k-modes
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->sample_ks.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_kmode_time_history(selector, i);
@@ -223,6 +224,7 @@ namespace transport
         std::string format, bool dimensionless, bool logy)
         {
           // loop over k-modes
+#pragma omp for schedule(guided)
           for(int i = 0; i < this->sample_ks.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, dimensionless);
