@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include <boost/timer/timer.hpp>
-#include "boost/filesystem/operations.hpp"
+#include <boost/filesystem/operations.hpp>
 
 #include "axion_basic.h"
 
@@ -26,7 +26,7 @@ const double g        = 1e-10;
 const double Lambda   = pow(g*pow(25.0/(2*M_PI),2.0),1.0/4.0);
 const double f        = M_Planck;
 
-const double phi_init = 23 * M_Planck;
+const double phi_init = 23.5 * M_Planck;
 const double chi_init = f/2.0 - 0.001*M_Planck;
 
 static void output_info(transport::canonical_model<double>& model);
@@ -66,13 +66,13 @@ int main(int argc, const char* argv[])
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double Ncross = 7.0; // horizon-crossing occurs at 7 e-folds from init_values
-    const double Npre   = 6.0; // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Ncross = 9.0; // horizon-crossing occurs at 9 e-folds from init_values
+    const double Npre   = 4.0; // how many e-folds do we wish to track the mode prior to horizon exit?
     const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
 
     const double        tmin = 0;           // begin Npre e-folds before horizon exit
     const double        tmax = 60+Npre;     // end at fixed time N=60
-    const unsigned int  tN   = 1000;        // record 500 samples
+    const unsigned int  tN   = 5000;        // record 5000 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
@@ -115,26 +115,6 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 2> index_set_e = { 2, 1 };
     std::array<unsigned int, 2> index_set_f = { 3, 0 };
     std::array<unsigned int, 2> index_set_g = { 3, 1 };
-
-//    std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
-//    std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
-//    std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
-//    std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
-//    std::array<unsigned int, 3> three_set_e = { 0, 2, 0 };
-//    std::array<unsigned int, 3> three_set_f = { 0, 2, 1 };
-//    std::array<unsigned int, 3> three_set_g = { 0, 3, 0 };
-//    std::array<unsigned int, 3> three_set_h = { 0, 3, 1 };
-//    std::array<unsigned int, 3> three_set_i = { 1, 2, 0 };
-//    std::array<unsigned int, 3> three_set_j = { 1, 2, 1 };
-//    std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
-//    std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
-//
-//    std::array<unsigned int, 3> three_set_m = { 2, 0, 0 };
-//    std::array<unsigned int, 3> three_set_n = { 2, 0, 1 };
-//    std::array<unsigned int, 3> three_set_o = { 2, 1, 1 };
-//    std::array<unsigned int, 3> three_set_p = { 3, 0, 0 };
-//    std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
-//    std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
 
     std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
     std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
@@ -181,33 +161,6 @@ int main(int argc, const char* argv[])
     sq_selector_b->set_on(sq_set_f);
 
     backg.plot(&py_plt, output_path.string() + "/background", backg_selector);
-
-//    u2_selector->none();
-//    u2_selector->set_on(index_set_d);
-//    u2_selector->set_on(index_set_e);
-//    u2_selector->set_on(index_set_f);
-//    u2_selector->set_on(index_set_g);
-//    backg.plot_u2(&py_plt, 0.3, output_path.string() + "/u2_mom_k=pt3", u2_selector);
-
-//    u3_selector->none();
-//    u3_selector->set_on(three_set_e);
-//    u3_selector->set_on(three_set_f);
-//    u3_selector->set_on(three_set_g);
-//    u3_selector->set_on(three_set_h);
-//    u3_selector->set_on(three_set_i);
-//    u3_selector->set_on(three_set_j);
-//    u3_selector->set_on(three_set_k);
-//    u3_selector->set_on(three_set_l);
-//    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_fields_k=pt3", u3_selector);
-
-//    u3_selector->none();
-//    u3_selector->set_on(three_set_m);
-//    u3_selector->set_on(three_set_n);
-//    u3_selector->set_on(three_set_o);
-//    u3_selector->set_on(three_set_p);
-//    u3_selector->set_on(three_set_q);
-//    u3_selector->set_on(three_set_r);
-//    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_mom_k=pt3", u3_selector);
 
     twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_mode",          twopf_re_selector);
     twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_mode",          twopf_im_selector);

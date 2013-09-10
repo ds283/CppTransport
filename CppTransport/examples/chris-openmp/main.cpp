@@ -9,7 +9,7 @@
 #include <iostream>
 
 #include <boost/timer/timer.hpp>
-#include "boost/filesystem/operations.hpp"
+#include <boost/filesystem/operations.hpp>
 
 #include "chris_basic.h"
 
@@ -26,7 +26,7 @@ const double W0       = 1e-5;
 const double lambda   = 0.05;
 
 const double phi_init = 0.001;
-const double chi_init = 16.0;
+const double chi_init = 16.5;
 
 static void output_info(transport::canonical_model<double>& model);
 
@@ -65,9 +65,13 @@ int main(int argc, const char* argv[])
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
+    const double Ncross = 9.0; // horizon-crossing occurs at 9 e-folds from init_values
+    const double Npre   = 4.0; // how many e-folds do we wish to track the mode prior to horizon exit?
+    const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
+
     const double        tmin = 0;          // begin at time t = 0
-    const double        tmax = 60;         // end at time t = 50
-    const unsigned int  tN   = 1000;        // record 500 samples
+    const double        tmax = 60+Npre;    // end at time t = 50
+    const unsigned int  tN   = 5000;       // record 500 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
@@ -92,7 +96,7 @@ int main(int argc, const char* argv[])
 
     // integrate background, 2pf and 3pf together
     const double Nstar = 7.0;
-    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
+    transport::threepf<double> threepf = model.threepf(ks, Npre, ics, times);
 
     timer.stop();
     timer.report();
@@ -111,26 +115,6 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 2> index_set_e = { 2, 1 };
     std::array<unsigned int, 2> index_set_f = { 3, 0 };
     std::array<unsigned int, 2> index_set_g = { 3, 1 };
-
-    std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
-    std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
-    std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
-    std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
-    std::array<unsigned int, 3> three_set_e = { 0, 2, 0 };
-    std::array<unsigned int, 3> three_set_f = { 0, 2, 1 };
-    std::array<unsigned int, 3> three_set_g = { 0, 3, 0 };
-    std::array<unsigned int, 3> three_set_h = { 0, 3, 1 };
-    std::array<unsigned int, 3> three_set_i = { 1, 2, 0 };
-    std::array<unsigned int, 3> three_set_j = { 1, 2, 1 };
-    std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
-    std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
-
-    std::array<unsigned int, 3> three_set_m = { 2, 0, 0 };
-    std::array<unsigned int, 3> three_set_n = { 2, 0, 1 };
-    std::array<unsigned int, 3> three_set_o = { 2, 1, 1 };
-    std::array<unsigned int, 3> three_set_p = { 3, 0, 0 };
-    std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
-    std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
 
     std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
     std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
@@ -160,10 +144,12 @@ int main(int argc, const char* argv[])
     twopf_im_selector->set_on(index_set_g);
 
     threepf_selector->none();
-    threepf_selector->set_on(three_set_a);
-    threepf_selector->set_on(three_set_b);
-    threepf_selector->set_on(three_set_c);
-    threepf_selector->set_on(three_set_d);
+    threepf_selector->set_on(sq_set_a);
+    threepf_selector->set_on(sq_set_b);
+    threepf_selector->set_on(sq_set_c);
+    threepf_selector->set_on(sq_set_d);
+    threepf_selector->set_on(sq_set_e);
+    threepf_selector->set_on(sq_set_f);
 
     sq_selector_a->none();
     sq_selector_a->set_on(sq_set_a);
@@ -176,51 +162,32 @@ int main(int argc, const char* argv[])
 
     backg.plot(&py_plt, output_path.string() + "/background", backg_selector);
 
-    u2_selector->none();
-    u2_selector->set_on(index_set_d);
-    u2_selector->set_on(index_set_e);
-    u2_selector->set_on(index_set_f);
-    u2_selector->set_on(index_set_g);
-    backg.plot_u2(&py_plt, 0.3, output_path.string() + "/u2_mom_k=pt3", u2_selector);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_mode",          twopf_re_selector);
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_mode",          twopf_im_selector);
 
-    u3_selector->none();
-    u3_selector->set_on(three_set_e);
-    u3_selector->set_on(three_set_f);
-    u3_selector->set_on(three_set_g);
-    u3_selector->set_on(three_set_h);
-    u3_selector->set_on(three_set_i);
-    u3_selector->set_on(three_set_j);
-    u3_selector->set_on(three_set_k);
-    u3_selector->set_on(three_set_l);
-    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_fields_k=pt3", u3_selector);
+    twopf_re.zeta_time_history(             &py_plt,   output_path.string() + "/zeta_twopf_mode");
+    twopf_re.zeta_time_history(             &text_plt, output_path.string() + "/zeta_twopf_mode");
 
-    u3_selector->none();
-    u3_selector->set_on(three_set_m);
-    u3_selector->set_on(three_set_n);
-    u3_selector->set_on(three_set_o);
-    u3_selector->set_on(three_set_p);
-    u3_selector->set_on(three_set_q);
-    u3_selector->set_on(three_set_r);
-    backg.plot_u3(&py_plt, 0.3, 0.3, 0.3, output_path.string() + "/u3_mom_k=pt3", u3_selector);
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_mode",       threepf_selector);
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
 
-    twopf_re.components_time_history(&py_plt, output_path.string() + "/re_k_mode", twopf_re_selector);
-    twopf_im.components_time_history(&py_plt, output_path.string() + "/im_k_mode", twopf_im_selector);
-    twopf_re.zeta_time_history(&py_plt, output_path.string() + "/zeta_twopf_mode");
-    twopf_re.zeta_time_history(&text_plt, output_path.string() + "/zeta_twopf_mode");
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
 
-    threepf.components_time_history(&py_plt, output_path.string() + "/threepf_mode", threepf_selector, "pdf", false);
-    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/threepf_dotphi_mode", threepf_selector, "pdf", false);
-    threepf.zeta_time_history(&py_plt, output_path.string() + "/zeta_threepf_mode");
-    threepf.reduced_bispectrum_time_history(&py_plt, output_path.string() + "/redbisp");
+    threepf.zeta_time_history(              &py_plt,   output_path.string() + "/zeta_threepf_mode");
+
+    threepf.reduced_bispectrum_time_history(&py_plt,   output_path.string() + "/redbisp");
     threepf.reduced_bispectrum_time_history(&text_plt, output_path.string() + "/redbisp");
-
-    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/sq_config_a_mode", sq_selector_a, "pdf", false);
-    threepf.components_dotphi_time_history(&py_plt, output_path.string() + "/sq_config_b_mode", sq_selector_b, "pdf", false);
 
     delete backg_selector;
     delete twopf_re_selector;
     delete twopf_im_selector;
     delete threepf_selector;
+    delete sq_selector_a;
+    delete sq_selector_b;
     delete u2_selector;
     delete u3_selector;
 
