@@ -1,5 +1,5 @@
 //
-//  main.cpp (dquad-openmp)
+//  main.cpp (chris-openmp)
 //  dquad
 //
 //  Created by David Seery on 26/06/2013.

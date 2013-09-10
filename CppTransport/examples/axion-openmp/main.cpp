@@ -1,5 +1,5 @@
 //
-//  main.cpp (dquad-openmp)
+//  main.cpp (axion-openmp)
 //  dquad
 //
 //  Created by David Seery on 26/06/2013.
@@ -46,7 +46,7 @@ int main(int argc, const char* argv[])
 
     if(argc != 3)
       {
-        std::cerr << "syntax: chris-openmp <output directory> <python interpreter>" << std::endl;
+        std::cerr << "syntax: axion-openmp <output directory> <python interpreter>" << std::endl;
       }
 
     std::string output(argv[1]);
@@ -79,8 +79,8 @@ int main(int argc, const char* argv[])
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
-    const double        kmin = exp(-2.0);   // begin with the mode which crosses the horizon at N=N*-3
-    const double        kmax = exp(+4.0);   // end with the mode which exits the horizon at N=N*+4
+    const double        kmin = exp(+0.0);   // begin with the mode which crosses the horizon at N=N*-3
+    const double        kmax = exp(+3.0);   // end with the mode which exits the horizon at N=N*+4
     const unsigned int  kN   = 5;          // number of k-points
 
     std::vector<double> ks;
@@ -92,7 +92,7 @@ int main(int argc, const char* argv[])
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    const double Nstar = 9.0;
+    const double Nstar = 7.0;
     transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
 
     timer.stop();
@@ -113,25 +113,25 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 2> index_set_f = { 3, 0 };
     std::array<unsigned int, 2> index_set_g = { 3, 1 };
 
-    std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
-    std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
-    std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
-    std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
-    std::array<unsigned int, 3> three_set_e = { 0, 2, 0 };
-    std::array<unsigned int, 3> three_set_f = { 0, 2, 1 };
-    std::array<unsigned int, 3> three_set_g = { 0, 3, 0 };
-    std::array<unsigned int, 3> three_set_h = { 0, 3, 1 };
-    std::array<unsigned int, 3> three_set_i = { 1, 2, 0 };
-    std::array<unsigned int, 3> three_set_j = { 1, 2, 1 };
-    std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
-    std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
-
-    std::array<unsigned int, 3> three_set_m = { 2, 0, 0 };
-    std::array<unsigned int, 3> three_set_n = { 2, 0, 1 };
-    std::array<unsigned int, 3> three_set_o = { 2, 1, 1 };
-    std::array<unsigned int, 3> three_set_p = { 3, 0, 0 };
-    std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
-    std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
+//    std::array<unsigned int, 3> three_set_a = { 0, 0, 0 };
+//    std::array<unsigned int, 3> three_set_b = { 0, 0, 1 };
+//    std::array<unsigned int, 3> three_set_c = { 0, 1, 1 };
+//    std::array<unsigned int, 3> three_set_d = { 1, 1, 1 };
+//    std::array<unsigned int, 3> three_set_e = { 0, 2, 0 };
+//    std::array<unsigned int, 3> three_set_f = { 0, 2, 1 };
+//    std::array<unsigned int, 3> three_set_g = { 0, 3, 0 };
+//    std::array<unsigned int, 3> three_set_h = { 0, 3, 1 };
+//    std::array<unsigned int, 3> three_set_i = { 1, 2, 0 };
+//    std::array<unsigned int, 3> three_set_j = { 1, 2, 1 };
+//    std::array<unsigned int, 3> three_set_k = { 1, 3, 0 };
+//    std::array<unsigned int, 3> three_set_l = { 1, 3, 1 };
+//
+//    std::array<unsigned int, 3> three_set_m = { 2, 0, 0 };
+//    std::array<unsigned int, 3> three_set_n = { 2, 0, 1 };
+//    std::array<unsigned int, 3> three_set_o = { 2, 1, 1 };
+//    std::array<unsigned int, 3> three_set_p = { 3, 0, 0 };
+//    std::array<unsigned int, 3> three_set_q = { 3, 0, 1 };
+//    std::array<unsigned int, 3> three_set_r = { 3, 1, 1 };
 
     std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
     std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };

@@ -45,7 +45,7 @@ namespace transport
           public:
             double operator()(double k1, double k2, double k3)
               {
-                return( 1.0/(k1*k1*k1*k2*k2*k2) + 1.0/(k1*k1*k1*k3*k3*k3) + 1.0/(k2*k2*k2*k3*k3*k3));
+                return( 1.0/(k1*k1*k1*k2*k2*k2) + 1.0/(k1*k1*k1*k3*k3*k3) + 1.0/(k2*k2*k2*k3*k3*k3) );
               }
         };
 
