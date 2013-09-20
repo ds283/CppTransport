@@ -19,4 +19,4 @@ typedef bool (*backend_function)(const struct input& data, finder& path);
 
 #include "cpp_backend.h"
 
-#endif __backends_H_
+#endif //__backends_H_

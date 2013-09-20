@@ -28,4 +28,4 @@ struct input
   };
 
 
-#endif __input_H_
+#endif // __input_H_
