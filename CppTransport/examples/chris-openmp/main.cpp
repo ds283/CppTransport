@@ -6,6 +6,10 @@
 //  Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
 #include <iostream>
 
 #include <boost/timer/timer.hpp>

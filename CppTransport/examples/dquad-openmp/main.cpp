@@ -6,6 +6,10 @@
 //  Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
+#ifndef __has_attribute
+#define __has_attribute(x) 0
+#endif
+
 #include <iostream>
 
 #include <boost/timer/timer.hpp>
@@ -69,7 +73,7 @@ int main(int argc, const char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ncross = 9.0; // horizon-crossing occurs at 9 e-folds from init_values
-    const double Npre   = 2.5; // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Npre   = 7;   // how many e-folds do we wish to track the mode prior to horizon exit?
     const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
 
     const double        tmin = 0;          // begin at time t = 0
