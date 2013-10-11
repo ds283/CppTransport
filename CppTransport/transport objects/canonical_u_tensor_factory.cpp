@@ -157,7 +157,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
               {
                 GiNaC::ex c = 0;
 
-                // note that we flip the sign of momenta attached to the j, k components compared to the
+                // note that we flip the sign of momenta attached to the i, j, k components compared to the
                 // analytic definition
                 // this accounts for integrating out the delta-functions when contracting u3 with something else
 
@@ -198,7 +198,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                     assert(false);
                   }
 
-                rval[i][j][k] = c;
+                rval[i][j][k] = 2 * c;
               }
           }
       }
