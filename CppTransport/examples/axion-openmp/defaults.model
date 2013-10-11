@@ -7,15 +7,15 @@ implementation "canonical_basic";
 
 % fix properties of the steppers
 background
- { abserr   = 1E-6;
-   relerr   = 1E-6;
-   stepsize = 1E-2;
+ { abserr   = 1E-12;
+   relerr   = 1E-12;
+   stepsize = 1E-10;
    stepper  = "runge_kutta_dopri5";
  };
 
 perturbations
  { abserr   = 1E-12;
-   relerr   = 1E-12;
+   relerr   = 1E-14;
    stepsize = 1E-10;
    stepper  = "runge_kutta_fehlberg78";
  };
