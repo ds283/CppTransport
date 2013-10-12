@@ -556,13 +556,6 @@ namespace transport
                   {
                     x[start + (2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k] =
                       this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics);
-
-                    // if desired, verify that the 3pf obeys the correct symmetries
-#ifdef CHECK_3PF_IC_SYMMETRY
-                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(j, i, k, kmode_2, kmode_1, kmode_3, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
-                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(i, k, j, kmode_1, kmode_3, kmode_2, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
-                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(k, j, i, kmode_3, kmode_2, kmode_1, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
-#endif
                   }
               }
           }
