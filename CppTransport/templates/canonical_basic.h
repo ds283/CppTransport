@@ -697,21 +697,22 @@ namespace transport
         const auto __u2_k3_$$__A_$$__B = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
         // set up components of the u3 tensor
-        const auto __u3_k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        const auto __u3_k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        const auto __u3_k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        const auto __u3_k1k2k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+        const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
-        // check that the u3 tensor is properly symmetric on its final two indices if desired
+        // if desired, check that the u3 tensor is properly symmetric on its final two indices
+        // division by zero errors may occur if any of the u3 components are not zero, but only if
+        // the compiler is not able to optimize away the check
+        // that itself indicates an error, since both terms should be zero giving 0-0
 #ifdef CHECK_U3_SYMMETRY
-          std::cout << "CHECK!" << std::endl;
-          const auto __u3_k1s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k1, __k3, __k2, __a, __Hsq, __eps};
-          const auto __u3_k2s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k2, __k3, __k1, __a, __Hsq, __eps};
-          const auto __u3_k3s_$$__A_$$__B_$$__C = $$__U3_PREDEF[ACB]{__k3, __k2, __k1, __a, __Hsq, __eps};
+        const auto __u3_k1k3k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k3, __k2, __a, __Hsq, __eps};
+        const auto __u3_k2k3k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k3, __k1, __a, __Hsq, __eps};
+        const auto __u3_k3k2k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k2, __k1, __a, __Hsq, __eps};
 
-          // check that the u3 tensor is sufficiently symmetric, a fractional error of less than 1 part in 1E12
-          CHECK_ZERO((__u3_k1_$$__A_$$__B_$$__C - __u3_k1s_$$__A_$$__B_$$__C)/__u3_k1_$$__A_$$__B_$$__C) $$// ;
-          CHECK_ZERO((__u3_k2_$$__A_$$__B_$$__C - __u3_k2s_$$__A_$$__B_$$__C)/__u3_k2_$$__A_$$__B_$$__C) $$// ;
-          CHECK_ZERO((__u3_k3_$$__A_$$__B_$$__C - __u3_k3s_$$__A_$$__B_$$__C)/__u3_k3_$$__A_$$__B_$$__C) $$// ;
+        CHECK_ZERO((__u3_k1k2k3_$$__A_$$__B_$$__C - __u3_k1k3k2_$$__A_$$__C_$$__B)/__u3_k1k2k3_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
+        CHECK_ZERO((__u3_k2k1k3_$$__A_$$__B_$$__C - __u3_k2k3k1_$$__A_$$__C_$$__B)/__u3_k2k1k3_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
+        CHECK_ZERO((__u3_k3k1k2_$$__A_$$__B_$$__C - __u3_k3k2k1_$$__A_$$__C_$$__B)/__u3_k3k1k2_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
 #endif
 
         // evolve the real and imaginary components of the 2pf
@@ -736,16 +737,16 @@ namespace transport
 
         // evolve the components of the 3pf
         __dthreepf($$__A, $$__B, $$__C) = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C
 
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C
 
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N
       }
 
 

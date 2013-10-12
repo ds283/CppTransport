@@ -14,12 +14,12 @@
 #include "transport/transport.h"
 
 
-#define CHECK_ZERO(c)  { if(fabs(c) > 1E-5) { std::cerr << "CHECK_ZERO fail: " #c " not zero (value=" << c << ")" << std::endl; exit(1); } }
+#define CHECK_ZERO(c,k1,k2,k3) _Pragma("omp critical") { if(fabs(c) > 1E-5) { std::cerr << "CHECK_ZERO fail: " #c " not zero (value=" << c << ", k1 = " << k1 << ", k2 = " << k2 << ", k3 = " << k3 << ")" << std::endl; exit(1); } }
 
-#define SPECIES(z)     ((z) >= $$__NUMBER_FIELDS ? ((z)-$$__NUMBER_FIELDS) : (z))
-#define MOMENTUM(z)    (SPECIES(z) + $$__NUMBER_FIELDS)
-#define IS_FIELD(z)    ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
-#define IS_MOMENTUM(z) ((z) >= $$__NUMBER_FIELDS && (z) < 2*$$__NUMBER_FIELDS)
+#define SPECIES(z)             ((z) >= $$__NUMBER_FIELDS ? ((z)-$$__NUMBER_FIELDS) : (z))
+#define MOMENTUM(z)            (SPECIES(z) + $$__NUMBER_FIELDS)
+#define IS_FIELD(z)            ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
+#define IS_MOMENTUM(z)         ((z) >= $$__NUMBER_FIELDS && (z) < 2*$$__NUMBER_FIELDS)
 
 #define DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 
@@ -521,29 +521,79 @@ namespace transport
 
           number     __tpf                  = 0.0;
 
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3;
 
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k2k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k3k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1k2k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1k3k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1k2k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1k3k2;
 
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k1;
-          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2k1k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k2k3k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2k1k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k2k3k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2k1k3;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k2k3k1;
 
-          __A_k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
-          __B_k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
-          __C_k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3k1k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k3k2k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3k1k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __B_k3k2k1;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3k1k2;
+          std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __C_k3k2k1;
 
-          __A_k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
-          __B_k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
-          __C_k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+          __A_k1k2k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          __A_k1k3k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+          __B_k1k2k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          __B_k1k3k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
+          __C_k1k2k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_2, __kmode_3, __ainit, __Hsq, __eps};
+          __C_k1k3k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_1, __kmode_3, __kmode_2, __ainit, __Hsq, __eps};
 
-          __A_k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
-          __B_k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
-          __C_k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __A_k2k3k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __A_k2k1k3[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_2, __kmode_1, __kmode_3, __ainit, __Hsq, __eps};
+          __B_k2k3k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __B_k2k1k3[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_2, __kmode_1, __kmode_3, __ainit, __Hsq, __eps};
+          __C_k2k3k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_2, __kmode_3, __kmode_1, __ainit, __Hsq, __eps};
+          __C_k2k1k3[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_2, __kmode_1, __kmode_3, __ainit, __Hsq, __eps};
+
+          __A_k3k1k2[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_3, __kmode_1, __kmode_2, __ainit, __Hsq, __eps};
+          __A_k3k2k1[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__kmode_3, __kmode_2, __kmode_1, __ainit, __Hsq, __eps};
+          __B_k3k1k2[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_3, __kmode_1, __kmode_2, __ainit, __Hsq, __eps};
+          __B_k3k2k1[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__kmode_3, __kmode_2, __kmode_1, __ainit, __Hsq, __eps};
+          __C_k3k1k2[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_3, __kmode_1, __kmode_2, __ainit, __Hsq, __eps};
+          __C_k3k2k1[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__kmode_3, __kmode_2, __kmode_1, __ainit, __Hsq, __eps};
+
+          // check symmetries of the A, B, C tensors
+          // division by zero errors may occur if any of these components are not zero, but only if
+          // the compiler is not able to optimize away the check
+          // that itself indicates an error, since both terms should be zero giving 0-0
+#ifdef CHECK_IC_SYMMETRIES
+          // A tensor, first pair of indices
+          CHECK_ZERO((__A_k1k2k3[$$__a][$$__b][$$__c] - __A_k2k1k3[$$__b][$$__a][$$__c])/__A_k1k2k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k1k3k2[$$__a][$$__b][$$__c] - __A_k3k1k2[$$__b][$$__a][$$__c])/__A_k2k1k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k2k3k1[$$__a][$$__b][$$__c] - __A_k3k2k1[$$__b][$$__a][$$__c])/__A_k3k2k1[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+
+          // A tensor, second pair of indices
+          CHECK_ZERO((__A_k1k2k3[$$__a][$$__b][$$__c] - __A_k1k3k2[$$__a][$$__c][$$__b])/__A_k1k2k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k2k1k3[$$__a][$$__b][$$__c] - __A_k2k3k1[$$__a][$$__c][$$__b])/__A_k2k1k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k3k1k2[$$__a][$$__b][$$__c] - __A_k3k2k1[$$__a][$$__c][$$__b])/__A_k3k2k1[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+
+          // A tensor, third pair of indices
+          CHECK_ZERO((__A_k2k1k3[$$__a][$$__b][$$__c] - __A_k3k1k2[$$__c][$$__b][$$__a])/__A_k1k2k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k1k2k3[$$__a][$$__b][$$__c] - __A_k3k2k1[$$__c][$$__b][$$__a])/__A_k2k1k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__A_k1k3k2[$$__a][$$__b][$$__c] - __A_k2k3k1[$$__c][$$__b][$$__a])/__A_k3k2k1[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+
+          // B tensor: only symmetric on first pair of indices
+          CHECK_ZERO((__B_k1k2k3[$$__a][$$__b][$$__c] - __B_k2k1k3[$$__b][$$__a][$$__c])/__B_k1k2k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__B_k1k3k2[$$__a][$$__b][$$__c] - __B_k3k1k2[$$__b][$$__a][$$__c])/__B_k2k1k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__B_k2k3k1[$$__a][$$__b][$$__c] - __B_k3k2k1[$$__b][$$__a][$$__c])/__B_k3k2k1[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+
+          // C tensor: only symmetric on first pair of indices
+          CHECK_ZERO((__C_k1k2k3[$$__a][$$__b][$$__c] - __C_k2k1k3[$$__b][$$__a][$$__c])/__C_k1k2k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__C_k1k3k2[$$__a][$$__b][$$__c] - __C_k3k1k2[$$__b][$$__a][$$__c])/__C_k2k1k3[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+          CHECK_ZERO((__C_k2k3k1[$$__a][$$__b][$$__c] - __C_k3k2k1[$$__b][$$__a][$$__c])/__C_k3k2k1[$$__a][$$__b][$$__c],__kmode_1,__kmode_2,__kmode_3) $$// ;
+#endif
 
           unsigned int total_fields  = (IS_FIELD(__i)    ? 1 : 0) + (IS_FIELD(__j)    ? 1 : 0) + (IS_FIELD(__k)    ? 1 : 0);
           unsigned int total_momenta = (IS_MOMENTUM(__i) ? 1 : 0) + (IS_MOMENTUM(__j) ? 1 : 0) + (IS_MOMENTUM(__k) ? 1 : 0);
@@ -554,18 +604,20 @@ namespace transport
             {
               case 3:   // field-field-field correlation function
                 {
+                  assert(total_fields == 3);
                   // prefactor here is dimension 5
                   auto __prefactor = (__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __ainit*__ainit*__ainit*__ainit);
 
                   // these components are dimension 3, so suppress by two powers of Mp
+                  // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                   __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                   // these components are dimension 1
-                  __tpf -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_2/2.0;
-                  __tpf -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)])*__kmode_1*__kmode_3/2.0;
-                  __tpf -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_3/2.0;
+                  __tpf += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_2/2.0;
+                  __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k1k3k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_3/2.0;
+                  __tpf += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_3/2.0;
 
                   __tpf *= __prefactor / __kprod3;
                   break;
@@ -573,6 +625,8 @@ namespace transport
 
               case 2:   // field-field-momentum correlation function
                 {
+                  assert(total_fields == 2);
+
                   auto __momentum_k = (IS_MOMENTUM(__i) ? __kmode_1 : 0.0) + (IS_MOMENTUM(__j) ? __kmode_2 : 0.0) + (IS_MOMENTUM(__k) ? __kmode_3 : 0.0);
 
                   // note the leading + sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
@@ -580,14 +634,15 @@ namespace transport
                   auto __prefactor_1 = __momentum_k*__momentum_k*(__kt-__momentum_k) / (__kt * __ainit*__ainit*__ainit*__ainit);
                   
                   // these components are dimension 6, so suppress by two powers of Mp
+                  // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                   auto __tpf_1  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
                        __tpf_1 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
                        __tpf_1 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
                   
                   // these components are dimension 4
-                       __tpf_1 -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3;
-                       __tpf_1 -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2;
-                       __tpf_1 -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1;
+                       __tpf_1 += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3;
+                       __tpf_1 += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2;
+                       __tpf_1 += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1;
                   
                   __tpf = __prefactor_1 * __tpf_1;
                   
@@ -595,19 +650,20 @@ namespace transport
                   auto __prefactor_2 = __momentum_k*__kmode_1*__kmode_2*__kmode_3 / (__kt * __ainit*__ainit*__ainit*__ainit);
                   
                   // these components are dimension 5, so suppress by two powers of Mp
+                  // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                   auto __tpf_2  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
                        __tpf_2 += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
                        __tpf_2 += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
                   
                   // these componennts are dimension 3
-                       __tpf_2 += (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                       __tpf_2 += (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
-                       __tpf_2 += (__C_k1[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
+                       __tpf_2 += (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                       __tpf_2 += (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                       __tpf_2 += (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
                   
                   // these components are dimension 3
-                       __tpf_2 += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
-                       __tpf_2 += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
-                       __tpf_2 += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
+                       __tpf_2 += (__B_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
+                       __tpf_2 += (__B_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
+                       __tpf_2 += (__B_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
                   
                   __tpf += __prefactor_2 * __tpf_2;
                   
@@ -617,23 +673,24 @@ namespace transport
 
               case 1:   // field-momentum-momentum correlation function
                 {
-                  auto __field_k = (IS_FIELD(__i) ? __kmode_1 : 0.0) + (IS_FIELD(__j) ? __kmode_2 : 0.0) + (IS_FIELD(__k) ? __kmode_3 : 0.0);
+                  assert(total_fields == 1);
 
                   // this prefactor has dimension 3
                   auto __prefactor = - (__kmode_1*__kmode_1 * __kmode_2*__kmode_2 * __kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
 
-                  // this term (really another part of the prefactor) has dimension 2)
-                  auto __mom_factor = __kmode_1*__kmode_2*__kmode_3 / __field_k;
+                  // this term (really another part of the prefactor -- but shouldn't be symmetrized) has dimension 2)
+                  auto __mom_factor = (IS_FIELD(__i) ? __kmode_2*__kmode_3 : 0.0) + (IS_FIELD(__j) ? __kmode_1*__kmode_3 : 0.0) + (IS_FIELD(__k) ? __kmode_1*__kmode_2 : 0.0);
 
                   // these components have dimension 3, so suppress by two powers of Mp
+                  // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                   __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
                 
                   // these components have dimension 1
-                  __tpf -= (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)]) * __kmode_1*__kmode_2;
-                  __tpf -= (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)]) * __kmode_1*__kmode_3;
-                  __tpf -= (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)]) * __kmode_2*__kmode_3;
+                  __tpf += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)]) * __kmode_1*__kmode_2;
+                  __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)]) * __kmode_1*__kmode_3;
+                  __tpf += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)]) * __kmode_2*__kmode_3;
                 
                   __tpf *= __prefactor * __mom_factor / __kprod3;
                   break;
@@ -641,23 +698,26 @@ namespace transport
 
               case 0:   // momentum-momentum-momentum correlation function
                 {
+                  assert(total_fields == 0);
+
                   // prefactor is dimension 3; note the leading - sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
                   auto __prefactor = -(__kmode_1*__kmode_1) * (__kmode_2*__kmode_2) * (__kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
 
                   // these components are dimension 5, so suppress by two powers of Mp
+                  // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
                   __tpf  = (SPECIES(__j) == SPECIES(__k) ? __fields[MOMENTUM(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__k) ? __fields[MOMENTUM(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
                   __tpf += (SPECIES(__i) == SPECIES(__j) ? __fields[MOMENTUM(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                   // these components are dimension 2
-                  __tpf += (__C_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                  __tpf += (__C_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
-                  __tpf += (__C_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k2[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                  __tpf += (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                  __tpf += (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
 
                   // these components are dimension 2
-                  __tpf += (__B_k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
-                  __tpf += (__B_k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
-                  __tpf += (__B_k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
+                  __tpf += (__B_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
+                  __tpf += (__B_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
+                  __tpf += (__B_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __B_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
 
                   __tpf *= __prefactor / __kprod3;
                   break;

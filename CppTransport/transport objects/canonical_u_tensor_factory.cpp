@@ -198,7 +198,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                     assert(false);
                   }
 
-                rval[i][j][k] = 2 * c;
+                rval[i][j][k] = 2 * c; // factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
               }
           }
       }
