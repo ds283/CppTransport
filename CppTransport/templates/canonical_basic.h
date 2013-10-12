@@ -556,6 +556,13 @@ namespace transport
                   {
                     x[start + (2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k] =
                       this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics);
+
+                    // if desired, verify that the 3pf obeys the correct symmetries
+#ifdef CHECK_3PF_IC_SYMMETRY
+                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(j, i, k, kmode_2, kmode_1, kmode_3, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
+                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(i, k, j, kmode_1, kmode_3, kmode_2, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
+                    CHECK_ZERO((this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics)-this->make_threepf_ic(k, j, i, kmode_3, kmode_2, kmode_1, Ninit, ics))/this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics));
+#endif
                   }
               }
           }
@@ -717,26 +724,26 @@ namespace transport
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement does matter
-        __dtwopf_re_k1($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B
+        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B
         __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_re_k1_$$__A_$$__C
 
-        __dtwopf_im_k1($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_im_k1_$$__C_$$__B
+        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_im_k1_$$__C_$$__B
         __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_im_k1_$$__A_$$__C
 
-        __dtwopf_re_k2($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_re_k2_$$__C_$$__B
+        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_re_k2_$$__C_$$__B
         __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_re_k2_$$__A_$$__C
 
-        __dtwopf_im_k2($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_im_k2_$$__C_$$__B
+        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_im_k2_$$__C_$$__B
         __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_im_k2_$$__A_$$__C
 
-        __dtwopf_re_k3($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_re_k3_$$__C_$$__B
+        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_re_k3_$$__C_$$__B
         __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_re_k3_$$__A_$$__C
 
-        __dtwopf_im_k3($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_im_k3_$$__C_$$__B
+        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_im_k3_$$__C_$$__B
         __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_im_k3_$$__A_$$__C
 
         // evolve the components of the 3pf
-        __dthreepf($$__A, $$__B, $$__C) = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C
+        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C
 
