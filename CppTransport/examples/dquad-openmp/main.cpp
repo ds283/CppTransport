@@ -77,8 +77,8 @@ int main(int argc, const char* argv[])
     const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
 
     const double        tmin = 0;          // begin at time t = 0
-    const double        tmax = 60+Npre;         // end at time t = 50
-    const unsigned int  tN   = 5000;        // record 500 samples
+    const double        tmax = 60+Npre;    // end 60 e-folds after horizon-crossing
+    const unsigned int  tN   = 5000;       // record 5000 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
@@ -176,6 +176,7 @@ int main(int argc, const char* argv[])
     twopf_re.zeta_time_history(             &text_plt, output_path.string() + "/zeta_twopf_mode");
 
     threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_mode",       threepf_selector);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_mode",       threepf_selector);
     threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
     threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
 

@@ -13,13 +13,12 @@
 #include "boost/numeric/odeint.hpp"
 #include "transport/transport.h"
 
-
 #define CHECK_ZERO(c,k1,k2,k3) _Pragma("omp critical") { if(fabs(c) > 1E-5) { std::cerr << "CHECK_ZERO fail: " #c " not zero (value=" << c << ", k1 = " << k1 << ", k2 = " << k2 << ", k3 = " << k3 << ")" << std::endl; exit(1); } }
 
 #define SPECIES(z)             ((z) >= $$__NUMBER_FIELDS ? ((z)-$$__NUMBER_FIELDS) : (z))
-#define MOMENTUM(z)            (SPECIES(z) + $$__NUMBER_FIELDS)
-#define IS_FIELD(z)            ((z) >= 0 && (z) < $$__NUMBER_FIELDS)
-#define IS_MOMENTUM(z)         ((z) >= $$__NUMBER_FIELDS && (z) < 2*$$__NUMBER_FIELDS)
+#define MOMENTUM(z)            ((z) >= $$__NUMBER_FIELDS ? (z) : ((z)+$$__NUMBER_FIELDS))
+#define IS_FIELD(z)            (((z) >= 0)                 && ((z) < $$__NUMBER_FIELDS))
+#define IS_MOMENTUM(z)         (((z) >= $$__NUMBER_FIELDS) && ((z) < 2*$$__NUMBER_FIELDS))
 
 #define DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 
@@ -615,7 +614,7 @@ namespace transport
 
                   // these components are dimension 1
                   __tpf += - (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_2/2.0;
-                  __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k1k3k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_3/2.0;
+                  __tpf += - (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_3/2.0;
                   __tpf += - (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_3/2.0;
 
                   __tpf *= __prefactor / __kprod3;
@@ -658,7 +657,7 @@ namespace transport
                        __tpf_2 += (__C_k1k2k3[SPECIES(__i)][SPECIES(__j)][SPECIES(__k)] + __C_k2k1k3[SPECIES(__j)][SPECIES(__i)][SPECIES(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
                        __tpf_2 += (__C_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __C_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
                        __tpf_2 += (__C_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __C_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
-                  
+
                   // these components are dimension 3
                        __tpf_2 += (__B_k2k3k1[SPECIES(__j)][SPECIES(__k)][SPECIES(__i)] + __B_k3k2k1[SPECIES(__k)][SPECIES(__j)][SPECIES(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
                        __tpf_2 += (__B_k1k3k2[SPECIES(__i)][SPECIES(__k)][SPECIES(__j)] + __B_k3k1k2[SPECIES(__k)][SPECIES(__i)][SPECIES(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;

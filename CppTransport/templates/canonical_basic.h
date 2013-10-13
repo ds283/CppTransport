@@ -7,7 +7,6 @@
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
 
-
 #include "transport/transport.h"
 
 #include "$$__CORE"
@@ -278,13 +277,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
-        for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-          {
-            for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
-              {
-                x[start + (2*$$__NUMBER_FIELDS*j)+k] = imaginary ? this->make_twopf_im_ic(j, k, kmode, Ninit, ics) : this->make_twopf_re_ic(j, k, kmode, Ninit, ics);
-              }
-          }
+        x[start + (2*$$__NUMBER_FIELDS*$$__A)+$$__B] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, ics) $$// ;
       }
 
 
@@ -548,17 +541,15 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS);
 
-        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
-          {
-            for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-              {
-                for(int k = 0; k < 2*$$__NUMBER_FIELDS; k++)
-                  {
-                    x[start + (2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k] =
-                      this->make_threepf_ic(i, j, k, kmode_1, kmode_2, kmode_3, Ninit, ics);
-                  }
-              }
-          }
+#undef  MAKE_THREEPF
+#define MAKE_THREEPF(i,j,k,k1,k2,k3) this->make_threepf_ic(i,j,k,k1,k2,k3,Ninit,ics)
+#ifdef CHECK_3PF_SYMMETRIES
+        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__B,$$__A,$$__C,kmode_2,kmode_1,kmode_3))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
+        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__A,$$__C,$$__B,kmode_1,kmode_3,kmode_2))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
+        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__C,$$__B,$$__A,kmode_3,kmode_2,kmode_1))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
+#endif
+
+        x[start + (2*$$__NUMBER_FIELDS * 2*$$__NUMBER_FIELDS)*$$__A + (2*$$__NUMBER_FIELDS)*$$__B + $$__C] = MAKE_THREEPF($$__A,$$__B,$$__C, kmode_1, kmode_2, kmode_3) $$// ;
       }
 
 
@@ -705,6 +696,8 @@ namespace transport
         // division by zero errors may occur if any of the u3 components are not zero, but only if
         // the compiler is not able to optimize away the check
         // that itself indicates an error, since both terms should be zero giving 0-0
+        // ** DO NOT USE WITH OPENMP: THIS LEADS TO PERFORMANCE DEGRADATION
+        // ** BECAUSE THE THREADS SPEND ALL THEIR TIME SYNCHRONIZING
 #ifdef CHECK_U3_SYMMETRY
         const auto __u3_k1k3k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k3, __k2, __a, __Hsq, __eps};
         const auto __u3_k2k3k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k3, __k1, __a, __Hsq, __eps};

@@ -76,7 +76,7 @@ int main(int argc, const char* argv[])
 
     const double        tmin = 0;           // begin Npre e-folds before horizon exit
     const double        tmax = 60+Npre;     // end at fixed time N=60
-    const unsigned int  tN   = 20000;       // record 20000 samples; how many are needed depends on the tolerance
+    const unsigned int  tN   = 5000;        // record 50000 samples; how many are needed depends on the tolerance
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
