@@ -51,6 +51,12 @@ class u_tensor_factory
 
       virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
+      // compute M tensor
+      virtual std::vector< std::vector<GiNaC::ex> > compute_M();
+
+      virtual std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+      //  CALCULATE GAUGE TRANSFORMATIONS
       virtual std::vector<GiNaC::ex> compute_zeta_xfm_1() = 0;
 
       virtual std::vector< std::vector<GiNaC::ex> > compute_zeta_xfm_2() = 0;
@@ -109,6 +115,11 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
       std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
+      // compute M tensor
+      std::vector< std::vector<GiNaC::ex> > compute_M();
+
+      std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps);
+
       //  CALCULATE GAUGE TRANSFORMATIONS
       std::vector<GiNaC::ex> compute_zeta_xfm_1();
 
@@ -131,6 +142,9 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
       // compute xi/H^2 [in the notation of the written notes]
       GiNaC::ex compute_xi(unsigned int i, GiNaC::ex& Hsq, GiNaC::ex& eps);
+
+      // compute M-tensor component
+      GiNaC::ex compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps);
   };
 
 

@@ -402,9 +402,16 @@ namespace transport
           const auto __Mp              = this->M_Planck;
 
           const auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __eps             = $$__EPSILON;
           const auto __ainit           = exp(__Ninit);
 
+          const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+
           number     __tpf             = 0.0;
+
+          std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+
+          __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
           // NOTE - conventions for the scale factor are
           //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -412,16 +419,21 @@ namespace transport
 
           if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
             {
-              __tpf = (SPECIES(__i) == SPECIES(__j) ? 1.0/(2.0*__k*__ainit*__ainit) : 0.0);
+              __tpf = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) / (2.0*__k*__ainit*__ainit);
             }
-          else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum correlation function
+          else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
                   || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
             {
-              __tpf = (SPECIES(__i) == SPECIES(__j) ? -1.0/(2.0*__k*__ainit*__ainit) : 0.0);
+              auto __leading   = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
+              auto __subl      = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__N*__eps);
+                                 -(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
+
+              __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
+                      -__subl   /(2.0*__k*__ainit*__ainit);
             }
           else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
             {
-              __tpf = (SPECIES(__i) == SPECIES(__j) ? __k/(2.0*__Hsq) : 0.0);
+              __tpf = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) * __k / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit);
             }
           else
             {
@@ -442,18 +454,35 @@ namespace transport
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
         const auto __ainit           = exp(__Ninit);
 
+        const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+
         number     __tpf             = 0.0;
+
+        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+
+        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
         // only the field-momentum and momentum-field correlation functions have imgainary parts
         if(IS_FIELD(__i) && IS_MOMENTUM(__j))
           {
-            __tpf = (SPECIES(__i) == SPECIES(__j) ?  1.0/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit) : 0.0);
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2*__eps*(1.0-__N))
+                             - 4.0*(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
+            auto __subl    = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
+
+            __tpf = +__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
+                    -__subl   /(2.0*__k*__ainit*__ainit);
           }
         else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
           {
-            __tpf = (SPECIES(__i) == SPECIES(__j) ? -1.0/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit) : 0.0);
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2*__eps*(1.0-__N))
+              - 4.0*(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
+            auto __subl    = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
+
+            __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
+                    +__subl   /(2.0*__k*__ainit*__ainit);
           }
 
         return(__tpf);

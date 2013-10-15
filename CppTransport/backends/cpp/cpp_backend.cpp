@@ -21,6 +21,7 @@
 
 #define DEFAULT_U2_NAME "__u2"
 #define DEFAULT_U3_NAME "__u3"
+#define DEFAULT_M_NAME  "__M"
 #define DEFAULT_K_NAME  "__k"
 #define DEFAULT_K1_NAME "__k1"
 #define DEFAULT_K2_NAME "__k2"
@@ -105,6 +106,10 @@ static std::string replace_B_predef       (struct replacement_data& data, const 
                                            std::vector<struct index_assignment> indices);
 static std::string replace_C_predef       (struct replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices);
+static std::string replace_M_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
+static std::string replace_M_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+                                           std::vector<struct index_assignment> indices);
 
 
 static const std::string pre_macros[] =
@@ -171,6 +176,7 @@ static const std::string index_macros[] =
     "ZETA_XFM_1", "ZETA_XFM_2",
     "A_TENSOR", "B_TENSOR", "C_TENSOR",
     "A_PREDEF", "B_PREDEF", "C_PREDEF",
+    "M_TENSOR", "M_PREDEF"
   };
 
 static const unsigned int index_macro_indices[] =
@@ -182,7 +188,8 @@ static const unsigned int index_macro_indices[] =
     2, 3,
     1, 2,
     3, 3, 3,
-    3, 3, 3
+    3, 3, 3,
+    2, 2
   };
 
 static const unsigned int index_macro_ranges[] =
@@ -193,7 +200,8 @@ static const unsigned int index_macro_ranges[] =
     2, 2,
     2, 2,
     1, 1, 1,
-    1, 1, 1
+    1, 1, 1,
+    1, 1
   };
 
 static const replacement_function_index index_macro_replacements[] =
@@ -206,6 +214,7 @@ static const replacement_function_index index_macro_replacements[] =
     replace_zeta_xfm_1, replace_zeta_xfm_2,
     replace_A_tensor, replace_B_tensor, replace_C_tensor,
     replace_A_predef, replace_B_predef, replace_C_predef,
+    replace_M_tensor, replace_M_predef
   };
 
 static const unsigned int index_macro_args[] =
@@ -216,13 +225,14 @@ static const unsigned int index_macro_args[] =
     1, 1,
     0, 0,
     4, 4, 4,
-    6, 6, 6
+    6, 6, 6,
+    0, 2
   };
 
 
 #define NUMBER_PRE_MACROS    (31)
 #define NUMBER_POST_MACROS   (1)
-#define NUMBER_INDEX_MACROS  (20)
+#define NUMBER_INDEX_MACROS  (22)
 
 
 // ******************************************************************
@@ -1335,6 +1345,62 @@ static std::string replace_C_predef(struct replacement_data& d, const std::vecto
     unsigned int k_label = get_index_label(indices[2]);
 
     out << GiNaC::csrc << C[i_label][j_label][k_label];
+
+    return(out.str());
+  }
+
+static std::string replace_M_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 2);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+
+    assert(args.size() == 0);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector< std::vector<GiNaC::ex> > M = d.u_factory->compute_M();
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+
+    out << GiNaC::csrc << M[i_label][j_label];
+
+    return(out.str());
+  }
+
+static std::string replace_M_predef(struct replacement_data& d, const std::vector<std::string>& args,
+                                    std::vector<struct index_assignment> indices)
+  {
+    std::ostringstream out;
+
+    assert(indices.size() == 2);
+    assert(indices[0].species < d.source->get_number_fields());
+    assert(indices[1].species < d.source->get_number_fields());
+    assert(indices[0].trait == index_field);
+    assert(indices[1].trait == index_field);
+
+    assert(args.size() == 2);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector< std::vector<GiNaC::ex> > M = d.u_factory->compute_M(Hsq, eps);
+
+    unsigned int i_label = get_index_label(indices[0]);
+    unsigned int j_label = get_index_label(indices[1]);
+
+    out << GiNaC::csrc << M[i_label][j_label];
 
     return(out.str());
   }

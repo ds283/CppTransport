@@ -105,7 +105,6 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiN
                 c -= Vab/Hsq;
                 c -= (3-eps)*this->deriv_list[SPECIES(i)]*this->deriv_list[SPECIES(j)]/pow(this->M_Planck,2);
                 c -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[SPECIES(i)]*Vb + this->deriv_list[SPECIES(j)]*Va);
-
               }
             else if(IS_MOMENTUM(i) && IS_MOMENTUM(j))
               {
@@ -325,7 +324,36 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
       }
 
     return(rval);
+  }
 
+
+std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_M()
+  {
+    GiNaC::ex Hsq = this->compute_Hsq();
+    GiNaC::ex eps = this->compute_eps();
+
+    return(this->compute_M(Hsq, eps));
+  }
+
+
+std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    std::vector< std::vector<GiNaC::ex> > rval(this->num_fields);
+
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        rval[i].resize(this->num_fields);
+      }
+
+    for(int i = 0; i < this->num_fields; i++)
+      {
+        for(int j = 0; j < this->num_fields; j++)
+          {
+            rval[i][j] = this->compute_M_component(i, j, Hsq, eps);
+          }
+      }
+
+    return(rval);
   }
 
 
@@ -549,4 +577,24 @@ GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq,
     GiNaC::ex c = -2*(3-eps)*this->deriv_list[i] - 2*Vi/Hsq;
 
     return(c);
+  }
+
+
+// compute M tensor
+GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    assert(i < this->num_fields);
+    assert(j < this->num_fields);
+
+    GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]);
+    GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[i]);
+    GiNaC::ex Vb  = GiNaC::diff(this->V, this->field_list[j]);
+
+    GiNaC::ex c = (i == j ? eps : 0);
+
+    GiNaC::ex u = -Vab/Hsq;
+    u -= (3-eps)*this->deriv_list[i]*this->deriv_list[j]/pow(this->M_Planck,2);
+    u -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[i]*Vb + this->deriv_list[j]*Va);
+
+    return(c+u/3);
   }
