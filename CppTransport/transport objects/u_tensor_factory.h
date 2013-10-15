@@ -5,8 +5,6 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
-
-
 #ifndef __u_tensor_factory_H_
 #define __u_tensor_factory_H_
 
@@ -34,7 +32,6 @@ class u_tensor_factory
 
       virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)= 0;
 
-
       // the A, B and C tensors are associated with the Hamiltonian for
       // scalar field fluctuations [see written notes]
       // actually, these compute A/H^2, B/H and C
@@ -52,9 +49,9 @@ class u_tensor_factory
       virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
       // compute M tensor
-      virtual std::vector< std::vector<GiNaC::ex> > compute_M();
+      virtual std::vector< std::vector<GiNaC::ex> > compute_M() = 0;
 
-      virtual std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps);
+      virtual std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
 
       //  CALCULATE GAUGE TRANSFORMATIONS
       virtual std::vector<GiNaC::ex> compute_zeta_xfm_1() = 0;
