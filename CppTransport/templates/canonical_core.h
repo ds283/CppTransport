@@ -428,7 +428,7 @@ namespace transport
               auto __subl      = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__N*__eps);
                                  -(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
 
-              __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
+              __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
                       -__subl   /(2.0*__k*__ainit*__ainit);
             }
           else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
