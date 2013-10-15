@@ -203,9 +203,14 @@ namespace transport
             out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
 
             out << "y_labels = [ ";
+            int count = 0;
             for(int i = 0; i < labels.size(); i++)
               {
-                if(plotted[i]) out << (i > 0 ? ", " : "") << "r'" << labels[i] << "'";
+                if(plotted[i])
+                  {
+                    out << (count > 0 ? ", " : "") << "r'" << labels[i] << "'";
+                    count++;
+                  }
               }
             out << " ]" << std::endl;
 
