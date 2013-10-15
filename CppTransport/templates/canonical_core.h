@@ -419,21 +419,29 @@ namespace transport
 
           if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
             {
-              __tpf = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) / (2.0*__k*__ainit*__ainit);
+              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N))
+                               + (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
+
+              __tpf = + __leading    / (2.0*__k*__ainit*__ainit)
+                      + __subl*__Hsq / (2.0*__k*__k*__k);
             }
           else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
                   || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
             {
-              auto __leading   = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
-              auto __subl      = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__N*__eps);
-                                 -(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
+              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 + __eps - 2.0*__eps*(1.0-__N));
+              auto __subl    = __M[SPECIES(__i)][SPECIES(__j)];
 
-              __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
-                      -__subl   /(2.0*__k*__ainit*__ainit);
+              __tpf = - __leading    / (2.0*__k*__ainit*__ainit)
             }
           else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
             {
-              __tpf = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) * __k / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit);
+              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * 2.0*__eps
+                               - (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
+
+              __tpf = + __k*__leading / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
+                      + __subl        / (2.0*__k*__ainit*__ainit);
             }
           else
             {
@@ -465,24 +473,22 @@ namespace transport
 
         __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
-        // only the field-momentum and momentum-field correlation functions have imgainary parts
+        // only the field-momentum and momentum-field correlation functions have imaginary parts
         if(IS_FIELD(__i) && IS_MOMENTUM(__j))
           {
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2*__eps*(1.0-__N))
-                             - 4.0*(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
-            auto __subl    = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+            auto __subl    = __M[SPECIES(__i)][SPECIES(__j)]; // representative contribution added to stabilize the subhorizon evolution
 
-            __tpf = +__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
-                    -__subl   /(2.0*__k*__ainit*__ainit);
+            __tpf = - __leading          / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
+                    - __subl*sqrt(__Hsq) / (2.0*__k*__k*__ainit);
           }
         else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
           {
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2*__eps*(1.0-__N))
-              - 4.0*(__M[SPECIES(__i)][SPECIES(__j)] - (SPECIES(__i) == SPECIES(__j) ? __eps : 0.0));
-            auto __subl    = M_PI*__M[SPECIES(__i)][SPECIES(__j)];
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+            auto __subl    = __M[SPECIES(__i)][SPECIES(__j)]; // representative contribution added to stabilize the subhorizon evolution
 
-            __tpf = -__leading/(2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
-                    +__subl   /(2.0*__k*__ainit*__ainit);
+            __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
+                    + __subl*sqrt(__Hsq) / (2.0*__k*__k*__ainit);
           }
 
         return(__tpf);
