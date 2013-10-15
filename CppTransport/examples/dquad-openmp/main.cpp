@@ -123,6 +123,10 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 2> index_set_f = { 3, 0 };
     std::array<unsigned int, 2> index_set_g = { 3, 1 };
 
+    std::array<unsigned int, 2> index_set_h = { 2, 2 };
+    std::array<unsigned int, 2> index_set_i = { 2, 3 };
+    std::array<unsigned int, 2> index_set_j = { 3, 3 };
+
     std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
     std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
     std::array<unsigned int, 3> sq_set_c    = { 1, 1, 0 };
@@ -131,24 +135,30 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
 
     transport::index_selector<1>* backg_selector    = backg.manufacture_selector();
-    transport::index_selector<2>* twopf_re_selector = twopf_re.manufacture_selector();
-    transport::index_selector<2>* twopf_im_selector = twopf_im.manufacture_selector();
+    transport::index_selector<2>* twopf_fields      = twopf_re.manufacture_selector();
+    transport::index_selector<2>* twopf_cross       = twopf_re.manufacture_selector();
+    transport::index_selector<2>* twopf_momenta     = twopf_re.manufacture_selector();
     transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
     transport::index_selector<3>* sq_selector_a     = threepf.manufacture_selector();
     transport::index_selector<3>* sq_selector_b     = threepf.manufacture_selector();
     transport::index_selector<2>* u2_selector       = backg.manufacture_2_selector();
     transport::index_selector<3>* u3_selector       = backg.manufacture_3_selector();
 
-    twopf_re_selector->none();
-    twopf_re_selector->set_on(index_set_a);
-    twopf_re_selector->set_on(index_set_b);
-    twopf_re_selector->set_on(index_set_c);
+    twopf_fields->none();
+    twopf_fields->set_on(index_set_a);
+    twopf_fields->set_on(index_set_b);
+    twopf_fields->set_on(index_set_c);
 
-    twopf_im_selector->none();
-    twopf_im_selector->set_on(index_set_d);
-    twopf_im_selector->set_on(index_set_e);
-    twopf_im_selector->set_on(index_set_f);
-    twopf_im_selector->set_on(index_set_g);
+    twopf_cross->none();
+    twopf_cross->set_on(index_set_d);
+    twopf_cross->set_on(index_set_e);
+    twopf_cross->set_on(index_set_f);
+    twopf_cross->set_on(index_set_g);
+
+    twopf_momenta->none();
+    twopf_momenta->set_on(index_set_h);
+    twopf_momenta->set_on(index_set_i);
+    twopf_momenta->set_on(index_set_j);
 
     threepf_selector->none();
     threepf_selector->set_on(sq_set_a);
@@ -169,8 +179,13 @@ int main(int argc, const char* argv[])
 
     backg.plot(&py_plt, output_path.string() + "/background", backg_selector);
 
-    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_mode",          twopf_re_selector);
-    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_mode",          twopf_im_selector);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_fields",        twopf_fields);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_cross",         twopf_cross);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_momenta",       twopf_momenta);
+
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_fields",        twopf_fields);
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_cross",         twopf_cross);
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_momenta",       twopf_momenta);
 
     twopf_re.zeta_time_history(             &py_plt,   output_path.string() + "/zeta_twopf_mode");
     twopf_re.zeta_time_history(             &text_plt, output_path.string() + "/zeta_twopf_mode");
@@ -191,8 +206,9 @@ int main(int argc, const char* argv[])
     threepf.reduced_bispectrum_time_history(&text_plt, output_path.string() + "/redbisp");
 
     delete backg_selector;
-    delete twopf_re_selector;
-    delete twopf_im_selector;
+    delete twopf_fields;
+    delete twopf_cross;
+    delete twopf_momenta;
     delete threepf_selector;
     delete sq_selector_a;
     delete sq_selector_b;
