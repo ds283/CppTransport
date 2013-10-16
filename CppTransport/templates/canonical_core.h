@@ -429,19 +429,23 @@ namespace transport
           else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
                   || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
             {
-              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 + __eps - 2.0*__eps*(1.0-__N));
-              auto __subl    = __M[SPECIES(__i)][SPECIES(__j)];
+              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0 + __eps*(1.0-2.0*__N)) + __eps*__eps*__M[SPECIES(__i)][SPECIES(__j)];
+              // next-next order term is added to stabilize the subhorizon evolution
+              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (- __eps);
 
-              __tpf = - __leading    / (2.0*__k*__ainit*__ainit)
+              __tpf = + __leading    / (2.0*__k*__ainit*__ainit)
+                      + __subl*__Hsq / (2.0*__k*__k*__k);
             }
           else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
             {
               auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
               auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * 2.0*__eps
                                - (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
+              auto __subsubl = - (3.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-              __tpf = + __k*__leading / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
-                      + __subl        / (2.0*__k*__ainit*__ainit);
+              __tpf = + __k*__leading   / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
+                      + __subl          / (2.0*__k*__ainit*__ainit)
+                      + __subsubl*__Hsq / (2.0*__k*__k*__k);
             }
           else
             {
@@ -476,19 +480,17 @@ namespace transport
         // only the field-momentum and momentum-field correlation functions have imaginary parts
         if(IS_FIELD(__i) && IS_MOMENTUM(__j))
           {
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
-            auto __subl    = __M[SPECIES(__i)][SPECIES(__j)]; // representative contribution added to stabilize the subhorizon evolution
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) + __eps*__M[SPECIES(__i)][SPECIES(__j)];
+            // next-next order term is representative - added to stabilize the subhorizon evolution
 
-            __tpf = - __leading          / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
-                    - __subl*sqrt(__Hsq) / (2.0*__k*__k*__ainit);
+            __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
           }
         else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
           {
-            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
-            auto __subl    = __M[SPECIES(__i)][SPECIES(__j)]; // representative contribution added to stabilize the subhorizon evolution
+            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N)) + __eps*__M[SPECIES(__i)][SPECIES(__j)];
+            // next-next order term is representative - added to stabilize the subhorizon evolution
 
-            __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit)
-                    + __subl*sqrt(__Hsq) / (2.0*__k*__k*__ainit);
+            __tpf = - __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
           }
 
         return(__tpf);
