@@ -734,8 +734,9 @@ namespace transport
 
         // project out the field-field and momentum-momentum components of the imaginary 2pf
         // these should be zero anyway
+        // also project out the off-diagonal momentum-field pieces
         #undef __TWOPF_IM
-        #define __TWOPF_IM(i,j,var) ((IS_FIELD(i) && IS_MOMENTUM(j)) || (IS_MOMENTUM(i) && IS_FIELD(j)) ? var : 0.0)
+        #define __TWOPF_IM(i,j,var) (((IS_FIELD(i) && IS_MOMENTUM(j)) || (IS_MOMENTUM(i) && IS_FIELD(j)) && (SPECIES(i) == SPECIES(j))) ? var : 0.0)
         // project out the off-diagonal momentum-field or momentum-momentum components of the real 2pf
         // these tend to be noisy
         #undef __TWOPF_RE
@@ -751,6 +752,12 @@ namespace transport
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__TWOPF_RE($$__A,$$__M,__twopf_re_k1_$$__A_$$__M)*__TWOPF_RE($$__B,$$__N,__twopf_re_k2_$$__B_$$__N)
         __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__TWOPF_IM($$__A,$$__M,__twopf_im_k1_$$__A_$$__M)*__TWOPF_IM($$__B,$$__N,__twopf_im_k2_$$__B_$$__N)
+
+        #pragma omp critical
+        {
+          std::cout << "dSigma(0,1)/dN = (H^2/2k^3) * " << __dtwopf_re_k1(0,1) * (2.0*__k1*__k1*__k1/__Hsq) << ", (k/aH) = " << __k1/(__a*sqrt(__Hsq)) << std::endl;
+          std::cout << "dSigma(1,2)/dN = (H^2/2k^3) * " << __dtwopf_re_k1(1,2) * (2.0*__k1*__k1*__k1/__Hsq) << ", (k/aH) = " << __k1/(__a*sqrt(__Hsq)) << std::endl;
+        }
       }
 
 
