@@ -552,13 +552,10 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     GiNaC::ex c = 0;
 
-//  LEADS TO OSCILLATIONS
     if (i == j) c += - this->deriv_list[k] / (2*pow(this->M_Planck,2));
 
-//  INITIALLY OK, BUT LEADS TO OSCILLATIONS NEAR HORIZON EXIT
     c += (this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k] / (8*pow(this->M_Planck,4))) * ( 1 - k1dotk2*k1dotk2 / (k1*k1*k2*k2) );
 
-//  LEADS TO OSCILLATIONS
     if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * (k1dotk3 / (k1*k1)) /2;
     if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * (k2dotk3 / (k2*k2)) /2;
 
