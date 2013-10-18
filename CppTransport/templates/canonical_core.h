@@ -419,39 +419,54 @@ namespace transport
 
           if(IS_FIELD(__i) && IS_FIELD(__j))              // field-field correlation function
             {
+              // LEADING-ORDER INITIAL CONDITION
               auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+              auto __subl    = 0.0;
+              auto __subsubl = 0.0;
+
+              // NEXT-ORDER INITIAL CONDITION - induces rapid onset of subhorizon oscillations
 //              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 //              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N))
 //                               + (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
 //              auto __subsubl = (9.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-              __tpf = + __leading                             / (2.0*__k*__ainit*__ainit);
-//                      + __subl*__Hsq                          / (2.0*__k*__k*__k)
-//                      + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
+              __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
+                      + __subl*__Hsq                          / (2.0*__k*__k*__k)
+                      + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
             }
           else if((IS_FIELD(__i) && IS_MOMENTUM(__j))     // field-momentum or momentum-field correlation function
                   || (IS_MOMENTUM(__i) && IS_FIELD(__j)))
             {
+              // LEADING-ORDER INITIAL CONDITION
               auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0);
+              auto __subl    = 0.0;
+              auto __subsubl = 0.0;
+
+              // NEXT-ORDER INITIAL CONDITION - induces slow onset of subhorizon oscillations
 //              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (-1.0 + __eps*(1.0-2.0*__N));
 //              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (- __eps);
 //              auto __subsubl = (9.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-              __tpf = + __leading                             / (2.0*__k*__ainit*__ainit);
-//                      + __subl*__Hsq                          / (2.0*__k*__k*__k)
-//                      + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
+              __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
+                      + __subl*__Hsq                          / (2.0*__k*__k*__k)
+                      + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
             }
           else if(IS_MOMENTUM(__i) && IS_MOMENTUM(__j))   // momentum-momentum correlation function
             {
+              // LEADING-ORDER INITIAL CONDITION
               auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
+              auto __subl    = 0.0;
+              auto __subsubl = 0.0;
+
+              // NEXT-ORDER INITIAL CONDITION - induces rapid onset of subhorizon oscillations
 //              auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 //              auto __subl    = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * 2.0*__eps
 //                               - (3.0/2.0)*__M[SPECIES(__i)][SPECIES(__j)];
 //              auto __subsubl = - (3.0/4.0)*__M[SPECIES(__i)][SPECIES(__j)];
 
-              __tpf = + __k*__leading   / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit);
-//                      + __subl          / (2.0*__k*__ainit*__ainit)
-//                      + __subsubl*__Hsq / (2.0*__k*__k*__k);
+              __tpf = + __k*__leading   / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
+                      + __subl          / (2.0*__k*__ainit*__ainit)
+                      + __subsubl*__Hsq / (2.0*__k*__k*__k);
             }
           else
             {
@@ -486,17 +501,21 @@ namespace transport
         // only the field-momentum and momentum-field correlation functions have imaginary parts
         if(IS_FIELD(__i) && IS_MOMENTUM(__j))
           {
-//            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+            // LEADING-ORDER INITIAL CONDITION
             auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-            // next-next order term is representative - added to stabilize the subhorizon evolution
+
+            // NEXT-ORDER INITIAL CONDITION
+//            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
             __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
           }
         else if(IS_MOMENTUM(__i) && IS_FIELD(__j))
           {
-//            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+            // LEADING-ORDER INITIAL CONDITION
             auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0);
-            // next-next order term is representative - added to stabilize the subhorizon evolution
+
+            // NEXT-ORDER INITIAL CONDITION
+//            auto __leading = (SPECIES(__i) == SPECIES(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
             __tpf = - __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
           }
