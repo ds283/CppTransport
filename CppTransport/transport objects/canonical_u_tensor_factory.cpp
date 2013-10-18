@@ -160,17 +160,18 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                 // analytic definition
                 // this accounts for integrating out the delta-functions when contracting u3 with something else
 
+                // factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
                 if(IS_FIELD(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
+                    c = -this->compute_B_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps);
                   }
                 else if(IS_FIELD(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps);
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
+                    c = -this->compute_C_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps);
                   }
                 else if(IS_FIELD(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
@@ -178,26 +179,26 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                   }
                 else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_FIELD(k))
                   {
-                    c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
+                    c = 3*this->compute_A_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps);
                   }
                 else if(IS_MOMENTUM(i) && IS_FIELD(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps, -1, -1, -1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(j), k2, SPECIES(k), k3, a, Hsq, eps);
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_FIELD(k))
                   {
-                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps, -1, -1, -1)/2;
+                    c = this->compute_B_component(SPECIES(i), k1, SPECIES(k), k3, SPECIES(j), k2, a, Hsq, eps);
                   }
                 else if(IS_MOMENTUM(i) && IS_MOMENTUM(j) && IS_MOMENTUM(k))
                   {
-                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps, -1, -1, -1)/2;
+                    c = this->compute_C_component(SPECIES(j), k2, SPECIES(k), k3, SPECIES(i), k1, a, Hsq, eps);
                   }
                 else
                   {
                     assert(false);
                   }
 
-                rval[i][j][k] = 2 * c; // factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
+                rval[i][j][k] = c;
               }
           }
       }
@@ -239,7 +240,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps, +1, +1, +1);
+                rval[i][j][k] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -278,7 +279,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps, +1, +1, +1);
+                rval[i][j][k] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -318,7 +319,7 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps, +1, +1, +1);
+                rval[i][j][k] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -463,8 +464,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                                          int k1_sign, int k2_sign, int k3_sign)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -479,9 +479,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
     GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
     GiNaC::ex xi_k = this->compute_xi(k, Hsq, eps);
 
-    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
-    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
-    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+    GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3)/2;
 
     GiNaC::ex c = - (Vijk / Hsq)/3;
 
@@ -511,8 +511,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                                          int k1_sign, int k2_sign, int k3_sign)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -521,9 +520,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
     GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps);
     GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
 
-    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
-    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
-    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+    GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3)/2;
 
     GiNaC::ex c = this->deriv_list[i]*this->deriv_list[j]*this->deriv_list[k]/(4*pow(this->M_Planck,4));
 
@@ -541,16 +540,15 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-                                                          int k1_sign, int k2_sign, int k3_sign)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
     assert(k < this->num_fields);
 
-    GiNaC::ex k1dotk2 = k1_sign*k2_sign * (k3*k3 - k1*k1 - k2*k2)/2;
-    GiNaC::ex k1dotk3 = k1_sign*k3_sign * (k2*k2 - k1*k1 - k3*k3)/2;
-    GiNaC::ex k2dotk3 = k2_sign*k3_sign * (k1*k1 - k2*k2 - k3*k3)/2;
+    GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
+    GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
+    GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3)/2;
 
     GiNaC::ex c = 0;
 
