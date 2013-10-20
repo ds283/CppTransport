@@ -695,7 +695,7 @@ namespace transport
 
               number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
                                          this->sample_com_ks[this->kconfig_list[i].indices[1]],
-                                         this->sample_com_ks[this->kconfig_list[i].indices[1]]);
+                                         this->sample_com_ks[this->kconfig_list[i].indices[2]]);
 
               data[j][0] = threepf[j][0] / form_factor;
             }
