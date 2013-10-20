@@ -153,8 +153,10 @@ namespace transport
             number construct_dotphi_shift(unsigned int i, unsigned int l, unsigned int m, unsigned int n, unsigned int r);
 
             // compute the shift in the correlation function when changing from momentum to d/dN
+            // __m,__kmode_m always specify the operator being shifted, but
+            // __pos indicated where it stands within the correlation function
             number dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
-                                unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos);
+                                unsigned int __r, unsigned int __kmode_r, unsigned int __time, unsigned int __pos);
 
             // return a time history for the correlation function of zeta, for a fixed k-configuration
             std::vector< std::vector<number> > construct_zeta_time_history(unsigned int i);
@@ -497,27 +499,32 @@ namespace transport
 
       // compute the shift in a correlation function from the canonical momentum p_i to the time derivative q'_i,
       // ' = d/dN
+      // __m,__kmode_m always represent the operator being shifted
+      // __n,__kmode_n and __r,__kmode_r represent the other operators in the 3pf
+      // they may be either fields or momenta, but we assume that they are in order, that is,
+      // __r,__kmode_r follows __n,__kmode_n within the 3pf
       template <typename number>
       number threepf<number>::dotphi_shift(unsigned int __m, unsigned int __kmode_m, unsigned int __n, unsigned int __kmode_n,
-                                           unsigned int __r, unsigned int __kmode_r, unsigned int __time_slice, unsigned int __pos)
+                                           unsigned int __r, unsigned int __kmode_r, unsigned int __time, unsigned int __pos)
         {
           assert(__pos < 3);
 
-          std::vector<number> __fields = this->backg.get_value(__time_slice);
+          std::vector<number> __fields = this->backg.get_value(__time);
 
-          std::vector< std::vector< std::vector<number> > > __B =
-            this->tensors->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time_slice]);
-          std::vector< std::vector< std::vector<number> > > __C =
-            this->tensors->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time_slice]);
-          
-          std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time_slice, __kmode_n);
-          std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time_slice, __kmode_r);
-          std::vector<number> __twopf_im_n = this->twopf_im.get_value(__time_slice, __kmode_n);
-          std::vector<number> __twopf_im_r = this->twopf_im.get_value(__time_slice, __kmode_r);
+          std::vector< std::vector< std::vector<number> > > __B_nrm =
+            this->tensors->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time]);
+          std::vector< std::vector< std::vector<number> > > __C_mnr =
+            this->tensors->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time]);
+
+          std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time, __kmode_n);
+          std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time, __kmode_r);
+          std::vector<number> __twopf_im_n = this->twopf_im.get_value(__time, __kmode_n);
+          std::vector<number> __twopf_im_r = this->twopf_im.get_value(__time, __kmode_r);
           
           number rval = 0.0;
           
           assert(__m >= this->N_fields);
+          assert(__m <  2*this->N_fields);
           auto __m_species = __m % this->N_fields;
           
           for(int __i = 0; __i < this->N_fields; __i++)
@@ -534,6 +541,7 @@ namespace transport
                   switch(__pos)
                     {
                       case 0: // index __m is on the far left, to the left of both __n and __r
+                        // flatten the two possible sets of index contractions: (i,n),(j,r) and (j,r),(i,n)
                         __i_field_twopf_index_n    = (2*this->N_fields)*__i + __n;
                         __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
                         __j_field_twopf_index_n    = (2*this->N_fields)*__j + __n;
@@ -543,6 +551,7 @@ namespace transport
                         break;
                       
                       case 1: // index __m is in the middle, to the left of __r but the right of __n
+                        // flatten the two possible sets of index contractions: (n,i),(j,r) and (n,j),(i,r)
                         __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
                         __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
                         __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
@@ -552,6 +561,7 @@ namespace transport
                         break;
                       
                       case 2: // index __m is on the far right, to the right of both __n and __r
+                        // flatten the two possible sets of index contractions: (n,i),(r,j) and (n,j),(r,i)
                         __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
                         __i_field_twopf_index_r    = (2*this->N_fields)*__r + __i;
                         __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
@@ -564,17 +574,21 @@ namespace transport
                         assert(false);
                     }
 
-                  rval += (1.0/2.0) * __B[__i][__j][__m_species]
-                                    * (  __twopf_re_n[__i_field_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
-                                       + __twopf_re_n[__j_field_twopf_index_n]*__twopf_re_r[__i_field_twopf_index_r]
-                                       - __twopf_im_n[__i_field_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
-                                       - __twopf_im_n[__j_field_twopf_index_n]*__twopf_im_r[__i_field_twopf_index_r]);
+                  rval -= (1.0/2.0) * __B_nrm[__i][__j][__m_species]
+                            * (  __twopf_re_n[__i_field_twopf_index_n] * __twopf_re_r[__j_field_twopf_index_r]
+                               - __twopf_im_n[__i_field_twopf_index_n] * __twopf_im_r[__j_field_twopf_index_r]);
 
-                  rval += __C[__m_species][__i][__j]
-                                    * (  __twopf_re_n[__i_dotfield_twopf_index_n]*__twopf_re_r[__j_field_twopf_index_r]
-                                       + __twopf_re_n[__j_field_twopf_index_n]   *__twopf_re_r[__i_dotfield_twopf_index_r]
-                                       - __twopf_im_n[__i_dotfield_twopf_index_n]*__twopf_im_r[__j_field_twopf_index_r]
-                                       - __twopf_im_n[__j_field_twopf_index_n]   *__twopf_im_r[__i_dotfield_twopf_index_r]);
+                  rval -= (1.0/2.0) * __B_nrm[__j][__i][__m_species]
+                            * (  __twopf_re_n[__j_field_twopf_index_n] * __twopf_re_r[__i_field_twopf_index_r]
+                               - __twopf_im_n[__j_field_twopf_index_n] * __twopf_im_r[__i_field_twopf_index_r]);
+
+                  rval -= __C_mnr[__m_species][__i][__j]
+                            * (  __twopf_re_n[__i_dotfield_twopf_index_n] * __twopf_re_r[__j_field_twopf_index_r]
+                               - __twopf_im_n[__i_dotfield_twopf_index_n] * __twopf_im_r[__j_field_twopf_index_r]);
+
+                  rval -= __C_mnr[__m_species][__j][__i]
+                            * (  __twopf_re_n[__j_field_twopf_index_n]    * __twopf_re_r[__i_dotfield_twopf_index_r]
+                               - __twopf_im_n[__j_field_twopf_index_n]    * __twopf_im_r[__i_dotfield_twopf_index_r]);
                 }
             }
 
