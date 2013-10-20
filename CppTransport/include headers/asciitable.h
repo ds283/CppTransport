@@ -34,7 +34,7 @@ namespace transport
               {}
 
           void write(std::string x_name, const std::vector<std::string>& columns,
-            const std::vector<number>& xs, const std::vector< std::vector<number> >& ys);
+            const std::vector<number>& xs, const std::vector< std::vector<number> >& ys, const std::string tag = "");
 
           void set_precision(unsigned int p);
 
@@ -57,7 +57,8 @@ namespace transport
 
       template <typename number>
       void asciitable<number>::write(std::string x_name,
-        const std::vector<std::string>& columns, const std::vector<number>& xs, const std::vector< std::vector<number> >& ys)
+        const std::vector<std::string>& columns, const std::vector<number>& xs, const std::vector< std::vector<number> >& ys,
+        const std::string tag)
         {
           // save current precision
           std::streamsize         prev_precision = this->stream.precision();
@@ -78,6 +79,12 @@ namespace transport
                 }
             }
           max++;
+
+          // write out tag if one has been given
+          if(!tag.empty())
+            {
+              this->stream << "// " << tag << std::endl;
+            }
 
           // max is the column width
           // if we are going to wrap, want to work out how many columns we can fit

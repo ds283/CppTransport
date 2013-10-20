@@ -27,7 +27,7 @@ namespace transport
 
         virtual void plot(std::string output, std::string title,
                           const std::vector<double>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-                          std::string xlabel, std::string ylabel, bool logx, bool logy) = 0;
+                          std::string xlabel, std::string ylabel, bool logx = true, bool logy = true, const std::string tag = "") = 0;
 
         virtual void               set_format(std::string f);         // set current output format (PDF, PNG, ... ) if supported by the gadget
 

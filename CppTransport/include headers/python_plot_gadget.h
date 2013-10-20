@@ -68,7 +68,7 @@ namespace transport
 
         void plot(std::string output, std::string title,
                   const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
+                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true, const std::string tag = "");
 
         // we want LaTeX labels to be provided
         bool latex_labels()             { return(true); }
@@ -93,7 +93,8 @@ namespace transport
     template <typename number>
     void python_plot_gadget<number>::plot(std::string output, std::string title,
                                           const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
-                                          const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
+                                          const std::vector<std::string>& labels, std::string xlabel, std::string ylabel,
+                                          bool logx, bool logy, const std::string tag)
       {
         bool ok = true;
 
@@ -215,6 +216,11 @@ namespace transport
             out << " ]" << std::endl;
 
             out << "plt.legend(handles, y_labels, frameon=False)" << std::endl;
+
+            if(!tag.empty())
+              {
+                out << "plt.figtext(0.02, 0.97, '" << tag << "', ha='left')" << std::endl;
+              }
 
             out << "plt.xlabel(r'"  << xlabel << "')" << std::endl;
             out << "plt.ylabel(r'"  << ylabel << "')" << std::endl;

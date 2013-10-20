@@ -38,7 +38,7 @@ namespace transport
 
         void plot(std::string output, std::string title,
                   const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
+                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true, const std::string tag = "");
 
         virtual void set_format(std::string f);
 
@@ -60,7 +60,8 @@ namespace transport
     template <typename number>
     void asciitable_plot_gadget<number>::plot(std::string output, std::string title,
                                               const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
-                                              const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
+                                              const std::vector<std::string>& labels, std::string xlabel, std::string ylabel,
+                                              bool logx, bool logy, const std::string tag)
       {
         // x and ys should be the same size
         assert(x.size() == ys.size());
@@ -74,7 +75,7 @@ namespace transport
             writer.set_wrap_status(false);  // don't want to wrap in a file
             writer.set_precision(this->precision);
 
-            writer.write("N", labels, x, ys);
+            writer.write("N", labels, x, ys, tag);
             // currently do nothing with xlabel, ylabel, title, logx, logy
           }
         else

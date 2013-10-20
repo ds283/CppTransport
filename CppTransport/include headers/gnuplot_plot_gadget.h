@@ -33,7 +33,7 @@ namespace transport
 
         void plot(std::string output, std::string title,
                   const std::vector<number>& x, const std::vector< std::vector<number> >& ys, const std::vector<std::string>& labels,
-                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true);
+                  std::string xlabel, std::string ylabel, bool logx = true, bool logy = true, const std::string tag = "");
 
         virtual void set_format(std::string f);
       };
@@ -49,7 +49,8 @@ namespace transport
     template <typename number>
     void gnuplot_plot_gadget<number>::plot(std::string output, std::string title,
                                            const std::vector<number>& x, const std::vector< std::vector<number> >& ys,
-                                           const std::vector<std::string>& labels, std::string xlabel, std::string ylabel, bool logx, bool logy)
+                                           const std::vector<std::string>& labels, std::string xlabel, std::string ylabel,
+                                            bool logx, bool logy, const std::string tag)
       {
         // x and ys should be the same size
         assert(x.size() == ys.size());

@@ -47,6 +47,11 @@ namespace transport
               {
                 return( 1.0/(k1*k1*k1*k2*k2*k2) + 1.0/(k1*k1*k1*k3*k3*k3) + 1.0/(k2*k2*k2*k3*k3*k3) );
               }
+
+            std::string name()
+              {
+                return("local");
+              }
         };
 
       struct threepf_kconfig
@@ -117,7 +122,7 @@ namespace transport
             // plot time evolution of the 'reduced bispectrum', defined by
             // (6/5) fNL_red(k1, k2, k3) ( P(k1) P(k2) + perms ) = B(k1, k2, k3)
             // this coincides with fNL_local *if* the bispectrum B(k1, k2, k3)
-            // is itsels purely local. Otherwise, it is momentum dependent
+            // is itself purely local. Otherwise, it is momentum dependent
             // and fNL_local should instead be extracted via projection
             void reduced_bispectrum_time_history(plot_gadget<number>* gadget, std::string output,
               std::string format="pdf", bool logy=false);
@@ -218,9 +223,12 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
+              std::ostringstream tag;
+              tag << (dotphi ? "derivatives" : "momenta");
+
               gadget->set_format(format);
               gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
+                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy, tag.str());
             }
         }
 
@@ -242,9 +250,13 @@ namespace transport
               std::ostringstream fnam;
               fnam << output << "_" << i;
 
+              std::ostringstream tag;
+              tag << (dotphi ? "derivatives" : "momenta");
+              tag << ", reference shape = " << shape.name();
+
               gadget->set_format(format);
               gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                this->sample_points, data, labels, PICK_N_LABEL, SHAPE_LABEL, false, logy);
+                this->sample_points, data, labels, PICK_N_LABEL, SHAPE_LABEL, false, logy, tag.str());
             }
         }
 
@@ -289,9 +301,12 @@ namespace transport
             std::vector<std::string> labels(1);
             labels[0] = this->labels.make_shape_bispectrum_label(gadget->latex_labels());
 
+            std::ostringstream tag;
+            tag << "reference shape = " << shape.name();
+
             gadget->set_format(format);
             gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-              this->sample_points, data, labels, PICK_N_LABEL, "", false, logy);
+              this->sample_points, data, labels, PICK_N_LABEL, "", false, logy, tag.str());
           }
       }
 
