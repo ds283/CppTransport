@@ -4,6 +4,8 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
+// OpenMP implementation
+
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
 
@@ -24,9 +26,7 @@ namespace transport
     // *********************************************************************************************
 
 
-    // CLASS FOR $$__MODEL CORE
-    // specific implementations (MPI, OpenMP, VexCL, ...) are later derived from this
-    // common core
+    // CLASS FOR $$__MODEL 'basic', ie., OpenMP implementation
     template <typename number>
     class $$__MODEL_basic : public $$__MODEL<number>
       {
@@ -81,7 +81,7 @@ namespace transport
       {
       public:
         $$__MODEL_basic_twopf_functor(const std::vector<number>& p, const number Mp, double k)
-        : parameters(p), M_Planck(Mp), k_mode(k)
+          : parameters(p), M_Planck(Mp), k_mode(k)
           {
           }
 
@@ -101,7 +101,7 @@ namespace transport
       public:
         $$__MODEL_basic_twopf_observer(std::vector <std::vector<number>>& bh,
                                        std::vector <std::vector<number>>& tpfh)
-        : background_history(bh), twopf_history(tpfh)
+          : background_history(bh), twopf_history(tpfh)
           {
           }
 
@@ -119,7 +119,7 @@ namespace transport
       {
       public:
         $$__MODEL_basic_threepf_functor(const std::vector<number>& p, const number Mp, double k1, double k2, double k3)
-        : parameters(p), M_Planck(Mp), kmode_1(k1), kmode_2(k2), kmode_3(k3)
+          : parameters(p), M_Planck(Mp), kmode_1(k1), kmode_2(k2), kmode_3(k3)
           {
           }
 
@@ -160,11 +160,12 @@ namespace transport
     // TWO-POINT FUNCTION INTEGRATION
 
 
-    // ks    -- vector of *conventionally normalized* wavenumbers for which we wish to compute the twopf
-    //          (conventional normalization means k=1 is the mode which crosses the horizon at Nstar)
-    // Nstar -- horizon-exit of the mode with k-comoving = 1 takes place at Nstar e-folds
-    // ics   -- vector of initial conditions for background fields (or fields+momenta)
-    // times -- vector of times at which the solution will be recoreded
+    // ks     -- vector of *conventionally normalized* wavenumbers for which we wish to compute the twopf
+    //           (conventional normalization means k=1 is the mode which crosses the horizon at Nstar)
+    // Nstar  -- horizon-exit of the mode with k-comoving = 1 takes place at Nstar e-folds
+    // ics    -- vector of initial conditions for background fields (or fields+momenta)
+    // times  -- vector of times at which the solution will be recorded
+    // silent -- set to true to suppress verbose output
     template <typename number>
     transport::twopf<number> $$__MODEL_basic<number>::twopf(const std::vector<double>& ks, double Nstar,
                                                             const std::vector<number>& ics, const std::vector<double>& times,
@@ -185,16 +186,17 @@ namespace transport
         std::vector<double> com_ks = this->normalize_comoving_ks(real_ics, ks, *(times.begin()), Nstar, silent);
 
         // allocate space for storing the solution
-        std::vector< std::vector<number> >                background_history;
-        std::vector< std::vector< std::vector<number> > > twopf_history;
-
-        // ensure there is sufficient space for the solution
         // the index convention is:
         //   first index  - time
         //   second index - component number
         //   third index  - k mode
+        std::vector< std::vector<number> >                background_history;
+        std::vector< std::vector< std::vector<number> > > twopf_history;
+
+        // ensure there is sufficient space for the solution
         this->resize_twopf_history(twopf_history, times, ks);
 
+        bool stored_background = false;
 #pragma omp parallel for schedule(dynamic)
         for(int i = 0; i < ks.size(); i++)
           {
@@ -203,6 +205,12 @@ namespace transport
 
             // write the time history for this particular k-mode into kmode_background_history, kmode_twopf_history
             this->twopf_kmode(com_ks[i], times, real_ics, kmode_background_history, kmode_twopf_history);
+
+            if(!stored_background)
+              {
+                background_history = kmode_background_history;
+                stored_background  = true;
+              }
 
             // store this twopf history in the twopf_history object
             for(int j = 0; j < kmode_twopf_history.size(); j++)             // j steps through the time-slices
@@ -218,7 +226,7 @@ namespace transport
         transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
 
         transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-                                     times, twopf_history, gauge_xfm, tensor);
+                                     times, background_history, twopf_history, gauge_xfm, tensor);
 
         return(tpf);
       }
@@ -264,7 +272,7 @@ namespace transport
       }
 
 
-    // make initial conditions for each components of the 2pf
+    // make initial conditions for each component of the 2pf
     // x         - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
     // start     - starting position of twopf components within the state vector
     // kmode     - *comoving normalized* wavenumber for which we will compute the twopf
