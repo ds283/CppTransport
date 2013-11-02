@@ -285,7 +285,7 @@ namespace transport
       template <typename number>
       background<number>& twopf<number>::get_background()
         {
-          return(this->background);
+          return(this->backg);
         }
 
 
