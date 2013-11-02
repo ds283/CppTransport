@@ -9,6 +9,8 @@
 #include <assert.h>
 #include <ctype.h>
 
+#include <boost/algorithm/string.hpp>
+
 #include "macro.h"
 
 
@@ -41,6 +43,18 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
         line.replace(0, split_point + this->split.size(), "");
       }
 
+    // trim trailing white space on 'line'
+    boost::algorithm::trim_right(line);
+
+    // check if the last component is a semicolon
+    // note std:string::back() and std::string::pop_back() require C++11
+    bool semicolon = false;
+    if(line.back() == ';')
+      {
+        semicolon = true;
+        line.pop_back();
+      }
+
     // extract a set of indices on the LHS, represented by here by the prefix 'line_prefix'
     // these 'lvalue' indices are excluded from the summation convention *within* each line
     // (of course, we eventually want to write out the whole system of equations;
@@ -69,7 +83,7 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
             lhs_indices[j].assignment = (lvalue_assignments[i])[j];
           }
 
-        this->apply_index(cur_line, lhs_indices, current_line, path);
+        this->apply_index(cur_line, lhs_indices, current_line, path, semicolon, line_prefix != "");
 
         if(i > 0)
           {
@@ -140,32 +154,68 @@ void macro_package::apply_post(std::string& line, unsigned int current_line, con
       }
   }
 
+void macro_package::blank_post(std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path)
+  {
+    while(line.find(this->prefix) != std::string::npos)
+      {
+        bool fail = true;
+
+        for(int i = 0; i < this->N_post; i++)
+          {
+            size_t pos;
+
+            if((pos = line.find(this->prefix + this->post_names[i])) != std::string::npos)
+              {
+                std::vector<std::string> arg_list = get_argument_list(line, pos + this->prefix.size() + this->post_names[i].size(),
+                  current_line, path, this->post_args[i], this->post_names[i]);
+
+                // found a simple macro; replace it with its value
+                line.replace(pos, this->prefix.size() + this->post_names[i].size(), "");
+                fail = false;
+              }
+          }
+
+        if(fail)    // no more simple macros to replace
+          {
+            break;
+          }
+      }
+  }
+
+// TODO: this macro replacement implementation is fairly kludgy - would be nice to improve it
 void macro_package::apply_index(std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-  unsigned int current_line, const std::deque<struct inclusion>& path)
+  unsigned int current_line, const std::deque<struct inclusion>& path, const bool semicolon, const bool lhs_present)
   {
     std::string temp_line;
     std::string new_line = "";
 
-    bool semicolon = false;
+    bool replaced = false;    // have we made any macro replacements? if not, might need to add a trailing semicolon later
 
+    // loop while there are still macros to replace, indicated by the presence of 'this->prefix'
     while(line.find(this->prefix) != std::string::npos)
       {
         bool fail = true;   // flag to break out of the loop, if instances of 'this->prefix' still exist but can't be rewritten
 
+        // loop over all macros, testing whether we can make a replacement
         for(int i = 0; i < this->N_index; i++)
           {
             size_t pos;
 
             if((pos = line.find(this->prefix + this->index_names[i])) != std::string::npos)
               {
+                replaced = true;
+
                 std::string temp_line;
                 std::string new_line = "";
 
-                // found a macro -- strip out the index set
+                // found a macro -- strip out the index set associated with it
                 std::vector<struct index_abstract> indices = get_index_set(line, pos + this->prefix.size() + this->index_names[i].size(),
                   this->index_names[i], this->index_indices[i], this->index_ranges[i], current_line, path);
 
                 // work through the index set, matching to lhs_indices if possible
+                // these won't be replaced; instead, we use the current value provided to us
+                // NOTE - this need not replace *all* instances of LHS indices (some might not appear
+                // in association with this macro), so we cannot rely on that later
                 for(int j = 0; j < indices.size(); j++)
                   {
                     for(int k = 0; k < lhs_indices.size(); k++)
@@ -213,12 +263,38 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                     // map indices associated with this macro
                     map_indices(temp_line, this->prefix, assgn[j]);
 
-                    // add this line
-                    if(j != 0)
+                    // check whether there are any unresolved replacements after rewriting any remaining instances of LHS indices
+                    // and removing any instances of post-macros
+
+                    // if there are none, we want to consider adding a terminal semicolon if that has been asked for
+                    // we only do this if there is no LHS present, because only in that case is the result of
+                    // each individual index replacement a complete statement;
+                    // if a LHS is present, then it's the *sum* of all index replacements which is a complete statement
+
+                    // if there are still indices to be replaced then we do nothing
+
+                    std::string temp_temp_line = temp_line;
+                    std::vector<struct index_assignment> lhs_assignments;
+                    for(int k = 0; k < lhs_indices.size(); k++)
                       {
-                        new_line += NEWLINE_CHAR;
-                        semicolon = true;
+                        lhs_assignments.push_back(lhs_indices[k].assignment);
                       }
+                    map_indices(temp_temp_line, this->prefix, lhs_assignments);
+                    this->blank_post(temp_temp_line, current_line, path);
+
+                    if(temp_temp_line.find(this->prefix) == std::string::npos)
+                      {
+                        if(!lhs_present)
+                          {
+                            if(semicolon)
+                              {
+                                temp_line += ';';
+                              }
+                            temp_line += NEWLINE_CHAR;
+                          }
+                      }
+
+                    // add this line
                     new_line += temp_line;
                   }
 
@@ -233,7 +309,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
           }
       }
 
-    // rewrite any instances of LHS indices which have not yet been replaced
+    // finally, rewrite any instances of LHS indices which have not yet been replaced
     // eg. they may not appear explicitly in any RHS macros
     std::vector<struct index_assignment> lhs_assignments;
     for(int i = 0; i < lhs_indices.size(); i++)
@@ -242,7 +318,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
       }
     map_indices(line, this->prefix, lhs_assignments);
 
-    if(semicolon)
+    if((lhs_present || !replaced) && semicolon)
       {
         line += ";";
       }
