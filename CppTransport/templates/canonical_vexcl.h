@@ -9,13 +9,16 @@
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
 
+// required for the fehlberg78 stepper to build
+#define VEXCL_SPLIT_MULTIEXPRESSIONS
+
 #include "transport/transport.h"
 
 #include "$$__CORE"
 
 #include "vexcl/vexcl.hpp"
-#include "boost/numeric/odeint/external/vexcl/vexcl_resize.hpp"
-#include "boost/numeric/odeint/external/vexcl/vexcl_norm_inf.hpp"
+#include "boost/numeric/odeint/external/vexcl/vexcl.hpp"
+
 
 namespace transport
   {
