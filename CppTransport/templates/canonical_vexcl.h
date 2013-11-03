@@ -174,17 +174,15 @@ namespace transport
           this->populate_twopf_ic(dev_x, twopf_start, com_ks, *times.begin(), hst_bg);
 
           // set up a functor to evolve this system
-          $$__MODEL_vexcl_twopf_functor<number> system(this->parameters, this->M_Planck, dev_ks, u2_tensor);
+          $$__MODEL_vexcl_twopf_functor<number> rhs(this->parameters, this->M_Planck, dev_ks, u2_tensor);
         
           // set up a functor to observe the integration
           $$__MODEL_vexcl_twopf_observer<number> obs(background_history, twopf_history, ks.size());
 
           using namespace boost::numeric::odeint;
-          typedef runge_kutta_fehlberg78<twopf_state, double, twopf_state, double,
-            vector_space_algebra, default_operations> stepper;
+          typedef runge_kutta_dopri5<twopf_state, double, twopf_state, double, vector_space_algebra, default_operations> stepper;
 
-          integrate_times( make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR),
-            system, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times( make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
           transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);

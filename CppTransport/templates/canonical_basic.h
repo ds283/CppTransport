@@ -246,7 +246,7 @@ namespace transport
         using namespace boost::numeric::odeint;
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> system(this->parameters, this->M_Planck, kmode);
+        $$__MODEL_basic_twopf_functor<number> rhs(this->parameters, this->M_Planck, kmode);
 
         // set up a functor to observe the integration
         $$__MODEL_basic_twopf_observer<number> obs(background_history, twopf_history);
@@ -268,7 +268,7 @@ namespace transport
         // fix initial conditions - 2pf
         this->populate_twopf_ic(x, twopf_start, kmode, *times.begin(), ics);
 
-        integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
       }
 
 
@@ -467,7 +467,7 @@ namespace transport
         using namespace boost::numeric::odeint;
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  system(this->parameters, this->M_Planck, kmode_1, kmode_2, kmode_3);
+        $$__MODEL_basic_threepf_functor<number>  rhs(this->parameters, this->M_Planck, kmode_1, kmode_2, kmode_3);
 
         // set up a functor to observe the integration
         $$__MODEL_basic_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history);
@@ -511,7 +511,7 @@ namespace transport
         // fix initial conditions - threepf
         this->populate_threepf_ic(x, threepf_start, kmode_1, kmode_2, kmode_3, *times.begin(), ics);
 
-        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state}, system, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
       }
 
 
