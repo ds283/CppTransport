@@ -1,26 +1,7 @@
 model   "dquad";
 name    "Double Quadratic Inflation";
 
-author  "David Seery and others 2013";
-tag     "please cite arXiv:XXXX.YYYY";
-
-% specify which class template should be used with this model
-class   "canonical_vexcl";
-
-% fix properties of the steppers
-background
- { abserr   = 1E-6;
-   relerr   = 1E-6;
-   stepsize = 1E-2;
-   stepper  = "runge_kutta_dopri5";
- };
-
-perturbations
- { abserr   = 1E-8;
-   relerr   = 1E-8;
-   stepsize = 1E-3;
-   stepper  = "runge_kutta_dopri5";
- };
+#include "defaults.model"
 
 % set up the fields
 field
