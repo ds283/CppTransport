@@ -4,7 +4,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// VexCL implementation
+// OpenCL implementation using VexCL
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -51,13 +51,13 @@ namespace transport
               {
               }
 
-            // Integrate background and 2-point function on the GPU
+            // Integrate background and 2-point function on an OpenCL device
             transport::twopf<number>
               twopf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
                     const std::vector<number>& ics, const std::vector<double>& times,
                     bool silent=false);
 
-            // Integrate background, 2-point function and 3-point function on the GPU
+            // Integrate background, 2-point function and 3-point function on an OpenCL device
             // this sample implementation works on a cubic lattice of k-modes
             transport::threepf<number>
               threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
