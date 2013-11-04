@@ -4,7 +4,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// OpenCL implementation using VexCL
+// OpenCL implementation using the VexCL library
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -32,10 +32,10 @@ namespace transport
       #define U2_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
       #define U3_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
 
-      // set up a state type for 2pf integration on the GPU
+      // set up a state type for 2pf integration on an OpenCL device
       typedef vex::multivector<double, TWOPF_STATE_SIZE> twopf_state;
 
-      // set up a state type for 3pf integration on the GPU
+      // set up a state type for 3pf integration on an OpenCL device
       typedef vex::multivector<double, THREEPF_STATE_SIZE> threepf_state;
 
 
@@ -336,7 +336,7 @@ namespace transport
             {
               // ensure destination is sufficiently large
               hst_state[i].resize(this->k_size);
-              vex::copy(x(2*$$__NUMBER_FIELDS + i), hst_state[i]);
+              vex::copy(x(BACKG_SIZE + i), hst_state[i]);
             }
 
           this->twopf_history.push_back(hst_state);
