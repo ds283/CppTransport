@@ -80,7 +80,7 @@ int main(int argc, const char* argv[])
 
     const double        tmin = 0;          // begin at time t = 0
     const double        tmax = 60+Npre;    // end 60 e-folds after horizon-crossing
-    const unsigned int  tN   = 5000;       // record 5000 samples
+    const unsigned int  tN   = 5000;       // record 100 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
