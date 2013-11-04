@@ -224,8 +224,7 @@ namespace transport
                     hst_tp_ic[k] = imaginary ? this->make_twopf_im_ic(i, j, kmodes[k], Ninit, ics) : this->make_twopf_re_ic(i, j, kmodes[k], Ninit, ics);
                   }
 
-                x(start + (2*$$__NUMBER_FIELDS)*i + j) = hst_tp_ic;
-//                vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS)*i + j));
+                vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS)*i + j));
               }
           }
       }
