@@ -4,7 +4,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// VexCL implementation
+// OpenCL implementation using the VexCL library
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -32,10 +32,10 @@ namespace transport
       #define U2_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
       #define U3_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
 
-      // set up a state type for 2pf integration on the GPU
+      // set up a state type for 2pf integration on an OpenCL device
       typedef vex::multivector<double, TWOPF_STATE_SIZE> twopf_state;
 
-      // set up a state type for 3pf integration on the GPU
+      // set up a state type for 3pf integration on an OpenCL device
       typedef vex::multivector<double, THREEPF_STATE_SIZE> threepf_state;
 
 
@@ -51,13 +51,13 @@ namespace transport
               {
               }
 
-            // Integrate background and 2-point function on the GPU
+            // Integrate background and 2-point function on an OpenCL device
             transport::twopf<number>
               twopf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
                     const std::vector<number>& ics, const std::vector<double>& times,
                     bool silent=false);
 
-            // Integrate background, 2-point function and 3-point function on the GPU
+            // Integrate background, 2-point function and 3-point function on an OpenCL device
             // this sample implementation works on a cubic lattice of k-modes
             transport::threepf<number>
               threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
@@ -224,7 +224,8 @@ namespace transport
                     hst_tp_ic[k] = imaginary ? this->make_twopf_im_ic(i, j, kmodes[k], Ninit, ics) : this->make_twopf_re_ic(i, j, kmodes[k], Ninit, ics);
                   }
 
-                vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS)*i + j));
+                x(start + (2*$$__NUMBER_FIELDS)*i + j) = hst_tp_ic;
+//                vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS)*i + j));
               }
           }
       }
@@ -336,7 +337,7 @@ namespace transport
             {
               // ensure destination is sufficiently large
               hst_state[i].resize(this->k_size);
-              vex::copy(x(2*$$__NUMBER_FIELDS + i), hst_state[i]);
+              vex::copy(x(BACKG_SIZE + i), hst_state[i]);
             }
 
           this->twopf_history.push_back(hst_state);
