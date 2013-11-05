@@ -125,6 +125,8 @@ namespace transport
           void rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
                           double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent=false);
 
+          void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, std::vector<double> com_ks);
+
           $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
 
@@ -566,23 +568,23 @@ namespace transport
       number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
         double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
         {
-          const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-          const auto $$__COORDINATE[A]      = __fields[$$__A];
-          const auto __Mp                   = this->M_Planck;
+          const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+          const auto $$__COORDINATE[A] = __fields[$$__A];
+          const auto __Mp              = this->M_Planck;
           
-          const auto __Hsq                  = $$__HUBBLE_SQ;
-          const auto __eps                  = $$__EPSILON;
-          const auto __ainit                = exp(__Ninit);
+          const auto __Hsq             = $$__HUBBLE_SQ;
+          const auto __eps             = $$__EPSILON;
+          const auto __ainit           = exp(__Ninit);
 
-          const auto __kt                   = __kmode_1 + __kmode_2 + __kmode_3;
-          const auto __Ksq                  = __kmode_1*__kmode_2 + __kmode_1*__kmode_3 + __kmode_2*__kmode_3;
-          const auto __kprod3               = 4.0 * __kmode_1*__kmode_1*__kmode_1 * __kmode_2*__kmode_2*__kmode_2 * __kmode_3*__kmode_3*__kmode_3;
+          const auto __kt              = __kmode_1 + __kmode_2 + __kmode_3;
+          const auto __Ksq             = __kmode_1*__kmode_2 + __kmode_1*__kmode_3 + __kmode_2*__kmode_3;
+          const auto __kprod3          = 4.0 * __kmode_1*__kmode_1*__kmode_1 * __kmode_2*__kmode_2*__kmode_2 * __kmode_3*__kmode_3*__kmode_3;
 
-          const auto __k2dotk3              = (__kmode_1*__kmode_1 - __kmode_2*__kmode_2 - __kmode_3*__kmode_3)/2.0;
-          const auto __k1dotk3              = (__kmode_2*__kmode_2 - __kmode_1*__kmode_1 - __kmode_3*__kmode_3)/2.0;
-          const auto __k1dotk2              = (__kmode_3*__kmode_3 - __kmode_1*__kmode_1 - __kmode_2*__kmode_2)/2.0;
+          const auto __k2dotk3         = (__kmode_1*__kmode_1 - __kmode_2*__kmode_2 - __kmode_3*__kmode_3)/2.0;
+          const auto __k1dotk3         = (__kmode_2*__kmode_2 - __kmode_1*__kmode_1 - __kmode_3*__kmode_3)/2.0;
+          const auto __k1dotk2         = (__kmode_3*__kmode_3 - __kmode_1*__kmode_1 - __kmode_2*__kmode_2)/2.0;
 
-          number     __tpf                  = 0.0;
+          number     __tpf             = 0.0;
 
           std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k2k3;
           std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k3k2;
@@ -790,6 +792,61 @@ namespace transport
             }
 
           return(__tpf);
+        }
+
+
+      template <typename number>
+      void populate_kconfig_list(std::vector< struct kconfig_list >& kconfig_list, std::vector<double> com_ks)
+        {
+          // step through the lattice of k-modes, recording which are viable triangular
+          // configurations, and making a queue of work
+          // we insist on ordering, so i <= j <= k
+          bool stored_background = false;
+
+          for(int i = 0; i < com_ks.size(); i++)
+            {
+              bool stored_twopf = false;
+
+              for(int j = 0; j <= i; j++)
+                {
+                  for(int k = 0; k <= j; k++)
+                    {
+                      struct threepf_kconfig kconfig;
+
+                      kconfig.k_t = com_ks[i] + com_ks[j] + com_ks[k];
+
+                      auto maxij  = (com_ks[i] > com_ks[j] ? com_ks[i] : com_ks[j]);
+                      auto maxijk = (maxij > com_ks[k] ? maxij : com_ks[k]);
+
+                      if(kconfig.k_t >= 2.0 * maxijk)   // impose the triangle conditions
+                        {
+                          kconfig.indices[0] = i;
+                          kconfig.indices[1] = j;
+                          kconfig.indices[2] = k;
+
+                          kconfig.beta  = 1.0 - 2.0 * com_ks[k] / kconfig.k_t;
+                          kconfig.alpha = 4.0 * com_ks[i] / kconfig.k_t - 1.0 - kconfig.beta;
+
+                          kconfig.store_background = stored_background ? false : (stored_background = true);
+                          kconfig.store_twopf      = stored_twopf      ? false : (stored_twopf = true);
+
+                          kconfig_list.push_back(kconfig);
+                        }
+                    }
+                }
+
+              if(stored_twopf == false)
+                {
+                  std::cerr << __CPP_TRANSPORT_TWOPF_STORE << std::endl;
+                  exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
+                }
+            }
+
+          if(stored_background == false)
+            {
+              std::cerr << __CPP_TRANSPORT_BACKGROUND_STORE << std::endl;
+              exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
+            }
         }
 
 
