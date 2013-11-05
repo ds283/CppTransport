@@ -153,6 +153,10 @@ int main(int argc, const char* argv[])
     tpf.components_time_history(&py_plt, output_path.string() + "/k_cross", twopf_cross);
     tpf.components_time_history(&py_plt, output_path.string() + "/k_momenta", twopf_momenta);
 
+    tpf.components_time_history(&text_plt, output_path.string() + "/k_fields", twopf_fields);
+    tpf.components_time_history(&text_plt, output_path.string() + "/k_cross", twopf_cross);
+    tpf.components_time_history(&text_plt, output_path.string() + "/k_momenta", twopf_momenta);
+
     delete backg_selector;
     delete twopf_fields;
     delete twopf_cross;
