@@ -153,9 +153,6 @@ namespace transport
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
 
-          // ensure there is sufficient space for the solution
-          this->resize_twopf_history(twopf_history, times, ks);
-        
           // SET UP DATA ON THE OPENCL DEVICE
         
           // initialize the device's copy of the k-modes
@@ -230,27 +227,6 @@ namespace transport
       }
 
 
-      template <typename number>
-      void $$__MODEL_vexcl<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf_history, const std::vector<double>& times,
-                                                         const std::vector<double>& ks)
-        {
-          const auto twopf_kmodes_size = ks.size();
-
-          twopf_history.resize(times.size());
-
-          for(int i = 0; i < times.size(); i++)
-            {
-              twopf_history[i].resize(TWOPF_SIZE);
-
-              for(int j = 0; j < TWOPF_SIZE; j++)
-                {
-                  // we need one copy of the components for each k
-                  twopf_history[i][j].resize(twopf_kmodes_size);
-                }
-            }
-        }
-
-
       // IMPLEMENTATION - FUNCTOR FOR 2PF INTEGRATION
 
 
@@ -279,20 +255,21 @@ namespace transport
           #undef __u2
 
           #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+
           #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
 
           #define __u2(a,b)         $$// this->u2_tensor((2*$$__NUMBER_FIELDS*a)+b)
 
-#undef __background
-#undef __dtwopf
-#define __background(a) __dxdt(__start_background + a)
-#define __dtwopf(a,b)   __dxdt(__start_twopf      + (2*$$__NUMBER_FIELDS*a) + b)
+          #undef __background
+          #undef __dtwopf
+          #define __background(a) __dxdt(__start_background + a)
+          #define __dtwopf(a,b)   __dxdt(__start_twopf      + (2*$$__NUMBER_FIELDS*a) + b)
 
           // evolve the background
-          __background($$__A) = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
+          __background($$__A)    = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
 
           // set up a k-dependent u2 tensor
-          __u2($$__A,$$__B) = $$// $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+          __u2($$__A,$$__B)      = $$// $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
           // evolve the 2pf
           // here, we are dealing only with the real part - which is symmetric
