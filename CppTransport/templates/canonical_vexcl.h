@@ -27,7 +27,7 @@ namespace transport
       #define THREEPF_SIZE ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
 
       #define TWOPF_STATE_SIZE   (BACKG_SIZE + TWOPF_SIZE)
-      #define THREEPF_STATE_SIZE (BACKG_SIZE + 3*TWOPF_SIZE + THREEPF_SIZE)
+      #define THREEPF_STATE_SIZE (BACKG_SIZE + 6*TWOPF_SIZE + THREEPF_SIZE)
 
       #define U2_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
       #define U3_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
@@ -71,7 +71,7 @@ namespace transport
 
             template <typename State>
             void populate_threepf_ic(State& x, unsigned int start,
-                                     const std:vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
+                                     const std::vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
                                      double Ninit, const std::vector<number>& ic);
 
             void populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
@@ -130,12 +130,12 @@ namespace transport
           vex::multivector<double, U2_SIZE>& u2_k1, vex::multivector<double, U2_SIZE>& u2_k2, vex::multivector<double, U2_SIZE>& u2_k3,
           vex::multivector<double, U3_SIZE>& u3_k1k2k3, vex::multivector<double, U3_SIZE>& u3_k2k1k3, vex::multivector<double, U3_SIZE>& u3_k3k1k2)
         : parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
-          u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensoe(u2_k3),
+          u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
           u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
           {
           }
 
-        void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
+        void operator()(const threepf_state& __x, threepf_state& __dxdt, double __t);
 
       private:
         const number						           M_Planck;
@@ -160,13 +160,15 @@ namespace transport
     class $$__MODEL_vexcl_threepf_observer
       {
       public:
-        $$__MODEL_vexcl_twopf_observer(std::vector< std::vector<number> >& bh,
+        $$__MODEL_vexcl_threepf_observer(std::vector< std::vector<number> >& bh,
           std::vector< std::vector< std::vector<number> > >& tpf_re_h, std::vector< std::vector< std::vector<number> > >& tpf_im_h,
           std::vector< std::vector< std::vector<number> > >& thpf_h,
-          const std::vector< struct threepf_kconfig >& kconfig_list)
-        : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), k_size(ks) {}
+          const std::vector< struct threepf_kconfig >& kc_l)
+        : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
+          {
+          }
 
-        void operator()(const twopf_state& x, double t);
+        void operator()(const threepf_state& x, double t);
 
       private:
         std::vector< std::vector<number> >&                background_history;
@@ -297,7 +299,7 @@ namespace transport
 
 
       template <typename number>
-      transport::threepf<number> $$__MODEL_basic<number>::threepf(const std::vector<double>& ks, double Nstar,
+      transport::threepf<number> $$__MODEL_vexcl<number>::threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
         const std::vector<number>& ics, const std::vector<double>& times,
         bool silent)
         {
@@ -322,13 +324,13 @@ namespace transport
           //   first index  - time
           //   second index - component number
           //   third index  = k mode
-          std::vector< std::vector<number> >
+          std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_re_history;
           std::vector< std::vector< std::vector<number> > > twopf_im_history;
           std::vector< std::vector< std::vector<number> > > threepf_history;
 
           std::vector< struct threepf_kconfig >             kconfig_list;
-          this->populate_kconfig_list(com_ks, kconfig_list);
+          this->populate_kconfig_list(kconfig_list, com_ks);
 
           // SET UP DATA ON THE OPENCL DEVICE
 
@@ -355,13 +357,13 @@ namespace transport
           vex::multivector<double, U2_SIZE> u2_k2_tensor(ctx.queue(), kconfig_list.size());
           vex::multivector<double, U2_SIZE> u2_k3_tensor(ctx.queue(), kconfig_list.size());
 
-          vex::multivector<double, U2_SIZE> u3_k1k2k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U2_SIZE> u3_k2k1k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U2_SIZE> u3_k3k1k2_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, U3_SIZE> u3_k1k2k3_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, U3_SIZE> u3_k2k1k3_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, U3_SIZE> u3_k3k1k2_tensor(ctx.queue(), kconfig_list.size());
 
           // set up state vector, and populate it with initial conditions for the background, twopf and threepf
           threepf_state dev_x(ctx.queue(), kconfig_list.size());
-          this->populate_threepf_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, kst_k3s, *(times.begin()), hst_bg);
+          this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *(times.begin()), hst_bg);
 
           // set up a functor to evolve this system
           $$__MODEL_vexcl_threepf_functor<number> rhs(this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s,
@@ -369,10 +371,10 @@ namespace transport
                                                       u3_k1k2k3_tensor, u3_k2k1k3_tensor, u3_k3k1k2_tensor);
 
           // set up a functor to observe the integration
-          $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list.size());
+          $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list);
 
           using namespace boost::numeric::odeint;
-          typedef runge_kutta_dopri5<threepf_state, double threepf_state, double, vector_space_algebra, default_operations> stepper;
+          typedef runge_kutta_dopri5<threepf_state, double, threepf_state, double, vector_space_algebra, default_operations> stepper;
 
           integrate_times(make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
@@ -388,8 +390,8 @@ namespace transport
 
       template <typename number>
       template <typename State>
-      void populate_threepf_ic(State& x, unsigned int start,
-        const std:vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
+      void $$__MODEL_vexcl<number>::populate_threepf_ic(State& x, unsigned int start,
+        const std::vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
         double Ninit, const std::vector<number>& ic)
         {
           // TODO - need some form of introspection to determine size of state vector
@@ -410,7 +412,7 @@ namespace transport
                       // populate hst_tp_ic with appropriate ics for the (i,j,k)th component
                       for(int m = 0; m < k1s.size(); m++)
                         {
-                          hst_pc_ic[m] = this->make_threepf_ic(i, j, k, k1s[m], k2s[m], k3s[m], Ninit, ics);
+                          hst_tp_ic[m] = this->make_threepf_ic(i, j, k, k1s[m], k2s[m], k3s[m], Ninit, ic);
                         }
 
                       vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k));
@@ -421,7 +423,7 @@ namespace transport
 
 
       template <typename number>
-      void $$__MODEL_vexcl::populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
+      void $$__MODEL_vexcl<number>::populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
         const std::vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
         double Ninit, const std::vector<number>& ic)
         {
@@ -437,22 +439,23 @@ namespace transport
           const auto twopf_im_k2_start  = twopf_re_k2_start + TWOPF_SIZE;
           const auto twopf_re_k3_start  = twopf_im_k2_start + TWOPF_SIZE;
           const auto twopf_im_k3_start  = twopf_re_k3_start + TWOPF_SIZE;
+          const auto threepf_start      = twopf_im_k3_start + TWOPF_SIZE;
 
           // fix background initial conditions
-          x(background_start + $$__A) = $$// ics[$$__A];
+          x(background_start + $$__A) = $$// ic[$$__A];
 
           // fix initial conditions - real 2pfs
-          this->populate_twopf_ic(x, twopf_re_k1_start, k1s, Ninit, ics, false);
-          this->populate_twopf_ic(x, twopf_re_k2_start, k2s, Ninit, ics, false);
-          this->populate_twopf_ic(x, twopf_re_k3_start, k3s, Ninit, ics, false);
+          this->populate_twopf_ic(x, twopf_re_k1_start, k1s, Ninit, ic, false);
+          this->populate_twopf_ic(x, twopf_re_k2_start, k2s, Ninit, ic, false);
+          this->populate_twopf_ic(x, twopf_re_k3_start, k3s, Ninit, ic, false);
 
           // fix initial conditions - imaginary 3pfs
-          this->populate_twopf_ic(x, twopf_im_k1_start, k1s, Ninit, ics, true);
-          this->populate_twopf_ic(x, twopf_im_k2_start, k2s, Ninit, ics, true);
-          this->populate_twopf_ic(x, twopf_im_k3_start, k3s, Ninit, ics, true);
+          this->populate_twopf_ic(x, twopf_im_k1_start, k1s, Ninit, ic, true);
+          this->populate_twopf_ic(x, twopf_im_k2_start, k2s, Ninit, ic, true);
+          this->populate_twopf_ic(x, twopf_im_k3_start, k3s, Ninit, ic, true);
 
           // fix initial conditions - threepf
-          this->populate_threepf_ic(x, threepf_start, k1s, k2s, k3s, Ninit, ics);
+          this->populate_threepf_ic(x, threepf_start, k1s, k2s, k3s, Ninit, ic);
         }
 
 
@@ -552,7 +555,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
+    void $$__MODEL_vexcl_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
       {
         const unsigned int __start_background  = 0;
         const unsigned int __start_twopf_re_k1 = __start_background  + BACKG_SIZE;
@@ -589,11 +592,19 @@ namespace transport
         #undef __twopf_im_k3_$$__A_$$__A      $$//
         #undef __threepf_$$__A_$$__B_$$__C    $$//
 
-        #undef __u2_$$__A_$$__B               $$//
-        #undef __u2
+        #undef __u2_k1_$$__A_$$__B            $$//
+        #undef __u2_k2_$$__A_$$__B            $$//
+        #undef __u2_k3_$$__A_$$__B            $$//
+        #undef __u2_k1
+        #undef __u2_k2
+        #undef __u2_k3
 
-        #undef __u3_$$__A_$$__B_$$__C         $$//
-        #undef __u3
+        #undef __u3_k1k2k3_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k2k1k3_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k3k1k2_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k1k2k3
+        #undef __u3_k2k1k3
+        #undef __u3_k3k1k2
 
         #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_re_k1 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
         #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_im_k1 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
@@ -603,15 +614,20 @@ namespace transport
         #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
         #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x(__start_threepf   + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS)*$$__B+$$__C)))
 
-        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
+        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
 
-        #define __u2_k1(a,b)                  $$// this->u2_k1_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u2_k1(a,b)                  $$// this->u2_k2_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u2_k1(a,b)                  $$// this->u2_k3_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u3_k1k2k3(a,b,c)            $$// this->u3_k1k2k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
-        #define __u3_k1k2k3(a,b,c)            $$// this->u3_k2k1k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
-        #define __u3_k1k2k3(a,b,c)            $$// this->u3_k3k1k2_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
+        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k1k2k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
+        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k2k1k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
+        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k3k1k2_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
+
+        #define __u2_k1(a,b)                       this->u2_k1_tensor((2*$$__NUMBER_FIELDS*a)+b)
+        #define __u2_k2(a,b)                       this->u2_k2_tensor((2*$$__NUMBER_FIELDS*a)+b)
+        #define __u2_k3(a,b)                       this->u2_k3_tensor((2*$$__NUMBER_FIELDS*a)+b)
+        #define __u3_k1k2k3(a,b,c)                 this->u3_k1k2k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
+        #define __u3_k2k1k3(a,b,c)                 this->u3_k2k1k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
+        #define __u3_k3k1k2(a,b,c)                 this->u3_k3k1k2_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
 
         #undef __background
         #undef __dtwopf_re_k1
@@ -628,7 +644,7 @@ namespace transport
         #define __dtwopf_im_k2(a,b) __dxdt(__start_twopf_im_k2 + (2*$$__NUMBER_FIELDS*a) + b)
         #define __dtwopf_re_k3(a,b) __dxdt(__start_twopf_re_k3 + (2*$$__NUMBER_FIELDS*a) + b)
         #define __dtwopf_im_k3(a,b) __dxdt(__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dthreepf(a,b,c    __dxdt(__start_threepf     + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*a + (2*$$__NUMBER_FIELDS)*b + c)
+        #define __dthreepf(a,b,c)   __dxdt(__start_threepf     + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*a + (2*$$__NUMBER_FIELDS)*b + c)
 
         // evolve the background
         __background($$__A)            = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
@@ -691,11 +707,19 @@ namespace transport
         #undef __twopf_im_k3_$$__A_$$__A      $$//
         #undef __threepf_$$__A_$$__B_$$__C    $$//
 
-        #undef __u2_$$__A_$$__B               $$//
-        #undef __u2
+        #undef __u2_k1_$$__A_$$__B            $$//
+        #undef __u2_k2_$$__A_$$__B            $$//
+        #undef __u2_k3_$$__A_$$__B            $$//
+        #undef __u2_k1
+        #undef __u2_k2
+        #undef __u2_k3
 
-        #undef __u3_$$__A_$$__B_$$__C         $$//
-        #undef __u3
+        #undef __u3_k1k2k3_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k2k1k3_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k3k1k2_$$__A_$$__B_$$__C  $$//
+        #undef __u3_k1k2k3
+        #undef __u3_k2k1k3
+        #undef __u3_k3k1k2
 
         #undef __background
         #undef __dtwopf_re_k1
@@ -712,7 +736,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_vexcl_three_observer<number>::operator()(const twopf_state& x, double t)
+    void $$__MODEL_vexcl_threepf_observer<number>::operator()(const threepf_state& x, double t)
       {
         const unsigned int start_background  = 0;
         const unsigned int start_twopf_re_k1 = start_background  + BACKG_SIZE;
@@ -743,7 +767,7 @@ namespace transport
             std::vector<number> hst_im(this->kconfig_list.size());
 
             vex::copy(x(start_twopf_re_k1 + i), hst_re);
-            vex::copy(x(start_twopf_im_k1 + u), hst_im);
+            vex::copy(x(start_twopf_im_k1 + i), hst_im);
             for(int j = 0; j < this->kconfig_list.size(); j++)
               {
                 if(this->kconfig_list[j].store_background)

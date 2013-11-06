@@ -796,7 +796,7 @@ namespace transport
 
 
       template <typename number>
-      void populate_kconfig_list(std::vector< struct kconfig_list >& kconfig_list, std::vector<double> com_ks)
+      void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, std::vector<double> com_ks)
         {
           // step through the lattice of k-modes, recording which are viable triangular
           // configurations, and making a queue of work

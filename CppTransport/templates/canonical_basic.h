@@ -340,7 +340,7 @@ namespace transport
         std::vector< std::vector< std::vector<number> > > threepf_history;
 
         std::vector< struct threepf_kconfig >             kconfig_list;
-        this->populate_kconfig_list(com_ks, kconfig_list);
+        this->populate_kconfig_list(kconfig_list, com_ks);
 
         // ensure there is enough space to store the solution
         // the index convention is
