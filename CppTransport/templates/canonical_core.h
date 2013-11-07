@@ -125,7 +125,7 @@ namespace transport
           void rescale_ks(const std::vector<double>& __ks, std::vector<double>& __com_ks,
                           double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent=false);
 
-          void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, std::vector<double> com_ks);
+          void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, const std::vector<double>& com_ks);
 
           $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
         };
@@ -796,7 +796,7 @@ namespace transport
 
 
       template <typename number>
-      void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, std::vector<double> com_ks)
+      void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, const std::vector<double>& com_ks)
         {
           // step through the lattice of k-modes, recording which are viable triangular
           // configurations, and making a queue of work
