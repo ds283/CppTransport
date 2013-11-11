@@ -675,11 +675,11 @@ namespace transport
         // these should be zero anyway
         // also project out the off-diagonal momentum-field pieces
 #undef __TWOPF_IM
-#define __TWOPF_IM(i,j,var) (((IS_FIELD(i) && IS_MOMENTUM(j)) || (IS_MOMENTUM(i) && IS_FIELD(j)) && (SPECIES(i) == SPECIES(j))) ? var : 0.0)
+#define __TWOPF_IM(i,j,var) (((is_field(i) && is_momentum(j)) || (is_momentum(i) && is_field(j)) && (species(i) == species(j))) ? var : 0.0)
         // project out the off-diagonal momentum-field or momentum-momentum components of the real 2pf
         // these tend to be noisy
 #undef __TWOPF_RE
-#define __TWOPF_RE(i,j,var) ((((IS_FIELD(i) && IS_MOMENTUM(j)) || (IS_MOMENTUM(i) && IS_FIELD(j))) && (SPECIES(i) != SPECIES(j))) ? 0.0 : var)
+#define __TWOPF_RE(i,j,var) ((((is_field(i) && is_momentum(j)) || (is_momentum(i) && is_field(j))) && (species(i) != species(j))) ? 0.0 : var)
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
