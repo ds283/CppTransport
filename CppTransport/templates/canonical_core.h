@@ -17,17 +17,22 @@ namespace transport
     // these can be replaced freely
     // we mark them as constexpr so the index arithmetic is performed at compile time where possible
 
-    constexpr unsigned int index_flatten(unsigned int a)
+    constexpr unsigned int __parameter_flatten(unsigned int a)
       {
         return(a);
       }
 
-    constexpr unsigned int index_flatten(unsigned int a, unsigned int b)
+    constexpr unsigned int __index_flatten(unsigned int a)
+      {
+        return(a);
+      }
+
+    constexpr unsigned int __index_flatten(unsigned int a, unsigned int b)
       {
         return(2*$$__NUMBER_FIELDS*a + b);
       }
 
-    constexpr unsigned int index_flatten(unsigned int a, unsigned int b, unsigned int c)
+    constexpr unsigned int __index_flatten(unsigned int a, unsigned int b, unsigned int c)
       {
         return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c);
       }
@@ -229,8 +234,8 @@ namespace transport
       {
         assert(fields.size() == $$__NUMBER_FIELDS);
 
-        const auto $$__PARAMETER[1] = this->parameters[$$__1];
-        const auto $$__FIELD[a]     = fields[$$__a];
+        const auto $$__PARAMETER[1] = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__FIELD[a]     = fields[__index_flatten($$__a)];
         const auto __Mp             = this->M_Planck;
 
         number rval = $$__V;
@@ -385,8 +390,8 @@ namespace transport
         if(__ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
-            const auto $$__PARAMETER[1] = this->parameters[$$__1];
-            const auto $$__FIELD[a]     = __ics[$$__a];
+            const auto $$__PARAMETER[1] = this->parameters[__parameter_flatten($$__1)];
+            const auto $$__FIELD[a]     = __ics[__index_flatten($$__a)];
             const auto __Mp             = this->M_Planck;
 
             __rics.push_back($$__SR_VELOCITY[a]);
@@ -415,8 +420,8 @@ namespace transport
 
         for(int i = 0; i < this->N_fields; i++)
           {
-            stream << "  " << this->field_names[i] << " = " << ics[i]
-              << "; d(" << this->field_names[i] << ")/dN = " << ics[this->N_fields+i] << std::endl;
+            stream << "  " << this->field_names[__index_flatten(i)] << " = " << ics[__index_flatten(i)]
+              << "; d(" << this->field_names[__index_flatten(i)] << ")/dN = " << ics[__index_flatten(momentum(i))] << std::endl;
           }
 
         stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
@@ -437,8 +442,8 @@ namespace transport
     number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
       double __k, double __Ninit, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
@@ -449,9 +454,9 @@ namespace transport
 
         number     __tpf             = 0.0;
 
-        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
-
-        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
+//        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+//
+//        __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
         // NOTE - conventions for the scale factor are
         //   a = exp(t), where t is the user-defined time (usually = 0 at the start of the integration)
@@ -522,8 +527,8 @@ namespace transport
   number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
     double __k, double __Ninit, const std::vector<number>& __fields)
     {
-      const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-      const auto $$__COORDINATE[A] = __fields[$$__A];
+      const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+      const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
       const auto __Mp              = this->M_Planck;
 
       const auto __Hsq             = $$__HUBBLE_SQ;
@@ -534,9 +539,9 @@ namespace transport
 
       number     __tpf             = 0.0;
 
-      std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
-
-      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
+//      std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
+//
+//      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
       if(is_field(__i) && is_momentum(__j))
@@ -571,8 +576,8 @@ namespace transport
         assert(__fields.size() == 2*$$__NUMBER_FIELDS);
         assert(__ks.size() == __com_ks.size());
 
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         // __fields should be the field configuration at horizon
@@ -586,8 +591,8 @@ namespace transport
 
             for(int i = 0; i < this->N_fields; i++)
               {
-                __stream << "  " << this->field_names[i] << " = " << __fields[i]
-                         << "; d(" << this->field_names[i] << ")/dN = " << __fields[this->N_fields+i] << std::endl;
+                __stream << "  " << this->field_names[__index_flatten(i)] << " = " << __fields[__index_flatten(i)]
+                         << "; d(" << this->field_names[__index_flatten(i)] << ")/dN = " << __fields[__index_flatten(momentum(i))] << std::endl;
               }
             __stream << "  H = " << sqrt(__Hsq) << std::endl << std::endl;
           }
@@ -606,8 +611,8 @@ namespace transport
     number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
       double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
@@ -894,14 +899,14 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_functor<number>::operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __x[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __x[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
-        __dxdt[$$__A]                = $$__U1_PREDEF[A]{__Hsq,__eps};
+        __dxdt[__index_flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }
 
 
@@ -941,8 +946,8 @@ namespace transport
     void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
       std::vector<number>& __dN)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __state[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
@@ -954,8 +959,8 @@ namespace transport
     void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
       std::vector< std::vector<number> >& __ddN)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-        const auto $$__COORDINATE[A] = __state[$$__A];
+        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A] = __state[__index_flatten($$__A)];
         const auto __Mp              = this->M_Planck;
 
         __ddN.resize(2*$$__NUMBER_FIELDS);
@@ -975,8 +980,8 @@ namespace transport
     std::vector< std::vector<number> > $$__MODEL_tensor_gadget<number>::u2(const std::vector<number>& __fields,
       double __k, double __N)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
+        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
@@ -1000,8 +1005,8 @@ namespace transport
     std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::u3(const std::vector<number>& __fields,
       double __km, double __kn, double __kr, double __N)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
+        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
@@ -1029,8 +1034,8 @@ namespace transport
     std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::A(const std::vector<number>& __fields,
       double __km, double __kn, double __kr, double __N)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
+        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
@@ -1058,8 +1063,8 @@ namespace transport
     std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::B(const std::vector<number>& __fields,
       double __km, double __kn, double __kr, double __N)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
+        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
@@ -1087,8 +1092,8 @@ namespace transport
     std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::C(const std::vector<number>& __fields,
       double __km, double __kn, double __kr, double __N)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
+        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
+        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
