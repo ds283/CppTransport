@@ -21,9 +21,7 @@
 #include "latex_output.h"
 #include "label_gadget.h"
 #include "plot_gadget.h"
-#include "gauge_xfm_gadget.h"
 #include "index_selector.h"
-#include "tensor_gadget.h"
 #include "messages_en.h"
 
 #include "background.h"
@@ -43,19 +41,17 @@ namespace transport
       class twopf
         {
           public:
-            twopf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
-              const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
+            twopf(const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf,
-              gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
-              : N_fields(N_f), labels(N_f, f_names, l_names),
+              model<number>* p)
+              : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(N_f, f_names, l_names, sp, b, t->clone()), samples(twopf),
-                gauge_xfm(gx), tensors(t),
+                backg(sp, b, p), samples(twopf),
+                parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH),
                 plot_precision(DEFAULT_PLOT_PRECISION)
               {}
-            ~twopf() { /*delete this->gauge_xfm; delete this->tensors*/ }
 
             background<number>& get_background();
 
@@ -89,11 +85,8 @@ namespace transport
             // return values for a given kvalue and timeslice
             std::vector< number >              get_value(unsigned int time, unsigned int kmode);
 
-            unsigned int                                            N_fields;          // number of fields
+            model<number>*                                          parent;            // parent model object
 
-            gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
-
-            tensor_gadget<number>*                                  tensors;           // tensor calculation gadget
             label_gadget                                            labels;            // holds names (and LaTeX names) of fields
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
@@ -200,14 +193,14 @@ namespace transport
           for(int j = 0; j < this->sample_points.size(); j++)
             {
               // now, for the chosen k-mode i, slice up the time series
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
-                  for(int n = 0; n < 2*this->N_fields; n++)
+                  for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
                       std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n };
                       if(selector->is_on(index_set))
                         {
-                          unsigned int samples_index = 2*this->N_fields*m + n;
+                          unsigned int samples_index = this->parent->client_flatten(m,n);
 
                           data[j].push_back(this->samples[j][samples_index][i]);
                         }
@@ -254,19 +247,19 @@ namespace transport
 
               // compute gauge transformation
               std::vector<number> dN;
-              this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+              this->parent->compute_gauge_xfm_1(this->backg.get_value(j), dN);
 
               data[j][0] = 0;
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
-                  for(int n = 0; n < 2*this->N_fields; n++)
+                  for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
-                      unsigned int samples_index = 2*this->N_fields*m + n;
+                      unsigned int samples_index = this->parent->client_flatten(m,n);
                       data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
                     }
                 }
 
-              if(dimensionless)   // plotting the dimensionless power spectrum?
+              if(dimensionless)   // are we plotting the dimensionless power spectrum?
                 {
                   data[j][0] *= pow(this->sample_com_ks[i], 3.0) / (2.0*M_PI*M_PI);
                 }
@@ -279,7 +272,7 @@ namespace transport
       template <typename number>
       index_selector<2>* twopf<number>::manufacture_selector()
         {
-          return new index_selector<2>(this->N_fields);
+          return new index_selector<2>(this->parent->get_N_fields());
         }
 
       template <typename number>
@@ -296,8 +289,7 @@ namespace transport
           writer.set_display_width(obj.get_wrap_width());
 
           index_selector<2>* selector = obj.manufacture_selector();
-
-          std::vector<std::string> labels = obj.make_labels(selector, false);
+          std::vector<std::string> labels = obj.labels.make_labels(selector, false);
 
           for(int i = 0; i < obj.sample_ks.size(); i++)
             {
@@ -309,18 +301,20 @@ namespace transport
               writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
             }
 
+          delete selector;
+
           return(out);
         }
 
       template <typename number>
       std::vector<number> twopf<number>::get_value(unsigned int time, unsigned int kmode)
         {
-          std::vector<number> rval(2*this->N_fields * 2*this->N_fields);
+          std::vector<number> rval(2*this->parent->get_N_fields() * 2*this->parent->get_N_fields());
           
           assert(time < this->sample_points.size());
           assert(kmode < this->sample_ks.size());
           
-          for(int i = 0; i < 2*this->N_fields*2*this->N_fields; i++)
+          for(int i = 0; i < 2*this->parent->get_N_fields() * 2*this->parent->get_N_fields(); i++)
             {
               rval[i] = this->samples[time][i][kmode];
             }

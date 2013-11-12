@@ -10,54 +10,6 @@
 #include <assert.h>
 #include <math.h>
 
-// set up constexpr functions which are needed by all the transport/ headers
-namespace transport
-  {
-    // set up maps for flattening index sets into a single, linear index
-    // these can be replaced freely
-    // we mark them as constexpr so the index arithmetic is performed at compile time where possible
-
-    constexpr unsigned int __parameter_flatten(unsigned int a)
-      {
-        return(a);
-      }
-
-    constexpr unsigned int __index_flatten(unsigned int a)
-      {
-        return(a);
-      }
-
-    constexpr unsigned int __index_flatten(unsigned int a, unsigned int b)
-      {
-        return(2*$$__NUMBER_FIELDS*a + b);
-      }
-
-    constexpr unsigned int __index_flatten(unsigned int a, unsigned int b, unsigned int c)
-      {
-        return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c);
-      }
-
-    constexpr unsigned int species(unsigned int a)
-      {
-        return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a);
-      }
-
-    constexpr unsigned int momentum(unsigned int a)
-      {
-        return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS);
-      }
-
-    constexpr unsigned int is_field(unsigned int a)
-      {
-        return(a < $$__NUMBER_FIELDS);
-      }
-    
-    constexpr unsigned int is_momentum(unsigned int a)
-      {
-        return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS);
-      }
-  }
-
 #include "boost/numeric/odeint.hpp"
 #include "transport/transport.h"
 
@@ -67,51 +19,38 @@ namespace transport
 
 namespace transport
   {
-    static std::vector<std::string> $$__MODEL_field_names = $$__FIELD_NAME_LIST;
-    static std::vector<std::string> $$__MODEL_latex_names = $$__LATEX_NAME_LIST;
-    static std::vector<std::string> $$__MODEL_param_names = $$__PARAM_NAME_LIST;
-    static std::vector<std::string> $$__MODEL_platx_names = $$__PLATX_NAME_LIST;
-    static std::vector<std::string> $$__MODEL_state_names = $$__STATE_NAME_LIST;
-
-
-    // *********************************************************************************************
-
-
-    // gauge transformation gadget
     template <typename number>
-    class $$__MODEL_gauge_xfm_gadget : public gauge_xfm_gadget<number>
+    using backg_state = std::vector<number>;
+
+    namespace $$__MODEL_pool
       {
-        public:
-          $$__MODEL_gauge_xfm_gadget(number Mp, const std::vector<number>& ps) : gauge_xfm_gadget<number>(Mp, ps) {}
+        static std::vector<std::string> field_names = $$__FIELD_NAME_LIST;
+        static std::vector<std::string> latex_names = $$__LATEX_NAME_LIST;
+        static std::vector<std::string> param_names = $$__PARAM_NAME_LIST;
+        static std::vector<std::string> platx_names = $$__PLATX_NAME_LIST;
+        static std::vector<std::string> state_names = $$__STATE_NAME_LIST;
 
-          $$__MODEL_gauge_xfm_gadget* clone() { return(new $$__MODEL_gauge_xfm_gadget(this->M_Planck, this->parameters)); }
+        constexpr unsigned int backg_size         = (2*$$__NUMBER_FIELDS);
+        constexpr unsigned int twopf_size         = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int threepf_size       = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+     
+        constexpr unsigned int backg_start        = 0;
+        constexpr unsigned int twopf_start        = backg_start + backg_size;
+        constexpr unsigned int twopf_re_k1_start  = twopf_start;
+        constexpr unsigned int twopf_im_k1_start  = twopf_re_k1_start + twopf_size;
+        constexpr unsigned int twopf_re_k2_start  = twopf_im_k1_start + twopf_size;
+        constexpr unsigned int twopf_im_k2_start  = twopf_re_k2_start + twopf_size;
+        constexpr unsigned int twopf_re_k3_start  = twopf_im_k2_start + twopf_size;
+        constexpr unsigned int twopf_im_k3_start  = twopf_re_k3_start + twopf_size;
+        constexpr unsigned int threepf_start      = twopf_im_k3_start + twopf_size;
 
-          void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
-          void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
-      };
+        constexpr unsigned int backg_state_size   = backg_size;
+        constexpr unsigned int twopf_state_size   = backg_size + twopf_size;
+        constexpr unsigned int threepf_state_size = backg_size + 6*twopf_size + threepf_size;
 
-
-    // tensor calculation gadget
-    template <typename number>
-    class $$__MODEL_tensor_gadget : public tensor_gadget<number>
-      {
-        public:
-          $$__MODEL_tensor_gadget(number Mp, const std::vector<number>& ps) : tensor_gadget<number>(Mp, ps) {}
-
-          $$__MODEL_tensor_gadget* clone() { return(new $$__MODEL_tensor_gadget(this->M_Planck, this->parameters)); }
-
-          std::vector< std::vector<number> >
-            u2(const std::vector<number>& __fields, double __k, double __N);
-          std::vector< std::vector< std::vector<number> > >
-            u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-
-          std::vector< std::vector< std::vector<number> > >
-            A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-          std::vector< std::vector< std::vector<number> > >
-            B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-          std::vector< std::vector< std::vector<number> > >
-            C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N);
-      };
+        constexpr unsigned int u2_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int u3_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+      }
 
 
     // *********************************************************************************************
@@ -123,10 +62,7 @@ namespace transport
     class $$__MODEL : public canonical_model<number>
       {
       public:
-
         $$__MODEL(number Mp, const std::vector<number>& ps);
-
-        ~$$__MODEL();
 
         // Functions inherited from canonical_model
         number V(std::vector<number> fields);
@@ -141,10 +77,45 @@ namespace transport
         // so this amounts to computing initial conditions at time N = Nstar - Npre, taking N=0 at the supplied ics
         std::vector<number> find_ics(const std::vector<number>& ics, double Nstar, double Npre, double tolerance=DEFAULT_ICS_GAP_TOLERANCE);
 
-        // Calculation of gauge-transformation coefficients (to zeta)
-        void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
+        // INDEX-FLATTENING FUNCTIONS
 
+        // constexpr version for rapid evaluation during integration
+        constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+
+        // overridden virtual functions from the 'model' base class,
+        // to be used by data containers
+        unsigned int client_flatten(unsigned int a)                                     { return(this->flatten(a)); }
+        unsigned int client_flatten(unsigned int a, unsigned int b)                     { return(this->flatten(a,b)); }
+        unsigned int client_flatten(unsigned int a, unsigned int b, unsigned int c)     { return(this->flatten(a,b,c)); }
+
+        // CALCULATE MODEL-SPECIFIC QUANTITIES
+        // curently, these all return by value
+
+        // calculate gauge transformations to zeta
+        void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
         void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+
+        // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
+        void u2(const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2);
+        void u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3);
+
+        void A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A);
+        void B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B);
+        void C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C);
+
+        // INDEX TRAITS
+
+        constexpr unsigned int species(unsigned int a)     { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); }
+        constexpr unsigned int momentum(unsigned int a)    { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); }
+        constexpr unsigned int is_field(unsigned int a)    { return(a < $$__NUMBER_FIELDS); }
+        constexpr unsigned int is_momentum(unsigned int a) { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
+
+        // overridden virtual functions from the 'model' base class,
+        // to be used to data containers
+        unsigned int client_species(unsigned int a)        { return(this->species(a)); }
+        unsigned int client_momentum(unsigned int a)       { return(this->momentum(a)); }
 
       protected:
 
@@ -169,8 +140,6 @@ namespace transport
                         double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent=false);
 
         void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, const std::vector<double>& com_ks);
-
-        $$__MODEL_gauge_xfm_gadget<number> gauge_xfm;
       };
 
 
@@ -183,9 +152,14 @@ namespace transport
           {
           }
 
-        void operator ()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t);
+        void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
       private:
+        // constexpr version for rapid evaluation during integration
+        constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+
         const number              M_Planck;
         const std::vector<number> parameters;
       };
@@ -200,7 +174,7 @@ namespace transport
           {
           }
 
-        void operator ()(const std::vector<number>& x, double t);
+        void operator ()(const backg_state<number>& x, double t);
 
       private:
         std::vector< std::vector< number> >& history;
@@ -214,18 +188,10 @@ namespace transport
     $$__MODEL<number>::$$__MODEL(number Mp, const std::vector<number>& ps)
     : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
         $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
-        $$__MODEL_field_names, $$__MODEL_latex_names,
-        $$__MODEL_param_names, $$__MODEL_platx_names, ps),
-      gauge_xfm(Mp, ps)
+        $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
+        $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
+        $$__MODEL_pool::state_names, ps)
       {
-        return;
-      }
-
-
-    template <typename number>
-    $$__MODEL<number>::~$$__MODEL()
-      {
-        return;
       }
 
 
@@ -234,8 +200,8 @@ namespace transport
       {
         assert(fields.size() == $$__NUMBER_FIELDS);
 
-        const auto $$__PARAMETER[1] = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__FIELD[a]     = fields[__index_flatten($$__a)];
+        const auto $$__PARAMETER[1] = this->parameters[$$__1];
+        const auto $$__FIELD[a]     = fields[$$__a];
         const auto __Mp             = this->M_Planck;
 
         number rval = $$__V;
@@ -255,11 +221,11 @@ namespace transport
         using namespace boost::numeric::odeint;
 
         // validate initial conditions (or set up ics for momenta if necessary)
-        std::vector<number> x = ics;
-        this->fix_initial_conditions(ics, x);
+        std::vector<number> real_ics = ics;
+        this->fix_initial_conditions(ics, real_ics);
         if(!silent)
           {
-            this->write_initial_conditions(x, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
+            this->write_initial_conditions(real_ics, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
           }
 
         // set up an observer which writes to this history vector
@@ -271,12 +237,12 @@ namespace transport
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(this->parameters, this->M_Planck);
 
+        backg_state<number> x($$__MODEL_pool::backg_state_size);
+        x[this->flatten($$__A)] = $$// real_ics[$$__A];
+
         integrate_times($$__MAKE_BACKG_STEPPER{std::vector<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
 
-        transport::$$__MODEL_tensor_gadget<number>* tensor = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
-
-        transport::background<number> backg($$__NUMBER_FIELDS, $$__MODEL_state_names,
-          $$__MODEL_latex_names, times, history, tensor);
+        transport::background<number> backg(times, history, this);
 
         return(backg);
       }
@@ -390,8 +356,8 @@ namespace transport
         if(__ics.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
-            const auto $$__PARAMETER[1] = this->parameters[__parameter_flatten($$__1)];
-            const auto $$__FIELD[a]     = __ics[__index_flatten($$__a)];
+            const auto $$__PARAMETER[1] = this->parameters[$$__1];
+            const auto $$__FIELD[a]     = __ics[$$__a];
             const auto __Mp             = this->M_Planck;
 
             __rics.push_back($$__SR_VELOCITY[a]);
@@ -420,8 +386,8 @@ namespace transport
 
         for(int i = 0; i < this->N_fields; i++)
           {
-            stream << "  " << this->field_names[__index_flatten(i)] << " = " << ics[__index_flatten(i)]
-              << "; d(" << this->field_names[__index_flatten(i)] << ")/dN = " << ics[__index_flatten(momentum(i))] << std::endl;
+            stream << "  " << this->field_names[i] << " = " << ics[i]
+              << "; d(" << this->field_names[i] << ")/dN = " << ics[this->momentum(i)] << std::endl;
           }
 
         stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
@@ -442,8 +408,8 @@ namespace transport
     number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
       double __k, double __Ninit, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
@@ -465,49 +431,49 @@ namespace transport
         if(is_field(__i) && is_field(__j))              // field-field correlation function
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0);
+            auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0);
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
             // NEXT-ORDER INITIAL CONDITION - induces rapid onset of subhorizon oscillations
-//              auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
-//              auto __subl    = (species(__i) == species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N))
-//                               + (3.0/2.0)*__M[species(__i)][species(__j)];
-//              auto __subsubl = (9.0/4.0)*__M[species(__i)][species(__j)];
+//              auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+//              auto __subl    = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N))
+//                               + (3.0/2.0)*__M[this->species(__i)][this->species(__j)];
+//              auto __subsubl = (9.0/4.0)*__M[this->species(__i)][this->species(__j)];
 
             __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
                     + __subl*__Hsq                          / (2.0*__k*__k*__k)
                     + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
           }
-        else if((is_field(__i) && is_momentum(__j))     // field-momentum or momentum-field correlation function
-                || (is_momentum(__i) && is_field(__j)))
+        else if((is_field(__i) && this->is_momentum(__j))     // field-momentum or momentum-field correlation function
+                || (this->is_momentum(__i) && is_field(__j)))
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (-1.0);
+            auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (-1.0);
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
             // NEXT-ORDER INITIAL CONDITION - induces slow onset of subhorizon oscillations
-//              auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (-1.0 + __eps*(1.0-2.0*__N));
-//              auto __subl    = (species(__i) == species(__j) ? 1.0 : 0.0) * (- __eps);
-//              auto __subsubl = (9.0/4.0)*__M[species(__i)][species(__j)];
+//              auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (-1.0 + __eps*(1.0-2.0*__N));
+//              auto __subl    = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (- __eps);
+//              auto __subsubl = (9.0/4.0)*__M[this->species(__i)][this->species(__j)];
 
             __tpf = + __leading                             / (2.0*__k*__ainit*__ainit)
                     + __subl*__Hsq                          / (2.0*__k*__k*__k)
                     + __subsubl*__Hsq*__Hsq*__ainit*__ainit / (2.0*__k*__k*__k*__k*__k);
           }
-        else if(is_momentum(__i) && is_momentum(__j))   // momentum-momentum correlation function
+        else if(this->is_momentum(__i) && this->is_momentum(__j))   // momentum-momentum correlation function
           {
             // LEADING-ORDER INITIAL CONDITION
-            auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0);
+            auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0);
             auto __subl    = 0.0;
             auto __subsubl = 0.0;
 
             // NEXT-ORDER INITIAL CONDITION - induces rapid onset of subhorizon oscillations
-//              auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
-//              auto __subl    = (species(__i) == species(__j) ? 1.0 : 0.0) * 2.0*__eps
-//                               - (3.0/2.0)*__M[species(__i)][species(__j)];
-//              auto __subsubl = - (3.0/4.0)*__M[species(__i)][species(__j)];
+//              auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+//              auto __subl    = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * 2.0*__eps
+//                               - (3.0/2.0)*__M[this->species(__i)][this->species(__j)];
+//              auto __subsubl = - (3.0/4.0)*__M[this->species(__i)][this->species(__j)];
 
             __tpf = + __k*__leading   / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit)
                     + __subl          / (2.0*__k*__ainit*__ainit)
@@ -527,8 +493,8 @@ namespace transport
   number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
     double __k, double __Ninit, const std::vector<number>& __fields)
     {
-      const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-      const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
+      const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+      const auto $$__COORDINATE[A] = __fields[$$__A];
       const auto __Mp              = this->M_Planck;
 
       const auto __Hsq             = $$__HUBBLE_SQ;
@@ -544,23 +510,23 @@ namespace transport
 //      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
 
       // only the field-momentum and momentum-field correlation functions have imaginary parts
-      if(is_field(__i) && is_momentum(__j))
+      if(is_field(__i) && this->is_momentum(__j))
         {
           // LEADING-ORDER INITIAL CONDITION
-          auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0);
+          auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0);
 
           // NEXT-ORDER INITIAL CONDITION
-//            auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+//            auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
           __tpf = + __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
         }
-      else if(is_momentum(__i) && is_field(__j))
+      else if(this->is_momentum(__i) && is_field(__j))
         {
           // LEADING-ORDER INITIAL CONDITION
-          auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0);
+          auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0);
 
           // NEXT-ORDER INITIAL CONDITION
-//            auto __leading = (species(__i) == species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
+//            auto __leading = (this->species(__i) == this->species(__j) ? 1.0 : 0.0) * (1.0 - 2.0*__eps*(1.0-__N));
 
           __tpf = - __leading / (2.0*sqrt(__Hsq)*__ainit*__ainit*__ainit);
         }
@@ -576,8 +542,8 @@ namespace transport
         assert(__fields.size() == 2*$$__NUMBER_FIELDS);
         assert(__ks.size() == __com_ks.size());
 
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = this->M_Planck;
 
         // __fields should be the field configuration at horizon
@@ -591,8 +557,8 @@ namespace transport
 
             for(int i = 0; i < this->N_fields; i++)
               {
-                __stream << "  " << this->field_names[__index_flatten(i)] << " = " << __fields[__index_flatten(i)]
-                         << "; d(" << this->field_names[__index_flatten(i)] << ")/dN = " << __fields[__index_flatten(momentum(i))] << std::endl;
+                __stream << "  " << this->field_names[this->flatten(i)] << " = " << __fields[this->flatten(i)]
+                         << "; d(" << this->field_names[this->flatten(i)] << ")/dN = " << __fields[this->flatten(this->momentum(i))] << std::endl;
               }
             __stream << "  H = " << sqrt(__Hsq) << std::endl << std::endl;
           }
@@ -611,8 +577,8 @@ namespace transport
     number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
       double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = this->M_Planck;
 
         const auto __Hsq             = $$__HUBBLE_SQ;
@@ -703,7 +669,7 @@ namespace transport
 #endif
 
         unsigned int total_fields  = (is_field(__i)    ? 1 : 0) + (is_field(__j)    ? 1 : 0) + (is_field(__k)    ? 1 : 0);
-        unsigned int total_momenta = (is_momentum(__i) ? 1 : 0) + (is_momentum(__j) ? 1 : 0) + (is_momentum(__k) ? 1 : 0);
+        unsigned int total_momenta = (this->is_momentum(__i) ? 1 : 0) + (this->is_momentum(__j) ? 1 : 0) + (this->is_momentum(__k) ? 1 : 0);
 
         assert(total_fields + total_momenta == 3);
 
@@ -717,14 +683,14 @@ namespace transport
 
                 // these components are dimension 3, so suppressed by two powers of Mp
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (species(__j) == species(__k) ? __fields[momentum(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__k) ? __fields[momentum(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__j) ? __fields[momentum(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = (this->species(__j) == this->species(__k) ? __fields[this->momentum(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__k) ? __fields[this->momentum(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__j) ? __fields[this->momentum(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 1
-                __tpf += - (__C_k1k2k3[species(__i)][species(__j)][species(__k)] + __C_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_1*__kmode_2/2.0;
-                __tpf += - (__C_k1k3k2[species(__i)][species(__k)][species(__j)] + __C_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_1*__kmode_3/2.0;
-                __tpf += - (__C_k2k3k1[species(__j)][species(__k)][species(__i)] + __C_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_2*__kmode_3/2.0;
+                __tpf += - (__C_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __C_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_1*__kmode_2/2.0;
+                __tpf += - (__C_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __C_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_1*__kmode_3/2.0;
+                __tpf += - (__C_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __C_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_2*__kmode_3/2.0;
 
                 __tpf *= __prefactor / __kprod3;
                 break;
@@ -734,7 +700,7 @@ namespace transport
               {
                 assert(total_fields == 2);
 
-                auto __momentum_k = (is_momentum(__i) ? __kmode_1 : 0.0) + (is_momentum(__j) ? __kmode_2 : 0.0) + (is_momentum(__k) ? __kmode_3 : 0.0);
+                auto __momentum_k = (this->is_momentum(__i) ? __kmode_1 : 0.0) + (this->is_momentum(__j) ? __kmode_2 : 0.0) + (this->is_momentum(__k) ? __kmode_3 : 0.0);
 
                 // note the leading + sign, switched from written notes, from d/dN = d/(H dt) = d/(aH d\tau) = -\tau d/d\tau
                 // this prefactor has dimension 2
@@ -742,14 +708,14 @@ namespace transport
 
                 // these components are dimension 6, so suppressed by two powers of Mp
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_1  = (species(__j) == species(__k) ? __fields[momentum(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (species(__i) == species(__k) ? __fields[momentum(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_1 += (species(__i) == species(__j) ? __fields[momentum(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_1  = (this->species(__j) == this->species(__k) ? __fields[this->momentum(__i)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += (this->species(__i) == this->species(__k) ? __fields[this->momentum(__j)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_1 += (this->species(__i) == this->species(__j) ? __fields[this->momentum(__k)] : 0.0) * __kmode_1*__kmode_2*__kmode_3 * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 4
-                     __tpf_1 += - (__C_k1k2k3[species(__i)][species(__j)][species(__k)] + __C_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3 / 2.0;
-                     __tpf_1 += - (__C_k1k3k2[species(__i)][species(__k)][species(__j)] + __C_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2 / 2.0;
-                     __tpf_1 += - (__C_k2k3k1[species(__j)][species(__k)][species(__i)] + __C_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1 / 2.0;
+                     __tpf_1 += - (__C_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __C_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*__kmode_3 / 2.0;
+                     __tpf_1 += - (__C_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __C_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*__kmode_2 / 2.0;
+                     __tpf_1 += - (__C_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __C_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*__kmode_1 / 2.0;
 
                 __tpf = __prefactor_1 * __tpf_1;
 
@@ -758,19 +724,19 @@ namespace transport
 
                 // these components are dimension 5, so suppressed by two powers of Mp
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                auto __tpf_2  = (species(__j) == species(__k) ? __fields[momentum(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += (species(__i) == species(__k) ? __fields[momentum(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                     __tpf_2 += (species(__i) == species(__j) ? __fields[momentum(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                auto __tpf_2  = (this->species(__j) == this->species(__k) ? __fields[this->momentum(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += (this->species(__i) == this->species(__k) ? __fields[this->momentum(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                     __tpf_2 += (this->species(__i) == this->species(__j) ? __fields[this->momentum(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these componennts are dimension 3
-                     __tpf_2 += (__C_k1k2k3[species(__i)][species(__j)][species(__k)] + __C_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                     __tpf_2 += (__C_k1k3k2[species(__i)][species(__k)][species(__j)] + __C_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
-                     __tpf_2 += (__C_k2k3k1[species(__j)][species(__k)][species(__i)] + __C_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
+                     __tpf_2 += (__C_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __C_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                     __tpf_2 += (__C_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __C_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                     __tpf_2 += (__C_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __C_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
 
                 // these components are dimension 3
-                     __tpf_2 += (__B_k2k3k1[species(__j)][species(__k)][species(__i)] + __B_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3 / 2.0;
-                     __tpf_2 += (__B_k1k3k2[species(__i)][species(__k)][species(__j)] + __B_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3 / 2.0;
-                     __tpf_2 += (__B_k1k2k3[species(__i)][species(__j)][species(__k)] + __B_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2 / 2.0;
+                     __tpf_2 += (__B_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __B_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3 / 2.0;
+                     __tpf_2 += (__B_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __B_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3 / 2.0;
+                     __tpf_2 += (__B_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __B_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2 / 2.0;
 
                 __tpf += __prefactor_2 * __tpf_2;
 
@@ -786,18 +752,18 @@ namespace transport
                 auto __prefactor = - (__kmode_1*__kmode_1 * __kmode_2*__kmode_2 * __kmode_3*__kmode_3) / (__kt * __Hsq * __ainit*__ainit*__ainit*__ainit*__ainit*__ainit);
 
                 // this term (really another part of the prefactor -- but shouldn't be symmetrized) has dimension 2)
-                auto __mom_factor = (is_field(__i) ? __kmode_2*__kmode_3 : 0.0) + (is_field(__j) ? __kmode_1*__kmode_3 : 0.0) + (is_field(__k) ? __kmode_1*__kmode_2 : 0.0);
+                auto __mom_factor = (this->is_field(__i) ? __kmode_2*__kmode_3 : 0.0) + (this->is_field(__j) ? __kmode_1*__kmode_3 : 0.0) + (this->is_field(__k) ? __kmode_1*__kmode_2 : 0.0);
 
                 // these components have dimension 3, so suppressed by two powers of Mp
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (species(__j) == species(__k) ? __fields[momentum(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__k) ? __fields[momentum(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__j) ? __fields[momentum(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = (this->species(__j) == this->species(__k) ? __fields[this->momentum(__i)] : 0.0) * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__k) ? __fields[this->momentum(__j)] : 0.0) * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__j) ? __fields[this->momentum(__k)] : 0.0) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components have dimension 1
-                __tpf += - (__C_k1k2k3[species(__i)][species(__j)][species(__k)] + __C_k2k1k3[species(__j)][species(__i)][species(__k)]) * __kmode_1*__kmode_2 / 2.0;
-                __tpf += - (__C_k1k3k2[species(__i)][species(__k)][species(__j)] + __C_k3k1k2[species(__k)][species(__i)][species(__j)]) * __kmode_1*__kmode_3 / 2.0;
-                __tpf += - (__C_k2k3k1[species(__j)][species(__k)][species(__i)] + __C_k3k2k1[species(__k)][species(__j)][species(__i)]) * __kmode_2*__kmode_3 / 2.0;
+                __tpf += - (__C_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __C_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)]) * __kmode_1*__kmode_2 / 2.0;
+                __tpf += - (__C_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __C_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)]) * __kmode_1*__kmode_3 / 2.0;
+                __tpf += - (__C_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __C_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)]) * __kmode_2*__kmode_3 / 2.0;
 
                 __tpf *= __prefactor * __mom_factor / __kprod3;
                 break;
@@ -812,19 +778,19 @@ namespace transport
 
                 // these components are dimension 5, so suppress by two powers of Mp
                 // note factor of 2 compared to analytic calculation, from symmetrization over beta, gamma
-                __tpf  = (species(__j) == species(__k) ? __fields[momentum(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__k) ? __fields[momentum(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
-                __tpf += (species(__i) == species(__j) ? __fields[momentum(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
+                __tpf  = (this->species(__j) == this->species(__k) ? __fields[this->momentum(__i)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k2dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__k) ? __fields[this->momentum(__j)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk3 / (2.0*__Mp*__Mp);
+                __tpf += (this->species(__i) == this->species(__j) ? __fields[this->momentum(__k)] : 0.0) * -(__Ksq + __kmode_1*__kmode_2*__kmode_3/__kt) * __k1dotk2 / (2.0*__Mp*__Mp);
 
                 // these components are dimension 2
-                __tpf += (__C_k1k2k3[species(__i)][species(__j)][species(__k)] + __C_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
-                __tpf += (__C_k1k3k2[species(__i)][species(__k)][species(__j)] + __C_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
-                __tpf += (__C_k2k3k1[species(__j)][species(__k)][species(__i)] + __C_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
+                __tpf += (__C_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __C_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_1*__kmode_1*__kmode_2*__kmode_2*(1.0+__kmode_3/__kt) / 2.0;
+                __tpf += (__C_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __C_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_1*__kmode_1*__kmode_3*__kmode_3*(1.0+__kmode_2/__kt) / 2.0;
+                __tpf += (__C_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __C_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_2*__kmode_2*__kmode_3*__kmode_3*(1.0+__kmode_1/__kt) / 2.0;
 
                 // these components are dimension 2
-                __tpf += (__B_k2k3k1[species(__j)][species(__k)][species(__i)] + __B_k3k2k1[species(__k)][species(__j)][species(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
-                __tpf += (__B_k1k3k2[species(__i)][species(__k)][species(__j)] + __B_k3k1k2[species(__k)][species(__i)][species(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
-                __tpf += (__B_k1k2k3[species(__i)][species(__j)][species(__k)] + __B_k2k1k3[species(__j)][species(__i)][species(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
+                __tpf += (__B_k2k3k1[this->species(__j)][this->species(__k)][this->species(__i)] + __B_k3k2k1[this->species(__k)][this->species(__j)][this->species(__i)])*__kmode_1*__kmode_1*__kmode_2*__kmode_3/2.0;
+                __tpf += (__B_k1k3k2[this->species(__i)][this->species(__k)][this->species(__j)] + __B_k3k1k2[this->species(__k)][this->species(__i)][this->species(__j)])*__kmode_2*__kmode_2*__kmode_1*__kmode_3/2.0;
+                __tpf += (__B_k1k2k3[this->species(__i)][this->species(__j)][this->species(__k)] + __B_k2k1k3[this->species(__j)][this->species(__i)][this->species(__k)])*__kmode_3*__kmode_3*__kmode_1*__kmode_2/2.0;
 
                 __tpf *= __prefactor / __kprod3;
                 break;
@@ -893,61 +859,15 @@ namespace transport
       }
 
 
-    // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
-
-
-    template <typename number>
-    void $$__MODEL_background_functor<number>::operator()(const std::vector<number>& __x, std::vector<number>& __dxdt, double __t)
-      {
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __x[__index_flatten($$__A)];
-        const auto __Mp              = this->M_Planck;
-
-        const auto __Hsq             = $$__HUBBLE_SQ;
-        const auto __eps             = $$__EPSILON;
-
-        __dxdt[__index_flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
-      }
-
-
-    // IMPLEMENTATION - FUNCTOR FOR BACKGROUND OBSERVATION
-
-
-    template <typename number>
-    void $$__MODEL_background_observer<number>::operator()(const std::vector<number>& x, double t)
-      {
-        this->history.push_back(x);
-      }
-
-
-    // IMPLEMENTATION -- GAUGE TRANSFORMATIONS
+    // CALCULATE GAUGE TRANSFORMATIONS
 
 
     template <typename number>
     void $$__MODEL<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
-      std::vector<number>& __dN)
+                                                std::vector<number>& __dN)
       {
-        this->gauge_xfm.compute_gauge_xfm_1(__state, __dN);
-      }
-
-
-    template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
-      std::vector< std::vector<number> >& __ddN)
-      {
-        this->gauge_xfm.compute_gauge_xfm_2(__state, __ddN);
-      }
-
-
-    // IMPLEMENTATION - GAUGE TRANSFORMATION GADGET
-
-
-    template <typename number>
-    void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
-      std::vector<number>& __dN)
-      {
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __state[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = this->M_Planck;
 
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
@@ -956,11 +876,11 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_gauge_xfm_gadget<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
-      std::vector< std::vector<number> >& __ddN)
+    void $$__MODEL<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
+                                                std::vector< std::vector<number> >& __ddN)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A] = __state[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = this->M_Planck;
 
         __ddN.resize(2*$$__NUMBER_FIELDS);
@@ -973,22 +893,21 @@ namespace transport
       }
 
 
-    // IMPLEMENTATION - TENSOR CALCULATION GADGET
+    // CALCULATE TENSOR QUANTITIES
 
 
     template <typename number>
-    std::vector< std::vector<number> > $$__MODEL_tensor_gadget<number>::u2(const std::vector<number>& __fields,
-      double __k, double __N)
+    void $$__MODEL<number>::u2(const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
-        std::vector< std::vector<number> > __u2(2*$$__NUMBER_FIELDS);
+        __u2.resize(2*$$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
           {
@@ -996,24 +915,21 @@ namespace transport
           }
 
         __u2[$$__a][$$__b] = $$__U2_PREDEF[ab]{__k, __a, __Hsq, __eps};
-
-        return(__u2);
       }
 
 
     template <typename number>
-    std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::u3(const std::vector<number>& __fields,
-      double __km, double __kn, double __kr, double __N)
+    void $$__MODEL<number>::u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
-        std::vector< std::vector< std::vector<number> > > __u3(2*$$__NUMBER_FIELDS);
+        __u3.resize(2*$$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
           {
@@ -1025,24 +941,21 @@ namespace transport
           }
 
         __u3[$$__a][$$__b][$$__c] = $$__U3_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
-
-        return(__u3);
       }
 
 
     template <typename number>
-    std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::A(const std::vector<number>& __fields,
-      double __km, double __kn, double __kr, double __N)
+    void $$__MODEL<number>::A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
-        std::vector< std::vector< std::vector<number> > > __A($$__NUMBER_FIELDS);
+        __A.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
           {
@@ -1054,24 +967,21 @@ namespace transport
           }
 
         __A[$$__a][$$__b][$$__c] = $$__A_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
-
-        return(__A);
       }
 
 
     template <typename number>
-    std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::B(const std::vector<number>& __fields,
-      double __km, double __kn, double __kr, double __N)
+    void $$__MODEL<number>::B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
-        std::vector< std::vector< std::vector<number> > > __B($$__NUMBER_FIELDS);
+        __B.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
           {
@@ -1083,24 +993,21 @@ namespace transport
           }
 
         __B[$$__a][$$__b][$$__c] = $$__B_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
-
-        return(__B);
       }
 
 
     template <typename number>
-    std::vector< std::vector< std::vector<number> > > $$__MODEL_tensor_gadget<number>::C(const std::vector<number>& __fields,
-      double __km, double __kn, double __kr, double __N)
+    void $$__MODEL<number>::C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[__parameter_flatten($$__1)];
-        const auto $$__COORDINATE[A]      = __fields[__index_flatten($$__A)];
+        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = this->M_Planck;
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
-        std::vector< std::vector< std::vector<number> > > __C($$__NUMBER_FIELDS);
+        __C.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
           {
@@ -1112,8 +1019,33 @@ namespace transport
           }
 
         __C[$$__a][$$__b][$$__c] = $$__C_PREDEF[abc]{__km, __kn, __kr, __a, __Hsq, __eps};
+      }
 
-        return(__C);
+
+    // IMPLEMENTATION - FUNCTOR FOR BACKGROUND INTEGRATION
+
+
+    template <typename number>
+    void $$__MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
+      {
+        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__COORDINATE[A] = __x[$$__A];
+        const auto __Mp              = this->M_Planck;
+
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+
+        __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
+      }
+
+
+    // IMPLEMENTATION - FUNCTOR FOR BACKGROUND OBSERVATION
+
+
+    template <typename number>
+    void $$__MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
+      {
+        this->history.push_back(x);
       }
 
 

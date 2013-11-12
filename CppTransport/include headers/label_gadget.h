@@ -36,7 +36,7 @@ namespace transport
 
         protected:
           unsigned int                   N_fields;                                    // number of fields
-          const std::vector<std::string> field_names;                                 // vector of names - includes momenta
+          const std::vector<std::string> field_names;                                 // vector of names - excludes momenta
           const std::vector<std::string> latex_names;                                 // vector of LaTeX names - excludes momenta
       };
 
@@ -44,6 +44,9 @@ namespace transport
     inline label_gadget::label_gadget(unsigned int N, const std::vector<std::string> f, const std::vector<std::string> l)
       : N_fields(N), field_names(f), latex_names(l)
       {
+        assert(field_names.size() == latex_names.size());
+        assert(field_names.size() == N_fields);
+        assert(latex_names.size() == N_fields);
       }
 
 
