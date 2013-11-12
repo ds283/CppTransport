@@ -17,7 +17,6 @@
 #include "label_gadget.h"
 #include "plot_gadget.h"
 #include "index_selector.h"
-#include "tensor_gadget.h"
 #include "messages_en.h"
 
 
@@ -39,15 +38,13 @@ namespace transport
       class background
         {
           public:
-            background(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
-              const std::vector<double>& sp, const std::vector< std::vector<number> >& s, tensor_gadget<number>* t)
-              : N_fields(N_f), labels(N_f, f_names, l_names),
+            background(const std::vector<double>& sp, const std::vector< std::vector<number> >& s, model<number>* p)
+              : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
                 sample_points(sp), samples(s),
-                tensors(t),
+                parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH),
                 plot_precision(DEFAULT_PLOT_PRECISION)
               {}
-            ~background() { /*delete this->tensors;*/ }
 
             index_selector<1>* manufacture_selector();
             index_selector<2>* manufacture_2_selector();
@@ -64,7 +61,7 @@ namespace transport
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
 
-            // need to find a better way of solving this problem
+            // TODO: find a better way of solving this problem
             // this is needed to normalize the comoving ks correctly in each $$__MODEL class
             const std::vector<number>&  __INTERNAL_ONLY_get_value (unsigned int n);
 
@@ -85,9 +82,8 @@ namespace transport
             std::vector< std::vector<number> > construct_u2_time_history(index_selector<2>* selector, double k);
             std::vector< std::vector<number> > construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3);
 
-            unsigned int                             N_fields;          // number of fields
+            model<number>*                           parent;            // parent model object
 
-            tensor_gadget<number>*                   tensors;           // tensor calculation gadget
             label_gadget                             labels;            // holds names (and LaTeX names) of fields, and makes labels
 
             const std::vector<double>                sample_points;     // list of times at which we hold samples for the background
@@ -123,12 +119,12 @@ namespace transport
 
           for(int l = 0; l < this->sample_points.size(); l++)
             {
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
                   std::array<unsigned int, 1> index_set = { (unsigned int)m };
                   if(selector->is_on(index_set))
                     {
-                      data[l].push_back(this->samples[l][m]);
+                      data[l].push_back(this->samples[l][this->parent->client_flatten(m)]);
                     }
                 }
             }
@@ -157,7 +153,12 @@ namespace transport
           transport::asciitable<number> writer(out);
           writer.set_display_width(obj.get_wrap_width());
 
-          writer.write(__CPP_TRANSPORT_EFOLDS, obj.field_names, obj.sample_points, obj.samples);
+          index_selector<1>* selector = obj.manufacture_selector();
+          std::vector<std::string> labels = obj.labels.make_labels(selector, false);
+
+          writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, obj.samples);
+
+          delete selector;
 
           return(out);
         }
@@ -177,19 +178,19 @@ namespace transport
       template <typename number>
       index_selector<1>* background<number>::manufacture_selector()
         {
-          return new index_selector<1>(this->N_fields);
+          return new index_selector<1>(this->parent->get_N_fields());
         }
 
       template <typename number>
       index_selector<2>* background<number>::manufacture_2_selector()
         {
-          return new index_selector<2>(this->N_fields);
+          return new index_selector<2>(this->parent->get_N_fields());
         }
 
       template <typename number>
       index_selector<3>* background<number>::manufacture_3_selector()
         {
-          return new index_selector<3>(this->N_fields);
+          return new index_selector<3>(this->parent->get_N_fields());
         }
 
 
@@ -270,7 +271,8 @@ namespace transport
 
           for(int i = 0; i < this->sample_points.size(); i++)
             {
-              std::vector< std::vector<number> > u2 = this->tensors->u2(this->samples[i], k, this->sample_points[i]);
+              std::vector< std::vector<number> > u2;
+              this->tensors->u2(this->samples[i], k, this->sample_points[i], u2);
 
               for(int m = 0; m < 2*this->N_fields; m++)
                 {
@@ -297,7 +299,8 @@ namespace transport
 
           for(int i = 0; i < this->sample_points.size(); i++)
             {
-              std::vector< std::vector< std::vector<number> > > u3 = this->tensors->u3(this->samples[i], k1, k2, k3, this->sample_points[i]);
+              std::vector< std::vector< std::vector<number> > > u3;
+              this->tensors->u3(this->samples[i], k1, k2, k3, this->sample_points[i], u3);
 
               for(int m = 0; m < 2*this->N_fields; m++)
                 {

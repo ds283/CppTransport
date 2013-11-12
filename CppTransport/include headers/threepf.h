@@ -22,9 +22,7 @@
 #include "latex_output.h"
 #include "label_gadget.h"
 #include "plot_gadget.h"
-#include "gauge_xfm_gadget.h"
 #include "index_selector.h"
-#include "tensor_gadget.h"
 #include "messages_en.h"
 
 #include "background.h"
@@ -70,25 +68,23 @@ namespace transport
       class threepf
         {
           public:
-            threepf(unsigned int N_f, const std::vector<std::string>& f_names, const std::vector<std::string>& l_names,
-              const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
+            threepf(const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
               const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& tpf_re,
               const std::vector< std::vector< std::vector<number> > >& tpf_im,
               const std::vector< std::vector< std::vector<number> > >& thpf,
               const std::vector< struct threepf_kconfig >& kl,
-              gauge_xfm_gadget<number>* gx, tensor_gadget<number>* t)
-              : N_fields(N_f), labels(N_f, f_names, l_names),
+              model<number>* p)
+              : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
                 Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(N_f, f_names, l_names, sp, b, t->clone()),
-                twopf_re(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_re, gx->clone(), t->clone()),
-                twopf_im(N_f, f_names, l_names, ks, com_ks, Nst, sp, b, tpf_im, gx->clone(), t->clone()),
+                backg(sp, b, p),
+                twopf_re(ks, com_ks, Nst, sp, b, tpf_re, p),
+                twopf_im(ks, com_ks, Nst, sp, b, tpf_im, p),
                 samples(thpf), kconfig_list(kl),
-                gauge_xfm(gx), tensors(t),
+                parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI),
                 plot_precision(DEFAULT_PLOT_PRECISION)
               {}
-            ~threepf() { /*delete this->gauge_xfm; delete this->tensors;*/ }
 
             background<number>& get_background();
             twopf<number>&      get_real_twopf();
@@ -174,11 +170,8 @@ namespace transport
             // return a time history for the reduced bispectrum of zeta and a fixed k-configuration
             std::vector< std::vector<number> > construct_reduced_bispectrum_time_history(unsigned int i);
 
-            unsigned int                                            N_fields;          // number of fields
+            model<number>*                                          parent;            // parent model object
 
-            gauge_xfm_gadget<number>*                               gauge_xfm;         // gauge transformation gadget
-          
-            tensor_gadget<number>*                                  tensors;           // tensor calculation gadget
             label_gadget                                            labels;            // holds names (and LaTeX names) for fields
 
             const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
@@ -367,16 +360,16 @@ namespace transport
           // depending whether they are enabled by the index_selector
           for(int l = 0; l < this->sample_points.size(); l++)
             {
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
-                  for(int n = 0; n < 2*this->N_fields; n++)
+                  for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
-                      for(int r = 0; r < 2*this->N_fields; r++)
+                      for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                         {
                           std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
                           if(selector->is_on(index_set))
                             {
-                              unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + 2*this->N_fields*n + r;
+                              unsigned int samples_index = this->parent->client_flatten(m,n,r);
 
                               data[l].push_back(this->samples[l][samples_index][i]);
                             }
@@ -428,16 +421,16 @@ namespace transport
 
           for(int l = 0; l < this->sample_points.size(); l++)
             {
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
-                  for(int n = 0; n < 2*this->N_fields; n++)
+                  for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
-                      for(int r = 0; r < 2*this->N_fields; r++)
+                      for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                         {
                           std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
                           if(selector->is_on(index_set))
                             {
-                              unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + 2*this->N_fields*n + r;
+                              unsigned int samples_index = this->parent->client_flatten(m,n,r);
 
                               number value = this->samples[l][samples_index][i];
 
@@ -489,19 +482,19 @@ namespace transport
         {
           number shift = 0.0;
 
-          if (m >= this->N_fields)
+          if (m >= this->parent->get_N_fields())
             {
               shift += this->dotphi_shift(m, this->kconfig_list[i].indices[0],
                                           n, this->kconfig_list[i].indices[1],
                                           r, this->kconfig_list[i].indices[2], l, 0);
             }
-          if (n >= this->N_fields)
+          if (n >= this->parent->get_N_fields())
             {
               shift += this->dotphi_shift(n, this->kconfig_list[i].indices[1],
                                           m, this->kconfig_list[i].indices[0],
                                           r, this->kconfig_list[i].indices[2], l, 1);
             }
-          if (r >= this->N_fields)
+          if (r >= this->parent->get_N_fields())
             {
               shift += this->dotphi_shift(r, this->kconfig_list[i].indices[2],
                                           m, this->kconfig_list[i].indices[0],
@@ -526,10 +519,10 @@ namespace transport
 
           std::vector<number> __fields = this->backg.get_value(__time);
 
-          std::vector< std::vector< std::vector<number> > > __B_nrm =
-            this->tensors->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time]);
-          std::vector< std::vector< std::vector<number> > > __C_mnr =
-            this->tensors->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time]);
+          std::vector< std::vector< std::vector<number> > > __B_nrm;
+          this->parent->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time], __B_nrm);
+          std::vector< std::vector< std::vector<number> > > __C_mnr;
+          this->parent->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time], __C_mnr);
 
           std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time, __kmode_n);
           std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time, __kmode_r);
@@ -538,13 +531,13 @@ namespace transport
           
           number rval = 0.0;
           
-          assert(__m >= this->N_fields);
-          assert(__m <  2*this->N_fields);
-          auto __m_species = __m % this->N_fields;
+          assert(__m >= this->parent->get_N_fields());
+          assert(__m <  2*this->parent->get_N_fields());
+          auto __m_species = this->parent->client_species(__m);
           
-          for(int __i = 0; __i < this->N_fields; __i++)
+          for(int __i = 0; __i < this->parent->get_N_fields(); __i++)
             {
-              for(int __j = 0; __j < this->N_fields; __j++)
+              for(int __j = 0; __j < this->parent->get_N_fields(); __j++)
                 {
                   unsigned int __i_field_twopf_index_r    = 0;
                   unsigned int __i_field_twopf_index_n    = 0;
@@ -557,32 +550,32 @@ namespace transport
                     {
                       case 0: // index __m is on the far left, to the left of both __n and __r
                         // flatten the two possible sets of index contractions: (i,n),(j,r) and (j,r),(i,n)
-                        __i_field_twopf_index_n    = (2*this->N_fields)*__i + __n;
-                        __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
-                        __j_field_twopf_index_n    = (2*this->N_fields)*__j + __n;
-                        __j_field_twopf_index_r    = (2*this->N_fields)*__j + __r;
-                        __i_dotfield_twopf_index_n = (2*this->N_fields)*(__i + this->N_fields) + __n;
-                        __i_dotfield_twopf_index_r = (2*this->N_fields)*(__i + this->N_fields) + __r;
+                        __i_field_twopf_index_n    = this->parent->client_flatten(__i,__n);
+                        __i_field_twopf_index_r    = this->parent->client_flatten(__i,__r);
+                        __j_field_twopf_index_n    = this->parent->client_flatten(__j,__n);
+                        __j_field_twopf_index_r    = this->parent->client_flatten(__j,__r);
+                        __i_dotfield_twopf_index_n = this->parent->client_flatten(this->parent->client_momentum(__i),__n);
+                        __i_dotfield_twopf_index_r = this->parent->client_flatten(this->parent->client_momentum(__i),__r);
                         break;
                       
                       case 1: // index __m is in the middle, to the left of __r but the right of __n
                         // flatten the two possible sets of index contractions: (n,i),(j,r) and (n,j),(i,r)
-                        __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
-                        __i_field_twopf_index_r    = (2*this->N_fields)*__i + __r;
-                        __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
-                        __j_field_twopf_index_r    = (2*this->N_fields)*__j + __r;
-                        __i_dotfield_twopf_index_n = (2*this->N_fields)*__n + (__i + this->N_fields);
-                        __i_dotfield_twopf_index_r = (2*this->N_fields)*(__i + this->N_fields) + __r;
+                        __i_field_twopf_index_n    = this->parent->client_flatten(__n,__i);
+                        __i_field_twopf_index_r    = this->parent->client_flatten(__i,__r);
+                        __j_field_twopf_index_n    = this->parent->client_flatten(__n,__j);
+                        __j_field_twopf_index_r    = this->parent->client_flatten(__j,__r);
+                        __i_dotfield_twopf_index_n = this->parent->client_flatten(__n,this->parent->client_momentum(__i));
+                        __i_dotfield_twopf_index_r = this->parent->client_flatten(this->parent->client_momentum(__i),__r);
                         break;
                       
                       case 2: // index __m is on the far right, to the right of both __n and __r
                         // flatten the two possible sets of index contractions: (n,i),(r,j) and (n,j),(r,i)
-                        __i_field_twopf_index_n    = (2*this->N_fields)*__n + __i;
-                        __i_field_twopf_index_r    = (2*this->N_fields)*__r + __i;
-                        __j_field_twopf_index_n    = (2*this->N_fields)*__n + __j;
-                        __j_field_twopf_index_r    = (2*this->N_fields)*__r + __j;
-                        __i_dotfield_twopf_index_n = (2*this->N_fields)*__n + (__i + this->N_fields);
-                        __i_dotfield_twopf_index_r = (2*this->N_fields)*__r + (__i + this->N_fields);
+                        __i_field_twopf_index_n    = this->parent->client_flatten(__n,__i);
+                        __i_field_twopf_index_r    = this->parent->client_flatten(__r,__i);
+                        __j_field_twopf_index_n    = this->parent->client_flatten(__n,__j);
+                        __j_field_twopf_index_r    = this->parent->client_flatten(__r,__j);
+                        __i_dotfield_twopf_index_n = this->parent->client_flatten(__n,this->parent->client_momentum(__i));
+                        __i_dotfield_twopf_index_r = this->parent->client_flatten(__r,this->parent->client_momentum(__i));
                         break;
                         
                       default:
@@ -623,8 +616,8 @@ namespace transport
               std::vector<number> dN;
               std::vector< std::vector<number> > ddN;
 
-              this->gauge_xfm->compute_gauge_xfm_1(this->backg.get_value(j), dN);
-              this->gauge_xfm->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
+              this->parent->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+              this->parent->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
 
               // get twopf values for this timeslices and appropriate k-modes
               std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
@@ -636,13 +629,13 @@ namespace transport
 
               // compute contribution from intrinsic threepf
               data[j][0] = 0;
-              for(int m = 0; m < 2*this->N_fields; m++)
+              for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
-                  for(int n = 0; n < 2*this->N_fields; n++)
+                  for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
-                      for(int r = 0; r < 2*this->N_fields; r++)
+                      for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                         {
-                          unsigned int samples_index = (2*this->N_fields*2*this->N_fields)*m + (2*this->N_fields)*n + r;
+                          unsigned int samples_index = this->parent->client_flatten(m,n,r);
 
                           number value = this->samples[j][samples_index][i];
 
@@ -656,31 +649,31 @@ namespace transport
 
               // compute contribution from gauge transformation
               number shift = 0;
-              for(int l = 0; l < 2*this->N_fields; l++)
+              for(int l = 0; l < 2*this->parent->get_N_fields(); l++)
                 {
-                  for(int m = 0; m < 2*this->N_fields; m++)
+                  for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                     {
-                      for(int n = 0; n < 2*this->N_fields; n++)
+                      for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                         {
-                          for(int r = 0; r < 2*this->N_fields; r++)
+                          for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                             {
                               // l, m to left of n and r
-                              unsigned int ln_1_index = (2*this->N_fields)*l + n;
-                              unsigned int lr_1_index = (2*this->N_fields)*l + r;
-                              unsigned int mn_1_index = (2*this->N_fields)*m + n;
-                              unsigned int mr_1_index = (2*this->N_fields)*m + r;
+                              unsigned int ln_1_index = this->parent->client_flatten(l,n);
+                              unsigned int lr_1_index = this->parent->client_flatten(l,r);
+                              unsigned int mn_1_index = this->parent->client_flatten(m,n);
+                              unsigned int mr_1_index = this->parent->client_flatten(m,r);
 
                               // l, m to left of r but right of n
-                              unsigned int ln_2_index = (2*this->N_fields)*n + l;
-                              unsigned int lr_2_index = (2*this->N_fields)*l + r;
-                              unsigned int mn_2_index = (2*this->N_fields)*n + m;
-                              unsigned int mr_2_index = (2*this->N_fields)*m + r;
+                              unsigned int ln_2_index = this->parent->client_flatten(n,l);
+                              unsigned int lr_2_index = this->parent->client_flatten(l,r);
+                              unsigned int mn_2_index = this->parent->client_flatten(n,m);
+                              unsigned int mr_2_index = this->parent->client_flatten(m,r);
 
                               // l, m to right of n and r
-                              unsigned int ln_3_index = (2*this->N_fields)*n + l;
-                              unsigned int lr_3_index = (2*this->N_fields)*r + l;
-                              unsigned int mn_3_index = (2*this->N_fields)*n + m;
-                              unsigned int mr_3_index = (2*this->N_fields)*r + m;
+                              unsigned int ln_3_index = this->parent->client_flatten(n,l);
+                              unsigned int lr_3_index = this->parent->client_flatten(r,l);
+                              unsigned int mn_3_index = this->parent->client_flatten(n,m);
+                              unsigned int mr_3_index = this->parent->client_flatten(r,m);
 
                               shift += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*
                                 (  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
@@ -759,7 +752,7 @@ namespace transport
       template <typename number>
       index_selector<3>* threepf<number>::manufacture_selector()
         {
-          return new index_selector<3>(this->N_fields);
+          return new index_selector<3>(this->parent->get_N_fields());
         }
 
       template <typename number>
@@ -788,7 +781,6 @@ namespace transport
           writer.set_display_width(obj.get_wrap_width());
 
           index_selector<3>* selector = obj.manufacture_selector();
-
           std::vector<std::string> labels = obj.make_labels(selector, false);
 
           for(int i = 0; i < obj.sample_ks.size(); i++)
@@ -810,6 +802,8 @@ namespace transport
                   writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, data);
                 }
             }
+
+          delete selector;
 
           return(out);
         }

@@ -22,21 +22,11 @@
 
 namespace transport
   {
-      #define BACKG_SIZE   (2*$$__NUMBER_FIELDS)
-      #define TWOPF_SIZE   ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
-      #define THREEPF_SIZE ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
-
-      #define TWOPF_STATE_SIZE   (BACKG_SIZE + TWOPF_SIZE)
-      #define THREEPF_STATE_SIZE (BACKG_SIZE + 6*TWOPF_SIZE + THREEPF_SIZE)
-
-      #define U2_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
-      #define U3_SIZE            ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS))
-
       // set up a state type for 2pf integration on an OpenCL device
-      typedef vex::multivector<double, TWOPF_STATE_SIZE> twopf_state;
+      typedef vex::multivector<double, $$__MODEL_pool::twopf_state_size> twopf_state;
 
       // set up a state type for 3pf integration on an OpenCL device
-      typedef vex::multivector<double, THREEPF_STATE_SIZE> threepf_state;
+      typedef vex::multivector<double, $$__MODEL_pool::threepf_state_size> threepf_state;
 
 
       // *********************************************************************************************
@@ -87,7 +77,7 @@ namespace transport
           public:
             $$__MODEL_vexcl_twopf_functor(const std::vector<number>& p, const number Mp,
                                           const vex::vector<double>& ks,
-                                          vex::multivector<double, U2_SIZE>& u2)
+                                          vex::multivector<double, $$__MODEL_pool::u2_size>& u2)
               : parameters(p), M_Planck(Mp), k_list(ks), u2_tensor(u2)
               {
               }
@@ -95,10 +85,15 @@ namespace transport
             void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
 
           private:
-            const number						           M_Planck;
-            const std::vector<number>&         parameters;
-            const vex::vector<double>&         k_list;
-            vex::multivector<double, U2_SIZE>& u2_tensor;
+            // constexpr version for rapid evaluation during integration
+            constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
+            constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
+            constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+
+            const number						                           M_Planck;
+            const std::vector<number>&                         parameters;
+            const vex::vector<double>&                         k_list;
+            vex::multivector<double, $$__MODEL_pool::u2_size>& u2_tensor;
         };
 
 
@@ -127,8 +122,8 @@ namespace transport
       public:
         $$__MODEL_vexcl_threepf_functor(const std::vector<number>& p, const number Mp,
           const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s,
-          vex::multivector<double, U2_SIZE>& u2_k1, vex::multivector<double, U2_SIZE>& u2_k2, vex::multivector<double, U2_SIZE>& u2_k3,
-          vex::multivector<double, U3_SIZE>& u3_k1k2k3, vex::multivector<double, U3_SIZE>& u3_k2k1k3, vex::multivector<double, U3_SIZE>& u3_k3k1k2)
+          vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3,
+          vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2)
         : parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
           u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
           u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
@@ -138,20 +133,25 @@ namespace transport
         void operator()(const threepf_state& __x, threepf_state& __dxdt, double __t);
 
       private:
-        const number						           M_Planck;
-        const std::vector<number>&         parameters;
+        // constexpr version for rapid evaluation during integration
+        constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
 
-        const vex::vector<double>&         k1_list;
-        const vex::vector<double>&         k2_list;
-        const vex::vector<double>&         k3_list;
+        const number						                           M_Planck;
+        const std::vector<number>&                         parameters;
 
-        vex::multivector<double, U2_SIZE>& u2_k1_tensor;
-        vex::multivector<double, U2_SIZE>& u2_k2_tensor;
-        vex::multivector<double, U2_SIZE>& u2_k3_tensor;
+        const vex::vector<double>&                         k1_list;
+        const vex::vector<double>&                         k2_list;
+        const vex::vector<double>&                         k3_list;
 
-        vex::multivector<double, U3_SIZE>& u3_k1k2k3_tensor;
-        vex::multivector<double, U3_SIZE>& u3_k2k1k3_tensor;
-        vex::multivector<double, U3_SIZE>& u3_k3k1k2_tensor;
+        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1_tensor;
+        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2_tensor;
+        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3_tensor;
+
+        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3_tensor;
+        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3_tensor;
+        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2_tensor;
       };
 
 
@@ -225,19 +225,16 @@ namespace transport
           vex::vector<double> dev_ks(ctx.queue(), com_ks);
         
           // allocate space on the device for the u2-tensor
-          vex::multivector<double, U2_SIZE> u2_tensor(ctx.queue(), com_ks.size());
+          vex::multivector<double, $$__MODEL_pool::u2_size> u2_tensor(ctx.queue(), com_ks.size());
 
           // set up state vector, and populate it with initial conditions for the background and twopf
           twopf_state dev_x(ctx.queue(), com_ks.size());
 
-          const auto background_start = 0;
-          const auto twopf_start      = background_start + BACKG_SIZE;
-        
           // 1 - background
-          dev_x(background_start + $$__A) = $$// hst_bg[$$__A];
+          dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->flatten($$__A)];
         
           // 2 - twopf
-          this->populate_twopf_ic(dev_x, twopf_start, com_ks, *times.begin(), hst_bg);
+          this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *times.begin(), hst_bg);
 
           // set up a functor to evolve this system
           $$__MODEL_vexcl_twopf_functor<number> rhs(this->parameters, this->M_Planck, dev_ks, u2_tensor);
@@ -250,11 +247,7 @@ namespace transport
 
           integrate_times(make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
-          transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
-          transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
-
-          transport::twopf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-                                       times, background_history, twopf_history, gauge_xfm, tensor);
+          transport::twopf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_history, this);
 
           return(tpf);
         }
@@ -275,7 +268,7 @@ namespace transport
         // TODO - need some form of introspection to determine size of state vector
         // but here assume it is ok
 //          assert(x.size() >= start);
-//          assert(x.size() >= start + TWOPF_SIZE);
+//          assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
           std::vector<double> hst_tp_ic(kmodes.size());
 
@@ -289,7 +282,7 @@ namespace transport
                       hst_tp_ic[k] = imaginary ? this->make_twopf_im_ic(i, j, kmodes[k], Ninit, ics) : this->make_twopf_re_ic(i, j, kmodes[k], Ninit, ics);
                     }
 
-                  vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS)*i + j));
+                  vex::copy(hst_tp_ic, x(start + this->flatten(i,j)));
                 }
             }
         }
@@ -353,13 +346,13 @@ namespace transport
           vex::copy(hst_k3s, dev_k3s);
 
           // allocate space on the device for the u2- and u3-tensors
-          vex::multivector<double, U2_SIZE> u2_k1_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U2_SIZE> u2_k2_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U2_SIZE> u2_k3_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k1_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k2_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k3_tensor(ctx.queue(), kconfig_list.size());
 
-          vex::multivector<double, U3_SIZE> u3_k1k2k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U3_SIZE> u3_k2k1k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, U3_SIZE> u3_k3k1k2_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k1k2k3_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k2k1k3_tensor(ctx.queue(), kconfig_list.size());
+          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k3k1k2_tensor(ctx.queue(), kconfig_list.size());
 
           // set up state vector, and populate it with initial conditions for the background, twopf and threepf
           threepf_state dev_x(ctx.queue(), kconfig_list.size());
@@ -378,11 +371,7 @@ namespace transport
 
           integrate_times(make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
-          transport::$$__MODEL_gauge_xfm_gadget<number>* gauge_xfm = new $$__MODEL_gauge_xfm_gadget<number>(this->M_Planck, this->parameters);
-          transport::$$__MODEL_tensor_gadget<number>*    tensor    = new $$__MODEL_tensor_gadget<number>(this->M_Planck, this->parameters);
-
-          transport::threepf<number> tpf($$__NUMBER_FIELDS, $$__MODEL_state_names, $$__MODEL_latex_names, ks, com_ks, Nstar,
-                                         times, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, gauge_xfm, tensor);
+          transport::threepf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, this);
 
           return(tpf);
         }
@@ -397,7 +386,7 @@ namespace transport
           // TODO - need some form of introspection to determine size of state vector
           // but here assume it is ok
 //          assert(x.size() >= start);
-//          assert(x.size() >= start + THREEPF_SIZE);
+//          assert(x.size() >= start + $$__MODEL_pool::threepf_size);
           assert(k1s.size() == k2s.size());
           assert(k1s.size() == k3s.size());
 
@@ -415,7 +404,7 @@ namespace transport
                           hst_tp_ic[m] = this->make_threepf_ic(i, j, k, k1s[m], k2s[m], k3s[m], Ninit, ic);
                         }
 
-                      vex::copy(hst_tp_ic, x(start + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*i + (2*$$__NUMBER_FIELDS)*j + k));
+                      vex::copy(hst_tp_ic, x(start + this->flatten(i,j,k)));
                     }
                 }
             }
@@ -425,37 +414,29 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl<number>::populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
         const std::vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
-        double Ninit, const std::vector<number>& ic)
+        double Ninit, const std::vector<number>& ics)
         {
           // we have to store:
           //   - 1 copy of the background, the same for each k
           //   - the real 2pf, for each of the kmodes in k1s, k2s, k3s
           //   - the imaginary 2pf, for each of the kmodes in k1s, k2s, k3s
           //   - the real 3pf
-          const auto background_start   = 0;
-          const auto twopf_re_k1_start  = background_start  + BACKG_SIZE;
-          const auto twopf_im_k1_start  = twopf_re_k1_start + TWOPF_SIZE;
-          const auto twopf_re_k2_start  = twopf_im_k1_start + TWOPF_SIZE;
-          const auto twopf_im_k2_start  = twopf_re_k2_start + TWOPF_SIZE;
-          const auto twopf_re_k3_start  = twopf_im_k2_start + TWOPF_SIZE;
-          const auto twopf_im_k3_start  = twopf_re_k3_start + TWOPF_SIZE;
-          const auto threepf_start      = twopf_im_k3_start + TWOPF_SIZE;
 
           // fix background initial conditions
-          x(background_start + $$__A) = $$// ic[$$__A];
+          x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// ics[$$__A];
 
           // fix initial conditions - real 2pfs
-          this->populate_twopf_ic(x, twopf_re_k1_start, k1s, Ninit, ic, false);
-          this->populate_twopf_ic(x, twopf_re_k2_start, k2s, Ninit, ic, false);
-          this->populate_twopf_ic(x, twopf_re_k3_start, k3s, Ninit, ic, false);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, k1s, Ninit, ics, false);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, k2s, Ninit, ics, false);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, k3s, Ninit, ics, false);
 
           // fix initial conditions - imaginary 3pfs
-          this->populate_twopf_ic(x, twopf_im_k1_start, k1s, Ninit, ic, true);
-          this->populate_twopf_ic(x, twopf_im_k2_start, k2s, Ninit, ic, true);
-          this->populate_twopf_ic(x, twopf_im_k3_start, k3s, Ninit, ic, true);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, k1s, Ninit, ics, true);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, k2s, Ninit, ics, true);
+          this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, k3s, Ninit, ics, true);
 
           // fix initial conditions - threepf
-          this->populate_threepf_ic(x, threepf_start, k1s, k2s, k3s, Ninit, ic);
+          this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, k1s, k2s, k3s, Ninit, ics);
         }
 
 
@@ -465,37 +446,34 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
-          const unsigned int __start_background = 0;
-          const unsigned int __start_twopf      = 2*$$__NUMBER_FIELDS;
-
           #undef $$__PARAMETER[1]
           #undef $$__COORDINATE[A]
           #undef __Mp
           #undef __k
 
           #define $$__PARAMETER[1]  (vex::tag<$$__UNIQUE>(this->parameters[$$__1]))
-          #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x($$__A)))
+          #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x(this->flatten($$__A))))
           #define __Mp              (vex::tag<$$__UNIQUE>(this->M_Planck))
           #define __k               (vex::tag<$$__UNIQUE>(this->k_list))
 
-          const auto __a               = vex::make_temp<$$__UNIQUE>(exp(__t));
-          const auto __Hsq             = vex::make_temp<$$__UNIQUE>($$__HUBBLE_SQ);
-          const auto __eps             = vex::make_temp<$$__UNIQUE>($$__EPSILON);
+          const auto __a   = vex::make_temp<$$__UNIQUE>(exp(__t));
+          const auto __Hsq = vex::make_temp<$$__UNIQUE>($$__HUBBLE_SQ);
+          const auto __eps = vex::make_temp<$$__UNIQUE>($$__EPSILON);
 
           #undef __tpf_$$__A_$$__B $$//
           #undef __u2_$$__A_$$__B  $$//
           #undef __u2
 
-          #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+          #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B))))
 
-          #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+          #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor(this->flatten($$__A,$$__B))))
 
-          #define __u2(a,b)         $$// this->u2_tensor((2*$$__NUMBER_FIELDS*a)+b)
+          #define __u2(a,b)         $$// this->u2_tensor(this->flatten(a,b))
 
           #undef __background
           #undef __dtwopf
-          #define __background(a) __dxdt(__start_background + a)
-          #define __dtwopf(a,b)   __dxdt(__start_twopf      + (2*$$__NUMBER_FIELDS*a) + b)
+          #define __background(a) __dxdt($$__MODEL_pool::backg_start + this->flatten(a))
+          #define __dtwopf(a,b)   __dxdt($$__MODEL_pool::twopf_start + this->flatten(a,b))
 
           // evolve the background
           __background($$__A)    = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
@@ -527,25 +505,25 @@ namespace transport
       void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
         {
           // allocate storage for state
-          std::vector<number>                hst_background_state(BACKG_SIZE);
-          std::vector< std::vector<number> > hst_state(TWOPF_SIZE);
+          std::vector<number>                hst_background_state($$__MODEL_pool::backg_size);
+          std::vector< std::vector<number> > hst_state($$__MODEL_pool::twopf_size);
 
           // copy device state into local storage, and then push it into the history
           // (** TODO work out how slow this really is)
 
           // first, background
-          for(int i = 0; i < BACKG_SIZE; i++)
+          for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
             {
               hst_background_state[i] = x(i)[0];  // only need to make a copy for one k-mode; the rest are all the same
             }
           this->background_history.push_back(hst_background_state);
 
           // then, two pf
-          for(int i = 0; i < TWOPF_SIZE; i++)
+          for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
             {
               // ensure destination is sufficiently large
               hst_state[i].resize(this->k_size);
-              vex::copy(x(BACKG_SIZE + i), hst_state[i]);
+              vex::copy(x($$__MODEL_pool::backg_size + i), hst_state[i]);
             }
           this->twopf_history.push_back(hst_state);
         }
@@ -557,15 +535,6 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
       {
-        const unsigned int __start_background  = 0;
-        const unsigned int __start_twopf_re_k1 = __start_background  + BACKG_SIZE;
-        const unsigned int __start_twopf_im_k1 = __start_twopf_re_k1 + TWOPF_SIZE;
-        const unsigned int __start_twopf_re_k2 = __start_twopf_im_k1 + TWOPF_SIZE;
-        const unsigned int __start_twopf_im_k2 = __start_twopf_re_k2 + TWOPF_SIZE;
-        const unsigned int __start_twopf_re_k3 = __start_twopf_im_k2 + TWOPF_SIZE;
-        const unsigned int __start_twopf_im_k3 = __start_twopf_re_k3 + TWOPF_SIZE;
-        const unsigned int __start_threepf     = __start_twopf_im_k3 + TWOPF_SIZE;
-
         #undef $$__PARAMETER[1]
         #undef $$__COORDINATE[A]
         #undef __Mp
@@ -574,7 +543,7 @@ namespace transport
         #undef __k3
 
         #define $$__PARAMETER[1]  (vex::tag<$$__UNIQUE>(this->parameters[$$__1]))
-        #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x($$__A)))
+        #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x(this->flatten($$__A))))
         #define __Mp              (vex::tag<$$__UNIQUE>(this->M_Planck))
         #define __k1              (vex::tag<$$__UNIQUE>(this->k1_list))
         #define __k2              (vex::tag<$$__UNIQUE>(this->k2_list))
@@ -606,28 +575,28 @@ namespace transport
         #undef __u3_k2k1k3
         #undef __u3_k3k1k2
 
-        #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_re_k1 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_im_k1 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __twopf_re_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_re_k2 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __twopf_im_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_im_k2 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __twopf_re_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_re_k3 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x(__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x(__start_threepf   + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS)*$$__B+$$__C)))
+        #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B))))
+        #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B))))
+        #define __twopf_re_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B))))
+        #define __twopf_im_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B))))
+        #define __twopf_re_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B))))
+        #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B))))
+        #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C))))
 
-        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
-        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor((2*$$__NUMBER_FIELDS*$$__A)+$$__B)))
+        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor(this->flatten($$__A,$$__B))))
+        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor(this->flatten($$__A,$$__B))))
+        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor(this->flatten($$__A,$$__B))))
 
-        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k1k2k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
-        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k2k1k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
-        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->u3_k3k1k2_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*$$__A)+(2*$$__NUMBER_FIELDS*$$__B)+$$__C)))
+        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
+        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
+        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
 
-        #define __u2_k1(a,b)                       this->u2_k1_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u2_k2(a,b)                       this->u2_k2_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u2_k3(a,b)                       this->u2_k3_tensor((2*$$__NUMBER_FIELDS*a)+b)
-        #define __u3_k1k2k3(a,b,c)                 this->u3_k1k2k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
-        #define __u3_k2k1k3(a,b,c)                 this->u3_k2k1k3_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
-        #define __u3_k3k1k2(a,b,c)                 this->u3_k3k1k2_tensor((2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a)+(2*$$__NUMBER_FIELDS*b)+c)
+        #define __u2_k1(a,b)                       this->u2_k1_tensor(this->flatten(a,b))
+        #define __u2_k2(a,b)                       this->u2_k2_tensor(this->flatten(a,b))
+        #define __u2_k3(a,b)                       this->u2_k3_tensor(this->flatten(a,b))
+        #define __u3_k1k2k3(a,b,c)                 this->u3_k1k2k3_tensor(this->flatten(a,b,c))
+        #define __u3_k2k1k3(a,b,c)                 this->u3_k2k1k3_tensor(this->flatten(a,b,c))
+        #define __u3_k3k1k2(a,b,c)                 this->u3_k3k1k2_tensor(this->flatten(a,b,c))
 
         #undef __background
         #undef __dtwopf_re_k1
@@ -637,14 +606,14 @@ namespace transport
         #undef __dtwopf_re_k3
         #undef __dtwopf_im_k3
         #undef __dthreepf
-        #define __background(a)     __dxdt(__start_background  + a)
-        #define __dtwopf_re_k1(a,b) __dxdt(__start_twopf_re_k1 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dtwopf_im_k1(a,b) __dxdt(__start_twopf_im_k1 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dtwopf_re_k2(a,b) __dxdt(__start_twopf_re_k2 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dtwopf_im_k2(a,b) __dxdt(__start_twopf_im_k2 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dtwopf_re_k3(a,b) __dxdt(__start_twopf_re_k3 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dtwopf_im_k3(a,b) __dxdt(__start_twopf_im_k3 + (2*$$__NUMBER_FIELDS*a) + b)
-        #define __dthreepf(a,b,c)   __dxdt(__start_threepf     + (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)*a + (2*$$__NUMBER_FIELDS)*b + c)
+        #define __background(a)     __dxdt($$__MODEL_pool::backg_start       + this->flatten(a))
+        #define __dtwopf_re_k1(a,b) __dxdt($$__MODEL_pool::twopf_re_k1_start + this->flatten(a,b))
+        #define __dtwopf_im_k1(a,b) __dxdt($$__MODEL_pool::twopf_im_k1_start + this->flatten(a,b))
+        #define __dtwopf_re_k2(a,b) __dxdt($$__MODEL_pool::twopf_re_k2_start + this->flatten(a,b))
+        #define __dtwopf_im_k2(a,b) __dxdt($$__MODEL_pool::twopf_im_k2_start + this->flatten(a,b))
+        #define __dtwopf_re_k3(a,b) __dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten(a,b))
+        #define __dtwopf_im_k3(a,b) __dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten(a,b))
+        #define __dthreepf(a,b,c)   __dxdt($$__MODEL_pool::threepf_start     + this->flatten(a,b,c))
 
         // evolve the background
         __background($$__A)            = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
@@ -738,36 +707,27 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_observer<number>::operator()(const threepf_state& x, double t)
       {
-        const unsigned int start_background  = 0;
-        const unsigned int start_twopf_re_k1 = start_background  + BACKG_SIZE;
-        const unsigned int start_twopf_im_k1 = start_twopf_re_k1 + TWOPF_SIZE;
-        const unsigned int start_twopf_re_k2 = start_twopf_im_k1 + TWOPF_SIZE;
-        const unsigned int start_twopf_im_k2 = start_twopf_re_k2 + TWOPF_SIZE;
-        const unsigned int start_twopf_re_k3 = start_twopf_im_k2 + TWOPF_SIZE;
-        const unsigned int start_twopf_im_k3 = start_twopf_re_k3 + TWOPF_SIZE;
-        const unsigned int start_threepf     = start_twopf_im_k3 + TWOPF_SIZE;
-
         // allocate storage for state
-        std::vector<number>                hst_background_state(BACKG_SIZE);
-        std::vector< std::vector<number> > hst_twopf_re_state(TWOPF_SIZE);
-        std::vector< std::vector<number> > hst_twopf_im_state(TWOPF_SIZE);
-        std::vector< std::vector<number> > hst_threepf_state(THREEPF_SIZE);
+        std::vector<number>                hst_background_state($$__MODEL_pool::backg_size);
+        std::vector< std::vector<number> > hst_twopf_re_state($$__MODEL_pool::twopf_size);
+        std::vector< std::vector<number> > hst_twopf_im_state($$__MODEL_pool::twopf_size);
+        std::vector< std::vector<number> > hst_threepf_state($$__MODEL_pool::threepf_size);
 
         // first, background
-        for(int i = 0; i < BACKG_SIZE; i++)
+        for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
           {
-            hst_background_state[i] = x(start_background + i)[0];  // only need to make a copy for one k-mode; the rest are all the same
+            hst_background_state[i] = x($$__MODEL_pool::backg_start + i)[0];  // only need to make a copy for one k-mode; the rest are all the same
           }
         this->background_history.push_back(hst_background_state);
 
         // then, two pf
-        for(int i = 0; i < TWOPF_SIZE; i++)
+        for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
           {
             std::vector<number> hst_re(this->kconfig_list.size());
             std::vector<number> hst_im(this->kconfig_list.size());
 
-            vex::copy(x(start_twopf_re_k1 + i), hst_re);
-            vex::copy(x(start_twopf_im_k1 + i), hst_im);
+            vex::copy(x($$__MODEL_pool::twopf_re_k1_start + i), hst_re);
+            vex::copy(x($$__MODEL_pool::twopf_im_k1_start + i), hst_im);
             for(int j = 0; j < this->kconfig_list.size(); j++)
               {
                 if(this->kconfig_list[j].store_background)
@@ -781,11 +741,11 @@ namespace transport
         this->twopf_im_history.push_back(hst_twopf_im_state);
 
         // finally, three pf
-        for(int i = 0; i < THREEPF_SIZE; i++)
+        for(int i = 0; i < $$__MODEL_pool::threepf_size; i++)
           {
             // ensure destination is sufficiently large
             hst_threepf_state[i].resize(this->kconfig_list.size());
-            vex::copy(x(start_threepf + i), hst_threepf_state[i]);
+            vex::copy(x($$__MODEL_pool::threepf_start + i), hst_threepf_state[i]);
           }
         this->threepf_history.push_back(hst_threepf_state);
       }
