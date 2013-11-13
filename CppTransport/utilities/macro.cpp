@@ -200,7 +200,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
     while(line.find(this->prefix) != std::string::npos)
       {
         bool fail = true;   // flag to break out of the loop, if instances of 'this->prefix' still exist but can't be rewritten
-
+     
         // loop over all macros, testing whether we can make a replacement
         for(int i = 0; i < this->N_index; i++)
           {
@@ -209,7 +209,8 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
             if((pos = line.find(this->prefix + this->index_names[i])) != std::string::npos)
               {
                 replaced = true;  // mark that we have done at least one macro replacement
-
+                fail = false;     //
+             
                 std::string new_line = "";
 
                 // found a macro -- strip out the index set associated with it
@@ -249,9 +250,17 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                 if(this->index_pre[i] != nullptr) state = (*(this->index_pre[i]))(this->data, arg_list);
 
                 // for each index assignment, write out a replaced version
+                bool endofline = false;
                 for(int j = 0; j < assgn.size(); j++)
                   {
                     assert(assgn[j].size() == indices.size());    // make sure we have the correct number of of indices
+
+                    if(j > 0 && endofline)
+                      {
+                        if(comma) new_line += ',';
+                        new_line += NEWLINE_CHAR;
+                      }
+                    endofline = false;
 
                     // replace macro
                     std::string temp_line = line;
@@ -286,8 +295,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                         if(!lhs_present)
                           {
                             if(semicolon) temp_line += ';';
-                            if(comma)     temp_line += ',';
-                            temp_line += NEWLINE_CHAR;
+                            endofline = true;
                           }
                       }
 
@@ -298,7 +306,6 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                 // destroy state
                 if(this->index_post[i] != nullptr) (*(this->index_post[i]))(state);
 
-                fail = false;
                 line = new_line;
               }
           }
