@@ -194,7 +194,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
     std::string temp_line;
     std::string new_line = "";
 
-    bool replaced = false;    // have we made any macro replacements? if not, might need to add a trailing semicolon later
+    bool replaced = false;    // have we made any macro replacements? if not, might need to add a trailing semicolon or comma later
 
     // loop while there are still macros to replace, indicated by the presence of 'this->prefix'
     while(line.find(this->prefix) != std::string::npos)
@@ -208,12 +208,12 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
 
             if((pos = line.find(this->prefix + this->index_names[i])) != std::string::npos)
               {
-                replaced = true;
+                replaced = true;  // mark that we have done at least one macro replacement
 
-                std::string temp_line;
                 std::string new_line = "";
 
                 // found a macro -- strip out the index set associated with it
+                // NOTE - this call leaves the index list intact in 'line'
                 std::vector<struct index_abstract> indices = get_index_set(line, pos + this->prefix.size() + this->index_names[i].size(),
                   this->index_names[i], this->index_indices[i], this->index_ranges[i], current_line, path);
 
@@ -238,32 +238,26 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                 assignment_package assign(this->fields, this->parameters, (this->order == indexorder_left) ? index_left_order : index_right_order);
                 std::vector< std::vector<struct index_assignment> > assgn = assign.assign(indices);
 
+                // get argument list for this macro
+                // NOTE - this call *deletes* the argument list from 'line'
+                std::vector<std::string> arg_list = get_argument_list(line,
+                                                                      pos + this->prefix.size() + this->index_names[i].size() + 2 + indices.size(),
+                                                                      current_line, path, this->index_args[i], this->index_names[i]);
+
+                // set up state, if required
+                void* state = nullptr;
+                if(this->index_pre[i] != nullptr) state = (*(this->index_pre[i]))(this->data, arg_list);
+
                 // for each index assignment, write out a replaced version
                 for(int j = 0; j < assgn.size(); j++)
                   {
                     assert(assgn[j].size() == indices.size());    // make sure we have the correct number of of indices
 
                     // replace macro
-                    temp_line = line;
+                    std::string temp_line = line;
 
-                    std::ostringstream macro_instance;
-                    macro_instance << this->prefix << this->index_names[i] << "[";
-                    for(int k = 0; k < indices.size(); k++)
-                      {
-                        macro_instance << indices[k].label;
-                      }
-                    macro_instance << "]";
-
-                    size_t r_pos;
-                    while((r_pos = temp_line.find(macro_instance.str())) != std::string::npos)
-                      {
-                        std::vector<std::string> arg_list = get_argument_list(temp_line,
-                          r_pos + macro_instance.str().size(),
-                          current_line, path, this->index_args[i], this->index_names[i]);
-
-                        temp_line.replace(r_pos, macro_instance.str().size(),
-                          (*(this->index_replacements[i]))(this->data, arg_list, assgn[j]));
-                      }
+                    temp_line.replace(pos, this->prefix.size() + this->index_names[i].size() + 2 + indices.size(),
+                                      (*(this->index_replacements[i]))(this->data, arg_list, assgn[j], state));
 
                     // map indices associated with this macro
                     map_indices(temp_line, this->prefix, assgn[j]);
@@ -300,6 +294,9 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                     // add this line
                     new_line += temp_line;
                   }
+
+                // destroy state
+                if(this->index_post[i] != nullptr) (*(this->index_post[i]))(state);
 
                 fail = false;
                 line = new_line;

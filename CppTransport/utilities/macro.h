@@ -36,8 +36,10 @@ struct replacement_data
 
 typedef std::string (*replacement_function_simple)(struct replacement_data& data, const std::vector<std::string>& args);
 typedef std::string (*replacement_function_index) (struct replacement_data& data, const std::vector<std::string>& args,
-                                                   std::vector<struct index_assignment> indices);
+                                                   std::vector<struct index_assignment> indices, void* state);
 
+typedef void*       (*replacement_function_pre)   (struct replacement_data& data, const std::vector<std::string>& args);
+typedef void        (*replacement_function_post)  (void* state);
 
 class macro_package
   {
@@ -46,13 +48,15 @@ class macro_package
                                            std::string pf, std::string sp, struct replacement_data& d,
                                            unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
                                            unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_simple* f2,
-                                           unsigned int N3, const std::string*n3, const unsigned int*i3, const unsigned int*r3,
-                                           const unsigned int*a3, const replacement_function_index*f3)
+                                           unsigned int N3, const std::string* n3, const unsigned int* i3, const unsigned int*r3,
+                                           const unsigned int* a3, const replacement_function_index* f3,
+                                           const replacement_function_pre* pr3, const replacement_function_post* po3)
       : fields(N_f), parameters(N_p), order(o),
         prefix(pf), split(sp), data(d),
         N_pre(N1), pre_names(n1), pre_args(a1), pre_replacements(f1),
         N_post(N2), post_names(n2), post_args(a2), post_replacements(f2),
-        N_index(N3), index_names(n3), index_indices(i3), index_ranges(r3), index_args(a3), index_replacements(f3)
+        N_index(N3), index_names(n3), index_indices(i3), index_ranges(r3), index_args(a3),
+        index_replacements(f3), index_pre(pr3), index_post(po3)
       {}
 
       void apply                          (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
@@ -97,6 +101,8 @@ class macro_package
       const unsigned int*                 index_ranges;
       const unsigned int*                 index_args;
       const replacement_function_index*   index_replacements;
+      const replacement_function_pre*     index_pre;
+      const replacement_function_post*    index_post;
   };
 
 

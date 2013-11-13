@@ -18,45 +18,45 @@ class u_tensor_factory
     public:
       u_tensor_factory(script *r);
 
-      virtual std::vector<GiNaC::ex> compute_sr_u() = 0;
+      virtual void compute_sr_u(std::vector<GiNaC::ex>& v) = 0;
 
-      virtual std::vector<GiNaC::ex> compute_u1() = 0;
+      virtual void compute_u1(std::vector<GiNaC::ex>& v) = 0;
 
-      virtual std::vector<GiNaC::ex> compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v) = 0;
 
-      virtual std::vector< std::vector<GiNaC::ex> > compute_u2(GiNaC::symbol& k, GiNaC::symbol& a) = 0;
+      virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector< std::vector<GiNaC::ex> >& v) = 0;
 
-      virtual std::vector< std::vector<GiNaC::ex> > compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+      virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)= 0;
+      virtual void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)= 0;
 
       // the A, B and C tensors are associated with the Hamiltonian for
       // scalar field fluctuations [see written notes]
       // actually, these compute A/H^2, B/H and C
       // all of these have mass dimension -1
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+      virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+      virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a) = 0;
+      virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
-      virtual std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v) = 0;
 
       // compute M tensor
-      virtual std::vector< std::vector<GiNaC::ex> > compute_M() = 0;
+      virtual void compute_M(std::vector< std::vector<GiNaC::ex> >& v) = 0;
 
-      virtual std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps) = 0;
+      virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v) = 0;
 
       //  CALCULATE GAUGE TRANSFORMATIONS
-      virtual std::vector<GiNaC::ex> compute_zeta_xfm_1() = 0;
+      virtual void compute_zeta_xfm_1(std::vector<GiNaC::ex>& v) = 0;
 
-      virtual std::vector< std::vector<GiNaC::ex> > compute_zeta_xfm_2() = 0;
+      virtual void compute_zeta_xfm_2(std::vector< std::vector<GiNaC::ex> >& v) = 0;
 
       virtual GiNaC::ex compute_Hsq() = 0;
 
@@ -82,45 +82,45 @@ class canonical_u_tensor_factory : public u_tensor_factory
         }
 
       //  CALCULATE DERIVED QUANTITIES
-      std::vector<GiNaC::ex> compute_sr_u();
+      void compute_sr_u(std::vector<GiNaC::ex>& v);
 
-      std::vector<GiNaC::ex> compute_u1();
+      void compute_u1(std::vector<GiNaC::ex>& v);
 
-      std::vector<GiNaC::ex> compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v);
 
-      std::vector< std::vector<GiNaC::ex> > compute_u2(GiNaC::symbol& k, GiNaC::symbol& a);
+      void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector< std::vector<GiNaC::ex> >& v);
 
-      std::vector< std::vector<GiNaC::ex> > compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+      void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_u3(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
       // the A, B and C tensors are associated with the Hamiltonian for
       // scalar field fluctuations [see written notes]
       // actually, these compute A/H^2, B/H and C
       // all of these have mass dimension -1
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+      void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+      void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_B(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a);
+      void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
-      std::vector< std::vector< std::vector<GiNaC::ex> > > compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v);
 
       // compute M tensor
-      std::vector< std::vector<GiNaC::ex> > compute_M();
+      void compute_M(std::vector< std::vector<GiNaC::ex> >& v);
 
-      std::vector< std::vector<GiNaC::ex> > compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps);
+      void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v);
 
       //  CALCULATE GAUGE TRANSFORMATIONS
-      std::vector<GiNaC::ex> compute_zeta_xfm_1();
+      void compute_zeta_xfm_1(std::vector<GiNaC::ex>& v);
 
-      std::vector< std::vector<GiNaC::ex> > compute_zeta_xfm_2();
+      void compute_zeta_xfm_2(std::vector< std::vector<GiNaC::ex> >& v);
 
       GiNaC::ex compute_Hsq();
 

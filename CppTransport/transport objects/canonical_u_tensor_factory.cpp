@@ -18,66 +18,63 @@
 #define IS_MOMENTUM(z) (z >= this->num_fields && z < 2*this->num_fields)
 
 
-std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_sr_u()
+void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v)
   {
-    std::vector<GiNaC::ex> rval;
+    v.clear();
 
     for(int i = 0; i < this->num_fields; i++)
       {
         GiNaC::ex sr_u = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
 
-        rval.push_back(sr_u);
+        v.push_back(sr_u);
       }
-
-    return(rval);
   }
 
 
-std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_u1()
+void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_u1(Hsq, eps));
+    return(this->compute_u1(Hsq, eps, v));
   }
 
 
-std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v)
   {
-    std::vector<GiNaC::ex> rval;
+    v.clear();
 
     // set up GiNaC symbols to represent epsilon = -dot(H)/H^2 and H^2
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval.push_back(this->deriv_list[i]);
+        v.push_back(this->deriv_list[i]);
       }
     for(int i = 0; i < this-> num_fields; i++)
       {
         GiNaC::ex d_deriv = -(3-eps)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
-        rval.push_back(d_deriv);
+        v.push_back(d_deriv);
       }
-
-    return(rval);
   }
 
 
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a)
+void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector< std::vector<GiNaC::ex> >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_u2(k, a, Hsq, eps));
+    return(this->compute_u2(k, a, Hsq, eps, v));
   }
 
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
-  GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
+  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v)
   {
-    std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
+    v.clear();
+    v.resize(2*this->num_fields);
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
-        rval[i].resize(2*this->num_fields);
+        v[i].resize(2*this->num_fields);
       }
 
     for(int i = 0; i < 2*this->num_fields; i++)
@@ -115,36 +112,35 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_u2(GiN
                 assert(false);
               }
 
-            (rval[i])[j] = c;
+            (v[i])[j] = c;
           }
       }
-
-    return(rval);
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_u3(k1, k2, k3, a, Hsq, eps));
+    return(this->compute_u3(k1, k2, k3, a, Hsq, eps, v));
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
+void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
   GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
-  GiNaC::ex& Hsq, GiNaC::ex& eps)
+  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
-    std::vector< std::vector< std::vector<GiNaC::ex> > > rval(2*this->num_fields);
+    v.clear();
+    v.resize(2*this->num_fields);
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
-        rval[i].resize(2*this->num_fields);
+        v[i].resize(2*this->num_fields);
         for(int j = 0; j < 2*this->num_fields; j++)
           {
-            rval[i][j].resize(2*this->num_fields);
+            v[i][j].resize(2*this->num_fields);
           }
       }
 
@@ -198,39 +194,39 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
                     assert(false);
                   }
 
-                rval[i][j][k] = c;
+                v[i][j][k] = c;
               }
           }
       }
-
-    return(rval);
   }
 
 
 // *****************************************************************************
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_A(k1, k2, k3, a, Hsq, eps));
+    return(this->compute_A(k1, k2, k3, a, Hsq, eps, v));
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
-    std::vector< std::vector< std::vector<GiNaC::ex> > > rval(this->num_fields);
+    v.clear();
+    v.resize(this->num_fields);
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval[i].resize(this->num_fields);
+        v[i].resize(this->num_fields);
         for(int j = 0; j < this->num_fields; j++)
           {
-            rval[i][j].resize(this->num_fields);
+            v[i][j].resize(this->num_fields);
           }
       }
 
@@ -240,36 +236,36 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[i][j][k] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
-
-    return(rval);
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_B(k1, k2, k3, a, Hsq, eps));
+    return(this->compute_B(k1, k2, k3, a, Hsq, eps, v));
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
-    std::vector< std::vector< std::vector<GiNaC::ex> > > rval(this->num_fields);
+    v.clear();
+    v.resize(this->num_fields);
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval[i].resize(this->num_fields);
+        v[i].resize(this->num_fields);
         for(int j = 0; j < this->num_fields; j++)
           {
-            rval[i][j].resize(this->num_fields);
+            v[i][j].resize(this->num_fields);
           }
       }
 
@@ -279,37 +275,36 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[i][j][k] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
-
-    return(rval);
-
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a)
+void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_C(k1, k2, k3, a, Hsq, eps));
+    return(this->compute_C(k1, k2, k3, a, Hsq, eps, v));
   }
 
 
-std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+  std::vector< std::vector< std::vector<GiNaC::ex> > >& v)
   {
-    std::vector< std::vector< std::vector<GiNaC::ex> > > rval(this->num_fields);
+    v.clear();
+    v.resize(this->num_fields);
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval[i].resize(this->num_fields);
+        v[i].resize(this->num_fields);
         for(int j = 0; j < this->num_fields; j++)
           {
-            rval[i][j].resize(this->num_fields);
+            v[i][j].resize(this->num_fields);
           }
       }
 
@@ -319,51 +314,48 @@ std::vector< std::vector< std::vector<GiNaC::ex> > > canonical_u_tensor_factory:
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                rval[i][j][k] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[i][j][k] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
-
-    return(rval);
   }
 
 
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_M()
+void canonical_u_tensor_factory::compute_M(std::vector< std::vector<GiNaC::ex> >& v)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
 
-    return(this->compute_M(Hsq, eps));
+    return(this->compute_M(Hsq, eps, v));
   }
 
 
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps)
+void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector< std::vector<GiNaC::ex> >& v)
   {
-    std::vector< std::vector<GiNaC::ex> > rval(this->num_fields);
+    v.clear();
+    v.resize(this->num_fields);
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval[i].resize(this->num_fields);
+        v[i].resize(this->num_fields);
       }
 
     for(int i = 0; i < this->num_fields; i++)
       {
         for(int j = 0; j < this->num_fields; j++)
           {
-            rval[i][j] = this->compute_M_component(i, j, Hsq, eps);
+            v[i][j] = this->compute_M_component(i, j, Hsq, eps);
           }
       }
-
-    return(rval);
   }
 
 
 // *****************************************************************************
 
 
-std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1()
+void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v)
   {
-    std::vector<GiNaC::ex> rval;
+    v.clear();
 
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -372,20 +364,19 @@ std::vector<GiNaC::ex> canonical_u_tensor_factory::compute_zeta_xfm_1()
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval.push_back( -(1/(2*dotH)) * diff(Hsq, this->field_list[i]) );
+        v.push_back( -(1/(2*dotH)) * diff(Hsq, this->field_list[i]) );
       }
     for(int i = 0; i < this->num_fields; i++)
       {
-        rval.push_back( -(1/(2*dotH)) * diff(Hsq, this->deriv_list[i]) );
+        v.push_back( -(1/(2*dotH)) * diff(Hsq, this->deriv_list[i]) );
       }
-
-    return(rval);
   }
 
 
-std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_xfm_2()
+void canonical_u_tensor_factory::compute_zeta_xfm_2(std::vector< std::vector<GiNaC::ex> >& v)
   {
-    std::vector< std::vector<GiNaC::ex> > rval(2*this->num_fields);
+    v.clear();
+    v.resize(2*this->num_fields);
 
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -396,10 +387,10 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
-        rval[i].resize(2*this->num_fields);
+        v[i].resize(2*this->num_fields);
         for(int j = 0; j < 2*this->num_fields; j++)
           {
-            rval[i][j] = 0;
+            v[i][j] = 0;
           }
       }
 
@@ -418,14 +409,12 @@ std::vector< std::vector<GiNaC::ex> > canonical_u_tensor_factory::compute_zeta_x
       {
         for(int j = 0; j < 2*this->num_fields; j++)
           {
-            rval[i][j] = -1/(2*dotH) * diff(diff(Hsq, COORDINATE(i)), COORDINATE(j))
-                         - diff(1/(2*dotH), COORDINATE(i)) * diff(Hsq, COORDINATE(j))
-                         - diff(1/(2*dotH), COORDINATE(j)) * diff(Hsq, COORDINATE(i))
-                         + 1/(2*dotH) * p_sum * diff(Hsq, COORDINATE(i)) * diff(Hsq, COORDINATE(j));
+            v[i][j] = -1/(2*dotH) * diff(diff(Hsq, COORDINATE(i)), COORDINATE(j))
+                      - diff(1/(2*dotH), COORDINATE(i)) * diff(Hsq, COORDINATE(j))
+                      - diff(1/(2*dotH), COORDINATE(j)) * diff(Hsq, COORDINATE(i))
+                      + 1/(2*dotH) * p_sum * diff(Hsq, COORDINATE(i)) * diff(Hsq, COORDINATE(j));
           }
       }
-
-    return(rval);
   }
 
 
