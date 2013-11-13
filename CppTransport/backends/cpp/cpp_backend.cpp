@@ -475,6 +475,9 @@ static bool process(struct replacement_data& d)
     inc.name = d.template_file;
     path.push_back(inc);
 
+    // set up a buffer
+    std::deque<std::string> buffer;
+
     struct macro_package ms(d.source->get_number_fields(), d.source->get_number_params(), d.source->get_indexorder(),
       MACRO_PREFIX, LINE_SPLIT, d,
       NUMBER_PRE_MACROS, pre_macros, pre_macro_args, pre_macro_replacements,
@@ -491,12 +494,20 @@ static bool process(struct replacement_data& d)
 
             ms.apply(line, current_line, path);
 
-            if(out.fail() == false)
-              {
-                out << line << std::endl;
-              }
+            buffer.push_back(line);
 
             current_line++;
+          }
+
+        for(std::deque<std::string>::iterator it = buffer.begin(); it != buffer.end() && out.fail() == false; it++)
+          {
+            out << *it << std::endl;
+          }
+        if(out.fail())
+          {
+            std::ostringstream msg;
+            msg << ERROR_CPP_BACKEND_WRITE << "'" << d.output_file << "'";
+            error(msg.str());
           }
       }
     else

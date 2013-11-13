@@ -19,6 +19,7 @@
 #define ERROR_BACKEND_FAILURE                 "Failed to generate output for backend"
 
 #define ERROR_BACKEND_OUTPUT                  "Error opening backend output file"
+#define ERROR_CPP_BACKEND_WRITE               "Error writing to backend output file"
 
 #define ERROR_NO_CPP_TEMPLATE                 "No C++ template specified"
 #define ERROR_MISSING_CPP_HEADER              "Could not find specified C++ header template"
