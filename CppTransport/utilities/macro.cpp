@@ -65,7 +65,7 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
     this->assign_lhs_index_types(line, lhs_indices, current_line, path);
 
     // generate an assignment for each lvalue index
-    assignment_package lvalue_assigner(this->fields, this->parameters);
+    assignment_package lvalue_assigner(this->fields, this->parameters, this->order == indexorder_left ? index_left_order : index_right_order);
     std::vector< std::vector<struct index_assignment> > lvalue_assignments = lvalue_assigner.assign(lhs_indices);
 
     // for each index assignment, carry out replacement in 'line_prefix' and then
@@ -230,7 +230,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                   }
 
                 // obtain a list of suitable index assignments
-                assignment_package assign(this->fields, this->parameters);
+                assignment_package assign(this->fields, this->parameters, (this->order == indexorder_left) ? index_left_order : index_right_order);
                 std::vector< std::vector<struct index_assignment> > assgn = assign.assign(indices);
 
                 // for each index assignment, write out a replaced version

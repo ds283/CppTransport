@@ -42,6 +42,9 @@ namespace y
           void         set_implementation       (lexeme::lexeme<keyword_type, character_type>* lex);
           void         set_model                (lexeme::lexeme<keyword_type, character_type>* lex);
 
+          void         set_indexorder_left      ();
+          void         set_indexorder_right     ();
+
           void         add_latex_attribute      (attributes* a, lexeme::lexeme<keyword_type, character_type> *lex);
 
           void         set_abserr               (struct stepper* s, lexeme::lexeme<keyword_type, character_type>* lex);

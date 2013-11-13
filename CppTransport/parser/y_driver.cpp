@@ -267,6 +267,16 @@ namespace y
             }
         }
 
+      void y_driver::set_indexorder_left()
+        {
+          this->root->set_indexorder(indexorder_left);
+        }
+
+      void y_driver::set_indexorder_right()
+        {
+          this->root->set_indexorder(indexorder_right);
+        }
+
       GiNaC::ex* y_driver::add(GiNaC::ex *l, GiNaC::ex *r)
         {
           GiNaC::ex* rval = new GiNaC::ex((*l) + (*r));

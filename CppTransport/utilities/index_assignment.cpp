@@ -17,16 +17,17 @@
 #define PARAMETER_STRING "param"
 
 
-static std::vector<unsigned int>
+static void
   make_assignment(unsigned int fields, unsigned int parameters,
-  const std::vector<struct index_abstract>& indices, unsigned int i);
+  const std::vector<struct index_abstract>& indices, unsigned int i, enum index_order order, std::deque<unsigned int>& assignment);
 
-static std::vector<struct index_assignment>
+static void
   make_index_assignment(unsigned int fields, unsigned int parameters,
-  const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices);
+  const std::deque<unsigned int>& assignment, const std::vector<struct index_abstract>& indices,
+  std::vector<struct index_assignment>& index_assignment);
 
 static bool
-  is_ordered(std::vector<unsigned int>& a, const std::vector<struct index_abstract>& indices);
+  is_ordered(std::deque<unsigned int>& a, const std::vector<struct index_abstract>& indices);
 
 
 // **************************************************************************************
@@ -36,6 +37,7 @@ std::vector< std::vector<struct index_assignment> > assignment_package::assign(c
   {
     std::vector< std::vector<struct index_assignment> > rval;
 
+    // generate the size of the set of all index assignments
     unsigned int limit = 1;
     for(int i = 0; i < indices.size(); i++)
       {
@@ -49,14 +51,19 @@ std::vector< std::vector<struct index_assignment> > assignment_package::assign(c
           }
       }
 
-    for(int i = 0; i < limit; i++)
+    // now work through the space of all index assignments, in the correct order,
+    // keeping track of which ones are correctly ordered.
+    std::deque<unsigned int> assignment;
+    std::vector<struct index_assignment> index_assignment;
+    for(unsigned int i = 0; i < limit; i++)
       {
-        std::vector<unsigned int> assignment = make_assignment(this->num_fields, this->num_parameters, indices, i);
+        make_assignment(this->num_fields, this->num_parameters, indices, i, this->order, assignment);
         assert(assignment.size() == indices.size());
 
         if(is_ordered(assignment, indices))
           {
-            rval.push_back(make_index_assignment(this->num_fields, this->num_parameters, assignment, indices));
+            make_index_assignment(this->num_fields, this->num_parameters, assignment, indices, index_assignment);
+            rval.push_back(index_assignment);
           }
       }
 
@@ -120,10 +127,11 @@ unsigned int index_numeric(const struct index_assignment& index)
 // / **************************************************************************************
 
 
-static std::vector<unsigned int> make_assignment(unsigned int fields, unsigned int parameters,
-  const std::vector<struct index_abstract>& indices, unsigned int i)
+static void make_assignment(unsigned int fields, unsigned int parameters,
+  const std::vector<struct index_abstract>& indices, unsigned int i,
+  enum index_order order, std::deque<unsigned int>& assignment)
   {
-    std::vector<unsigned int> rval;
+    assignment.clear();
 
     for(int j = 0; j < indices.size(); j++)
       {
@@ -141,21 +149,30 @@ static std::vector<unsigned int> make_assignment(unsigned int fields, unsigned i
         unsigned int this_index = i % size;
         i                       = i / size;
 
-        rval.push_back(this_index);
+        // order indicates whether we want to assign values to the indices
+        // beginning from the left or from the right
+        switch(order)
+          {
+            case index_left_order:
+              assignment.push_back(this_index);
+              break;
+            case index_right_order:
+            default:
+              assignment.push_front(this_index);
+          }
       }
-
-    return(rval);
   }
 
 
-static std::vector<struct index_assignment> make_index_assignment(unsigned int fields, unsigned int parameters,
-  const std::vector<unsigned int>& assignment, const std::vector<struct index_abstract>& indices)
+static void make_index_assignment(unsigned int fields, unsigned int parameters,
+  const std::deque<unsigned int>& assignment, const std::vector<struct index_abstract>& indices,
+  std::vector<struct index_assignment>& index_assignment)
   {
-    std::vector<struct index_assignment> rval;
-
     assert(assignment.size() == indices.size());
 
-    for(int i = 0; i < assignment.size(); i++)
+    index_assignment.clear();
+
+    for(unsigned int i = 0; i < assignment.size(); i++)
       {
         struct index_assignment index;
 
@@ -194,14 +211,11 @@ static std::vector<struct index_assignment> make_index_assignment(unsigned int f
         index.num_fields = fields;
         index.num_params = parameters;
 
-        rval.push_back(index);
+        index_assignment.push_back(index);
       }
-
-    return(rval);
   }
 
-static bool is_ordered (std::vector<unsigned int>& a,
-  const std::vector<struct index_abstract>& indices)
+static bool is_ordered (std::deque<unsigned int>& a, const std::vector<struct index_abstract>& indices)
   {
     bool rval = true;
 

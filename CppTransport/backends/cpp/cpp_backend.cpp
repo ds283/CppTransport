@@ -385,7 +385,7 @@ static bool process(struct replacement_data& d)
     inc.name = d.template_file;
     path.push_back(inc);
 
-    struct macro_package ms(d.source->get_number_fields(), d.source->get_number_params(),
+    struct macro_package ms(d.source->get_number_fields(), d.source->get_number_params(), d.source->get_indexorder(),
       MACRO_PREFIX, LINE_SPLIT, d,
       NUMBER_PRE_MACROS, pre_macros, pre_macro_args, pre_macro_replacements,
       NUMBER_POST_MACROS, post_macros, post_macro_args, post_macro_replacements,

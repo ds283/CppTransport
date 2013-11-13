@@ -18,6 +18,7 @@ enum keyword_type
       k_parameter, k_latex, k_core, k_implementation, k_model,
       k_abserr, k_relerr, k_stepper, k_stepsize,
       k_background, k_perturbations,
+      k_indexorder, k_left, k_right,
       f_abs, f_step, f_sqrt,
       f_sin, f_cos, f_tan,
       f_asin, f_acos, f_atan, f_atan2,
@@ -28,7 +29,7 @@ enum keyword_type
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-#define NUMBER_KEYWORDS (47)
+#define NUMBER_KEYWORDS (50)
 
 enum character_type
   {

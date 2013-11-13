@@ -65,6 +65,7 @@ struct stepper
     std::string name;
   };
 
+enum indexorder { indexorder_left, indexorder_right };
 
 #define SYMBOL_TABLE_SIZE (1024)
 
@@ -119,6 +120,9 @@ class script
       void                               set_model                (const std::string m);
       const std::string&                 get_model                ();
 
+      void                               set_indexorder           (enum indexorder o);
+      enum indexorder                    get_indexorder           ();
+
       void                               set_potential            (GiNaC::ex* V);
       GiNaC::ex                          get_potential            ();
       void                               unset_potential          ();
@@ -135,6 +139,8 @@ class script
       std::string                        core;
       std::string                        implementation;
       std::string                        model;
+
+      enum indexorder                    order;
 
       struct stepper                     background_stepper;
       struct stepper                     perturbations_stepper;

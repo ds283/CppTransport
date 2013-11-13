@@ -42,13 +42,13 @@ typedef std::string (*replacement_function_index) (struct replacement_data& data
 class macro_package
   {
     public:
-      macro_package                       (unsigned int N_f, unsigned int N_p,
-        std::string pf, std::string sp, struct replacement_data& d,
-        unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
-        unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_simple* f2,
-        unsigned int N3, const std::string*n3, const unsigned int*i3, const unsigned int*r3,
-        const unsigned int*a3, const replacement_function_index*f3)
-      : fields(N_f), parameters(N_p),
+      macro_package                       (unsigned int N_f, unsigned int N_p, enum indexorder o,
+                                           std::string pf, std::string sp, struct replacement_data& d,
+                                           unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
+                                           unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_simple* f2,
+                                           unsigned int N3, const std::string*n3, const unsigned int*i3, const unsigned int*r3,
+                                           const unsigned int*a3, const replacement_function_index*f3)
+      : fields(N_f), parameters(N_p), order(o),
         prefix(pf), split(sp), data(d),
         N_pre(N1), pre_names(n1), pre_args(a1), pre_replacements(f1),
         N_post(N2), post_names(n2), post_args(a2), post_replacements(f2),
@@ -71,10 +71,11 @@ class macro_package
       void
             assign_lhs_index_types        (std::string rhs, std::vector<struct index_abstract>& lhs_indices,
                                            unsigned int current_line, const std::deque<struct inclusion>& path);
-		  void  assign_index_defaults				(std::vector<struct index_abstract>& lhs_indices);
+		  void  assign_index_defaults				  (std::vector<struct index_abstract>& lhs_indices);
 
       unsigned int                        fields;
       unsigned int                        parameters;
+      enum indexorder                     order;
       struct replacement_data&            data;
 
       const std::string                   prefix;

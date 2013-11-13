@@ -65,6 +65,9 @@
 %token          stepsize
 %token          background
 %token          perturbations
+%token          indexorder
+%token          left
+%token          right
 %token          model
 %token          abs
 %token          step
@@ -147,6 +150,8 @@ script: script potential expression semicolon                                   
         | script core string semicolon                                                  { driver->set_core($3); }
         | script implementation string semicolon                                        { driver->set_implementation($3); }
         | script model string semicolon                                                 { driver->set_model($3); }
+        | script indexorder left semicolon                                              { driver->set_indexorder_left(); }
+        | script indexorder right semicolon                                             { driver->set_indexorder_right(); }
         | script field attribute_block identifier semicolon                             { driver->add_field($4, $3); }
         | script parameter attribute_block identifier semicolon                         { driver->add_parameter($4, $3); }
         | script background stepper_block semicolon                                     { driver->set_background_stepper($3); }

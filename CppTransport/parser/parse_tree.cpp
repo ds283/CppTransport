@@ -98,7 +98,7 @@ void parameter_declaration::print(std::ostream& stream)
 
 
 script::script()
-  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL)
+  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
   {
     this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
 
@@ -216,6 +216,18 @@ void script::set_model(const std::string m)
 const std::string& script::get_model()
   {
     return(this->model);
+  }
+
+
+void script::set_indexorder(enum indexorder o)
+  {
+    this->order = o;
+  }
+
+
+enum indexorder script::get_indexorder()
+  {
+    return(this->order);
   }
 
 

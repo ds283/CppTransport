@@ -1,6 +1,8 @@
 author         "David Seery and others 2013";
 tag            "please cite arXiv:XXXX.YYYY";
 
+indexorder     right;
+
 % specify which class template should be used with this model
 core           "canonical_core";
 implementation "canonical_basic";
