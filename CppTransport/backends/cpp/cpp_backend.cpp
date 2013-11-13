@@ -9,6 +9,9 @@
 #include <assert.h>
 #include <time.h>
 
+#include <vector>
+#include <list>
+
 #include "boost/algorithm/string.hpp"
 
 #include "core.h"
@@ -33,145 +36,147 @@
 
 #define DEFAULT_STEPPER_STATE_NAME "<UNKNOWN_STATE_TYPE>"
 
+#define DEFAULT_POOL_TEMPLATE      "auto $1 = $2;"
 
 // PRE macros
-static std::string replace_tool           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_version        (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_guard          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_date           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_source         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_name           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_author         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_tag            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_model          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_header         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_core           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_fields  (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_params  (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_field_list     (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_latex_list     (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_param_list     (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_platx_list     (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_state_list     (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_V              (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_Hsq            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_eps            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_step         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_stepper      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_abs_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_rel_err      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_step         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_stepper      (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_backg_stepper  (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_pert_stepper   (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_tool           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_version        (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_guard          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_date           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_source         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_name           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_author         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_tag            (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_model          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_header         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_core           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_number_fields  (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_number_params  (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_field_list     (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_latex_list     (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_param_list     (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_platx_list     (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_state_list     (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_V              (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_Hsq            (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_eps            (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_abs_err      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_rel_err      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_step         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_b_stepper      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_abs_err      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_rel_err      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_step         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_p_stepper      (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_backg_stepper  (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_pert_stepper   (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_temp_pool      (replacement_data& data, const std::vector<std::string>& args);
 
 // POST macros
-static std::string replace_unique         (struct replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_unique         (replacement_data& data, const std::vector<std::string>& args);
 
 // INDEX macros
-static std::string replace_parameter      (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_parameter      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 
-static std::string replace_field          (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_field          (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 
-static std::string replace_coordinate     (struct replacement_data& data, const std::vector<std::string>& args,
+static std::string replace_coordinate     (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 
-static void*       pre_sr_velocity        (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_sr_velocity    (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_sr_velocity        (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_sr_velocity    (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_sr_velocity       (void* state);
 
-static void*       pre_u1_tensor          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u1_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u1_tensor          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u1_tensor      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u1_tensor         (void* state);
 
-static void*       pre_u2_tensor          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u2_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u2_tensor          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u2_tensor      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u2_tensor         (void* state);
 
-static void*       pre_u3_tensor          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u3_tensor      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u3_tensor          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u3_tensor      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u3_tensor         (void* state);
 
-static void*       pre_u1_predef          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u1_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u1_predef          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u1_predef      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u1_predef         (void* state);
 
-static void*       pre_u2_predef          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u2_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u2_predef          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u2_predef      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u2_predef         (void* state);
 
-static void*       pre_u3_predef          (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u3_predef      (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u3_predef          (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u3_predef      (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u3_predef         (void* state);
 
-static void*       pre_u2_name            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u2_name        (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u2_name            (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u2_name        (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u2_name           (void* state);
 
-static void*       pre_u3_name            (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_u3_name        (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_u3_name            (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_u3_name        (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_u3_name           (void* state);
 
-static void*       pre_zeta_xfm_1         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_zeta_xfm_1     (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_zeta_xfm_1         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_zeta_xfm_1     (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_zeta_xfm_1        (void* state);
 
-static void*       pre_zeta_xfm_2         (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_zeta_xfm_2     (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_zeta_xfm_2         (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_zeta_xfm_2     (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_zeta_xfm_2        (void* state);
 
-static void*       pre_A_tensor           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_A_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_A_tensor           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_A_tensor       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_A_tensor          (void* state);
 
-static void*       pre_B_tensor           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_B_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_B_tensor           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_B_tensor       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_B_tensor          (void* state);
 
-static void*       pre_C_tensor           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_C_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_C_tensor           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_C_tensor       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_C_tensor          (void* state);
 
-static void*       pre_A_predef           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_A_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_A_predef           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_A_predef       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_A_predef          (void* state);
 
-static void*       pre_B_predef           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_B_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_B_predef           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_B_predef       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_B_predef          (void* state);
 
-static void*       pre_C_predef           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_C_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_C_predef           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_C_predef       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_C_predef          (void* state);
 
-static void*       pre_M_tensor           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_M_tensor       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_M_tensor           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_M_tensor       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_M_tensor          (void* state);
 
-static void*       pre_M_predef           (struct replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_M_predef       (struct replacement_data& data, const std::vector<std::string>& args,
+static void*       pre_M_predef           (replacement_data& data, const std::vector<std::string>& args);
+static std::string replace_M_predef       (replacement_data& data, const std::vector<std::string>& args,
                                            std::vector<struct index_assignment> indices, void* state);
 static void        post_M_predef          (void* state);
 
@@ -186,7 +191,8 @@ static const std::string pre_macros[] =
     "STATE_NAME_LIST", "V", "HUBBLE_SQ", "EPSILON",
     "BACKG_ABS_ERR", "BACKG_REL_ERR", "BACKG_STEP_SIZE", "BACKG_STEPPER",
     "PERT_ABS_ERR", "PERT_REL_ERR", "PERT_STEP_SIZE", "PERT_STEPPER",
-    "MAKE_BACKG_STEPPER", "MAKE_PERT_STEPPER"
+    "MAKE_BACKG_STEPPER", "MAKE_PERT_STEPPER",
+    "TEMP_POOL"
   };
 
 static const std::string post_macros[] =
@@ -204,7 +210,8 @@ static const replacement_function_simple pre_macro_replacements[] =
     replace_state_list, replace_V, replace_Hsq, replace_eps,
     replace_b_abs_err, replace_b_rel_err, replace_b_step, replace_b_stepper,
     replace_p_abs_err, replace_p_rel_err, replace_p_step, replace_p_stepper,
-    replace_backg_stepper, replace_pert_stepper
+    replace_backg_stepper, replace_pert_stepper,
+    replace_temp_pool
   };
 
 static const replacement_function_simple post_macro_replacements[] =
@@ -222,7 +229,8 @@ static const unsigned int pre_macro_args[] =
     0, 0, 0, 0,
     0, 0, 0, 0,
     0, 0, 0, 0,
-    1, 1
+    1, 1,
+    1
   };
 
 static const unsigned int post_macro_args[] =
@@ -320,7 +328,7 @@ static const unsigned int index_macro_args[] =
   };
 
 
-#define NUMBER_PRE_MACROS    (31)
+#define NUMBER_PRE_MACROS    (32)
 #define NUMBER_POST_MACROS   (1)
 #define NUMBER_INDEX_MACROS  (22)
 
@@ -333,7 +341,7 @@ static bool         apply_replacement(const std::string& input, const std::strin
 static std::string  strip_dot_h      (const std::string& pathname);
 static std::string  leafname         (const std::string& pathname);
 
-static bool         process          (struct replacement_data& d);
+static bool         process          (replacement_data& d);
 
 static unsigned int get_index_label  (struct index_assignment& index);
 
@@ -386,12 +394,19 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
 
     if(rval)
       {
-        struct replacement_data d;
+        // set up a buffer to allow insertion of temporaries into the output stream
+        std::list<std::string> buffer;
 
-        // set up replacement data, including u_tensor_factory
+        // set up replacement data
+        replacement_data d(buffer);
+
         d.source        = source;
         d.source_file   = data.name;
+
         d.u_factory     = u_factory;
+
+        d.pool          = buffer.begin();
+        d.pool_template = DEFAULT_POOL_TEMPLATE;
 
         d.output_file   = strip_dot_h(output) + ".h";
         d.core_file     = strip_dot_h(data.core_output) + ".h";
@@ -399,6 +414,15 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
         d.template_file = h_template;
 
         d.unique        = 0;
+
+        class macro_package ms(source->get_number_fields(), source->get_number_params(), source->get_indexorder(),
+          MACRO_PREFIX, LINE_SPLIT, d,
+          NUMBER_PRE_MACROS, pre_macros, pre_macro_args, pre_macro_replacements,
+          NUMBER_POST_MACROS, post_macros, post_macro_args, post_macro_replacements,
+          NUMBER_INDEX_MACROS, index_macros, index_macro_indices, index_macro_ranges, index_macro_args,
+                               index_macro_replacements, index_macro_pre, index_macro_post);
+
+        d.ms = &ms;
 
         rval = process(d);
       }
@@ -450,7 +474,7 @@ static std::string leafname(const std::string& pathname)
 // ******************************************************************
 
 
-static bool process(struct replacement_data& d)
+static bool process(replacement_data& d)
   {
     bool rval = true;
 
@@ -475,16 +499,6 @@ static bool process(struct replacement_data& d)
     inc.name = d.template_file;
     path.push_back(inc);
 
-    // set up a buffer
-    std::deque<std::string> buffer;
-
-    struct macro_package ms(d.source->get_number_fields(), d.source->get_number_params(), d.source->get_indexorder(),
-      MACRO_PREFIX, LINE_SPLIT, d,
-      NUMBER_PRE_MACROS, pre_macros, pre_macro_args, pre_macro_replacements,
-      NUMBER_POST_MACROS, post_macros, post_macro_args, post_macro_replacements,
-      NUMBER_INDEX_MACROS, index_macros, index_macro_indices, index_macro_ranges, index_macro_args,
-      index_macro_replacements, index_macro_pre, index_macro_post);
-
     if(in.is_open())
       {
         while(in.eof() == false && in.fail() == false)
@@ -492,14 +506,13 @@ static bool process(struct replacement_data& d)
             std::string line;
             std::getline(in, line);
 
-            ms.apply(line, current_line, path);
-
-            buffer.push_back(line);
+            d.ms->apply(line, current_line, path);
+            d.buffer.push_back(line);
 
             current_line++;
           }
 
-        for(std::deque<std::string>::iterator it = buffer.begin(); it != buffer.end() && out.fail() == false; it++)
+        for(std::list<std::string>::iterator it = d.buffer.begin(); it != d.buffer.end() && out.fail() == false; it++)
           {
             out << *it << std::endl;
           }
@@ -614,22 +627,22 @@ static std::string replace_stepper(const struct stepper& s, std::string state_na
 // PRE macros
 
 
-static std::string replace_tool(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_tool(replacement_data& d, const std::vector<std::string>& args)
   {
     return CPPTRANSPORT_NAME;
   }
 
-static std::string replace_version(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_version(replacement_data& d, const std::vector<std::string>& args)
   {
     return CPPTRANSPORT_VERSION;
   }
 
-static std::string replace_guard(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_guard(replacement_data& d, const std::vector<std::string>& args)
   {
     return "__CPP_TRANSPORT_" + d.guard + "_H_";
   }
 
-static std::string replace_date(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_date(replacement_data& d, const std::vector<std::string>& args)
   {
     time_t     now = time(0);
     struct tm  tstruct;
@@ -643,42 +656,42 @@ static std::string replace_date(struct replacement_data& d, const std::vector<st
     return(rval);
   }
 
-static std::string replace_source(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_source(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.source_file);
   }
 
-static std::string replace_name(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_name(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.source->get_name());
   }
 
-static std::string replace_author(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_author(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.source->get_author());
   }
 
-static std::string replace_tag(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_tag(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.source->get_tag());
   }
 
-static std::string replace_model(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_model(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.source->get_model());
   }
 
-static std::string replace_header(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_header(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.output_file);
   }
 
-static std::string replace_core(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_core(replacement_data& d, const std::vector<std::string>& args)
   {
     return(d.core_file);
   }
 
-static std::string replace_number_fields(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_number_fields(replacement_data& d, const std::vector<std::string>& args)
   {
     std::ostringstream out;
 
@@ -687,7 +700,7 @@ static std::string replace_number_fields(struct replacement_data& d, const std::
     return(out.str());
   }
 
-static std::string replace_number_params(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_number_params(replacement_data& d, const std::vector<std::string>& args)
   {
     std::ostringstream out;
 
@@ -696,7 +709,7 @@ static std::string replace_number_params(struct replacement_data& d, const std::
     return(out.str());
   }
 
-static std::string replace_field_list(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_field_list(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<std::string> list = d.source->get_field_list();
     std::ostringstream out;
@@ -716,7 +729,7 @@ static std::string replace_field_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
-static std::string replace_latex_list(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_latex_list(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<std::string> list = d.source->get_latex_list();
     std::ostringstream out;
@@ -736,7 +749,7 @@ static std::string replace_latex_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
-static std::string replace_param_list(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_param_list(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<std::string> list = d.source->get_param_list();
     std::ostringstream out;
@@ -756,7 +769,7 @@ static std::string replace_param_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
-static std::string replace_platx_list(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_platx_list(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<std::string> list = d.source->get_platx_list();
     std::ostringstream out;
@@ -776,7 +789,7 @@ static std::string replace_platx_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
-static std::string replace_state_list(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_state_list(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<GiNaC::symbol> f_list = d.source->get_field_symbols();
     std::vector<GiNaC::symbol> d_list = d.source->get_deriv_symbols();
@@ -803,7 +816,7 @@ static std::string replace_state_list(struct replacement_data& d, const std::vec
     return(out.str());
   }
 
-static std::string replace_V(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_V(replacement_data& d, const std::vector<std::string>& args)
   {
     GiNaC::ex potential = d.source->get_potential();
 
@@ -813,7 +826,7 @@ static std::string replace_V(struct replacement_data& d, const std::vector<std::
     return(out.str());
   }
 
-static std::string replace_Hsq(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_Hsq(replacement_data& d, const std::vector<std::string>& args)
   {
     std::string rval;
     GiNaC::ex Hsq = d.u_factory->compute_Hsq();
@@ -824,7 +837,7 @@ static std::string replace_Hsq(struct replacement_data& d, const std::vector<std
     return(out.str());
   }
 
-static std::string replace_eps(struct replacement_data& d, const std::vector<std::string>& args)
+static std::string replace_eps(replacement_data& d, const std::vector<std::string>& args)
   {
     std::string rval;
     GiNaC::ex eps = d.u_factory->compute_eps();
@@ -835,7 +848,7 @@ static std::string replace_eps(struct replacement_data& d, const std::vector<std
     return(out.str());
   }
 
-static std::string replace_b_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_abs_err(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_background_stepper();
 
@@ -845,7 +858,7 @@ static std::string replace_b_abs_err(struct replacement_data& data, const std::v
     return(out.str());
   }
 
-static std::string replace_b_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_rel_err(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_background_stepper();
 
@@ -855,7 +868,7 @@ static std::string replace_b_rel_err(struct replacement_data& data, const std::v
     return(out.str());
   }
 
-static std::string replace_b_step(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_step(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_background_stepper();
 
@@ -865,14 +878,14 @@ static std::string replace_b_step(struct replacement_data& data, const std::vect
     return(out.str());
   }
 
-static std::string replace_b_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_b_stepper(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_background_stepper();
 
     return(s.name);
   }
 
-static std::string replace_p_abs_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_p_abs_err(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_perturbations_stepper();
 
@@ -882,7 +895,7 @@ static std::string replace_p_abs_err(struct replacement_data& data, const std::v
     return(out.str());
   }
 
-static std::string replace_p_rel_err(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_p_rel_err(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_perturbations_stepper();
 
@@ -892,7 +905,7 @@ static std::string replace_p_rel_err(struct replacement_data& data, const std::v
     return(out.str());
   }
 
-static std::string replace_p_step(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_p_step(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_perturbations_stepper();
 
@@ -902,14 +915,14 @@ static std::string replace_p_step(struct replacement_data& data, const std::vect
     return(out.str());
   }
 
-static std::string replace_p_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_p_stepper(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_perturbations_stepper();
 
     return(s.name);
   }
 
-static std::string replace_backg_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_backg_stepper(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_background_stepper();
 
@@ -919,7 +932,7 @@ static std::string replace_backg_stepper(struct replacement_data& data, const st
     return(replace_stepper(s, state_name));
   }
 
-static std::string replace_pert_stepper(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_pert_stepper(replacement_data& data, const std::vector<std::string>& args)
   {
     const struct stepper s = data.source->get_perturbations_stepper();
 
@@ -929,11 +942,23 @@ static std::string replace_pert_stepper(struct replacement_data& data, const std
     return(replace_stepper(s, state_name));
   }
 
+static std::string replace_temp_pool(replacement_data& data, const std::vector<std::string>& args)
+  {
+    assert(args.size() == 1);
+    std::string t = (args.size() >= 1 ? args[0] : DEFAULT_POOL_TEMPLATE);
+
+    // mark current endpoint in the buffer as the insertion point
+
+    data.pool_template = t;
+    data.pool          = data.buffer.end();
+
+    return(""); // replace with a blank
+  }
 
 // POST macros
 
 
-static std::string replace_unique(struct replacement_data& data, const std::vector<std::string>& args)
+static std::string replace_unique(replacement_data& data, const std::vector<std::string>& args)
   {
     std::ostringstream out;
 
@@ -951,7 +976,7 @@ static std::string replace_unique(struct replacement_data& data, const std::vect
 
 // ******************************************************************
 
-static std::string replace_parameter(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_parameter(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -968,7 +993,7 @@ static std::string replace_parameter(struct replacement_data& d, const std::vect
 
 // ******************************************************************
 
-static std::string replace_field(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_field(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -985,7 +1010,7 @@ static std::string replace_field(struct replacement_data& d, const std::vector<s
 
 // ******************************************************************
 
-static std::string replace_coordinate(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_coordinate(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1016,7 +1041,7 @@ static std::string replace_coordinate(struct replacement_data& d, const std::vec
 
 // ******************************************************************
 
-static void* pre_sr_velocity(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_sr_velocity(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
     d.u_factory->compute_sr_u(*state);
@@ -1024,7 +1049,7 @@ static void* pre_sr_velocity(struct replacement_data& d, const std::vector<std::
     return(state);
   }
 
-static std::string replace_sr_velocity(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_sr_velocity(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1051,7 +1076,7 @@ static void post_sr_velocity(void* state)
 
 // ******************************************************************
 
-static void* pre_u1_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u1_tensor(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
     d.u_factory->compute_u1(*state);
@@ -1059,7 +1084,7 @@ static void* pre_u1_tensor(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u1_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u1_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1087,7 +1112,7 @@ static void post_u1_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_u1_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u1_predef(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 2);
 
@@ -1102,7 +1127,7 @@ static void* pre_u1_predef(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u1_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u1_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1130,7 +1155,7 @@ static void post_u1_predef(void* state)
 
 // ******************************************************************
 
-static void* pre_u2_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u2_tensor(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 2);
 
@@ -1143,7 +1168,7 @@ static void* pre_u2_tensor(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u2_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u2_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1173,7 +1198,7 @@ static void post_u2_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_u2_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u2_predef(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 4);
 
@@ -1191,7 +1216,7 @@ static void* pre_u2_predef(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u2_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u2_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1221,7 +1246,7 @@ static void post_u2_predef(void* state)
 
 // ******************************************************************
 
-static void* pre_u3_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u3_tensor(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 4);
 
@@ -1236,7 +1261,7 @@ static void* pre_u3_tensor(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u3_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u3_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1268,7 +1293,7 @@ static void post_u3_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_u3_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_u3_predef(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 6);
 
@@ -1288,7 +1313,7 @@ static void* pre_u3_predef(struct replacement_data& d, const std::vector<std::st
     return(state);
   }
 
-static std::string replace_u3_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u3_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1320,7 +1345,7 @@ static void post_u3_predef(void* state)
 
 // ******************************************************************
 
-static std::string replace_u2_name(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u2_name(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1343,7 +1368,7 @@ static std::string replace_u2_name(struct replacement_data& d, const std::vector
 
 // ******************************************************************
 
-static std::string replace_u3_name(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_u3_name(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1367,7 +1392,7 @@ static std::string replace_u3_name(struct replacement_data& d, const std::vector
 
 // ******************************************************************
 
-static void* pre_zeta_xfm_1(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_zeta_xfm_1(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
     d.u_factory->compute_zeta_xfm_1(*state);
@@ -1375,7 +1400,7 @@ static void* pre_zeta_xfm_1(struct replacement_data& d, const std::vector<std::s
     return(state);
   }
 
-static std::string replace_zeta_xfm_1(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_zeta_xfm_1(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1403,7 +1428,7 @@ static void post_zeta_xfm_1(void* state)
 
 // ******************************************************************
 
-static void* pre_zeta_xfm_2(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_zeta_xfm_2(replacement_data& d, const std::vector<std::string>& args)
   {
     std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
     d.u_factory->compute_zeta_xfm_2(*state);
@@ -1411,7 +1436,7 @@ static void* pre_zeta_xfm_2(struct replacement_data& d, const std::vector<std::s
     return(state);
   }
 
-static std::string replace_zeta_xfm_2(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_zeta_xfm_2(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1441,7 +1466,7 @@ static void post_zeta_xfm_2(void* state)
 
 // ******************************************************************
 
-static void* pre_A_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_A_tensor(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 4);
 
@@ -1456,7 +1481,7 @@ static void* pre_A_tensor(struct replacement_data& d, const std::vector<std::str
     return(state);
   }
 
-static std::string replace_A_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_A_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1491,7 +1516,7 @@ static void post_A_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_A_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_A_predef(replacement_data& d, const std::vector<std::string>& args)
   {
     assert(args.size() == 6);
 
@@ -1511,7 +1536,7 @@ static void* pre_A_predef(struct replacement_data& d, const std::vector<std::str
     return(state);
   }
 
-static std::string replace_A_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_A_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1546,7 +1571,7 @@ static void post_A_predef(void* state)
 
 // ******************************************************************
 
-static void* pre_B_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_B_tensor(replacement_data& d, const std::vector<std::string>& args)
 {
   assert(args.size() == 4);
   
@@ -1561,7 +1586,7 @@ static void* pre_B_tensor(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_B_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_B_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1596,7 +1621,7 @@ static void post_B_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_B_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_B_predef(replacement_data& d, const std::vector<std::string>& args)
 {
   assert(args.size() == 6);
   
@@ -1616,7 +1641,7 @@ static void* pre_B_predef(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_B_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_B_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void *state)
   {
     std::ostringstream out;
@@ -1651,7 +1676,7 @@ static void post_B_predef(void* state)
 
 // ******************************************************************
 
-static void* pre_C_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_C_tensor(replacement_data& d, const std::vector<std::string>& args)
 {
   assert(args.size() == 4);
   
@@ -1666,7 +1691,7 @@ static void* pre_C_tensor(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_C_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_C_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void *state)
   {
     std::ostringstream out;
@@ -1701,7 +1726,7 @@ static void post_C_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_C_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_C_predef(replacement_data& d, const std::vector<std::string>& args)
 {
   assert(args.size() == 6);
   
@@ -1721,7 +1746,7 @@ static void* pre_C_predef(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_C_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_C_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1756,7 +1781,7 @@ static void post_C_predef(void* state)
 
 // ******************************************************************
 
-static void* pre_M_tensor(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_M_tensor(replacement_data& d, const std::vector<std::string>& args)
 {
   std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
   d.u_factory->compute_M(*state);
@@ -1764,7 +1789,7 @@ static void* pre_M_tensor(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_M_tensor(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_M_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;
@@ -1796,7 +1821,7 @@ static void post_M_tensor(void* state)
 
 // ******************************************************************
 
-static void* pre_M_predef(struct replacement_data& d, const std::vector<std::string>& args)
+static void* pre_M_predef(replacement_data& d, const std::vector<std::string>& args)
 {
   assert(args.size() == 2);
   
@@ -1811,7 +1836,7 @@ static void* pre_M_predef(struct replacement_data& d, const std::vector<std::str
   return(state);
 }
 
-static std::string replace_M_predef(struct replacement_data& d, const std::vector<std::string>& args,
+static std::string replace_M_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
     std::ostringstream out;

@@ -12,6 +12,8 @@
 
 #include <iostream>
 #include <vector>
+#include <list>
+#include <string>
 
 #include "core.h"
 #include "parse_tree.h"
@@ -19,18 +21,33 @@
 #include "u_tensor_factory.h"
 
 
-struct replacement_data
+class macro_package;
+
+class replacement_data
   {
-    script*           source;           // parse tree corresponding to input script
-    std::string       source_file;      // name of input script
-    u_tensor_factory* u_factory;        // manufactured u_tensor factory
+  public:
+    replacement_data(std::list<std::string>& b) : buffer(b)
+      {}
 
-    std::string       output_file;      // output file being written
-    std::string       core_file;        // name of core .h file (whatever output file is being produced)
-    std::string       template_file;    // template file being used to produce output
-    std::string       guard;            // tag for #ifndef guard
+    script*           source;               // parse tree corresponding to input script
+    std::string       source_file;          // name of input script
 
-    unsigned int      unique;           // unique number used to keep track of tags
+    u_tensor_factory* u_factory;            // manufactured u_tensor factory
+
+    macro_package*    ms;                   // macro package containing replacement rules
+
+    std::string       output_file;          // output file being written
+    std::string       core_file;            // name of core .h file (whatever output file is being produced)
+    std::string       template_file;        // template file being used to produce output
+    std::string       guard;                // tag for #ifndef guard
+
+    unsigned int      unique;               // unique number used to keep track of tags
+
+    std::list<std::string>&
+                      buffer;               // output buffer
+    std::list<std::string>::iterator
+                      pool;                 // current insertion point for temporary pool
+    std::string       pool_template;        // template for generating temporaries
   };
 
 
@@ -45,7 +62,7 @@ class macro_package
   {
     public:
       macro_package                       (unsigned int N_f, unsigned int N_p, enum indexorder o,
-                                           std::string pf, std::string sp, struct replacement_data& d,
+                                           std::string pf, std::string sp, replacement_data& d,
                                            unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
                                            unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_simple* f2,
                                            unsigned int N3, const std::string* n3, const unsigned int* i3, const unsigned int*r3,
@@ -80,7 +97,7 @@ class macro_package
       unsigned int                        fields;
       unsigned int                        parameters;
       enum indexorder                     order;
-      struct replacement_data&            data;
+      replacement_data&                   data;
 
       const std::string                   prefix;
       const std::string                   split;
