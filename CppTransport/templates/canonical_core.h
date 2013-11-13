@@ -204,6 +204,8 @@ namespace transport
         const auto $$__FIELD[a]     = fields[$$__a];
         const auto __Mp             = this->M_Planck;
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         number rval = $$__V;
 
         return(rval);
@@ -360,6 +362,8 @@ namespace transport
             const auto $$__FIELD[a]     = __ics[$$__a];
             const auto __Mp             = this->M_Planck;
 
+            $$__TEMP_POOL{auto $1 = $2;}
+
             __rics.push_back($$__SR_VELOCITY[a]);
           }
         else if(__ics.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
@@ -419,6 +423,8 @@ namespace transport
         const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
 
         number     __tpf             = 0.0;
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
 //        std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
 //
@@ -505,6 +511,8 @@ namespace transport
 
       number     __tpf             = 0.0;
 
+      $$__TEMP_POOL{auto $1 = $2;}
+
 //      std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __M;
 //
 //      __M[$$__a][$$__b] = $$__M_PREDEF[ab]{__Hsq, __eps};
@@ -551,6 +559,8 @@ namespace transport
         // (not at the start of the integration)
         const auto __Hsq             = $$__HUBBLE_SQ;
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         if(!__silent)
           {
             __stream << "Normalization of comoving wavenumbers" << std::endl;
@@ -594,6 +604,8 @@ namespace transport
         const auto __k1dotk2         = (__kmode_3*__kmode_3 - __kmode_1*__kmode_1 - __kmode_2*__kmode_2)/2.0;
 
         number     __tpf             = 0.0;
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
         std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k2k3;
         std::array< std::array< std::array<number, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS>, $$__NUMBER_FIELDS> __A_k1k3k2;
@@ -870,6 +882,8 @@ namespace transport
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = this->M_Planck;
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
         __dN[$$__A] = $$__ZETA_XFM_1[A];
       }
@@ -882,6 +896,8 @@ namespace transport
         const auto $$__PARAMETER[1]  = this->parameters[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = this->M_Planck;
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
         __ddN.resize(2*$$__NUMBER_FIELDS);
         for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
@@ -907,6 +923,8 @@ namespace transport
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         __u2.resize(2*$$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
@@ -928,6 +946,8 @@ namespace transport
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
         __u3.resize(2*$$__NUMBER_FIELDS);
 
@@ -955,6 +975,8 @@ namespace transport
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         __A.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
@@ -981,6 +1003,8 @@ namespace transport
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
 
+        $$__TEMP_POOL{auto $1 = $2;}
+
         __B.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
@@ -1006,6 +1030,8 @@ namespace transport
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
         const auto __a                    = exp(__N);
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
         __C.resize($$__NUMBER_FIELDS);
 
@@ -1034,6 +1060,8 @@ namespace transport
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
+
+        $$__TEMP_POOL{auto $1 = $2;}
 
         __dxdt[this->flatten($$__A)] = $$__U1_PREDEF[A]{__Hsq,__eps};
       }
