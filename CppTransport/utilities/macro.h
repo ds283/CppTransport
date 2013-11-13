@@ -64,7 +64,7 @@ class macro_package
       void blank_post                     (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
       void apply_index                    (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
                                            unsigned int current_line, const std::deque<struct inclusion>& path,
-                                           const bool semicolon, const bool lhs_present);
+                                           const bool semicolon, const bool comma, const bool lhs_present);
 
       std::vector<struct index_abstract>
             get_lhs_indices               (std::string lhs, unsigned int current_line, const std::deque<struct inclusion>& path);

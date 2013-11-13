@@ -55,6 +55,14 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
         line.pop_back();
       }
 
+    // check if the last component is a comma
+    bool comma = false;
+    if(line.back() == ',')
+      {
+        comma = true;
+        line.pop_back();
+      }
+
     // extract a set of indices on the LHS, represented by here by the prefix 'line_prefix'
     // these 'lvalue' indices are excluded from the summation convention *within* each line
     // (of course, we eventually want to write out the whole system of equations;
@@ -83,12 +91,9 @@ void macro_package::apply(std::string& line, unsigned int current_line, const st
             lhs_indices[j].assignment = (lvalue_assignments[i])[j];
           }
 
-        this->apply_index(cur_line, lhs_indices, current_line, path, semicolon, line_prefix != "");
+        this->apply_index(cur_line, lhs_indices, current_line, path, semicolon, comma, line_prefix != "");
 
-        if(i > 0)
-          {
-            new_line += NEWLINE_CHAR;
-          }
+        if(i > 0) new_line += NEWLINE_CHAR;
 //        new_line += cur_line_prefix + (cur_line_prefix != "" ? NEWLINE_CHAR : "") + cur_line;
         new_line += cur_line_prefix + cur_line;
       }
@@ -184,7 +189,7 @@ void macro_package::blank_post(std::string& line, unsigned int current_line, con
 
 // TODO: this macro replacement implementation is fairly kludgy - would be nice to improve it
 void macro_package::apply_index(std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-  unsigned int current_line, const std::deque<struct inclusion>& path, const bool semicolon, const bool lhs_present)
+  unsigned int current_line, const std::deque<struct inclusion>& path, const bool semicolon, const bool comma, const bool lhs_present)
   {
     std::string temp_line;
     std::string new_line = "";
@@ -266,7 +271,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                     // check whether there are any unresolved replacements after rewriting any remaining instances of LHS indices
                     // and removing any instances of post-macros
 
-                    // if there are none, we want to consider adding a terminal semicolon if that has been asked for
+                    // if there are none, we want to consider adding a terminal comma or semicolon if that has been asked for
                     // we only do this if there is no LHS present, because only in that case is the result of
                     // each individual index replacement a complete statement;
                     // if a LHS is present, then it's the *sum* of all index replacements which is a complete statement
@@ -286,10 +291,8 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                       {
                         if(!lhs_present)
                           {
-                            if(semicolon)
-                              {
-                                temp_line += ';';
-                              }
+                            if(semicolon) temp_line += ';';
+                            if(comma)     temp_line += ',';
                             temp_line += NEWLINE_CHAR;
                           }
                       }
@@ -318,10 +321,11 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
       }
     map_indices(line, this->prefix, lhs_assignments);
 
-    if((lhs_present || !replaced) && semicolon)
-      {
-        line += ";";
-      }
+    // add semicolons and commas if ndeeded,
+    // but don't add a comma if we made any index replacement.
+    // In that case, presumably, the indices make a list which does not require a terminal comma
+    if((lhs_present || !replaced) && semicolon) line += ';';
+    if(!replaced && comma)                      line += ',';
   }
 
 
