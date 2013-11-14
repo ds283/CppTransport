@@ -12,7 +12,7 @@
 #include "input.h"
 
 
-typedef bool (*backend_function)(const struct input& data, finder& path);
+typedef bool (*backend_function)(const struct input& data, finder& path, bool cse);
 
 #define NUMBER_BACKENDS (1)
 

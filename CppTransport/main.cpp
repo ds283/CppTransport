@@ -126,15 +126,13 @@ int main(int argc, const char *argv[])
     std::deque<struct input> inputs;
     std::string              current_core = "";
     std::string              current_implementation = "";
+    bool                     cse = true;
 
     for(int i = 1; i < argc; i++)
       {
         if(strcmp(argv[i], "-I") == 0)
           {
-            if(i + 1 < argc)
-              {
-                path.add(std::string(argv[++i]));
-              }
+            if(i + 1 < argc) path.add(std::string(argv[++i]));
             else
               {
                 std::ostringstream msg;
@@ -144,10 +142,7 @@ int main(int argc, const char *argv[])
           }
         else if(strcmp(argv[i], "--core-output") == 0)
           {
-            if(i + 1 < argc)
-              {
-                current_core = (std::string)argv[++i];
-              }
+            if(i + 1 < argc) current_core = (std::string)argv[++i];
             else
               {
                 std::ostringstream msg;
@@ -157,10 +152,7 @@ int main(int argc, const char *argv[])
           }
         else if(strcmp(argv[i], "--implementation-output") == 0)
           {
-            if(i + 1 < argc)
-              {
-                current_implementation = (std::string)argv[++i];
-              }
+            if(i + 1 < argc) current_implementation = (std::string)argv[++i];
             else
               {
                 std::ostringstream msg;
@@ -173,14 +165,8 @@ int main(int argc, const char *argv[])
             std::string backend = "";
             bool        found   = false;
 
-            if(i + 1 < argc)
-              {
-                backend = argv[++i];
-              }
-            else
-              {
-                error(ERROR_MISSING_BACKEND);
-              }
+            if(i + 1 < argc) backend = argv[++i];
+            else             error(ERROR_MISSING_BACKEND);
 
             for(int i = 0; i < NUMBER_BACKENDS; i++)
               {
@@ -197,6 +183,8 @@ int main(int argc, const char *argv[])
                 error(msg.str());
               }
           }
+        else if(strcmp(argv[i], "--cse") == 0)    cse = true;
+        else if(strcmp(argv[i], "--no-cse") == 0) cse = false;
         else  // assume to be an input file we are processing
           {
             struct input in;
@@ -214,10 +202,7 @@ int main(int argc, const char *argv[])
             in.driver = new y::y_driver();
             in.parser = new y::y_parser(in.lexer, in.driver);
 
-            if(in.parser->parse() == FAIL)
-              {
-                warn(WARNING_PARSING_FAILED + (std::string)(" '") + in.name + (std::string)("'"));
-              }
+            if(in.parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + in.name + (std::string)("'"));
 
             // in.driver->get_script()->print(std::cerr);
             if(current_core != "")
@@ -225,20 +210,14 @@ int main(int argc, const char *argv[])
                 in.core_output = current_core;
                 current_core = "";
               }
-            else
-              {
-                in.core_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_core()));
-              }
+            else in.core_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_core()));
 
             if(current_implementation != "")
               {
                 in.implementation_output = current_implementation;
                 current_implementation = "";
               }
-            else
-              {
-                in.implementation_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_implementation()));
-              }
+            else in.implementation_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_implementation()));
 
             inputs.push_back(in);
           }
@@ -251,7 +230,7 @@ int main(int argc, const char *argv[])
           {
             if(backend_selector[j])
               {
-                if((*(backend_dispatcher[j]))(inputs[i], path) == false)
+                if((*(backend_dispatcher[j]))(inputs[i], path, cse) == false)
                   {
                     std::ostringstream msg;
                     msg << ERROR_BACKEND_FAILURE << " '" << backend_table[j] << "'";
@@ -291,14 +270,8 @@ static std::string mangle_output_name(std::string input, std::string tag)
 
     if((pos = input.find(MODEL_SCRIPT_SUFFIX)) != std::string::npos)
       {
-        if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH)
-          {
-            output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos) + "_" + tag;
-          }
-        else
-          {
-            output = input + "_" + tag;
-          }
+        if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH) output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos) + "_" + tag;
+        else                                                   output = input + "_" + tag;
       }
 
     return(output);
@@ -310,14 +283,8 @@ static std::string mangle_input_name(std::string input)
     size_t      pos = 0;
     std::string output;
 
-    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos)
-      {
-        output = input.erase(0, pos+1);
-      }
-    else
-      {
-        output = input;
-      }
+    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos+1);
+    else                                                             output = input;
 
     return(output);
   }

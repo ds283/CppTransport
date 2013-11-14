@@ -18,6 +18,7 @@
 #include "cpp_backend.h"
 #include "to_printable.h"
 #include "macro.h"
+#include "cse.h"
 
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
@@ -337,7 +338,7 @@ static const unsigned int index_macro_args[] =
 
 static bool         apply_replacement(const std::string& input, const std::string& output,
                                       u_tensor_factory* u_factory,
-                                      const struct input& data, script* source, finder& path);
+                                      const struct input& data, script* source, finder& path, bool cse);
 static std::string  strip_dot_h      (const std::string& pathname);
 static std::string  leafname         (const std::string& pathname);
 
@@ -353,7 +354,7 @@ static std::string  replace_stepper  (const struct stepper& s, std::string state
 
 // generate C++ output
 // returns 'false' if this fails
-bool cpp_backend(const struct input& data, finder& path)
+bool cpp_backend(const struct input& data, finder& path, bool cse)
   {
     bool rval = true;
 
@@ -361,8 +362,8 @@ bool cpp_backend(const struct input& data, finder& path)
 
     u_tensor_factory* u_factory = make_u_tensor_factory(source);
 
-    rval = apply_replacement(source->get_core(), data.core_output, u_factory, data, source, path);
-    if(rval) { rval = apply_replacement(source->get_implementation(), data.implementation_output, u_factory, data, source, path); }
+    rval = apply_replacement(source->get_core(), data.core_output, u_factory, data, source, path, cse);
+    if(rval) { rval = apply_replacement(source->get_implementation(), data.implementation_output, u_factory, data, source, path, cse); }
 
     delete u_factory;
 
@@ -372,7 +373,7 @@ bool cpp_backend(const struct input& data, finder& path)
 
 static bool apply_replacement(const std::string& input, const std::string& output,
                               u_tensor_factory* u_factory,
-                              const struct input& data, script* source, finder& path)
+                              const struct input& data, script* source, finder& path, bool cse)
   {
     bool rval = true;
     std::string h_template;
@@ -405,6 +406,7 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
 
         d.u_factory     = u_factory;
 
+        d.cse           = cse;
         d.pool          = buffer.begin();
         d.pool_template = DEFAULT_POOL_TEMPLATE;
 

@@ -43,6 +43,7 @@ class replacement_data
 
     unsigned int      unique;               // unique number used to keep track of tags
 
+    bool              cse;                  // whether to perform CSE on output exprs, generating temporaries
     std::list<std::string>&
                       buffer;               // output buffer
     std::list<std::string>::iterator
