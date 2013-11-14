@@ -45,9 +45,12 @@
 
 #include <string>
 
+#include <map>
+#include <utility>
+
 #include "ginac/ginac.h"
 
-#define DEFAULT_CSE_KERNEL_NAME "t"
+#define DEFAULT_CSE_KERNEL_NAME "__t"
 
 class cse
   {

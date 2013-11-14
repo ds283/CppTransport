@@ -42,7 +42,8 @@
 
 #include <iostream>
 #include <sstream>
-#include <string>
+#include <map>
+#include <utility>
 
 #include "msg_en.h"
 
@@ -106,9 +107,9 @@ std::string cse::temporaries(const std::string& t)
           {
             std::string line = t;
 
-            t.replace(lhs_pos, 2, this->decls[i].first);
-            t.replace(rhs_pos, 2, this->decls[i].second);
-            out << t << std::endl;
+            line.replace(lhs_pos, (size_t)2, this->decls[i].first);
+            line.replace(rhs_pos, (size_t)2, this->decls[i].second);
+            out << line << std::endl;
           }
       }
     else
@@ -166,7 +167,7 @@ std::string cse::print_operands(const GiNaC::ex& expr, std::string op)
       {
         for(size_t i = 0; i < n; i++)
           {
-            out << (i > 0 ? op : "") << this->symbols[expr.op(i)];
+            out << (i > 0 ? op : "") << this->symbol(expr.op(i));
           }
       }
     else
