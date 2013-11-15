@@ -338,17 +338,18 @@ static const unsigned int index_macro_args[] =
 
 // ******************************************************************
 
-static bool         apply_replacement(const std::string& input, const std::string& output,
-                                      u_tensor_factory* u_factory, cse& temp_factory, flattener& fl,
-                                      const struct input& data, script* source, finder& path, bool cse);
-static std::string  strip_dot_h      (const std::string& pathname);
-static std::string  leafname         (const std::string& pathname);
+static bool         apply_replacement  (const std::string& input, const std::string& output,
+                                        u_tensor_factory* u_factory, cse& temp_factory, flattener& fl,
+                                        const struct input& data, script* source, finder& path, bool cse);
+static std::string  strip_dot_h        (const std::string& pathname);
+static std::string  leafname           (const std::string& pathname);
 
-static bool         process          (replacement_data& d);
+static bool         process            (replacement_data& d);
 
-static unsigned int get_index_label  (struct index_assignment& index);
+static unsigned int get_index_label    (struct index_assignment& index);
+static void         deposit_temporaries(replacement_data& d);
 
-static std::string  replace_stepper  (const struct stepper& s, std::string state_name);
+static std::string  replace_stepper    (const struct stepper& s, std::string state_name);
 
 
 // ******************************************************************
@@ -517,6 +518,9 @@ static bool process(replacement_data& d)
 
             d.current_line++;
           }
+     
+        // flush any remaining temporaries
+        deposit_temporaries(d);
 
         for(std::list<std::string>::iterator it = d.buffer.begin(); it != d.buffer.end() && out.fail() == false; it++)
           {
@@ -569,6 +573,21 @@ static unsigned int get_index_label(struct index_assignment& index)
       }
 
     return(label);
+  }
+
+static void deposit_temporaries(replacement_data& data)
+  {
+    // deposit any temporaries generated in the current temporary pool,
+    // and then reset
+    //
+    // the insertion happens before the element pointed
+    // to by data.pool, so there should be no need
+    // to update its location
+    std::string temps = data.temp_factory.temporaries(data.pool_template);
+    data.ms->apply(temps);
+    data.buffer.insert(data.pool, temps);
+ 
+    data.temp_factory.clear();
   }
 
 
@@ -949,8 +968,15 @@ static std::string replace_temp_pool(replacement_data& data, const std::vector<s
   {
     assert(args.size() == 1);
     std::string t = (args.size() >= 1 ? args[0] : DEFAULT_POOL_TEMPLATE);
-
-    // mark current endpoint in the buffer as the insertion point
+ 
+    // deposit any temporaries generated up to this point the current temporary pool
+    //
+    // the insertion happens before the element pointed
+    // to by data.pool, so there should be no need
+    // to update its location
+    deposit_temporaries(data);
+ 
+    // mark current endpoint in the buffer as the new insertion point
 
     data.pool_template = t;
     data.pool          = --data.buffer.end();

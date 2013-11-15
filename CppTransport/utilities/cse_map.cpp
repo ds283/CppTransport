@@ -10,7 +10,7 @@
 cse_map::cse_map(std::vector<GiNaC::ex>* l, replacement_data& d)
   : list(l), data(d)
   {
-    data.temp_factory.clear();
+//    data.temp_factory.clear();
 
     if(data.do_cse)
       {
@@ -19,16 +19,6 @@ cse_map::cse_map(std::vector<GiNaC::ex>* l, replacement_data& d)
           {
             data.temp_factory.parse((*list)[i]);
           }
-
-        // deposit any temporaries generated
-        // by this process in the current temporary pool
-        //
-        // the insertion happens before the element pointed
-        // to by data.pool, so there should be no need
-        // to update its location
-        std::string temps = data.temp_factory.temporaries(data.pool_template);
-        data.ms->apply(temps);
-        data.buffer.insert(data.pool, temps);
       }
   }
 
@@ -44,7 +34,6 @@ std::string cse_map::operator[](unsigned int index)
             std::ostringstream out;
             out << this->data.temp_factory.symbol((*this->list)[index]);
             rval = out.str();
-//            this->data.ms->apply(rval);
           }
         else
           {
