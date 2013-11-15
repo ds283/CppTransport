@@ -327,11 +327,11 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, f
       {
         if(this->is_field(i))
           {
-            v[fl.flatten(i)] = -(1/(2*dotH)) * diff(Hsq, this->field_list[i]);
+            v[fl.flatten(i)] = -(1/(2*dotH)) * diff(Hsq, this->field_list[this->species(i)]);
           }
         else if(this->is_momentum(i))
           {
-            v[fl.flatten(i)] =  -(1/(2*dotH)) * diff(Hsq, this->deriv_list[i]);
+            v[fl.flatten(i)] =  -(1/(2*dotH)) * diff(Hsq, this->deriv_list[this->species(i)]);
           }
         else
           {
