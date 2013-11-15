@@ -505,7 +505,7 @@ namespace transport
 
         const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)];
 
-        $$__TEMP_POOL{auto $1 = $2;}
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __background
 #undef __dtwopf
@@ -577,7 +577,7 @@ namespace transport
 
         const auto __threepf_$$__A_$$__B_$$__C = $$// __x[$$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)];
 
-        $$__TEMP_POOL{auto $1 = $2;}
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __background
 #undef __dtwopf_re_k1
