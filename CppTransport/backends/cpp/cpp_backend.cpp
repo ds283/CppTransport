@@ -953,7 +953,7 @@ static std::string replace_temp_pool(replacement_data& data, const std::vector<s
     // mark current endpoint in the buffer as the insertion point
 
     data.pool_template = t;
-    data.pool          = data.buffer.end();
+    data.pool          = --data.buffer.end();
 
     return(""); // replace with a blank
   }
