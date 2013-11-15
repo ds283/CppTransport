@@ -19,6 +19,8 @@
 #include "to_printable.h"
 #include "macro.h"
 #include "cse.h"
+#include "flatten.h"
+#include "cse_map.h"
 
 #define MACRO_PREFIX "$$__"
 #define LINE_SPLIT   "$$//"
@@ -337,7 +339,7 @@ static const unsigned int index_macro_args[] =
 // ******************************************************************
 
 static bool         apply_replacement(const std::string& input, const std::string& output,
-                                      u_tensor_factory* u_factory,
+                                      u_tensor_factory* u_factory, cse& temp_factory, flattener& fl,
                                       const struct input& data, script* source, finder& path, bool cse);
 static std::string  strip_dot_h      (const std::string& pathname);
 static std::string  leafname         (const std::string& pathname);
@@ -354,16 +356,18 @@ static std::string  replace_stepper  (const struct stepper& s, std::string state
 
 // generate C++ output
 // returns 'false' if this fails
-bool cpp_backend(const struct input& data, finder& path, bool cse)
+bool cpp_backend(const struct input& data, finder& path, bool do_cse)
   {
     bool rval = true;
 
     script* source = data.driver->get_script();
 
     u_tensor_factory* u_factory = make_u_tensor_factory(source);
+    cse               temp_factory(0);
+    flattener         fl(1);  // dimension of flattener will be set later
 
-    rval = apply_replacement(source->get_core(), data.core_output, u_factory, data, source, path, cse);
-    if(rval) { rval = apply_replacement(source->get_implementation(), data.implementation_output, u_factory, data, source, path, cse); }
+    rval = apply_replacement(source->get_core(), data.core_output, u_factory, temp_factory, fl, data, source, path, do_cse);
+    if(rval) rval = apply_replacement(source->get_implementation(), data.implementation_output, u_factory, temp_factory, fl, data, source, path, do_cse);
 
     delete u_factory;
 
@@ -372,8 +376,8 @@ bool cpp_backend(const struct input& data, finder& path, bool cse)
 
 
 static bool apply_replacement(const std::string& input, const std::string& output,
-                              u_tensor_factory* u_factory,
-                              const struct input& data, script* source, finder& path, bool cse)
+                              u_tensor_factory* u_factory, cse& temp_factory, flattener& fl,
+                              const struct input& data, script* source, finder& path, bool do_cse)
   {
     bool rval = true;
     std::string h_template;
@@ -399,14 +403,14 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
         std::list<std::string> buffer;
 
         // set up replacement data
-        replacement_data d(buffer);
+        replacement_data d(buffer, temp_factory, fl);
 
         d.source        = source;
         d.source_file   = data.name;
 
         d.u_factory     = u_factory;
 
-        d.cse           = cse;
+        d.do_cse        = do_cse;
         d.pool          = buffer.begin();
         d.pool_template = DEFAULT_POOL_TEMPLATE;
 
@@ -416,6 +420,15 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
         d.template_file = h_template;
 
         d.unique        = 0;
+
+        d.num_fields    = source->get_number_fields();
+
+        // set up a deque of inclusions for error reporting purposes
+        struct inclusion inc;
+        inc.line = 0;               // line number is irrelevant; we just set it to zero
+        inc.name = d.template_file;
+        d.path.push_back(inc);
+        d.current_line = 1;
 
         class macro_package ms(source->get_number_fields(), source->get_number_params(), source->get_indexorder(),
           MACRO_PREFIX, LINE_SPLIT, d,
@@ -480,9 +493,6 @@ static bool process(replacement_data& d)
   {
     bool rval = true;
 
-    unsigned int current_line = 1;
-    std::deque<struct inclusion> path;
-
     std::ofstream out;
     out.open(d.output_file.c_str());
     if(out.fail())
@@ -495,12 +505,6 @@ static bool process(replacement_data& d)
     std::ifstream in;
     in.open(d.template_file.c_str());
 
-    // set up a deque of inclusions for error reporting purposes
-    struct inclusion inc;
-    inc.line = 0;               // line number is irrelevant; we just set it to zero
-    inc.name = d.template_file;
-    path.push_back(inc);
-
     if(in.is_open())
       {
         while(in.eof() == false && in.fail() == false)
@@ -508,10 +512,10 @@ static bool process(replacement_data& d)
             std::string line;
             std::getline(in, line);
 
-            d.ms->apply(line, current_line, path);
+            d.ms->apply(line);
             d.buffer.push_back(line);
 
-            current_line++;
+            d.current_line++;
           }
 
         for(std::list<std::string>::iterator it = d.buffer.begin(); it != d.buffer.end() && out.fail() == false; it++)
@@ -533,10 +537,7 @@ static bool process(replacement_data& d)
         rval = false;
       }
 
-    if(rval == true)
-      {
-        rval = !out.fail();
-      }
+    if(rval == true) rval = !out.fail();
 
     in.close();
     out.close();
@@ -1045,71 +1046,68 @@ static std::string replace_coordinate(replacement_data& d, const std::vector<std
 
 static void* pre_sr_velocity(replacement_data& d, const std::vector<std::string>& args)
   {
-    std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
-    d.u_factory->compute_sr_u(*state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_sr_u(*container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_sr_velocity(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 1);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[0].trait == index_field);
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector<GiNaC::ex>* sr_velocity = (std::vector<GiNaC::ex>*)state;
+    d.fl.set_size(d.num_fields);
 
-    out << GiNaC::csrc << (*sr_velocity)[indices[0].species];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(indices[0].species)]);
   }
 
 static void post_sr_velocity(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector<GiNaC::ex>*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
 
 static void* pre_u1_tensor(replacement_data& d, const std::vector<std::string>& args)
   {
-    std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
-    d.u_factory->compute_u1(*state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u1(*container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u1_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 1);
     assert(indices[0].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector<GiNaC::ex>* u1 = (std::vector<GiNaC::ex>*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
-
-    out << GiNaC::csrc << (*u1)[i_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label)]);
   }
 
 static void post_u1_tensor(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector<GiNaC::ex>*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1123,36 +1121,34 @@ static void* pre_u1_predef(replacement_data& d, const std::vector<std::string>& 
     GiNaC::ex     Hsq = Hsq_symbol;
     GiNaC::ex     eps = eps_symbol;
 
-    std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
-    d.u_factory->compute_u1(Hsq, eps, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u1(Hsq, eps, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u1_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 1);
     assert(indices[0].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector<GiNaC::ex>* u1 = (std::vector<GiNaC::ex>*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
-
-    out << GiNaC::csrc << (*u1)[i_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label)]);
   }
 
 static void post_u1_predef(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector<GiNaC::ex>*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1164,38 +1160,37 @@ static void* pre_u2_tensor(replacement_data& d, const std::vector<std::string>& 
     GiNaC::symbol k(args.size() >= 1 ? args[0] : DEFAULT_K_NAME);
     GiNaC::symbol a(args.size() >= 2 ? args[1] : DEFAULT_A_NAME);
 
-    std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
-    d.u_factory->compute_u2(k, a, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u2(k, a, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u2_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 2);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector<GiNaC::ex> >* u2 = (std::vector< std::vector<GiNaC::ex> >*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
 
-    out << GiNaC::csrc << (*u2)[i_label][j_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label)]);
   }
 
 static void post_u2_tensor(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector<GiNaC::ex> >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1212,38 +1207,37 @@ static void* pre_u2_predef(replacement_data& d, const std::vector<std::string>& 
     GiNaC::ex     Hsq = Hsq_symbol;
     GiNaC::ex     eps = eps_symbol;
 
-    std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
-    d.u_factory->compute_u2(k, a, Hsq, eps, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u2(k, a, Hsq, eps, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u2_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 2);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector<GiNaC::ex> >* u2 = (std::vector< std::vector<GiNaC::ex> >*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
 
-    out << GiNaC::csrc << (*u2)[i_label][j_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label)]);
   }
 
 static void post_u2_predef(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector<GiNaC::ex> >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1257,40 +1251,39 @@ static void* pre_u3_tensor(replacement_data& d, const std::vector<std::string>& 
     GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
     GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-    d.u_factory->compute_u3(k1, k2, k3, a, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u3(k1, k2, k3, a, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u3_tensor(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
     assert(indices[2].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* u3 = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*u3)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_u3_tensor(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1309,40 +1302,39 @@ static void* pre_u3_predef(replacement_data& d, const std::vector<std::string>& 
     GiNaC::ex     Hsq = Hsq_symbol;
     GiNaC::ex     eps = eps_symbol;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-    d.u_factory->compute_u3(k1, k2, k3, a, Hsq, eps, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_u3(k1, k2, k3, a, Hsq, eps, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_u3_predef(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
     assert(indices[2].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* u3 = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*u3)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_u3_predef(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1396,74 +1388,72 @@ static std::string replace_u3_name(replacement_data& d, const std::vector<std::s
 
 static void* pre_zeta_xfm_1(replacement_data& d, const std::vector<std::string>& args)
   {
-    std::vector<GiNaC::ex>* state = new std::vector<GiNaC::ex>;
-    d.u_factory->compute_zeta_xfm_1(*state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_zeta_xfm_1(*container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_zeta_xfm_1(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 1);
     assert(indices[0].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector<GiNaC::ex>* dN = (std::vector<GiNaC::ex>*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
 
-    out << GiNaC::csrc << (*dN)[i_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label)]);
   }
 
 static void post_zeta_xfm_1(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector<GiNaC::ex>*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
 
 static void* pre_zeta_xfm_2(replacement_data& d, const std::vector<std::string>& args)
   {
-    std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
-    d.u_factory->compute_zeta_xfm_2(*state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_zeta_xfm_2(*container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_zeta_xfm_2(replacement_data& d, const std::vector<std::string>& args,
   std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 2);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector<GiNaC::ex> >* ddN = (std::vector< std::vector<GiNaC::ex> >*)state;
+    d.fl.set_size(2*d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
 
-    out << GiNaC::csrc << (*ddN)[i_label][j_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label)]);
   }
 
 static void post_zeta_xfm_2(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector<GiNaC::ex> >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1477,17 +1467,17 @@ static void* pre_A_tensor(replacement_data& d, const std::vector<std::string>& a
     GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
     GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-    d.u_factory->compute_A(k1, k2, k3, a, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_A(k1, k2, k3, a, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_A_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1497,23 +1487,22 @@ static std::string replace_A_tensor(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* A = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*A)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_A_tensor(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
@@ -1532,17 +1521,17 @@ static void* pre_A_predef(replacement_data& d, const std::vector<std::string>& a
     GiNaC::ex     Hsq = Hsq_symbol;
     GiNaC::ex     eps = eps_symbol;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-    d.u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *state);
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *container, d.fl);
 
-    return(state);
+    cse_map* map = new cse_map(container, d);
+
+    return(map);
   }
 
 static std::string replace_A_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1552,47 +1541,46 @@ static std::string replace_A_predef(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* A = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*A)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_A_predef(void* state)
   {
     assert(state != nullptr);
 
-    delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    delete (cse_map*)state;
   }
 
 // ******************************************************************
 
-static void* pre_B_tensor(replacement_data& d, const std::vector<std::string>& args)
-{
-  assert(args.size() == 4);
-  
-  GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
-  GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
-  GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
-  GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
-  
-  std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-  d.u_factory->compute_B(k1, k2, k3, a, *state);
-  
-  return(state);
-}
+static void* pre_B_tensor(replacement_data &d, const std::vector<std::string> &args)
+  {
+    assert(args.size() == 4);
 
-static std::string replace_B_tensor(replacement_data& d, const std::vector<std::string>& args,
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_B(k1, k2, k3, a, *container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
+
+static std::string replace_B_tensor(replacement_data &d, const std::vector<std::string> &args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1602,52 +1590,51 @@ static std::string replace_B_tensor(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
- 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* B = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    cse_map* map = (cse_map*) state;
+
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*B)[i_label][j_label][k_label];
-
-    return(out.str());
+    return ((*map)[d.fl.flatten(i_label, j_label, k_label)]);
   }
 
 static void post_B_tensor(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************
 
 static void* pre_B_predef(replacement_data& d, const std::vector<std::string>& args)
-{
-  assert(args.size() == 6);
-  
-  GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
-  GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
-  GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
-  GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
-  
-  GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
-  GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
-  GiNaC::ex     Hsq = Hsq_symbol;
-  GiNaC::ex     eps = eps_symbol;
-  
-  std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-  d.u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *state);
-  
-  return(state);
-}
+  {
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
 
 static std::string replace_B_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void *state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1657,47 +1644,46 @@ static std::string replace_B_predef(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
- 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* B = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    cse_map* map = (cse_map*)state;
 
+    d.fl.set_size(d.num_fields);
+ 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*B)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_B_predef(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************
 
-static void* pre_C_tensor(replacement_data& d, const std::vector<std::string>& args)
-{
-  assert(args.size() == 4);
-  
-  GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
-  GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
-  GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
-  GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
-  
-  std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-  d.u_factory->compute_C(k1, k2, k3, a, *state);
-  
-  return(state);
-}
+static void* pre_C_tensor(replacement_data &d, const std::vector<std::string> &args)
+  {
+    assert(args.size() == 4);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_C(k1, k2, k3, a, *container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
 
 static std::string replace_C_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void *state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1707,52 +1693,51 @@ static std::string replace_C_tensor(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
- 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* C = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    cse_map* map = (cse_map*)state;
+
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*C)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_C_tensor(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************
 
-static void* pre_C_predef(replacement_data& d, const std::vector<std::string>& args)
-{
-  assert(args.size() == 6);
-  
-  GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
-  GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
-  GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
-  GiNaC::symbol  a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
-  
-  GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
-  GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
-  GiNaC::ex     Hsq = Hsq_symbol;
-  GiNaC::ex     eps = eps_symbol;
-  
-  std::vector< std::vector< std::vector<GiNaC::ex> > >* state = new std::vector< std::vector< std::vector<GiNaC::ex> > >;
-  d.u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *state);
-  
-  return(state);
-}
+static void* pre_C_predef(replacement_data &d, const std::vector<std::string> &args)
+  {
+    assert(args.size() == 6);
+
+    GiNaC::symbol k1(args.size() >= 1 ? args[0] : DEFAULT_K1_NAME);
+    GiNaC::symbol k2(args.size() >= 2 ? args[1] : DEFAULT_K2_NAME);
+    GiNaC::symbol k3(args.size() >= 3 ? args[2] : DEFAULT_K3_NAME);
+    GiNaC::symbol a(args.size() >= 4 ? args[3] : DEFAULT_A_NAME);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
 
 static std::string replace_C_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 3);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1762,40 +1747,39 @@ static std::string replace_C_predef(replacement_data& d, const std::vector<std::
     assert(indices[2].trait == index_field);
 
     assert(state != nullptr);
- 
-    std::vector< std::vector< std::vector<GiNaC::ex> > >* C = (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
+    cse_map* map = (cse_map*)state;
+
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
     unsigned int k_label = get_index_label(indices[2]);
 
-    out << GiNaC::csrc << (*C)[i_label][j_label][k_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label,k_label)]);
   }
 
 static void post_C_predef(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector< std::vector<GiNaC::ex> > >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************
 
-static void* pre_M_tensor(replacement_data& d, const std::vector<std::string>& args)
-{
-  std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
-  d.u_factory->compute_M(*state);
-  
-  return(state);
-}
+static void* pre_M_tensor(replacement_data &d, const std::vector<std::string> &args)
+  {
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_M(*container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
 
 static std::string replace_M_tensor(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 2);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1803,46 +1787,45 @@ static std::string replace_M_tensor(replacement_data& d, const std::vector<std::
     assert(indices[1].trait == index_field);
 
     assert(state != nullptr);
+    cse_map* map = (cse_map*)state;
 
-    std::vector< std::vector<GiNaC::ex> >* M = (std::vector< std::vector<GiNaC::ex> >*)state;
+    d.fl.set_size(d.num_fields);
 
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
 
-    out << GiNaC::csrc << (*M)[i_label][j_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label)]);
   }
 
 static void post_M_tensor(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector<GiNaC::ex> >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************
 
-static void* pre_M_predef(replacement_data& d, const std::vector<std::string>& args)
-{
-  assert(args.size() == 2);
-  
-  GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
-  GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : DEFAULT_EPS_NAME);
-  GiNaC::ex     Hsq = Hsq_symbol;
-  GiNaC::ex     eps = eps_symbol;
-  
-  std::vector< std::vector<GiNaC::ex> >* state = new std::vector< std::vector<GiNaC::ex> >;
-  d.u_factory->compute_M(Hsq, eps, *state);
-  
-  return(state);
-}
+static void* pre_M_predef(replacement_data &d, const std::vector<std::string> &args)
+  {
+    assert(args.size() == 2);
+
+    GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : DEFAULT_HSQ_NAME);
+    GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : DEFAULT_EPS_NAME);
+    GiNaC::ex     Hsq = Hsq_symbol;
+    GiNaC::ex     eps = eps_symbol;
+
+    std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+    d.u_factory->compute_M(Hsq, eps, *container, d.fl);
+
+    cse_map* map = new cse_map(container, d);
+
+    return (map);
+  }
 
 static std::string replace_M_predef(replacement_data& d, const std::vector<std::string>& args,
                                     std::vector<struct index_assignment> indices, void* state)
   {
-    std::ostringstream out;
-
     assert(indices.size() == 2);
     assert(indices[0].species < d.source->get_number_fields());
     assert(indices[1].species < d.source->get_number_fields());
@@ -1850,22 +1833,21 @@ static std::string replace_M_predef(replacement_data& d, const std::vector<std::
     assert(indices[1].trait == index_field);
 
     assert(state != nullptr);
- 
-    std::vector< std::vector<GiNaC::ex> >* M = (std::vector< std::vector<GiNaC::ex> >*)state;
- 
+    cse_map* map = (cse_map*)state;
+
+    d.fl.set_size(d.num_fields);
+
     unsigned int i_label = get_index_label(indices[0]);
     unsigned int j_label = get_index_label(indices[1]);
 
-    out << GiNaC::csrc << (*M)[i_label][j_label];
-
-    return(out.str());
+    return((*map)[d.fl.flatten(i_label,j_label)]);
   }
 
 static void post_M_predef(void* state)
-{
-  assert(state != nullptr);
-  
-  delete (std::vector< std::vector<GiNaC::ex> >*)state;
-}
+  {
+    assert(state != nullptr);
+
+    delete (cse_map*) state;
+  }
 
 // ******************************************************************

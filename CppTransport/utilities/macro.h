@@ -19,6 +19,8 @@
 #include "parse_tree.h"
 #include "index_assignment.h"
 #include "u_tensor_factory.h"
+#include "cse.h"
+#include "flatten.h"
 
 
 class macro_package;
@@ -26,13 +28,15 @@ class macro_package;
 class replacement_data
   {
   public:
-    replacement_data(std::list<std::string>& b) : buffer(b)
+    replacement_data(std::list<std::string>& b, cse& t, flattener& f) : buffer(b), temp_factory(t), fl(f)
       {}
 
     script*           source;               // parse tree corresponding to input script
     std::string       source_file;          // name of input script
 
     u_tensor_factory* u_factory;            // manufactured u_tensor factory
+    cse&              temp_factory;         // gadget for performing common sub-expression elimination
+    flattener&        fl;                   // flattening rule
 
     macro_package*    ms;                   // macro package containing replacement rules
 
@@ -43,12 +47,16 @@ class replacement_data
 
     unsigned int      unique;               // unique number used to keep track of tags
 
-    bool              cse;                  // whether to perform CSE on output exprs, generating temporaries
+    unsigned int      num_fields;           // number of fields
+    bool              do_cse;               // whether to perform CSE on output exprs, generating temporaries
     std::list<std::string>&
                       buffer;               // output buffer
     std::list<std::string>::iterator
                       pool;                 // current insertion point for temporary pool
     std::string       pool_template;        // template for generating temporaries
+
+    std::deque<struct inclusion> path;
+    unsigned int      current_line;
   };
 
 
@@ -77,23 +85,26 @@ class macro_package
         index_replacements(f3), index_pre(pr3), index_post(po3)
       {}
 
-      void apply                          (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
+      void apply                          (std::string& line);
 
     private:
 
-      void apply_pre                      (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
-      void apply_post                     (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
-      void blank_post                     (std::string& line, unsigned int current_line, const std::deque<struct inclusion>& path);
+      void apply_pre                      (std::string& line);
+      void apply_post                     (std::string& line);
+      void blank_post                     (std::string& line);
       void apply_index                    (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-                                           unsigned int current_line, const std::deque<struct inclusion>& path,
                                            const bool semicolon, const bool comma, const bool lhs_present);
 
-      std::vector<struct index_abstract>
-            get_lhs_indices               (std::string lhs, unsigned int current_line, const std::deque<struct inclusion>& path);
-      void
-            assign_lhs_index_types        (std::string rhs, std::vector<struct index_abstract>& lhs_indices,
-                                           unsigned int current_line, const std::deque<struct inclusion>& path);
-		  void  assign_index_defaults				  (std::vector<struct index_abstract>& lhs_indices);
+      std::vector<struct index_abstract> get_lhs_indices(std::string lhs);
+      void                               assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices);
+		  void                               assign_index_defaults(std::vector<struct index_abstract>& lhs_indices);
+
+      std::vector<std::string>           get_argument_list(std::string& line, size_t pos, unsigned int num_args, std::string macro_name);
+
+      std::vector<struct index_abstract> get_index_set(std::string line, size_t pos, std::string name, unsigned int indices, unsigned int range);
+
+      void                               map_indices (std::string& line, std::string prefx, const std::vector<struct index_assignment>& assignment);
+
 
       unsigned int                        fields;
       unsigned int                        parameters;
