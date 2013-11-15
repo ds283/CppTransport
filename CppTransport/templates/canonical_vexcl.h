@@ -475,6 +475,8 @@ namespace transport
           #define __background(a) __dxdt($$__MODEL_pool::backg_start + this->flatten(a))
           #define __dtwopf(a,b)   __dxdt($$__MODEL_pool::twopf_start + this->flatten(a,b))
 
+          $$__TEMP_POOL{"const auto $1 = vex::make_temp<$$__UNIQUE>($2);"}
+
           // evolve the background
           __background($$__A)    = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
 
@@ -614,6 +616,8 @@ namespace transport
         #define __dtwopf_re_k3(a,b) __dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten(a,b))
         #define __dtwopf_im_k3(a,b) __dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten(a,b))
         #define __dthreepf(a,b,c)   __dxdt($$__MODEL_pool::threepf_start     + this->flatten(a,b,c))
+
+        $$__TEMP_POOL{"const auto $1 = vex::make_temp<$$__UNIQUE>($2);"}
 
         // evolve the background
         __background($$__A)            = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
