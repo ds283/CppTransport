@@ -35,7 +35,7 @@ std::string cse_map::operator[](unsigned int index)
   {
     std::string rval = "";
 
-    if(index > this->list->size())
+    if(index < this->list->size())
       {
         if(data.do_cse)
           {
