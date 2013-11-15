@@ -26,7 +26,9 @@ cse_map::cse_map(std::vector<GiNaC::ex>* l, replacement_data& d)
         // the insertion happens before the element pointed
         // to by data.pool, so there should be no need
         // to update its location
-        data.buffer.insert(data.pool, data.temp_factory.temporaries(data.pool_template));
+        std::string temps = data.temp_factory.temporaries(data.pool_template);
+        data.ms->apply(temps);
+        data.buffer.insert(data.pool, temps);
       }
   }
 
@@ -42,7 +44,7 @@ std::string cse_map::operator[](unsigned int index)
             std::ostringstream out;
             out << this->data.temp_factory.symbol((*this->list)[index]);
             rval = out.str();
-            this->data.ms->apply(rval);
+//            this->data.ms->apply(rval);
           }
         else
           {
