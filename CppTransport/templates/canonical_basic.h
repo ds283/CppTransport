@@ -264,7 +264,7 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        x[background_start + this->flatten($$__A)] = $$// ics[$$__A];
+        x[$$__MODEL_pool::backg_start + this->flatten($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kmode, *times.begin(), ics);
