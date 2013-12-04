@@ -27,7 +27,6 @@ class cse_map
     replacement_data&       data;
 
     std::vector<GiNaC::ex>* list;
-    std::vector<GiNaC::ex>  cse_symbols;
   };
 
 
