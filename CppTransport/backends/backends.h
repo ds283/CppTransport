@@ -9,13 +9,11 @@
 #define __backends_H_
 
 
-#include "input.h"
 
+typedef bool (*backend_function)(const struct input& data, finder& path, bool do_cse=true);
 
-typedef bool (*backend_function)(const struct input& data, finder& path, bool do_cse);
 
 #define NUMBER_BACKENDS (1)
-
 
 #include "cpp_backend.h"
 

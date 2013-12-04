@@ -72,4 +72,10 @@
 
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
 
+// output strings
+
+#define OUTPUT_CPPTRANSPORT_TAG               "__CPPTRANSPORT"
+#define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"
+#define OUTPUT_DEFAULT_POOL_TEMPLATE          "auto $1 = $2;"
+
 #endif //__msg_H_

@@ -7,7 +7,6 @@
 
 
 #include <assert.h>
-#include <time.h>
 
 #include <vector>
 #include <list>
@@ -16,7 +15,6 @@
 
 #include "core.h"
 #include "cpp_backend.h"
-#include "to_printable.h"
 #include "macro.h"
 #include "cse.h"
 #include "flatten.h"
@@ -39,44 +37,11 @@
 
 #define DEFAULT_STEPPER_STATE_NAME "<UNKNOWN_STATE_TYPE>"
 
-#define DEFAULT_POOL_TEMPLATE      "auto $1 = $2;"
 
 // PRE macros
-static std::string replace_tool           (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_version        (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_guard          (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_date           (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_source         (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_name           (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_author         (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_tag            (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_model          (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_header         (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_core           (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_fields  (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_number_params  (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_field_list     (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_latex_list     (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_param_list     (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_platx_list     (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_state_list     (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_V              (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_Hsq            (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_eps            (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_abs_err      (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_rel_err      (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_step         (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_b_stepper      (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_abs_err      (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_rel_err      (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_p_step         (replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_p_stepper      (replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_backg_stepper  (replacement_data& data, const std::vector<std::string>& args);
 static std::string replace_pert_stepper   (replacement_data& data, const std::vector<std::string>& args);
-static std::string replace_temp_pool      (replacement_data& data, const std::vector<std::string>& args);
-
-// POST macros
-static std::string replace_unique         (replacement_data& data, const std::vector<std::string>& args);
 
 // INDEX macros
 static std::string replace_parameter      (replacement_data& data, const std::vector<std::string>& args,
@@ -347,7 +312,6 @@ static std::string  leafname           (const std::string& pathname);
 static bool         process            (replacement_data& d);
 
 static unsigned int get_index_label    (struct index_assignment& index);
-static void         deposit_temporaries(replacement_data& d);
 
 static std::string  replace_stepper    (const struct stepper& s, std::string state_name);
 
@@ -575,21 +539,6 @@ static unsigned int get_index_label(struct index_assignment& index)
     return(label);
   }
 
-static void deposit_temporaries(replacement_data& data)
-  {
-    // deposit any temporaries generated in the current temporary pool,
-    // and then reset
-    //
-    // the insertion happens before the element pointed
-    // to by data.pool, so there should be no need
-    // to update its location
-    std::string temps = data.temp_factory.temporaries(data.pool_template);
-    data.ms->apply(temps);
-    data.buffer.insert(data.pool, temps);
- 
-    data.temp_factory.clear();
-  }
-
 
 // ********************************************************************************
 
@@ -649,293 +598,6 @@ static std::string replace_stepper(const struct stepper& s, std::string state_na
 // PRE macros
 
 
-static std::string replace_tool(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return CPPTRANSPORT_NAME;
-  }
-
-static std::string replace_version(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return CPPTRANSPORT_VERSION;
-  }
-
-static std::string replace_guard(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return "__CPP_TRANSPORT_" + d.guard + "_H_";
-  }
-
-static std::string replace_date(replacement_data& d, const std::vector<std::string>& args)
-  {
-    time_t     now = time(0);
-    struct tm  tstruct;
-    char       buf[80];
-    tstruct = *localtime(&now);
-
-    strftime(buf, sizeof(buf), "%X on %d %m %Y", &tstruct);
-
-    std::string rval(buf);
-
-    return(rval);
-  }
-
-static std::string replace_source(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.source_file);
-  }
-
-static std::string replace_name(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.source->get_name());
-  }
-
-static std::string replace_author(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.source->get_author());
-  }
-
-static std::string replace_tag(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.source->get_tag());
-  }
-
-static std::string replace_model(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.source->get_model());
-  }
-
-static std::string replace_header(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.output_file);
-  }
-
-static std::string replace_core(replacement_data& d, const std::vector<std::string>& args)
-  {
-    return(d.core_file);
-  }
-
-static std::string replace_number_fields(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::ostringstream out;
-
-    out << d.source->get_number_fields();
-
-    return(out.str());
-  }
-
-static std::string replace_number_params(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::ostringstream out;
-
-    out << d.source->get_number_params();
-
-    return(out.str());
-  }
-
-static std::string replace_field_list(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<std::string> list = d.source->get_field_list();
-    std::ostringstream out;
-
-    out << "{ ";
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << ", ";
-          }
-        out << to_printable(list[i]);
-      }
-    out << " }";
-
-    return(out.str());
-  }
-
-static std::string replace_latex_list(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<std::string> list = d.source->get_latex_list();
-    std::ostringstream out;
-
-    out << "{ ";
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << ", ";
-          }
-        out << to_printable(list[i]);
-      }
-    out << " }";
-
-    return(out.str());
-  }
-
-static std::string replace_param_list(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<std::string> list = d.source->get_param_list();
-    std::ostringstream out;
-
-    out << "{ ";
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << ", ";
-          }
-        out << to_printable(list[i]);
-      }
-    out << " }";
-
-    return(out.str());
-  }
-
-static std::string replace_platx_list(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<std::string> list = d.source->get_platx_list();
-    std::ostringstream out;
-
-    out << "{ ";
-
-    for(int i = 0; i < list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << ", ";
-          }
-        out << to_printable(list[i]);
-      }
-    out << " }";
-
-    return(out.str());
-  }
-
-static std::string replace_state_list(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::vector<GiNaC::symbol> f_list = d.source->get_field_symbols();
-    std::vector<GiNaC::symbol> d_list = d.source->get_deriv_symbols();
-
-    std::ostringstream out;
-
-    out << "{ ";
-
-    for(int i = 0; i < f_list.size(); i++)
-      {
-        if(i > 0)
-          {
-            out << ", ";
-          }
-        out << to_printable(f_list[i].get_name());
-      }
-    for(int i = 0; i < d_list.size(); i++)
-      {
-        out << ", " << to_printable(d_list[i].get_name());
-      }
-
-    out << " }";
-
-    return(out.str());
-  }
-
-static std::string replace_V(replacement_data& d, const std::vector<std::string>& args)
-  {
-    GiNaC::ex potential = d.source->get_potential();
-
-    std::ostringstream out;
-    out << GiNaC::csrc << potential;
-
-    return(out.str());
-  }
-
-static std::string replace_Hsq(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::string rval;
-    GiNaC::ex Hsq = d.u_factory->compute_Hsq();
-
-    std::ostringstream out;
-    out << GiNaC::csrc << Hsq;
-
-    return(out.str());
-  }
-
-static std::string replace_eps(replacement_data& d, const std::vector<std::string>& args)
-  {
-    std::string rval;
-    GiNaC::ex eps = d.u_factory->compute_eps();
-
-    std::ostringstream out;
-    out << GiNaC::csrc << eps;
-
-    return(out.str());
-  }
-
-static std::string replace_b_abs_err(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_background_stepper();
-
-    std::ostringstream out;
-    out << s.abserr;
-
-    return(out.str());
-  }
-
-static std::string replace_b_rel_err(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_background_stepper();
-
-    std::ostringstream out;
-    out << s.relerr;
-
-    return(out.str());
-  }
-
-static std::string replace_b_step(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_background_stepper();
-
-    std::ostringstream out;
-    out << s.stepsize;
-
-    return(out.str());
-  }
-
-static std::string replace_b_stepper(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_background_stepper();
-
-    return(s.name);
-  }
-
-static std::string replace_p_abs_err(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_perturbations_stepper();
-
-    std::ostringstream out;
-    out << s.abserr;
-
-    return(out.str());
-  }
-
-static std::string replace_p_rel_err(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_perturbations_stepper();
-
-    std::ostringstream out;
-    out << s.relerr;
-
-    return(out.str());
-  }
-
-static std::string replace_p_step(replacement_data& data, const std::vector<std::string>& args)
-  {
-    const struct stepper s = data.source->get_perturbations_stepper();
-
-    std::ostringstream out;
-    out << s.stepsize;
-
-    return(out.str());
-  }
 
 static std::string replace_p_stepper(replacement_data& data, const std::vector<std::string>& args)
   {
@@ -962,38 +624,6 @@ static std::string replace_pert_stepper(replacement_data& data, const std::vecto
     std::string state_name = (args.size() >= 1 ? args[0] : DEFAULT_STEPPER_STATE_NAME);
 
     return(replace_stepper(s, state_name));
-  }
-
-static std::string replace_temp_pool(replacement_data& data, const std::vector<std::string>& args)
-  {
-    assert(args.size() == 1);
-    std::string t = (args.size() >= 1 ? args[0] : DEFAULT_POOL_TEMPLATE);
- 
-    // deposit any temporaries generated up to this point the current temporary pool
-    //
-    // the insertion happens before the element pointed
-    // to by data.pool, so there should be no need
-    // to update its location
-    deposit_temporaries(data);
- 
-    // mark current endpoint in the buffer as the new insertion point
-
-    data.pool_template = t;
-    data.pool          = --data.buffer.end();
-
-    return(""); // replace with a blank
-  }
-
-// POST macros
-
-
-static std::string replace_unique(replacement_data& data, const std::vector<std::string>& args)
-  {
-    std::ostringstream out;
-
-    out << data.unique++;
-
-    return(out.str());
   }
 
 

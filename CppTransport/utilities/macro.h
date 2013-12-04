@@ -14,6 +14,7 @@
 #include <vector>
 #include <list>
 #include <string>
+#include <functional>
 
 #include "core.h"
 #include "parse_tree.h"
@@ -60,23 +61,22 @@ class replacement_data
   };
 
 
-typedef std::string (*replacement_function_simple)(struct replacement_data& data, const std::vector<std::string>& args);
-typedef std::string (*replacement_function_index) (struct replacement_data& data, const std::vector<std::string>& args,
-                                                   std::vector<struct index_assignment> indices, void* state);
+typedef std::function<std::string(const std::vector<std::string>&)>                                              replacement_rule_simple;
+typedef std::function<std::string(const std::vector<std::string>&, std::vector<struct index_assignment>, void*)> replacement_rule_index;
+typedef std::function<void*      (const std::vector<std::string>&)>                                              replacement_rule_pre;
+typedef std::function<void       (void*)>                                                                        replacement_rule_post;
 
-typedef void*       (*replacement_function_pre)   (struct replacement_data& data, const std::vector<std::string>& args);
-typedef void        (*replacement_function_post)  (void* state);
 
 class macro_package
   {
     public:
       macro_package                       (unsigned int N_f, unsigned int N_p, enum indexorder o,
                                            std::string pf, std::string sp, replacement_data& d,
-                                           unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_function_simple* f1,
-                                           unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_function_simple* f2,
+                                           unsigned int N1, const std::string* n1, const unsigned int* a1, const replacement_rule_simple* f1,
+                                           unsigned int N2, const std::string* n2, const unsigned int* a2, const replacement_rule_simple* f2,
                                            unsigned int N3, const std::string* n3, const unsigned int* i3, const unsigned int*r3,
-                                           const unsigned int* a3, const replacement_function_index* f3,
-                                           const replacement_function_pre* pr3, const replacement_function_post* po3)
+                                           const unsigned int* a3, const replacement_rule_index* f3,
+                                           const replacement_rule_pre* pr3, const replacement_rule_post* po3)
       : fields(N_f), parameters(N_p), order(o),
         prefix(pf), split(sp), data(d),
         N_pre(N1), pre_names(n1), pre_args(a1), pre_replacements(f1),
@@ -117,21 +117,21 @@ class macro_package
       unsigned int                        N_pre;
       const std::string*                  pre_names;
       const unsigned int*                 pre_args;
-      const replacement_function_simple*  pre_replacements;
+      const replacement_rule_simple*  pre_replacements;
 
       unsigned int                        N_post;
       const std::string*                  post_names;
       const unsigned int*                 post_args;
-      const replacement_function_simple*  post_replacements;
+      const replacement_rule_simple*  post_replacements;
 
       unsigned int                        N_index;
       const std::string*                  index_names;
       const unsigned int*                 index_indices;
       const unsigned int*                 index_ranges;
       const unsigned int*                 index_args;
-      const replacement_function_index*   index_replacements;
-      const replacement_function_pre*     index_pre;
-      const replacement_function_post*    index_post;
+      const replacement_rule_index*   index_replacements;
+      const replacement_rule_pre*     index_pre;
+      const replacement_rule_post*    index_post;
   };
 
 

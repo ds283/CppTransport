@@ -45,6 +45,7 @@
 
 #include <string>
 
+#include <functional>
 #include <map>
 #include <utility>
 
@@ -55,7 +56,8 @@
 class cse
   {
   public:
-    cse(unsigned int s, std::string k=DEFAULT_CSE_KERNEL_NAME) : serial_number(s), kernel_name(k) {}
+    cse(std::function<std::string(const GiNaC::ex&)> p, unsigned int s, std::string k=DEFAULT_CSE_KERNEL_NAME)
+      : print(p), serial_number(s), kernel_name(k) {}
 
     void parse(const GiNaC::ex& expr);
 
@@ -68,7 +70,8 @@ class cse
     void               set_kernel_name(const std::string& k) { this->kernel_name = k; }
 
   protected:
-    std::string print         (const GiNaC::ex& expr);
+    const std::function<std::string(const GiNaC::ex&)> print;
+//    std::string print         (const GiNaC::ex& expr);
     std::string print_operands(const GiNaC::ex& expr, std::string op);
 
     std::string make_symbol   ();
