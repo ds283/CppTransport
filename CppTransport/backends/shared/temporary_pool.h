@@ -9,6 +9,8 @@
 #define __macropackage_temporary_pool_H_
 
 
+#include <list>
+
 #include "macro.h"
 #include "replacement_rule_package.h"
 
@@ -19,18 +21,22 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(replacement_data& d, std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : default_template(t), replacement_rule_package(d)
+        temporary_pool(replacement_data& d, ginac_printer p,
+                       std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE,
+                       std::list<std::string>::iterator cpl)
+          : pool_template(t), current_pool_location(cpl), replacement_rule_package(d, p)
           {
           }
 
-        const rule_package<replacement_rule_simple>& get_simple_rules();
-        const rule_package<replacement_rule_index>&  get_index_rules();
+        const std::vector<simple_rule> get_pre_rules();
+        const std::vector<simple_rule> get_post_rules();
+        const std::vector<index_rule>  get_index_rules();
 
         void        deposit_temporaries    ();
 
       protected:
-        std::string default_template;
+        std::string                        pool_template;
+        std::list<std::string>::iterator   current_pool_location;
 
         std::string replace_temp_pool      (const std::vector<std::string>& args);
       };

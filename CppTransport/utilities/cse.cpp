@@ -43,7 +43,6 @@
 #include <iostream>
 #include <sstream>
 #include <map>
-#include <utility>
 
 #include "msg_en.h"
 
@@ -138,27 +137,4 @@ std::string cse::make_symbol()
     symbol_counter++;
 
     return(s.str());
-  }
-
-// **********************************************************************
-
-
-std::string cse::print_operands(const GiNaC::ex& expr, std::string op)
-  {
-    std::ostringstream out;
-    size_t             n = expr.nops();
-
-    if(n > 0)
-      {
-        for(size_t i = 0; i < n; i++)
-          {
-            out << (i > 0 ? op : "") << this->symbol(expr.op(i));
-          }
-      }
-    else
-      {
-        out << expr;
-      }
-
-    return(out.str());
   }

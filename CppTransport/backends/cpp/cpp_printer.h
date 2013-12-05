@@ -14,8 +14,12 @@
 #include "ginac/basic.h"
 
 
-std::string cse::print(const GiNaC::ex& expr)
+namespace cpp
+  {
 
+    std::string print(const GiNaC::ex& expr);
+
+  } // namespace cpp
 
 
 #endif //__cpp_printer_H_

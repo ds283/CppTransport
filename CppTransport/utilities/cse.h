@@ -45,19 +45,21 @@
 
 #include <string>
 
-#include <functional>
 #include <map>
 #include <utility>
 
+#include "replacement_rule_package.h"
+
 #include "ginac/ginac.h"
 
-#define DEFAULT_CSE_KERNEL_NAME "__t"
 
 class cse
   {
   public:
-    cse(std::function<std::string(const GiNaC::ex&)> p, unsigned int s, std::string k=DEFAULT_CSE_KERNEL_NAME)
-      : print(p), serial_number(s), kernel_name(k) {}
+    cse(unsigned int s, ginac_printer p, std::string k)
+      : serial_number(s), printer(p), kernel_name(k)
+      {
+      }
 
     void parse(const GiNaC::ex& expr);
 
@@ -70,9 +72,12 @@ class cse
     void               set_kernel_name(const std::string& k) { this->kernel_name = k; }
 
   protected:
-    const std::function<std::string(const GiNaC::ex&)> print;
-//    std::string print         (const GiNaC::ex& expr);
-    std::string print_operands(const GiNaC::ex& expr, std::string op);
+    ginac_printer printer;
+
+    // these functions are abstract and must be implemented by any derived classes
+    // typically they will vary
+    virtual std::string print         (const GiNaC::ex& expr) = 0;
+    virtual std::string print_operands(const GiNaC::ex& expr, std::string op) = 0;
 
     std::string make_symbol   ();
 

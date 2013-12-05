@@ -14,6 +14,103 @@
 namespace macro_packages
   {
 
+    const std::vector<simple_rule> fundamental::get_pre_rules()
+      {
+        std::vector<simple_rule> package;
+
+        const std::vector<replacement_rule_simple> rules =
+          { &this->replace_tool,          &this->replace_version,       &this->replace_guard,      &this->replace_date,       &this->replace_source,
+            &this->replace_name,          &this->replace_author,        &this->replace_tag,        &this->replace_model,
+            &this->replace_header,        &this->replace_core,
+            &this->replace_number_fields, &this->replace_number_params,
+            &this->replace_field_list,    &this->replace_latex_list,    &this->replace_param_list, &this->replace_platx_list, &this->replace_state_list,
+            &this->replace_b_abs_err,     &this->replace_b_rel_err,     &this->replace_b_step,     &this->replace_b_stepper,
+            &this->replace_p_abs_err,     &this->replace_p_rel_err,     &this->replace_p_step,     &this->replace_p_stepper
+          };
+
+        const std::vector<std::string> names =
+          { "TOOL",                       "VERSION",                    "GUARD",                   "DATE",                    "SOURCE",
+            "NAME",                       "AUTHOR",                     "TAG",                     "MODEL",
+            "HEADER",                     "CORE",
+            "NUMBER_FIELDS",              "NUMBER_PARAMS",
+            "FIELD_NAME_LIST",            "LATEX_NAME_LIST",            "PARAM_NAME_LIST",         "PLATX_NAME_LIST",         "STATE_NAME_LIST",
+            "BACKG_ABS_ERR",              "BACKG_REL_ERR",              "BACKG_STEP_SIZE",         "BACKG_STEPPER",
+            "PERT_ABS_ERR",               "PERT_REL_ERR",               "PERT_STEP_SIZE",          "PERT_STEPPER"
+          };
+
+        const std::vector<unsigned int> args =
+          { 0,                            0,                            0,                         0,                         0,
+            0,                            0,                            0,                         0,                         0,
+            0,                            0,
+            0,                            0,
+            0,                            0,                            0,                         0,                         0,
+            0,                            0,                            0,                         0,
+            0,                            0,                            0,                         0
+          };
+
+        assert(rules.size() == names.size());
+        assert(rules.size() == args.size());
+
+        for(int i = 0; i < rules.size(); i++)
+          {
+            simple_rule rule;
+
+            rule.rule = rules[i];
+            rule.args = args[i];
+            rule.name = names[i];
+
+            package.push_back(rule);
+          }
+
+        return(package);
+      }
+
+
+    const std::vector<simple_rule> fundamental::get_post_rules()
+      {
+        std::vector<simple_rule> package;
+
+        const std::vector<replacement_rule_simple> rules =
+          { &this->replace_unique
+          };
+
+        const std::vector<std::string> names =
+          { "UNIQUE"
+          };
+
+        const std::vector<unsigned int> args =
+          { 0
+          };
+
+        assert(rules.size() == names.size());
+        assert(rules.size() == args.size());
+
+        for(int i = 0; i < rules.size(); i++)
+          {
+            simple_rule rule;
+
+            rule.rule = rules[i];
+            rule.args = args[i];
+            rule.name = names[i];
+
+            package.push_back(rule);
+          }
+
+        return(package);
+      }
+
+
+    const std::vector<index_rule> fundamental::get_index_rules()
+      {
+        std::vector<index_rule> package;
+
+        return(package);
+      }
+
+
+    // *******************************************************************
+
+
     std::string fundamental::stringize_list(std::vector<std::string> list)
       {
         std::ostringstream out;
@@ -32,6 +129,9 @@ namespace macro_packages
 
         return(out.str());
       }
+
+
+    // *******************************************************************
 
 
     // REPLACEMENT RULES
@@ -237,6 +337,14 @@ namespace macro_packages
         const struct stepper s = this->data.source->get_perturbations_stepper();
 
         return(this->stringize_number(s.stepsize));
+      }
+
+
+    std::string fundamental::replace_p_stepper(const std::vector<std::string>& args)
+      {
+        const struct stepper s = this->data.source->get_perturbations_stepper();
+
+        return(s.name);
       }
 
 

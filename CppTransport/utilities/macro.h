@@ -36,7 +36,7 @@ class replacement_data
     std::string       source_file;          // name of input script
 
     u_tensor_factory* u_factory;            // manufactured u_tensor factory
-    cse&              temp_factory;         // gadget for performing common sub-expression elimination
+    cse*              temp_factory;         // gadget for performing common sub-expression elimination
     flattener&        fl;                   // flattening rule
 
     macro_package*    ms;                   // macro package containing replacement rules
@@ -52,9 +52,6 @@ class replacement_data
     bool              do_cse;               // whether to perform CSE on output exprs, generating temporaries
     std::list<std::string>&
                       buffer;               // output buffer
-    std::list<std::string>::iterator
-                      pool;                 // current insertion point for temporary pool
-    std::string       pool_template;        // template for generating temporaries
 
     std::deque<struct inclusion> path;
     unsigned int      current_line;

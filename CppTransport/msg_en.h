@@ -74,8 +74,27 @@
 
 // output strings
 
+#define BACKEND_MACRO_PREFIX                  "$$__"
+#define BACKEND_LINE_SPLIT                    "$$//"
+
 #define OUTPUT_CPPTRANSPORT_TAG               "__CPPTRANSPORT"
 #define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"
 #define OUTPUT_DEFAULT_POOL_TEMPLATE          "auto $1 = $2;"
+
+#define OUTPUT_DEFAULT_CPP_KERNEL_NAME        "__temp"
+
+#define OUTPUT_DEFAULT_U2_NAME                "__u2"
+#define OUTPUT_DEFAULT_U3_NAME                "__u3"
+#define OUTPUT_DEFAULT_M_NAME                 "__M"
+#define OUTPUT_DEFAULT_K_NAME                 "__k"
+#define OUTPUT_DEFAULT_K1_NAME                "__k1"
+#define OUTPUT_DEFAULT_K2_NAME                "__k2"
+#define OUTPUT_DEFAULT_K3_NAME                "__k3"
+#define OUTPUT_DEFAULT_A_NAME                 "__a"
+
+#define OUTPUT_DEFAULT_HSQ_NAME               "__Hsq"
+#define OUTPUT_DEFAULT_EPS_NAME               "__eps"
+
+#define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
 
 #endif //__msg_H_

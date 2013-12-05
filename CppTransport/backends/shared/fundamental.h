@@ -22,18 +22,19 @@ namespace macro_packages
     class fundamental: public replacement_rule_package
       {
       public:
-        fundamental(replacement_data& d,
+        fundamental(replacement_data& d, ginac_printer p,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H_",
                     std::string tf = OUTPUT_TIME_FORMAT)
           : list_start(ls), list_end(le), list_separator(lsep), list_pad(lpad), tag(t), guard_terminator(ge), time_format(tf),
-            replacement_rule_package(d)
+            replacement_rule_package(d, p)
           {
           }
 
-        const rule_package<replacement_rule_simple>& get_simple_rules();
-        const rule_package<replacement_rule_index>&  get_index_rules();
+        const std::vector<simple_rule> get_pre_rules();
+        const std::vector<simple_rule> get_post_rules();
+        const std::vector<index_rule>  get_index_rules();
 
       protected:
         std::string list_start;
@@ -59,6 +60,7 @@ namespace macro_packages
         std::string replace_author        (const std::vector<std::string> &args);
         std::string replace_tag           (const std::vector<std::string> &args);
         std::string replace_model         (const std::vector<std::string> &args);
+
         std::string replace_header        (const std::vector<std::string> &args);
         std::string replace_core          (const std::vector<std::string> &args);
 
@@ -75,12 +77,15 @@ namespace macro_packages
         std::string replace_b_rel_err     (const std::vector<std::string> &args);
         std::string replace_b_step        (const std::vector<std::string> &args);
         std::string replace_b_stepper     (const std::vector<std::string> &args);
+
         std::string replace_p_abs_err     (const std::vector<std::string> &args);
         std::string replace_p_rel_err     (const std::vector<std::string> &args);
         std::string replace_p_step        (const std::vector<std::string> &args);
+        std::string replace_p_stepper     (const std::vector<std::string> &args);
 
         // POST macros
         std::string replace_unique        (const std::vector<std::string> &args);
+
       };
 
   } // namespace macro_packages

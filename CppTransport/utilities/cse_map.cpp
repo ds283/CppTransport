@@ -7,8 +7,8 @@
 #include "cse_map.h"
 
 
-cse_map::cse_map(std::vector<GiNaC::ex>* l, replacement_data& d)
-  : list(l), data(d)
+cse_map::cse_map(std::vector<GiNaC::ex>* l, replacement_data& d, ginac_printer p)
+  : list(l), data(d), printer(p)
   {
 //    data.temp_factory.clear();
 
@@ -31,15 +31,11 @@ std::string cse_map::operator[](unsigned int index)
       {
         if(data.do_cse)
           {
-            std::ostringstream out;
-            out << this->data.temp_factory.symbol((*this->list)[index]);
-            rval = out.str();
+            rval = this->data.temp_factory.symbol((*this->list)[index]);
           }
         else
           {
-            std::ostringstream out;
-            out << GiNaC::csrc << (*this->list)[index];
-            rval = out.str();
+            rval = this->printer((*this->list)[index]);
           }
       }
 

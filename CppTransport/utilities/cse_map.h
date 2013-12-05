@@ -14,10 +14,11 @@
 #include "macro.h"
 #include "cse.h"
 
+
 class cse_map
   {
   public:
-    cse_map(std::vector<GiNaC::ex>* l, replacement_data& d);
+    cse_map(std::vector<GiNaC::ex>* l, replacement_data& d, ginac_printer p);
     ~cse_map() { delete list; }
 
     // not returning a reference disallows using [] as an lvalue
@@ -25,6 +26,7 @@ class cse_map
 
   protected:
     replacement_data&       data;
+    ginac_printer           printer;
 
     std::vector<GiNaC::ex>* list;
   };
