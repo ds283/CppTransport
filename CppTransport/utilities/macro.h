@@ -29,14 +29,14 @@ class macro_package;
 class replacement_data
   {
   public:
-    replacement_data(std::list<std::string>& b, cse& t, flattener& f) : buffer(b), temp_factory(t), fl(f)
+    replacement_data(std::list<std::string>& b, cse& t, flattener& f) : buffer(b), cse_worker(t), fl(f)
       {}
 
     script*           source;               // parse tree corresponding to input script
     std::string       source_file;          // name of input script
 
     u_tensor_factory* u_factory;            // manufactured u_tensor factory
-    cse*              temp_factory;         // gadget for performing common sub-expression elimination
+    cse*              cse_worker;           // gadget for performing common sub-expression elimination
     flattener&        fl;                   // flattening rule
 
     macro_package*    ms;                   // macro package containing replacement rules
@@ -49,7 +49,6 @@ class replacement_data
     unsigned int      unique;               // unique number used to keep track of tags
 
     unsigned int      num_fields;           // number of fields
-    bool              do_cse;               // whether to perform CSE on output exprs, generating temporaries
     std::list<std::string>&
                       buffer;               // output buffer
 

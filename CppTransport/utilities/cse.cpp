@@ -121,7 +121,9 @@ std::string cse::temporaries(const std::string& t)
     return(out.str());
   }
 
+
 // **********************************************************************
+
 
 std::string cse::symbol(const GiNaC::ex& expr)
   {
@@ -137,4 +139,44 @@ std::string cse::make_symbol()
     symbol_counter++;
 
     return(s.str());
+  }
+
+
+// **********************************************************************
+
+
+cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
+  : cse_worker(c)
+  {
+    assert(l != nullptr);
+    assert(c != nullptr);
+
+    if(cse_worker->get_do_cse())
+      {
+        // parse each component of the container
+        for(int i = 0; i < list->size(); i++)
+          {
+            cse_worker->parse((*list)[i]);
+          }
+      }
+  }
+
+
+std::string cse_map::operator[](unsigned int index)
+  {
+    std::string rval = "";
+
+    if(index < this->list->size())
+      {
+        if(this->cse_worker->get_do_cse())
+          {
+            rval = this->cse_worker->symbol((*this->list)[index]);
+          }
+        else
+          {
+            rval = (this->cse_worker->get_ginac_printer)((*this->list)[index]);
+          }
+      }
+
+    return(rval);
   }

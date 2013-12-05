@@ -7,8 +7,10 @@
 #include "gauge_xfm.h"
 
 #include "cse.h"
-#include "cse_map.h"
 
+#define BIND0(X) std::bind(&gauge_xfm::X, this)
+#define BIND1(X) std::bind(&gauge_xfm::X, this, _1)
+#define BIND3(X) std::bind(&gauge_xfm::X, this, _1, _2,_3)
 
 namespace macro_packages
   {
@@ -34,15 +36,15 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { &this->pre_zeta_xfm_1,        &this->pre_zeta_xfm_2
+          { BIND1(pre_zeta_xfm_1),        BIND1(pre_zeta_xfm_2)
           };
 
         const std::vector<replacement_rule_post> posts =
-          { &this->generic_post_hook,     &this->generic_post_hook
+          { BIND0(generic_post_hook),     BIND0(generic_post_hook)
           };
 
         const std::vector<replacement_rule_index> rules =
-          { &this->replace_1index_tensor, &this->replace_2index_tensor
+          { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
           };
 
         const std::vector<unsigned int> args =

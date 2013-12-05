@@ -14,6 +14,7 @@
 #include "macro.h"
 #include "replacement_rule_package.h"
 
+#include "buffer.h"
 
 namespace macro_packages
   {
@@ -21,10 +22,10 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(replacement_data& d, ginac_printer p,
-                       std::list<std::string>::iterator cpl, unsigned int dm = DEFAULT_RECURSION_DEPTH,
+        temporary_pool(replacement_data& d, ginac_printer p, macro_package* m,
+                       unsigned int dm = DEFAULT_RECURSION_DEPTH,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : pool_template(t), current_pool_location(cpl), recursion_depth(0), recursion_max(dm),
+          : pool_template(t), recursion_depth(0), recursion_max(dm), ms(m), buf(nullptr),
             replacement_rule_package(d, p)
           {
           }
@@ -33,16 +34,20 @@ namespace macro_packages
         const std::vector<simple_rule> get_post_rules();
         const std::vector<index_rule>  get_index_rules();
 
-        void        deposit_temporaries    ();
+        void                           deposit_temporaries();
+
+        void                           set_buffer(buffer* b);
 
       protected:
-        std::string                        pool_template;
-        std::list<std::string>::iterator   current_pool_location;
+        buffer*        buf;
+        macro_package* ms;
 
-        unsigned int                       recursion_depth;
-        unsigned int                       recursion_max;
+        std::string    pool_template;
 
-        std::string replace_temp_pool      (const std::vector<std::string>& args);
+        unsigned int   recursion_depth;
+        unsigned int   recursion_max;
+
+        std::string replace_temp_pool (const std::vector<std::string>& args);
       };
 
   } // namespace macro_packages

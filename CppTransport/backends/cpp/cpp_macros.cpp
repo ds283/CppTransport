@@ -9,9 +9,63 @@
 
 #include "cpp_macros.h"
 
+#define BIND(X) std::bind(&cpp_macros::X, this, _1)
 
 namespace cpp
   {
+
+    const std::vector<macro_packages::simple_rule> cpp_macros::get_pre_rules()
+      {
+        std::vector<macro_packages::simple_rule> package;
+
+        const std::vector<replacement_rule_simple> rules =
+          { BIND(replace_backg_stepper), BIND(replace_pert_stepper)
+          };
+
+        const std::vector<std::string> names =
+          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER"
+          }
+
+        const std::vector<unsigned int> args =
+          { 1,                           1
+          };
+
+        assert(rules.size() == names.size());
+        assert(rules.size() == args.size());
+
+        for(int i = 0; i < rules.size(); i++)
+          {
+            macro_packages::simple_rule rule;
+
+            rule.rule = rules[i];
+            rule.args = args[i];
+            rule.name = names[i];
+
+            package.push_back(rule);
+          }
+
+        return(package);
+      }
+
+
+    const std::vector<macro_packages::simple_rule> cpp_macros::get_post_rules()
+      {
+        std::vector<macro_packages::simple_rule> package;
+
+        return(package);
+      }
+
+
+    const std::vector<macro_packages::index_rule> cpp_macros::get_index_rules()
+      {
+        std::vector<macro_packages::index_rule> package;
+
+        return(package);
+      }
+
+
+    // *******************************************************************
+
 
     std::string cpp_macros::replace_stepper(const struct stepper& s, std::string state_name)
       {

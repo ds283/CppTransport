@@ -53,26 +53,38 @@
 #include "ginac/ginac.h"
 
 
+// to be defined below; need a forward reference here
+class cse_map;
+
 class cse
   {
   public:
-    cse(unsigned int s, ginac_printer p, std::string k)
-      : serial_number(s), printer(p), kernel_name(k)
+    cse(unsigned int s, ginac_printer p, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME, bool d=true)
+      : serial_number(s), printer(p), kernel_name(k), do_cse(d)
       {
       }
 
-    void parse(const GiNaC::ex& expr);
+    void               parse(const GiNaC::ex& expr);
 
-    std::string temporaries(const std::string& t);
-    std::string symbol(const GiNaC::ex& expr);
+    std::string        temporaries(const std::string& t);
+    std::string        symbol(const GiNaC::ex& expr);
 
-    void clear();
+    void               clear();
 
-    const std::string& get_kernel_name()                     { return(this->kernel_name); }
-    void               set_kernel_name(const std::string& k) { this->kernel_name = k; }
+    const std::string& get_kernel_name()                      { return(this->kernel_name); }
+    void               set_kernel_name(const std::string& k)  { this->kernel_name = k; }
+
+    cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this))}
+
+    bool               get_do_cse()                           { return(this->do_cse); }
+    void               set_do_cse(bool d)                     { this->do_cse = d; }
+
+    ginac_printer      get_ginac_printer()                    { return(this->printer); }
+    void               set_ginac_printer(ginac_printer p)     { this->printer = p; }
 
   protected:
     ginac_printer printer;
+    bool          do_cse;
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
@@ -88,6 +100,25 @@ class cse
 
     std::map<std::string, std::string>                 symbols;
     std::vector< std::pair<std::string, std::string> > decls;
+  };
+
+
+// utility class to make using CSE easier
+// it takes a vector of GiNaC expressions as input,
+// and can be indexed in the same order to produce the equivalent CSE symbol
+class cse_map
+  {
+  public:
+    cse_map(std::vector<GiNaC::ex>* l, cse* c);
+    ~cse_map() { delete list; }
+
+    // not returning a reference disallows using [] as an lvalue
+    std::string operator[](unsigned int index);
+
+  protected:
+    cse*                    cse_worker;
+
+    std::vector<GiNaC::ex>* list;
   };
 
 

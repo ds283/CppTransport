@@ -6,7 +6,11 @@
 
 #include "utensors.h"
 
-#include "cse_map.h"
+#include "cse.h"
+
+
+#define BIND1(X) std::bind(&utensors::X, this, _1)
+#define BIND3(X) std::bind(&utensors::X, this, _1, _2,_3)
 
 
 namespace macro_packages
@@ -33,21 +37,21 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { &this->pre_u1_tensor,         &this->pre_u2_tensor,         &this->pre_u3_tensor,
-            &this->pre_u1_predef,         &this->pre_u2_predef,         &this->pre_u3_predef,
+          { BIND1(pre_u1_tensor),         BIND1(pre_u2_tensor),         BIND1(pre_u3_tensor),
+            BIND1(pre_u1_predef),         BIND1(pre_u2_predef),         BIND1(pre_u3_predef),
             nullptr,                      nullptr
           };
 
         const std::vector<replacement_rule_post> posts =
-          { &this->generic_post_hook,     &this->generic_post_hook,     &this->generic_post_hook,
-            &this->generic_post_hook,     &this->generic_post_hook,     &this->generic_post_hook,
+          { BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook),
+            BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook),
             nullptr,                      nullptr
           };
 
         const std::vector<replacement_rule_index> rules =
-          { &this->replace_1index_tensor, &this->replace_2index_tensor, &this->replace_3index_tensor,
-            &this->replace_1index_tensor, &this->replace_2index_tensor, &this->replace_3index_tensor,
-            &this->replace_u2_name,       &this->replace_u3_name
+          { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
+            BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
+            BIND3(this->replace_u2_name), BIND3(this->replace_u3_name)
           };
 
         const std::vector<unsigned int> args =

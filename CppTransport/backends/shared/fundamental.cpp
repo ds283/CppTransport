@@ -7,9 +7,12 @@
 #include "fundamental.h"
 #include "to_printable.h"
 
-#include <time.h>
-#include <c++/4.2.1/bits/basic_string.h>
+#include <functional>
 
+#include <time.h>
+
+
+#define BIND(X) std::bind(&fundamental::X, this, _1)
 
 namespace macro_packages
   {
@@ -19,13 +22,13 @@ namespace macro_packages
         std::vector<simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { &this->replace_tool,          &this->replace_version,       &this->replace_guard,      &this->replace_date,       &this->replace_source,
-            &this->replace_name,          &this->replace_author,        &this->replace_tag,        &this->replace_model,
-            &this->replace_header,        &this->replace_core,
-            &this->replace_number_fields, &this->replace_number_params,
-            &this->replace_field_list,    &this->replace_latex_list,    &this->replace_param_list, &this->replace_platx_list, &this->replace_state_list,
-            &this->replace_b_abs_err,     &this->replace_b_rel_err,     &this->replace_b_step,     &this->replace_b_stepper,
-            &this->replace_p_abs_err,     &this->replace_p_rel_err,     &this->replace_p_step,     &this->replace_p_stepper
+          { BIND(replace_tool) ,          BIND(replace_version),        BIND(replace_guard),       BIND(replace_date),        BIND(replace_source),
+            BIND(replace_name),           BIND(replace_author),         BIND(replace_tag),         BIND(replace_model),
+            BIND(replace_header),         BIND(replace_core),
+            BIND(replace_number_fields),  BIND(replace_number_params),
+            BIND(replace_field_list),     BIND(replace_latex_list),     BIND(replace_param_list),  BIND(replace_platx_list),  BIND(replace_state_list),
+            BIND(replace_b_abs_err),      BIND(replace_b_rel_err),      BIND(replace_b_step),      BIND(replace_b_stepper),
+            BIND(replace_p_abs_err),      BIND(replace_p_rel_err),      BIND(replace_p_step),      BIND(replace_p_stepper)
           };
 
         const std::vector<std::string> names =
@@ -71,7 +74,7 @@ namespace macro_packages
         std::vector<simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { &this->replace_unique
+          { BIND(replace_unique)
           };
 
         const std::vector<std::string> names =

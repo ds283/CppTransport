@@ -5,24 +5,28 @@
 
 
 #include <string>
+#include <functional>
 
 #include "temporary_pool.h"
 
+#define BIND(X) std::bind(&temporary_pool::X, this, _1)
+
 namespace macro_packages
   {
+
     const std::vector<simple_rule> temporary_pool::get_pre_rules()
       {
         std::vector<simple_rule> package;
 
-        const std::vector<replacement_rule_simple> rules
-          { &this->replace_temp_pool
+        const std::vector<replacement_rule_simple> rules =
+          { BIND(replace_temp_pool)
           };
 
-        const std::vector<std::string> names
+        const std::vector<std::string> names =
           { "TEMP_POOL"
           }
 
-        const std::vector<unsigned int> args
+        const std::vector<unsigned int> args =
           { 1
           };
 
@@ -63,6 +67,23 @@ namespace macro_packages
     // *******************************************************************
 
 
+    void temporary_pool::set_buffer(buffer* b)
+      {
+        // deposit current set of temporaries, if needed
+        if(this->buf != nullptr)
+          {
+            this->deposit_temporaries();
+            this->buf->deregister_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this));
+          }
+
+        this->buf = b;
+        if(this->buf != nullptr)
+          {
+            b->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this));
+          }
+      }
+
+
     void temporary_pool::deposit_temporaries()
       {
         // deposit any temporaries generated in the current temporary pool,
@@ -71,24 +92,35 @@ namespace macro_packages
         // the insertion happens before the element pointed
         // to by data.pool, so there should be no need
         // to update its location
-        std::string temps = this->data.temp_factory.temporaries(this->pool_template);
 
-        if(++this->recursion_depth < this->recursion_max)
+        if(this->buf == nullptr)
           {
-            this->data.ms->apply(temps);
-            --this->recursion_depth;
+            error(ERROR_NO_BUFFER_REGISTERED);
           }
         else
           {
-            std::ostringstream msg;
-            msg << WARNING_RECURSION_DEPTH << " " << this->recursion_max << ")";
-            warn(msg.str(), this->data.current_line, this->data->path);
+            std::string temps = this->data.cse_worker->temporaries(this->pool_template);
+
+            if(++this->recursion_depth < this->recursion_max)
+              {
+                this->ms->apply(temps);
+                --this->recursion_depth;
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << WARNING_RECURSION_DEPTH << " " << this->recursion_max << ")";
+                warn(msg.str(), this->data.current_line, this->data.path);
+              }
+
+            // write to current tagged position, but don't move it - we might need to write again later
+            this->buf->write_to_tag(temps);
+
+            // clear worker object; if we don't we might duplicate temporaries we've already written out
+            this->data.cse_worker->clear();
           }
 
-        this->data.buffer.insert(this->current_pool_location, temps);
-
-        this->data.temp_factory.clear();
-      }
+       }
 
     std::string temporary_pool::replace_temp_pool(const std::vector<std::string>& args)
       {
@@ -100,12 +132,21 @@ namespace macro_packages
         // the insertion happens before the element pointed
         // to by data.pool, so there should be no need
         // to update its location
-        this->deposit_temporaries();
 
-        // mark current endpoint in the buffer as the new insertion point
+        if(this->buf == nullptr)
+          {
+            error(ERROR_NO_BUFFER_REGISTERED);
+          }
+        else
+          {
+            this->deposit_temporaries();
 
-        this->pool_template         = t;
-        this->current_pool_location = --this->data.buffer.end();
+            // remember new template
+            this->pool_template = t;
+
+            // mark current endpoint in the buffer as the new insertion point
+            this->buf->set_tag_to_end();
+          }
 
         return(""); // replace with a blank
       }

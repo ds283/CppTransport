@@ -25,9 +25,9 @@ namespace cpp
           {
           }
 
-        const std::vector<simple_rule> get_pre_rules();
-        const std::vector<simple_rule> get_post_rules();
-        const std::vector<index_rule>  get_index_rules();
+        const std::vector<macro_packages::simple_rule> get_pre_rules();
+        const std::vector<macro_packages::simple_rule> get_post_rules();
+        const std::vector<macro_packages::index_rule>  get_index_rules();
 
       protected:
         std::string default_state;

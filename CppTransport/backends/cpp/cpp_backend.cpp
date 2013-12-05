@@ -103,8 +103,6 @@ static bool apply_replacement(const std::string& input, const std::string& outpu
 
         d.u_factory     = u_factory;
 
-        d.do_cse        = do_cse;
-
         d.output_file   = strip_dot_h(output) + ".h";
         d.core_file     = strip_dot_h(data.core_output) + ".h";
         d.guard         = boost::to_upper_copy(leafname(output));

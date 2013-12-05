@@ -6,7 +6,11 @@
 
 #include "lagrangian_tensors.h"
 
-#include "cse_map.h"
+#include "cse.h"
+
+
+#define BIND1(X) std::bind(&gauge_xfm::X, this, _1)
+#define BIND3(X) std::bind(&gauge_xfm::X, this, _1, _2,_3)
 
 
 namespace macro_packages
@@ -33,21 +37,21 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { &this->pre_A_tensor,                &this->pre_B_tensor,                &this->pre_C_tensor,
-            &this->pre_A_predef,                &this->pre_B_predef,                &this->pre_C_predef,
-            &this->pre_M_tensor,                &this->pre_M_predef
+          { BIND1(pre_A_tensor),                BIND1(pre_B_tensor),                BIND1(pre_C_tensor),
+            BIND1(pre_A_predef),                BIND1(pre_B_predef),                BIND1(pre_C_predef),
+            BIND1(pre_M_tensor),                BIND1(pre_M_predef)
           };
 
         const std::vector<replacement_rule_post> posts =
-          { &this->generic_post_hook,           &this->generic_post_hook,           &this->generic_post_hook,
-            &this->generic_post_hook,           &this->generic_post_hook,           &this->generic_post_hook,
-            &this->generic_post_hook,           &this->generic_post_hook
+          { BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
+            BIND1(generic_post_hook),           BIND1(generic_post_hook),           BIND1(generic_post_hook),
+            BIND1(generic_post_hook),           BIND1(generic_post_hook)
           };
 
         const std::vector<replacement_rule_index> rules =
-          { &this->replace_1index_field_tensor, &this->replace_2index_field_tensor, &this->replace_3index_field_tensor,
-            &this->replace_1index_field_tensor, &this->replace_2index_field_tensor, &this->replace_3index_field_tensor,
-            &this->replace_2index_field_tensor, &this->replace_2index_field_tensor
+          { BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor), BIND3(replace_3index_field_tensor),
+            BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor), BIND3(replace_3index_field_tensor),
+            BIND3(replace_2index_field_tensor), BIND3(replace_2index_field_tensor)
           };
 
         const std::vector<unsigned int> args =

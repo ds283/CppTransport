@@ -51,6 +51,8 @@
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "
 
+#define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package used, but no buffer registered"
+
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
 #define WARNING_OCTAL_CONVERSION_A            "Leading '0' in "

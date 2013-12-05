@@ -7,7 +7,10 @@
 #include "flow_tensors.h"
 
 #include "cse.h"
-#include "cse_map.h"
+
+
+#define BIND1(X) std::bind(&flow_tensors::X, this, _1)
+#define BIND3(X) std::bind(&flow_tensors::X, this, _1, _2,_3)
 
 
 namespace macro_packages
@@ -17,7 +20,7 @@ namespace macro_packages
         std::vector<simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { &this->replace_V, &this->replace_Hsq, &this->replace_eps
+          { BIND1(replace_V), BIND1(replace_Hsq), BIND1(replace_eps)
           };
 
         const std::vector<std::string> names =
@@ -60,17 +63,17 @@ namespace macro_packages
 
         const std::vector<replacement_rule_pre> pres =
           { nullptr,                           nullptr,              nullptr,
-            &this->pre_sr_velocity
+            BIND1(pre_sr_velocity)
           };
 
         const std::vector<replacement_rule_post> posts =
           { nullptr,                           nullptr,              nullptr,
-            &this->generic_post_hook
+            BIND1(generic_post_hook)
           };
 
         const std::vector<replacement_rule_index> rules =
-          { &this->replace_parameter,          &this->replace_field, &this->replace_coordinate,
-            &this->replace_1index_field_tensor
+          { BIND3(replace_parameter),          BIND3(replace_field), BIND3(replace_coordinate),
+            BIND3(replace_1index_field_tensor)
           };
 
         const std::vector<unsigned int> args =
