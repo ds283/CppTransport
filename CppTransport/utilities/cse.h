@@ -75,7 +75,7 @@ class cse
     ginac_printer printer;
 
     // these functions are abstract and must be implemented by any derived classes
-    // typically they will vary
+    // typically they will vary depending on the target language
     virtual std::string print         (const GiNaC::ex& expr) = 0;
     virtual std::string print_operands(const GiNaC::ex& expr, std::string op) = 0;
 

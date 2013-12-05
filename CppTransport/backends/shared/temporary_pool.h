@@ -22,9 +22,10 @@ namespace macro_packages
       {
       public:
         temporary_pool(replacement_data& d, ginac_printer p,
-                       std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE,
-                       std::list<std::string>::iterator cpl)
-          : pool_template(t), current_pool_location(cpl), replacement_rule_package(d, p)
+                       std::list<std::string>::iterator cpl, unsigned int dm = DEFAULT_RECURSION_DEPTH,
+                       std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
+          : pool_template(t), current_pool_location(cpl), recursion_depth(0), recursion_max(dm),
+            replacement_rule_package(d, p)
           {
           }
 
@@ -37,6 +38,9 @@ namespace macro_packages
       protected:
         std::string                        pool_template;
         std::list<std::string>::iterator   current_pool_location;
+
+        unsigned int                       recursion_depth;
+        unsigned int                       recursion_max;
 
         std::string replace_temp_pool      (const std::vector<std::string>& args);
       };

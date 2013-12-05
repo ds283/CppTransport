@@ -72,7 +72,19 @@ namespace macro_packages
         // to by data.pool, so there should be no need
         // to update its location
         std::string temps = this->data.temp_factory.temporaries(this->pool_template);
-        this->data.ms->apply(temps);
+
+        if(++this->recursion_depth < this->recursion_max)
+          {
+            this->data.ms->apply(temps);
+            --this->recursion_depth;
+          }
+        else
+          {
+            std::ostringstream msg;
+            msg << WARNING_RECURSION_DEPTH << " " << this->recursion_max << ")";
+            warn(msg.str(), this->data.current_line, this->data->path);
+          }
+
         this->data.buffer.insert(this->current_pool_location, temps);
 
         this->data.temp_factory.clear();

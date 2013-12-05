@@ -56,6 +56,8 @@
 #define WARNING_OCTAL_CONVERSION_A            "Leading '0' in "
 #define WARNING_OCTAL_CONVERSION_B            "indicates octal, but did not convert: treated as decimal"
 
+#define WARNING_RECURSION_DEPTH               "Recursion depth exceeded (max"
+
 #define WARNING_LEXEME_KEYWORD                "Internal error: attempt to get keyword type for non-keyword lexeme"
 #define WARNING_LEXEME_SYMBOL                 "Internal error: attempt to get symbol type for non-symbol lexeme"
 #define WARNING_LEXEME_INTEGER                "Internal error: attempt to get integer value for non-integer lexeme"

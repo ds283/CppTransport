@@ -27,6 +27,8 @@
 #define MPLANCK_LATEX_SYMBOL         "M_{\\mathrm{P}}"
 #define MPLANCK_TEXT_NAME            "M_P"
 
+#define DEFAULT_RECURSION_DEPTH      (127)
+
 // data structure for tracking the source of any lexeme
 struct inclusion
   {
