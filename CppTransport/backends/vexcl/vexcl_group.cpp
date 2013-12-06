@@ -1,22 +1,21 @@
 //
-// Created by David Seery on 05/12/2013.
+// Created by David Seery on 06/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
 
-#include "core_group.h"
+#include "vexcl_group.h"
 
 #include "cpp_printer.h"
 #include "cpp_cse.h"
 
 
-core_group::core_group(macro_packages::replacement_data& d, bool do_cse)
+vexcl_group::vexcl_group(macro_packages::replacement_data& d, bool do_cse)
   : package_group(d)
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
-    // because it gets pushed to them automatically when we add this packages
-    // to our list
+    // because it gets pushed to them when they join the package group
     cse_worker = new cpp::cpp_cse(0, ginac_printer(&cpp::print), do_cse);
 
     f  = new macro_packages::fundamental       (d, ginac_printer(&cpp::print));
@@ -25,9 +24,9 @@ core_group::core_group(macro_packages::replacement_data& d, bool do_cse)
     ut = new macro_packages::utensors          (d, ginac_printer(&cpp::print));
     xf = new macro_packages::gauge_xfm         (d, ginac_printer(&cpp::print));
     tp = new macro_packages::temporary_pool    (d, ginac_printer(&cpp::print));
-    cm = new cpp::core_macros                  (d, ginac_printer(&cpp::print));
+    vs = new cpp::vexcl_steppers               (d, ginac_printer(&cpp::print));
 
-    this->push_back(cm);
+    this->push_back(vs);
     this->push_back(tp);
     this->push_back(ut);
     this->push_back(xf);
@@ -37,7 +36,7 @@ core_group::core_group(macro_packages::replacement_data& d, bool do_cse)
   }
 
 
-core_group::~core_group()
+vexcl_group::~vexcl_group()
   {
     delete f;
     delete ft;
@@ -45,7 +44,7 @@ core_group::~core_group()
     delete ut;
     delete xf;
     delete tp;
-    delete cm;
+    delete vs;
 
     delete cse_worker;
   }

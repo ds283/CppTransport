@@ -26,6 +26,9 @@
 #define ERROR_TEMPLATE_BACKEND_A              "Template"
 #define ERROR_TEMPLATE_BACKEND_B              "requires unknown backend"
 
+#define ERROR_VEXCL_NO_STEPPER_STATE          "Fatal: stepper state type specification is mandatory with VexCL backend"
+#define WARNING_VEXCL_STEPPER_IGNORED         "Using stepper type 'runge_kutta_dopri5'; VexCL backend ignores stepper specification"
+
 #define ERROR_UNRECOGNIZED_NUMBER             "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL             "Unrecognized character"
 #define ERROR_EXPECTED_CLOSE_QUOTE            "Unterminated string literal"

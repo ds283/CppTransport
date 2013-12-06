@@ -79,13 +79,16 @@ namespace macro_packages
           }
 
         // these methods must be overridden by derived classes which implement the replacement_rule_package concept
-        virtual const std::vector<simple_rule> get_pre_rules()   = 0;
-        virtual const std::vector<simple_rule> get_post_rules()  = 0;
+        virtual const std::vector<simple_rule> get_pre_rules  ()   = 0;
+        virtual const std::vector<simple_rule> get_post_rules ()  = 0;
         virtual const std::vector<index_rule>  get_index_rules() = 0;
 
-        inline void                            set_u_factory (u_tensor_factory* uf)  { this->u_factory = uf; }
-        inline void                            set_flattener (flattener* f)          { this->fl = f; }
-        inline void                            set_cse_worker(cse* cw)               { this->cse_worker = cw; }
+        inline void                            set_u_factory  (u_tensor_factory* uf)  { this->u_factory = uf; }
+        inline void                            set_flattener  (flattener* f)          { this->fl = f; }
+        inline void                            set_cse_worker (cse* cw)               { this->cse_worker = cw; }
+
+        inline void                            error          (std::string const msg) { ::error(msg, this->data.current_line, this->data.path); }
+        inline void                            warn           (std::string const msg) { ::warn(msg, this->data.current_line, this->data.path); }
 
       protected:
         replacement_data& data;

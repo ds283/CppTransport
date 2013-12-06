@@ -1,12 +1,12 @@
 //
-// Created by David Seery on 05/12/2013.
+// Created by David Seery on 06/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
 
 
-#ifndef __macropackage_cpp_macros_H_
-#define __macropackage_cpp_macros_H_
+#ifndef __macropackage_vexcl_steppers_H_
+#define __macropackage_vexcl_steppers_H_
 
 
 #include "macro.h"
@@ -16,12 +16,11 @@
 namespace cpp
   {
 
-    class core_macros: public ::macro_packages::replacement_rule_package
+    class vexcl_steppers: public ::macro_packages::replacement_rule_package
       {
       public:
-        core_macros(macro_packages::replacement_data& d, ginac_printer p,
-                   std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
-          : default_state(ds), ::macro_packages::replacement_rule_package(d, p)
+        vexcl_steppers(macro_packages::replacement_data& d, ginac_printer p)
+          : ::macro_packages::replacement_rule_package(d, p)
           {
           }
 
@@ -30,8 +29,6 @@ namespace cpp
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
       protected:
-        std::string default_state;
-
         std::string replace_stepper      (const struct stepper& s, std::string state_name);
 
         std::string replace_backg_stepper(const std::vector<std::string>& args);
@@ -42,5 +39,4 @@ namespace cpp
   } // namespace cpp
 
 
-
-#endif //__macropackage_cpp_macros_H_
+#endif //__macropackage_vexcl_steppers_H_

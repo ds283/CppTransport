@@ -11,7 +11,9 @@
 
 #include "core_macros.h"
 
+
 #define BIND(X) std::bind(&core_macros::X, this, std::placeholders::_1)
+
 
 namespace cpp
   {

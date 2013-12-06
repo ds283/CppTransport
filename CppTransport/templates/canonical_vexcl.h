@@ -244,9 +244,7 @@ namespace transport
           $$__MODEL_vexcl_twopf_observer<number> obs(background_history, twopf_history, ks.size());
 
           using namespace boost::numeric::odeint;
-          typedef runge_kutta_dopri5<twopf_state, double, twopf_state, double, vector_space_algebra, default_operations> stepper;
-
-          integrate_times(make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::twopf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_history, this);
 
@@ -368,9 +366,7 @@ namespace transport
           $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list);
 
           using namespace boost::numeric::odeint;
-          typedef runge_kutta_dopri5<threepf_state, double, threepf_state, double, vector_space_algebra, default_operations> stepper;
-
-          integrate_times(make_controlled<stepper>($$__PERT_ABS_ERR, $$__PERT_REL_ERR), rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::threepf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, this);
 

@@ -120,7 +120,7 @@ namespace macro_packages
               {
                 std::ostringstream msg;
                 msg << WARNING_RECURSION_DEPTH << " " << this->recursion_max << ")";
-                warn(msg.str(), this->data.current_line, this->data.path);
+                this->warn(msg.str());
               }
 
             // write to current tagged position, but don't move it - we might need to write again later

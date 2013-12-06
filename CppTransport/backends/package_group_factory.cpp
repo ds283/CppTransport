@@ -10,6 +10,7 @@
 #include "package_group_factory.h"
 
 #include "core_group.h"
+#include "vexcl_group.h"
 
 
 package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, bool do_cse)
@@ -19,6 +20,10 @@ package_group* package_group_factory(std::string backend, macro_packages::replac
     if(backend == "core")
       {
         rval = new core_group(data, do_cse);
+      }
+    else if(backend == "vexcl")
+      {
+        rval = new vexcl_group(data, do_cse);
       }
     else
       {
