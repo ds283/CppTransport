@@ -19,16 +19,18 @@ core_group::core_group(macro_packages::replacement_data& d, bool do_cse)
     // to out list
     cse_worker = new cpp::cpp_cse(0, ginac_printer(&cpp::print), do_cse);
 
-    f  = new macro_packages::fundamental(d, ginac_printer(&cpp::print));
-    ft = new macro_packages::flow_tensors(d, ginac_printer(&cpp::print));
+    f  = new macro_packages::fundamental       (d, ginac_printer(&cpp::print));
+    ft = new macro_packages::flow_tensors      (d, ginac_printer(&cpp::print));
     lt = new macro_packages::lagrangian_tensors(d, ginac_printer(&cpp::print));
-    ut = new macro_packages::utensors(d, ginac_printer(&cpp::print));
-    tp = new macro_packages::temporary_pool(d, ginac_printer(&cpp::print));
-    cm = new cpp::core_macros(d, ginac_printer(&cpp::print));
+    ut = new macro_packages::utensors          (d, ginac_printer(&cpp::print));
+    xf = new macro_packages::gauge_xfm         (d, ginac_printer(&cpp::print));
+    tp = new macro_packages::temporary_pool    (d, ginac_printer(&cpp::print));
+    cm = new cpp::core_macros                  (d, ginac_printer(&cpp::print));
 
     this->push_back(cm);
     this->push_back(tp);
     this->push_back(ut);
+    this->push_back(xf);
     this->push_back(lt);
     this->push_back(ft);
     this->push_back(f);
