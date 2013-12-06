@@ -20,9 +20,6 @@
 #include "core_macros.h"
 
 
-#define CORE_GROUP_NAME "core"
-
-
 class core_group: public package_group
   {
   public:
@@ -31,8 +28,6 @@ class core_group: public package_group
 
     void        set_buffer(buffer* b)        { this->tp->set_buffer(b); }
     void        set_macros(macro_package* m) { this->tp->set_macros(m); }
-
-    std::string get_name  ()                 { return(CORE_GROUP_NAME); }
 
   protected:
     macro_packages::fundamental*        f;

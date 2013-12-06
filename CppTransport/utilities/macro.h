@@ -43,38 +43,38 @@ class macro_package
     public:
       macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk);
 
-      unsigned int                             apply                 (std::string& line);
+      unsigned int                              apply                 (std::string& line);
 
     private:
-      unsigned int                             apply_simple          (std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank=false);
-      unsigned int                             apply_index           (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-                                                                      const bool semicolon, const bool comma, const bool lhs_present,
+      unsigned int                              apply_simple          (std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank=false);
+      unsigned int                              apply_index           (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
+                                                                       const bool semicolon, const bool comma, const bool lhs_present,
+                                                                       std::vector<macro_packages::index_rule>& ruleset);
+
+      std::vector<struct index_abstract>        get_lhs_indices       (std::string lhs);
+      void                                      assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices,
                                                                       std::vector<macro_packages::index_rule>& ruleset);
+		  void                                      assign_index_defaults (std::vector<struct index_abstract>& lhs_indices);
 
-      std::vector<struct index_abstract>       get_lhs_indices       (std::string lhs);
-      void                                     assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices,
-                                                                      std::vector<macro_packages::index_rule>& ruleset);
-		  void                                     assign_index_defaults (std::vector<struct index_abstract>& lhs_indices);
+      std::vector<std::string>                  get_argument_list     (std::string& line, size_t pos, unsigned int num_args, std::string macro_name);
 
-      std::vector<std::string>                 get_argument_list     (std::string& line, size_t pos, unsigned int num_args, std::string macro_name);
+      std::vector<struct index_abstract>        get_index_set         (std::string line, size_t pos, std::string name, unsigned int indices, unsigned int range);
 
-      std::vector<struct index_abstract>       get_index_set         (std::string line, size_t pos, std::string name, unsigned int indices, unsigned int range);
-
-      void                                     map_indices           (std::string& line, std::string prefx, const std::vector<struct index_assignment>& assignment);
+      void                                      map_indices           (std::string& line, std::string prefx, const std::vector<struct index_assignment>& assignment);
 
 
-      unsigned int                             fields;
-      unsigned int                             parameters;
-      enum indexorder                          order;
+      unsigned int                              fields;
+      unsigned int                              parameters;
+      enum indexorder                           order;
 
-      package_group*                           package;
+      package_group*                            package;
 
-      std::vector<macro_packages::simple_rule> pre_rule_cache;
-      std::vector<macro_packages::simple_rule> post_rule_cache;
-      std::vector<macro_packages::index_rule>  index_rule_cache;
+      std::vector<macro_packages::simple_rule>& pre_rule_cache;
+      std::vector<macro_packages::simple_rule>& post_rule_cache;
+      std::vector<macro_packages::index_rule>&  index_rule_cache;
 
-      const std::string                        prefix;
-      const std::string                        split;
+      const std::string                         prefix;
+      const std::string                         split;
   };
 
 

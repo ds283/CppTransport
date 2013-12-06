@@ -20,13 +20,10 @@
 
 
 macro_package::macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk)
-  : fields(N_f), parameters(N_p), order(o), prefix(pf), split(sp), package(pk)
+  : fields(N_f), parameters(N_p), order(o), prefix(pf), split(sp), package(pk),
+    pre_rule_cache(pk->get_pre_ruleset()), post_rule_cache(pk->get_post_ruleset()), index_rule_cache(pk->get_index_ruleset())
   {
     assert(package != nullptr);
-
-    pre_rule_cache   = package->get_pre_ruleset();
-    post_rule_cache  = package->get_post_ruleset();
-    index_rule_cache = package->get_index_ruleset();
   }
 
 
