@@ -13,6 +13,9 @@
 #include "ginac/ginac.h"
 
 
+// define the concept of a ginac_printer - something which takes an GiNaC expression
+// and formats to a string appropriate for a particular language
+
 typedef std::function<std::string(const GiNaC::ex&)> ginac_printer;
 
 
