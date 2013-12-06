@@ -57,8 +57,13 @@ void buffer::deregister_closure_handler(buffer_closure_handler handler, void* ta
 
 void buffer::emit(std::string file)
   {
-    std::ofstream out;
+    // loop through closure handlers, informing them that we intend to finish writing to the buffer
+    for(std::list< std::pair<buffer_closure_handler,void*> >::iterator t = this->closure_handlers.begin(); t != this->closure_handlers.end(); t++)
+      {
+        ((*t).first)();
+      }
 
+    std::ofstream out;
     out.open(file);
     if(out.is_open() && !out.fail())
       {
