@@ -28,6 +28,7 @@ namespace macro_packages
                     std::string ge = "_H_",
                     std::string tf = OUTPUT_TIME_FORMAT)
           : list_start(ls), list_end(le), list_separator(lsep), list_pad(lpad), tag(t), guard_terminator(ge), time_format(tf),
+            unique(0),
             replacement_rule_package(d, p)
           {
           }
@@ -37,14 +38,16 @@ namespace macro_packages
         const std::vector<index_rule>  get_index_rules();
 
       protected:
-        std::string list_start;
-        std::string list_end;
-        std::string list_separator;
-        std::string list_pad;
-        std::string tag;
-        std::string guard_terminator;
+        std::string  list_start;
+        std::string  list_end;
+        std::string  list_separator;
+        std::string  list_pad;
+        std::string  tag;
+        std::string  guard_terminator;
 
-        std::string time_format;
+        std::string  time_format;
+
+        unsigned int unique;
 
         std::string stringize_list         (std::vector<std::string> list);
         std::string stringize_number       (double number);

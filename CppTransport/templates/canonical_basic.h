@@ -1,4 +1,4 @@
-// opencl 0.06
+// core 0.06
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $$__TOOL $$__VERSION
 //

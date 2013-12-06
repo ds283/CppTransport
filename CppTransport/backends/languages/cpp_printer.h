@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "ginac/basic.h"
+#include "ginac/ginac.h"
 
 
 namespace cpp

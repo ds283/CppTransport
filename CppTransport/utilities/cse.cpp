@@ -43,6 +43,7 @@
 #include <iostream>
 #include <sstream>
 #include <map>
+#include <assert.h>
 
 #include "msg_en.h"
 
@@ -52,6 +53,7 @@
 
 // **********************************************************************
 
+
 void cse::clear()
   {
     this->symbols.clear();
@@ -60,7 +62,9 @@ void cse::clear()
     this->serial_number++;
   }
 
+
 // **********************************************************************
+
 
 void cse::parse(const GiNaC::ex& expr)
   {
@@ -76,6 +80,7 @@ void cse::parse(const GiNaC::ex& expr)
           }
       }
   }
+
 
 std::string cse::temporaries(const std::string& t)
   {
@@ -162,6 +167,12 @@ cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
   }
 
 
+cse_map::~cse_map()
+  {
+    delete list;
+  }
+
+
 std::string cse_map::operator[](unsigned int index)
   {
     std::string rval = "";
@@ -174,7 +185,7 @@ std::string cse_map::operator[](unsigned int index)
           }
         else
           {
-            rval = (this->cse_worker->get_ginac_printer)((*this->list)[index]);
+            rval = (this->cse_worker->get_ginac_printer())((*this->list)[index]);
           }
       }
 

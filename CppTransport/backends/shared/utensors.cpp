@@ -4,13 +4,13 @@
 //
 
 
-#include "utensors.h"
+#include <functional>
 
+#include "utensors.h"
 #include "cse.h"
 
-
-#define BIND1(X) std::bind(&utensors::X, this, _1)
-#define BIND3(X) std::bind(&utensors::X, this, _1, _2,_3)
+#define BIND1(X) std::bind(&utensors::X, this, std::placeholders::_1)
+#define BIND3(X) std::bind(&utensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 
 namespace macro_packages
@@ -51,7 +51,7 @@ namespace macro_packages
         const std::vector<replacement_rule_index> rules =
           { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
             BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
-            BIND3(this->replace_u2_name), BIND3(this->replace_u3_name)
+            BIND3(replace_u2_name),       BIND3(replace_u3_name)
           };
 
         const std::vector<unsigned int> args =
@@ -101,9 +101,9 @@ namespace macro_packages
     void* utensors::pre_u1_tensor(const std::vector<std::string>& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u1(*container, this->data.fl);
+        this->u_factory->compute_u1(*container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -119,9 +119,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u1(Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_u1(Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -138,9 +138,9 @@ namespace macro_packages
         GiNaC::symbol a(args.size() >= 2 ? args[1] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u2(k, a, *container, this->data.fl);
+        this->u_factory->compute_u2(k, a, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -159,9 +159,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u2(k, a, Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_u2(k, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -180,9 +180,9 @@ namespace macro_packages
         GiNaC::symbol  a(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u3(k1, k2, k3, a, *container, this->data.fl);
+        this->u_factory->compute_u3(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -203,9 +203,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_u3(k1, k2, k3, a, Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_u3(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -220,8 +220,8 @@ namespace macro_packages
         std::ostringstream out;
 
         assert(indices.size() == 2);
-        assert(indices[0].species < this->data.source->get_number_fields());
-        assert(indices[1].species < this->data.source->get_number_fields());
+        assert(indices[0].species < this->data.parse_tree->get_number_fields());
+        assert(indices[1].species < this->data.parse_tree->get_number_fields());
 
         assert(args.size() == 1);
 
@@ -242,9 +242,9 @@ namespace macro_packages
         std::ostringstream out;
 
         assert(indices.size() == 3);
-        assert(indices[0].species < this->data.source->get_number_fields());
-        assert(indices[1].species < this->data.source->get_number_fields());
-        assert(indices[2].species < this->data.source->get_number_fields());
+        assert(indices[0].species < this->data.parse_tree->get_number_fields());
+        assert(indices[1].species < this->data.parse_tree->get_number_fields());
+        assert(indices[2].species < this->data.parse_tree->get_number_fields());
 
         assert(args.size() == 1);
 

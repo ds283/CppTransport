@@ -9,18 +9,43 @@
 #define __replacement_rule_package_H_
 
 
-#include <functional>
+#include "ginac/ginac.h"
 
-
-#include "input.h"
 #include "macro.h"
-
-
-typedef std::function<std::string(const GiNaC::ex& expr)> ginac_printer;
+#include "u_tensor_factory.h"
+#include "flatten.h"
+#include "ginac_printer.h"
+#include "cse.h"
 
 
 namespace macro_packages
   {
+
+    class replacement_data
+      {
+      public:
+        script*                      parse_tree;         // parse tree corresponding to input script
+        std::string                  script_in;          // name of input script
+
+        // information about the template being processed
+        std::string                  template_in;        // template file being read from
+        std::string                  file_out;           // output file being written
+
+        std::string                  core_out;           // name of core .h file
+        std::string                  implementation_out; // name of implementation .h file
+
+        std::string                  guard;              // tag for #ifndef guard
+
+        // basic information about the model being processed
+        unsigned int                 num_fields;         // number of fields
+        unsigned int                 num_params;         // number of parameters
+        enum indexorder              index_order;        // index ordering
+
+        // information to support helpful error output
+        std::deque<struct inclusion> path;
+        unsigned int                 current_line;
+      };
+
 
     class simple_rule
       {
@@ -38,7 +63,7 @@ namespace macro_packages
         replacement_rule_pre     pre;
         replacement_rule_post    post;
         unsigned int             args;
-        unsigned int             indices;0,
+        unsigned int             indices;
         unsigned int             range;
         std::string              name;
       };
@@ -48,7 +73,7 @@ namespace macro_packages
     class replacement_rule_package
       {
       public:
-        replacement_rule_package(replacement_data &d, ginac_printer p)
+        replacement_rule_package(replacement_data& d, ginac_printer p)
         : data(d), printer(p)
           {
           }
@@ -58,22 +83,29 @@ namespace macro_packages
         virtual const std::vector<simple_rule> get_post_rules()  = 0;
         virtual const std::vector<index_rule>  get_index_rules() = 0;
 
+        inline void                            set_u_factory(u_tensor_factory* uf)  { this->u_factory = uf; }
+        inline void                            set_flattener(flattener* f)          { this->fl = f; }
+        inline void                            set_cse_worker(cse* cw)              { this->cse_worker = cw; }
+
       protected:
-        replacement_data &data;
-        ginac_printer    printer;
+        replacement_data& data;
+        ginac_printer     printer;
 
-        std::string replace_1index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
-        std::string replace_2index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
-        std::string replace_3index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        u_tensor_factory* u_factory;
+        flattener*        fl;
+        cse*              cse_worker;
 
-        std::string replace_1index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
-        std::string replace_2index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
-        std::string replace_3index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        std::string       replace_1index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        std::string       replace_2index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        std::string       replace_3index_tensor      (const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
 
-        void        generic_post_hook          (void* state);
+        std::string       replace_1index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        std::string       replace_2index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
+        std::string       replace_3index_field_tensor(const std::vector<std::string> &args, std::vector<struct index_assignment> indices, void *state);
 
-        unsigned int get_index_label           (struct index_assignment& index);
+        void              generic_post_hook          (void* state);
 
+        unsigned int      get_index_label            (struct index_assignment& index);
       };
   }
 

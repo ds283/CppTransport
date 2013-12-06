@@ -44,23 +44,44 @@
 #define __cse_H_
 
 #include <string>
-
 #include <map>
 #include <utility>
 
-#include "replacement_rule_package.h"
-
 #include "ginac/ginac.h"
 
+#include "ginac_printer.h"
+#include "msg_en.h"
 
 // to be defined below; need a forward reference here
-class cse_map;
+class cse;
+
+// utility class to make using CSE easier
+// it takes a vector of GiNaC expressions as input,
+// and can be indexed in the same order to produce the equivalent CSE symbol
+class cse_map
+  {
+  public:
+    cse_map(std::vector<GiNaC::ex>* l, cse* c);
+    ~cse_map();
+
+    // not returning a reference disallows using [] as an lvalue
+    std::string operator[](unsigned int index);
+
+  protected:
+    cse*                    cse_worker;
+
+    std::vector<GiNaC::ex>* list;
+  };
+
 
 class cse
   {
   public:
     cse(unsigned int s, ginac_printer p, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME, bool d=true)
       : serial_number(s), printer(p), kernel_name(k), do_cse(d)
+      {
+      }
+    virtual ~cse()
       {
       }
 
@@ -74,7 +95,7 @@ class cse
     const std::string& get_kernel_name()                      { return(this->kernel_name); }
     void               set_kernel_name(const std::string& k)  { this->kernel_name = k; }
 
-    cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this))}
+    cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this)); }
 
     bool               get_do_cse()                           { return(this->do_cse); }
     void               set_do_cse(bool d)                     { this->do_cse = d; }
@@ -100,25 +121,6 @@ class cse
 
     std::map<std::string, std::string>                 symbols;
     std::vector< std::pair<std::string, std::string> > decls;
-  };
-
-
-// utility class to make using CSE easier
-// it takes a vector of GiNaC expressions as input,
-// and can be indexed in the same order to produce the equivalent CSE symbol
-class cse_map
-  {
-  public:
-    cse_map(std::vector<GiNaC::ex>* l, cse* c);
-    ~cse_map() { delete list; }
-
-    // not returning a reference disallows using [] as an lvalue
-    std::string operator[](unsigned int index);
-
-  protected:
-    cse*                    cse_worker;
-
-    std::vector<GiNaC::ex>* list;
   };
 
 

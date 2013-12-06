@@ -18,23 +18,23 @@ typedef std::function<void(void)> buffer_closure_handler;
 class buffer
   {
   public:
-    buffer()                                                         { tag = --buf.end(); }
+    buffer();
 
-    void write_to_end              (std::string line)                { this->buf.push_back(line); }
-    void write_to_tag              (std::string line)                { this->buf.insert(this->tag, line); }
+    void write_to_end              (std::string line);
+    void write_to_tag              (std::string line);
 
-    void set_tag_to_end            ()                                { this->tag = --this->buf.end(); }
+    void set_tag_to_end            ();
 
-    void register_closure_handler  (buffer_closure_handler handler, void* tag)  { this->closure_handlers.push_back(handler); }
-    void deregister_closure_handler(buffer_closure_handler handler, void* tag)  { this->buf.remove_if([&](std::pair<buffer_closure_handler,void*> item) -> bool { return item.first() == tag; } ); }
+    void register_closure_handler  (buffer_closure_handler handler, void* tag);
+    void deregister_closure_handler(buffer_closure_handler handler, void* tag);
 
     void emit                      (std::string file);
 
   protected:
-    std::list<std::string>                              buf;
-    std::list<std::string>::iterator                    tag;
+    std::list<std::string>                               buf;
+    std::list<std::string>::iterator                     tag;
 
-    std::list<std::pair<buffer_closure_handler, void*>> closure_handlers;
+    std::list<std::pair<buffer_closure_handler, void*> > closure_handlers;
   };
 
 

@@ -12,103 +12,7 @@
 #include <boost/timer/timer.hpp>
 
 #include "core.h"
-#include "input.h"
-#include "backends.h"
-
-// FAIL return code for Bison parser
-#ifndef FAIL
-#define FAIL (1)
-#endif
-
-
-// ******************************************************************
-
-// lexical analyser data
-
-
-const std::string keyword_table[] =
-  {
-    "name", "author", "tag", "field", "potential",
-    "parameter", "latex", "core", "implementation", "model",
-    "abserr", "relerr", "stepper", "stepsize",
-    "background", "perturbations",
-    "indexorder", "left", "right",
-    "abs", "step", "sqrt", "sin", "cos", "tan",
-    "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-    "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G_func", "S_func", "H_func",
-    "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
-  };
-
-const enum keyword_type keyword_map[] =
-  {
-    k_name, k_author, k_tag, k_field, k_potential,
-    k_parameter, k_latex, k_core, k_implementation, k_model,
-    k_abserr, k_relerr, k_stepper, k_stepsize,
-    k_background, k_perturbations,
-    k_indexorder, k_left, k_right,
-    f_abs, f_step, f_sqrt,
-    f_sin, f_cos, f_tan,
-    f_asin, f_acos, f_atan, f_atan2,
-    f_sinh, f_cosh, f_tanh,
-    f_asinh, f_acosh, f_atanh,
-    f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
-    f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
-    f_beta, f_psi, f_factorial, f_binomial
-  };
-
-const std::string character_table[] =
-  {
-    "{", "}", "(", ")",
-    "[", "]", ",", ".", ":", ";",
-    "=", "+", "-@binary", "-@unary", "*", "/", "\\", "~",
-    "&", "^", "@", "...", "->"
-  };
-
-const enum character_type character_map[] =
-   {
-     open_brace, close_brace, open_bracket, close_bracket,
-     open_square, close_square, comma, period, colon, semicolon,
-     equals, plus, binary_minus, unary_minus, star, backslash, foreslash, tilde,
-     ampersand, circumflex, ampersat, ellipsis, rightarrow
-   };
-
-// keep track of which characters can precede a unary minus
-// this is an open bracket '(', and the binary operators
-// which bind tighter: *, /, ^
-// plus anything which isn't part of an expression
-const bool character_unary_context[] =
-  {
-    true, true, true, false,
-    true, true, true, true, true, true,
-    false, false, false, false, true, true, true, true,
-    true, true, true, true, true
-  };
-
-
-// ******************************************************************
-
-
-const std::string backend_table[] =
-  {
-    "cpp"
-  };
-
-const backend_function backend_dispatcher[] =
-  {
-    cpp_backend
-  };
-
-bool backend_selector[] =
-  {
-    true
-  };
-
-
-// ******************************************************************
-
-
-static std::string mangle_output_name(std::string input, std::string tag);
-static std::string mangle_input_name (std::string input);
+#include "translation_unit.h"
 
 
 // ******************************************************************
@@ -123,10 +27,12 @@ int main(int argc, const char *argv[])
     // set up the initial search path to consist only of CWD
     finder path;
 
-    std::deque<struct input> inputs;
-    std::string              current_core = "";
-    std::string              current_implementation = "";
-    bool                     cse = true;
+    std::string                         current_core = "";
+    std::string                         current_implementation = "";
+    bool                                cse = true;
+
+    unsigned int                        files_processed = 0;
+    unsigned int                        replacements = 0;
 
     for(int i = 1; i < argc; i++)
       {
@@ -160,131 +66,30 @@ int main(int argc, const char *argv[])
                 error(msg.str());
               }
           }
-        else if(strcmp(argv[i], "--backend") == 0)
-          {
-            std::string backend = "";
-            bool        found   = false;
-
-            if(i + 1 < argc) backend = argv[++i];
-            else             error(ERROR_MISSING_BACKEND);
-
-            for(int i = 0; i < NUMBER_BACKENDS; i++)
-              {
-                if(backend == backend_table[i])
-                  {
-                    backend_selector[i] = true;
-                    found = true;
-                  }
-              }
-            if(!found)
-              {
-                std::ostringstream msg;
-                msg << ERROR_UNKNOWN_BACKEND << " '" << backend << "'";
-                error(msg.str());
-              }
-          }
         else if(strcmp(argv[i], "--cse") == 0)    cse = true;
         else if(strcmp(argv[i], "--no-cse") == 0) cse = false;
-        else  // assume to be an input file we are processing
+        else if((argv[i])[0] == '-')  // assume to be a switch we don't know about
           {
-            struct input in;
-
-            // lexicalize this input file
-            in.name   = (std::string)argv[i];
-            in.stream = new lexstream<keyword_type, character_type>((std::string) argv[i], &path,
-              keyword_table, keyword_map, NUMBER_KEYWORDS,
-              character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
-
-            // in.stream->print(std::cerr);
-
-            // now pass to the parser for syntactic analysis
-            in.lexer  = new y::y_lexer(in.stream);
-            in.driver = new y::y_driver();
-            in.parser = new y::y_parser(in.lexer, in.driver);
-
-            if(in.parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + in.name + (std::string)("'"));
-
-            // in.driver->get_script()->print(std::cerr);
-            if(current_core != "")
-              {
-                in.core_output = current_core;
-                current_core = "";
-              }
-            else in.core_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_core()));
-
-            if(current_implementation != "")
-              {
-                in.implementation_output = current_implementation;
-                current_implementation = "";
-              }
-            else in.implementation_output = mangle_output_name(in.name, mangle_input_name(in.driver->get_script()->get_implementation()));
-
-            inputs.push_back(in);
+            std::ostringstream msg;
+            msg << WARNING_UNKNOWN_SWITCH << " " << argv[i];
+            warn(msg.str());
           }
-      }
-
-    // pass each translation unit off to the selected backends
-    for(int i = 0; i < inputs.size(); i++)
-      {
-        for(int j = 0; j < NUMBER_BACKENDS; j++)
+        else // assume to be an input file we are processing
           {
-            if(backend_selector[j])
-              {
-                if((*(backend_dispatcher[j]))(inputs[i], path, cse) == false)
-                  {
-                    std::ostringstream msg;
-                    msg << ERROR_BACKEND_FAILURE << " '" << backend_table[j] << "'";
-                    error(msg.str());
-                  };
-              }
+            translation_unit unit((std::string)argv[i], &path, current_core, current_implementation, cse);
+
+            replacements += unit.do_replacement();
+            files_processed++;
           }
       }
 
     timer.stop();
     std::cout << MESSAGE_PROCESSING_COMPLETE_A
-              << " " << inputs.size() << " "
-              << (inputs.size() != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
+              << " " << files_processed << " "
+              << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
               << " " << MESSAGE_PROCESSING_COMPLETE_B;
     timer.report();
-
-    // deallocate  storage
-    for(int i = 0; i < inputs.size(); i++)
-      {
-        delete inputs[i].stream;
-        delete inputs[i].parser;
-        delete inputs[i].lexer;
-        delete inputs[i].driver;
-      }
+    std::cout << replacements << " macro replacements" << std::endl;
 
     return 0;
-  }
-
-
-// ******************************************************************
-
-
-static std::string mangle_output_name(std::string input, std::string tag)
-  {
-    size_t      pos = 0;
-    std::string output;
-
-    if((pos = input.find(MODEL_SCRIPT_SUFFIX)) != std::string::npos)
-      {
-        if(pos == input.length() - MODEL_SCRIPT_SUFFIX_LENGTH) output = input.erase(input.length() - MODEL_SCRIPT_SUFFIX_LENGTH, std::string::npos) + "_" + tag;
-        else                                                   output = input + "_" + tag;
-      }
-
-    return(output);
-  }
-
-
-static std::string mangle_input_name(std::string input)
-  {
-    size_t      pos = 0;
-    std::string output;
-
-    if((pos = input.find(TEMPLATE_TAG_SUFFIX)) != std::string::npos) output = input.erase(0, pos+1);
-    else                                                             output = input;
-
-    return(output);
   }

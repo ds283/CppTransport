@@ -4,13 +4,14 @@
 //
 
 
-#include "lagrangian_tensors.h"
+#include <functional>
 
+#include "lagrangian_tensors.h"
 #include "cse.h"
 
 
-#define BIND1(X) std::bind(&gauge_xfm::X, this, _1)
-#define BIND3(X) std::bind(&gauge_xfm::X, this, _1, _2,_3)
+#define BIND1(X) std::bind(&lagrangian_tensors::X, this, std::placeholders::_1)
+#define BIND3(X) std::bind(&lagrangian_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 
 namespace macro_packages
@@ -108,9 +109,9 @@ namespace macro_packages
         GiNaC::symbol  a(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_A(k1, k2, k3, a, *container, this->data.fl);
+        this->u_factory->compute_A(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -131,9 +132,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_A(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -152,9 +153,9 @@ namespace macro_packages
         GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_B(k1, k2, k3, a, *container, this->data.fl);
+        this->u_factory->compute_B(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }
@@ -175,9 +176,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_B(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }
@@ -196,9 +197,9 @@ namespace macro_packages
         GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_C(k1, k2, k3, a, *container, this->data.fl);
+        this->u_factory->compute_C(k1, k2, k3, a, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }
@@ -219,9 +220,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_C(k1, k2, k3, a, Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }
@@ -233,9 +234,9 @@ namespace macro_packages
     void* lagrangian_tensors::pre_M_tensor(const std::vector<std::string> &args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_M(*container, this->data.fl);
+        this->u_factory->compute_M(*container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }
@@ -251,9 +252,9 @@ namespace macro_packages
         GiNaC::ex     eps = eps_symbol;
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_M(Hsq, eps, *container, this->data.fl);
+        this->u_factory->compute_M(Hsq, eps, *container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return (map);
       }

@@ -9,7 +9,7 @@
 
 #include "temporary_pool.h"
 
-#define BIND(X) std::bind(&temporary_pool::X, this, _1)
+#define BIND(X) std::bind(&temporary_pool::X, this, std::placeholders::_1)
 
 namespace macro_packages
   {
@@ -24,7 +24,7 @@ namespace macro_packages
 
         const std::vector<std::string> names =
           { "TEMP_POOL"
-          }
+          };
 
         const std::vector<unsigned int> args =
           { 1
@@ -73,14 +73,20 @@ namespace macro_packages
         if(this->buf != nullptr)
           {
             this->deposit_temporaries();
-            this->buf->deregister_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this));
+            this->buf->deregister_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
           }
 
         this->buf = b;
         if(this->buf != nullptr)
           {
-            b->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this));
+            b->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
           }
+      }
+
+
+    void temporary_pool::set_macros(macro_package* m)
+      {
+        this->ms = m;
       }
 
 
@@ -97,9 +103,13 @@ namespace macro_packages
           {
             error(ERROR_NO_BUFFER_REGISTERED);
           }
+        else if(this->ms == nullptr)
+          {
+            error(ERROR_NO_MACROS_REGISTERED);
+          }
         else
           {
-            std::string temps = this->data.cse_worker->temporaries(this->pool_template);
+            std::string temps = this->cse_worker->temporaries(this->pool_template);
 
             if(++this->recursion_depth < this->recursion_max)
               {
@@ -117,7 +127,7 @@ namespace macro_packages
             this->buf->write_to_tag(temps);
 
             // clear worker object; if we don't we might duplicate temporaries we've already written out
-            this->data.cse_worker->clear();
+            this->cse_worker->clear();
           }
 
        }
@@ -136,6 +146,10 @@ namespace macro_packages
         if(this->buf == nullptr)
           {
             error(ERROR_NO_BUFFER_REGISTERED);
+          }
+        else if(this->ms == nullptr)
+          {
+            error(ERROR_NO_MACROS_REGISTERED);
           }
         else
           {

@@ -29,7 +29,7 @@ namespace macro_packages
           : default_a(da), default_Hsq(dHsq), default_eps(deps),
             default_k(dk), default_k1(dk1), default_k2(dk2), default_k3(dk3),
             default_M(dM),
-            index_pad(ip)
+            index_pad(ip), 
             replacement_rule_package(d, p)
           {
           }

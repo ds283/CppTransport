@@ -4,13 +4,13 @@
 //
 
 
-#include "gauge_xfm.h"
+#include <functional>
 
+#include "gauge_xfm.h"
 #include "cse.h"
 
-#define BIND0(X) std::bind(&gauge_xfm::X, this)
-#define BIND1(X) std::bind(&gauge_xfm::X, this, _1)
-#define BIND3(X) std::bind(&gauge_xfm::X, this, _1, _2,_3)
+#define BIND1(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1)
+#define BIND3(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 namespace macro_packages
   {
@@ -40,7 +40,7 @@ namespace macro_packages
           };
 
         const std::vector<replacement_rule_post> posts =
-          { BIND0(generic_post_hook),     BIND0(generic_post_hook)
+          { BIND1(generic_post_hook),     BIND1(generic_post_hook)
           };
 
         const std::vector<replacement_rule_index> rules =
@@ -88,9 +88,9 @@ namespace macro_packages
     void* gauge_xfm::pre_zeta_xfm_1(const std::vector<std::string>& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_zeta_xfm_1(*container, this->data.fl);
+        this->u_factory->compute_zeta_xfm_1(*container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }
@@ -99,9 +99,9 @@ namespace macro_packages
     void* gauge_xfm::pre_zeta_xfm_2(const std::vector<std::string>& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_zeta_xfm_2(*container, this->data.fl);
+        this->u_factory->compute_zeta_xfm_2(*container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }

@@ -7,14 +7,16 @@
 #include <string>
 #include <sstream>
 
-#include "cpp_macros.h"
+#include <functional>
 
-#define BIND(X) std::bind(&cpp_macros::X, this, _1)
+#include "core_macros.h"
+
+#define BIND(X) std::bind(&core_macros::X, this, std::placeholders::_1)
 
 namespace cpp
   {
 
-    const std::vector<macro_packages::simple_rule> cpp_macros::get_pre_rules()
+    const std::vector<macro_packages::simple_rule> core_macros::get_pre_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
@@ -24,7 +26,7 @@ namespace cpp
 
         const std::vector<std::string> names =
           { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER"
-          }
+          };
 
         const std::vector<unsigned int> args =
           { 1,                           1
@@ -48,7 +50,7 @@ namespace cpp
       }
 
 
-    const std::vector<macro_packages::simple_rule> cpp_macros::get_post_rules()
+    const std::vector<macro_packages::simple_rule> core_macros::get_post_rules()
       {
         std::vector<macro_packages::simple_rule> package;
 
@@ -56,7 +58,7 @@ namespace cpp
       }
 
 
-    const std::vector<macro_packages::index_rule> cpp_macros::get_index_rules()
+    const std::vector<macro_packages::index_rule> core_macros::get_index_rules()
       {
         std::vector<macro_packages::index_rule> package;
 
@@ -67,7 +69,7 @@ namespace cpp
     // *******************************************************************
 
 
-    std::string cpp_macros::replace_stepper(const struct stepper& s, std::string state_name)
+    std::string core_macros::replace_stepper(const struct stepper& s, std::string state_name)
       {
         std::ostringstream out;
 
@@ -117,9 +119,9 @@ namespace cpp
     // ********************************************************************************
 
 
-    std::string cpp_macros::replace_backg_stepper(const std::vector<std::string>& args)
+    std::string core_macros::replace_backg_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.source->get_background_stepper();
+        const struct stepper s = data.parse_tree->get_background_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);
@@ -128,9 +130,9 @@ namespace cpp
       }
 
 
-    std::string cpp_macros::replace_pert_stepper(const std::vector<std::string>& args)
+    std::string core_macros::replace_pert_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.source->get_perturbations_stepper();
+        const struct stepper s = data.parse_tree->get_perturbations_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);

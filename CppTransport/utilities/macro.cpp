@@ -13,17 +13,31 @@
 
 #include "macro.h"
 
+#include "package_group.h"
+
 
 // **************************************************************************************
 
 
-void macro_package::apply(std::string& line)
+macro_package::macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk)
+  : fields(N_f), parameters(N_p), order(o), prefix(pf), split(sp), package(pk)
   {
+    assert(package != nullptr);
+
+    pre_rule_cache   = package->get_pre_ruleset();
+    post_rule_cache  = package->get_post_ruleset();
+    index_rule_cache = package->get_index_ruleset();
+  }
+
+
+unsigned int macro_package::apply(std::string& line)
+  {
+    unsigned int rval = 0;
     std::string line_prefix = "";
     std::string new_line = "";
 
     // apply all pre- macros
-    this->apply_pre(line);
+    rval += this->apply_simple(line, this->pre_rule_cache);
 
     // first, find a split point if there is one
     size_t split_point;
@@ -60,7 +74,7 @@ void macro_package::apply(std::string& line)
     std::vector<struct index_abstract> lhs_indices = this->get_lhs_indices(line_prefix);
 
     // work out the type of each lvalue index
-    this->assign_lhs_index_types(line, lhs_indices);
+    this->assign_lhs_index_types(line, lhs_indices, this->index_rule_cache);
 
     // generate an assignment for each lvalue index
     assignment_package lvalue_assigner(this->fields, this->parameters, this->order == indexorder_left ? index_left_order : index_right_order);
@@ -81,7 +95,7 @@ void macro_package::apply(std::string& line)
             lhs_indices[j].assignment = (lvalue_assignments[i])[j];
           }
 
-        this->apply_index(cur_line, lhs_indices, semicolon, comma, line_prefix != "");
+        rval += this->apply_index(cur_line, lhs_indices, semicolon, comma, line_prefix != "", this->index_rule_cache);
 
         if(i > 0) new_line += NEWLINE_CHAR;
         new_line += cur_line_prefix + cur_line;
@@ -89,88 +103,51 @@ void macro_package::apply(std::string& line)
 
     line = new_line;
 
-    this->apply_post(line);
+    rval += this->apply_simple(line, this->post_rule_cache);
+
+    return(rval);
   }
 
-void macro_package::apply_pre(std::string& line)
+
+unsigned int macro_package::apply_simple(std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank)
   {
+    unsigned int rval = 0;
+
     while(line.find(this->prefix) != std::string::npos)
       {
         bool fail = true;
 
-        for(int i = 0; i < this->N_pre; i++)
+        for(int i = 0; i < ruleset.size(); i++)
           {
             size_t pos;
+            macro_packages::simple_rule rule = ruleset[i];
 
-            if((pos = line.find(this->prefix + this->pre_names[i])) != std::string::npos)
+            if((pos = line.find(this->prefix + rule.name)) != std::string::npos)
               {
-                std::vector<std::string> arg_list = this->get_argument_list(line, pos + this->prefix.size() + this->pre_names[i].size(),
-                                                                            this->pre_args[i], this->pre_names[i]);
+                std::vector<std::string> arg_list = this->get_argument_list(line, pos + this->prefix.size() + rule.name.size(),
+                                                                            rule.args, rule.name);
 
                 // found a simple macro; replace it with its value
-                line.replace(pos, this->prefix.size() + this->pre_names[i].size(), (*(this->pre_replacements[i]))(this->data, arg_list));
+                std::string replacement = blank ? "" : (rule.rule)(arg_list);
+                line.replace(pos, this->prefix.size() + rule.name.size(), replacement);
+                rval++;
                 fail = false;
               }
           }
 
         if(fail) break;    // no more simple macros to replace
       }
+
+    return(rval);
   }
 
-void macro_package::apply_post(std::string& line)
-  {
-    while(line.find(this->prefix) != std::string::npos)
-      {
-        bool fail = true;
-
-        for(int i = 0; i < this->N_post; i++)
-          {
-            size_t pos;
-
-            if((pos = line.find(this->prefix + this->post_names[i])) != std::string::npos)
-              {
-                std::vector<std::string> arg_list = this->get_argument_list(line, pos + this->prefix.size() + this->post_names[i].size(),
-                                                                            this->post_args[i], this->post_names[i]);
-
-                // found a simple macro; replace it with its value
-                line.replace(pos, this->prefix.size() + this->post_names[i].size(), (*(this->post_replacements[i]))(this->data, arg_list));
-                fail = false;
-              }
-          }
-
-        if(fail) break;   // no more simple macros to replace
-      }
-  }
-
-void macro_package::blank_post(std::string& line)
-  {
-    while(line.find(this->prefix) != std::string::npos)
-      {
-        bool fail = true;
-
-        for(int i = 0; i < this->N_post; i++)
-          {
-            size_t pos;
-
-            if((pos = line.find(this->prefix + this->post_names[i])) != std::string::npos)
-              {
-                std::vector<std::string> arg_list = this->get_argument_list(line, pos + this->prefix.size() + this->post_names[i].size(),
-                                                                            this->post_args[i], this->post_names[i]);
-
-                // found a simple macro; replace it with its value
-                line.replace(pos, this->prefix.size() + this->post_names[i].size(), "");
-                fail = false;
-              }
-          }
-
-        if(fail) break;    // no more simple macros to replace
-      }
-  }
 
 // TODO: this macro replacement implementation is fairly kludgy - would be nice to improve it
-void macro_package::apply_index(std::string& line, const std::vector<struct index_abstract>& lhs_indices,
-  const bool semicolon, const bool comma, const bool lhs_present)
+unsigned int macro_package::apply_index(std::string& line, const std::vector<struct index_abstract>& lhs_indices,
+  const bool semicolon, const bool comma, const bool lhs_present,
+  std::vector<macro_packages::index_rule>& ruleset)
   {
+    unsigned int rval = 0;
     std::string temp_line;
     std::string new_line = "";
 
@@ -182,21 +159,24 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
         bool fail = true;   // flag to break out of the loop, if instances of 'this->prefix' still exist but can't be rewritten
      
         // loop over all macros, testing whether we can make a replacement
-        for(int i = 0; i < this->N_index; i++)
+        for(int i = 0; i < ruleset.size(); i++)
           {
+            macro_packages::index_rule rule = ruleset[i];
             size_t pos;
 
-            if((pos = line.find(this->prefix + this->index_names[i])) != std::string::npos)
+            if((pos = line.find(this->prefix + rule.name)) != std::string::npos)
               {
                 replaced = true;  // mark that we have done at least one macro replacement
                 fail = false;     //
-             
+                rval++;
+
                 std::string new_line = "";
 
                 // found a macro -- strip out the index set associated with it
                 // NOTE - this call leaves the index list intact in 'line'
-                std::vector<struct index_abstract> indices = this->get_index_set(line, pos + this->prefix.size() + this->index_names[i].size(),
-                                                                                 this->index_names[i], this->index_indices[i], this->index_ranges[i]);
+                std::vector<struct index_abstract> indices =
+                                                     this->get_index_set(line, pos + this->prefix.size() + rule.name.size(),
+                                                                         rule.name, rule.indices, rule.range);
 
                 // work through the index set, matching to lhs_indices if possible
                 // these won't be replaced; instead, we use the current value provided to us
@@ -221,13 +201,14 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
 
                 // get argument list for this macro
                 // NOTE - this call *deletes* the argument list from 'line'
-                std::vector<std::string> arg_list = get_argument_list(line,
-                                                                      pos + this->prefix.size() + this->index_names[i].size() + 2 + indices.size(),
-                                                                      this->index_args[i], this->index_names[i]);
+                std::vector<std::string> arg_list =
+                                           get_argument_list(line,
+                                                             pos + this->prefix.size() + rule.name.size() + 2 + indices.size(),
+                                                             rule.args, rule.name);
 
                 // set up state, if required
                 void* state = nullptr;
-                if(this->index_pre[i] != nullptr) state = (*(this->index_pre[i]))(this->data, arg_list);
+                if(rule.pre != nullptr) state = (rule.pre)(arg_list);
 
                 // for each index assignment, write out a replaced version
                 bool endofline = false;
@@ -245,8 +226,8 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                     // replace macro
                     std::string temp_line = line;
 
-                    temp_line.replace(pos, this->prefix.size() + this->index_names[i].size() + 2 + indices.size(),
-                                      (*(this->index_replacements[i]))(this->data, arg_list, assgn[j], state));
+                    temp_line.replace(pos, this->prefix.size() + rule.name.size() + 2 + indices.size(),
+                                      (rule.rule)(arg_list, assgn[j], state));
 
                     // map indices associated with this macro
                     map_indices(temp_line, this->prefix, assgn[j]);
@@ -268,7 +249,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                         lhs_assignments.push_back(lhs_indices[k].assignment);
                       }
                     map_indices(temp_temp_line, this->prefix, lhs_assignments);
-                    this->blank_post(temp_temp_line);
+                    this->apply_simple(temp_temp_line, this->post_rule_cache, true);    // blank these remaining macros
 
                     if(temp_temp_line.find(this->prefix) == std::string::npos)
                       {
@@ -284,7 +265,7 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
                   }
 
                 // destroy state
-                if(this->index_post[i] != nullptr) (*(this->index_post[i]))(state);
+                if(rule.post != nullptr) (rule.post)(state);
 
                 line = new_line;
               }
@@ -307,6 +288,8 @@ void macro_package::apply_index(std::string& line, const std::vector<struct inde
     // In that case, presumably, the indices make a list which does not require a terminal comma
     if((lhs_present || !replaced) && semicolon) line += ';';
     if(!replaced && comma)                      line += ',';
+
+    return(rval);
   }
 
 
@@ -324,7 +307,7 @@ std::vector<struct index_abstract> macro_package::get_lhs_indices(std::string lh
           {
             std::ostringstream msg;
             msg << ERROR_EXPECTED_INDEX << " '" << this->prefix << "'";
-            error(msg.str(), this->data.current_line, this->data.path);
+            this->package->error(msg.str());
             lhs.replace(pos, this->prefix.size()+1, "");
           }
         else
@@ -346,21 +329,24 @@ std::vector<struct index_abstract> macro_package::get_lhs_indices(std::string lh
   }
 
 
-void macro_package::assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices)
+void macro_package::assign_lhs_index_types(std::string rhs, std::vector<struct index_abstract>& lhs_indices,
+                                           std::vector<macro_packages::index_rule>& ruleset)
   {
     while(rhs.find(this->prefix) != std::string::npos)
       {
         bool fail = true;     // flag to break out of the loop, if instances of 'this->prefix' still exist but can't be recognized
 
-        for(int i = 0; i < this->N_index; i++)
+        for(int i = 0; i < ruleset.size(); i++)
           {
+            macro_packages::index_rule rule = ruleset[i];
             size_t pos;
 
-            if((pos = rhs.find(this->prefix + this->index_names[i])) != std::string::npos)
+            if((pos = rhs.find(this->prefix + rule.name)) != std::string::npos)
               {
                 // found a macro -- strip out the index set
-                std::vector<struct index_abstract> indices = get_index_set(rhs, pos + this->prefix.size() + this->index_names[i].size(),
-                  this->index_names[i], this->index_indices[i], this->index_ranges[i]);
+                std::vector<struct index_abstract> indices =
+                  get_index_set(rhs, pos + this->prefix.size() + rule.name.size(),
+                                rule.name, rule.indices, rule.range);
 
                 // now try to match this index set with elements of lhs_indices
                 for(int j = 0; j < indices.size(); j++)
@@ -373,9 +359,9 @@ void macro_package::assign_lhs_index_types(std::string rhs, std::vector<struct i
                               {
                                 std::ostringstream msg;
                                 msg << ERROR_DUPLICATE_INDEX << " '" << lhs_indices[k].label << "'";
-                                error(msg.str(), this->data.current_line, this->data.path);
+                                this->package->error(msg.str());
                               }
-                            lhs_indices[k].range = this->index_ranges[i];
+                            lhs_indices[k].range = rule.range;
 
                             break;
                           }
@@ -383,7 +369,7 @@ void macro_package::assign_lhs_index_types(std::string rhs, std::vector<struct i
                   }
 
                 // remove this macro
-                rhs.replace(pos, this->prefix.size() + this->index_names[i].size() + 2 + this->index_indices[i], "");
+                rhs.replace(pos, this->prefix.size() + rule.name.size() + 2 + rule.indices, "");
                 fail = false;
               }
           }
@@ -460,7 +446,7 @@ std::vector<std::string> macro_package::get_argument_list(std::string& line, siz
           }
         if(pos + length >= line.size())
           {
-            error(ERROR_EXPECTED_CLOSE_ARGL, this->data.current_line, this->data.path);
+            this->package->error(ERROR_EXPECTED_CLOSE_ARGL);
           }
         else
           {
@@ -477,7 +463,7 @@ std::vector<std::string> macro_package::get_argument_list(std::string& line, siz
       {
         std::ostringstream msg;
         msg << ERROR_WRONG_ARG_NUM << " '" << macro_name << "' (" << ERROR_WRONG_ARG_NUM_EXPECT << " " << num_args << ")";
-        error(msg.str(), this->data.current_line, this->data.path);
+        this->package->error(msg.str());
       }
 
     line.replace(pos, length, "");
@@ -494,13 +480,13 @@ std::vector<struct index_abstract> macro_package::get_index_set(std::string line
       {
         std::ostringstream msg;
         msg << ERROR_TOO_FEW_INDICES << " '" << name << "'";
-        error(msg.str(), this->data.current_line, this->data.path);
+        this->package->error(msg.str());
       }
     if(line[pos] != '[')
       {
         std::ostringstream msg;
         msg << ERROR_EXPECTED_OPEN_IDXL << " '" << name << "'";
-        error(msg.str(), this->data.current_line, this->data.path);
+        this->package->error(msg.str());
       }
     else
       {
@@ -513,7 +499,7 @@ std::vector<struct index_abstract> macro_package::get_index_set(std::string line
           {
             std::ostringstream msg;
             msg << ERROR_TOO_FEW_INDICES << " '" << name << "'";
-            error(msg.str(), this->data.current_line, this->data.path);
+            this->package->error(msg.str());
             break;
           }
         else
@@ -532,7 +518,7 @@ std::vector<struct index_abstract> macro_package::get_index_set(std::string line
       {
         std::ostringstream msg;
         msg << ERROR_EXPECTED_CLOSE_IDXL << " '" << name << "'";
-        error(msg.str(), this->data.current_line, this->data.path);
+        this->package->error(msg.str());
       }
 
     return(rhs_indices);

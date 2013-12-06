@@ -4,13 +4,14 @@
 //
 
 
-#include "flow_tensors.h"
+#include <functional>
 
+#include "flow_tensors.h"
 #include "cse.h"
 
 
-#define BIND1(X) std::bind(&flow_tensors::X, this, _1)
-#define BIND3(X) std::bind(&flow_tensors::X, this, _1, _2,_3)
+#define BIND1(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
+#define BIND3(X) std::bind(&flow_tensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
 
 
 namespace macro_packages
@@ -27,7 +28,7 @@ namespace macro_packages
           { "V",              "HUBBLE_SQ",        "EPSILON"
           };
 
-        const std::vector<unsigned int> args
+        const std::vector<unsigned int> args =
           { 0,                0,                  0
           };
 
@@ -81,10 +82,10 @@ namespace macro_packages
             0
           };
 
-        const std::vector<unsigned int> indices
+        const std::vector<unsigned int> indices =
           { 1,                                 1,                    1,
             1
-          }
+          };
 
         const std::vector<unsigned int> ranges =
           { INDEX_RANGE_PARAMETER,             1,                    2,
@@ -119,7 +120,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_V(const std::vector<std::string> &args)
       {
-        GiNaC::ex potential = this->data.source->get_potential();
+        GiNaC::ex potential = this->data.parse_tree->get_potential();
 
         return(this->printer(potential));
       }
@@ -127,7 +128,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_Hsq(const std::vector<std::string> &args)
       {
-        GiNaC::ex Hsq = this->data.u_factory->compute_Hsq();
+        GiNaC::ex Hsq = this->u_factory->compute_Hsq();
 
         return(this->printer(Hsq));
       }
@@ -135,7 +136,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_eps(const std::vector<std::string> &args)
       {
-        GiNaC::ex eps = this->data.u_factory->compute_eps();
+        GiNaC::ex eps = this->u_factory->compute_eps();
 
         return(this->printer(eps));
       }
@@ -148,9 +149,9 @@ namespace macro_packages
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_parameter);
-        assert(indices[0].species < this->data.source->get_number_params());
+        assert(indices[0].species < this->data.parse_tree->get_number_params());
 
-        std::vector<GiNaC::symbol> parameters = this->data.source->get_param_symbols();
+        std::vector<GiNaC::symbol> parameters = this->data.parse_tree->get_param_symbols();
         return(this->printer(parameters[indices[0].species]));
       }
 
@@ -159,9 +160,9 @@ namespace macro_packages
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_field);
-        assert(indices[0].species < this->data.source->get_number_fields());
+        assert(indices[0].species < this->data.parse_tree->get_number_fields());
 
-        std::vector<GiNaC::symbol> fields = this->data.source->get_field_symbols();
+        std::vector<GiNaC::symbol> fields = this->data.parse_tree->get_field_symbols();
         return(this->printer(fields[indices[0].species]));
       }
 
@@ -169,10 +170,10 @@ namespace macro_packages
     std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].species < this->data.source->get_number_fields());
+        assert(indices[0].species < this->data.parse_tree->get_number_fields());
 
-        std::vector<GiNaC::symbol> fields  = this->data.source->get_field_symbols();
-        std::vector<GiNaC::symbol> momenta = this->data.source->get_deriv_symbols();
+        std::vector<GiNaC::symbol> fields  = this->data.parse_tree->get_field_symbols();
+        std::vector<GiNaC::symbol> momenta = this->data.parse_tree->get_deriv_symbols();
 
         std::string rval;
 
@@ -198,12 +199,12 @@ namespace macro_packages
 // ******************************************************************
 
 
-    void*flow_tensors::pre_sr_velocity(const std::vector<std::string>& args)
+    void* flow_tensors::pre_sr_velocity(const std::vector<std::string>& args)
       {
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->data.u_factory->compute_sr_u(*container, this->data.fl);
+        this->u_factory->compute_sr_u(*container, this->fl);
 
-        cse_map* map = new cse_map(container, this->data, this->printer);
+        cse_map* map = this->cse_worker->map_factory(container);
 
         return(map);
       }

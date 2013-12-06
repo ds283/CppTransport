@@ -22,10 +22,10 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(replacement_data& d, ginac_printer p, macro_package* m,
+        temporary_pool(replacement_data& d, ginac_printer p,
                        unsigned int dm = DEFAULT_RECURSION_DEPTH,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : pool_template(t), recursion_depth(0), recursion_max(dm), ms(m), buf(nullptr),
+          : pool_template(t), recursion_depth(0), recursion_max(dm), ms(nullptr), buf(nullptr),
             replacement_rule_package(d, p)
           {
           }
@@ -37,6 +37,7 @@ namespace macro_packages
         void                           deposit_temporaries();
 
         void                           set_buffer(buffer* b);
+        void                           set_macros(macro_package* m);
 
       protected:
         buffer*        buf;

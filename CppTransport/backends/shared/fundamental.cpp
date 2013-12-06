@@ -8,11 +8,12 @@
 #include "to_printable.h"
 
 #include <functional>
-
 #include <time.h>
 
+#include "boost/lexical_cast.hpp"
 
-#define BIND(X) std::bind(&fundamental::X, this, _1)
+
+#define BIND(X) std::bind(&fundamental::X, this, std::placeholders::_1)
 
 namespace macro_packages
   {
@@ -134,6 +135,12 @@ namespace macro_packages
       }
 
 
+    std::string fundamental::stringize_number(double number)
+      {
+        return(boost::lexical_cast<std::string>(number));
+      }
+
+
     // *******************************************************************
 
 
@@ -176,43 +183,43 @@ namespace macro_packages
 
     std::string fundamental::replace_source(const std::vector<std::string> &args)
       {
-        return(this->data.source_file);
+        return(this->data.script_in);
       }
 
 
     std::string fundamental::replace_name(const std::vector<std::string> &args)
       {
-        return(this->data.source->get_name());
+        return(this->data.parse_tree->get_name());
       }
 
 
     std::string fundamental::replace_author(const std::vector<std::string> &args)
       {
-        return(this->data.source->get_author());
+        return(this->data.parse_tree->get_author());
       }
 
 
     std::string fundamental::replace_tag(const std::vector<std::string> &args)
       {
-        return(this->data.source->get_tag());
+        return(this->data.parse_tree->get_tag());
       }
 
 
     std::string fundamental::replace_model(const std::vector<std::string>& args)
       {
-        return(this->data.source->get_model());
+        return(this->data.parse_tree->get_model());
       }
 
 
     std::string fundamental::replace_header(const std::vector<std::string> &args)
       {
-        return(this->data.output_file);
+        return(this->data.file_out);
       }
 
 
     std::string fundamental::replace_core(const std::vector<std::string> &args)
       {
-        return(this->data.core_file);
+        return(this->data.core_out);
       }
 
 
@@ -220,7 +227,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->data.source->get_number_fields();
+        out << this->data.parse_tree->get_number_fields();
 
         return(out.str());
       }
@@ -230,7 +237,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        out << this->data.source->get_number_params();
+        out << this->data.parse_tree->get_number_params();
 
         return(out.str());
       }
@@ -238,7 +245,7 @@ namespace macro_packages
 
     std::string fundamental::replace_field_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->data.source->get_field_list();
+        std::vector<std::string> list = this->data.parse_tree->get_field_list();
 
         return(this->stringize_list(list));
       }
@@ -246,7 +253,7 @@ namespace macro_packages
 
     std::string fundamental::replace_latex_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->data.source->get_latex_list();
+        std::vector<std::string> list = this->data.parse_tree->get_latex_list();
 
         return(this->stringize_list(list));
       }
@@ -254,7 +261,7 @@ namespace macro_packages
 
     std::string fundamental::replace_param_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->data.source->get_param_list();
+        std::vector<std::string> list = this->data.parse_tree->get_param_list();
 
         return(this->stringize_list(list));
       }
@@ -262,7 +269,7 @@ namespace macro_packages
 
     std::string fundamental::replace_platx_list(const std::vector<std::string> &args)
       {
-        std::vector<std::string> list = this->data.source->get_platx_list();
+        std::vector<std::string> list = this->data.parse_tree->get_platx_list();
 
         return(this->stringize_list(list));
       }
@@ -270,8 +277,8 @@ namespace macro_packages
 
     std::string fundamental::replace_state_list(const std::vector<std::string> &args)
       {
-        std::vector<GiNaC::symbol> f_list = this->data.source->get_field_symbols();
-        std::vector<GiNaC::symbol> d_list = this->data.source->get_deriv_symbols();
+        std::vector<GiNaC::symbol> f_list = this->data.parse_tree->get_field_symbols();
+        std::vector<GiNaC::symbol> d_list = this->data.parse_tree->get_deriv_symbols();
 
         std::vector<std::string> list;
         for(int i = 0; i < f_list.size(); i++)
@@ -289,7 +296,7 @@ namespace macro_packages
 
      std::string fundamental::replace_b_abs_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_background_stepper();
+        const struct stepper s = this->data.parse_tree->get_background_stepper();
 
         return(this->stringize_number(s.abserr));
       }
@@ -297,7 +304,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_rel_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_background_stepper();
+        const struct stepper s = this->data.parse_tree->get_background_stepper();
 
         return(this->stringize_number(s.relerr));
       }
@@ -305,7 +312,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_step(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_background_stepper();
+        const struct stepper s = this->data.parse_tree->get_background_stepper();
 
         return(this->stringize_number(s.stepsize));
       }
@@ -313,7 +320,7 @@ namespace macro_packages
 
     std::string fundamental::replace_b_stepper(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_background_stepper();
+        const struct stepper s = this->data.parse_tree->get_background_stepper();
 
         return(s.name);
       }
@@ -321,7 +328,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_abs_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_perturbations_stepper();
+        const struct stepper s = this->data.parse_tree->get_perturbations_stepper();
 
         return(this->stringize_number(s.abserr));
       }
@@ -329,7 +336,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_rel_err(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_perturbations_stepper();
+        const struct stepper s = this->data.parse_tree->get_perturbations_stepper();
 
         return(this->stringize_number(s.relerr));
       }
@@ -337,7 +344,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_step(const std::vector<std::string> &args)
       {
-        const struct stepper s = this->data.source->get_perturbations_stepper();
+        const struct stepper s = this->data.parse_tree->get_perturbations_stepper();
 
         return(this->stringize_number(s.stepsize));
       }
@@ -345,7 +352,7 @@ namespace macro_packages
 
     std::string fundamental::replace_p_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = this->data.source->get_perturbations_stepper();
+        const struct stepper s = this->data.parse_tree->get_perturbations_stepper();
 
         return(s.name);
       }
@@ -358,7 +365,7 @@ namespace macro_packages
       {
         std::ostringstream out;
 
-        return(this->stringize_number(this->data.unique++));
+        return(this->stringize_number(this->unique++));
       }
 
 

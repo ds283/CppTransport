@@ -11,20 +11,20 @@
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(this->num_fields);
+    fl->set_size(this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(1));
+    v.resize(fl->get_flattened_size(1));
 
     for(int i = 0; i < this->num_fields; i++)
       {
-        v[fl.flatten(i)] = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
+        v[fl->flatten(i)] = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
       }
   }
 
 
-void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -33,21 +33,21 @@ void canonical_u_tensor_factory::compute_u1(std::vector<GiNaC::ex>& v, flattener
   }
 
 
-void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(2*this->num_fields);
+    fl->set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(1));
+    v.resize(fl->get_flattened_size(1));
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         if(this->is_field(i))
           {
-            v[fl.flatten(i)] = this->deriv_list[this->species(i)];
+            v[fl->flatten(i)] = this->deriv_list[this->species(i)];
           }
         else if(this->is_momentum(i))
           {
-            v[fl.flatten(i)] = -(3-eps)*this->deriv_list[this->species(i)] - diff(this->V, this->field_list[this->species(i)])/Hsq;
+            v[fl->flatten(i)] = -(3-eps)*this->deriv_list[this->species(i)] - diff(this->V, this->field_list[this->species(i)])/Hsq;
           }
         else
           {
@@ -57,7 +57,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
   }
 
 
-void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -66,11 +66,11 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a, 
   }
 
 void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
-  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(2*this->num_fields);
+    fl->set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(2));
+    v.resize(fl->get_flattened_size(2));
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
@@ -107,14 +107,14 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
                 assert(false);
               }
 
-            v[fl.flatten(i,j)] = c;
+            v[fl->flatten(i,j)] = c;
           }
       }
   }
 
 
 void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -125,11 +125,11 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
   GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a,
-  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(2*this->num_fields);
+    fl->set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(3));
+    v.resize(fl->get_flattened_size(3));
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
@@ -181,7 +181,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
                     assert(false);
                   }
 
-                v[fl.flatten(i,j,k)] = c;
+                v[fl->flatten(i,j,k)] = c;
               }
           }
       }
@@ -192,7 +192,7 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -203,11 +203,11 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
   GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-  std::vector<GiNaC::ex>& v, flattener& fl)
+  std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(this->num_fields);
+    fl->set_size(this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(3));
+    v.resize(fl->get_flattened_size(3));
 
     for(int i = 0; i < this->num_fields; i++)
       {
@@ -215,7 +215,7 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl.flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl->flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -223,7 +223,7 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -234,11 +234,11 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
   GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-  std::vector<GiNaC::ex>& v, flattener& fl)
+  std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(this->num_fields);
+    fl->set_size(this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(3));
+    v.resize(fl->get_flattened_size(3));
 
     for(int i = 0; i < this->num_fields; i++)
       {
@@ -246,7 +246,7 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl.flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl->flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -254,7 +254,7 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
 
 
 void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
-  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener& fl)
+  GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -265,11 +265,11 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
 
 void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
   GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
-  std::vector<GiNaC::ex>& v, flattener& fl)
+  std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(this->num_fields);
+    fl->set_size(this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(3));
+    v.resize(fl->get_flattened_size(3));
 
     for(int i = 0; i < this->num_fields; i++)
       {
@@ -277,14 +277,14 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl.flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
+                v[fl->flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
   }
 
 
-void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener* fl)
   {
     GiNaC::ex Hsq = this->compute_Hsq();
     GiNaC::ex eps = this->compute_eps();
@@ -293,17 +293,17 @@ void canonical_u_tensor_factory::compute_M(std::vector<GiNaC::ex>& v, flattener&
   }
 
 
-void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(this->num_fields);
+    fl->set_size(this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(2));
+    v.resize(fl->get_flattened_size(2));
 
     for(int i = 0; i < this->num_fields; i++)
       {
         for(int j = 0; j < this->num_fields; j++)
           {
-            v[fl.flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
+            v[fl->flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
           }
       }
   }
@@ -312,11 +312,11 @@ void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(2*this->num_fields);
+    fl->set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(1));
+    v.resize(fl->get_flattened_size(1));
 
     GiNaC::ex Hsq  = this->compute_Hsq();
     GiNaC::ex eps  = this->compute_eps();
@@ -327,11 +327,11 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, f
       {
         if(this->is_field(i))
           {
-            v[fl.flatten(i)] = -(1/(2*dotH)) * diff(Hsq, this->field_list[this->species(i)]);
+            v[fl->flatten(i)] = -(1/(2*dotH)) * diff(Hsq, this->field_list[this->species(i)]);
           }
         else if(this->is_momentum(i))
           {
-            v[fl.flatten(i)] =  -(1/(2*dotH)) * diff(Hsq, this->deriv_list[this->species(i)]);
+            v[fl->flatten(i)] =  -(1/(2*dotH)) * diff(Hsq, this->deriv_list[this->species(i)]);
           }
         else
           {
@@ -341,11 +341,11 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, f
   }
 
 
-void canonical_u_tensor_factory::compute_zeta_xfm_2(std::vector<GiNaC::ex>& v, flattener& fl)
+void canonical_u_tensor_factory::compute_zeta_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl)
   {
-    fl.set_size(2*this->num_fields);
+    fl->set_size(2*this->num_fields);
     v.clear();
-    v.resize(fl.get_flattened_size(2));
+    v.resize(fl->get_flattened_size(2));
 
     GiNaC::ex Hsq  = this->compute_Hsq();
     GiNaC::ex eps  = this->compute_eps();
@@ -369,10 +369,10 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(std::vector<GiNaC::ex>& v, f
       {
         for(int j = 0; j < 2*this->num_fields; j++)
           {
-            v[fl.flatten(i,j)] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
-                                 - diff(1/(2*dotH), this->coordinate(i)) * diff(Hsq, this->coordinate(j))
-                                 - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
-                                 + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
+            v[fl->flatten(i,j)] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
+                                  - diff(1/(2*dotH), this->coordinate(i)) * diff(Hsq, this->coordinate(j))
+                                  - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
+                                  + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
           }
       }
   }

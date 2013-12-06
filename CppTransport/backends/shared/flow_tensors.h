@@ -11,7 +11,6 @@
 
 #include <string>
 
-#include "backends.h"
 #include "macro.h"
 
 #include "replacement_rule_package.h"

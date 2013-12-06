@@ -13,19 +13,18 @@
 #define ERROR_INCLUDE_DIRECTIVE               "Expected filename following #include directive"
 
 #define ERROR_MISSING_PATHNAME                "Too few arguments: expected pathname following"
-#define ERROR_MISSING_BACKEND                 "Too few arguments: expected backend name following --backend"
 
-#define ERROR_UNKNOWN_BACKEND                 "Requested unknown backend"
-#define ERROR_BACKEND_FAILURE                 "Failed to generate output for backend"
+#define ERROR_CPP_BUFFER_WRITE                "Error writing to output file"
 
-#define ERROR_BACKEND_OUTPUT                  "Error opening backend output file"
-#define ERROR_CPP_BACKEND_WRITE               "Error writing to backend output file"
-
-#define ERROR_NO_CPP_TEMPLATE                 "No C++ template specified"
-#define ERROR_MISSING_CPP_HEADER              "Could not find specified C++ header template"
-#define ERROR_CPP_TEMPLATE_READ               "Error reading from C++ template file"
-
-#define ERROR_MISSING_POTENTIAL               "No potential specified"
+#define ERROR_NO_CORE_TEMPLATE                "fatal: No core template specified"
+#define ERROR_NO_IMPLEMENTATION_TEMPLATE      "fatal: No implementation template specified"
+#define ERROR_MISSING_TEMPLATE                "Could not find specified template"
+#define ERROR_READING_TEMPLATE                "Error reading from template file"
+#define ERROR_TOKENIZE_TEMPLATE_HEADER        "Could not find properly-formed header in template file"
+#define ERROR_TEMPLATE_TOO_RECENT_A           "Template"
+#define ERROR_TEMPLATE_TOO_RECENT_B           "requires more recent version of CppTransport (>"
+#define ERROR_TEMPLATE_BACKEND_A              "Template"
+#define ERROR_TEMPLATE_BACKEND_B              "requires unknown backend"
 
 #define ERROR_UNRECOGNIZED_NUMBER             "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL             "Unrecognized character"
@@ -51,7 +50,8 @@
 #define ERROR_MISSING_LHS                     "Missing left-hand side in temporary template "
 #define ERROR_MISSING_RHS                     "Missing right-hand side in temporary template "
 
-#define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package used, but no buffer registered"
+#define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
+#define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
@@ -66,6 +66,8 @@
 #define WARNING_LEXEME_DECIMAL                "Internal error: attempt to get decimal value for non-decimal lexeme"
 #define WARNING_LEXEME_STRING                 "Internal error: attempt to get string value for non-string lexeme"
 #define WARNING_LEXEME_IDENTIFIER             "Internal error: attempt to get identifier value for non-identifier lexeme"
+
+#define WARNING_UNKNOWN_SWITCH                "Unknown command-line switch"
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"
 
