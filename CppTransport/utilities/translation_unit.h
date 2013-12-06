@@ -43,7 +43,7 @@ class translation_unit
     unsigned int                                       process(macro_packages::replacement_data& data);
 
     std::string                                        mangle_output_name(std::string input, std::string tag);
-    std::string                                        get_input_suffix  (std::string input);
+    std::string                                        get_template_suffix(std::string input);
   };
 
 

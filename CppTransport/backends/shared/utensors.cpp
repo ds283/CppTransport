@@ -54,6 +54,12 @@ namespace macro_packages
             BIND3(replace_u2_name),       BIND3(replace_u3_name)
           };
 
+        const std::vector<std::string> names =
+          { "U1_TENSOR",                  "U2_TENSOR",                  "U3_TENSOR",
+            "U1_PREDEF",                  "U2_PREDEF",                  "U3_PREDEF",
+            "U2_NAME",                    "U3_NAME"
+          };
+
         const std::vector<unsigned int> args =
           { 0,                            2,                            4,
             2,                            4,                            6,
@@ -74,6 +80,7 @@ namespace macro_packages
 
         assert(pres.size() == posts.size());
         assert(pres.size() == rules.size());
+        assert(pres.size() == names.size());
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
 
@@ -82,6 +89,7 @@ namespace macro_packages
             index_rule rule;
 
             rule.rule    = rules[i];
+            rule.name    = names[i];
             rule.pre     = pres[i];
             rule.post    = posts[i];
             rule.args    = args[i];

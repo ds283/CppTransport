@@ -47,6 +47,10 @@ namespace macro_packages
           { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
           };
 
+        const std::vector<std::string> names =
+          { "ZETA_XFM_1",                 "ZETA_XFM_2"
+          };
+
         const std::vector<unsigned int> args =
           { 0,                            0
           };
@@ -61,6 +65,7 @@ namespace macro_packages
 
         assert(pres.size() == posts.size());
         assert(pres.size() == rules.size());
+        assert(pres.size() == names.size());
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
 
@@ -69,6 +74,7 @@ namespace macro_packages
             index_rule rule;
 
             rule.rule    = rules[i];
+            rule.name    = names[i];
             rule.pre     = pres[i];
             rule.post    = posts[i];
             rule.args    = args[i];

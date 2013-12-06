@@ -24,12 +24,16 @@ buffer::buffer()
 void buffer::write_to_end(std::string line)
   {
     this->buf.push_back(line);
+
+//    std::cerr << ":: " << line << std::endl;
   }
 
 
 void buffer::write_to_tag(std::string line)
   {
     this->buf.insert(this->tag, line);
+
+//    std::cerr << ">> " << line << std::endl;
   }
 
 

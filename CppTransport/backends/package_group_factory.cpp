@@ -12,13 +12,13 @@
 #include "core_group.h"
 
 
-package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data)
+package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, bool do_cse)
   {
     package_group* rval = nullptr;
 
     if(backend == "core")
       {
-        rval = new core_group(data);
+        rval = new core_group(data, do_cse);
       }
     else
       {

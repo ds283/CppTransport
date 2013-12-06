@@ -207,8 +207,7 @@ unsigned int macro_package::apply_index(std::string& line, const std::vector<str
                                                              rule.args, rule.name);
 
                 // set up state, if required
-                void* state = nullptr;
-                if(rule.pre != nullptr) state = (rule.pre)(arg_list);
+                void* state = (rule.pre != nullptr) ? (rule.pre)(arg_list) : nullptr;
 
                 // for each index assignment, write out a replaced version
                 bool endofline = false;

@@ -17,8 +17,8 @@ namespace cpp
     class cpp_cse: public cse
       {
       public:
-        cpp_cse(unsigned int s, ginac_printer p, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
-          : cse(s, p, k)
+        cpp_cse(unsigned int s, ginac_printer p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
+          : cse(s, p, d, k)
           {
           }
 

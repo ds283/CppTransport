@@ -77,8 +77,8 @@ class cse_map
 class cse
   {
   public:
-    cse(unsigned int s, ginac_printer p, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME, bool d=true)
-      : serial_number(s), printer(p), kernel_name(k), do_cse(d)
+    cse(unsigned int s, ginac_printer p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
+      : serial_number(s), printer(p), do_cse(d), kernel_name(k), symbol_counter(0)
       {
       }
     virtual ~cse()

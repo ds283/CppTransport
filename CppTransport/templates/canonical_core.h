@@ -207,7 +207,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        number rval = $$__V;
+        number rval = $$__POTENTIAL;
 
         return(rval);
       }

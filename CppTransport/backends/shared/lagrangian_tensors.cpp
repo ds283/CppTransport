@@ -50,9 +50,15 @@ namespace macro_packages
           };
 
         const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor), BIND3(replace_3index_field_tensor),
-            BIND3(replace_1index_field_tensor), BIND3(replace_2index_field_tensor), BIND3(replace_3index_field_tensor),
+          { BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
+            BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor), BIND3(replace_3index_field_tensor),
             BIND3(replace_2index_field_tensor), BIND3(replace_2index_field_tensor)
+          };
+
+        const std::vector<std::string> names =
+          { "A_TENSOR",                         "B_TENSOR",                         "C_TENSOR",
+            "A_PREDEF",                         "B_PREDEF",                         "C_PREDEF",
+            "M_TENSOR",                         "M_PREDEF"
           };
 
         const std::vector<unsigned int> args =
@@ -75,6 +81,7 @@ namespace macro_packages
 
         assert(pres.size() == posts.size());
         assert(pres.size() == rules.size());
+        assert(pres.size() == names.size());
         assert(pres.size() == args.size());
         assert(pres.size() == ranges.size());
 
@@ -83,6 +90,7 @@ namespace macro_packages
             index_rule rule;
 
             rule.rule    = rules[i];
+            rule.name    = names[i];
             rule.pre     = pres[i];
             rule.post    = posts[i];
             rule.args    = args[i];

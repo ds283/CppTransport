@@ -112,7 +112,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
       }
     else
       {
-        core_output = this->mangle_output_name(name, this->get_input_suffix(driver->get_script()->get_core()));
+        core_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_core()));
       }
 
     if(implementation_out != "")
@@ -121,7 +121,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
       }
     else
       {
-        implementation_output = this->mangle_output_name(name, this->get_input_suffix(driver->get_script()->get_core()));
+        implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_implementation()));
       }
   }
 
@@ -242,7 +242,7 @@ unsigned int translation_unit::process(macro_packages::replacement_data& data)
             if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
               {
                 buffer*        buf     = new buffer;
-                package_group* backend = package_group_factory(tokens[1], data);
+                package_group* backend = package_group_factory(tokens[1], data, this->do_cse);
 
                 if(backend != nullptr)
                   {
@@ -304,11 +304,11 @@ std::string translation_unit::mangle_output_name(std::string input, std::string 
         else                                                   output = input + "_" + tag;
       }
 
-    return(output);
+    return(output + ".h");
   }
 
 
-std::string translation_unit::get_input_suffix(std::string input)
+std::string translation_unit::get_template_suffix(std::string input)
   {
     size_t      pos = 0;
     std::string output;
@@ -353,7 +353,7 @@ static std::string leafname(const std::string& pathname)
 
     while((pos = rval.find(".")) != std::string::npos)
       {
-        rval.erase(pos+1, rval.length()-pos-1);
+        rval.erase(pos, std::string::npos);
       }
 
     return(rval);

@@ -74,7 +74,7 @@ namespace macro_packages
       {
       public:
         replacement_rule_package(replacement_data& d, ginac_printer p)
-        : data(d), printer(p)
+        : data(d), printer(p), u_factory(nullptr), fl(nullptr), cse_worker(nullptr)
           {
           }
 
@@ -83,9 +83,9 @@ namespace macro_packages
         virtual const std::vector<simple_rule> get_post_rules()  = 0;
         virtual const std::vector<index_rule>  get_index_rules() = 0;
 
-        inline void                            set_u_factory(u_tensor_factory* uf)  { this->u_factory = uf; }
-        inline void                            set_flattener(flattener* f)          { this->fl = f; }
-        inline void                            set_cse_worker(cse* cw)              { this->cse_worker = cw; }
+        inline void                            set_u_factory (u_tensor_factory* uf)  { this->u_factory = uf; }
+        inline void                            set_flattener (flattener* f)          { this->fl = f; }
+        inline void                            set_cse_worker(cse* cw)               { this->cse_worker = cw; }
 
       protected:
         replacement_data& data;

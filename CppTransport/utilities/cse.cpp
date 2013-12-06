@@ -151,7 +151,7 @@ std::string cse::make_symbol()
 
 
 cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
-  : cse_worker(c)
+  : list(l), cse_worker(c)
   {
     assert(l != nullptr);
     assert(c != nullptr);
