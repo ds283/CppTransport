@@ -19,15 +19,40 @@
 // **************************************************************************************
 
 
-macro_package::macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk)
+macro_package::macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk,
+                             unsigned int dm)
   : fields(N_f), parameters(N_p), order(o), prefix(pf), split(sp), package(pk),
+    recursion_max(dm), recursion_depth(0),
     pre_rule_cache(pk->get_pre_ruleset()), post_rule_cache(pk->get_post_ruleset()), index_rule_cache(pk->get_index_ruleset())
   {
     assert(package != nullptr);
+    assert(recursion_max > 0);
+
+    if(recursion_max == 0) recursion_max = 1;
   }
 
 
 unsigned int macro_package::apply(std::string& line)
+  {
+    unsigned int rval = 0;
+
+    if(++this->recursion_depth < this->recursion_max)
+      {
+        this->apply_line(line);
+        --this->recursion_depth;
+      }
+    else
+      {
+        std::ostringstream msg;
+        msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
+        this->package->warn(msg.str());
+      }
+
+    return(rval);
+  }
+
+
+unsigned int macro_package::apply_line(std::string& line)
   {
     unsigned int rval = 0;
     std::string line_prefix = "";

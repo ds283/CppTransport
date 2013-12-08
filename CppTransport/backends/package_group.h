@@ -29,7 +29,7 @@ class package_group
     inline void                                          warn               (std::string const msg)  { ::warn(msg, this->data.current_line, this->data.path); }
 
     // return references to our internal ruleset caches
-    // TODO find some way to prevent them being changed explcitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
+    // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
     std::vector<macro_packages::simple_rule>&            get_pre_ruleset    ();
     std::vector<macro_packages::simple_rule>&            get_post_ruleset   ();
     std::vector<macro_packages::index_rule>&             get_index_ruleset  ();

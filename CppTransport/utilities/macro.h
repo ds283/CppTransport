@@ -41,12 +41,21 @@ namespace macro_packages
 class macro_package
   {
     public:
-      macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk);
+      macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk,
+                    unsigned int dm=DEFAULT_RECURSION_DEPTH);
 
+      // apply macro substitution to a line, provided this does not bring the total number
+      // of recursive applications above the maximum
       unsigned int                              apply                 (std::string& line);
 
     private:
+      // do the heavy lifting of applying macro substitution to a line
+      unsigned int                              apply_line            (std::string& line);
+
+      // apply a ruleset of simple macros to a line
       unsigned int                              apply_simple          (std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank=false);
+
+      // apply a ruleset of index macros to a line
       unsigned int                              apply_index           (std::string& line, const std::vector<struct index_abstract>& lhs_indices,
                                                                        const bool semicolon, const bool comma, const bool lhs_present,
                                                                        std::vector<macro_packages::index_rule>& ruleset);
@@ -66,6 +75,9 @@ class macro_package
       unsigned int                              fields;
       unsigned int                              parameters;
       enum indexorder                           order;
+
+      unsigned int                              recursion_depth;
+      unsigned int                              recursion_max;
 
       package_group*                            package;
 

@@ -9,7 +9,9 @@
 
 #include "temporary_pool.h"
 
+
 #define BIND(X) std::bind(&temporary_pool::X, this, std::placeholders::_1)
+
 
 namespace macro_packages
   {
@@ -110,18 +112,7 @@ namespace macro_packages
         else
           {
             std::string temps = this->cse_worker->temporaries(this->pool_template);
-
-            if(++this->recursion_depth < this->recursion_max)
-              {
-                this->ms->apply(temps);
-                --this->recursion_depth;
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << WARNING_RECURSION_DEPTH << " " << this->recursion_max << ")";
-                this->warn(msg.str());
-              }
+            this->ms->apply(temps);
 
             // write to current tagged position, but don't move it - we might need to write again later
             this->buf->write_to_tag(temps);

@@ -24,7 +24,7 @@ namespace macro_packages
         temporary_pool(replacement_data& d, ginac_printer p,
                        unsigned int dm = DEFAULT_RECURSION_DEPTH,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : pool_template(t), recursion_depth(0), recursion_max(dm), ms(nullptr), buf(nullptr),
+          : pool_template(t), ms(nullptr), buf(nullptr),
             replacement_rule_package(d, p)
           {
           }
@@ -43,9 +43,6 @@ namespace macro_packages
         macro_package* ms;
 
         std::string    pool_template;
-
-        unsigned int   recursion_depth;
-        unsigned int   recursion_max;
 
         std::string replace_temp_pool (const std::vector<std::string>& args);
       };
