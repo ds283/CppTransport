@@ -1,7 +1,7 @@
 model   "dquad";
 name    "Double Quadratic Inflation";
 
-#include "defaults.model"
+#include "custom.model"
 
 % set up the fields
 field

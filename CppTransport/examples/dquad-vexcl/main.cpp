@@ -18,7 +18,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_vexcl.h"
+#include "dq_vexcl-custom.h"
 
 
 // ****************************************************************************
