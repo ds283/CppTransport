@@ -5,7 +5,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// OpenCL implementation using the VexCL library
+// OpenCL/CUDA implementation using the VexCL library
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -23,10 +23,10 @@
 
 namespace transport
   {
-      // set up a state type for 2pf integration on an OpenCL device
+      // set up a state type for 2pf integration on an OpenCL/CUDA device
       typedef vex::multivector<double, $$__MODEL_pool::twopf_state_size> twopf_state;
 
-      // set up a state type for 3pf integration on an OpenCL device
+      // set up a state type for 3pf integration on an OpenCL/CUDA device
       typedef vex::multivector<double, $$__MODEL_pool::threepf_state_size> threepf_state;
 
 
@@ -42,13 +42,13 @@ namespace transport
               {
               }
 
-            // Integrate background and 2-point function on an OpenCL device
+            // Integrate background and 2-point function on an OpenCL/CUDA device
             transport::twopf<number>
               twopf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
                     const std::vector<number>& ics, const std::vector<double>& times,
                     bool silent=false);
 
-            // Integrate background, 2-point function and 3-point function on an OpenCL device
+            // Integrate background, 2-point function and 3-point function on an OpenCL/CUDA device
             // this sample implementation works on a cubic lattice of k-modes
             transport::threepf<number>
               threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
