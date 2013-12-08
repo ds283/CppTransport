@@ -12,9 +12,8 @@
 #include <string>
 
 #include "msg_en.h"
-#include "macro.h"
-
 #include "replacement_rule_package.h"
+
 
 namespace macro_packages
   {

@@ -9,7 +9,6 @@
 #define __macropackage_cpp_macros_H_
 
 
-#include "macro.h"
 #include "replacement_rule_package.h"
 
 

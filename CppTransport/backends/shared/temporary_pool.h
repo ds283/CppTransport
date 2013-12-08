@@ -11,10 +11,9 @@
 
 #include <list>
 
-#include "macro.h"
 #include "replacement_rule_package.h"
-
 #include "buffer.h"
+
 
 namespace macro_packages
   {

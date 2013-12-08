@@ -11,9 +11,8 @@
 
 #include <string>
 
-#include "macro.h"
-
 #include "replacement_rule_package.h"
+
 
 namespace macro_packages
   {

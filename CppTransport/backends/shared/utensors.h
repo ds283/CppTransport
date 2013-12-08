@@ -8,7 +8,7 @@
 #ifndef __macropackage_utensors_H_
 #define __macropackage_utensors_H_
 
-#include "macro.h"
+
 #include "replacement_rule_package.h"
 
 
