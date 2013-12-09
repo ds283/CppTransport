@@ -11,7 +11,7 @@
 
 #include <string>
 
-#include "replacement_rule_package.h"
+#include "replacement_data.h"
 #include "package_group.h"
 #include "buffer.h"
 

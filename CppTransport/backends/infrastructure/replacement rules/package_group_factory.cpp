@@ -4,8 +4,8 @@
 //
 
 
-#include <sstream>
 #include <string>
+#include <sstream>
 
 #include "package_group_factory.h"
 
@@ -19,7 +19,9 @@ package_group* package_group_factory(std::string backend, macro_packages::replac
 
     assert(buf != nullptr);
 
-    if(backend == "core")
+    // would be more elegant to do this via a table, but you can't take the
+    // address of a constructor (there is no instance to go with it -- we need new to do that for us)
+    if(backend == "cpp")
       {
         rval = new core_group(data, do_cse);
       }
@@ -34,7 +36,7 @@ package_group* package_group_factory(std::string backend, macro_packages::replac
         error(msg.str());
       }
 
-    // inform the selected backend of the output buffer
+    // push information about the output buffer to the selected backend
     if(rval != nullptr) rval->set_buffer(buf);
 
     return(rval);

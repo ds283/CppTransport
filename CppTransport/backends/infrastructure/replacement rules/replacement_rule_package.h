@@ -16,36 +16,11 @@
 #include "flatten.h"
 #include "language_printer.h"
 #include "cse.h"
+#include "replacement_data.h"
 
 
 namespace macro_packages
   {
-
-    class replacement_data
-      {
-      public:
-        script*                      parse_tree;         // parse tree corresponding to input script
-        std::string                  script_in;          // name of input script
-
-        // information about the template being processed
-        std::string                  template_in;        // template file being read from
-        std::string                  file_out;           // output file being written
-
-        std::string                  core_out;           // name of core .h file
-        std::string                  implementation_out; // name of implementation .h file
-
-        std::string                  guard;              // tag for #ifndef guard
-
-        // basic information about the model being processed
-        unsigned int                 num_fields;         // number of fields
-        unsigned int                 num_params;         // number of parameters
-        enum indexorder              index_order;        // index ordering
-
-        // information to support helpful error output
-        std::deque<struct inclusion> path;
-        unsigned int                 current_line;
-      };
-
 
     class simple_rule
       {

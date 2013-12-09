@@ -17,7 +17,6 @@
 #include <functional>
 
 #include "core.h"
-#include "parse_tree.h"
 #include "index_assignment.h"
 #include "u_tensor_factory.h"
 #include "cse.h"

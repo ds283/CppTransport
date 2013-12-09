@@ -14,9 +14,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "buffer.h"
-#include "replacement_rule_package.h"
 #include "package_group_factory.h"
-#include "macro.h"
 
 // FAIL return code for Bison parser
 #ifndef FAIL
