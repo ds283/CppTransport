@@ -9,78 +9,54 @@
 #include <sstream>
 
 #include "core.h"
+#include "basic_error.h"
 #include "error.h"
+
 
 // ******************************************************************
 
+
 void warn(std::string const msg)
   {
-    std::ostringstream out;
-
-    out << CPPTRANSPORT_NAME << ": " << WARNING_TOKEN << msg;
-    std::cerr << out.str() << std::endl;
+    basic_warn(msg);
   }
+
 
 void error(std::string const msg)
   {
-    std::ostringstream out;
-
-    out << CPPTRANSPORT_NAME << ": " << ERROR_TOKEN << msg;
-    std::cerr << out.str() << std::endl;
+    basic_error(msg);
   }
 
-void warn(std::string const msg, unsigned int line, std::deque<inclusion> const &path)
+
+void warn(std::string const msg, unsigned int line, filestack& path)
   {
     warn(msg, line, path, WARN_PATH_LEVEL);
   }
 
-void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path)
+
+void error(std::string const msg, unsigned int line, filestack& path)
   {
     error(msg, line, path, ERROR_PATH_LEVEL);
   }
 
-void warn(std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level)
+
+void warn(std::string const msg, unsigned int line, filestack& path, unsigned int level)
   {
-    if(path.size() < level)
-      {
-        level = (unsigned int)path.size();
-      }
-
     std::ostringstream out;
-    out << CPPTRANSPORT_NAME << ": at line " << line;
-    if(level >= 1)
-      {
-        out << " of '" << path[0].name << "'";
-      }
-    std::cerr << out.str() << std::endl;
 
-    for(int i = 1; i < level; i++)
-      {
-        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'" << std::endl;
-      }
+    out << ERROR_MESSAGE_AT_LINE << " " << line << path.write(level) << std::endl;
+    out << ERROR_MESSAGE_WRAP_PAD << msg << std::endl;
 
-    std::cerr << "  " << WARNING_TOKEN << msg << std::endl;
+    basic_warn(out.str());
   }
 
-void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level)
+
+void error(std::string const msg, unsigned int line, filestack& path, unsigned int level)
   {
-    if(path.size() < level)
-      {
-        level = (unsigned int)path.size();
-      }
-
     std::ostringstream out;
-    out << CPPTRANSPORT_NAME << ":  at line " << line;
-    if(level >= 1)
-      {
-        out << " of '" << path[0].name << "'";
-      }
-    std::cerr << out.str() << std::endl;
 
-    for(int i = 1; i < level; i++)
-      {
-        std::cerr << "  included from line " << path[i].line << " of file '" << path[i].name << "'" << std::endl;
-      }
+    out << ERROR_MESSAGE_AT_LINE << " " << line << path.write(level) << std::endl;
+    out << ERROR_MESSAGE_WRAP_PAD << msg << std::endl;
 
-    std::cerr << "  " << ERROR_TOKEN << msg << std::endl;
+    basic_error(out.str());
   }

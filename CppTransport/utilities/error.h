@@ -12,20 +12,21 @@
 #include <deque>
 
 #include "core.h"
+#include "filestack.h"
+
 
 #define ERROR_PATH_LEVEL (1)
 #define WARN_PATH_LEVEL  (1)
 
-#define WARNING_TOKEN    "warning: "
-#define ERROR_TOKEN      ""
 
 void warn (std::string const msg);
 void error(std::string const msg);
 
-void warn (std::string const msg, unsigned int line, std::deque<inclusion> const &path);
-void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path);
+void warn (std::string const msg, unsigned int line, filestack& path);
+void error(std::string const msg, unsigned int line, filestack& path);
 
-void warn (std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level);
-void error(std::string const msg, unsigned int line, std::deque<inclusion> const &path, unsigned int level);
+void warn (std::string const msg, unsigned int line, filestack& path, unsigned int level);
+void error(std::string const msg, unsigned int line, filestack& path, unsigned int level);
+
 
 #endif //__error_H_
