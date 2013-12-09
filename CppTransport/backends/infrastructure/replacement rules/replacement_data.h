@@ -35,7 +35,7 @@ namespace macro_packages
         enum indexorder              index_order;        // index ordering
 
         // information to support helpful error output
-        std::deque<struct inclusion> path;
+        filestack                    path;
         unsigned int                 current_line;
       };
 

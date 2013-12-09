@@ -48,13 +48,13 @@ void attributes::unset_latex()
 // ******************************************************************
 
 
-quantity::quantity(std::string n, unsigned int l, const std::deque<struct inclusion>& p)
+quantity::quantity(std::string n, unsigned int l, filestack& p)
   : name(n), line(l), path(p)
   {
     ginac_symbol = GiNaC::symbol(n);
   }
 
-quantity::quantity(std::string n, attributes& a, unsigned int l, const std::deque<struct inclusion>& p)
+quantity::quantity(std::string n, attributes& a, unsigned int l, filestack& p)
   : name(n), attrs(a), line(l), path(p)
   {
     std::string latex_name;
@@ -99,7 +99,7 @@ unsigned int quantity::get_line()
     return(this->line);
   }
 
-const std::deque<struct inclusion>& quantity::get_path()
+filestack& quantity::get_path()
   {
     return(this->path);
   }

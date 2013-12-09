@@ -8,6 +8,12 @@
 #ifndef __msg_H_
 #define __msg_H_
 
+#define ERROR_MESSAGE_AT_LINE                 "at line"
+#define ERROR_MESSAGE_OF                      "of"
+#define ERROR_MESSAGE_WRAP_PAD                "  "
+#define ERROR_MESSAGE_INCLUDED_FROM           "included from line"
+#define ERROR_MESSAGE_OF_FILE                 "of file"
+
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"
 #define ERROR_INCLUDE_DIRECTIVE               "Expected filename following #include directive"
@@ -55,6 +61,10 @@
 
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
+
+#define ERROR_FILESTACK_EMPTY                 "Internal error: filestack empty when setting line number"
+#define ERROR_FILESTACK_TOO_SHORT             "Internal error: filestack empty when attempting to pop"
+#define ERROR_FILESTACK_LOCKED                "Internal error: attempt to modify locked filestack"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"

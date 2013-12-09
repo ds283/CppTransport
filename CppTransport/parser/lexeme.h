@@ -50,7 +50,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           public:
           lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                  enum lexeme_minus_context& context,
-                 const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
+                 filestack& p, unsigned int l, unsigned int u,
                  const std::string* kt, const keywords* km, unsigned int num_k,
                  const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
@@ -76,7 +76,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
           const unsigned int&                 get_line();
 
-          const std::deque<struct inclusion>& get_path();
+          filestack&                          get_path();
 
           private:
           enum lexeme_type                    type;
@@ -90,7 +90,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           std::string                         str;
 
           // origin: line number and sequence of inclusions
-          const std::deque<struct inclusion>  path;
+          filestack                           path;
           const unsigned int                  line;
 
           const std::string*                  ktable;
@@ -108,7 +108,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
       template <class keywords, class characters>
       lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                                            enum lexeme_minus_context& context,
-                                           const std::deque<struct inclusion> p, unsigned int l, unsigned int u,
+                                           filestack& p, unsigned int l, unsigned int u,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
       : path(p), line(l), unique(u),
@@ -117,6 +117,9 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         {
           bool ok     = false;
           int  offset = 0;
+
+          // lock filestack object we have just copied
+          path->lock();
 
           switch (t)
             {
@@ -430,7 +433,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
 
       template <class keywords, class characters>
-      const std::deque<struct inclusion>& lexeme<keywords, characters>::get_path()
+      filestack& lexeme<keywords, characters>::get_path()
         {
           return (this->path);
         }

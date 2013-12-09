@@ -31,12 +31,4 @@
 
 #define DEFAULT_RECURSION_DEPTH      (127)
 
-// data structure for tracking the source of any lexeme
-struct inclusion
-  {
-    std::string  name;
-    unsigned int line;
-  };
-
-
 #endif //__core_H_

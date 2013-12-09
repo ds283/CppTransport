@@ -12,7 +12,7 @@
 
 #include <iostream>
 #include <string>
-#include <deque>
+#include "filestack.h"
 
 #include "lexeme.h"
 
@@ -37,9 +37,9 @@ class attributes
 class quantity
   {
     public:
-      quantity(std::string n, unsigned int l, const std::deque<struct inclusion>& p);                 // basic constructor
-      quantity(std::string n, attributes& a, unsigned int l, const std::deque<struct inclusion>& p);  // constructor with attributes
-      quantity(std::string n, attributes& a, GiNaC::symbol& s);                                       // constructor with GiNaC symbol
+      quantity(std::string n, unsigned int l, filestack& p);                 // basic constructor
+      quantity(std::string n, attributes& a, unsigned int l, filestack& p);  // constructor with attributes
+      quantity(std::string n, attributes& a, GiNaC::symbol& s);              // constructor with GiNaC symbol
       ~quantity();
 
       void                                print(std::ostream& stream);
@@ -50,13 +50,13 @@ class quantity
       const GiNaC::symbol*                get_ginac_symbol();
 
       unsigned int                        get_line();
-      const std::deque<struct inclusion>& get_path();
+      filestack&                          get_path();
 
     protected:
       std::string                         name;
 
       const unsigned int                  line;
-      const std::deque<struct inclusion>  path;
+      filestack                           path;
 
       attributes                          attrs;
       GiNaC::symbol                       ginac_symbol;

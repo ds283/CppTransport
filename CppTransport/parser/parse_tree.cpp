@@ -15,7 +15,7 @@
 // ******************************************************************
 
 
-declaration::declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+declaration::declaration(const quantity& o, unsigned int l, filestack& p)
   : line(l), path(p)
   {
     this->obj = new quantity(o);
@@ -28,7 +28,7 @@ quantity* declaration::get_quantity()
   }
 
 
-field_declaration::field_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+field_declaration::field_declaration(const quantity& o, unsigned int l, filestack& p)
   : declaration(o, l, p)
   {
   }
@@ -61,7 +61,7 @@ void field_declaration::print(std::ostream& stream)
   }
 
 
-parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, const std::deque<struct inclusion>& p)
+parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, filestack& p)
   : declaration(o, l, p)
   {
   }

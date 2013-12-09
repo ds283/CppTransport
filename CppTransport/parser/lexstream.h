@@ -25,7 +25,7 @@ template <class keywords, class characters>
 class lexstream
   {
     public:
-      lexstream(const std::string filename, finder* search,
+      lexstream(const std::string filename, finder* s,
 								const std::string* kt, const keywords* km, unsigned int num_k,
 								const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
       ~lexstream();
@@ -38,11 +38,14 @@ class lexstream
       void								                  print(std::ostream& stream);
 
     private:
-		  bool                                  parse     (std::string file, finder* search, std::deque<struct inclusion>& inclusions);
+		  bool                                  parse     (std::string file);
 
-		  void                                  lexicalize(finder* search, std::deque<struct inclusion>& inclusions, lexfile& input);
+		  void                                  lexicalize(lexfile& input);
 
-		  std::string                           get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type, std::deque<struct inclusion>& p);
+		  std::string                           get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
+
+      finder*                                                               search;      // finder
+      filestack                                                             stack;       // stack of included files
 
       std::deque< lexeme::lexeme<keywords, characters> >                    lexeme_list; // list of lexemes obtained from the file
 
@@ -71,10 +74,10 @@ class lexstream
 // convert the contents of 'filename' to a string of lexemes, descending into
 // included files as necessary
 template <class keywords, class characters>
-lexstream<keywords, characters>::lexstream(const std::string filename, finder* search,
+lexstream<keywords, characters>::lexstream(const std::string filename, finder* s,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string*ct, const characters*cm, const bool* ctx, unsigned int num_c)
-  : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx)
+  : ptr_valid(false), ktable(kt), kmap(km), Nk(num_k), ctable(ct), cmap(cm), Nc(num_c), ccontext(ctx), search(s)
   {
     assert(search != NULL);
     assert(ktable != NULL);
@@ -82,9 +85,7 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
     assert(ctable != NULL);
     assert(cmap != NULL);
 
-    std::deque<struct inclusion> inclusions;
-
-    if(parse(filename, search, inclusions) == false)
+    if(parse(filename) == false)
       {
         std::ostringstream msg;
         msg << ERROR_OPEN_TOPLEVEL << " '" << filename << "'";
@@ -96,7 +97,6 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
 template <class keywords, class characters>
 lexstream<keywords, characters>::~lexstream(void)
   {
-	 return;
   }
 
 
@@ -174,7 +174,7 @@ bool lexstream<keywords, characters>::state()
 
 
 template <class keywords, class characters>
-bool lexstream<keywords, characters>::parse(std::string file, finder* search, std::deque<struct inclusion>& inclusions)
+bool lexstream<keywords, characters>::parse(std::string file)
   {
     assert(search != NULL);
 
@@ -185,30 +185,23 @@ bool lexstream<keywords, characters>::parse(std::string file, finder* search, st
       {
         lexfile input(path);
 
-        // remember this inclusion
-        struct inclusion inc;
-        inc.line = 0;                // line doesn't count for the topmost file on the stack
-        inc.name = path;
-
-        inclusions.push_front(inc);  // note this takes a copy of inc
-
-        lexicalize(search, inclusions, input);
-
-        inclusions.pop_front();      // pop this file from the stack
+        this->stack.push(path);
+        lexicalize(input);
+        this->stack.pop();
       }
 
     return(found);
   }
 
 template <class keywords, class characters>
-void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<struct inclusion>& inclusions, lexfile& input)
+void lexstream<keywords, characters>::lexicalize(lexfile& input)
   {
     enum lexeme::lexeme_minus_context context = lexeme::unary_context;      // keep track of whether we expect unary or binary minus sign
 
     while(input.current_state() == lex_ok)
       {
         enum lexeme::lexeme_buffer_type   type;
-        std::string word = get_lexeme(input, type, inclusions);
+        std::string word = get_lexeme(input, type);
 
         if(word != "")
           {
@@ -217,24 +210,24 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                 case lexeme::buf_character:
                   if(word == "#")                                               // treat as a preprocessor directive
                     {
-                      word = get_lexeme(input, type, inclusions);      // get next lexeme
+                      word = get_lexeme(input, type);                           // get next lexeme
 
                       if(word == "include")                                     // inclusion directive
                         {
-                          word = get_lexeme(input, type, inclusions);
+                          word = get_lexeme(input, type);
 
                           if(type != lexeme::buf_string_literal)
                             {
-                              error(ERROR_INCLUDE_DIRECTIVE, input.current_line(), inclusions);
+                              error(ERROR_INCLUDE_DIRECTIVE, input.current_line(), this->stack);
                             }
                           else
                             {
-                              inclusions[0].line = input.current_line();        // update which line this file was included from
-                              if(parse(word, search, inclusions) == false)
+                              this->stack.set_line(input.current_line());       // update which line this file was included from
+                              if(parse(word) == false)
                                 {
                                   std::ostringstream msg;
                                   msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                  error(msg.str(), input.current_line(), inclusions);
+                                  error(msg.str(), input.current_line(), this->stack);
                                 }
                             }
                         }
@@ -243,7 +236,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                     {
                       // note: this updates context, depending what the lexeme is recognized as
                       this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                        (word, type, context, inclusions, input.current_line(), this->unique++,
+                        (word, type, context, input.current_line(), this->unique++,
                           this->ktable, this->kmap, this->Nk,
                           this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
@@ -254,7 +247,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
                 case lexeme::buf_string_literal:
                   // note: this updates context, depending what the lexeme is recognized as
                   this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                    (word, type, context, inclusions, input.current_line(), this->unique++,
+                    (word, type, context, input.current_line(), this->unique++,
                       this->ktable, this->kmap, this->Nk,
                       this->ctable, this->cmap, this->ccontext, this->Nc));
                 break;
@@ -267,7 +260,7 @@ void lexstream<keywords, characters>::lexicalize(finder* search, std::deque<stru
   }
 
 template <class keywords, class characters>
-std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type, std::deque<struct inclusion>& p)
+std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type)
   {
     enum lexfile_outcome state = lex_ok;
     char                 c     = 0;
@@ -361,7 +354,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                       }
                     else
                       {
-                        error(ERROR_EXPECTED_ELLIPSIS, input.current_line(), p);
+                        error(ERROR_EXPECTED_ELLIPSIS, input.current_line(), this->stack);
                         word += '.';                          // make up to a proper ellipsis anyway
                       }
                   }
@@ -383,7 +376,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                   }
                 else
                   {
-                    error(ERROR_EXPECTED_CLOSE_QUOTE, input.current_line(), p);
+                    error(ERROR_EXPECTED_CLOSE_QUOTE, input.current_line(), this->stack);
                   }
                 type = lexeme::buf_string_literal;
               }
