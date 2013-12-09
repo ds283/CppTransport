@@ -44,7 +44,7 @@ namespace macro_packages
 
         std::string    pool_template;
 
-        std::string replace_temp_pool (const std::vector<std::string>& args);
+        std::string    replace_temp_pool (const std::vector<std::string>& args);
       };
 
   } // namespace macro_packages
