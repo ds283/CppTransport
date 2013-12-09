@@ -22,8 +22,8 @@ namespace cpp
         if(GiNaC::is_a<GiNaC::function>(expr)) name = GiNaC::ex_to<GiNaC::function>(expr).get_name();
         else                                   name = GiNaC::ex_to<GiNaC::basic>(expr).class_name();
 
-        if     (name == "numeric") out << this->printer(expr);
-        else if(name == "symbol")  out << this->printer(expr);
+        if     (name == "numeric") out << this->printer.ginac(expr);
+        else if(name == "symbol")  out << this->printer.ginac(expr);
         else if(name == "add")     out << this->print_operands(expr, "+");
         else if(name == "mul")     out << this->print_operands(expr, "*");
         else if(name == "power")   out << "pow(" << this->print_operands(expr, ",") << ")";
@@ -47,7 +47,7 @@ namespace cpp
           }
         else
           {
-            out << this->printer(expr);
+            out << this->printer.ginac(expr);
           }
 
         return(out.str());

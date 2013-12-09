@@ -18,7 +18,7 @@ namespace cpp
     class core_macros: public ::macro_packages::replacement_rule_package
       {
       public:
-        core_macros(macro_packages::replacement_data& d, ginac_printer p,
+        core_macros(macro_packages::replacement_data& d, language_printer& p,
                    std::string ds=OUTPUT_DEFAULT_STEPPER_STATE_NAME)
           : default_state(ds), ::macro_packages::replacement_rule_package(d, p)
           {

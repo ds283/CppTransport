@@ -49,7 +49,7 @@
 
 #include "ginac/ginac.h"
 
-#include "ginac_printer.h"
+#include "language_printer.h"
 #include "msg_en.h"
 
 // to be defined below; need a forward reference here
@@ -77,7 +77,7 @@ class cse_map
 class cse
   {
   public:
-    cse(unsigned int s, ginac_printer p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
+    cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
       : serial_number(s), printer(p), do_cse(d), kernel_name(k), symbol_counter(0)
       {
       }
@@ -100,12 +100,11 @@ class cse
     bool               get_do_cse()                           { return(this->do_cse); }
     void               set_do_cse(bool d)                     { this->do_cse = d; }
 
-    ginac_printer      get_ginac_printer()                    { return(this->printer); }
-    void               set_ginac_printer(ginac_printer p)     { this->printer = p; }
+    language_printer&  get_ginac_printer()                    { return(this->printer); }
 
   protected:
-    ginac_printer printer;
-    bool          do_cse;
+    language_printer& printer;
+    bool              do_cse;
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language

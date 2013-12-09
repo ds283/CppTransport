@@ -18,7 +18,7 @@ namespace macro_packages
     class utensors: public replacement_rule_package
       {
       public:
-        utensors(replacement_data& d, ginac_printer p,
+        utensors(replacement_data& d, language_printer& p,
                  std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
                  std::string deps=OUTPUT_DEFAULT_EPS_NAME,
                  std::string dk=OUTPUT_DEFAULT_K_NAME,

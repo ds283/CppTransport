@@ -21,7 +21,7 @@ namespace macro_packages
     class fundamental: public replacement_rule_package
       {
       public:
-        fundamental(replacement_data& d, ginac_printer p,
+        fundamental(replacement_data& d, language_printer& p,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H_",

@@ -21,7 +21,7 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(replacement_data& d, ginac_printer p,
+        temporary_pool(replacement_data& d, language_printer& p,
                        unsigned int dm = DEFAULT_RECURSION_DEPTH,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
           : pool_template(t), ms(nullptr), buf(nullptr),

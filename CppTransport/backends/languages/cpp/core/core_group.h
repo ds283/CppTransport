@@ -18,6 +18,7 @@
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
 #include "core_macros.h"
+#include "cpp_printer.h"
 
 
 class core_group: public package_group
@@ -30,6 +31,8 @@ class core_group: public package_group
     void set_macros(macro_package* m) { this->tp->set_macros(m); }
 
   protected:
+    cpp::cpp_printer                    printer;
+
     macro_packages::fundamental*        f;
     macro_packages::flow_tensors*       ft;
     macro_packages::lagrangian_tensors* lt;

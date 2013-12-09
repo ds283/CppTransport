@@ -14,7 +14,7 @@
 #include "macro.h"
 #include "u_tensor_factory.h"
 #include "flatten.h"
-#include "ginac_printer.h"
+#include "language_printer.h"
 #include "cse.h"
 
 
@@ -73,7 +73,7 @@ namespace macro_packages
     class replacement_rule_package
       {
       public:
-        replacement_rule_package(replacement_data& d, ginac_printer p)
+        replacement_rule_package(replacement_data& d, language_printer& p)
         : data(d), printer(p), u_factory(nullptr), fl(nullptr), cse_worker(nullptr)
           {
           }
@@ -92,7 +92,7 @@ namespace macro_packages
 
       protected:
         replacement_data& data;
-        ginac_printer     printer;
+        language_printer& printer;
 
         u_tensor_factory* u_factory;
         flattener*        fl;

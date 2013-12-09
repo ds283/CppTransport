@@ -185,7 +185,7 @@ std::string cse_map::operator[](unsigned int index)
           }
         else
           {
-            rval = (this->cse_worker->get_ginac_printer())((*this->list)[index]);
+            rval = (this->cse_worker->get_ginac_printer()).ginac((*this->list)[index]);
           }
       }
 

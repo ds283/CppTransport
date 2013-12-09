@@ -129,7 +129,7 @@ namespace macro_packages
       {
         GiNaC::ex potential = this->data.parse_tree->get_potential();
 
-        return(this->printer(potential));
+        return(this->printer.ginac(potential));
       }
 
 
@@ -137,7 +137,7 @@ namespace macro_packages
       {
         GiNaC::ex Hsq = this->u_factory->compute_Hsq();
 
-        return(this->printer(Hsq));
+        return(this->printer.ginac(Hsq));
       }
 
 
@@ -145,7 +145,7 @@ namespace macro_packages
       {
         GiNaC::ex eps = this->u_factory->compute_eps();
 
-        return(this->printer(eps));
+        return(this->printer.ginac(eps));
       }
 
 
@@ -159,7 +159,7 @@ namespace macro_packages
         assert(indices[0].species < this->data.parse_tree->get_number_params());
 
         std::vector<GiNaC::symbol> parameters = this->data.parse_tree->get_param_symbols();
-        return(this->printer(parameters[indices[0].species]));
+        return(this->printer.ginac(parameters[indices[0].species]));
       }
 
 
@@ -170,7 +170,7 @@ namespace macro_packages
         assert(indices[0].species < this->data.parse_tree->get_number_fields());
 
         std::vector<GiNaC::symbol> fields = this->data.parse_tree->get_field_symbols();
-        return(this->printer(fields[indices[0].species]));
+        return(this->printer.ginac(fields[indices[0].species]));
       }
 
 
@@ -187,11 +187,11 @@ namespace macro_packages
         switch(indices[0].trait)
           {
             case index_field:
-              rval = this->printer(fields[indices[0].species]);
+              rval = this->printer.ginac(fields[indices[0].species]);
               break;
 
             case index_momentum:
-              rval = this->printer(momenta[indices[0].species]);
+              rval = this->printer.ginac(momenta[indices[0].species]);
               break;
 
             case index_parameter:

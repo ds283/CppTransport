@@ -11,21 +11,21 @@
 
 
 core_group::core_group(macro_packages::replacement_data& d, bool do_cse)
-  : package_group(d)
+  : package_group(d), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them automatically when we add this packages
     // to our list
-    cse_worker = new cpp::cpp_cse(0, ginac_printer(&cpp::print), do_cse);
+    cse_worker = new cpp::cpp_cse(0, this->printer, do_cse);
 
-    f  = new macro_packages::fundamental       (d, ginac_printer(&cpp::print));
-    ft = new macro_packages::flow_tensors      (d, ginac_printer(&cpp::print));
-    lt = new macro_packages::lagrangian_tensors(d, ginac_printer(&cpp::print));
-    ut = new macro_packages::utensors          (d, ginac_printer(&cpp::print));
-    xf = new macro_packages::gauge_xfm         (d, ginac_printer(&cpp::print));
-    tp = new macro_packages::temporary_pool    (d, ginac_printer(&cpp::print));
-    cm = new cpp::core_macros                  (d, ginac_printer(&cpp::print));
+    f  = new macro_packages::fundamental       (d, this->printer);
+    ft = new macro_packages::flow_tensors      (d, this->printer);
+    lt = new macro_packages::lagrangian_tensors(d, this->printer);
+    ut = new macro_packages::utensors          (d, this->printer);
+    xf = new macro_packages::gauge_xfm         (d, this->printer);
+    tp = new macro_packages::temporary_pool    (d, this->printer);
+    cm = new cpp::core_macros                  (d, this->printer);
 
     this->push_back(cm);
     this->push_back(tp);

@@ -18,7 +18,7 @@ namespace cpp
     class vexcl_steppers: public ::macro_packages::replacement_rule_package
       {
       public:
-        vexcl_steppers(macro_packages::replacement_data& d, ginac_printer p)
+        vexcl_steppers(macro_packages::replacement_data& d, language_printer& p)
           : ::macro_packages::replacement_rule_package(d, p)
           {
           }
