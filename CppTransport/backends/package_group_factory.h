@@ -13,9 +13,10 @@
 
 #include "replacement_rule_package.h"
 #include "package_group.h"
+#include "buffer.h"
 
 
-package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, bool do_cse=true);
+package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, buffer* buf, bool do_cse=true);
 
 
 #endif //__package_group_factory_H_

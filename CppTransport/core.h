@@ -23,6 +23,8 @@
 
 #define NEWLINE_CHAR                 "\n"
 
+#define INVALID_GUARD_CHARACTERS     "-/\\|@£$%^&*()`~+=[]{}:;<>,§±"
+
 #define MPLANCK_SYMBOL               "__Mp"
 #define MPLANCK_LATEX_SYMBOL         "M_{\\mathrm{P}}"
 #define MPLANCK_TEXT_NAME            "M_P"

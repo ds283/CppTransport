@@ -10,6 +10,7 @@
 #include "translation_unit.h"
 
 #include "boost/algorithm/string.hpp"
+#include "boost/range/algorithm/remove_if.hpp"
 #include "boost/lexical_cast.hpp"
 
 #include "buffer.h"
@@ -190,6 +191,7 @@ unsigned int translation_unit::apply(std::string in, std::string out)
         data.implementation_out = this->implementation_output;
 
         data.guard              = boost::to_upper_copy(leafname(out));
+        data.guard.erase(boost::remove_if(data.guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
 
         // this information is available via parse_tree->get_X() anyway,
         // but is helpful to have it nearer the top of the data structure
@@ -229,7 +231,7 @@ unsigned int translation_unit::process(macro_packages::replacement_data& data)
         std::getline(in, line);
 
         std::vector<std::string> tokens;
-        boost::split(tokens, line, boost::is_any_of(" "));
+        boost::split(tokens, line, boost::is_any_of(" ,:;."));
         if(tokens.size() < 3)
           {
             std::ostringstream msg;
@@ -241,16 +243,17 @@ unsigned int translation_unit::process(macro_packages::replacement_data& data)
             double minver = boost::lexical_cast<double>(tokens[2]);
             if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
               {
+                // generate an output buffer and an appropriate backend
                 buffer*        buf     = new buffer;
-                package_group* backend = package_group_factory(tokens[1], data, this->do_cse);
+                package_group* backend = package_group_factory(tokens[1], data, buf, this->do_cse);
 
                 if(backend != nullptr)
                   {
-                    backend->set_buffer(buf);
-
                     macro_package* macro = new macro_package(data.num_fields, data.num_params, data.index_order,
                                                              BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT, backend);
 
+                    // inform the selected backend of the final macro package
+                    // TODO consider replacing this
                     backend->set_macros(macro);
 
                     while(in.eof() == false && in.fail() == false)
