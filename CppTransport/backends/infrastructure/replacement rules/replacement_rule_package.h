@@ -49,7 +49,7 @@ namespace macro_packages
       {
       public:
         replacement_rule_package(replacement_data& d, language_printer& p)
-        : data(d), printer(p), u_factory(nullptr), fl(nullptr), cse_worker(nullptr)
+          : data(d), printer(p), u_factory(nullptr), fl(nullptr), cse_worker(nullptr)
           {
           }
 

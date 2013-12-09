@@ -170,8 +170,6 @@ unsigned int macro_package::apply_index(std::string& line, const std::vector<str
   std::vector<macro_packages::index_rule>& ruleset)
   {
     unsigned int rval = 0;
-    std::string temp_line;
-    std::string new_line = "";
 
     bool replaced = false;    // have we made any macro replacements? if not, might need to add a trailing semicolon or comma later
 

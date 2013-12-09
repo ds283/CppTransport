@@ -6,6 +6,8 @@
 //
 
 
+#include <assert.h>
+
 #include "quantity.h"
 
 
@@ -48,15 +50,18 @@ void attributes::unset_latex()
 // ******************************************************************
 
 
-quantity::quantity(std::string n, unsigned int l, filestack& p)
+quantity::quantity(std::string n, unsigned int l, filestack* p)
   : name(n), line(l), path(p)
   {
+    assert(path != nullptr);
     ginac_symbol = GiNaC::symbol(n);
   }
 
-quantity::quantity(std::string n, attributes& a, unsigned int l, filestack& p)
+quantity::quantity(std::string n, attributes& a, unsigned int l, filestack* p)
   : name(n), attrs(a), line(l), path(p)
   {
+    assert(path != nullptr);
+
     std::string latex_name;
     bool        latex_set = attrs.get_latex(latex_name);
 
@@ -99,7 +104,7 @@ unsigned int quantity::get_line()
     return(this->line);
   }
 
-filestack& quantity::get_path()
+filestack* quantity::get_path()
   {
     return(this->path);
   }

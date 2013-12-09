@@ -22,11 +22,11 @@
 void warn (std::string const msg);
 void error(std::string const msg);
 
-void warn (std::string const msg, unsigned int line, filestack& path);
-void error(std::string const msg, unsigned int line, filestack& path);
+void warn (std::string const msg, unsigned int line, filestack* path);
+void error(std::string const msg, unsigned int line, filestack* path);
 
-void warn (std::string const msg, unsigned int line, filestack& path, unsigned int level);
-void error(std::string const msg, unsigned int line, filestack& path, unsigned int level);
+void warn (std::string const msg, unsigned int line, filestack* path, unsigned int level);
+void error(std::string const msg, unsigned int line, filestack* path, unsigned int level);
 
 
 #endif //__error_H_

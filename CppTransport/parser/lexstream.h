@@ -19,6 +19,7 @@
 #include "finder.h"
 #include "lexfile.h"
 #include "error.h"
+#include "input_stack.h"
 
 
 template <class keywords, class characters>
@@ -45,7 +46,7 @@ class lexstream
 		  std::string                           get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
 
       finder*                                                               search;      // finder
-      filestack                                                             stack;       // stack of included files
+      input_stack                                                           stack;       // stack of included files
 
       std::deque< lexeme::lexeme<keywords, characters> >                    lexeme_list; // list of lexemes obtained from the file
 
@@ -236,7 +237,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                     {
                       // note: this updates context, depending what the lexeme is recognized as
                       this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                        (word, type, context, input.current_line(), this->unique++,
+                        (word, type, context, this->stack, input.current_line(), this->unique++,
                           this->ktable, this->kmap, this->Nk,
                           this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
@@ -247,7 +248,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                 case lexeme::buf_string_literal:
                   // note: this updates context, depending what the lexeme is recognized as
                   this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                    (word, type, context, input.current_line(), this->unique++,
+                    (word, type, context, this->stack, input.current_line(), this->unique++,
                       this->ktable, this->kmap, this->Nk,
                       this->ctable, this->cmap, this->ccontext, this->Nc));
                 break;

@@ -27,17 +27,17 @@ class declaration
 
     protected:
       declaration
-        (const quantity& o, unsigned int l, filestack& p); // constructor needed for const members
+        (const quantity& o, unsigned int l, filestack* p); // constructor needed for const members
 
       quantity*                          obj;
       const unsigned int                 line;
-      filestack                          path;
+      filestack*                         path;
   };
 
 class field_declaration: public declaration
   {
     public:
-      field_declaration(const quantity& o, unsigned int l, filestack& p);
+      field_declaration(const quantity& o, unsigned int l, filestack* p);
       ~field_declaration();
 
       void print(std::ostream& stream);
@@ -46,7 +46,7 @@ class field_declaration: public declaration
 class parameter_declaration: public declaration
   {
     public:
-      parameter_declaration(const quantity& o, unsigned int l, filestack& p);
+      parameter_declaration(const quantity& o, unsigned int l, filestack* p);
       ~parameter_declaration();
 
       void print(std::ostream& stream);

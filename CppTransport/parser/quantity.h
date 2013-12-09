@@ -37,8 +37,8 @@ class attributes
 class quantity
   {
     public:
-      quantity(std::string n, unsigned int l, filestack& p);                 // basic constructor
-      quantity(std::string n, attributes& a, unsigned int l, filestack& p);  // constructor with attributes
+      quantity(std::string n, unsigned int l, filestack* p);                 // basic constructor
+      quantity(std::string n, attributes& a, unsigned int l, filestack* p);  // constructor with attributes
       quantity(std::string n, attributes& a, GiNaC::symbol& s);              // constructor with GiNaC symbol
       ~quantity();
 
@@ -50,13 +50,13 @@ class quantity
       const GiNaC::symbol*                get_ginac_symbol();
 
       unsigned int                        get_line();
-      filestack&                          get_path();
+      filestack*                          get_path();
 
     protected:
       std::string                         name;
 
       const unsigned int                  line;
-      filestack                           path;
+      filestack*                          path;
 
       attributes                          attrs;
       GiNaC::symbol                       ginac_symbol;

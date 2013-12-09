@@ -9,42 +9,38 @@
 
 
 #include <string>
-#include <deque>
 
+
+// this is an abstract class whose interface can be implemented by
+// subsequent, more specialized derived classes
 
 class filestack
   {
   public:
-    // data structure for tracking the source of any lexeme
-    struct inclusion
-      {
-        std::string  name;
-        unsigned int line;
-      };
-
     filestack();
+    virtual ~filestack();
 
     // push a new filename to the top of the stack, included from line current_line
     // of the file which is *currently* on top of the stack
-    void push(const std::string name);
+    virtual void push(const std::string name) = 0;
 
     // set line number information for the item on top of the stack
-    void set_line(unsigned int line);
+    virtual void set_line(unsigned int line) = 0;
 
     // pop a filename from the top of the stack
-    void pop();
+    virtual void pop() = 0;
 
     // generate a list of included files, suitable for producing an error report
     // the list is truncated at depth 'level' to avoid excess verbosity
-    std::string write(unsigned int level);
+    virtual std::string write(unsigned int level) = 0;
+    virtual std::string write()                   = 0;
 
     // lock the filestack, preventing future changes
-    // there is no unlock API, so this puts to filestack into a state suitable
+    // there is no unlock API, so this puts the filestack into a state suitable
     // for archiving, eg. as part of the lexeme list
     void lock();
 
   protected:
-    std::deque<struct inclusion> inclusions;
     bool                         locked;
   };
 

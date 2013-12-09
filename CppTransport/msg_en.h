@@ -9,10 +9,11 @@
 #define __msg_H_
 
 #define ERROR_MESSAGE_AT_LINE                 "at line"
-#define ERROR_MESSAGE_OF                      "of"
 #define ERROR_MESSAGE_WRAP_PAD                "  "
-#define ERROR_MESSAGE_INCLUDED_FROM           "included from line"
-#define ERROR_MESSAGE_OF_FILE                 "of file"
+#define OUTPUT_STACK_OF                       "of"
+#define OUTPUT_STACK_WRAP_PAD                 ERROR_MESSAGE_WRAP_PAD
+#define OUTPUT_STACK_INCLUDED_FROM            "included from line"
+#define OUTPUT_STACK_OF_FILE                  "of file"
 
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"

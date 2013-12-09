@@ -363,8 +363,6 @@ namespace macro_packages
 
     std::string fundamental::replace_unique(const std::vector<std::string> &args)
       {
-        std::ostringstream out;
-
         return(this->stringize_number(this->unique++));
       }
 

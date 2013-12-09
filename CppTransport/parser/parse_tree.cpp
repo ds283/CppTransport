@@ -6,6 +6,7 @@
 //
 
 #include <sstream>
+#include <assert.h>
 
 #include "parse_tree.h"
 
@@ -15,9 +16,10 @@
 // ******************************************************************
 
 
-declaration::declaration(const quantity& o, unsigned int l, filestack& p)
+declaration::declaration(const quantity& o, unsigned int l, filestack* p)
   : line(l), path(p)
   {
+    assert(path != nullptr);
     this->obj = new quantity(o);
   }
 
@@ -28,7 +30,7 @@ quantity* declaration::get_quantity()
   }
 
 
-field_declaration::field_declaration(const quantity& o, unsigned int l, filestack& p)
+field_declaration::field_declaration(const quantity& o, unsigned int l, filestack* p)
   : declaration(o, l, p)
   {
   }
@@ -47,21 +49,11 @@ void field_declaration::print(std::ostream& stream)
     stream << "Field declaration for symbol '" << this->obj->get_name()
            << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
-    stream << "  defined at line " << line;
-    if(this->path.size() >= 1)
-      {
-        stream << " of '" << path[0].name << "'";
-      }
-    stream << std::endl;
-
-    for(int i = 1; i < this->path.size(); i++)
-      {
-        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'" << std::endl;
-      }
+    stream << "  defined at line " << line << this->path->write();
   }
 
 
-parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, filestack& p)
+parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, filestack* p)
   : declaration(o, l, p)
   {
   }
@@ -80,17 +72,7 @@ void parameter_declaration::print(std::ostream& stream)
     stream << "Parameter declaration for symbol '" << this->obj->get_name()
       << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
-    stream << "  defined at line " << line;
-    if(this->path.size() >= 1)
-      {
-        stream << " of '" << path[0].name << "'";
-      }
-    stream << std::endl;
-
-    for(int i = 1; i < this->path.size(); i++)
-      {
-        stream << "  included from line " << this->path[i].line << " of file '" << this->path[i].name << "'" << std::endl;
-      }
+    stream << "  defined at line " << line << this->path->write();
   }
 
 
