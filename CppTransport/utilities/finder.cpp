@@ -58,20 +58,18 @@ bool finder::fqpn(std::string leaf, std::string& fqpn)
   {
     bool match = false;
 
-    int i;
-    for(i = 0; match == false && i < this->paths.size(); i++)
+    for(int i = 0; match == false && i < this->paths.size(); i++)
       {
-        std::ostringstream path;
+        std::ostringstream filepath;
+        filepath << this->paths[i] << "/" << leaf;
 
-        path << this->paths[i] << "/" << leaf;
-
-        std::ifstream stream;
-        stream.open(path.str().c_str());  // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
-
-        if(stream.is_open())
+        boost::filesystem::path file(filepath.str());
+        if(boost::filesystem::exists(file))
           {
+            boost::filesystem::canonical(file);
+
             match = true;
-            fqpn  = path.str();
+            fqpn  = filepath.str();
           }
       }
 
