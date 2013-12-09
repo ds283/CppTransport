@@ -33,6 +33,9 @@ enum lexfile_outcome
     lex_error     // there was an error
   };
 
+
+// read in characters from a file - the base step in the lexical analysis stack
+
 class lexfile
   {
     public:

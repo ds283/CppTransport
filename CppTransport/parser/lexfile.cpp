@@ -75,10 +75,10 @@ char lexfile::get(enum lexfile_outcome& state)
 
         case lexfile_eof:
         case lexfile_error:
-          break;                                    // do nothing if there is already and error or eof condition
+          break;                                    // do nothing if there is already an error or eof condition
 
         default:
-          assert(false);                            // shouldn't ready here
+          assert(false);                            // shouldn't arrive here
       }
 
     if(this->state == lexfile_eof)
