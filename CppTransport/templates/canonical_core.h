@@ -1,4 +1,4 @@
-// core 0.06
+// backend=cpp minver=0.06
 //
 // DO NOT EDIT: GENERATED AUTOMATICALLY BY $$__TOOL $$__VERSION
 //
@@ -58,7 +58,7 @@ namespace transport
 
 
     // CLASS FOR $$__MODEL CORE
-    // specific implementations (MPI, OpenMP, VexCL, ...) are later derived from this  common core
+    // specific implementations (MPI, OpenMP, VexCL, ...) are later derived from this common core
     template <typename number>
     class $$__MODEL : public canonical_model<number>
       {
