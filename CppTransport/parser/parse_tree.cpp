@@ -80,7 +80,7 @@ void parameter_declaration::print(std::ostream& stream) const
 
 
 script::script()
-  : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
+  : potential_set(false), potential(nullptr), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
   {
     this->table = new symbol_table<const quantity>(SYMBOL_TABLE_SIZE);
 
@@ -120,8 +120,8 @@ script::~script()
     // delete potential
     if(this->potential_set)
       {
-        assert(this->potential != NULL);
-        if(this->potential != NULL)
+        assert(this->potential != nullptr);
+        if(this->potential != nullptr)
           {
             delete this->potential;
           }
@@ -250,7 +250,7 @@ void script::print(std::ostream& stream) const
 
     if(this->potential_set)
       {
-        assert(this->potential != NULL);
+        assert(this->potential != nullptr);
         stream << "** Potential = " << *this->potential << std::endl;
       }
     else
@@ -453,13 +453,13 @@ void script::set_potential(GiNaC::ex* V)
   {
     if(this->potential_set)
       {
-        assert(this->potential != NULL);
+        assert(this->potential != nullptr);
         delete this->potential;
       }
     this->potential     = V;
     this->potential_set = true;
 
-    // std::cerr << "Set potential to be V = " << *this->potential << std::endl;
+//    std::cerr << "Set potential to be V = " << *this->potential << std::endl;
   }
 
 
@@ -480,9 +480,9 @@ void script::unset_potential()
   {
     if(this->potential_set)
       {
-        assert(this->potential != NULL);
+        assert(this->potential != nullptr);
         delete this->potential;
       }
-    this->potential     = NULL;
+    this->potential     = nullptr;
     this->potential_set = false;
   }

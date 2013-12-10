@@ -133,7 +133,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
 void translator::parse_header_line(const std::string in, const std::string line, std::string& backend, double& minver)
   {
     std::vector<std::string> tokens;
-    boost::split(tokens, line, boost::is_any_of(" ,:;.="));
+    boost::split(tokens, line, boost::is_any_of(" ,:;="));
 
     bool backend_set = false;
     bool minver_set  = false;

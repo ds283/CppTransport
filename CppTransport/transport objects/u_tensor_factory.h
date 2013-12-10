@@ -82,7 +82,7 @@ class u_tensor_factory
 
       const unsigned int                num_fields;
       const GiNaC::symbol&              M_Planck;
-      const GiNaC::ex&                  V;
+      const GiNaC::ex                   V;
 
       const std::vector<GiNaC::symbol>  field_list;
       const std::vector<GiNaC::symbol>  deriv_list;
