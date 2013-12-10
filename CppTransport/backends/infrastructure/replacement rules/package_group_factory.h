@@ -11,12 +11,12 @@
 
 #include <string>
 
-#include "replacement_data.h"
+#include "translation_unit.h"
 #include "package_group.h"
 #include "buffer.h"
 
 
-package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, buffer* buf, bool do_cse=true);
+package_group* package_group_factory(std::string backend, translation_unit* unit, buffer* buf);
 
 
 #endif //__package_group_factory_H_

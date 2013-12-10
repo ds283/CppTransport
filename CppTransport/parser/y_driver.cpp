@@ -28,7 +28,7 @@ namespace y
           ::error(msg);
         }
 
-      script* y_driver::get_script()
+      const script* y_driver::get_script()
         {
           return(this->root);
         }
@@ -38,13 +38,13 @@ namespace y
           // extract identifier name from lexeme
           std::string        id;
           bool               ok = lex->get_identifier(id);
-          field_declaration* d  = NULL;
+          field_declaration* d  = nullptr;
 
           if(ok)
             {
-              quantity s(id, *a, lex->get_line(), lex->get_path());
+              quantity s(id, *a, lex->get_path());
 
-              d = new field_declaration(s, lex->get_line(), lex->get_path());
+              d = new field_declaration(s, lex->get_path());
               if(this->root->add_field(d) == false)
                 {
                   delete d;
@@ -52,7 +52,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
             }
 
           delete a; // otherwise, attributes block would never be deallocated
@@ -63,13 +63,13 @@ namespace y
           // extract identifier name from lexeme
           std::string            id;
           bool                   ok = lex->get_identifier(id);
-          parameter_declaration* d  = NULL;
+          parameter_declaration* d  = nullptr;
 
           if(ok)
             {
-              quantity s(id, *a, lex->get_line(), lex->get_path());
+              quantity s(id, *a, lex->get_path());
 
-              d = new parameter_declaration(s, lex->get_line(), lex->get_path());
+              d = new parameter_declaration(s, lex->get_path());
               if(this->root->add_parameter(d) == false)
                 {
                   delete d;
@@ -77,7 +77,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
             }
 
           delete a; // otherwise, attributes block would never be deallocated
@@ -95,7 +95,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -111,7 +111,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
             }
         }
 
@@ -127,7 +127,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
             }
         }
 
@@ -143,7 +143,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -159,7 +159,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
             }
         }
 
@@ -188,7 +188,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -203,7 +203,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -218,7 +218,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -233,7 +233,7 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
         }
 
@@ -248,7 +248,7 @@ namespace y
           }
         else
           {
-            ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+            ::error(ERROR_STRING_LOOKUP, lex->get_path());
           }
       }
 
@@ -263,8 +263,13 @@ namespace y
             }
           else
             {
-              ::error(ERROR_STRING_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_STRING_LOOKUP, lex->get_path());
             }
+        }
+
+      void y_driver::set_potential(GiNaC::ex* V)
+        {
+          this->root->set_potential(V);
         }
 
       void y_driver::set_indexorder_left()
@@ -664,7 +669,7 @@ namespace y
 
           if(!ok)
             {
-              ::error(ERROR_INTEGER_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_INTEGER_LOOKUP, lex->get_path());
             }
 
           return(rval);
@@ -679,7 +684,7 @@ namespace y
 
           if(!ok)
             {
-              ::error(ERROR_DECIMAL_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_DECIMAL_LOOKUP, lex->get_path());
             }
 
           return(rval);
@@ -690,11 +695,11 @@ namespace y
           std::string id;
           bool        ok = lex->get_identifier(id);
 
-          GiNaC::ex*  rval = NULL;
+          GiNaC::ex*  rval = nullptr;
 
           if(ok)
             {
-              quantity* s = NULL;
+              const quantity* s = nullptr;
 
               bool exists = this->root->lookup_symbol(id, s);
 
@@ -707,15 +712,15 @@ namespace y
                   std::ostringstream msg;
 
                   msg << ERROR_UNKNOWN_IDENTIFIER << " '" << id << "'";
-                  ::error(msg.str(), lex->get_line(), lex->get_path());
+                  ::error(msg.str(), lex->get_path());
                 }
             }
           else
             {
-              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_line(), lex->get_path());
+              ::error(ERROR_IDENTIFIER_LOOKUP, lex->get_path());
             }
 
-          if(rval == NULL)
+          if(rval == nullptr)
             {
               rval = new GiNaC::ex(1);
             }

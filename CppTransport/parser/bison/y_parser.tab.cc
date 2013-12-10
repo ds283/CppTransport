@@ -428,7 +428,7 @@ namespace y {
           case 3:
 /* Line 664 of lalr1.cc  */
 #line 146 "y_parser.yy"
-    { driver->get_script()->set_potential((yysemantic_stack_[(4) - (3)].x)); }
+    { driver->set_potential((yysemantic_stack_[(4) - (3)].x)); }
     break;
 
   case 4:

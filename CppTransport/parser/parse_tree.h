@@ -12,6 +12,9 @@
 
 #include <iostream>
 
+#include "stepper.h"
+#include "indexorder.h"
+
 #include "quantity.h"
 #include "symbol_table.h"
 #include "filestack.h"
@@ -19,53 +22,50 @@
 #include "ginac/ginac.h"
 
 
+// abstract 'declaration' concept
+// the filestack* object used here is inherited from the parent lexeme,
+// so we don't have to keep track of its deletion -- it will be deleted
+// automatically when the parent lexeme is destroyed
 class declaration
   {
     public:
-      quantity*                          get_quantity();
-      virtual void                       print       (std::ostream& stream) = 0;
+      declaration(const quantity& o, const filestack* p); // constructor needed for const members
+
+      // return pointer to the symbol table object this declaration corresponds to
+      const quantity*                    get_quantity        () const;
+      virtual void                       print               (std::ostream& stream) const = 0;
 
     protected:
-      declaration
-        (const quantity& o, unsigned int l, filestack* p); // constructor needed for const members
 
       quantity*                          obj;
-      const unsigned int                 line;
-      filestack*                         path;
+      const filestack*                   path;
   };
+
 
 class field_declaration: public declaration
   {
     public:
-      field_declaration(const quantity& o, unsigned int l, filestack* p);
+      field_declaration(const quantity& o, const filestack* p);
       ~field_declaration();
 
-      void print(std::ostream& stream);
+      void print(std::ostream& stream) const;
   };
+
 
 class parameter_declaration: public declaration
   {
     public:
-      parameter_declaration(const quantity& o, unsigned int l, filestack* p);
+      parameter_declaration(const quantity& o, const filestack* p);
       ~parameter_declaration();
 
-      void print(std::ostream& stream);
+      void print(std::ostream& stream) const;
   };
+
 
 #define DEFAULT_ABS_ERR   (1E-6)
 #define DEFAULT_REL_ERR   (1E-6)
 #define DEFAULT_STEP_SIZE (1E-2)
 #define DEFAULT_STEPPER   "runge_kutta_dopri5"
-
-struct stepper
-  {
-    double      abserr;
-    double      relerr;
-    double      stepsize;
-    std::string name;
-  };
-
-enum indexorder { indexorder_left, indexorder_right };
 
 #define SYMBOL_TABLE_SIZE (1024)
 
@@ -75,7 +75,7 @@ class script
       script();
       ~script();
 
-      void                               print                    (std::ostream& stream);
+      void                               print                    (std::ostream& stream) const;
 
       bool                               add_field                (field_declaration* d);
       bool                               add_parameter            (parameter_declaration* d);
@@ -83,48 +83,48 @@ class script
       void                               set_background_stepper   (stepper* s);
       void                               set_perturbations_stepper(stepper* s);
 
-      const struct stepper&              get_background_stepper   ();
-      const struct stepper&              get_perturbations_stepper();
+      const struct stepper&              get_background_stepper   () const;
+      const struct stepper&              get_perturbations_stepper() const;
 
-      bool                               lookup_symbol            (std::string id, quantity*& s);
+      bool                               lookup_symbol            (std::string id, const quantity*& s) const;
 
-      unsigned int                       get_number_fields        ();
-      unsigned int                       get_number_params        ();
+      unsigned int                       get_number_fields        () const;
+      unsigned int                       get_number_params        () const;
 
-      std::vector<std::string>           get_field_list           ();
-      std::vector<std::string>           get_latex_list           ();
-      std::vector<std::string>           get_param_list           ();
-      std::vector<std::string>           get_platx_list           ();
+      std::vector<std::string>           get_field_list           () const;
+      std::vector<std::string>           get_latex_list           () const;
+      std::vector<std::string>           get_param_list           () const;
+      std::vector<std::string>           get_platx_list           () const;
 
-      std::vector<GiNaC::symbol>         get_field_symbols        ();
-      std::vector<GiNaC::symbol>         get_deriv_symbols        ();
-      std::vector<GiNaC::symbol>         get_param_symbols        ();
+      std::vector<GiNaC::symbol>         get_field_symbols        () const;
+      std::vector<GiNaC::symbol>         get_deriv_symbols        () const;
+      std::vector<GiNaC::symbol>         get_param_symbols        () const;
 
-      const GiNaC::symbol&               get_Mp_symbol            ();
+      const GiNaC::symbol&               get_Mp_symbol            () const;
 
       void                               set_name                 (const std::string n);
-      const std::string&                 get_name                 ();
+      const std::string&                 get_name                 () const;
 
       void                               set_author               (const std::string a);
-      const std::string&                 get_author               ();
+      const std::string&                 get_author               () const;
 
       void                               set_tag                  (const std::string t);
-      const std::string&                 get_tag                  ();
+      const std::string&                 get_tag                  () const;
 
       void                               set_core                 (const std::string c);
-      const std::string&                 get_core                 ();
+      const std::string&                 get_core                 () const;
 
       void                               set_implementation       (const std::string i);
-      const std::string&                 get_implementation       ();
+      const std::string&                 get_implementation       () const;
 
       void                               set_model                (const std::string m);
-      const std::string&                 get_model                ();
+      const std::string&                 get_model                () const;
 
       void                               set_indexorder           (enum indexorder o);
-      enum indexorder                    get_indexorder           ();
+      enum indexorder                    get_indexorder           () const;
 
       void                               set_potential            (GiNaC::ex* V);
-      GiNaC::ex                          get_potential            ();
+      GiNaC::ex                          get_potential            () const;
       void                               unset_potential          ();
 
     private:
@@ -155,7 +155,7 @@ class script
       GiNaC::symbol                      M_Planck;
       std::vector<GiNaC::symbol>         deriv_symbols;
 
-      symbol_table<quantity>*            table;
+      symbol_table<const quantity>*      table;
   };
 
 

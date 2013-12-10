@@ -19,16 +19,20 @@
 // **************************************************************************************
 
 
-macro_package::macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk,
-                             unsigned int dm)
-  : fields(N_f), parameters(N_p), order(o), prefix(pf), split(sp), package(pk),
+macro_package::macro_package(translation_unit* u, package_group* pkg, std::string pf, std::string sp, unsigned int dm)
+  : unit(u), package(pkg), prefix(pf), split(sp),
     recursion_max(dm), recursion_depth(0),
-    pre_rule_cache(pk->get_pre_ruleset()), post_rule_cache(pk->get_post_ruleset()), index_rule_cache(pk->get_index_ruleset())
+    pre_rule_cache(pkg->get_pre_ruleset()), post_rule_cache(pkg->get_post_ruleset()), index_rule_cache(pkg->get_index_ruleset())
   {
+    assert(unit != nullptr);
     assert(package != nullptr);
     assert(recursion_max > 0);
 
     if(recursion_max == 0) recursion_max = 1;
+
+    fields     = unit->get_number_fields();
+    parameters = unit->get_number_parameters();
+    order      = unit->get_index_order();
   }
 
 

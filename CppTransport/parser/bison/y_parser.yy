@@ -143,7 +143,7 @@
 program: script
         ;
 
-script: script potential expression semicolon                                           { driver->get_script()->set_potential($3); }
+script: script potential expression semicolon                                           { driver->set_potential($3); }
         | script name string semicolon                                                  { driver->set_name($3); }
         | script author string semicolon                                                { driver->set_author($3); }
         | script tag string semicolon                                                   { driver->set_tag($3); }

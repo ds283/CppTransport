@@ -4,10 +4,14 @@
 //
 
 
+#include <assert.h>
 #include <functional>
 
 #include "flow_tensors.h"
 #include "cse.h"
+#include "index_assignment.h"
+#include "u_tensor_factory.h"
+#include "translation_unit.h"
 
 
 #define BIND1(X) std::bind(&flow_tensors::X, this, std::placeholders::_1)
@@ -127,7 +131,7 @@ namespace macro_packages
 
     std::string flow_tensors::replace_V(const std::vector<std::string> &args)
       {
-        GiNaC::ex potential = this->data.parse_tree->get_potential();
+        GiNaC::ex potential = this->unit->get_potential();
 
         return(this->printer.ginac(potential));
       }
@@ -156,9 +160,9 @@ namespace macro_packages
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_parameter);
-        assert(indices[0].species < this->data.parse_tree->get_number_params());
+        assert(indices[0].species < this->unit->get_number_parameters());
 
-        std::vector<GiNaC::symbol> parameters = this->data.parse_tree->get_param_symbols();
+        std::vector<GiNaC::symbol> parameters = this->unit->get_parameter_symbols();
         return(this->printer.ginac(parameters[indices[0].species]));
       }
 
@@ -167,9 +171,9 @@ namespace macro_packages
       {
         assert(indices.size() == 1);
         assert(indices[0].trait == index_field);
-        assert(indices[0].species < this->data.parse_tree->get_number_fields());
+        assert(indices[0].species < this->unit->get_number_fields());
 
-        std::vector<GiNaC::symbol> fields = this->data.parse_tree->get_field_symbols();
+        std::vector<GiNaC::symbol> fields = this->unit->get_field_symbols();
         return(this->printer.ginac(fields[indices[0].species]));
       }
 
@@ -177,10 +181,10 @@ namespace macro_packages
     std::string flow_tensors::replace_coordinate(const std::vector<std::string>& args, std::vector<struct index_assignment> indices, void* state)
       {
         assert(indices.size() == 1);
-        assert(indices[0].species < this->data.parse_tree->get_number_fields());
+        assert(indices[0].species < this->unit->get_number_fields());
 
-        std::vector<GiNaC::symbol> fields  = this->data.parse_tree->get_field_symbols();
-        std::vector<GiNaC::symbol> momenta = this->data.parse_tree->get_deriv_symbols();
+        std::vector<GiNaC::symbol> fields  = this->unit->get_field_symbols();
+        std::vector<GiNaC::symbol> momenta = this->unit->get_deriv_symbols();
 
         std::string rval;
 

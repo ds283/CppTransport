@@ -16,7 +16,7 @@ void basic_warn(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << WARNING_TOKEN << msg;
-    std::cerr << out.str() << std::endl;
+    std::cout << out.str() << std::endl;
   }
 
 void basic_error(std::string const msg)
@@ -24,5 +24,5 @@ void basic_error(std::string const msg)
     std::ostringstream out;
 
     out << CPPTRANSPORT_NAME << ": " << ERROR_TOKEN << msg;
-    std::cerr << out.str() << std::endl;
+    std::cout << out.str() << std::endl;
   }

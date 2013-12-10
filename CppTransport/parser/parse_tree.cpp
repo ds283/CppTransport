@@ -16,22 +16,22 @@
 // ******************************************************************
 
 
-declaration::declaration(const quantity& o, unsigned int l, filestack* p)
-  : line(l), path(p)
+declaration::declaration(const quantity& o, const filestack* p)
+  : path(p)
   {
     assert(path != nullptr);
     this->obj = new quantity(o);
   }
 
 
-quantity* declaration::get_quantity()
+const quantity* declaration::get_quantity() const
   {
     return(this->obj);
   }
 
 
-field_declaration::field_declaration(const quantity& o, unsigned int l, filestack* p)
-  : declaration(o, l, p)
+field_declaration::field_declaration(const quantity& o, const filestack* p)
+  : declaration(o, p)
   {
   }
 
@@ -44,17 +44,17 @@ field_declaration::~field_declaration()
   }
 
 
-void field_declaration::print(std::ostream& stream)
+void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->obj->get_name()
            << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
-    stream << "  defined at line " << line << this->path->write();
+    stream << "  defined at line " << this->path->write();
   }
 
 
-parameter_declaration::parameter_declaration(const quantity& o, unsigned int l, filestack* p)
-  : declaration(o, l, p)
+parameter_declaration::parameter_declaration(const quantity& o, const filestack* p)
+  : declaration(o, p)
   {
   }
 
@@ -67,12 +67,12 @@ parameter_declaration::~parameter_declaration()
   }
 
 
-void parameter_declaration::print(std::ostream& stream)
+void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->obj->get_name()
       << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
 
-    stream << "  defined at line " << line << this->path->write();
+    stream << "  defined at line " << this->path->write();
   }
 
 
@@ -82,7 +82,7 @@ void parameter_declaration::print(std::ostream& stream)
 script::script()
   : potential_set(false), potential(NULL), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
   {
-    this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
+    this->table = new symbol_table<const quantity>(SYMBOL_TABLE_SIZE);
 
     // insert M_Planck symbol into the symbol table
     attributes attrs;
@@ -135,7 +135,7 @@ void script::set_name(const std::string n)
   }
 
 
-const std::string& script::get_name()
+const std::string& script::get_name() const
   {
     return(this->name);
   }
@@ -147,7 +147,7 @@ void script::set_author(const std::string a)
   }
 
 
-const std::string& script::get_author()
+const std::string& script::get_author() const
   {
     return(this->author);
   }
@@ -159,7 +159,7 @@ void script::set_tag(const std::string t)
   }
 
 
-const std::string& script::get_tag()
+const std::string& script::get_tag() const
   {
     return(this->tag);
   }
@@ -171,7 +171,7 @@ void script::set_core(const std::string c)
   }
 
 
-const std::string& script::get_core()
+const std::string& script::get_core() const
   {
     return(this->core);
   }
@@ -183,7 +183,7 @@ void script::set_implementation(const std::string i)
   }
 
 
-const std::string& script::get_implementation()
+const std::string& script::get_implementation() const
   {
     return(this->implementation);
   }
@@ -195,7 +195,7 @@ void script::set_model(const std::string m)
   }
 
 
-const std::string& script::get_model()
+const std::string& script::get_model() const
   {
     return(this->model);
   }
@@ -207,13 +207,13 @@ void script::set_indexorder(enum indexorder o)
   }
 
 
-enum indexorder script::get_indexorder()
+enum indexorder script::get_indexorder() const
   {
     return(this->order);
   }
 
 
-void script::print(std::ostream& stream)
+void script::print(std::ostream& stream) const
   {
     stream << "Script summary:" << std::endl;
     stream << "===============" << std::endl;
@@ -227,7 +227,7 @@ void script::print(std::ostream& stream)
 
     stream << "Fields:" << std::endl;
     stream << "=======" << std::endl;
-    for(std::deque<field_declaration*>::iterator ptr = this->fields.begin();
+    for(std::deque<field_declaration*>::const_iterator ptr = this->fields.begin();
         ptr != this->fields.end(); ptr++)
       {
         (*ptr)->print(stream);
@@ -236,7 +236,7 @@ void script::print(std::ostream& stream)
 
     stream << "Parameters:" << std::endl;
     stream << "===========" << std::endl;
-    for(std::deque<parameter_declaration*>::iterator ptr = this->parameters.begin();
+    for(std::deque<parameter_declaration*>::const_iterator ptr = this->parameters.begin();
         ptr != this->parameters.end(); ptr++)
       {
         (*ptr)->print(stream);
@@ -264,8 +264,8 @@ void script::print(std::ostream& stream)
 bool script::add_field(field_declaration* d)
   {
     // search for an existing entry in the symbol table
-    quantity* p;
-    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
+    const quantity* p;
+    bool            exists = this->table->find(d->get_quantity()->get_name(), p);
 
     if(exists)
       {
@@ -294,8 +294,8 @@ bool script::add_field(field_declaration* d)
 bool script::add_parameter(parameter_declaration* d)
   {
     // search for an existing entry in the symbol table
-    quantity* p;
-    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
+    const quantity* p;
+    bool            exists = this->table->find(d->get_quantity()->get_name(), p);
 
     if(exists)
       {
@@ -329,37 +329,37 @@ void script::set_perturbations_stepper(stepper *s)
   }
 
 
-const struct stepper& script::get_background_stepper()
+const struct stepper& script::get_background_stepper() const
   {
     return(this->background_stepper);
   }
 
 
-const struct stepper& script::get_perturbations_stepper()
+const struct stepper& script::get_perturbations_stepper() const
   {
     return(this->perturbations_stepper);
   }
 
 
-bool script::lookup_symbol(std::string id, quantity *& s)
+bool script::lookup_symbol(std::string id, const quantity*& s) const
   {
     return(this->table->find(id, s));
   }
 
 
-unsigned int script::get_number_fields()
+unsigned int script::get_number_fields() const
   {
     return(this->fields.size());
   }
 
 
-unsigned int script::get_number_params()
+unsigned int script::get_number_params() const
   {
     return(this->parameters.size());
   }
 
 
-std::vector<std::string> script::get_field_list()
+std::vector<std::string> script::get_field_list() const
   {
     std::vector<std::string> rval;
 
@@ -372,7 +372,7 @@ std::vector<std::string> script::get_field_list()
   }
 
 
-std::vector<std::string> script::get_latex_list()
+std::vector<std::string> script::get_latex_list() const
   {
     std::vector<std::string> rval;
 
@@ -385,7 +385,7 @@ std::vector<std::string> script::get_latex_list()
   }
 
 
-std::vector<std::string> script::get_param_list()
+std::vector<std::string> script::get_param_list() const
   {
     std::vector<std::string> rval;
 
@@ -398,7 +398,7 @@ std::vector<std::string> script::get_param_list()
   }
 
 
-std::vector<std::string> script::get_platx_list()
+std::vector<std::string> script::get_platx_list() const
   {
     std::vector<std::string> rval;
 
@@ -411,7 +411,7 @@ std::vector<std::string> script::get_platx_list()
   }
 
 
-std::vector<GiNaC::symbol> script::get_field_symbols()
+std::vector<GiNaC::symbol> script::get_field_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
@@ -424,13 +424,13 @@ std::vector<GiNaC::symbol> script::get_field_symbols()
   }
 
 
-std::vector<GiNaC::symbol> script::get_deriv_symbols()
+std::vector<GiNaC::symbol> script::get_deriv_symbols() const
   {
     return(this->deriv_symbols);
   }
 
 
-std::vector<GiNaC::symbol> script::get_param_symbols()
+std::vector<GiNaC::symbol> script::get_param_symbols() const
   {
     std::vector<GiNaC::symbol> rval;
 
@@ -443,7 +443,7 @@ std::vector<GiNaC::symbol> script::get_param_symbols()
   }
 
 
-const GiNaC::symbol& script::get_Mp_symbol()
+const GiNaC::symbol& script::get_Mp_symbol() const
   {
     return(this->M_Planck);
   }
@@ -463,7 +463,7 @@ void script::set_potential(GiNaC::ex* V)
   }
 
 
-GiNaC::ex script::get_potential()
+GiNaC::ex script::get_potential() const
   {
     GiNaC::ex V = GiNaC::numeric(0);    // returned in case no potential has been set
 

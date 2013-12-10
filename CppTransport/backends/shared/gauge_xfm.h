@@ -18,8 +18,8 @@ namespace macro_packages
     class gauge_xfm: public replacement_rule_package
       {
       public:
-        gauge_xfm(replacement_data& d, language_printer& p)
-          : replacement_rule_package(d, p)
+        gauge_xfm(translation_unit* u, language_printer& p)
+          : replacement_rule_package(u, p)
           {
           }
 

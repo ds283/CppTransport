@@ -28,34 +28,34 @@ void error(std::string const msg)
   }
 
 
-void warn(std::string const msg, unsigned int line, filestack* path)
+void warn(std::string const msg, const filestack* path)
   {
-    warn(msg, line, path, WARN_PATH_LEVEL);
+    warn(msg, path, WARN_PATH_LEVEL);
   }
 
 
-void error(std::string const msg, unsigned int line, filestack* path)
+void error(std::string const msg, const filestack* path)
   {
-    error(msg, line, path, ERROR_PATH_LEVEL);
+    error(msg, path, ERROR_PATH_LEVEL);
   }
 
 
-void warn(std::string const msg, unsigned int line, filestack* path, unsigned int level)
+void warn(std::string const msg, const filestack* path, unsigned int level)
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << line << path->write(level) << std::endl;
+    out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
     out << ERROR_MESSAGE_WRAP_PAD << msg << std::endl;
 
     basic_warn(out.str());
   }
 
 
-void error(std::string const msg, unsigned int line, filestack* path, unsigned int level)
+void error(std::string const msg, const filestack* path, unsigned int level)
   {
     std::ostringstream out;
 
-    out << ERROR_MESSAGE_AT_LINE << " " << line << path->write(level) << std::endl;
+    out << ERROR_MESSAGE_AT_LINE << " " << path->write(level) << std::endl;
     out << ERROR_MESSAGE_WRAP_PAD << msg << std::endl;
 
     basic_error(out.str());

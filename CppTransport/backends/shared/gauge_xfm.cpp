@@ -4,13 +4,17 @@
 //
 
 
+#include <assert.h>
 #include <functional>
 
 #include "gauge_xfm.h"
 #include "cse.h"
+#include "u_tensor_factory.h"
+
 
 #define BIND1(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1)
 #define BIND3(X) std::bind(&gauge_xfm::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
+
 
 namespace macro_packages
   {

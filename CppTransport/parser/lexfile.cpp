@@ -16,11 +16,12 @@
 // ******************************************************************
 
 
-lexfile::lexfile(std::string fnam)
-  : file(fnam), line(0), c(0), state(lexfile_unready)
+lexfile::lexfile(std::string fnam, filestack* s)
+  : file(fnam), stack(s), state(lexfile_unready)
   {
     stream.open(fnam.c_str());    // when building with GCC LLVM 4.2, stream.open() doesn't accept std::string
     assert(stream.is_open());
+    assert(stack != nullptr);
   }
 
 lexfile::~lexfile()
@@ -65,7 +66,7 @@ char lexfile::get(enum lexfile_outcome& state)
               else                                  // can assume this character is valid
                 {
                   this->state = lexfile_ready;
-                  if(this->c == '\n') this->line++;
+                  if(this->c == '\n') this->stack->increment_line();
                 }
             }
           break;
@@ -104,7 +105,7 @@ void lexfile::eat()
     this->state = lexfile_unready;
   }
 
-enum lexfile_outcome lexfile::current_state()
+enum lexfile_outcome lexfile::current_state() const
   {
     enum lexfile_outcome rval = lex_ok;
 
@@ -118,9 +119,4 @@ enum lexfile_outcome lexfile::current_state()
       }
 
     return(rval);
-  }
-
-unsigned int lexfile::current_line()
-  {
-    return(this->line);
   }

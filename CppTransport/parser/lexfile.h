@@ -13,6 +13,9 @@
 #include <iostream>
 
 
+#include "filestack.h"
+
+
 // reading from the stream is a finite state machine
 // the available internal states are:
 
@@ -39,24 +42,22 @@ enum lexfile_outcome
 class lexfile
   {
     public:
-      lexfile(std::string fnam);
+      lexfile(std::string fnam, filestack* s);
       ~lexfile();
 
       char                 get(enum lexfile_outcome& state);
       void                 eat();
 
-      enum lexfile_outcome current_state();
-
-      unsigned int         current_line();
+      enum lexfile_outcome current_state() const;
 
     private:
-      std::string        file;
-      std::ifstream      stream;
+      std::string          file;
+      std::ifstream        stream;
 
-      unsigned int       line;
+      filestack*           stack;
 
-      char               c;
-      enum lexfile_state state;
+      char                 c;
+      enum lexfile_state   state;
   };
 
 

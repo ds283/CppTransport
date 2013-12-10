@@ -13,7 +13,7 @@
 #include "vexcl_group.h"
 
 
-package_group* package_group_factory(std::string backend, macro_packages::replacement_data& data, buffer* buf, bool do_cse)
+package_group* package_group_factory(std::string backend, translation_unit* unit, buffer* buf)
   {
     package_group* rval = nullptr;
 
@@ -23,21 +23,12 @@ package_group* package_group_factory(std::string backend, macro_packages::replac
     // address of a constructor (there is no instance to go with it -- we need new to do that for us)
     if(backend == "cpp")
       {
-        rval = new core_group(data, do_cse);
+        rval = new core_group(unit);
       }
     else if(backend == "vexcl")
       {
-        rval = new vexcl_group(data, do_cse);
+        rval = new vexcl_group(unit);
       }
-    else
-      {
-        std::ostringstream msg;
-        msg << ERROR_TEMPLATE_BACKEND_A << " '" << data.template_in << "' " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
-        error(msg.str());
-      }
-
-    // push information about the output buffer to the selected backend
-    if(rval != nullptr) rval->set_buffer(buf);
 
     return(rval);
   }

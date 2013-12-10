@@ -13,6 +13,7 @@
 
 #include "replacement_rule_package.h"
 #include "buffer.h"
+#include "core.h"
 
 
 namespace macro_packages
@@ -21,11 +22,10 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(replacement_data& d, language_printer& p,
+        temporary_pool(translation_unit* u, language_printer& p,
                        unsigned int dm = DEFAULT_RECURSION_DEPTH,
                        std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE)
-          : pool_template(t), ms(nullptr), buf(nullptr),
-            replacement_rule_package(d, p)
+          : pool_template(t), replacement_rule_package(u, p)
           {
           }
 
@@ -35,16 +35,10 @@ namespace macro_packages
 
         void                           deposit_temporaries();
 
-        void                           set_buffer(buffer* b);
-        void                           set_macros(macro_package* m);
-
       protected:
-        buffer*        buf;
-        macro_package* ms;
+        std::string                    pool_template;
 
-        std::string    pool_template;
-
-        std::string    replace_temp_pool (const std::vector<std::string>& args);
+        std::string                    replace_temp_pool(const std::vector<std::string>& args);
       };
 
   } // namespace macro_packages

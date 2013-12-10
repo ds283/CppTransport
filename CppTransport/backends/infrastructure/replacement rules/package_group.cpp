@@ -8,12 +8,15 @@
 
 #include "u_tensor_factory.h"
 #include "flatten.h"
+#include "error.h"
 
 
-package_group::package_group(macro_packages::replacement_data& d)
-  : data(d), cse_worker(nullptr)
+package_group::package_group(translation_unit* u)
+  : unit(u), cse_worker(nullptr)
   {
-    u_factory = make_u_tensor_factory(data.parse_tree);
+    assert(unit != nullptr);
+
+    u_factory = make_u_tensor_factory(unit);
     fl        = new flattener(1);
   }
 
@@ -22,6 +25,18 @@ package_group::~package_group()
   {
     delete u_factory;
     delete fl;
+  }
+
+
+void package_group::error(const std::string msg)
+  {
+    ::error(msg, this->unit->get_stack());
+  }
+
+
+void package_group::warn(const std::string msg)
+  {
+    ::warn(msg, this->unit->get_stack());
   }
 
 

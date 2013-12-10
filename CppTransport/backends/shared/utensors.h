@@ -18,7 +18,7 @@ namespace macro_packages
     class utensors: public replacement_rule_package
       {
       public:
-        utensors(replacement_data& d, language_printer& p,
+        utensors(translation_unit* u, language_printer& p,
                  std::string da=OUTPUT_DEFAULT_A_NAME, std::string dHsq=OUTPUT_DEFAULT_HSQ_NAME,
                  std::string deps=OUTPUT_DEFAULT_EPS_NAME,
                  std::string dk=OUTPUT_DEFAULT_K_NAME,
@@ -29,7 +29,7 @@ namespace macro_packages
             default_k(dk), default_k1(dk1), default_k2(dk2), default_k3(dk3),
             default_u2(du2), default_u3(du3),
             index_pad(ip),
-            replacement_rule_package(d, p)
+            replacement_rule_package(u, p)
         {
         }
 

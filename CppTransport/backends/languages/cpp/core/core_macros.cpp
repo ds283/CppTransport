@@ -7,9 +7,11 @@
 #include <string>
 #include <sstream>
 
+#include <assert.h>
 #include <functional>
 
 #include "core_macros.h"
+#include "translation_unit.h"
 
 
 #define BIND(X) std::bind(&core_macros::X, this, std::placeholders::_1)
@@ -123,7 +125,7 @@ namespace cpp
 
     std::string core_macros::replace_backg_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.parse_tree->get_background_stepper();
+        const struct stepper& s = this->unit->get_background_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);
@@ -134,7 +136,7 @@ namespace cpp
 
     std::string core_macros::replace_pert_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.parse_tree->get_perturbations_stepper();
+        const struct stepper& s = this->unit->get_perturbations_stepper();
 
         assert(args.size() == 1);
         std::string state_name = (args.size() >= 1 ? args[0] : this->default_state);

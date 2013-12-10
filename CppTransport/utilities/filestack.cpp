@@ -7,18 +7,6 @@
 #include "filestack.h"
 
 
-filestack::filestack()
-  : locked(false)
-  {
-  }
-
-
 filestack::~filestack()
   {
-  }
-
-
-void filestack::lock()
-  {
-    this->locked = true;
   }

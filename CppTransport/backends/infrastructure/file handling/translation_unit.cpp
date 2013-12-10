@@ -5,16 +5,13 @@
 
 
 #include "core.h"
-#include "msg_en.h"
-
 #include "translation_unit.h"
+#include "parse_tree.h"
+#include "output_stack.h"
 
 #include "boost/algorithm/string.hpp"
 #include "boost/range/algorithm/remove_if.hpp"
-#include "boost/lexical_cast.hpp"
 
-#include "buffer.h"
-#include "package_group_factory.h"
 
 // FAIL return code for Bison parser
 #ifndef FAIL
@@ -105,6 +102,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
     if(parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
     // in.driver->get_script()->print(std::cerr);
 
+    // cache details about this translation unit
     if(core_out != "")
       {
         core_output = core_out;
@@ -113,6 +111,8 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
       {
         core_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_core()));
       }
+    core_guard = boost::to_upper_copy(leafname(core_output));
+    core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
 
     if(implementation_out != "")
       {
@@ -122,16 +122,33 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
       {
         implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_implementation()));
       }
+    implementation_guard = boost::to_upper_copy(leafname(implementation_output));
+    implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
+
+    stack = new output_stack;
+    outstream = new translator(this);
   }
 
 
 translation_unit::~translation_unit()
   {
     // deallocate storage
+
+    assert(this->stream != nullptr);
+    assert(this->parser != nullptr);
+    assert(this->lexer != nullptr);
+    assert(this->driver != nullptr);
+
     delete this->stream;
     delete this->parser;
     delete this->lexer;
     delete this->driver;
+
+    assert(this->stack != nullptr);
+    assert(this->outstream != nullptr);
+
+    delete this->stack;
+    delete this->outstream;
   }
 
 
@@ -142,12 +159,12 @@ unsigned int translation_unit::do_replacement()
   {
     unsigned int rval = 0;
 
-    script* s = this->driver->get_script();
+    const script* s = this->driver->get_script();
 
     std::string in = s->get_core();
     if(in != "")
       {
-        rval += this->apply(in, this->core_output);
+        rval += this->outstream->translate(in, this->core_output, process_core);
       }
     else
       {
@@ -158,7 +175,7 @@ unsigned int translation_unit::do_replacement()
     in = s->get_implementation();
     if(in != "")
       {
-        rval += this->apply(in, this->implementation_output);
+        rval += this->outstream->translate(in, this->implementation_output, process_implementation);
       }
     else
       {
@@ -170,124 +187,165 @@ unsigned int translation_unit::do_replacement()
   }
 
 
-unsigned int translation_unit::apply(std::string in, std::string out)
+const std::string& translation_unit::get_model_input() const
   {
-    unsigned int rval = 0;
-    std::string  template_in;
-
-    if(this->path->fqpn(in + ".h", template_in) == true)
-      {
-        macro_packages::replacement_data data;
-
-        data.parse_tree         = this->driver->get_script();
-        data.script_in          = this->name;
-
-        data.template_in        = template_in;
-        data.file_out           = out;
-
-        data.core_out           = this->core_output;
-        data.implementation_out = this->implementation_output;
-
-        data.guard              = boost::to_upper_copy(leafname(out));
-        data.guard.erase(boost::remove_if(data.guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
-
-        // this information is available via parse_tree->get_X() anyway,
-        // but is helpful to have it nearer the top of the data structure
-        data.num_fields         = data.parse_tree->get_number_fields();
-        data.num_params         = data.parse_tree->get_number_params();
-        data.index_order        = data.parse_tree->get_indexorder();
-
-        // set up a 'fake' inclusion list, so that errors can include the line number in the template
-        struct inclusion incl;
-        incl.line = 0;
-        incl.name = template_in;
-        data.path.push_back(incl);
-        data.current_line = 1;
-
-        rval += this->process(data);
-      }
-    else
-      {
-        std::ostringstream msg;
-        msg << ERROR_MISSING_TEMPLATE << " '" << in << ".h'";
-        error(msg.str());
-      }
-
-    return(rval);
+    return(this->name);
   }
 
 
-unsigned int translation_unit::process(macro_packages::replacement_data& data)
+const std::string& translation_unit::get_core_output() const
   {
-    unsigned int  rval = 0;
-    std::ifstream in;
+    return(this->core_output);
+  }
 
-    in.open(data.template_in.c_str());
-    if(in.is_open() && !in.fail())
-      {
-        std::string line;
-        std::getline(in, line);
 
-        std::vector<std::string> tokens;
-        boost::split(tokens, line, boost::is_any_of(" ,:;.="));
-        if(tokens.size() < 3)
-          {
-            std::ostringstream msg;
-            msg << ERROR_TOKENIZE_TEMPLATE_HEADER << " '" << data.template_in << "'";
-            error(msg.str());
-          }
-        else
-          {
-            double minver = boost::lexical_cast<double>(tokens[2]);
-            if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
-              {
-                // generate an output buffer and an appropriate backend
-                buffer*        buf     = new buffer;
-                package_group* backend = package_group_factory(tokens[1], data, buf, this->do_cse);
+const std::string& translation_unit::get_implementation_output() const
+  {
+    return(this->implementation_output);
+  }
 
-                if(backend != nullptr)
-                  {
-                    macro_package* macro = new macro_package(data.num_fields, data.num_params, data.index_order,
-                                                             BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT, backend);
 
-                    // inform the selected backend of the final macro package
-                    // TODO consider replacing this
-                    backend->set_macros(macro);
+const std::string& translation_unit::get_core_guard() const
+  {
+    return(this->core_guard);
+  }
 
-                    while(in.eof() == false && in.fail() == false)
-                      {
-                        std::getline(in, line);
-                        rval += macro->apply(line);
 
-                        buf->write_to_end(line);
-                        data.current_line++;
-                      }
+const std::string& translation_unit::get_implementation_guard() const
+  {
+    return(this->implementation_guard);
+  }
 
-                    // no need to flush temporaries before writing out the buffer, because that
-                    // happens automatically via the closure handlers
-                    buf->emit(data.file_out);
 
-                    delete buf;
-                  }
-              }
-            else
-              {
-                std::ostringstream msg;
-                msg << ERROR_TEMPLATE_TOO_RECENT_A << " '" << data.template_in << "' " << ERROR_TEMPLATE_TOO_RECENT_B << minver << ")";
-                error(msg.str());
-              }
-          }
-      }
-    else
-      {
-        std::ostringstream msg;
-        msg << ERROR_READING_TEMPLATE << " '" << data.template_in << "'";
-        error(msg.str());
-      }
+bool translation_unit::get_do_cse() const
+  {
+    return(this->do_cse);
+  }
 
-    in.close();
 
-    return(rval);
+const std::string& translation_unit::get_name() const
+  {
+    return(this->driver->get_script()->get_name());
+  }
+
+
+const std::string& translation_unit::get_author() const
+  {
+    return(this->driver->get_script()->get_author());
+  }
+
+
+const std::string& translation_unit::get_model() const
+  {
+    return(this->driver->get_script()->get_model());
+  }
+
+
+const std::string& translation_unit::get_tag() const
+  {
+    return(this->driver->get_script()->get_tag());
+  }
+
+
+unsigned int translation_unit::get_number_fields() const
+  {
+    return(this->driver->get_script()->get_number_fields());
+  }
+
+
+unsigned int translation_unit::get_number_parameters() const
+  {
+    return(this->driver->get_script()->get_number_params());
+  }
+
+
+enum indexorder translation_unit::get_index_order() const
+  {
+    return(this->driver->get_script()->get_indexorder());
+  }
+
+
+const GiNaC::symbol& translation_unit::get_Mp_symbol() const
+  {
+    return(this->driver->get_script()->get_Mp_symbol());
+  }
+
+
+const GiNaC::ex translation_unit::get_potential() const
+  {
+    return(this->driver->get_script()->get_potential());
+  }
+
+
+const std::vector<GiNaC::symbol> translation_unit::get_field_symbols() const
+  {
+    return(this->driver->get_script()->get_field_symbols());
+  }
+
+
+const std::vector<GiNaC::symbol> translation_unit::get_deriv_symbols() const
+  {
+    return(this->driver->get_script()->get_deriv_symbols());
+  }
+
+
+const std::vector<GiNaC::symbol> translation_unit::get_parameter_symbols() const
+  {
+    return(this->driver->get_script()->get_param_symbols());
+  }
+
+
+const std::vector<std::string> translation_unit::get_field_list() const
+  {
+    return(this->driver->get_script()->get_field_list());
+  }
+
+
+const std::vector<std::string> translation_unit::get_latex_list() const
+  {
+    return(this->driver->get_script()->get_latex_list());
+  }
+
+
+const std::vector<std::string> translation_unit::get_param_list() const
+  {
+    return(this->driver->get_script()->get_param_list());
+  }
+
+
+const std::vector<std::string> translation_unit::get_platx_list() const
+  {
+    return(this->driver->get_script()->get_platx_list());
+  }
+
+
+const struct stepper& translation_unit::get_background_stepper() const
+  {
+    return(this->driver->get_script()->get_background_stepper());
+  }
+
+
+const struct stepper& translation_unit::get_perturbations_stepper() const
+  {
+    return(this->driver->get_script()->get_perturbations_stepper());
+  }
+
+
+finder* translation_unit::get_finder()
+  {
+    return(this->path);
+  }
+
+
+output_stack* translation_unit::get_stack()
+  {
+    return(this->stack);
+  }
+
+
+translator* translation_unit::get_translator()
+  {
+    return(this->outstream);
   }
 
 

@@ -24,7 +24,7 @@ class attributes
       attributes();
       ~attributes();
 
-      bool get_latex  (std::string& l);
+      bool get_latex  (std::string& l) const;
       void set_latex  (const std::string l);
       void unset_latex();
 
@@ -37,26 +37,24 @@ class attributes
 class quantity
   {
     public:
-      quantity(std::string n, unsigned int l, filestack* p);                 // basic constructor
-      quantity(std::string n, attributes& a, unsigned int l, filestack* p);  // constructor with attributes
-      quantity(std::string n, attributes& a, GiNaC::symbol& s);              // constructor with GiNaC symbol
+      quantity(std::string n, const filestack* p);                    // basic constructor
+      quantity(std::string n, attributes& a, const filestack* p);     // constructor with attributes
+      quantity(std::string n, attributes& a, GiNaC::symbol& s);       // constructor with GiNaC symbol, but no filestack data
       ~quantity();
 
-      void                                print(std::ostream& stream);
+      void                                print(std::ostream& stream) const;
 
-      const std::string                   get_name();
-      const std::string                   get_latex_name();
+      const std::string                   get_name() const;
+      const std::string                   get_latex_name() const;
 
-      const GiNaC::symbol*                get_ginac_symbol();
+      const GiNaC::symbol*                get_ginac_symbol() const;
 
-      unsigned int                        get_line();
-      filestack*                          get_path();
+      const filestack*                    get_path() const;
 
     protected:
       std::string                         name;
 
-      const unsigned int                  line;
-      filestack*                          path;
+      const filestack*                    path;
 
       attributes                          attrs;
       GiNaC::symbol                       ginac_symbol;

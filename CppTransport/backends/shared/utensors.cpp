@@ -4,10 +4,15 @@
 //
 
 
+#include <assert.h>
 #include <functional>
+#include <sstream>
 
 #include "utensors.h"
 #include "cse.h"
+#include "u_tensor_factory.h"
+#include "translation_unit.h"
+
 
 #define BIND1(X) std::bind(&utensors::X, this, std::placeholders::_1)
 #define BIND3(X) std::bind(&utensors::X, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3)
@@ -228,8 +233,8 @@ namespace macro_packages
         std::ostringstream out;
 
         assert(indices.size() == 2);
-        assert(indices[0].species < this->data.parse_tree->get_number_fields());
-        assert(indices[1].species < this->data.parse_tree->get_number_fields());
+        assert(indices[0].species < this->unit->get_number_fields());
+        assert(indices[1].species < this->unit->get_number_fields());
 
         assert(args.size() == 1);
 
@@ -250,9 +255,9 @@ namespace macro_packages
         std::ostringstream out;
 
         assert(indices.size() == 3);
-        assert(indices[0].species < this->data.parse_tree->get_number_fields());
-        assert(indices[1].species < this->data.parse_tree->get_number_fields());
-        assert(indices[2].species < this->data.parse_tree->get_number_fields());
+        assert(indices[0].species < this->unit->get_number_fields());
+        assert(indices[1].species < this->unit->get_number_fields());
+        assert(indices[2].species < this->unit->get_number_fields());
 
         assert(args.size() == 1);
 

@@ -15,6 +15,8 @@
 #define OUTPUT_STACK_INCLUDED_FROM            "included from line"
 #define OUTPUT_STACK_OF_FILE                  "of file"
 
+#define ERROR_FILESTACK_PUSH                  "Internal error: call to push() method of abstract filestack"
+
 #define ERROR_OPEN_TOPLEVEL                   "Could not open top-level file"
 #define ERROR_INCLUDE_FILE                    "Could not open included file"
 #define ERROR_INCLUDE_DIRECTIVE               "Expected filename following #include directive"
@@ -27,11 +29,15 @@
 #define ERROR_NO_IMPLEMENTATION_TEMPLATE      "fatal: No implementation template specified"
 #define ERROR_MISSING_TEMPLATE                "Could not find specified template"
 #define ERROR_READING_TEMPLATE                "Error reading from template file"
-#define ERROR_TOKENIZE_TEMPLATE_HEADER        "Could not find properly-formed header in template file"
+#define ERROR_IMPROPER_TEMPLATE_HEADER        "Improperly formed header line in template"
+#define ERROR_EXPECTED_TEMPLATE_BACKEND       "Expected backend specifier following 'backend' keyword in template"
+#define ERROR_EXPECTED_TEMPLATE_MINVER        "Expected minver specifier following 'minver' keyword in template"
 #define ERROR_TEMPLATE_TOO_RECENT_A           "Template"
 #define ERROR_TEMPLATE_TOO_RECENT_B           "requires more recent version of CppTransport (>"
 #define ERROR_TEMPLATE_BACKEND_A              "Template"
 #define ERROR_TEMPLATE_BACKEND_B              "requires unknown backend"
+#define WARNING_DUPLICATE_TEMPLATE_BACKEND    "Header line contains duplicate backend specifiers in template"
+#define WARNING_DUPLICATE_TEMPLATE_MINVER     "Header line contains duplicate minver specifiers in template"
 
 #define ERROR_VEXCL_NO_STEPPER_STATE          "Fatal: stepper state type specification is mandatory with VexCL backend"
 #define WARNING_VEXCL_STEPPER_IGNORED         "Using stepper type 'runge_kutta_dopri5'; VexCL backend ignores stepper specification"

@@ -4,12 +4,14 @@
 //
 
 
+#include <assert.h>
 #include <string>
 #include <sstream>
 
 #include <functional>
 
 #include "vexcl_steppers.h"
+#include "translation_unit.h"
 
 
 #define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
@@ -73,7 +75,7 @@ namespace cpp
 
     std::string vexcl_steppers::replace_backg_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.parse_tree->get_background_stepper();
+        const struct stepper& s = this->unit->get_background_stepper();
 
         assert(args.size() == 1);
         if(args.size() < 1)
@@ -99,7 +101,7 @@ namespace cpp
 
     std::string vexcl_steppers::replace_pert_stepper(const std::vector<std::string>& args)
       {
-        const struct stepper s = data.parse_tree->get_perturbations_stepper();
+        const struct stepper& s = this->unit->get_perturbations_stepper();
 
         assert(args.size() == 1);
         if(args.size() < 1)

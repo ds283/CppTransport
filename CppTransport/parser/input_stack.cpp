@@ -7,17 +7,11 @@
 #include <string>
 #include <sstream>
 
+
 #include "msg_en.h"
 #include "basic_error.h"
-
-
 #include "input_stack.h"
 
-
-input_stack::input_stack()
-  : filestack()
-  {
-  }
 
 input_stack::~input_stack()
   {
@@ -26,69 +20,80 @@ input_stack::~input_stack()
 
 void input_stack::push(const std::string name)
   {
-    if(!locked)
-      {
-        struct inclusion incl;
+    struct inclusion incl;
 
-        incl.line = 1;    // line number doesn't matter; // it will get overwritten later
-        incl.name = name;
+    incl.line = 1;
+    incl.name = name;
 
-        this->inclusions.push_front(incl);
-      }
-    else
-      {
-        basic_error(ERROR_FILESTACK_LOCKED);
-      }
+    this->inclusions.push_front(incl);
   }
 
 
 void input_stack::set_line(unsigned int line)
   {
-    if(!locked)
+    if(inclusions.size() == 0)
       {
-        if(inclusions.size() == 0)
-          {
-            basic_error(ERROR_FILESTACK_EMPTY);
-          }
-        else
-          {
-            this->inclusions[0].line = line;
-          }
+        basic_error(ERROR_FILESTACK_EMPTY);
       }
     else
       {
-        basic_error(ERROR_FILESTACK_LOCKED);
+        this->inclusions[0].line = line;
       }
+  }
+
+
+unsigned int input_stack::increment_line()
+  {
+    unsigned int rval = 0;
+
+    if(inclusions.size() == 0)
+      {
+        basic_error(ERROR_FILESTACK_EMPTY);
+      }
+    else
+      {
+        rval = ++this->inclusions[0].line;
+      }
+    return(rval);
+  }
+
+
+unsigned int input_stack::get_line() const
+  {
+    unsigned int rval = 0;
+
+    if(inclusions.size() == 0)
+      {
+        basic_error(ERROR_FILESTACK_EMPTY);
+      }
+    else
+      {
+        rval = this->inclusions[0].line;
+      }
+    return(rval);
   }
 
 
 void input_stack::pop()
   {
-    if(!locked)
+    if(inclusions.size() > 0)
       {
-        if(inclusions.size() > 0)
-          {
-            this->inclusions.pop_front();
-          }
-        else
-          {
-            basic_error(ERROR_FILESTACK_TOO_SHORT);
-          }
+        this->inclusions.pop_front();
       }
     else
       {
-        basic_error(ERROR_FILESTACK_LOCKED);
+        basic_error(ERROR_FILESTACK_TOO_SHORT);
       }
   }
 
 
-std::string input_stack::write()
+std::string input_stack::write() const
   {
     return this->write(this->inclusions.size());
   }
 
 
-std::string input_stack::write(unsigned int level)
+std::string input_stack::write(unsigned int level) const
   {
     std::ostringstream out;
 
@@ -99,7 +104,7 @@ std::string input_stack::write(unsigned int level)
 
     if(level >= 1)
       {
-        out << " " << OUTPUT_STACK_OF << " '" << this->inclusions[0].name << "'";
+        out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " '" << this->inclusions[0].name << "'";
       }
     out << std::endl;
 
@@ -109,5 +114,5 @@ std::string input_stack::write(unsigned int level)
           << " " << OUTPUT_STACK_OF_FILE << " '" << this->inclusions[i].name << "'" << std::endl;
       }
 
-    return(out.msg());
+    return(out.str());
   }

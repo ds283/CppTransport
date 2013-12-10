@@ -5,6 +5,9 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
+
+#include <assert.h>
+
 #include "u_tensor_factory.h"
 
 

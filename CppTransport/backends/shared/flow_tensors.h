@@ -20,8 +20,8 @@ namespace macro_packages
     class flow_tensors : public replacement_rule_package
       {
       public:
-        flow_tensors(replacement_data& d, language_printer& p)
-          : replacement_rule_package(d, p)
+        flow_tensors(translation_unit* u, language_printer& p)
+          : replacement_rule_package(u, p)
           {
           }
 

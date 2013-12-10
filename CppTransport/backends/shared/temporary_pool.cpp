@@ -4,10 +4,13 @@
 //
 
 
+#include <assert.h>
 #include <string>
 #include <functional>
 
 #include "temporary_pool.h"
+#include "translation_unit.h"
+#include "macro.h"
 
 
 #define BIND(X) std::bind(&temporary_pool::X, this, std::placeholders::_1)
@@ -69,29 +72,6 @@ namespace macro_packages
     // *******************************************************************
 
 
-    void temporary_pool::set_buffer(buffer* b)
-      {
-        // deposit current set of temporaries, if needed
-        if(this->buf != nullptr)
-          {
-            this->deposit_temporaries();
-            this->buf->deregister_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
-          }
-
-        this->buf = b;
-        if(this->buf != nullptr)
-          {
-            b->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
-          }
-      }
-
-
-    void temporary_pool::set_macros(macro_package* m)
-      {
-        this->ms = m;
-      }
-
-
     void temporary_pool::deposit_temporaries()
       {
         // deposit any temporaries generated in the current temporary pool,
@@ -101,21 +81,25 @@ namespace macro_packages
         // to by data.pool, so there should be no need
         // to update its location
 
-        if(this->buf == nullptr)
+        // get buffer and macro package from the top of the stack
+        buffer*        buf = this->unit->get_stack()->top_buffer();
+        macro_package* ms  = this->unit->get_stack()->top_macro_package();
+
+        if(buf == nullptr)
           {
             error(ERROR_NO_BUFFER_REGISTERED);
           }
-        else if(this->ms == nullptr)
+        else if(ms == nullptr)
           {
             error(ERROR_NO_MACROS_REGISTERED);
           }
         else
           {
             std::string temps = this->cse_worker->temporaries(this->pool_template);
-            this->ms->apply(temps);
+            ms->apply(temps);
 
             // write to current tagged position, but don't move it - we might need to write again later
-            this->buf->write_to_tag(temps);
+            buf->write_to_tag(temps);
 
             // clear worker object; if we don't we might duplicate temporaries we've already written out
             this->cse_worker->clear();
@@ -134,11 +118,15 @@ namespace macro_packages
         // to by data.pool, so there should be no need
         // to update its location
 
-        if(this->buf == nullptr)
+        // get buffer and macro package from the top of the stack
+        buffer*        buf = this->unit->get_stack()->top_buffer();
+        macro_package* ms  = this->unit->get_stack()->top_macro_package();
+
+        if(buf == nullptr)
           {
             error(ERROR_NO_BUFFER_REGISTERED);
           }
-        else if(this->ms == nullptr)
+        else if(ms == nullptr)
           {
             error(ERROR_NO_MACROS_REGISTERED);
           }
@@ -150,7 +138,7 @@ namespace macro_packages
             this->pool_template = t;
 
             // mark current endpoint in the buffer as the new insertion point
-            this->buf->set_tag_to_end();
+            buf->set_tag_to_end();
           }
 
         return(""); // replace with a blank

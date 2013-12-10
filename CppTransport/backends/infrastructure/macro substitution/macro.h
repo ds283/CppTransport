@@ -21,12 +21,9 @@
 #include "u_tensor_factory.h"
 #include "cse.h"
 #include "flatten.h"
-
-
-typedef std::function<std::string(const std::vector<std::string>&)>                                              replacement_rule_simple;
-typedef std::function<std::string(const std::vector<std::string>&, std::vector<struct index_assignment>, void*)> replacement_rule_index;
-typedef std::function<void*      (const std::vector<std::string>&)>                                              replacement_rule_pre;
-typedef std::function<void       (void*)>                                                                        replacement_rule_post;
+#include "package_group.h"
+#include "translation_unit.h"
+#include "replacement_rule_definitions.h"
 
 
 class package_group;
@@ -40,7 +37,7 @@ namespace macro_packages
 class macro_package
   {
     public:
-      macro_package(unsigned int N_f, unsigned int N_p, enum indexorder o, std::string pf, std::string sp, package_group* pk,
+      macro_package(translation_unit* u, package_group* pkg, std::string pf, std::string sp,
                     unsigned int dm=DEFAULT_RECURSION_DEPTH);
 
       // apply macro substitution to a line, provided this does not bring the total number
@@ -78,6 +75,7 @@ class macro_package
       unsigned int                              recursion_depth;
       unsigned int                              recursion_max;
 
+      translation_unit*                         unit;
       package_group*                            package;
 
       std::vector<macro_packages::simple_rule>& pre_rule_cache;

@@ -17,7 +17,6 @@
 class filestack
   {
   public:
-    filestack();
     virtual ~filestack();
 
     // push a new filename to the top of the stack, included from line current_line
@@ -27,21 +26,39 @@ class filestack
     // set line number information for the item on top of the stack
     virtual void set_line(unsigned int line) = 0;
 
+    // increment line number information for the item on top of the stack
+    virtual unsigned int increment_line() = 0;
+
+    // get line number information for the item on top of the stack
+    virtual unsigned int get_line() const = 0;
+
     // pop a filename from the top of the stack
     virtual void pop() = 0;
 
     // generate a list of included files, suitable for producing an error report
     // the list is truncated at depth 'level' to avoid excess verbosity
-    virtual std::string write(unsigned int level) = 0;
-    virtual std::string write()                   = 0;
+    virtual std::string write(unsigned int level) const = 0;
+    virtual std::string write()                   const = 0;
 
-    // lock the filestack, preventing future changes
-    // there is no unlock API, so this puts the filestack into a state suitable
-    // for archiving, eg. as part of the lexeme list
-    void lock();
+    virtual filestack* clone() const = 0;
 
   protected:
     bool                         locked;
+  };
+
+
+// if we need to copy a derived class from a polymorphic pointer to the base class,
+// then some extra magic is needed to make that happen
+// here, this is done by inherited from an auxiliary class that implements
+// a suitable clone() method calling the copy constructor of the derived class
+template <class Derived>
+class filestack_derivation_helper : public filestack
+  {
+  public:
+    virtual filestack* clone() const
+      {
+        return new Derived(static_cast<const Derived&>(*this)); // call the copy ctor.
+      }
   };
 
 

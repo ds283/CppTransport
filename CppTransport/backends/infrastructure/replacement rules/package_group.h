@@ -11,22 +11,23 @@
 
 #include "macro.h"
 #include "replacement_rule_package.h"
+#include "u_tensor_factory.h"
 #include "buffer.h"
 #include "cse.h"
 #include "error.h"
 
 
+// need a forward reference to avoid circularity
+class translation_unit;
+
 class package_group
   {
   public:
-    package_group(macro_packages::replacement_data& d);
+    package_group(translation_unit* u);
     ~package_group();
 
-    virtual void                                         set_buffer         (buffer* b) = 0;
-    virtual void                                         set_macros         (macro_package* m) = 0;
-
-    inline void                                          error              (std::string const msg) { ::error(msg, this->data.current_line, this->data.path); }
-    inline void                                          warn               (std::string const msg)  { ::warn(msg, this->data.current_line, this->data.path); }
+    void                                                 error              (const std::string msg);
+    void                                                 warn               (const std::string msg);
 
     // return references to our internal ruleset caches
     // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
@@ -41,7 +42,7 @@ class package_group
     void                                                 build_post_ruleset ();
     void                                                 build_index_ruleset();
 
-    macro_packages::replacement_data&                    data;
+    translation_unit*                                    unit;
     u_tensor_factory*                                    u_factory;
     cse*                                                 cse_worker;  // should be set by implementations
     flattener*                                           fl;

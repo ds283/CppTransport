@@ -25,7 +25,7 @@ attributes::~attributes()
     return;
   }
 
-bool attributes::get_latex(std::string& l)
+bool attributes::get_latex(std::string& l) const
   {
     if(this->latex_set)
       {
@@ -50,15 +50,15 @@ void attributes::unset_latex()
 // ******************************************************************
 
 
-quantity::quantity(std::string n, unsigned int l, filestack* p)
-  : name(n), line(l), path(p)
+quantity::quantity(std::string n, const filestack* p)
+  : name(n), path(p)
   {
     assert(path != nullptr);
     ginac_symbol = GiNaC::symbol(n);
   }
 
-quantity::quantity(std::string n, attributes& a, unsigned int l, filestack* p)
-  : name(n), attrs(a), line(l), path(p)
+quantity::quantity(std::string n, attributes& a, const filestack* p)
+  : name(n), attrs(a), path(p)
   {
     assert(path != nullptr);
 
@@ -76,7 +76,7 @@ quantity::quantity(std::string n, attributes& a, unsigned int l, filestack* p)
   }
 
 quantity::quantity(std::string n, attributes&a, GiNaC::symbol&s)
-  : name(n), attrs(a), line(0), ginac_symbol(s)
+  : name(n), attrs(a), path(nullptr), ginac_symbol(s)
   {
   }
 
@@ -84,7 +84,7 @@ quantity::~quantity()
   {
   }
 
-void quantity::print(std::ostream& stream)
+void quantity::print(std::ostream& stream) const
   {
     stream << "Quantity '" << this->name << "'" << std::endl;
 
@@ -99,22 +99,17 @@ void quantity::print(std::ostream& stream)
       }
   }
 
-unsigned int quantity::get_line()
-  {
-    return(this->line);
-  }
-
-filestack* quantity::get_path()
+const filestack* quantity::get_path() const
   {
     return(this->path);
   }
 
-const std::string quantity::get_name()
+const std::string quantity::get_name() const
   {
     return(this->name);
   }
 
-const std::string quantity::get_latex_name()
+const std::string quantity::get_latex_name() const
   {
     std::string latex_name;
     bool        ok = this->attrs.get_latex(latex_name);
@@ -127,7 +122,7 @@ const std::string quantity::get_latex_name()
     return(latex_name);
   }
 
-const GiNaC::symbol* quantity::get_ginac_symbol()
+const GiNaC::symbol* quantity::get_ginac_symbol() const
   {
     return(&this->ginac_symbol);
   }

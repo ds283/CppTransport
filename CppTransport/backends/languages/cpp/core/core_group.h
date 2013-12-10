@@ -24,11 +24,8 @@
 class core_group: public package_group
   {
   public:
-    core_group(macro_packages::replacement_data& d, bool do_cse=true);
+    core_group(translation_unit* u);
     ~core_group();
-
-    void set_buffer(buffer* b)        { this->tp->set_buffer(b); }
-    void set_macros(macro_package* m) { this->tp->set_macros(m); }
 
   protected:
     cpp::cpp_printer                    printer;

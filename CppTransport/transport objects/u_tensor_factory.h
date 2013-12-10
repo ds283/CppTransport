@@ -10,17 +10,19 @@
 
 #include <iostream>
 
-#include "parse_tree.h"
 #include "flatten.h"
 
-#include "ginac/basic.h"
+#include "ginac/ginac.h"
 
+
+// need a forward reference to avoid circularity
+class translation_unit;
 
 
 class u_tensor_factory
   {
     public:
-      u_tensor_factory(script *r);
+      u_tensor_factory(translation_unit *u);
       virtual ~u_tensor_factory()
         {
         }
@@ -76,21 +78,21 @@ class u_tensor_factory
       bool                 is_field   (unsigned int z) { return(z < this->num_fields); }
       bool                 is_momentum(unsigned int z) { return(z >= this->num_fields && z < 2*this->num_fields); }
 
-      script*                          root;
+      translation_unit*                 unit;
 
-      const unsigned int               num_fields;
-      const GiNaC::symbol              M_Planck;
-      const GiNaC::ex                  V;
+      const unsigned int                num_fields;
+      const GiNaC::symbol&              M_Planck;
+      const GiNaC::ex&                  V;
 
-      const std::vector<GiNaC::symbol> field_list;
-      const std::vector<GiNaC::symbol> deriv_list;
+      const std::vector<GiNaC::symbol>  field_list;
+      const std::vector<GiNaC::symbol>  deriv_list;
   };
 
 
 class canonical_u_tensor_factory : public u_tensor_factory
   {
     public:
-      canonical_u_tensor_factory(script *r) : u_tensor_factory(r)
+      canonical_u_tensor_factory(translation_unit *u) : u_tensor_factory(u)
         {
         }
 
@@ -159,7 +161,7 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
 
 // factory function to manufacture a u_tensor_factory instance
-u_tensor_factory* make_u_tensor_factory(script* script);
+u_tensor_factory* make_u_tensor_factory(translation_unit* u);
 
 
 #endif //__u_tensor_factory_H_

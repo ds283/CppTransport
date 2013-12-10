@@ -21,14 +21,14 @@ namespace macro_packages
     class fundamental: public replacement_rule_package
       {
       public:
-        fundamental(replacement_data& d, language_printer& p,
+        fundamental(translation_unit* u, language_printer& p,
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H_",
                     std::string tf = OUTPUT_TIME_FORMAT)
           : list_start(ls), list_end(le), list_separator(lsep), list_pad(lpad), tag(t), guard_terminator(ge), time_format(tf),
             unique(0),
-            replacement_rule_package(d, p)
+            replacement_rule_package(u, p)
           {
           }
 

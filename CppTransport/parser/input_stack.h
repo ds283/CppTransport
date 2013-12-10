@@ -14,7 +14,7 @@
 #include "filestack.h"
 
 
-class input_stack: public filestack
+class input_stack: public filestack_derivation_helper<input_stack>
   {
   public:
     // data structure for tracking the source of any lexeme
@@ -24,17 +24,18 @@ class input_stack: public filestack
         unsigned int line;
       };
 
-    input_stack();
     ~input_stack();
 
-    void        push    (const std::string name);
+    void         push          (const std::string name);
 
-    void        set_line(unsigned int line);
+    void         set_line      (unsigned int line);
+    unsigned int increment_line();
+    unsigned int get_line      () const;
 
-    void        pop     ();
+    void         pop           ();
 
-    std::string write   (unsigned int level);
-    std::string write   ();
+    std::string  write         (unsigned int level) const;
+    std::string  write         () const;
 
   protected:
     std::deque<struct inclusion> inclusions;

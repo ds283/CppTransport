@@ -10,21 +10,21 @@
 #include "cpp_cse.h"
 
 
-vexcl_group::vexcl_group(macro_packages::replacement_data& d, bool do_cse)
-  : package_group(d), printer()
+vexcl_group::vexcl_group(translation_unit* u)
+  : package_group(u), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,
     // because it gets pushed to them when they join the package group
-    cse_worker = new cpp::cpp_cse(0, this->printer, do_cse);
+    cse_worker = new cpp::cpp_cse(0, this->printer, this->unit->get_do_cse());
 
-    f  = new macro_packages::fundamental       (d, this->printer);
-    ft = new macro_packages::flow_tensors      (d, this->printer);
-    lt = new macro_packages::lagrangian_tensors(d, this->printer);
-    ut = new macro_packages::utensors          (d, this->printer);
-    xf = new macro_packages::gauge_xfm         (d, this->printer);
-    tp = new macro_packages::temporary_pool    (d, this->printer);
-    vs = new cpp::vexcl_steppers               (d, this->printer);
+    f  = new macro_packages::fundamental       (u, this->printer);
+    ft = new macro_packages::flow_tensors      (u, this->printer);
+    lt = new macro_packages::lagrangian_tensors(u, this->printer);
+    ut = new macro_packages::utensors          (u, this->printer);
+    xf = new macro_packages::gauge_xfm         (u, this->printer);
+    tp = new macro_packages::temporary_pool    (u, this->printer);
+    vs = new cpp::vexcl_steppers               (u, this->printer);
 
     this->push_back(vs);
     this->push_back(tp);

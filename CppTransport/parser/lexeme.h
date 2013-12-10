@@ -20,11 +20,14 @@
 
 #include "core.h"
 #include "error.h"
+#include "filestack.h"
+
 
 #define UNARY_TAG         "@unary"
 #define LENGTH_UNARY_TAG  6
 #define BINARY_TAG        "@binary"
 #define LENGTH_BINARY_TAG 7
+
 
 namespace lexeme    // package in a unique namespace to protect common words like 'keyword', 'character' used below
   {
@@ -48,59 +51,58 @@ namespace lexeme    // package in a unique namespace to protect common words lik
       class lexeme
         {
           public:
-          lexeme(const std::string buffer, const enum lexeme_buffer_type t,
-                 enum lexeme_minus_context& context,
-                 filestack* p, unsigned int l, unsigned int u,
-                 const std::string* kt, const keywords* km, unsigned int num_k,
-                 const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
+            lexeme(const std::string buffer, const enum lexeme_buffer_type t,
+                   enum lexeme_minus_context& context,
+                   const filestack* p, unsigned int u,
+                   const std::string* kt, const keywords* km, unsigned int num_k,
+                   const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
-          ~lexeme();
+            ~lexeme();
 
-          // write details to specified output stream
-          void dump(std::ostream& stream);
+            // write details to specified output stream
+            void dump(std::ostream& stream);
 
-          // get information
-          enum lexeme_type                    get_type();
+            // get information
+            enum lexeme_type                    get_type();
 
-          bool                                get_keyword(keywords& keyword);
+            bool                                get_keyword(keywords& keyword);
 
-          bool                                get_symbol(characters& symbol);
+            bool                                get_symbol(characters& symbol);
 
-          bool                                get_identifier(std::string& id);
+            bool                                get_identifier(std::string& id);
 
-          bool                                get_integer(int& z);
+            bool                                get_integer(int& z);
 
-          bool                                get_decimal(double& d);
+            bool                                get_decimal(double& d);
 
-          bool                                get_string(std::string& str);
+            bool                                get_string(std::string& str);
 
-          const unsigned int&                 get_line();
+            const filestack*                    get_path();
 
-          filestack*                          get_path();
+          protected:
+            enum lexeme_type                    type;
+            const unsigned int                  unique;
 
-          private:
-          enum lexeme_type                    type;
-          const unsigned int                  unique;
+            // lexeme value - not all of these are used by any single lexeme
+            keywords                            k;
+            characters                          s;
+            int                                 z;
+            double                              d;
+            std::string                         str;
 
-          // lexeme value - not all of these are used by any single lexeme
-          keywords                            k;
-          characters                          s;
-          int                                 z;
-          double                              d;
-          std::string                         str;
+            // copy of a filestack object recording where this lexeme came from
+            // we take a copy and mark it const so that it cannot subsequently be
+            // modified
+            const filestack*                    path;
 
-          // origin: line number and sequence of inclusions
-          filestack*                          path;
-          const unsigned int                  line;
+            const std::string*                  ktable;
+            const keywords*                     kmap;
+            const unsigned int                  Nk;
 
-          const std::string*                  ktable;
-          const keywords*                     kmap;
-          const unsigned int                  Nk;
-
-          const std::string*                  ctable;
-          const characters*                   cmap;
-          const bool*                         ccontext;
-          unsigned int                        Nc;
+            const std::string*                  ctable;
+            const characters*                   cmap;
+            const bool*                         ccontext;
+            unsigned int                        Nc;
         };
 
 //  IMPLEMENTATION
@@ -108,10 +110,10 @@ namespace lexeme    // package in a unique namespace to protect common words lik
       template <class keywords, class characters>
       lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                                            enum lexeme_minus_context& context,
-                                           filestack* p, unsigned int l, unsigned int u,
+                                           const filestack* p, unsigned int u,
                                            const std::string* kt, const keywords* km, unsigned int num_k,
                                            const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c)
-      : path(p), line(l), unique(u),
+      : path(p->clone()), unique(u),
         ktable(kt), kmap(km), Nk(num_k),
         ctable(ct), cmap(cm), ccontext(ctx), Nc(num_c)
         {
@@ -124,9 +126,6 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           assert(cmap   != nullptr);
           assert(ctable != nullptr);
           assert(ctx    != nullptr);
-
-          // lock filestack object we have just copied
-          path->lock();
 
           switch (t)
             {
@@ -171,20 +170,20 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_NUMBER << " '" << buffer << "'";
-                    error(msg.str(), l, p);
+                    error(msg.str(), path);
                   }
 
                 if (type == decimal && buffer[0] == '0' && buffer[1] == 'x')
                   {
                     std::ostringstream msg;
                     msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
-                    warn(msg.str(), l, p);
+                    warn(msg.str(), path);
                   }
                 else if (type == decimal && buffer[0] == '0')
                   {
                     std::ostringstream msg;
                     msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
-                    warn(msg.str(), l, p);
+                    warn(msg.str(), path);
                   }
 
                 context = binary_context; // unary minus can't follow a number
@@ -225,7 +224,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                   {
                     std::ostringstream msg;
                     msg << ERROR_UNRECOGNIZED_SYMBOL << " '" << buffer << "'";
-                    error(msg.str(), l, p);
+                    error(msg.str(), p);
                     context = unary_context; // reset the context
                   }
                 break;
@@ -244,7 +243,9 @@ namespace lexeme    // package in a unique namespace to protect common words lik
       template <class keywords, class characters>
       lexeme<keywords, characters>::~lexeme()
         {
-          return;
+          // delete copy of filestack object
+          assert(this->path != nullptr);
+          delete this->path;
         }
 
 
@@ -325,7 +326,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_KEYWORD << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return (rval);
@@ -345,7 +346,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_SYMBOL << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return (rval);
@@ -365,7 +366,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_IDENTIFIER << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return (rval);
@@ -385,7 +386,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_INTEGER << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return (rval);
@@ -405,7 +406,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_DECIMAL << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return (rval);
@@ -425,7 +426,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             {
               std::ostringstream msg;
               msg << WARNING_LEXEME_STRING << " (id " << this->unique << ")";
-              warn(msg.str(), this->line, this->path);
+              warn(msg.str(), this->path);
             }
 
           return(rval);
@@ -433,14 +434,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
 
       template <class keywords, class characters>
-      const unsigned int& lexeme<keywords, characters>::get_line()
-        {
-          return(this->line);
-        }
-
-
-      template <class keywords, class characters>
-      filestack* lexeme<keywords, characters>::get_path()
+      const filestack* lexeme<keywords, characters>::get_path()
         {
           return(this->path);
         }

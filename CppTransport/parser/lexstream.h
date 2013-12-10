@@ -46,7 +46,7 @@ class lexstream
 		  std::string                           get_lexeme(lexfile& input, enum lexeme::lexeme_buffer_type& type);
 
       finder*                                                               search;      // finder
-      input_stack                                                           stack;       // stack of included files
+      input_stack*                                                          stack;       // stack of included files
 
       std::deque< lexeme::lexeme<keywords, characters> >                    lexeme_list; // list of lexemes obtained from the file
 
@@ -86,6 +86,8 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
     assert(ctable != NULL);
     assert(cmap != NULL);
 
+    stack = new input_stack;
+
     if(parse(filename) == false)
       {
         std::ostringstream msg;
@@ -98,6 +100,8 @@ lexstream<keywords, characters>::lexstream(const std::string filename, finder* s
 template <class keywords, class characters>
 lexstream<keywords, characters>::~lexstream(void)
   {
+    assert(stack != nullptr);
+    delete this->stack;
   }
 
 
@@ -184,11 +188,11 @@ bool lexstream<keywords, characters>::parse(std::string file)
 
     if(found)
       {
-        lexfile input(path);
+        lexfile input(path, this->stack);
 
-        this->stack.push(path);
+        this->stack->push(path);
         lexicalize(input);
-        this->stack.pop();
+        this->stack->pop();
       }
 
     return(found);
@@ -219,16 +223,17 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
 
                           if(type != lexeme::buf_string_literal)
                             {
-                              error(ERROR_INCLUDE_DIRECTIVE, input.current_line(), this->stack);
+                              error(ERROR_INCLUDE_DIRECTIVE, this->stack);
                             }
                           else
                             {
-                              this->stack.set_line(input.current_line());       // update which line this file was included from
+                              // TODO remove this when confident everything works with new line number system
+//                              this->stack.set_line(input.current_line());       // update which line this file was included from
                               if(parse(word) == false)
                                 {
                                   std::ostringstream msg;
                                   msg << ERROR_INCLUDE_FILE << " '" << word << "'";
-                                  error(msg.str(), input.current_line(), this->stack);
+                                  error(msg.str(), this->stack);
                                 }
                             }
                         }
@@ -237,7 +242,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                     {
                       // note: this updates context, depending what the lexeme is recognized as
                       this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                        (word, type, context, this->stack, input.current_line(), this->unique++,
+                        (word, type, context, this->stack, this->unique++,
                           this->ktable, this->kmap, this->Nk,
                           this->ctable, this->cmap, this->ccontext, this->Nc));
                     }
@@ -248,7 +253,7 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                 case lexeme::buf_string_literal:
                   // note: this updates context, depending what the lexeme is recognized as
                   this->lexeme_list.push_back(lexeme::lexeme<keywords, characters>
-                    (word, type, context, this->stack, input.current_line(), this->unique++,
+                    (word, type, context, this->stack, this->unique++,
                       this->ktable, this->kmap, this->Nk,
                       this->ctable, this->cmap, this->ccontext, this->Nc));
                 break;
@@ -355,7 +360,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                       }
                     else
                       {
-                        error(ERROR_EXPECTED_ELLIPSIS, input.current_line(), this->stack);
+                        error(ERROR_EXPECTED_ELLIPSIS, this->stack);
                         word += '.';                          // make up to a proper ellipsis anyway
                       }
                   }
@@ -377,7 +382,7 @@ std::string lexstream<keywords, characters>::get_lexeme(lexfile& input, enum lex
                   }
                 else
                   {
-                    error(ERROR_EXPECTED_CLOSE_QUOTE, input.current_line(), this->stack);
+                    error(ERROR_EXPECTED_CLOSE_QUOTE, this->stack);
                   }
                 type = lexeme::buf_string_literal;
               }

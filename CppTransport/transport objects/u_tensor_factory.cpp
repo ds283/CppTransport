@@ -5,7 +5,9 @@
 // To change the template use AppCode | Preferences | File Templates.
 //
 
+
 #include "u_tensor_factory.h"
+#include "translation_unit.h"
 
 
 // *****************************************************************************
@@ -13,17 +15,17 @@
 // Constructor for parent (virtual) class
 
 
-u_tensor_factory::u_tensor_factory(script* s)
-  : root(s), num_fields(s->get_number_fields()), V(s->get_potential()), M_Planck(s->get_Mp_symbol()),
-    field_list(s->get_field_symbols()), deriv_list(s->get_deriv_symbols())
+u_tensor_factory::u_tensor_factory(translation_unit* u)
+  : unit(u), num_fields(u->get_number_fields()), V(u->get_potential()), M_Planck(u->get_Mp_symbol()),
+    field_list(u->get_field_symbols()), deriv_list(u->get_deriv_symbols())
   {
     assert(field_list.size() == num_fields);
     assert(deriv_list.size() == num_fields);
   }
 
 
-u_tensor_factory* make_u_tensor_factory(script* s)
+u_tensor_factory* make_u_tensor_factory(translation_unit* u)
   {
     // at the moment, nothing to do - only canonical models implemented
-    return(new canonical_u_tensor_factory(s));
+    return(new canonical_u_tensor_factory(u));
   }
