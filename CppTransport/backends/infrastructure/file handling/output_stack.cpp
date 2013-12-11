@@ -125,12 +125,12 @@ std::string output_stack::write(unsigned int level) const
       {
         out << this->inclusions[0].line << " " << OUTPUT_STACK_OF << " '" << this->inclusions[0].in << "'";
       }
-    out << std::endl;
 
     for(int i = 1; i < level; i++)
       {
-        out << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << this->inclusions[i].line
-          << " " << OUTPUT_STACK_OF_FILE << " '" << this->inclusions[i].in << "'" << std::endl;
+        out << std::endl
+            << OUTPUT_STACK_WRAP_PAD << OUTPUT_STACK_INCLUDED_FROM << " " << this->inclusions[i].line
+            << " " << OUTPUT_STACK_OF_FILE << " '" << this->inclusions[i].in << "'";
       }
 
     return(out.str());

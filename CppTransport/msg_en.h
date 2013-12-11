@@ -123,4 +123,7 @@
 
 #define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
 
+#define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
+#define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
+
 #endif //__msg_H_
