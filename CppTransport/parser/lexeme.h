@@ -57,6 +57,9 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                    const std::string* kt, const keywords* km, unsigned int num_k,
                    const std::string* ct, const characters* cm, const bool* ctx, unsigned int num_c);
 
+            // need an explicit copy constructor to handle cloning of the filestack* object
+            lexeme(const lexeme<keywords, characters>& obj);
+
             ~lexeme();
 
             // write details to specified output stream
@@ -120,7 +123,13 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           bool ok     = false;
           int  offset = 0;
 
+          // cloning of the filestack* object implies that we have to be cautious
+          // when this object gets copied, otherwise it will just inherit
+          // a reference to the same cloned filestack.
+          // that will lead to delete errors when the destructor is called on whichever
+          // object is destroyed second
           assert(path   != nullptr);
+
           assert(kmap   != nullptr);
           assert(ktable != nullptr);
           assert(cmap   != nullptr);
@@ -238,6 +247,16 @@ namespace lexeme    // package in a unique namespace to protect common words lik
               default:
                 assert(false);
             }
+        }
+
+      template <class keywords, class characters>
+      lexeme<keywords, characters>::lexeme(const lexeme<keywords, characters>& obj)
+        : type(obj.type), unique(obj.unique),
+          k(obj.k), s(obj.s), z(obj.z), d(obj.d), str(obj.str),
+          path(obj.path->clone()),
+          ktable(obj.ktable), kmap(obj.kmap), Nk(obj.Nk),
+          ctable(obj.ctable), cmap(obj.cmap), ccontext(obj.ccontext), Nc(obj.Nc)
+        {
         }
 
       template <class keywords, class characters>
