@@ -76,7 +76,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
         std::getline(inf, line);
         this->parse_header_line(in, line, backend, minver);
 
-        if(minver >= CPPTRANSPORT_NUMERIC_VERSION)
+        if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
           {
             // generate an appropriate backend
             package_group* package = package_group_factory(backend, this->unit, buf);
