@@ -78,10 +78,11 @@ namespace transport
       class $$__MODEL_vexcl_twopf_functor
         {
           public:
-            $$__MODEL_vexcl_twopf_functor(const std::vector<number>& p, const number Mp,
+            $$__MODEL_vexcl_twopf_functor(vex::Context& c,
+                                          const std::vector<number>& p, const number Mp,
                                           const vex::vector<double>& ks,
                                           vex::multivector<double, $$__MODEL_pool::u2_size>& u2)
-              : parameters(p), M_Planck(Mp), k_list(ks), u2_tensor(u2)
+              : ctx(c), parameters(p), M_Planck(Mp), k_list(ks), u2_tensor(u2)
               {
               }
 
@@ -92,6 +93,8 @@ namespace transport
             constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
             constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
             constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+
+            vex::Context&                                      ctx;
 
             const number						                           M_Planck;
             const std::vector<number>&                         parameters;
@@ -240,7 +243,7 @@ namespace transport
           this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *times.begin(), hst_bg);
 
           // set up a functor to evolve this system
-          $$__MODEL_vexcl_twopf_functor<number> rhs(this->parameters, this->M_Planck, dev_ks, u2_tensor);
+          $$__MODEL_vexcl_twopf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_ks, u2_tensor);
         
           // set up a functor to observe the integration
           $$__MODEL_vexcl_twopf_observer<number> obs(background_history, twopf_history, ks.size());
@@ -445,6 +448,26 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
+          std::vector<vex::backend::kernel> u2_kernel;
+
+          // build a kernel to construct the components of u2
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              u2_kernel.emplace_back(this->ctx.context(d),
+                                     $$__IMPORT_KERNEL{vexcl-opencl-u2fused.cl, u2fused, );}
+            }
+
+          // Apply the u2 kernel
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              u2_kernel[d].push_arg<cl_ulong>(this->u2_tensor(0).part_size());
+              u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
+              u2_kernel[d].push_arg((__x($$__A))(d)); $$//
+              u2_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+              u2_kernel[d](this->ctx.queue(d));
+            }
+
           #undef $$__PARAMETER[1]
           #undef $$__COORDINATE[A]
           #undef __Mp

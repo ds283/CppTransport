@@ -11,6 +11,7 @@
 
 #include "core_group.h"
 #include "vexcl_group.h"
+#include "opencl_group.h"
 
 
 package_group* package_group_factory(std::string backend, translation_unit* unit)
@@ -26,6 +27,10 @@ package_group* package_group_factory(std::string backend, translation_unit* unit
     else if(backend == "vexcl")
       {
         rval = new vexcl_group(unit);
+      }
+    else if(backend == "opencl")
+      {
+        rval = new opencl_group(unit);
       }
 
     return(rval);

@@ -10,31 +10,51 @@
 
 
 #include <list>
+#include <deque>
 #include <string>
 
 
-typedef std::function<void(void)> buffer_closure_handler;
+typedef std::function<void(void)> buffer_flush_handler;
 
 class buffer
   {
   public:
+
+    struct delimiter
+      {
+        std::string left;
+        std::string right;
+      };
+
     buffer();
 
     void write_to_end              (std::string line);
     void write_to_tag              (std::string line);
+    void delimit_line              (std::string& line);
 
     void set_tag_to_end            ();
 
-    void register_closure_handler  (buffer_closure_handler handler, void* tag);
-    void deregister_closure_handler(buffer_closure_handler handler, void* tag);
+    void register_closure_handler  (buffer_flush_handler handler, void* tag);
+    void deregister_closure_handler(buffer_flush_handler handler, void* tag);
 
     void emit                      (std::string file);
 
-  protected:
-    std::list<std::string>                               buf;
-    std::list<std::string>::iterator                     tag;
+    void flush                     ();
 
-    std::list<std::pair<buffer_closure_handler, void*> > closure_handlers;
+    void push_delimiter            (std::string left, std::string right);
+    void pop_delimiter             ();
+
+    void push_skip_blank           (bool skip);
+    void pop_skip_blank            ();
+
+  protected:
+    std::list<std::string>                             buf;
+    std::list<std::string>::iterator                   tag;
+
+    std::list<std::pair<buffer_flush_handler, void*> > flush_handlers;
+
+    std::deque<struct delimiter>                       delimiters;
+    std::deque<bool>                                   skips;
   };
 
 

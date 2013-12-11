@@ -36,6 +36,9 @@ namespace macro_packages
           {
           }
 
+        // provide virtual destructor so that derived classes delete correctly
+        virtual ~replacement_rule_package();
+
         // these methods must be overridden by derived classes which implement the replacement_rule_package concept
         virtual const std::vector<simple_rule> get_pre_rules  () = 0;
         virtual const std::vector<simple_rule> get_post_rules () = 0;

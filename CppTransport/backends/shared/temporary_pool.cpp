@@ -20,16 +20,26 @@
 namespace macro_packages
   {
 
-    temporary_pool::temporary_pool(translation_unit* u, language_printer& p, unsigned int dm, std::string t)
+    temporary_pool::temporary_pool(translation_unit* u, language_printer& p, std::string t)
      : pool_template(t), replacement_rule_package(u, p)
       {
-        // bind ourselves to the buffer on top of the stack
+        // bind ourselves to the buffer on top of the stack, and remember which buffer that was
+        // so we can deregister later
+        registered_buf     = unit->get_stack()->top_buffer();
+        registered_handler = std::bind(&temporary_pool::deposit_temporaries, this);
 
-        buffer* buf = unit->get_stack()->top_buffer();
-
-        if(buf != nullptr)
+        if(registered_buf != nullptr)
           {
-            buf->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
+            registered_buf->register_closure_handler(registered_handler, this);
+          }
+      }
+
+
+    temporary_pool::~temporary_pool()
+      {
+        if(this->registered_buf != nullptr)
+          {
+            this->registered_buf->deregister_closure_handler(registered_handler, this);
           }
       }
 

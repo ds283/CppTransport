@@ -17,6 +17,11 @@
 
 namespace macro_packages
   {
+    replacement_rule_package::~replacement_rule_package()
+      {
+      }
+
+
     void replacement_rule_package::error(const std::string msg)
       {
         ::error(msg, this->unit->get_stack());

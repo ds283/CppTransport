@@ -50,6 +50,10 @@ unsigned int translator::translate(const std::string in, const std::string out, 
       {
         rval += this->process(template_in, out, type, buf);
       }
+    else if(path->fqpn(in, template_in) == true)
+      {
+        rval += this->process(template_in, out, type, buf);
+      }
     else
       {
         std::ostringstream msg;
@@ -104,7 +108,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
 
                 // no need to flush temporaries before writing out the buffer, because that
                 // happens automatically via the closure handlers
-                buf->emit(out);
+                if(out != "") buf->emit(out);
               }
             else
               {

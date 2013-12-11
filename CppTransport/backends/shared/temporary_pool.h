@@ -22,9 +22,9 @@ namespace macro_packages
     class temporary_pool: public replacement_rule_package
       {
       public:
-        temporary_pool(translation_unit* u, language_printer& p,
-                       unsigned int dm = DEFAULT_RECURSION_DEPTH,
-                       std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE);
+        temporary_pool(translation_unit* u, language_printer& p, std::string t = OUTPUT_DEFAULT_POOL_TEMPLATE);
+
+        ~temporary_pool();
 
         const std::vector<simple_rule> get_pre_rules();
         const std::vector<simple_rule> get_post_rules();
@@ -34,6 +34,9 @@ namespace macro_packages
 
       protected:
         std::string                    pool_template;
+
+        buffer*                        registered_buf;
+        buffer_flush_handler           registered_handler;
 
         std::string                    replace_temp_pool(const std::vector<std::string>& args);
       };

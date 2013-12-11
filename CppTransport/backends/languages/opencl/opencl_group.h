@@ -1,12 +1,11 @@
 //
-// Created by David Seery on 06/12/2013.
+// Created by David Seery on 11/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
 
-
-#ifndef __vexcl_group_H_
-#define __vexcl_group_H_
+#ifndef __opencl_group_H_
+#define __opencl_group_H_
 
 
 #include "package_group.h"
@@ -17,16 +16,15 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "vexcl_steppers.h"
 #include "vexcl_kernels.h"
 #include "cpp_printer.h"
 
 
-class vexcl_group: public package_group
+class opencl_group: public package_group
   {
   public:
-    vexcl_group(translation_unit* u);
-    ~vexcl_group();
+    opencl_group(translation_unit* u);
+    ~opencl_group();
 
   protected:
     cpp::cpp_printer                    printer;
@@ -37,9 +35,8 @@ class vexcl_group: public package_group
     macro_packages::utensors*           ut;
     macro_packages::gauge_xfm*          xf;
     macro_packages::temporary_pool*     tp;
-    cpp::vexcl_steppers*                vs;
     cpp::vexcl_kernels*                 vk;
   };
 
 
-#endif //__vexcl_group_H_
+#endif //__opencl_group_H_

@@ -126,4 +126,11 @@
 #define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
 #define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
 
+#define OUTPUT_VEXCL_KERNEL_PRE               ", \""
+#define OUTPUT_VEXCL_KERNEL_POST              "\""
+#define OUTPUT_VEXCL_UNKNOWN_KERNEL           (OUTPUT_VEXCL_KERNEL_PRE "<UNKNOWN_KERNEL_NAME>" OUTPUT_VEXCL_KERNEL_POST)
+
+#define OUTPUT_VEXCL_KERNELLINE_PRE           "\""
+#define OUTPUT_VEXCL_KERNELLINE_POST          "\\n\""
+
 #endif //__msg_H_

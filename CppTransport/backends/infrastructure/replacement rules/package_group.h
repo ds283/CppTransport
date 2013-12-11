@@ -24,7 +24,7 @@ class package_group
   {
   public:
     package_group(translation_unit* u);
-    ~package_group();
+    virtual ~package_group();
 
     void                                                 error              (const std::string msg);
     void                                                 warn               (const std::string msg);

@@ -1,16 +1,15 @@
 //
-// Created by David Seery on 06/12/2013.
+// Created by David Seery on 11/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
-
-#include "vexcl_group.h"
+#include "opencl_group.h"
 
 #include "cpp_printer.h"
 #include "cpp_cse.h"
 
 
-vexcl_group::vexcl_group(translation_unit* u)
+opencl_group::opencl_group(translation_unit* u)
   : package_group(u), printer()
   {
     // set up cse worker instance
@@ -24,11 +23,9 @@ vexcl_group::vexcl_group(translation_unit* u)
     ut = new macro_packages::utensors          (u, this->printer);
     xf = new macro_packages::gauge_xfm         (u, this->printer);
     tp = new macro_packages::temporary_pool    (u, this->printer);
-    vs = new cpp::vexcl_steppers               (u, this->printer);
     vk = new cpp::vexcl_kernels                (u, this->printer);
 
     this->push_back(vk);
-    this->push_back(vs);
     this->push_back(tp);
     this->push_back(ut);
     this->push_back(xf);
@@ -38,7 +35,7 @@ vexcl_group::vexcl_group(translation_unit* u)
   }
 
 
-vexcl_group::~vexcl_group()
+opencl_group::~opencl_group()
   {
     delete f;
     delete ft;
@@ -46,7 +43,6 @@ vexcl_group::~vexcl_group()
     delete ut;
     delete xf;
     delete tp;
-    delete vs;
     delete vk;
 
     delete cse_worker;
