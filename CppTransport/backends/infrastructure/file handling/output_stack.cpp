@@ -28,11 +28,9 @@ void output_stack::push(const std::string name)
   }
 
 
-void output_stack::push(const std::string out, const std::string in, buffer* buf, macro_package* ms, package_group* pkg,
-                        enum process_type type)
+void output_stack::push(const std::string out, const std::string in, buffer* buf, enum process_type type)
   {
     assert(buf != nullptr);
-    assert(ms != nullptr);
 
     struct inclusion incl;
 
@@ -40,11 +38,45 @@ void output_stack::push(const std::string out, const std::string in, buffer* buf
     incl.in      = in;
     incl.out     = out;
     incl.buf     = buf;
-    incl.ms      = ms;
-    incl.package = pkg;
+    incl.ms      = nullptr;   // these elements should be updated with push_top_data(), below - can't see a simple way round this
+    incl.package = nullptr;
     incl.type    = type;
 
     this->inclusions.push_front(incl);
+  }
+
+
+void output_stack::push_top_data(macro_package* ms, package_group* pkg)
+  {
+    assert(ms != nullptr);
+    assert(pkg != nullptr);
+
+    if(inclusions.size() == 0)
+      {
+        basic_error(ERROR_FILESTACK_EMPTY);
+      }
+    else
+      {
+        assert(this->inclusions[0].ms == nullptr);
+        assert(this->inclusions[0].package == nullptr);
+
+        if(this->inclusions[0].ms == nullptr)
+          {
+            this->inclusions[0].ms = ms;
+          }
+        else
+          {
+            basic_error(ERROR_FILESTACK_OVERWRITE);
+          }
+        if(this->inclusions[0].package == nullptr)
+          {
+            this->inclusions[0].package = pkg;
+          }
+        else
+          {
+            basic_error(ERROR_FILESTACK_OVERWRITE);
+          }
+      }
   }
 
 

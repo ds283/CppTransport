@@ -16,7 +16,7 @@
 #include "buffer.h"
 
 
-package_group* package_group_factory(std::string backend, translation_unit* unit, buffer* buf);
+package_group* package_group_factory(std::string backend, translation_unit* unit);
 
 
 #endif //__package_group_factory_H_

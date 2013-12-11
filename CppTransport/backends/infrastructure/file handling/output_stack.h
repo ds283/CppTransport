@@ -41,10 +41,18 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
     ~output_stack();
 
-    // explicitly delete inherited method, which requires only a name: we also want a buffer and a macro_package
+    // we are forced to have the basic push method inherited from filestack, even though we don't want it,
+    // because otherwise it makes output_stack abstract
     void              push              (const std::string name);
-    void              push              (const std::string out, const std::string in, buffer* buf, macro_package* ms, package_group* pkg,
-                                         enum process_type type);
+
+    // push an object to the top of the stack
+    void              push              (const std::string out, const std::string in, buffer* buf, enum process_type type);
+
+    // really, we want the macro_package* and package_group* information as part of the push() method above,
+    // but constructors for the replacement_package_data objects may depend on there being objects
+    // on the stack - eg. temporary_pool, which uses this mechanism to claim buffer emit notifications.
+    // so, allow this data to be updated afterwards
+    void              push_top_data     (macro_package* ms, package_group* pkg);
 
     void              set_line          (unsigned int line);
     unsigned int      increment_line    ();

@@ -78,15 +78,20 @@ unsigned int translator::process(const std::string in, const std::string out, en
 
         if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
           {
+            // want to generate an object on the stack *before* we call package_group,
+            // because the constructors of replacement_rule_package objects may depend
+            // on it being there
+            output_stack* os  = this->unit->get_stack();
+            os->push(out, in, buf, type);  // current line number is automatically set to 1
+
             // generate an appropriate backend
-            package_group* package = package_group_factory(backend, this->unit, buf);
+            package_group* package = package_group_factory(backend, this->unit);
 
             if(package != nullptr)
               {
                 macro_package* ms = new macro_package(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
-                output_stack* os  = this->unit->get_stack();
 
-                os->push(out, in, buf, ms, package, type);  // current line number is automatically set to 1
+                os->push_top_data(ms, package);
 
                 while(inf.eof() == false && inf.fail() == false)
                   {
@@ -108,6 +113,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
                 error(msg.str());
               }
 
+            os->pop();
             delete package;
           }
         else

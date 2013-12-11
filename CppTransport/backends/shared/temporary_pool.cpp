@@ -11,6 +11,7 @@
 #include "temporary_pool.h"
 #include "translation_unit.h"
 #include "macro.h"
+#include "msg_en.h"
 
 
 #define BIND(X) std::bind(&temporary_pool::X, this, std::placeholders::_1)
@@ -18,6 +19,20 @@
 
 namespace macro_packages
   {
+
+    temporary_pool::temporary_pool(translation_unit* u, language_printer& p, unsigned int dm, std::string t)
+     : pool_template(t), replacement_rule_package(u, p)
+      {
+        // bind ourselves to the buffer on top of the stack
+
+        buffer* buf = unit->get_stack()->top_buffer();
+
+        if(buf != nullptr)
+          {
+            buf->register_closure_handler(std::bind(&temporary_pool::deposit_temporaries, this), this);
+          }
+      }
+
 
     const std::vector<simple_rule> temporary_pool::get_pre_rules()
       {
@@ -99,7 +114,8 @@ namespace macro_packages
             ms->apply(temps);
 
             // write to current tagged position, but don't move it - we might need to write again later
-            buf->write_to_tag(temps);
+            buf->write_to_tag(this->printer.comment(OUTPUT_TEMPORARY_POOL_START));
+            if(temps != "") buf->write_to_tag(temps);
 
             // clear worker object; if we don't we might duplicate temporaries we've already written out
             this->cse_worker->clear();
@@ -141,7 +157,8 @@ namespace macro_packages
             buf->set_tag_to_end();
           }
 
-        return(""); // replace with a blank
+        // temporary pool will be inserted *before* the line corresponding to this macro
+        return(this->printer.comment(OUTPUT_TEMPORARY_POOL_END));
       }
 
   } // namespace macro_packages

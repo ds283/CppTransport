@@ -69,9 +69,9 @@
 #define ERROR_NO_BUFFER_REGISTERED            "Internal error: TemporaryPool macro package in use, but no buffer registered"
 #define ERROR_NO_MACROS_REGISTERED            "Internal error: TemporaryPool macro package in use, but no macro set registered"
 
-#define ERROR_FILESTACK_EMPTY                 "Internal error: filestack empty when setting line number"
+#define ERROR_FILESTACK_EMPTY                 "Internal error: filestack empty when accessing top element"
 #define ERROR_FILESTACK_TOO_SHORT             "Internal error: filestack empty when attempting to pop"
-#define ERROR_FILESTACK_LOCKED                "Internal error: attempt to modify locked filestack"
+#define ERROR_FILESTACK_OVERWRITE             "Internal error: attempt to overwrite data for top filestack element"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
