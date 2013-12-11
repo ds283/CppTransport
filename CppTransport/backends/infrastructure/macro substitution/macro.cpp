@@ -42,7 +42,7 @@ unsigned int macro_package::apply(std::string& line)
 
     if(++this->recursion_depth < this->recursion_max)
       {
-        this->apply_line(line);
+        rval = this->apply_line(line);
         --this->recursion_depth;
       }
     else
