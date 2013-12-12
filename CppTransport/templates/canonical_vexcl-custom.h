@@ -126,13 +126,14 @@ namespace transport
     class $$__MODEL_vexcl_threepf_functor
       {
       public:
-        $$__MODEL_vexcl_threepf_functor(const std::vector<number>& p, const number Mp,
+        $$__MODEL_vexcl_threepf_functor(vex::Context& c,
+          const std::vector<number>& p, const number Mp,
           const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s,
           vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3,
           vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2)
-        : parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
-          u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
-          u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
+          : ctx(c), parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
+            u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
+            u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
           {
           }
 
@@ -143,6 +144,8 @@ namespace transport
         constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+
+        vex::Context&                                      ctx;
 
         const number						                           M_Planck;
         const std::vector<number>&                         parameters;
@@ -170,7 +173,7 @@ namespace transport
           std::vector< std::vector< std::vector<number> > >& tpf_re_h, std::vector< std::vector< std::vector<number> > >& tpf_im_h,
           std::vector< std::vector< std::vector<number> > >& thpf_h,
           const std::vector< struct threepf_kconfig >& kc_l)
-        : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
+          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
           {
           }
 
@@ -363,7 +366,7 @@ namespace transport
           this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *(times.begin()), hst_bg);
 
           // set up a functor to evolve this system
-          $$__MODEL_vexcl_threepf_functor<number> rhs(this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s,
+          $$__MODEL_vexcl_threepf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s,
                                                       u2_k1_tensor, u2_k2_tensor, u2_k3_tensor,
                                                       u3_k1k2k3_tensor, u3_k2k1k3_tensor, u3_k3k1k2_tensor);
 
@@ -371,7 +374,7 @@ namespace transport
           $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list);
 
           using namespace boost::numeric::odeint;
-          integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::threepf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, this);
 
@@ -448,7 +451,7 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
-          const auto __new_a = exp(__t);
+          const auto __a = exp(__t);
 
           std::vector<vex::backend::kernel> u2_kernel;
           std::vector<vex::backend::kernel> backg_kernel;
@@ -469,7 +472,7 @@ namespace transport
               u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
               u2_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
               u2_kernel[d].push_arg(this->k_list(d));
-              u2_kernel[d].push_arg(__new_a);
+              u2_kernel[d].push_arg(__a);
               u2_kernel[d].push_arg(this->M_Planck);
 
               u2_kernel[d](this->ctx.queue(d));
@@ -505,7 +508,6 @@ namespace transport
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
-              twopf_kernel[d].push_arg(this->parameters[$$__1]); $$//
               twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
               twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
               twopf_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
@@ -552,6 +554,220 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
       {
+        const auto __a = exp(__t);
+
+        std::vector<vex::backend::kernel> u2_kernel;
+        std::vector<vex::backend::kernel> u3_kernel;
+        std::vector<vex::backend::kernel> backg_kernel;
+        std::vector<vex::backend::kernel> twopf_kernel;
+        std::vector<vex::backend::kernel> threepf_kernel;
+
+        // build a kernel to construct the components of u2
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u2_kernel.emplace_back(this->ctx.queue(d),
+                                   $$__IMPORT_KERNEL{vexcl-opencl-u2fused.cl, u2fused, );}
+          }
+
+        // Apply the u2 kernel: we need to build *three* copies, corresponding to the k-choices k1, k2, k3
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u2_kernel[d].push_arg<cl_ulong>(this->u2_k1_tensor(0).part_size(d));
+            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u2_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            u2_kernel[d].push_arg(this->k1_list(d));
+            u2_kernel[d].push_arg(__a);
+            u2_kernel[d].push_arg(this->M_Planck);
+
+            u2_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u2_kernel[d].push_arg<cl_ulong>(this->u2_k2_tensor(0).part_size(d));
+            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u2_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            u2_kernel[d].push_arg(this->k2_list(d));
+            u2_kernel[d].push_arg(__a);
+            u2_kernel[d].push_arg(this->M_Planck);
+
+            u2_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u2_kernel[d].push_arg<cl_ulong>(this->u2_k3_tensor(0).part_size(d));
+            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u2_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            u2_kernel[d].push_arg(this->k3_list(d));
+            u2_kernel[d].push_arg(__a);
+            u2_kernel[d].push_arg(this->M_Planck);
+
+            u2_kernel[d](this->ctx.queue(d));
+          }
+
+        // build a kernel to construct the components of u3
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u3_kernel.emplace_back(this->ctx.queue(d),
+                                   $$__IMPORT_KERNEL{vexcl-opencl-u3fused.cl, u2fused, );}
+          }
+
+        // Apply the u3 kernel: we need to build *three* copies, corresponding to the index permutations of k1, k2, k3
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u3_kernel[d].push_arg<cl_ulong>(this->u3_k1k2k3_tensor(0).part_size(d));
+            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            u3_kernel[d].push_arg(this->k1_list(d));
+            u3_kernel[d].push_arg(this->k2_list(d));
+            u3_kernel[d].push_arg(this->k3_list(d));
+            u3_kernel[d].push_arg(__a);
+            u3_kernel[d].push_arg(this->M_Planck);
+
+            u3_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u3_kernel[d].push_arg<cl_ulong>(this->u3_k2k1k3_tensor(0).part_size(d));
+            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            u3_kernel[d].push_arg(this->k2_list(d));
+            u3_kernel[d].push_arg(this->k1_list(d));
+            u3_kernel[d].push_arg(this->k3_list(d));
+            u3_kernel[d].push_arg(__a);
+            u3_kernel[d].push_arg(this->M_Planck);
+
+            u3_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            u3_kernel[d].push_arg<cl_ulong>(this->u3_k3k1k2_tensor(0).part_size(d));
+            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            u3_kernel[d].push_arg(this->k3_list(d));
+            u3_kernel[d].push_arg(this->k1_list(d));
+            u3_kernel[d].push_arg(this->k2_list(d));
+            u3_kernel[d].push_arg(__a);
+            u3_kernel[d].push_arg(this->M_Planck);
+
+            u3_kernel[d](this->ctx.queue(d));
+          }
+
+        // build a kernel to evolve the background
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            backg_kernel.emplace_back(this->ctx.queue(d),
+                                      $$__IMPORT_KERNEL{vexcl-opencl-backg.cl, backg, );}
+          }
+
+        // apply the background kernel
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            backg_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            backg_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            backg_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+            backg_kernel[d].push_arg((__dxdt(this->flatten($$__A)))(d)); $$//
+            backg_kernel[d].push_arg(this->M_Planck);
+
+            backg_kernel[d](this->ctx.queue(d));
+          }
+
+        // build a kernel to evolve the twopf
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel.emplace_back(this->ctx.queue(d),
+                                      $$__IMPORT_KERNEL{vexcl-opencl-twopf.cl, twopffused, );}
+          }
+
+        // apply the twopf kernel to evolve to real and imaginary components of each twopf
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            twopf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+            twopf_kernel[d](this->ctx.queue(d));
+          }
+
+        // build a kernel to evolve the threepf
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            twopf_kernel.emplace_back(this->ctx.queue(d),
+                                      $$__IMPORT_KERNEL{vexcl-opencl-threepf.cl, threepffused, );}
+          }
+
+        // apply the threepf kernel
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
+          {
+            threepf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+
+            threepf_kernel[d](this->ctx.queue(d));
+          }
       }
 
 

@@ -28,6 +28,7 @@ namespace opencl
 
         std::string args_1index(const std::vector<std::string>& args);
         std::string args_2index(const std::vector<std::string>& args);
+        std::string args_3index(const std::vector<std::string>& args);
 
         std::string label;
       };

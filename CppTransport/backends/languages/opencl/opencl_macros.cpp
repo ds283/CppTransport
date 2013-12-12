@@ -32,15 +32,21 @@ namespace opencl
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-                                                     { BIND(args_params), BIND(args_1index), BIND(args_2index), BIND(args_2index)
+                                                     { BIND(args_params), BIND(args_1index),
+                                                       BIND(args_2index), BIND(args_2index),
+                                                       BIND(args_3index), BIND(args_3index)
                                                      };
 
         const std::vector<std::string> names =
-                                         { "PARAM_ARGS", "COORD_ARGS", "U2_ARGS", "TWOPF_ARGS"
+                                         { "PARAM_ARGS", "COORD_ARGS",
+                                           "U2_ARGS", "TWOPF_ARGS",
+                                           "U3_ARGS", "THREEPF_ARGS"
                                          };
 
         const std::vector<unsigned int> args =
-                                          { 0, 1, 1, 1
+                                          { 0, 1,
+                                            1, 1,
+                                            1, 1
                                           };
 
         assert(rules.size() == names.size());
@@ -131,6 +137,32 @@ namespace opencl
             for(int j = 0; j < ncoords; j++)
               {
                 out << (i == 0 && j == 0 ? "" : ", ") << "global double* " << name << "_" << i << "_" << j;
+              }
+          }
+
+        return(out.str());
+      }
+
+
+    std::string opencl_macros::args_3index(const std::vector<std::string>& args)
+      {
+        assert(args.size() == 1);
+
+        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_THREEINDEX_NAME);
+        unsigned int ncoords = 2*this->unit->get_number_fields();
+
+        this->fl->set_size(ncoords);
+
+        std::ostringstream out;
+
+        for(int i = 0; i < ncoords; i++)
+          {
+            for(int j = 0; j < ncoords; j++)
+              {
+                for(int k = 0; k < ncoords; k++)
+                  {
+                    out << (i == 0 && j == 0 && k == 0 ? "" : ", ") << "global double* " << name << "_" << i << "_" << j << "_" << k;
+                  }
               }
           }
 

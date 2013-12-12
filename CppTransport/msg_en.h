@@ -127,6 +127,7 @@
 
 #define OUTPUT_DEFAULT_ONEINDEX_NAME          "__1index"
 #define OUTPUT_DEFAULT_TWOINDEX_NAME          "__2index"
+#define OUTPUT_DEFAULT_THREEINDEX_NAME        "__3index"
 
 #define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
 
