@@ -448,22 +448,27 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
+          const auto __new_a = exp(__t);
+
           std::vector<vex::backend::kernel> u2_kernel;
 
           // build a kernel to construct the components of u2
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
-              u2_kernel.emplace_back(this->ctx.context(d),
+              u2_kernel.emplace_back(this->ctx.queue(d),
                                      $$__IMPORT_KERNEL{vexcl-opencl-u2fused.cl, u2fused, );}
             }
 
           // Apply the u2 kernel
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
-              u2_kernel[d].push_arg<cl_ulong>(this->u2_tensor(0).part_size());
+              u2_kernel[d].push_arg<cl_ulong>(this->u2_tensor(0).part_size(d));
               u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
               u2_kernel[d].push_arg((__x($$__A))(d)); $$//
               u2_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+              u2_kernel[d].push_arg(this->k_list(d));
+              u2_kernel[d].push_arg(__new_a);
+              u2_kernel[d].push_arg(this->M_Planck);
 
               u2_kernel[d](this->ctx.queue(d));
             }
@@ -501,9 +506,6 @@ namespace transport
 
           // evolve the background
           __background($$__A)    = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
-
-          // set up a k-dependent u2 tensor
-          __u2($$__A,$$__B)      = $$// $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
           // evolve the 2pf
           // here, we are dealing only with the real part - which is symmetric
@@ -559,171 +561,6 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_functor<number>::operator()(const threepf_state& __x, threepf_state& __dxdt, double __t)
       {
-        #undef $$__PARAMETER[1]
-        #undef $$__COORDINATE[A]
-        #undef __Mp
-        #undef __k1
-        #undef __k2
-        #undef __k3
-
-        #define $$__PARAMETER[1]  (vex::tag<$$__UNIQUE>(this->parameters[$$__1]))
-        #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x(this->flatten($$__A))))
-        #define __Mp              (vex::tag<$$__UNIQUE>(this->M_Planck))
-        #define __k1              (vex::tag<$$__UNIQUE>(this->k1_list))
-        #define __k2              (vex::tag<$$__UNIQUE>(this->k2_list))
-        #define __k3              (vex::tag<$$__UNIQUE>(this->k3_list))
-
-        const auto __a               = vex::make_temp<$$__UNIQUE>(exp(__t));
-        const auto __Hsq             = vex::make_temp<$$__UNIQUE>($$__HUBBLE_SQ);
-        const auto __eps             = vex::make_temp<$$__UNIQUE>($$__EPSILON);
-
-        #undef __twopf_re_k1_$$__A_$$__B      $$//
-        #undef __twopf_im_k1_$$__A_$$__B      $$//
-        #undef __twopf_re_k2_$$__A_$$__B      $$//
-        #undef __twopf_im_k2_$$__A_$$__A      $$//
-        #undef __twopf_re_k3_$$__A_$$__A      $$//
-        #undef __twopf_im_k3_$$__A_$$__A      $$//
-        #undef __threepf_$$__A_$$__B_$$__C    $$//
-
-        #undef __u2_k1_$$__A_$$__B            $$//
-        #undef __u2_k2_$$__A_$$__B            $$//
-        #undef __u2_k3_$$__A_$$__B            $$//
-        #undef __u2_k1
-        #undef __u2_k2
-        #undef __u2_k3
-
-        #undef __u3_k1k2k3_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k2k1k3_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k3k1k2_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k1k2k3
-        #undef __u3_k2k1k3
-        #undef __u3_k3k1k2
-
-        #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B))))
-        #define __twopf_re_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B))))
-        #define __twopf_re_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B))))
-        #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C))))
-
-        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor(this->flatten($$__A,$$__B))))
-        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor(this->flatten($$__A,$$__B))))
-        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor(this->flatten($$__A,$$__B))))
-
-        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
-        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
-        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
-
-        #define __u2_k1(a,b)                       this->u2_k1_tensor(this->flatten(a,b))
-        #define __u2_k2(a,b)                       this->u2_k2_tensor(this->flatten(a,b))
-        #define __u2_k3(a,b)                       this->u2_k3_tensor(this->flatten(a,b))
-        #define __u3_k1k2k3(a,b,c)                 this->u3_k1k2k3_tensor(this->flatten(a,b,c))
-        #define __u3_k2k1k3(a,b,c)                 this->u3_k2k1k3_tensor(this->flatten(a,b,c))
-        #define __u3_k3k1k2(a,b,c)                 this->u3_k3k1k2_tensor(this->flatten(a,b,c))
-
-        #undef __background
-        #undef __dtwopf_re_k1
-        #undef __dtwopf_im_k1
-        #undef __dtwopf_re_k2
-        #undef __dtwopf_im_k2
-        #undef __dtwopf_re_k3
-        #undef __dtwopf_im_k3
-        #undef __dthreepf
-        #define __background(a)     __dxdt($$__MODEL_pool::backg_start       + this->flatten(a))
-        #define __dtwopf_re_k1(a,b) __dxdt($$__MODEL_pool::twopf_re_k1_start + this->flatten(a,b))
-        #define __dtwopf_im_k1(a,b) __dxdt($$__MODEL_pool::twopf_im_k1_start + this->flatten(a,b))
-        #define __dtwopf_re_k2(a,b) __dxdt($$__MODEL_pool::twopf_re_k2_start + this->flatten(a,b))
-        #define __dtwopf_im_k2(a,b) __dxdt($$__MODEL_pool::twopf_im_k2_start + this->flatten(a,b))
-        #define __dtwopf_re_k3(a,b) __dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten(a,b))
-        #define __dtwopf_im_k3(a,b) __dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten(a,b))
-        #define __dthreepf(a,b,c)   __dxdt($$__MODEL_pool::threepf_start     + this->flatten(a,b,c))
-
-        $$__TEMP_POOL{"const auto $1 = vex::make_temp<$$__UNIQUE>($2);"}
-
-        // evolve the background
-        __background($$__A)            = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
-
-        // set up k-dependent u2 tensors
-        __u2_k1($$__A,$$__B)           = $$// $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        __u2_k2($$__A,$$__B)           = $$// $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        __u2_k3($$__A,$$__B)           = $$// $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
-
-        // set up k-dependent u3 tensors
-        __u3_k1k2k3($$__A,$$__B,$$__C) = $$// $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        __u3_k2k1k3($$__A,$$__B,$$__C) = $$// $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        __u3_k3k1k2($$__A,$$__B,$$__C) = $$// $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
-
-        // evolve the real and imaginary components of the 2pf
-        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B;
-        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_re_k1_$$__A_$$__C;
-
-        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_im_k1_$$__C_$$__B;
-        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_im_k1_$$__A_$$__C;
-
-        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_re_k2_$$__C_$$__B;
-        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_re_k2_$$__A_$$__C;
-
-        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_im_k2_$$__C_$$__B;
-        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_im_k2_$$__A_$$__C;
-
-        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_re_k3_$$__C_$$__B;
-        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_re_k3_$$__A_$$__C;
-
-        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_im_k3_$$__C_$$__B;
-        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_im_k3_$$__A_$$__C;
-
-        // evolve the components of the 3pf
-
-        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
-
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
-
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
-
-        #undef $$__PARAMETER[1]
-        #undef $$__COORDINATE[A]
-        #undef __Mp
-        #undef __k1
-        #undef __k2
-        #undef __k3
-
-        #undef __twopf_re_k1_$$__A_$$__B      $$//
-        #undef __twopf_im_k1_$$__A_$$__B      $$//
-        #undef __twopf_re_k2_$$__A_$$__B      $$//
-        #undef __twopf_im_k2_$$__A_$$__A      $$//
-        #undef __twopf_re_k3_$$__A_$$__A      $$//
-        #undef __twopf_im_k3_$$__A_$$__A      $$//
-        #undef __threepf_$$__A_$$__B_$$__C    $$//
-
-        #undef __u2_k1_$$__A_$$__B            $$//
-        #undef __u2_k2_$$__A_$$__B            $$//
-        #undef __u2_k3_$$__A_$$__B            $$//
-        #undef __u2_k1
-        #undef __u2_k2
-        #undef __u2_k3
-
-        #undef __u3_k1k2k3_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k2k1k3_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k3k1k2_$$__A_$$__B_$$__C  $$//
-        #undef __u3_k1k2k3
-        #undef __u3_k2k1k3
-        #undef __u3_k3k1k2
-
-        #undef __background
-        #undef __dtwopf_re_k1
-        #undef __dtwopf_im_k1
-        #undef __dtwopf_re_k2
-        #undef __dtwopf_im_k2
-        #undef __dtwopf_re_k3
-        #undef __dtwopf_im_k3
-        #undef __dthreepf
       }
 
 
