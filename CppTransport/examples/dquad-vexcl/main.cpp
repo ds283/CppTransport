@@ -231,11 +231,11 @@ int main(int argc, const char* argv[])
     delete twopf_fields;
     delete twopf_cross;
     delete twopf_momenta;
-//    delete threepf_selector;
-//    delete sq_selector_a;
-//    delete sq_selector_b;
-//    delete u2_selector;
-//    delete u3_selector;
+    delete threepf_selector;
+    delete sq_selector_a;
+    delete sq_selector_b;
+    delete u2_selector;
+    delete u3_selector;
 
     return(EXIT_SUCCESS);
   }
