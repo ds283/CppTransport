@@ -25,6 +25,7 @@ namespace cpp
       protected:
         std::string print         (const GiNaC::ex& expr);
         std::string print_operands(const GiNaC::ex& expr, std::string op);
+        std::string print_power   (const GiNaC::ex& expr);
 
       };
 
