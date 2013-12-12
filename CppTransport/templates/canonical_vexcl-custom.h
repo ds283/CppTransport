@@ -228,7 +228,7 @@ namespace transport
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
 
-          // SET UP DATA ON THE OPENCL DEVICE
+          // SET UP DATA ON THE OPENCL/CUDA DEVICE
         
           // initialize the device's copy of the k-modes
           vex::vector<double> dev_ks(ctx.queue(), com_ks);
@@ -300,11 +300,9 @@ namespace transport
 
       template <typename number>
       transport::threepf<number> $$__MODEL_vexcl<number>::threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
-        const std::vector<number>& ics, const std::vector<double>& times,
-        bool silent)
+                                                                  const std::vector<number>& ics, const std::vector<double>& times,
+                                                                  bool silent)
         {
-          using namespace boost::numeric::odeint;
-
           this->validate_times(times, Nstar);
 
           // validate initial conditions (or set up ics for momenta if necessary)
@@ -332,7 +330,7 @@ namespace transport
           std::vector< struct threepf_kconfig >             kconfig_list;
           this->populate_kconfig_list(kconfig_list, com_ks);
 
-          // SET UP DATA ON THE OPENCL DEVICE
+          // SET UP DATA ON THE OPENCL/CUDA DEVICE
 
           // initialize the device's copy of the k-modes
           vex::vector<double> dev_k1s(ctx.queue(), kconfig_list.size());
@@ -363,7 +361,7 @@ namespace transport
 
           // set up state vector, and populate it with initial conditions for the background, twopf and threepf
           threepf_state dev_x(ctx.queue(), kconfig_list.size());
-          this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *(times.begin()), hst_bg);
+          this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *times.begin(), hst_bg);
 
           // set up a functor to evolve this system
           $$__MODEL_vexcl_threepf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s,
@@ -563,10 +561,18 @@ namespace transport
         std::vector<vex::backend::kernel> threepf_kernel;
 
         // build a kernel to construct the components of u2
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            u2_kernel.emplace_back(this->ctx.queue(d),
-                                   $$__IMPORT_KERNEL{vexcl-opencl-u2fused.cl, u2fused, );}
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                u2_kernel.emplace_back(this->ctx.queue(d),
+                                       $$__IMPORT_KERNEL{vexcl-opencl-u2fused.cl, u2fused, );}
+              }
+          }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Setting up u2 kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
           }
 
         // Apply the u2 kernel: we need to build *three* copies, corresponding to the k-choices k1, k2, k3
@@ -608,10 +614,18 @@ namespace transport
           }
 
         // build a kernel to construct the components of u3
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            u3_kernel.emplace_back(this->ctx.queue(d),
-                                   $$__IMPORT_KERNEL{vexcl-opencl-u3fused.cl, u2fused, );}
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                u3_kernel.emplace_back(this->ctx.queue(d),
+                                       $$__IMPORT_KERNEL{vexcl-opencl-u3fused.cl, u3fused, );}
+              }
+          }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Setting up u3 kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
           }
 
         // Apply the u3 kernel: we need to build *three* copies, corresponding to the index permutations of k1, k2, k3
@@ -659,10 +673,18 @@ namespace transport
           }
 
         // build a kernel to evolve the background
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            backg_kernel.emplace_back(this->ctx.queue(d),
-                                      $$__IMPORT_KERNEL{vexcl-opencl-backg.cl, backg, );}
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                backg_kernel.emplace_back(this->ctx.queue(d),
+                                          $$__IMPORT_KERNEL{vexcl-opencl-backg.cl, backg, );}
+              }
+          }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Setting up backg kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
           }
 
         // apply the background kernel
@@ -678,10 +700,18 @@ namespace transport
           }
 
         // build a kernel to evolve the twopf
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            twopf_kernel.emplace_back(this->ctx.queue(d),
-                                      $$__IMPORT_KERNEL{vexcl-opencl-twopf.cl, twopffused, );}
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                twopf_kernel.emplace_back(this->ctx.queue(d),
+                                          $$__IMPORT_KERNEL{vexcl-opencl-twopf.cl, twopffused, );}
+              }
+          }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Setting up twopf kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
           }
 
         // apply the twopf kernel to evolve to real and imaginary components of each twopf
@@ -741,33 +771,50 @@ namespace transport
           }
 
         // build a kernel to evolve the threepf
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            twopf_kernel.emplace_back(this->ctx.queue(d),
-                                      $$__IMPORT_KERNEL{vexcl-opencl-threepf.cl, threepffused, );}
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                twopf_kernel.emplace_back(this->ctx.queue(d),
+                                          $$__IMPORT_KERNEL{vexcl-opencl-threepf.cl, threepffused, );}
+              }
+          }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Setting up threepf kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
           }
 
         // apply the threepf kernel
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
+        try
           {
-            threepf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            for(unsigned int d = 0; d < this->ctx.size(); d++)
+              {
+                threepf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+                threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+                threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
 
-            threepf_kernel[d](this->ctx.queue(d));
+              threepf_kernel[d](this->ctx.queue(d));
+              }
           }
+        catch (const cl::Error &err)
+          {
+            std::cerr << "Calling the threepf kernel: " << err.what() << " " << err.err() << std::endl;
+            exit(1);
+          }
+
       }
 
 
