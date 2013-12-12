@@ -16,8 +16,8 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "vexcl_kernels.h"
-#include "cpp_printer.h"
+#include "opencl_macros.h"
+#include "opencl_printer.h"
 
 
 class opencl_group: public package_group
@@ -27,7 +27,7 @@ class opencl_group: public package_group
     ~opencl_group();
 
   protected:
-    cpp::cpp_printer                    printer;
+    opencl::opencl_printer              printer;
 
     macro_packages::fundamental*        f;
     macro_packages::flow_tensors*       ft;
@@ -35,7 +35,7 @@ class opencl_group: public package_group
     macro_packages::utensors*           ut;
     macro_packages::gauge_xfm*          xf;
     macro_packages::temporary_pool*     tp;
-    cpp::vexcl_kernels*                 vk;
+    opencl::opencl_macros*              om;
   };
 
 

@@ -33,10 +33,12 @@ namespace macro_packages
         void                           deposit_temporaries();
 
       protected:
-        std::string                    pool_template;
+        std::string                    pool_template;       // template to use when constructing temporaries
+        unsigned int                   unique;              // unique id labelling temporary pools (helpful for matching up while debugging)
+        bool                           tag_set;             // keep track of whether we have set a tag yet (helpful for debugging)
 
-        buffer*                        registered_buf;
-        buffer_flush_handler           registered_handler;
+        buffer*                        registered_buf;      // buffer to which we have registered a flush handler
+        buffer_flush_handler           registered_handler;  // the flush handler we registered - cached so we can deregister it later
 
         std::string                    replace_temp_pool(const std::vector<std::string>& args);
       };

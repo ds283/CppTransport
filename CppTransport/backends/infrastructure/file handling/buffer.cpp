@@ -13,63 +13,86 @@
 #include <sstream>
 #include <vector>
 
+#include "core.h"
 #include "buffer.h"
 #include "error.h"
+
+#include "boost/algorithm/string.hpp"
+
+
+#define BUFFER_MAGIC_TAG "MAGIC_TAG"
+
 
 buffer::buffer()
   {
     tag = --buf.end();
+    buf.insert(buf.end(), BUFFER_MAGIC_TAG);
+    ++tag;
+  }
+
+
+void buffer::write(std::string& line, std::list<std::string>::iterator insertion_point)
+  {
+    // break up the string to be written into individual lines
+    std::vector<std::string> lines;
+    boost::split(lines, line, boost::is_any_of(NEWLINE_CHAR));
+
+    for(std::vector<std::string>::const_iterator t = lines.begin(); t != lines.end(); t++)
+      {
+        bool write = true;
+        if(this->skips.size() > 0)
+          {
+            if(this->skips[0] && *t == "") write = false;
+          }
+
+        if(write)
+          {
+            std::string item = *t;
+            this->delimit_line(item);
+            this->buf.insert(insertion_point, item);
+//    std::cerr << ":: " << line << std::endl;
+          }
+      }
   }
 
 
 void buffer::write_to_end(std::string line)
   {
-    bool write = true;
-    if(this->skips.size() > 0)
-      {
-        if(this->skips[0] && line == "") write = false;
-      }
-
-    if(write)
-      {
-        this->delimit_line(line);
-        this->buf.push_back(line);
-//    std::cerr << ":: " << line << std::endl;
-      }
+    this->write(line, this->buf.end());
   }
 
 
 void buffer::write_to_tag(std::string line)
   {
-    bool write = true;
-    if(this->skips.size() > 0)
-      {
-        if(this->skips[0] && line == "") write = false;
-      }
-
-    if(write)
-      {
-        this->delimit_line(line);
-        this->buf.insert(this->tag, line);
-
-//    std::cerr << ">> " << line << std::endl;
-      }
+    this->write(line, this->tag);
   }
 
 
-void buffer::delimit_line(std::string& line)
+void buffer::delimit_line(std::string& item)
   {
     for(std::deque<struct delimiter>::iterator t = this->delimiters.begin(); t != this->delimiters.end(); t++)
       {
-        line.insert(0, (*t).left);
-        line.append((*t).right);
+        item.insert(0, (*t).left);
+        item.append((*t).right);
       }
   }
 
 
 void buffer::set_tag_to_end()
   {
+    // remove blank placeholder line if it is safe to do so (should always be true)
+    if(*(this->tag) == BUFFER_MAGIC_TAG) this->buf.erase(this->tag);
+
+    // magic to keep track of tagged line position
+    // (it's hard to make sure tagged content appears at the right place, because
+    // tags will usually be set *before* output of the line they correpond to--that is,
+    // macro replacement functions which set the tag location have to return a string,
+    // and the string is sent to the buffer *afterwards*)
+    // this magic uses a special tagged line to keep track of where
+    // the insertion should really happen
     this->tag = --this->buf.end();
+    this->buf.insert(this->buf.end(), BUFFER_MAGIC_TAG);
+    ++this->tag;
   }
 
 
@@ -90,6 +113,8 @@ void buffer::emit(std::string file)
     // loop through closure handlers, asking them to flush anything waiting to be written to the output
     this->flush();
 
+    if(*(this->tag) == BUFFER_MAGIC_TAG) this->buf.erase(this->tag);
+
     std::ofstream out;
     out.open(file);
     if(out.is_open() && !out.fail())
@@ -105,6 +130,10 @@ void buffer::emit(std::string file)
         msg << ERROR_CPP_BUFFER_WRITE << " '" << file << "'";
         error(msg.str());
       }
+
+    this->tag = --this->buf.end();
+    this->buf.insert(this->buf.end(), BUFFER_MAGIC_TAG);
+    ++this->tag;
   }
 
 

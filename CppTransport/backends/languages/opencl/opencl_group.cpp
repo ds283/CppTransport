@@ -5,7 +5,7 @@
 
 #include "opencl_group.h"
 
-#include "cpp_printer.h"
+#include "opencl_printer.h"
 #include "cpp_cse.h"
 
 
@@ -23,9 +23,9 @@ opencl_group::opencl_group(translation_unit* u)
     ut = new macro_packages::utensors          (u, this->printer);
     xf = new macro_packages::gauge_xfm         (u, this->printer);
     tp = new macro_packages::temporary_pool    (u, this->printer);
-    vk = new cpp::vexcl_kernels                (u, this->printer);
+    om = new opencl::opencl_macros             (u, this->printer);
 
-    this->push_back(vk);
+    this->push_back(om);
     this->push_back(tp);
     this->push_back(ut);
     this->push_back(xf);
@@ -43,7 +43,7 @@ opencl_group::~opencl_group()
     delete ut;
     delete xf;
     delete tp;
-    delete vk;
+    delete om;
 
     delete cse_worker;
   }

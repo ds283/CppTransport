@@ -106,8 +106,11 @@ unsigned int translator::process(const std::string in, const std::string out, en
                     os->increment_line();
                   }
 
-                // no need to flush temporaries before writing out the buffer, because that
-                // happens automatically via the closure handlers
+                // if we are required to output the buffer, do so.
+                // any temporaries will be automatically flushed.
+                // if we are not required to output, temporaries
+                // will be flushed when the package_group is destroyed
+                // below
                 if(out != "") buf->emit(out);
               }
             else
@@ -117,8 +120,11 @@ unsigned int translator::process(const std::string in, const std::string out, en
                 error(msg.str());
               }
 
-            os->pop();
+            // note that destruction of the package_group must happen
+            // before the output stack is adjusted, because replacement_rule_packages
+            // may depend on the stack contents
             delete package;
+            os->pop();
           }
         else
           {

@@ -1,28 +1,27 @@
 //
-// Created by David Seery on 04/12/2013.
+// Created by David Seery on 11/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
 
 
-
-#ifndef __cpp_printer_H_
-#define __cpp_printer_H_
+#ifndef __opencl_printer_H_
+#define __opencl_printer_H_
 
 
 #include "C_style_printer.h"
 
 
-namespace cpp
+namespace opencl
   {
 
-    class cpp_printer: public C_style_printer
+    class opencl_printer: public C_style_printer
       {
       public:
         std::string ginac  (const GiNaC::ex& expr);
         std::string comment(const std::string tag);
       };
 
-  } // namespace cpp
+  } // namespace opencl
 
 
-#endif //__cpp_printer_H_
+#endif //__opencl_printer_H_

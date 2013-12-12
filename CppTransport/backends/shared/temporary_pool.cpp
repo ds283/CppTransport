@@ -21,7 +21,7 @@ namespace macro_packages
   {
 
     temporary_pool::temporary_pool(translation_unit* u, language_printer& p, std::string t)
-     : pool_template(t), replacement_rule_package(u, p)
+     : pool_template(t), unique(0), tag_set(false), replacement_rule_package(u, p)
       {
         // bind ourselves to the buffer on top of the stack, and remember which buffer that was
         // so we can deregister later
@@ -37,6 +37,8 @@ namespace macro_packages
 
     temporary_pool::~temporary_pool()
       {
+        if(!tag_set) this->warn(WARNING_TEMPORARY_NO_TAG_SET);
+        this->deposit_temporaries();
         if(this->registered_buf != nullptr)
           {
             this->registered_buf->deregister_closure_handler(registered_handler, this);
@@ -100,43 +102,48 @@ namespace macro_packages
     void temporary_pool::deposit_temporaries()
       {
         // deposit any temporaries generated in the current temporary pool,
-        // and then reset
-        //
-        // the insertion happens before the element pointed
-        // to by data.pool, so there should be no need
-        // to update its location
+        // and then reset the CSE agent
 
-        // get buffer and macro package from the top of the stack
-        buffer*        buf = this->unit->get_stack()->top_buffer();
-        macro_package* ms  = this->unit->get_stack()->top_macro_package();
-
-        if(buf == nullptr)
+        // however, we should only do something if the location of a temporary pool has been defined
+        // (we could get called before that has happened, eg., due to insertion of a kernel)
+        // if there is no location defined, we should hold on until one is set later
+        if(tag_set)
           {
-            error(ERROR_NO_BUFFER_REGISTERED);
-          }
-        else if(ms == nullptr)
-          {
-            error(ERROR_NO_MACROS_REGISTERED);
-          }
-        else
-          {
-            std::string temps = this->cse_worker->temporaries(this->pool_template);
-            ms->apply(temps);
+            // get buffer and macro package from the top of the stack
+            buffer*        buf = this->unit->get_stack()->top_buffer();
+            macro_package* ms  = this->unit->get_stack()->top_macro_package();
 
-            // write to current tagged position, but don't move it - we might need to write again later
-            buf->write_to_tag(this->printer.comment(OUTPUT_TEMPORARY_POOL_START));
-            if(temps != "") buf->write_to_tag(temps);
+            if(buf == nullptr)
+              {
+                error(ERROR_NO_BUFFER_REGISTERED);
+              }
+            else if(ms == nullptr)
+              {
+                error(ERROR_NO_MACROS_REGISTERED);
+              }
+            else
+              {
+                std::string temps = this->cse_worker->temporaries(this->pool_template);
+                ms->apply(temps);
 
-            // clear worker object; if we don't we might duplicate temporaries we've already written out
-            this->cse_worker->clear();
+                // write to current tagged position, but don't move it - we might need to write again later
+                std::ostringstream label;
+                label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
+                buf->write_to_tag(this->printer.comment(label.str()));
+                if(temps != "") buf->write_to_tag(temps);
+
+                // clear worker object; if we don't we might duplicate temporaries we've already written out
+                this->cse_worker->clear();
+              }
           }
-
        }
 
     std::string temporary_pool::replace_temp_pool(const std::vector<std::string>& args)
       {
         assert(args.size() == 1);
         std::string t = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_POOL_TEMPLATE);
+
+        std::string rval = "";
 
         // deposit any temporaries generated up to this point the current temporary pool
         //
@@ -146,29 +153,30 @@ namespace macro_packages
 
         // get buffer and macro package from the top of the stack
         buffer*        buf = this->unit->get_stack()->top_buffer();
-        macro_package* ms  = this->unit->get_stack()->top_macro_package();
 
         if(buf == nullptr)
           {
             error(ERROR_NO_BUFFER_REGISTERED);
           }
-        else if(ms == nullptr)
-          {
-            error(ERROR_NO_MACROS_REGISTERED);
-          }
         else
           {
-            this->deposit_temporaries();
+            // flush any existing temporaries to the preceding pool, if one exists
+            if(this->tag_set) this->deposit_temporaries();
 
             // remember new template
             this->pool_template = t;
 
             // mark current endpoint in the buffer as the new insertion point
             buf->set_tag_to_end();
+            this->tag_set = true;
+
+            // temporary pool will be inserted *before* the line corresponding to this macro
+            std::ostringstream label;
+            label << OUTPUT_TEMPORARY_POOL_END << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique << ")";
+            rval = this->printer.comment(label.str());
           }
 
-        // temporary pool will be inserted *before* the line corresponding to this macro
-        return(this->printer.comment(OUTPUT_TEMPORARY_POOL_END));
+        return(rval);
       }
 
   } // namespace macro_packages

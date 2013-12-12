@@ -30,7 +30,6 @@ class buffer
 
     void write_to_end              (std::string line);
     void write_to_tag              (std::string line);
-    void delimit_line              (std::string& line);
 
     void set_tag_to_end            ();
 
@@ -48,8 +47,12 @@ class buffer
     void pop_skip_blank            ();
 
   protected:
+
+    void delimit_line              (std::string& line);
+    void write                     (std::string& line, std::list<std::string>::iterator insertion_point);
+
     std::list<std::string>                             buf;
-    std::list<std::string>::iterator                   tag;
+    std::list<std::string>::iterator                   tag;       // position of tagged location within the output stream
 
     std::list<std::pair<buffer_flush_handler, void*> > flush_handlers;
 

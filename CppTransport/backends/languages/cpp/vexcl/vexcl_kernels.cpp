@@ -107,6 +107,7 @@ namespace cpp
                     // preserve the type of translation (core/implementation)
                     unsigned int replacements = t->translate(kernel_file, "", type, buf);
 
+                    // restore previous state prior to switching back to original input file
                     buf->pop_skip_blank();
                     buf->pop_delimiter();
 
@@ -124,13 +125,14 @@ namespace cpp
                     if(args.size() >= 3)
                       {
                         buf->write_to_end(args[2]);
+                        buf->write_to_end("");  // skip a line to avoid collisions with the new pool (set below)
                       }
 
                     // reset tag pointer on buffer to after the lines we have written
                     buf->set_tag_to_end();
 
                     // mark this point as the beginning of a new pool
-                    rval = this->printer.comment(OUTPUT_TEMPORARY_POOL_END);
+                    rval = this->printer.comment(OUTPUT_KERNEL_LOCATION);
                   }
               }
           }

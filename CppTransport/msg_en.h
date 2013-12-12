@@ -25,6 +25,8 @@
 
 #define ERROR_CPP_BUFFER_WRITE                "Error writing to output file"
 
+#define ERROR_CSE_POWER_ARGUMENTS             "Unexpected number of arguments to pow() during common subexpression elimination"
+
 #define ERROR_NO_CORE_TEMPLATE                "fatal: No core template specified"
 #define ERROR_NO_IMPLEMENTATION_TEMPLATE      "fatal: No implementation template specified"
 #define ERROR_MISSING_TEMPLATE                "Could not find specified template"
@@ -72,6 +74,8 @@
 #define ERROR_FILESTACK_EMPTY                 "Internal error: filestack empty when accessing top element"
 #define ERROR_FILESTACK_TOO_SHORT             "Internal error: filestack empty when attempting to pop"
 #define ERROR_FILESTACK_OVERWRITE             "Internal error: attempt to overwrite data for top filestack element"
+
+#define WARNING_TEMPORARY_NO_TAG_SET          "Temporary pool being written, but no location set: defaults to end-of-buffer"
 
 #define WARNING_HEX_CONVERSION_A              "Leading '0x' in "
 #define WARNING_HEX_CONVERSION_B              "indicates hex, but did not convert: treated as decmial"
@@ -121,10 +125,14 @@
 #define OUTPUT_DEFAULT_HSQ_NAME               "__Hsq"
 #define OUTPUT_DEFAULT_EPS_NAME               "__eps"
 
+#define OUTPUT_DEFAULT_COORD_NAME             "__x"
+
 #define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
 
 #define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
 #define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
+#define OUTPUT_TEMPORARY_POOL_SEQUENCE        "sequence"
+#define OUTPUT_KERNEL_LOCATION                "-- KERNEL INSERTION - closed temporary pool"
 
 #define OUTPUT_VEXCL_KERNEL_PRE               ", \""
 #define OUTPUT_VEXCL_KERNEL_POST              "\""
@@ -132,5 +140,7 @@
 
 #define OUTPUT_VEXCL_KERNELLINE_PRE           "\""
 #define OUTPUT_VEXCL_KERNELLINE_POST          "\\n\""
+
+#define OUTPUT_OPENCL_DEFAULT_LABEL           "idx"
 
 #endif //__msg_H_

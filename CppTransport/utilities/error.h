@@ -15,8 +15,8 @@
 #include "filestack.h"
 
 
-#define ERROR_PATH_LEVEL (1)
-#define WARN_PATH_LEVEL  (1)
+#define ERROR_PATH_LEVEL (5)
+#define WARN_PATH_LEVEL  (5)
 
 
 void warn (std::string const msg);
