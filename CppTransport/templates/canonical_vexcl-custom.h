@@ -451,6 +451,8 @@ namespace transport
           const auto __new_a = exp(__t);
 
           std::vector<vex::backend::kernel> u2_kernel;
+          std::vector<vex::backend::kernel> backg_kernel;
+          std::vector<vex::backend::kernel> twopf_kernel;
 
           // build a kernel to construct the components of u2
           for(unsigned int d = 0; d < this->ctx.size(); d++)
@@ -464,7 +466,7 @@ namespace transport
             {
               u2_kernel[d].push_arg<cl_ulong>(this->u2_tensor(0).part_size(d));
               u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
-              u2_kernel[d].push_arg((__x($$__A))(d)); $$//
+              u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
               u2_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
               u2_kernel[d].push_arg(this->k_list(d));
               u2_kernel[d].push_arg(__new_a);
@@ -473,54 +475,43 @@ namespace transport
               u2_kernel[d](this->ctx.queue(d));
             }
 
-          #undef $$__PARAMETER[1]
-          #undef $$__COORDINATE[A]
-          #undef __Mp
-          #undef __k
+          // build a kernel to evolve the background
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              backg_kernel.emplace_back(this->ctx.queue(d),
+                                        $$__IMPORT_KERNEL{vexcl-opencl-backg.cl, backg, );}
+            }
 
-          #define $$__PARAMETER[1]  (vex::tag<$$__UNIQUE>(this->parameters[$$__1]))
-          #define $$__COORDINATE[A] (vex::tag<$$__UNIQUE>(__x(this->flatten($$__A))))
-          #define __Mp              (vex::tag<$$__UNIQUE>(this->M_Planck))
-          #define __k               (vex::tag<$$__UNIQUE>(this->k_list))
+          // apply the background kernel
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              backg_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+              backg_kernel[d].push_arg(this->parameters[$$__1]); $$//
+              backg_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+              backg_kernel[d].push_arg((__dxdt(this->flatten($$__A)))(d)); $$//
+              backg_kernel[d].push_arg(this->M_Planck);
 
-          const auto __a   = vex::make_temp<$$__UNIQUE>(exp(__t));
-          const auto __Hsq = vex::make_temp<$$__UNIQUE>($$__HUBBLE_SQ);
-          const auto __eps = vex::make_temp<$$__UNIQUE>($$__EPSILON);
+              backg_kernel[d](this->ctx.queue(d));
+            }
 
-          #undef __tpf_$$__A_$$__B $$//
-          #undef __u2_$$__A_$$__B  $$//
-          #undef __u2
+          // build a kernel to evolve the twopf
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              twopf_kernel.emplace_back(this->ctx.queue(d),
+                                        $$__IMPORT_KERNEL{vexcl-opencl-twopf.cl, twopffused, );}
+            }
 
-          #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B))))
+          // apply the twopf kernel
+          for(unsigned int d = 0; d < this->ctx.size(); d++)
+            {
+              twopf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+              twopf_kernel[d].push_arg(this->parameters[$$__1]); $$//
+              twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
+              twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
+              twopf_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
 
-          #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor(this->flatten($$__A,$$__B))))
-
-          #define __u2(a,b)         $$// this->u2_tensor(this->flatten(a,b))
-
-          #undef __background
-          #undef __dtwopf
-          #define __background(a) __dxdt($$__MODEL_pool::backg_start + this->flatten(a))
-          #define __dtwopf(a,b)   __dxdt($$__MODEL_pool::twopf_start + this->flatten(a,b))
-
-          $$__TEMP_POOL{"const auto $1 = vex::make_temp<$$__UNIQUE>($2);"}
-
-          // evolve the background
-          __background($$__A)    = $$// $$__U1_PREDEF[A]{__Hsq, __eps};
-
-          // evolve the 2pf
-          // here, we are dealing only with the real part - which is symmetric
-          // so the index placement is not important
-          __dtwopf($$__A,$$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2} * __tpf_$$__C_$$__B;
-          __dtwopf($$__A,$$__B) += 0 $$// + $$__U2_NAME[BC]{__u2} * __tpf_$$__A_$$__C;
-
-          #undef $$__PARAMETER[1]
-          #undef $$__COORDINATE[A]
-          #undef __Mp
-          #undef __k
-
-          #undef __tpf_$$__A_$$__B $$//
-          #undef __u2_$$__A_$$__B  $$//
-          #undef __u2
+              twopf_kernel[d](this->ctx.queue(d));
+            }
         }
 
 

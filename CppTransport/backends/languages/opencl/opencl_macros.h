@@ -24,9 +24,10 @@ namespace opencl
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
       protected:
-        std::string param_args(const std::vector<std::string>& args);
-        std::string coord_args(const std::vector<std::string>& args);
-        std::string u2_args   (const std::vector<std::string>& args);
+        std::string args_params(const std::vector<std::string> &args);
+
+        std::string args_1index(const std::vector<std::string>& args);
+        std::string args_2index(const std::vector<std::string>& args);
 
         std::string label;
       };

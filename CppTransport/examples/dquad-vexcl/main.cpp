@@ -11,7 +11,7 @@
 #endif
 
 #define VEXCL_CACHE_KERNELS
-#define VEXCL_BACKEND_CUDA
+#define VEXCL_BACKEND_OPENCL
 
 #include <iostream>
 
@@ -72,7 +72,7 @@ int main(int argc, const char* argv[])
     // set up a context and work queue which can
     // be used by boost::odeint to schedule computations
     #if defined(VEXCL_BACKEND_OPENCL)
-      vex::Context ctx(vex::Filter::Type(CL_DEVICE_TYPE_GPU) && vex::Filter::DoublePrecision);
+      vex::Context ctx(vex::Filter::Type(CL_DEVICE_TYPE_CPU) && vex::Filter::DoublePrecision);
       std::cout << "Available OpenCL devices:" << std::endl;
       std::cout << ctx << std::endl;
     #elif defined(VEXCL_BACKEND_CUDA)

@@ -6,7 +6,7 @@
 #  pragma OPENCL EXTENSION cl_amd_fp64: enable
 #endif
 
-kernel void u2fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U2_ARGS{__u2}, global double* __klist, double __a, double __Mp )
+kernel void backg( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__COORD_ARGS{__dxdt}, double __Mp )
   {
     size_t chunk_size  = (n + get_global_size(0) - 1) / get_global_size(0);
     size_t chunk_start = get_global_id(0) * chunk_size;
@@ -21,11 +21,10 @@ kernel void u2fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U2_ARGS{_
     #undef  $$__COORDINATE[A]
     #undef  __k
     #define $$__COORDINATE[A] __x_$$__A[idx]
-    #define __k __klist[idx]
 
     for(size_t idx = chunk_start; idx < chunk_end; ++idx)
       {
         $$__TEMP_POOL{"double $1 = $2;"}
-        __u2_$$__A_$$__B[idx] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        __dxdt_$$__A[idx] = $$__U1_PREDEF[A]{__Hsq, __eps};
       }
   }

@@ -32,15 +32,15 @@ namespace opencl
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-                                                     { BIND(param_args), BIND(coord_args), BIND(u2_args)
+                                                     { BIND(args_params), BIND(args_1index), BIND(args_2index), BIND(args_2index)
                                                      };
 
         const std::vector<std::string> names =
-                                         { "PARAM_ARGS", "COORD_ARGS", "U2_ARGS"
+                                         { "PARAM_ARGS", "COORD_ARGS", "U2_ARGS", "TWOPF_ARGS"
                                          };
 
         const std::vector<unsigned int> args =
-                                          { 0, 1, 1
+                                          { 0, 1, 1, 1
                                           };
 
         assert(rules.size() == names.size());
@@ -80,7 +80,7 @@ namespace opencl
     // *******************************************************************
 
 
-    std::string opencl_macros::param_args(const std::vector<std::string>& args)
+    std::string opencl_macros::args_params(const std::vector<std::string> &args)
       {
         std::vector<std::string> list = this->unit->get_param_list();
 
@@ -95,11 +95,11 @@ namespace opencl
       }
 
 
-    std::string opencl_macros::coord_args(const std::vector<std::string>& args)
+    std::string opencl_macros::args_1index(const std::vector<std::string>& args)
       {
         assert(args.size() == 1);
 
-        std::string name     = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_COORD_NAME);
+        std::string name     = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_ONEINDEX_NAME);
         unsigned int ncoords = 2*this->unit->get_number_fields();
 
         this->fl->set_size(ncoords);
@@ -115,11 +115,11 @@ namespace opencl
       }
 
 
-    std::string opencl_macros::u2_args(const std::vector<std::string>& args)
+    std::string opencl_macros::args_2index(const std::vector<std::string>& args)
       {
         assert(args.size() == 1);
 
-        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_U2_NAME);
+        std::string  name    = (args.size() >= 1 ? args[0] : OUTPUT_DEFAULT_TWOINDEX_NAME);
         unsigned int ncoords = 2*this->unit->get_number_fields();
 
         this->fl->set_size(ncoords);

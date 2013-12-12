@@ -125,7 +125,8 @@
 #define OUTPUT_DEFAULT_HSQ_NAME               "__Hsq"
 #define OUTPUT_DEFAULT_EPS_NAME               "__eps"
 
-#define OUTPUT_DEFAULT_COORD_NAME             "__x"
+#define OUTPUT_DEFAULT_ONEINDEX_NAME          "__1index"
+#define OUTPUT_DEFAULT_TWOINDEX_NAME          "__2index"
 
 #define OUTPUT_DEFAULT_STEPPER_STATE_NAME     "double"
 
