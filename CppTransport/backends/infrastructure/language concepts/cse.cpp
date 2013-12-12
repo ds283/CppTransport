@@ -44,6 +44,7 @@
 #include <sstream>
 #include <map>
 #include <assert.h>
+#include <functional>
 
 #include "msg_en.h"
 
@@ -70,13 +71,16 @@ void cse::parse(const GiNaC::ex& expr)
   {
     for(GiNaC::const_postorder_iterator it = expr.postorder_begin(); it != expr.postorder_end(); it++)
       {
-        std::string e = this->print(*it);
+        symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
 
-        if(this->symbols[e] == "")
+        std::string e = this->print(*it, symf);
+        symbol_record& record = this->symbols[e];
+
+        if(record.filled == false)
           {
-            std::string sym = this->make_symbol();
-            this->symbols[e] = sym;
-            this->decls.push_back(std::make_pair(sym, e));
+            record.filled = true;
+            record.symbol = this->make_symbol();
+            record.target = e;
           }
       }
   }
@@ -107,7 +111,7 @@ std::string cse::temporaries(const std::string& t)
 
     if(ok)
       {
-        // deposit each declation into the output stream
+        // deposit each declaration into the output stream
         for(size_t i = 0; i < this->decls.size(); i++)
           {
             std::string line = t;
@@ -130,11 +134,44 @@ std::string cse::temporaries(const std::string& t)
 // **********************************************************************
 
 
-std::string cse::symbol(const GiNaC::ex& expr)
+std::string cse::get_symbol_no_tag(const GiNaC::ex& expr)
   {
-    std::string e = this->print(expr);
-    return(this->symbols[e]);
+    symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
+
+    std::string e = this->print(expr, symf);
+    symbol_record& record = this->symbols[e];
+
+    std::string rval = e;
+    if(record.filled)
+      {
+        rval = record.symbol;
+      }
+
+    return(rval);
   }
+
+
+std::string cse::get_symbol_and_tag(const GiNaC::ex& expr)
+  {
+    symbol_f symf = std::bind(&cse::get_symbol_and_tag, this, std::placeholders::_1);
+
+    std::string e = this->print(expr, symf);
+    symbol_record& record = this->symbols[e];
+
+    std::string rval = e;
+    if(record.filled)
+      {
+        rval = record.symbol;
+        if(!record.written)
+          {
+            this->decls.push_back(std::make_pair(record.symbol, record.target));
+            record.written = true;
+          }
+      }
+
+    return(rval);
+  }
+
 
 std::string cse::make_symbol()
   {
@@ -181,7 +218,7 @@ std::string cse_map::operator[](unsigned int index)
       {
         if(this->cse_worker->get_do_cse())
           {
-            rval = this->cse_worker->symbol((*this->list)[index]);
+            rval = this->cse_worker->get_symbol_and_tag((*this->list)[index]);
           }
         else
           {

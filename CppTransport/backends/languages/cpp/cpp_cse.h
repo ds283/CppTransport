@@ -23,9 +23,9 @@ namespace cpp
           }
 
       protected:
-        std::string print         (const GiNaC::ex& expr);
-        std::string print_operands(const GiNaC::ex& expr, std::string op);
-        std::string print_power   (const GiNaC::ex& expr);
+        std::string print         (const GiNaC::ex& expr, symbol_f symf);
+        std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf);
+        std::string print_power   (const GiNaC::ex& expr, symbol_f symf);
 
       };
 

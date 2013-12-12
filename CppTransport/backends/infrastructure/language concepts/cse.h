@@ -57,7 +57,7 @@ class cse;
 
 // utility class to make using CSE easier
 // it takes a vector of GiNaC expressions as input,
-// and can be indexed in the same order to produce the equivalent CSE symbol
+// and can be indexed in the same order to produce the equivalent CSE get_symbol
 class cse_map
   {
   public:
@@ -74,9 +74,27 @@ class cse_map
   };
 
 
+typedef std::function<std::string(const GiNaC::ex&)> symbol_f;
+
+
 class cse
   {
   public:
+
+    class symbol_record
+      {
+      public:
+        symbol_record()
+          : target(""), written(false), filled(false)
+          {
+          }
+
+        std::string target;
+        std::string symbol;
+        bool        written;
+        bool        filled;
+      };
+
     cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
       : serial_number(s), printer(p), do_cse(d), kernel_name(k), symbol_counter(0)
       {
@@ -88,7 +106,12 @@ class cse
     void               parse(const GiNaC::ex& expr);
 
     std::string        temporaries(const std::string& t);
-    std::string        symbol(const GiNaC::ex& expr);
+
+    // two methods for getting the symbol corresponding to a GiNaC expression
+    // get_symbol_no_tag() just returns the symbol and is used during the parsing phase
+    // get_symbol_and_tag() marks each temporary as 'used', and injects it into the declarations
+    // it is used when actually outputting symbols
+    std::string        get_symbol_and_tag(const GiNaC::ex &expr);
 
     void               clear();
 
@@ -108,17 +131,19 @@ class cse
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
-    virtual std::string print         (const GiNaC::ex& expr) = 0;
-    virtual std::string print_operands(const GiNaC::ex& expr, std::string op) = 0;
+    virtual std::string print           (const GiNaC::ex& expr, symbol_f symf) = 0;
+    virtual std::string print_operands  (const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
 
-    std::string make_symbol   ();
+    std::string        get_symbol_no_tag(const GiNaC::ex &expr);
+
+    std::string        make_symbol      ();
 
     unsigned int serial_number;
     unsigned int symbol_counter;
 
     std::string  kernel_name;
 
-    std::map<std::string, std::string>                 symbols;
+    std::map<std::string, symbol_record>               symbols;
     std::vector< std::pair<std::string, std::string> > decls;
   };
 
