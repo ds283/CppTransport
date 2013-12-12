@@ -130,7 +130,7 @@ namespace opencl
           {
             for(int j = 0; j < ncoords; j++)
               {
-                out << (i == 0 && j == 0 ? "" : ", ") << "global double* " << name << "_" << this->fl->flatten(i,j);
+                out << (i == 0 && j == 0 ? "" : ", ") << "global double* " << name << "_" << i << "_" << j;
               }
           }
 
