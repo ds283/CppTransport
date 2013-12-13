@@ -125,9 +125,9 @@ namespace transport
           const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s,
           vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3,
           vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2)
-        : parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
-          u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
-          u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
+          : parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
+            u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
+            u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
           {
           }
 
@@ -165,7 +165,7 @@ namespace transport
           std::vector< std::vector< std::vector<number> > >& tpf_re_h, std::vector< std::vector< std::vector<number> > >& tpf_im_h,
           std::vector< std::vector< std::vector<number> > >& thpf_h,
           const std::vector< struct threepf_kconfig >& kc_l)
-        : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
+          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
           {
           }
 
@@ -366,7 +366,7 @@ namespace transport
           $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list);
 
           using namespace boost::numeric::odeint;
-          integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+          integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
           transport::threepf<number> tpf(ks, com_ks, Nstar, times, background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, this);
 
