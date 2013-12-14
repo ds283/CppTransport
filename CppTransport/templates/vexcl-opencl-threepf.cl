@@ -7,19 +7,19 @@
 #endif
 
 kernel void twopffused( ulong n,
-  $$__TWOPF_ARGS{__twopf_re_k1}, \\
-  $$__TWOPF_ARGS{__twopf_im_k1}, \\
-  $$__TWOPF_ARGS{__twopf_re_k2}, \\
-  $$__TWOPF_ARGS{__twopf_im_k2}, \\
-  $$__TWOPF_ARGS{__twopf_re_k3}, \\
-  $$__TWOPF_ARGS{__twopf_im_k3}, \\
-  $$__THREEPF_ARGS{__threepf}, \\
-  $$__THREEPF_ARGS{__dthreepf}, \\
-  $$__U2_ARGS{__u2_k1}, \\
-  $$__U2_ARGS{__u2_k2}, \\
-  $$__U2_ARGS{__u2_k3}, \\
-  $$__U3_ARGS{__u3_k1k2k3}, \\
-  $$__U3_ARGS{__u3_k2k1k3}, \\
+  $$__TWOPF_ARGS{__twopf_re_k1},
+  $$__TWOPF_ARGS{__twopf_im_k1},
+  $$__TWOPF_ARGS{__twopf_re_k2},
+  $$__TWOPF_ARGS{__twopf_im_k2},
+  $$__TWOPF_ARGS{__twopf_re_k3},
+  $$__TWOPF_ARGS{__twopf_im_k3},
+  $$__THREEPF_ARGS{__threepf},
+  $$__THREEPF_ARGS{__dthreepf},
+  $$__U2_ARGS{__u2_k1},
+  $$__U2_ARGS{__u2_k2},
+  $$__U2_ARGS{__u2_k3},
+  $$__U3_ARGS{__u3_k1k2k3},
+  $$__U3_ARGS{__u3_k2k1k3},
   $$__U3_ARGS{__u3_k3k1k2} )
 {
   size_t chunk_size  = (n + get_global_size(0) - 1) / get_global_size(0);

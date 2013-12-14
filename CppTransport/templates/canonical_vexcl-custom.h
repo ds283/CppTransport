@@ -775,8 +775,8 @@ namespace transport
           {
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
-                twopf_kernel.emplace_back(this->ctx.queue(d),
-                                          $$__IMPORT_KERNEL{vexcl-opencl-threepf.cl, threepffused, );}
+                threepf_kernel.emplace_back(this->ctx.queue(d),
+                                            $$__IMPORT_KERNEL{vexcl-opencl-threepf.cl, threepffused, );}
               }
           }
         catch (const cl::Error &err)
