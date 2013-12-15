@@ -5,9 +5,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// OpenCL/CUDA implementation using the VexCL library
-// this version uses directly-generated custom kernels, rather
-// than relying on VexCL's ability to use expression templates
+// custom OpenCL implementation using the VexCL library and custom kernels
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -459,7 +457,7 @@ namespace transport
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               u2_kernel.emplace_back(this->ctx.queue(d),
-                                     $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-u2fused.cl, u2fused, );}
+                                     $$__IMPORT_KERNEL{vexcl-opencl/u2fused.cl, u2fused, );}
             }
 
           // Apply the u2 kernel
@@ -480,7 +478,7 @@ namespace transport
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               backg_kernel.emplace_back(this->ctx.queue(d),
-                                        $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-backg.cl, backg, );}
+                                        $$__IMPORT_KERNEL{vexcl-opencl/backg.cl, backg, );}
             }
 
           // apply the background kernel
@@ -499,7 +497,7 @@ namespace transport
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               twopf_kernel.emplace_back(this->ctx.queue(d),
-                                        $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-twopf.cl, twopffused, );}
+                                        $$__IMPORT_KERNEL{vexcl-opencl/twopf.cl, twopffused, );}
             }
 
           // apply the twopf kernel
@@ -566,7 +564,7 @@ namespace transport
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
                 u2_kernel.emplace_back(this->ctx.queue(d),
-                                       $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-u2fused.cl, u2fused, );}
+                                       $$__IMPORT_KERNEL{vexcl-opencl/u2fused.cl, u2fused, );}
               }
           }
         catch (const cl::Error &err)
@@ -619,7 +617,7 @@ namespace transport
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
                 u3_kernel.emplace_back(this->ctx.queue(d),
-                                       $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-u3fused.cl, u3fused, );}
+                                       $$__IMPORT_KERNEL{vexcl-opencl/u3fused.cl, u3fused, );}
               }
           }
         catch (const cl::Error &err)
@@ -678,7 +676,7 @@ namespace transport
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
                 backg_kernel.emplace_back(this->ctx.queue(d),
-                                          $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-backg.cl, backg, );}
+                                          $$__IMPORT_KERNEL{vexcl-opencl/backg.cl, backg, );}
               }
           }
         catch (const cl::Error &err)
@@ -705,7 +703,7 @@ namespace transport
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
                 twopf_kernel.emplace_back(this->ctx.queue(d),
-                                          $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-twopf.cl, twopffused, );}
+                                          $$__IMPORT_KERNEL{vexcl-opencl/twopf.cl, twopffused, );}
               }
           }
         catch (const cl::Error &err)
@@ -776,7 +774,7 @@ namespace transport
             for(unsigned int d = 0; d < this->ctx.size(); d++)
               {
                 threepf_kernel.emplace_back(this->ctx.queue(d),
-                                            $$__IMPORT_KERNEL{vexcl-opencl/vexcl-opencl-threepf.cl, threepffused, );}
+                                            $$__IMPORT_KERNEL{vexcl-opencl/threepf.cl, threepffused, );}
               }
           }
         catch (const cl::Error &err)
