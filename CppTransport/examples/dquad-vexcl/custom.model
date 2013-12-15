@@ -5,7 +5,7 @@ indexorder     right;
 
 % specify which class template should be used with this model
 core           "canonical_core";
-implementation "vexcl-opencl/canonical_vexcl-opencl";
+implementation "vexcl-cuda/canonical_vexcl-cuda";
 
 % fix properties of the steppers
 background
