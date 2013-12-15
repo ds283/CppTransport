@@ -14,7 +14,7 @@
 #include <string>
 
 
-std::string to_printable(const std::string& input);
+std::string to_printable(const std::string& input, bool quote=true);
 
 
 #endif //__to_printable_H_

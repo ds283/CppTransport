@@ -9,13 +9,13 @@
 #include "to_printable.h"
 
 
-std::string to_printable(const std::string& input)
+std::string to_printable(const std::string& input, bool quote)
   {
     std::string result = "";
 
     std::back_insert_iterator<std::string> out = std::back_inserter(result);
 
-    *out++ = '"';
+    if(quote) *out++ = '"';
     for(std::string::const_iterator i = input.begin(); i != input.end(); i++)
       {
         unsigned char c = *i;
@@ -51,7 +51,7 @@ std::string to_printable(const std::string& input)
               }
           }
       }
-    *out++ = '"';
+    if(quote) *out++ = '"';
 
     return (result);
   }
