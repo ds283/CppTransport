@@ -10,7 +10,6 @@
 #define __has_attribute(x) 0
 #endif
 
-#define VEXCL_CACHE_KERNELS
 #define VEXCL_BACKEND_CUDA
 
 #include <iostream>
@@ -116,18 +115,18 @@ int main(int argc, const char* argv[])
 
     // integrate background, 2pf and 3pf together
     const double Nstar = 7.0;
-//    transport::threepf<double> threepf = model.threepf(ctx, ks, Nstar, init_values, times);
-    transport::twopf<double> twopf = model.twopf(ctx, ks, Nstar, init_values, times);
+    transport::threepf<double> threepf = model.threepf(ctx, ks, Nstar, init_values, times);
+//    transport::twopf<double> twopf = model.twopf(ctx, ks, Nstar, init_values, times);
 
     timer.stop();
     timer.report();
 //    std::cout << tpf;
 
-//    transport::background<double> backg = threepf.get_background();
-    transport::background<double> backg = twopf.get_background();
+    transport::background<double> backg = threepf.get_background();
+//    transport::background<double> backg = twopf.get_background();
 
-//    transport::twopf<double> twopf_re   = threepf.get_real_twopf();
-//    transport::twopf<double> twopf_im   = threepf.get_imag_twopf();
+    transport::twopf<double> twopf_re   = threepf.get_real_twopf();
+    transport::twopf<double> twopf_im   = threepf.get_imag_twopf();
 
     std::array<unsigned int, 2> index_set_a = { 0, 0 };
     std::array<unsigned int, 2> index_set_b = { 0, 1 };
@@ -150,17 +149,17 @@ int main(int argc, const char* argv[])
     std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
 
     transport::index_selector<1>* backg_selector    = backg.manufacture_selector();
-    transport::index_selector<2>* twopf_fields      = twopf.manufacture_selector();
-    transport::index_selector<2>* twopf_cross       = twopf.manufacture_selector();
-    transport::index_selector<2>* twopf_momenta     = twopf.manufacture_selector();
-//    transport::index_selector<2>* twopf_fields      = twopf_re.manufacture_selector();
-//    transport::index_selector<2>* twopf_cross       = twopf_re.manufacture_selector();
-//    transport::index_selector<2>* twopf_momenta     = twopf_re.manufacture_selector();
-//    transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
-//    transport::index_selector<3>* sq_selector_a     = threepf.manufacture_selector();
-//    transport::index_selector<3>* sq_selector_b     = threepf.manufacture_selector();
-//    transport::index_selector<2>* u2_selector       = backg.manufacture_2_selector();
-//    transport::index_selector<3>* u3_selector       = backg.manufacture_3_selector();
+//    transport::index_selector<2>* twopf_fields      = twopf.manufacture_selector();
+//    transport::index_selector<2>* twopf_cross       = twopf.manufacture_selector();
+//    transport::index_selector<2>* twopf_momenta     = twopf.manufacture_selector();
+    transport::index_selector<2>* twopf_fields      = twopf_re.manufacture_selector();
+    transport::index_selector<2>* twopf_cross       = twopf_re.manufacture_selector();
+    transport::index_selector<2>* twopf_momenta     = twopf_re.manufacture_selector();
+    transport::index_selector<3>* threepf_selector  = threepf.manufacture_selector();
+    transport::index_selector<3>* sq_selector_a     = threepf.manufacture_selector();
+    transport::index_selector<3>* sq_selector_b     = threepf.manufacture_selector();
+    transport::index_selector<2>* u2_selector       = backg.manufacture_2_selector();
+    transport::index_selector<3>* u3_selector       = backg.manufacture_3_selector();
 
     twopf_fields->none();
     twopf_fields->set_on(index_set_a);
@@ -178,64 +177,64 @@ int main(int argc, const char* argv[])
     twopf_momenta->set_on(index_set_i);
     twopf_momenta->set_on(index_set_j);
 
-//    threepf_selector->none();
-//    threepf_selector->set_on(sq_set_a);
-//    threepf_selector->set_on(sq_set_b);
-//    threepf_selector->set_on(sq_set_c);
-//    threepf_selector->set_on(sq_set_d);
-//    threepf_selector->set_on(sq_set_e);
-//    threepf_selector->set_on(sq_set_f);
-//
-//    sq_selector_a->none();
-//    sq_selector_a->set_on(sq_set_a);
-//    sq_selector_a->set_on(sq_set_b);
-//    sq_selector_a->set_on(sq_set_c);
-//    sq_selector_b->none();
-//    sq_selector_b->set_on(sq_set_d);
-//    sq_selector_b->set_on(sq_set_e);
-//    sq_selector_b->set_on(sq_set_f);
+    threepf_selector->none();
+    threepf_selector->set_on(sq_set_a);
+    threepf_selector->set_on(sq_set_b);
+    threepf_selector->set_on(sq_set_c);
+    threepf_selector->set_on(sq_set_d);
+    threepf_selector->set_on(sq_set_e);
+    threepf_selector->set_on(sq_set_f);
+
+    sq_selector_a->none();
+    sq_selector_a->set_on(sq_set_a);
+    sq_selector_a->set_on(sq_set_b);
+    sq_selector_a->set_on(sq_set_c);
+    sq_selector_b->none();
+    sq_selector_b->set_on(sq_set_d);
+    sq_selector_b->set_on(sq_set_e);
+    sq_selector_b->set_on(sq_set_f);
 
     backg.plot(&py_plt, output_path.string() + "/background", backg_selector);
 
-    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_fields",        twopf_fields);
-    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_cross",         twopf_cross);
-    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_momenta",       twopf_momenta);
+//    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_fields",        twopf_fields);
+//    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_cross",         twopf_cross);
+//    twopf.components_time_history(       &py_plt,   output_path.string() + "/re_k_momenta",       twopf_momenta);
 
-//    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_fields",        twopf_fields);
-//    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_cross",         twopf_cross);
-//    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_momenta",       twopf_momenta);
-//
-//    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_fields",        twopf_fields);
-//    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_cross",         twopf_cross);
-//    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_momenta",       twopf_momenta);
-//
-//    twopf_re.zeta_time_history(             &py_plt,   output_path.string() + "/zeta_twopf_mode");
-//    twopf_re.zeta_time_history(             &text_plt, output_path.string() + "/zeta_twopf_mode");
-//
-//    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_mode",       threepf_selector);
-//    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_mode",       threepf_selector);
-//    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
-//    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
-//
-//    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
-//    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
-//    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
-//    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
-//
-//    threepf.zeta_time_history(              &py_plt,   output_path.string() + "/zeta_threepf_mode");
-//
-//    threepf.reduced_bispectrum_time_history(&py_plt,   output_path.string() + "/redbisp");
-//    threepf.reduced_bispectrum_time_history(&text_plt, output_path.string() + "/redbisp");
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_fields",        twopf_fields);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_cross",         twopf_cross);
+    twopf_re.components_time_history(       &py_plt,   output_path.string() + "/re_k_momenta",       twopf_momenta);
+
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_fields",        twopf_fields);
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_cross",         twopf_cross);
+    twopf_im.components_time_history(       &py_plt,   output_path.string() + "/im_k_momenta",       twopf_momenta);
+
+    twopf_re.zeta_time_history(             &py_plt,   output_path.string() + "/zeta_twopf_mode");
+    twopf_re.zeta_time_history(             &text_plt, output_path.string() + "/zeta_twopf_mode");
+
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_mode",       threepf_selector);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_mode",       threepf_selector);
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/threepf_shape_mode", transport::threepf_local_shape(), threepf_selector);
+
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_a_mode",   transport::threepf_local_shape(), sq_selector_a);
+    threepf.components_time_history(        &py_plt,   output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
+    threepf.components_time_history(        &text_plt, output_path.string() + "/sq_config_b_mode",   transport::threepf_local_shape(), sq_selector_b);
+
+    threepf.zeta_time_history(              &py_plt,   output_path.string() + "/zeta_threepf_mode");
+
+    threepf.reduced_bispectrum_time_history(&py_plt,   output_path.string() + "/redbisp");
+    threepf.reduced_bispectrum_time_history(&text_plt, output_path.string() + "/redbisp");
 
     delete backg_selector;
     delete twopf_fields;
     delete twopf_cross;
     delete twopf_momenta;
-//    delete threepf_selector;
-//    delete sq_selector_a;
-//    delete sq_selector_b;
-//    delete u2_selector;
-//    delete u3_selector;
+    delete threepf_selector;
+    delete sq_selector_a;
+    delete sq_selector_b;
+    delete u2_selector;
+    delete u3_selector;
 
     return(EXIT_SUCCESS);
   }

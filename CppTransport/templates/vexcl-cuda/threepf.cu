@@ -5,7 +5,7 @@ typedef unsigned int        uint;
 typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
 
-extern "C" __global__ void twopffused( ulong n,
+extern "C" __global__ void threepffused( ulong n,
   $$__TWOPF_ARGS{__twopf_re_k1},
   $$__TWOPF_ARGS{__twopf_im_k1},
   $$__TWOPF_ARGS{__twopf_re_k2},

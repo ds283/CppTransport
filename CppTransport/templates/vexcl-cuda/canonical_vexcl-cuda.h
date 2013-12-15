@@ -23,10 +23,10 @@
 
 namespace transport
   {
-      // set up a state type for 2pf integration on an OpenCL device
+      // set up a state type for 2pf integration on an CUDA device
       typedef vex::multivector<double, $$__MODEL_pool::twopf_state_size> twopf_state;
 
-      // set up a state type for 3pf integration on an OpenCL device
+      // set up a state type for 3pf integration on an CUDA device
       typedef vex::multivector<double, $$__MODEL_pool::threepf_state_size> threepf_state;
 
 
@@ -42,13 +42,13 @@ namespace transport
               {
               }
 
-            // Integrate background and 2-point function on an OpenCL device
+            // Integrate background and 2-point function on an CUDA device
             transport::twopf<number>
               twopf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
                     const std::vector<number>& ics, const std::vector<double>& times,
                     bool silent=false);
 
-            // Integrate background, 2-point function and 3-point function on an OpenCL device
+            // Integrate background, 2-point function and 3-point function on an CUDA device
             // this sample implementation works on a cubic lattice of k-modes
             transport::threepf<number>
               threepf(vex::Context& ctx, const std::vector<double>& ks, double Nstar,
@@ -108,7 +108,10 @@ namespace transport
           public:
             $$__MODEL_vexcl_twopf_observer(std::vector< std::vector<number> >& bh,
                                            std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks)
-              : background_history(bh), twopf_history(tpfh), k_size(ks) {}
+              : background_history(bh), twopf_history(tpfh), k_size(ks)
+              {
+              }
+
             void operator()(const twopf_state& x, double t);
 
           private:
@@ -764,7 +767,6 @@ namespace transport
 
           threepf_kernel[d](this->ctx.queue(d));
           }
-
       }
 
 

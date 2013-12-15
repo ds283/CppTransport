@@ -6,7 +6,7 @@
 #  pragma OPENCL EXTENSION cl_amd_fp64: enable
 #endif
 
-kernel void twopffused( ulong n,
+kernel void threepffused( ulong n,
   $$__TWOPF_ARGS{__twopf_re_k1},
   $$__TWOPF_ARGS{__twopf_im_k1},
   $$__TWOPF_ARGS{__twopf_re_k2},

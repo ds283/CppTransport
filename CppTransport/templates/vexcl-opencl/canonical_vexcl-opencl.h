@@ -226,7 +226,7 @@ namespace transport
           std::vector< std::vector<number> >                background_history;
           std::vector< std::vector< std::vector<number> > > twopf_history;
 
-          // SET UP DATA ON THE OPENCL/CUDA DEVICE
+          // SET UP DATA ON THE OPENCL DEVICE
         
           // initialize the device's copy of the k-modes
           vex::vector<double> dev_ks(ctx.queue(), com_ks);
@@ -328,7 +328,7 @@ namespace transport
           std::vector< struct threepf_kconfig >             kconfig_list;
           this->populate_kconfig_list(kconfig_list, com_ks);
 
-          // SET UP DATA ON THE OPENCL/CUDA DEVICE
+          // SET UP DATA ON THE OPENCL DEVICE
 
           // initialize the device's copy of the k-modes
           vex::vector<double> dev_k1s(ctx.queue(), kconfig_list.size());
