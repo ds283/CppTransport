@@ -29,17 +29,17 @@ translator::translator(translation_unit* tu)
   }
 
 
-unsigned int translator::translate(const std::string in, const std::string out, enum process_type type)
+unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, filter_function* filter)
   {
     buffer* buf = new buffer;
-    unsigned int rval = this->translate(in, out, type, buf);
+    unsigned int rval = this->translate(in, out, type, buf, filter);
     delete buf;
 
     return(rval);
   }
 
 
-unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, buffer* buf)
+unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
   {
     unsigned int rval = 0;
     std::string  template_in;
@@ -48,11 +48,11 @@ unsigned int translator::translate(const std::string in, const std::string out, 
 
     if(path->fqpn(in + ".h", template_in) == true)    // leaves fully qualified pathname in template_in if it exists
       {
-        rval += this->process(template_in, out, type, buf);
+        rval += this->process(template_in, out, type, buf, filter);
       }
     else if(path->fqpn(in, template_in) == true)
       {
-        rval += this->process(template_in, out, type, buf);
+        rval += this->process(template_in, out, type, buf, filter);
       }
     else
       {
@@ -65,7 +65,7 @@ unsigned int translator::translate(const std::string in, const std::string out, 
   }
 
 
-unsigned int translator::process(const std::string in, const std::string out, enum process_type type, buffer* buf)
+unsigned int translator::process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
   {
     unsigned int  rval = 0;
     std::ifstream inf;
@@ -102,7 +102,14 @@ unsigned int translator::process(const std::string in, const std::string out, en
                     std::getline(inf, line);
                     rval += ms->apply(line);
 
-                    buf->write_to_end(line);
+                    if(filter != nullptr)
+                      {
+                        buf->write_to_end((*filter)(line));
+                      }
+                    else
+                      {
+                        buf->write_to_end(line);
+                      }
                     os->increment_line();
                   }
 

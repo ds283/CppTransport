@@ -15,6 +15,8 @@
 // need forward reference to avoid circularity
 class translation_unit;
 
+typedef std::function<std::string(std::string&)> filter_function;
+
 class translator
   {
   public:
@@ -25,12 +27,12 @@ class translator
     // sometimes we want to supply a buffer, because we share buffers
     // across different input sources
     // otherwise, translate() creates a suitable buffer internally
-    unsigned int translate(const std::string in, const std::string out, enum process_type type);
-    unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf);
+    unsigned int translate(const std::string in, const std::string out, enum process_type type, filter_function* filter=nullptr);
+    unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter=nullptr);
 
   protected:
     // internal API to process a file
-    unsigned int process(const std::string in, const std::string out, enum process_type type, buffer* buf);
+    unsigned int process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter);
 
     // do the heavy lifting of actual processing
     unsigned int apply();
