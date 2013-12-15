@@ -14,6 +14,7 @@
 #include "macro.h"
 #include "translation_unit.h"
 
+#include "to_printable.h"
 
 #define BIND(X) std::bind(&vexcl_kernels::X, this, std::placeholders::_1)
 
@@ -105,7 +106,11 @@ namespace cpp
 
                     // translate the contents of 'kernel_file' into the current output buffer, but do not emit any output (yet)
                     // preserve the type of translation (core/implementation)
-                    unsigned int replacements = t->translate(kernel_file, "", type, buf);
+                    // also, filter to printable strings. The bound arguments here are:
+                    // * 'false' disables quoting by to_printable())
+                    // * 'true' allows newlines to pass through
+                    std::function<std::string(std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
+                    unsigned int replacements = t->translate(kernel_file, "", type, buf, &filter);
 
                     // restore previous state prior to switching back to original input file
                     buf->pop_skip_blank();
