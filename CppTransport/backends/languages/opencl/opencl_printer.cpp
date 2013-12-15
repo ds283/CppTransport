@@ -23,4 +23,4 @@ namespace opencl
         return(this->C_style_printer::comment(tag));
       }
 
-  } // namespace cpp
+  } // namespace opencl
