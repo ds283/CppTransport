@@ -7,7 +7,7 @@ typedef unsigned long long  ulong;
 
 extern "C" __global__ void backg( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__COORD_ARGS{__dxdt}, double __Mp )
   {
-    size_t begin = blockDim.x * blockIdx.x + threadIdx.x
+    size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     if(begin < n)
       {

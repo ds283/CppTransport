@@ -5,9 +5,9 @@ typedef unsigned int        uint;
 typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
 
-extern "C" __global__ void u3fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U3_ARGS{__u3}, global double* __k1list, global double* __k2list, global double* __k3list, double __a, double __Mp )
+extern "C" __global__ void u3fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U3_ARGS{__u3}, double* __k1list, double* __k2list, double* __k3list, double __a, double __Mp )
   {
-    size_t begin = blockDim.x * blockIdx.x + threadIdx.x
+    size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     if(begin < n)
     {

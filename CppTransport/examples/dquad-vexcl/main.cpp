@@ -11,7 +11,6 @@
 #endif
 
 #define VEXCL_CACHE_KERNELS
-#define VEXCL_SHOW_KERNELS
 #define VEXCL_BACKEND_CUDA
 
 #include <iostream>
@@ -19,7 +18,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_vexcl.h"
+#include "dq_vexcl-cuda.h"
 
 
 // ****************************************************************************

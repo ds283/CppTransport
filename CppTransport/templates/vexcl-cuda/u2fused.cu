@@ -5,9 +5,9 @@ typedef unsigned int        uint;
 typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
 
-extern "C" __global__ void u2fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U2_ARGS{__u2}, global double* __klist, double __a, double __Mp )
+extern "C" __global__ void u2fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}, $$__U2_ARGS{__u2}, double* __klist, double __a, double __Mp )
   {
-    size_t begin = blockDim.x * blockIdx.x + threadIdx.x
+    size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     if(begin < n)
       {
