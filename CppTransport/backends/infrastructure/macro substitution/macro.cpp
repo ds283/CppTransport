@@ -79,7 +79,7 @@ unsigned int macro_package::apply_line(std::string& line)
     // check if the last component is a semicolon
     // note std:string::back() and std::string::pop_back() require C++11
     bool semicolon = false;
-    if(line.back() == ';')
+    if(line.size() > 0 && line.back() == ';')
       {
         semicolon = true;
         line.pop_back();
@@ -87,7 +87,7 @@ unsigned int macro_package::apply_line(std::string& line)
 
     // check if the last component is a comma
     bool comma = false;
-    if(line.back() == ',')
+    if(line.size() > 0 && line.back() == ',')
       {
         comma = true;
         line.pop_back();
