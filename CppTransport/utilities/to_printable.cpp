@@ -9,7 +9,7 @@
 #include "to_printable.h"
 
 
-std::string to_printable(const std::string& input, bool quote)
+std::string to_printable(const std::string& input, bool quote, bool allow_newlines)
   {
     std::string result = "";
 
@@ -19,7 +19,7 @@ std::string to_printable(const std::string& input, bool quote)
     for(std::string::const_iterator i = input.begin(); i != input.end(); i++)
       {
         unsigned char c = *i;
-        if(' ' <= c and c <= '~' and c != '\\' and c != '"')
+        if((' ' <= c and c <= '~' and c != '\\' and c != '"') || (c == '\n' and allow_newlines))
           {
             *out++ = c;
           }
