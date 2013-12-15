@@ -559,18 +559,10 @@ namespace transport
         std::vector<vex::backend::kernel> threepf_kernel;
 
         // build a kernel to construct the components of u2
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                u2_kernel.emplace_back(this->ctx.queue(d),
-                                       $$__IMPORT_KERNEL{vexcl-cuda/u2fused.cu, u2fused, );}
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Setting up u2 kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+            u2_kernel.emplace_back(this->ctx.queue(d),
+                                   $$__IMPORT_KERNEL{vexcl-cuda/u2fused.cu, u2fused, );}
           }
 
         // Apply the u2 kernel: we need to build *three* copies, corresponding to the k-choices k1, k2, k3
@@ -612,18 +604,10 @@ namespace transport
           }
 
         // build a kernel to construct the components of u3
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                u3_kernel.emplace_back(this->ctx.queue(d),
-                                       $$__IMPORT_KERNEL{vexcl-cuda/u3fused.cu, u3fused, );}
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Setting up u3 kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+            u3_kernel.emplace_back(this->ctx.queue(d),
+                                   $$__IMPORT_KERNEL{vexcl-cuda/u3fused.cu, u3fused, );}
           }
 
         // Apply the u3 kernel: we need to build *three* copies, corresponding to the index permutations of k1, k2, k3
@@ -671,18 +655,10 @@ namespace transport
           }
 
         // build a kernel to evolve the background
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                backg_kernel.emplace_back(this->ctx.queue(d),
-                                          $$__IMPORT_KERNEL{vexcl-cuda/backg.cu, backg, );}
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Setting up backg kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+            backg_kernel.emplace_back(this->ctx.queue(d),
+                                      $$__IMPORT_KERNEL{vexcl-cuda/backg.cu, backg, );}
           }
 
         // apply the background kernel
@@ -698,18 +674,10 @@ namespace transport
           }
 
         // build a kernel to evolve the twopf
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                twopf_kernel.emplace_back(this->ctx.queue(d),
-                                          $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Setting up twopf kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+            twopf_kernel.emplace_back(this->ctx.queue(d),
+                                      $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
           }
 
         // apply the twopf kernel to evolve to real and imaginary components of each twopf
@@ -769,48 +737,32 @@ namespace transport
           }
 
         // build a kernel to evolve the threepf
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                threepf_kernel.emplace_back(this->ctx.queue(d),
-                                            $$__IMPORT_KERNEL{vexcl-cuda/threepf.cu, threepffused, );}
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Setting up threepf kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+            threepf_kernel.emplace_back(this->ctx.queue(d),
+                                        $$__IMPORT_KERNEL{vexcl-cuda/threepf.cu, threepffused, );}
           }
 
         // apply the threepf kernel
-        try
+        for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
-            for(unsigned int d = 0; d < this->ctx.size(); d++)
-              {
-                threepf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-                threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-                threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg<cl_ulong>(__x(0).part_size(d));
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
 
-              threepf_kernel[d](this->ctx.queue(d));
-              }
-          }
-        catch (const cl::Error &err)
-          {
-            std::cerr << "Calling the threepf kernel: " << err.what() << " " << err.err() << std::endl;
-            exit(1);
+          threepf_kernel[d](this->ctx.queue(d));
           }
 
       }
