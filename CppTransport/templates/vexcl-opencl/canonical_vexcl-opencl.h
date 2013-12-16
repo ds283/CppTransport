@@ -646,7 +646,7 @@ namespace transport
             u3_kernel[d].push_arg<cl_ulong>(this->u3_k2k1k3_tensor(0).part_size(d));
             u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
             u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            u3_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
             u3_kernel[d].push_arg(this->k2_list(d));
             u3_kernel[d].push_arg(this->k1_list(d));
             u3_kernel[d].push_arg(this->k3_list(d));
@@ -660,7 +660,7 @@ namespace transport
             u3_kernel[d].push_arg<cl_ulong>(this->u3_k3k1k2_tensor(0).part_size(d));
             u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
             u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            u3_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
             u3_kernel[d].push_arg(this->k3_list(d));
             u3_kernel[d].push_arg(this->k1_list(d));
             u3_kernel[d].push_arg(this->k2_list(d));
@@ -824,9 +824,9 @@ namespace transport
       {
         // allocate storage for state
         std::vector<number>                hst_background_state($$__MODEL_pool::backg_size);
-        std::vector< std::vector<number> > hst_twopf_re_state($$__MODEL_pool::twopf_size);
-        std::vector< std::vector<number> > hst_twopf_im_state($$__MODEL_pool::twopf_size);
-        std::vector< std::vector<number> > hst_threepf_state($$__MODEL_pool::threepf_size);
+        std::vector< std::vector<number> > hst_twopf_re_state  ($$__MODEL_pool::twopf_size);
+        std::vector< std::vector<number> > hst_twopf_im_state  ($$__MODEL_pool::twopf_size);
+        std::vector< std::vector<number> > hst_threepf_state   ($$__MODEL_pool::threepf_size);
 
         // first, background
         for(int i = 0; i < $$__MODEL_pool::backg_size; i++)

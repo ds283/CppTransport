@@ -10,7 +10,7 @@ extern "C" __global__ void u3fused( ulong n, $$__PARAM_ARGS, $$__COORD_ARGS{__x}
     size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     if(begin < n)
-    {
+      {
         #undef  $$__COORDINATE[A]
         #define $$__COORDINATE[A] __x_$$__A[begin]
 
