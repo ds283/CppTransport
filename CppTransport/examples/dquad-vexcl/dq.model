@@ -1,7 +1,8 @@
 model   "dquad";
 name    "Double Quadratic Inflation";
 
-#include "custom.model"
+#include "cuda.model"
+%#include "opencl.model"
 
 % set up the fields
 field
