@@ -828,14 +828,25 @@ namespace transport
         std::vector< std::vector<number> > hst_twopf_im_state  ($$__MODEL_pool::twopf_size);
         std::vector< std::vector<number> > hst_threepf_state   ($$__MODEL_pool::threepf_size);
 
+        std::cout << __CPP_TRANSPORT_OBSERVER_TIME << " = " << t << std::endl;
+
         // first, background
         for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
           {
-            hst_background_state[i] = x($$__MODEL_pool::backg_start + i)[0];  // only need to make a copy for one k-mode; the rest are all the same
+            std::vector<number> hst_bg(this->kconfig_list.size());
+
+            vex::copy(x($$__MODEL_pool::backg_start + i), hst_bg);
+            for(int j = 0; j < this->kconfig_list.size(); j++)
+              {
+                if(this->kconfig_list[j].store_background)
+                  {
+                    hst_background_state[i] = hst_bg[j];
+                  }
+              }
           }
         this->background_history.push_back(hst_background_state);
 
-        // then, two pf
+        // then, twopf
         for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
           {
             std::vector<number> hst_re(this->kconfig_list.size());
@@ -845,7 +856,7 @@ namespace transport
             vex::copy(x($$__MODEL_pool::twopf_im_k1_start + i), hst_im);
             for(int j = 0; j < this->kconfig_list.size(); j++)
               {
-                if(this->kconfig_list[j].store_background)
+                if(this->kconfig_list[j].store_twopf)
                   {
                     hst_twopf_re_state[i].push_back(hst_re[j]);
                     hst_twopf_im_state[i].push_back(hst_im[j]);
@@ -855,7 +866,7 @@ namespace transport
         this->twopf_re_history.push_back(hst_twopf_re_state);
         this->twopf_im_history.push_back(hst_twopf_im_state);
 
-        // finally, three pf
+        // finally, threepf
         for(int i = 0; i < $$__MODEL_pool::threepf_size; i++)
           {
             // ensure destination is sufficiently large
