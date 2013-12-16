@@ -16,7 +16,7 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
-#include "opencl_macros.h"
+#include "kernel_argument_macros.h"
 #include "opencl_printer.h"
 
 
@@ -35,7 +35,7 @@ class opencl_group: public package_group
     macro_packages::utensors*           ut;
     macro_packages::gauge_xfm*          xf;
     macro_packages::temporary_pool*     tp;
-    opencl::opencl_macros*              om;
+    shared::kernel_argument_macros*     ka;
   };
 
 

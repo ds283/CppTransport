@@ -15,6 +15,11 @@
 #include <string>
 #include <deque>
 
+#include "indexorder.h"
+
+
+#define INDEX_RANGE_FIELDS    (1)
+#define INDEX_RANGE_ALL       (2)
 
 #define INDEX_RANGE_UNKNOWN   (0)
 #define INDEX_RANGE_PARAMETER (1000)
@@ -22,11 +27,6 @@
 enum index_trait
   {
     index_field, index_momentum, index_parameter, index_unknown
-  };
-
-enum index_order
-  {
-    index_left_order, index_right_order
   };
 
 struct index_assignment
@@ -55,15 +55,17 @@ struct index_abstract
 class assignment_package
   {
     public:
-      assignment_package(unsigned int f, unsigned int p, enum index_order o=index_right_order)
+      assignment_package(unsigned int f, unsigned int p, enum indexorder o=indexorder_right)
       : num_fields(f), num_parameters(p), order(o) {}
 
       std::vector< std::vector<struct index_assignment> > assign(const std::vector<struct index_abstract>& indices);
 
+      unsigned int value(struct index_assignment& v);
+
     private:
       const unsigned int     num_fields;
       const unsigned int     num_parameters;
-      const enum index_order order;
+      const enum indexorder  order;
   };
 
 

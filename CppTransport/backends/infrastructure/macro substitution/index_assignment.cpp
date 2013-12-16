@@ -19,7 +19,7 @@
 
 static void
   make_assignment(unsigned int fields, unsigned int parameters,
-  const std::vector<struct index_abstract>& indices, unsigned int i, enum index_order order, std::deque<unsigned int>& assignment);
+  const std::vector<struct index_abstract>& indices, unsigned int i, enum indexorder order, std::deque<unsigned int>& assignment);
 
 static void
   make_index_assignment(unsigned int fields, unsigned int parameters,
@@ -129,7 +129,7 @@ unsigned int index_numeric(const struct index_assignment& index)
 
 static void make_assignment(unsigned int fields, unsigned int parameters,
   const std::vector<struct index_abstract>& indices, unsigned int i,
-  enum index_order order, std::deque<unsigned int>& assignment)
+  enum indexorder order, std::deque<unsigned int>& assignment)
   {
     assignment.clear();
 
@@ -153,10 +153,10 @@ static void make_assignment(unsigned int fields, unsigned int parameters,
         // beginning from the left or from the right
         switch(order)
           {
-            case index_left_order:
+            case indexorder_left:
               assignment.push_back(this_index);
               break;
-            case index_right_order:
+            case indexorder_right:
             default:
               assignment.push_front(this_index);
           }
@@ -265,6 +265,33 @@ static bool is_ordered (std::deque<unsigned int>& a, const std::vector<struct in
                 rval = false;
               }
           }
+      }
+
+    return(rval);
+  }
+
+
+unsigned int assignment_package::value(struct index_assignment& v)
+  {
+    unsigned int rval = 0;
+
+    switch(v.trait)
+      {
+        case index_parameter:
+          rval = v.species;
+          break;
+
+        case index_field:
+          rval = v.species;
+          break;
+
+        case index_momentum:
+          rval = v.species + v.num_fields;
+          break;
+
+        case index_unknown:
+        default:
+          assert(false);
       }
 
     return(rval);
