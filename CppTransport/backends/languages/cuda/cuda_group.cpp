@@ -23,9 +23,11 @@ cuda_group::cuda_group(translation_unit* u)
     ut = new macro_packages::utensors          (u, this->printer);
     xf = new macro_packages::gauge_xfm         (u, this->printer);
     tp = new macro_packages::temporary_pool    (u, this->printer);
+    su = new macro_packages::summation         (u, this->printer);
     ka = new shared::kernel_argument_macros    (u, this->printer);
 
     this->push_back(ka);
+    this->push_back(su);
     this->push_back(tp);
     this->push_back(ut);
     this->push_back(xf);
@@ -43,6 +45,7 @@ cuda_group::~cuda_group()
     delete ut;
     delete xf;
     delete tp;
+    delete su;
     delete ka;
 
     delete cse_worker;

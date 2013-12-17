@@ -24,11 +24,13 @@ vexcl_group::vexcl_group(translation_unit* u)
     ut = new macro_packages::utensors          (u, this->printer);
     xf = new macro_packages::gauge_xfm         (u, this->printer);
     tp = new macro_packages::temporary_pool    (u, this->printer);
+    su = new macro_packages::summation         (u, this->printer);
     vs = new cpp::vexcl_steppers               (u, this->printer);
     vk = new cpp::vexcl_kernels                (u, this->printer);
 
     this->push_back(vk);
     this->push_back(vs);
+    this->push_back(su);
     this->push_back(tp);
     this->push_back(ut);
     this->push_back(xf);
@@ -46,6 +48,7 @@ vexcl_group::~vexcl_group()
     delete ut;
     delete xf;
     delete tp;
+    delete su;
     delete vs;
     delete vk;
 

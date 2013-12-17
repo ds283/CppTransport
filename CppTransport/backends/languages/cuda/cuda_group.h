@@ -16,6 +16,7 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
+#include "summation.h"
 #include "kernel_argument_macros.h"
 #include "cuda_printer.h"
 
@@ -35,6 +36,7 @@ class cuda_group : public package_group
     macro_packages::utensors*           ut;
     macro_packages::gauge_xfm*          xf;
     macro_packages::temporary_pool*     tp;
+    macro_packages::summation*          su;
     shared::kernel_argument_macros*     ka;
   };
 

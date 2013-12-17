@@ -17,6 +17,7 @@
 #include "utensors.h"
 #include "gauge_xfm.h"
 #include "temporary_pool.h"
+#include "summation.h"
 #include "vexcl_steppers.h"
 #include "vexcl_kernels.h"
 #include "cpp_printer.h"
@@ -37,6 +38,7 @@ class vexcl_group: public package_group
     macro_packages::utensors*           ut;
     macro_packages::gauge_xfm*          xf;
     macro_packages::temporary_pool*     tp;
+    macro_packages::summation*          su;
     cpp::vexcl_steppers*                vs;
     cpp::vexcl_kernels*                 vk;
   };
