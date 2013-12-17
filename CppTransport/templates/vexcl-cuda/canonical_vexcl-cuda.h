@@ -20,6 +20,9 @@
 #include "vexcl/vexcl.hpp"
 #include "boost/numeric/odeint/external/vexcl/vexcl.hpp"
 
+#include <cuda.h>
+#include <cuda_runtime_api.h>
+
 
 namespace transport
   {
@@ -68,6 +71,9 @@ namespace transport
             void populate_threepf_state_ic(threepf_state& x, const std::vector< struct threepf_kconfig >& kconfig_list,
                                            const std::vector<double>& k1s, const std::vector<double>& k2s, const std::vector<double>& k3s,
                                            double Ninit, const std::vector<number>& ic);
+
+            template <typename State>
+            void write_memory_requirements(vex::Context& ctx, State& x);
         };
 
 
@@ -239,6 +245,7 @@ namespace transport
 
           // set up state vector, and populate it with initial conditions for the background and twopf
           twopf_state dev_x(ctx.queue(), com_ks.size());
+          this->write_memory_requirements(ctx, dev_x(0));
 
           // 1 - background
           dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->flatten($$__A)];
@@ -293,6 +300,27 @@ namespace transport
                   vex::copy(hst_tp_ic, x(start + this->flatten(i,j)));
                 }
             }
+        }
+
+
+      template <typename number>
+      template <typename State>
+      void $$__MODEL_vexcl<number>::write_memory_requirements(vex::Context& ctx, State& x)
+        {
+          for(int i = 0; i < ctx.size(); i++)
+            {
+              cudaDeviceProp props;
+              cudaGetDeviceProperties(&props, ctx.device(i).raw());
+
+              // compute memory required, assuming 64bits=8bytes in a double
+              double device_mem_required  = (double)x.part_size(i) * $$__MODEL_pool::twopf_state_size * 8.0 / (1024.0*1024.0);
+
+              std::cout << props.name << std::endl;
+              std::cout << "  Global memory = " << (double)props.totalGlobalMem / (1024.0*1024.0) << " Mb" << std::endl;
+              std::cout << "  Shared memory = " << (double)props.sharedMemPerBlock / (1024.0) << " kb" << std::endl;
+              std::cout << "  State vector  = " << device_mem_required << " Mb" << std::endl;
+            }
+          std::cout << std::endl;
         }
 
 
@@ -362,6 +390,8 @@ namespace transport
 
           // set up state vector, and populate it with initial conditions for the background, twopf and threepf
           threepf_state dev_x(ctx.queue(), kconfig_list.size());
+          this->write_memory_requirements(ctx, dev_x(0));
+
           this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *times.begin(), hst_bg);
 
           // set up a functor to evolve this system
