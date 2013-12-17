@@ -42,7 +42,8 @@
 #define WARNING_DUPLICATE_TEMPLATE_MINVER     "Header line contains duplicate minver specifiers in template"
 
 #define ERROR_VEXCL_NO_STEPPER_STATE          "Fatal: stepper state type specification is mandatory with VexCL backend"
-#define WARNING_VEXCL_STEPPER_IGNORED         "Using stepper type 'runge_kutta_dopri5'; VexCL backend ignores stepper specification"
+#define WARNING_VEXCL_STEPPER_IGNORED_A       "Using stepper type"
+#define WARNING_VEXCL_STEPPER_IGNORED_B       "; VexCL backend ignores stepper specification"
 
 #define ERROR_UNRECOGNIZED_NUMBER             "Unrecognized numeric literal"
 #define ERROR_UNRECOGNIZED_SYMBOL             "Unrecognized character"

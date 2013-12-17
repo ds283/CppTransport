@@ -14,6 +14,8 @@
 #include "translation_unit.h"
 
 
+#define VEXCL_STEPPER "runge_kutta_fehlberg78"
+
 #define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
 
 
@@ -25,15 +27,15 @@ namespace cpp
         std::vector<macro_packages::simple_rule> package;
 
         const std::vector<replacement_rule_simple> rules =
-          { BIND(replace_backg_stepper), BIND(replace_pert_stepper)
+          { BIND(replace_backg_stepper), BIND(replace_pert_stepper), BIND(stepper_name), BIND(stepper_name)
           };
 
         const std::vector<std::string> names =
-          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER"
+          { "MAKE_BACKG_STEPPER",        "MAKE_PERT_STEPPER",        "BACKG_STEPPER",    "BACKG_STEPPER"
           };
 
         const std::vector<unsigned int> args =
-          { 1,                           1
+          { 1,                           1,                          1,                  1
           };
 
         assert(rules.size() == names.size());
@@ -85,15 +87,15 @@ namespace cpp
           }
         std::string state_name = args[0];
 
-        if(s.name != "runge_kutta_dopri5")
+        if(s.name != "runge_kutta_fehlberg78")
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED << " ('" << s.name << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
             this->warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< runge_kutta_dopri5< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
 
         return(out.str());
       }
@@ -111,17 +113,22 @@ namespace cpp
           }
         std::string state_name = args[0];
 
-        if(s.name != "runge_kutta_dopri5")
+        if(s.name != "runge_kutta_fehlberg78")
           {
             std::ostringstream msg;
-            msg << WARNING_VEXCL_STEPPER_IGNORED << " ('" << s.name << "')";
+            msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
             this->warn(msg.str());
           }
 
         std::ostringstream out;
-        out << "make_controlled< runge_kutta_dopri5< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
+        out << "make_controlled< " << VEXCL_STEPPER << "< " << state_name << ", double, " << state_name << ", double, vector_space_algebra, default_operations > >(" << s.abserr << ", " << s.relerr << ")";
 
         return(out.str());
+      }
+
+    std::string vexcl_steppers::stepper_name(const std::vector<std::string>& args)
+      {
+        return(VEXCL_STEPPER);
       }
 
 

@@ -29,10 +29,9 @@ namespace cpp
         const std::vector<macro_packages::index_rule>  get_index_rules();
 
       protected:
-        std::string replace_stepper      (const struct stepper& s, std::string state_name);
-
         std::string replace_backg_stepper(const std::vector<std::string>& args);
         std::string replace_pert_stepper (const std::vector<std::string>& args);
+        std::string stepper_name         (const std::vector<std::string>& args);
 
       };
 
