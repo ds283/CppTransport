@@ -84,15 +84,14 @@ namespace transport
           public:
             $$__MODEL_vexcl_twopf_functor(vex::Context& c,
                                           const std::vector<number>& p, const number Mp,
-                                          const vex::vector<double>& ks,
-                                          vex::multivector<double, $$__MODEL_pool::u2_size>& u2)
-              : ctx(c), parameters(p), M_Planck(Mp), k_list(ks), u2_tensor(u2)
+                                          const vex::vector<double>& ks)
+              : ctx(c), parameters(p), M_Planck(Mp), k_list(ks)
               {
               }
 
             void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
 
-          private:
+          protected:
             // constexpr version for rapid evaluation during integration
             constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
             constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
@@ -103,28 +102,29 @@ namespace transport
             const number						                           M_Planck;
             const std::vector<number>&                         parameters;
             const vex::vector<double>&                         k_list;
-            vex::multivector<double, $$__MODEL_pool::u2_size>& u2_tensor;
         };
 
 
       // integration - observer object for 2pf
       template <typename number>
-      class $$__MODEL_vexcl_twopf_observer
+      class $$__MODEL_vexcl_twopf_observer: public $$__MODEL_observer
         {
           public:
             $$__MODEL_vexcl_twopf_observer(std::vector< std::vector<number> >& bh,
-                                           std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks)
-              : background_history(bh), twopf_history(tpfh), k_size(ks)
+                                           std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks,
+                                           double t_int=1.0, bool s=false)
+              : background_history(bh), twopf_history(tpfh), k_size(ks),
+                $$__MODEL_observer(t_int, s)
               {
               }
 
             void operator()(const twopf_state& x, double t);
 
-          private:
+          protected:
             std::vector< std::vector<number> >&                background_history;
             std::vector< std::vector< std::vector<number> > >& twopf_history;
 
-            const unsigned int                                 k_size;    // number of k-modes we are integrating
+            const unsigned int                                 k_size;      // number of k-modes we are integrating
         };
 
 
@@ -135,18 +135,14 @@ namespace transport
       public:
         $$__MODEL_vexcl_threepf_functor(vex::Context& c,
           const std::vector<number>& p, const number Mp,
-          const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s,
-          vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2, vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3,
-          vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3, vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2)
-          : ctx(c), parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s),
-            u2_k1_tensor(u2_k1), u2_k2_tensor(u2_k2), u2_k3_tensor(u2_k3),
-            u3_k1k2k3_tensor(u3_k1k2k3), u3_k2k1k3_tensor(u3_k2k1k3), u3_k3k1k2_tensor(u3_k3k1k2)
+          const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s)
+          : ctx(c), parameters(p), M_Planck(Mp), k1_list(k1s), k2_list(k2s), k3_list(k3s)
           {
           }
 
         void operator()(const threepf_state& __x, threepf_state& __dxdt, double __t);
 
-      private:
+      protected:
         // constexpr version for rapid evaluation during integration
         constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
@@ -160,33 +156,27 @@ namespace transport
         const vex::vector<double>&                         k1_list;
         const vex::vector<double>&                         k2_list;
         const vex::vector<double>&                         k3_list;
-
-        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k1_tensor;
-        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k2_tensor;
-        vex::multivector<double, $$__MODEL_pool::u2_size>& u2_k3_tensor;
-
-        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k1k2k3_tensor;
-        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k2k1k3_tensor;
-        vex::multivector<double, $$__MODEL_pool::u3_size>& u3_k3k1k2_tensor;
       };
 
 
     // integration - observer object for 3pf
     template <typename number>
-    class $$__MODEL_vexcl_threepf_observer
+    class $$__MODEL_vexcl_threepf_observer: public $$__MODEL_observer
       {
       public:
         $$__MODEL_vexcl_threepf_observer(std::vector< std::vector<number> >& bh,
           std::vector< std::vector< std::vector<number> > >& tpf_re_h, std::vector< std::vector< std::vector<number> > >& tpf_im_h,
           std::vector< std::vector< std::vector<number> > >& thpf_h,
-          const std::vector< struct threepf_kconfig >& kc_l)
-          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
+          const std::vector< struct threepf_kconfig >& kc_l,
+          double t_int=1.0, bool s=false)
+          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l),
+            $$__MODEL_observer(t_int, s)
           {
           }
 
         void operator()(const threepf_state& x, double t);
 
-      private:
+      protected:
         std::vector< std::vector<number> >&                background_history;
         std::vector< std::vector< std::vector<number> > >& twopf_re_history;
         std::vector< std::vector< std::vector<number> > >& twopf_im_history;
@@ -240,9 +230,6 @@ namespace transport
           // initialize the device's copy of the k-modes
           vex::vector<double> dev_ks(ctx.queue(), com_ks);
         
-          // allocate space on the device for the u2-tensor
-          vex::multivector<double, $$__MODEL_pool::u2_size> u2_tensor(ctx.queue(), com_ks.size());
-
           // set up state vector, and populate it with initial conditions for the background and twopf
           twopf_state dev_x(ctx.queue(), com_ks.size());
           this->write_memory_requirements(ctx, dev_x(0));
@@ -251,10 +238,10 @@ namespace transport
           dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->flatten($$__A)];
         
           // 2 - twopf
-          this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *times.begin(), hst_bg);
+          this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *(times.begin()), hst_bg);
 
           // set up a functor to evolve this system
-          $$__MODEL_vexcl_twopf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_ks, u2_tensor);
+          $$__MODEL_vexcl_twopf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_ks);
         
           // set up a functor to observe the integration
           $$__MODEL_vexcl_twopf_observer<number> obs(background_history, twopf_history, ks.size());
@@ -313,11 +300,11 @@ namespace transport
               cudaGetDeviceProperties(&props, ctx.device(i).raw());
 
               // compute memory required, assuming 64bits=8bytes in a double
-              double device_mem_required  = (double)x.part_size(i) * $$__MODEL_pool::twopf_state_size * 8.0 / (1024.0*1024.0);
+              double device_mem_required  = static_cast<double>(x.part_size(i)) * $$__MODEL_pool::twopf_state_size * 8.0 / (1024.0*1024.0);
 
               std::cout << props.name << std::endl;
-              std::cout << "  Global memory = " << (double)props.totalGlobalMem / (1024.0*1024.0) << " Mb" << std::endl;
-              std::cout << "  Shared memory = " << (double)props.sharedMemPerBlock / (1024.0) << " kb" << std::endl;
+              std::cout << "  Global memory = " << static_cast<double>(props.totalGlobalMem) / (1024.0*1024.0) << " Mb" << std::endl;
+              std::cout << "  Shared memory = " << static_cast<double>(props.sharedMemPerBlock) / (1024.0) << " kb" << std::endl;
               std::cout << "  State vector  = " << device_mem_required << " Mb" << std::endl;
             }
           std::cout << std::endl;
@@ -379,28 +366,17 @@ namespace transport
           vex::copy(hst_k2s, dev_k2s);
           vex::copy(hst_k3s, dev_k3s);
 
-          // allocate space on the device for the u2- and u3-tensors
-          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k1_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k2_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, $$__MODEL_pool::u2_size> u2_k3_tensor(ctx.queue(), kconfig_list.size());
-
-          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k1k2k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k2k1k3_tensor(ctx.queue(), kconfig_list.size());
-          vex::multivector<double, $$__MODEL_pool::u3_size> u3_k3k1k2_tensor(ctx.queue(), kconfig_list.size());
-
           // set up state vector, and populate it with initial conditions for the background, twopf and threepf
           threepf_state dev_x(ctx.queue(), kconfig_list.size());
           this->write_memory_requirements(ctx, dev_x(0));
 
-          this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *times.begin(), hst_bg);
+          this->populate_threepf_state_ic(dev_x, kconfig_list, hst_k1s, hst_k2s, hst_k3s, *(times.begin()), hst_bg);
 
           // set up a functor to evolve this system
-          $$__MODEL_vexcl_threepf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s,
-                                                      u2_k1_tensor, u2_k2_tensor, u2_k3_tensor,
-                                                      u3_k1k2k3_tensor, u3_k2k1k3_tensor, u3_k3k1k2_tensor);
+          $$__MODEL_vexcl_threepf_functor<number> rhs(ctx, this->parameters, this->M_Planck, dev_k1s, dev_k2s, dev_k3s);
 
           // set up a functor to observe the integration
-          $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list);
+          $$__MODEL_vexcl_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history, kconfig_list, 0.1);
 
           using namespace boost::numeric::odeint;
           integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
@@ -482,64 +458,40 @@ namespace transport
         {
           const auto __a = exp(__t);
 
-          std::vector<vex::backend::kernel> u2_kernel;
-          std::vector<vex::backend::kernel> backg_kernel;
           std::vector<vex::backend::kernel> twopf_kernel;
 
-          // build a kernel to construct the components of u2
-          for(unsigned int d = 0; d < this->ctx.size(); d++)
-            {
-              u2_kernel.emplace_back(this->ctx.queue(d),
-                                     $$__IMPORT_KERNEL{vexcl-cuda/u2fused.cu, u2fused, );}
-            }
-
-          // Apply the u2 kernel
-          for(unsigned int d = 0; d < this->ctx.size(); d++)
-            {
-              u2_kernel[d].push_arg<unsigned long long>(this->u2_tensor(0).part_size(d));
-              u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
-              u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-              u2_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-              u2_kernel[d].push_arg(this->k_list(d));
-              u2_kernel[d].push_arg(__a);
-              u2_kernel[d].push_arg(this->M_Planck);
-
-              u2_kernel[d](this->ctx.queue(d));
-            }
-
-          // build a kernel to evolve the background
-          for(unsigned int d = 0; d < this->ctx.size(); d++)
-            {
-              backg_kernel.emplace_back(this->ctx.queue(d),
-                                        $$__IMPORT_KERNEL{vexcl-cuda/backg.cu, backg, );}
-            }
-
-          // apply the background kernel
-          for(unsigned int d = 0; d < this->ctx.size(); d++)
-            {
-              backg_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-              backg_kernel[d].push_arg(this->parameters[$$__1]); $$//
-              backg_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-              backg_kernel[d].push_arg((__dxdt(this->flatten($$__A)))(d)); $$//
-              backg_kernel[d].push_arg(this->M_Planck);
-
-              backg_kernel[d](this->ctx.queue(d));
-            }
-
-          // build a kernel to evolve the twopf
+          // build a kernel to evolve the twopf and background combined
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               twopf_kernel.emplace_back(this->ctx.queue(d),
                                         $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
             }
 
+          struct
+            {
+              size_t operator()(size_t w_size)
+                {
+                  return(1 + $$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size)*w_size*sizeof(double);
+                }
+            } twopf_kernel_smem_functor;
+
           // apply the twopf kernel
           for(unsigned int d = 0; d < this->ctx.size(); d++)
             {
               twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
+              twopf_kernel[d].push_arg(this->M_Planck);
+              twopf_kernel[d].push_arg(this->parameters[$$__1]); $$//
+              twopf_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
+              twopf_kernel[d].push_arg((this->k_list)(d)); $$//
+              twopf_kernel[d].push_arg(__a);
               twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
+              twopf_kernel[d].push_arg((__dxdt(this->flatten($$__A)))(d)); $$//
               twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B)))(d)); $$//
-              twopf_kernel[d].push_arg((this->u2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
+
+              // set amount of shared memory required per block
+              // VexCL passes us the block dimension, so we have to multiply by the required shared memory per thread
+              twopf_kernel[d].config(ctx.queue(d), twopf_kernel_smem_functor);
+              twopf_kernel[d].set_smem(twopf_kernel_smem_functor);
 
               twopf_kernel[d](this->ctx.queue(d));
             }
@@ -555,6 +507,8 @@ namespace transport
           // allocate storage for state
           std::vector<number>                hst_background_state($$__MODEL_pool::backg_size);
           std::vector< std::vector<number> > hst_state($$__MODEL_pool::twopf_size);
+
+          this->start_observer(t);
 
           // copy device state into local storage, and then push it into the history
           // (** TODO work out how slow this really is)
@@ -574,6 +528,8 @@ namespace transport
               vex::copy(x($$__MODEL_pool::backg_size + i), hst_state[i]);
             }
           this->twopf_history.push_back(hst_state);
+
+          this->stop_observer();
         }
 
 
@@ -585,215 +541,54 @@ namespace transport
       {
         const auto __a = exp(__t);
 
-        std::vector<vex::backend::kernel> u2_kernel;
-        std::vector<vex::backend::kernel> u3_kernel;
-        std::vector<vex::backend::kernel> backg_kernel;
-        std::vector<vex::backend::kernel> twopf_kernel;
         std::vector<vex::backend::kernel> threepf_kernel;
 
-        // build a kernel to construct the components of u2
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u2_kernel.emplace_back(this->ctx.queue(d),
-                                   $$__IMPORT_KERNEL{vexcl-cuda/u2fused.cu, u2fused, );}
-          }
-
-        // Apply the u2 kernel: we need to build *three* copies, corresponding to the k-choices k1, k2, k3
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u2_kernel[d].push_arg<unsigned long long>(this->u2_k1_tensor(0).part_size(d));
-            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u2_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            u2_kernel[d].push_arg(this->k1_list(d));
-            u2_kernel[d].push_arg(__a);
-            u2_kernel[d].push_arg(this->M_Planck);
-
-            u2_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u2_kernel[d].push_arg<unsigned long long>(this->u2_k2_tensor(0).part_size(d));
-            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u2_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            u2_kernel[d].push_arg(this->k2_list(d));
-            u2_kernel[d].push_arg(__a);
-            u2_kernel[d].push_arg(this->M_Planck);
-
-            u2_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u2_kernel[d].push_arg<unsigned long long>(this->u2_k3_tensor(0).part_size(d));
-            u2_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u2_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u2_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            u2_kernel[d].push_arg(this->k3_list(d));
-            u2_kernel[d].push_arg(__a);
-            u2_kernel[d].push_arg(this->M_Planck);
-
-            u2_kernel[d](this->ctx.queue(d));
-          }
-
-        // build a kernel to construct the components of u3
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u3_kernel.emplace_back(this->ctx.queue(d),
-                                   $$__IMPORT_KERNEL{vexcl-cuda/u3fused.cu, u3fused, );}
-          }
-
-        // Apply the u3 kernel: we need to build *three* copies, corresponding to the index permutations of k1, k2, k3
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u3_kernel[d].push_arg<unsigned long long>(this->u3_k1k2k3_tensor(0).part_size(d));
-            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u3_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            u3_kernel[d].push_arg(this->k1_list(d));
-            u3_kernel[d].push_arg(this->k2_list(d));
-            u3_kernel[d].push_arg(this->k3_list(d));
-            u3_kernel[d].push_arg(__a);
-            u3_kernel[d].push_arg(this->M_Planck);
-
-            u3_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u3_kernel[d].push_arg<unsigned long long>(this->u3_k2k1k3_tensor(0).part_size(d));
-            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u3_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            u3_kernel[d].push_arg(this->k2_list(d));
-            u3_kernel[d].push_arg(this->k1_list(d));
-            u3_kernel[d].push_arg(this->k3_list(d));
-            u3_kernel[d].push_arg(__a);
-            u3_kernel[d].push_arg(this->M_Planck);
-
-            u3_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            u3_kernel[d].push_arg<unsigned long long>(this->u3_k3k1k2_tensor(0).part_size(d));
-            u3_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            u3_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            u3_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            u3_kernel[d].push_arg(this->k3_list(d));
-            u3_kernel[d].push_arg(this->k1_list(d));
-            u3_kernel[d].push_arg(this->k2_list(d));
-            u3_kernel[d].push_arg(__a);
-            u3_kernel[d].push_arg(this->M_Planck);
-
-            u3_kernel[d](this->ctx.queue(d));
-          }
-
-        // build a kernel to evolve the background
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            backg_kernel.emplace_back(this->ctx.queue(d),
-                                      $$__IMPORT_KERNEL{vexcl-cuda/backg.cu, backg, );}
-          }
-
-        // apply the background kernel
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            backg_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            backg_kernel[d].push_arg(this->parameters[$$__1]); $$//
-            backg_kernel[d].push_arg((__x(this->flatten($$__A)))(d)); $$//
-            backg_kernel[d].push_arg((__dxdt(this->flatten($$__A)))(d)); $$//
-            backg_kernel[d].push_arg(this->M_Planck);
-
-            backg_kernel[d](this->ctx.queue(d));
-          }
-
-        // build a kernel to evolve the twopf
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel.emplace_back(this->ctx.queue(d),
-                                      $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
-          }
-
-        // apply the twopf kernel to evolve to real and imaginary components of each twopf
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            twopf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            twopf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            twopf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-
-            twopf_kernel[d](this->ctx.queue(d));
-          }
-
-        // build a kernel to evolve the threepf
+        // build a kernel to evolve the threepf, twopf and backg together
         for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
             threepf_kernel.emplace_back(this->ctx.queue(d),
                                         $$__IMPORT_KERNEL{vexcl-cuda/threepf.cu, threepffused, );}
           }
 
+        struct
+          {
+            size_t operator()(size_t w_size)
+              {
+                return(3*(1 + 2*$$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size + $$__MODEL_pool::u3_size) + $$__MODEL_pool::threepf_size)*w_size*sizeof(double);
+              }
+          } threepf_kernel_smem_functor;
+
         // apply the threepf kernel
         for(unsigned int d = 0; d < this->ctx.size(); d++)
           {
             threepf_kernel[d].push_arg<unsigned long long>(__x(0).part_size(d));
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start  + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k1_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k2_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u2_k3_tensor(this->flatten($$__A,$$__B)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k1k2k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k2k1k3_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
-            threepf_kernel[d].push_arg((this->u3_k3k1k2_tensor(this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg(this->M_Planck);
+            threepf_kernel[d].push_arg(this->parameters[$$__1]); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::backg_start       + this->flatten($$__A)))(d)); $$//
+            threepf_kernel[d].push_arg(this->k1_list(d));
+            threepf_kernel[d].push_arg(this->k2_list(d));
+            threepf_kernel[d].push_arg(this->k3_list(d));
+            threepf_kernel[d].push_arg(__a);
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__x   ($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::backg_start       + this->flatten($$__A)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B)))(d)); $$//
+            threepf_kernel[d].push_arg((__dxdt($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C)))(d)); $$//
+
+            // set amount of shared memory required per block
+            // VexCL passes us the block dimension, so we have to multiply by the required shared memory per thread
+            threepf_kernel[d].config(ctx.queue(d), threepf_kernel_smem_functor);
+            threepf_kernel[d].set_smem(threepf_kernel_smem_functor);
 
             threepf_kernel[d](this->ctx.queue(d));
           }
@@ -812,7 +607,7 @@ namespace transport
         std::vector< std::vector<number> > hst_twopf_im_state  ($$__MODEL_pool::twopf_size);
         std::vector< std::vector<number> > hst_threepf_state   ($$__MODEL_pool::threepf_size);
 
-        std::cout << __CPP_TRANSPORT_OBSERVER_TIME << " = " << t << std::endl;
+        this->start_observer(t);
 
         // first, background
         for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
@@ -858,6 +653,8 @@ namespace transport
             vex::copy(x($$__MODEL_pool::threepf_start + i), hst_threepf_state[i]);
           }
         this->threepf_history.push_back(hst_threepf_state);
+
+        this->stop_observer();
       }
 
 

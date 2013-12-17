@@ -10,9 +10,13 @@
 
 #include <assert.h>
 #include <math.h>
+#include <iomanip>
+#include <sstream>
 
 #include "boost/numeric/odeint.hpp"
 #include "transport/transport.h"
+
+#include <boost/timer/timer.hpp>
 
 #define CHECK_ZERO(c,k1,k2,k3) _Pragma("omp critical") { if(fabs(c) > 1E-8) { std::cerr << "CHECK_ZERO fail: " #c " not zero (value=" << c << ", k1 = " << k1 << ", k2 = " << k2 << ", k3 = " << k3 << ")" << std::endl; exit(1); } }
 
@@ -141,6 +145,56 @@ namespace transport
                         double __Nstar, const std::vector<number>& __fields, std::ostream& __stream, bool __silent=false);
 
         void populate_kconfig_list(std::vector< struct threepf_kconfig >& kconfig_list, const std::vector<double>& com_ks);
+      };
+
+
+    class $$__MODEL_observer
+      {
+      public:
+        $$__MODEL_observer(double t_int=1.0, bool s=false, unsigned int p=3)
+        : t_interval(t_int), silent(s), ready(false), t_last(0), precision(p)
+          {
+            timer.stop();
+          }
+
+        void start_observer(double t)
+          {
+            if(!ready || t > this->t_last + this->t_interval)
+              {
+                this->timer.stop();
+                this->t_last = t;
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
+                std::cout << msg.str();
+                if(ready)
+                  {
+                    std::cout << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " = " << this->timer.format();
+                  }
+                else
+                  {
+                    std::cout << std::endl;
+                  }
+                ready = false;
+              }
+          }
+
+        void stop_observer()
+          {
+            if(!ready)
+              {
+                this->timer.start();
+                ready = true;
+              }
+          }
+
+      protected:
+        bool                                               silent;      // whether to generate output during observations
+        bool                                               ready;
+        double                                             t_last;      // last value at which we emitted output
+        double                                             t_interval;  // t-interval at which to emit output
+        unsigned int                                       precision;   // precision used in output
+
+        boost::timer::cpu_timer                            timer;
       };
 
 
