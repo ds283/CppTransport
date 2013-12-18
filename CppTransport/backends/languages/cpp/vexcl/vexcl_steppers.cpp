@@ -15,6 +15,7 @@
 
 
 #define VEXCL_STEPPER "runge_kutta_fehlberg78"
+//#define VEXCL_STEPPER "runge_kutta_dopri5"
 
 #define BIND(X) std::bind(&vexcl_steppers::X, this, std::placeholders::_1)
 
@@ -87,7 +88,7 @@ namespace cpp
           }
         std::string state_name = args[0];
 
-        if(s.name != "runge_kutta_fehlberg78")
+        if(s.name != VEXCL_STEPPER)
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";
@@ -113,7 +114,7 @@ namespace cpp
           }
         std::string state_name = args[0];
 
-        if(s.name != "runge_kutta_fehlberg78")
+        if(s.name != VEXCL_STEPPER)
           {
             std::ostringstream msg;
             msg << WARNING_VEXCL_STEPPER_IGNORED_A << " '" << VEXCL_STEPPER << "' " << WARNING_VEXCL_STEPPER_IGNORED_B << " ('" << s.name << "')";

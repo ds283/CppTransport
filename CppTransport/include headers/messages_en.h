@@ -37,6 +37,7 @@
 #define __CPP_TRANSPORT_OF                    "of"
 
 #define __CPP_TRANSPORT_OBSERVER_TIME         "Integration in progress: time N"
+#define __CPP_TRANSPORT_OBSERVER_ELAPSED      "| time elapsed since last report"
 
 #define __CPP_TRANSPORT_NO_TIMES              "Fatal: no times specified for integration"
 #define __CPP_TRANSPORT_NSTAR_TOO_EARLY       "Fatal: Nstar is earlier than the start point of the integration"
