@@ -299,8 +299,8 @@ namespace transport
               cudaDeviceProp props;
               cudaGetDeviceProperties(&props, ctx.device(i).raw());
 
-              // compute memory required, assuming 64bits=8bytes in a double
-              double device_mem_required  = static_cast<double>(x.part_size(i)) * $$__MODEL_pool::twopf_state_size * 8.0 / (1024.0*1024.0);
+              // compute memory required
+              double device_mem_required  = static_cast<double>(x.part_size(i)) * $$__MODEL_pool::twopf_state_size * sizeof(double) / (1024.0*1024.0);
 
               std::cout << props.name << std::endl;
               std::cout << "  Global memory = " << static_cast<double>(props.totalGlobalMem) / (1024.0*1024.0) << " Mb" << std::endl;

@@ -168,7 +168,7 @@ namespace transport
                 std::cout << msg.str();
                 if(ready)
                   {
-                    std::cout << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " = " << this->timer.format();
+                    std::cout << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->timer.format();
                   }
                 else
                   {
