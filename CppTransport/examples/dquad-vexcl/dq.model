@@ -3,6 +3,7 @@ name    "Double Quadratic Inflation";
 
 #include "cuda.model"
 %#include "opencl.model"
+%#include "defaults.model"
 
 % set up the fields
 field
