@@ -1,11 +1,13 @@
 // backend=cuda, minver=0.06
 
+#if defined(_MSC_VER) || defined(__APPLE__)
 typedef unsigned char       uchar;
 typedef unsigned int        uint;
 typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
+#endif
 
-extern "C" __global__ void twopffused( ulong n,
+extern "C" __global__ void twopffused( ulong __n,
                                        double __Mp,
                                        $$__PARAM_ARGS,
                                        $$__COORD_ARGS{__x},
@@ -15,7 +17,7 @@ extern "C" __global__ void twopffused( ulong n,
                                        $$__COORD_ARGS{__dxdt},
                                        $$__TWOPF_ARGS{__dtwopf} )
   {
-    size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
+    size_t __begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     #define __U2_SIZE    (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
     #define __TWOPF_SIZE (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
@@ -29,26 +31,26 @@ extern "C" __global__ void twopffused( ulong n,
     //                                      = 16*8*blockDim.x bytes = 128*blockDim.x bytes
 
     // TOTAL                                = (8+128+128)*blockDim.x bytes = 264*blockDim.x bytes
-    extern double __shared__ smem[];
+    extern double __shared__ __smem[];
 
     // index into k-modes
-    #define __k smem[threadIdx.x]
+    #define __k __smem[threadIdx.x]
 
     // index into u2 tensor
     // we allocate all u2 tensors in a block after the k-modes, so have to offset by blockDim.x
-    #define __U2(a,b) smem[blockDim.x + threadIdx.x*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __U2(a,b) __smem[blockDim.x + threadIdx.x*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
 
     // index into twopf
     // twopfs come in a block after the u2-tensors, so we have to offset by blockDim.x + __U2_SIZE*blockDim.x
-    #define __TWOPF(a,b) smem[blockDim.x + __U2_SIZE*blockDim.x + threadIdx.x*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF(a,b) __smem[blockDim.x + __U2_SIZE*blockDim.x + threadIdx.x*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
 
-    if(begin < n)
+    if(__begin < __n)
       {
-        size_t grid_size = blockDim.x * gridDim.x;  // number of threads in the grid = stride size per kernel
+        size_t __grid_size = blockDim.x * gridDim.x;  // number of threads in the grid = stride size per kernel
 
         // read coords into local variables
-        // we only need one, which we can choose to be 'begin'
-        double $$__COORDINATE[A] = __x_$$__A[begin];
+        // we only need one, which we can choose to be '__begin'
+        double $$__COORDINATE[A] = __x_$$__A[__begin];
 
         double __Hsq = $$__HUBBLE_SQ;
         double __eps = $$__EPSILON;
@@ -57,7 +59,7 @@ extern "C" __global__ void twopffused( ulong n,
         $$__TEMP_POOL{"double $1 = $2;"}
         double __u1_$$__A = $$__U1_PREDEF[A]{__Hsq, __eps};
 
-        for(size_t idx = begin; idx < n; idx += grid_size)
+        for(size_t idx = __begin; idx < __n; idx += __grid_size)
           {
             // copy the data we need from global memory into shared memory
             __k = __klist[idx];

@@ -1,11 +1,13 @@
 // backend=cuda, minver=0.06
 
+#if defined(_MSC_VER) || defined(__APPLE__)
 typedef unsigned char       uchar;
 typedef unsigned int        uint;
 typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
+#endif
 
-extern "C" __global__ void threepffused( ulong n,
+extern "C" __global__ void threepffused( ulong __n,
                                          double __Mp,
                                          $$__PARAM_ARGS,
                                          $$__COORD_ARGS{__x},
@@ -29,7 +31,7 @@ extern "C" __global__ void threepffused( ulong n,
                                          $$__TWOPF_ARGS{__dtwopf_im_k3},
                                          $$__THREEPF_ARGS{__dthreepf} )
   {
-    size_t begin = blockDim.x * blockIdx.x + threadIdx.x;
+    size_t __begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     #define __U2_SIZE      (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
     #define __U3_SIZE      (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
@@ -44,41 +46,41 @@ extern "C" __global__ void threepffused( ulong n,
     // threepf: 1 per thread in the block   = __THREEPF_SIZE*blockDim.x*sizeof(double)
 
     // TOTAL                                = ( 3*(1 + __U2_SIZE + __U3_SIZE + 2*__TWOPF_SIZE) + __THREEPF_SIZE )*blockDim.x*sizeof(double)
-    extern double __shared__ smem[];
+    extern double __shared__ __smem[];
 
     // index into k-modes
-    #define __k1 smem[3*threadIdx.x]
-    #define __k2 smem[3*threadIdx.x+1]
-    #define __k3 smem[3*threadIdx.x+2]
+    #define __k1 __smem[3*threadIdx.x]
+    #define __k2 __smem[3*threadIdx.x+1]
+    #define __k3 __smem[3*threadIdx.x+2]
 
     // index into u2-tensors
-    #define __U2_k1(a,b) smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __U2_k2(a,b) smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + __U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __U2_k3(a,b) smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + 2*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __U2_k1(a,b) __smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __U2_k2(a,b) __smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + 1*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __U2_k3(a,b) __smem[3*blockDim.x + 3*threadIdx.x*__U2_SIZE + 2*__U2_SIZE + 2*$$__NUMBER_FIELDS*a + b]
 
     // index into u3-tensors
-    #define __U3_k1k2k3(a,b,c) smem[3*blockDim.x * 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
-    #define __U3_k2k1k3(a,b,c) smem[3*blockDim.x * 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 1*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
-    #define __U3_k3k1k2(a,b,c) smem[3*blockDim.x * 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 2*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
+    #define __U3_k1k2k3(a,b,c) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
+    #define __U3_k2k1k3(a,b,c) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 1*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
+    #define __U3_k3k1k2(a,b,c) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*threadIdx.x*__U3_SIZE + 2*__U3_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
 
     // index into twopfs
-    #define __TWOPF_RE_k1(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __TWOPF_IM_k1(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 1*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __TWOPF_RE_k2(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 2*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __TWOPF_IM_k2(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 3*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __TWOPF_RE_k3(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 4*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
-    #define __TWOPF_IM_k3(a,b) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 5*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_RE_k1(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_IM_k1(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 1*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_RE_k2(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 2*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_IM_k2(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 3*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_RE_k3(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 4*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
+    #define __TWOPF_IM_k3(a,b) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*threadIdx.x*__TWOPF_SIZE + 5*__TWOPF_SIZE + 2*$$__NUMBER_FIELDS*a + b]
 
     // index into threepf
-    #define __THREEPF(a,b,c) smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*blockDim.x*__TWOPF_SIZE + threadIdx.x*__THREEPF_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
+    #define __THREEPF(a,b,c) __smem[3*blockDim.x + 3*blockDim.x*__U2_SIZE + 3*blockDim.x*__U3_SIZE + 6*blockDim.x*__TWOPF_SIZE + threadIdx.x*__THREEPF_SIZE + 2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c]
 
-    if(begin < n)
+    if(__begin < __n)
       {
-        size_t grid_size = blockDim.x * gridDim.x;  // number of threads in the grid = stride size per kernel
+        size_t __grid_size = blockDim.x * gridDim.x;  // number of threads in the grid = stride size per kernel
 
         // read coords into local variables
-        // we only need one, which we can choose to be 'begin'
-        double $$__COORDINATE[A] = __x_$$__A[begin];
+        // we only need one, which we can choose to be '__begin'
+        double $$__COORDINATE[A] = __x_$$__A[__begin];
 
         double __Hsq = $$__HUBBLE_SQ;
         double __eps = $$__EPSILON;
@@ -87,7 +89,7 @@ extern "C" __global__ void threepffused( ulong n,
         $$__TEMP_POOL{"double $1 = $2;"}
         double __u1_$$__A = $$__U1_PREDEF[A]{__Hsq, __eps};
 
-        for(size_t idx = begin; idx < n; idx += grid_size)
+        for(size_t idx = __begin; idx < __n; idx += __grid_size)
           {
             // copy the data we need from global memory into shared memory
             __k1 = __k1_list[idx];
