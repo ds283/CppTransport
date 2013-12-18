@@ -59,21 +59,24 @@ extern "C" __global__ void twopffused( ulong __n,
         $$__TEMP_POOL{"double $1 = $2;"}
         double __u1_$$__A = $$__U1_PREDEF[A]{__Hsq, __eps};
 
-        for(size_t idx = __begin; idx < __n; idx += __grid_size)
+        for(size_t __idx = __begin; __idx < __n; __idx += __grid_size)
           {
             // copy the data we need from global memory into shared memory
-            __k = __klist[idx];
-            __TWOPF($$__A, $$__B) = __twopf_$$__A_$$__B[idx]; $$//
+            __k = __klist[__idx];
+            __TWOPF($$__A, $$__B) = __twopf_$$__A_$$__B[__idx]; $$//
 
             // compute u2 for the k-mode we are looking at
             $$__TEMP_POOL{"double $1 = $2;"}
 
             __U2($$__A,$$__B) = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
-            __dxdt_$$__A[idx] = __u1_$$__A; $$//
+            __dxdt_$$__A[__idx] = __u1_$$__A; $$//
 
-            __dtwopf_$$__A_$$__B[idx]  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
-            __dtwopf_$$__A_$$__B[idx] += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
+            double __cache_twopf_$$__A_$$__B; $$//
+
+            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
+            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
+            __dtwopf_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
           }
       }
   }
