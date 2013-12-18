@@ -93,12 +93,13 @@ extern "C" __global__ void threepffused( ulong n,
             __k1 = __k1_list[idx];
             __k2 = __k2_list[idx];
             __k3 = __k3_list[idx];
-            __TWOPF_RE_k1($$__A, $$__B) = __twopf_re_k1_$$__A_$$__B[idx]; $$//
-            __TWOPF_IM_k1($$__A, $$__B) = __twopf_im_k1_$$__A_$$__B[idx]; $$//
-            __TWOPF_RE_k2($$__A, $$__B) = __twopf_re_k2_$$__A_$$__B[idx]; $$//
-            __TWOPF_IM_k2($$__A, $$__B) = __twopf_im_k2_$$__A_$$__B[idx]; $$//
-            __TWOPF_RE_k3($$__A, $$__B) = __twopf_re_k3_$$__A_$$__B[idx]; $$//
-            __TWOPF_IM_k3($$__A, $$__B) = __twopf_im_k3_$$__A_$$__B[idx]; $$//
+            __TWOPF_RE_k1($$__A, $$__B)    = __twopf_re_k1_$$__A_$$__B[idx]; $$//
+            __TWOPF_IM_k1($$__A, $$__B)    = __twopf_im_k1_$$__A_$$__B[idx]; $$//
+            __TWOPF_RE_k2($$__A, $$__B)    = __twopf_re_k2_$$__A_$$__B[idx]; $$//
+            __TWOPF_IM_k2($$__A, $$__B)    = __twopf_im_k2_$$__A_$$__B[idx]; $$//
+            __TWOPF_RE_k3($$__A, $$__B)    = __twopf_re_k3_$$__A_$$__B[idx]; $$//
+            __TWOPF_IM_k3($$__A, $$__B)    = __twopf_im_k3_$$__A_$$__B[idx]; $$//
+            __THREEPF($$__A, $$__B, $$__C) = __threepf_$$__A_$$__B_$$__C[idx]; $$//
 
             $$__TEMP_POOL{"double $1 = $2;"}
             // compute u2 tensors
