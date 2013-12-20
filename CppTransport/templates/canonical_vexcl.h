@@ -100,12 +100,17 @@ namespace transport
 
       // integration - observer object for 2pf
       template <typename number>
-      class $$__MODEL_vexcl_twopf_observer
+      class $$__MODEL_vexcl_twopf_observer: public $$__MODEL_observer
         {
           public:
             $$__MODEL_vexcl_twopf_observer(std::vector< std::vector<number> >& bh,
-                                           std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks)
-              : background_history(bh), twopf_history(tpfh), k_size(ks) {}
+                                           std::vector< std::vector< std::vector<number> > >& tpfh, unsigned int ks,
+                                           double t_int=1.0, bool s=false)
+              : background_history(bh), twopf_history(tpfh), k_size(ks),
+                $$__MODEL_observer(t_int, s)
+              {
+              }
+
             void operator()(const twopf_state& x, double t);
 
           private:
@@ -158,14 +163,16 @@ namespace transport
 
     // integration - observer object for 3pf
     template <typename number>
-    class $$__MODEL_vexcl_threepf_observer
+    class $$__MODEL_vexcl_threepf_observer: public $$__MODEL_observer
       {
       public:
         $$__MODEL_vexcl_threepf_observer(std::vector< std::vector<number> >& bh,
           std::vector< std::vector< std::vector<number> > >& tpf_re_h, std::vector< std::vector< std::vector<number> > >& tpf_im_h,
           std::vector< std::vector< std::vector<number> > >& thpf_h,
-          const std::vector< struct threepf_kconfig >& kc_l)
-          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l)
+          const std::vector< struct threepf_kconfig >& kc_l,
+          double t_int=1.0, bool s=false)
+          : background_history(bh), twopf_re_history(tpf_re_h), twopf_im_history(tpf_im_h), threepf_history(thpf_h), kconfig_list(kc_l),
+            $$__MODEL_observer(t_int, s)
           {
           }
 
@@ -483,8 +490,8 @@ namespace transport
           // evolve the 2pf
           // here, we are dealing only with the real part - which is symmetric
           // so the index placement is not important
-          __dtwopf($$__A,$$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2} * __tpf_$$__C_$$__B;
-          __dtwopf($$__A,$$__B) += 0 $$// + $$__U2_NAME[BC]{__u2} * __tpf_$$__A_$$__C;
+          __dtwopf($$__A,$$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_$$__A_$$__C * __tpf_$$__C_$$__B;
+          __dtwopf($$__A,$$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_$$__B_$$__C * __tpf_$$__A_$$__C;
 
           #undef $$__PARAMETER[1]
           #undef $$__COORDINATE[A]
@@ -507,6 +514,8 @@ namespace transport
           std::vector<number>                hst_background_state($$__MODEL_pool::backg_size);
           std::vector< std::vector<number> > hst_state($$__MODEL_pool::twopf_size);
 
+          this->start_observer();
+
           // copy device state into local storage, and then push it into the history
           // (** TODO work out how slow this really is)
 
@@ -525,6 +534,8 @@ namespace transport
               vex::copy(x($$__MODEL_pool::backg_size + i), hst_state[i]);
             }
           this->twopf_history.push_back(hst_state);
+
+          this->stop_observer();
         }
 
 
@@ -630,37 +641,37 @@ namespace transport
         __u3_k3k1k2($$__A,$$__B,$$__C) = $$// $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
         // evolve the real and imaginary components of the 2pf
-        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B;
-        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_re_k1_$$__A_$$__C;
+        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_re_k1_$$__C_$$__B;
+        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_re_k1_$$__A_$$__C;
 
-        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_im_k1_$$__C_$$__B;
-        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_im_k1_$$__A_$$__C;
+        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_im_k1_$$__C_$$__B;
+        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_im_k1_$$__A_$$__C;
 
-        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_re_k2_$$__C_$$__B;
-        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_re_k2_$$__A_$$__C;
+        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_re_k2_$$__C_$$__B;
+        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_re_k2_$$__A_$$__C;
 
-        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_im_k2_$$__C_$$__B;
-        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_im_k2_$$__A_$$__C;
+        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_im_k2_$$__C_$$__B;
+        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_im_k2_$$__A_$$__C;
 
-        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_re_k3_$$__C_$$__B;
-        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_re_k3_$$__A_$$__C;
+        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_re_k3_$$__C_$$__B;
+        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_re_k3_$$__A_$$__C;
 
-        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_im_k3_$$__C_$$__B;
-        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_im_k3_$$__A_$$__C;
+        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_im_k3_$$__C_$$__B;
+        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_im_k3_$$__A_$$__C;
 
         // evolve the components of the 3pf
 
-        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] __u2_k1_$$__A_$$__M*__threepf_$$__M_$$__B_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k2_$$__B_$$__M*__threepf_$$__A_$$__M_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k3_$$__C_$$__M*__threepf_$$__A_$$__B_$$__M;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
 
         #undef $$__PARAMETER[1]
         #undef $$__COORDINATE[A]
@@ -714,6 +725,8 @@ namespace transport
         std::vector< std::vector<number> > hst_twopf_im_state($$__MODEL_pool::twopf_size);
         std::vector< std::vector<number> > hst_threepf_state($$__MODEL_pool::threepf_size);
 
+        this->start_observer();
+
         // first, background
         for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
           {
@@ -749,6 +762,8 @@ namespace transport
             vex::copy(x($$__MODEL_pool::threepf_start + i), hst_threepf_state[i]);
           }
         this->threepf_history.push_back(hst_threepf_state);
+
+        this->stop_observer();
       }
 
 

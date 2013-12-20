@@ -480,11 +480,6 @@ namespace transport
 
 #undef  MAKE_THREEPF
 #define MAKE_THREEPF(i,j,k,k1,k2,k3) this->make_threepf_ic(i,j,k,k1,k2,k3,Ninit,ics)
-#ifdef CHECK_3PF_SYMMETRIES
-        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__B,$$__A,$$__C,kmode_2,kmode_1,kmode_3))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
-        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__A,$$__C,$$__B,kmode_1,kmode_3,kmode_2))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
-        CHECK_ZERO((MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3)-MAKE_THREEPF($$__C,$$__B,$$__A,kmode_3,kmode_2,kmode_1))/MAKE_THREEPF($$__A,$$__B,$$__C,kmode_1,kmode_2,kmode_3), kmode_1, kmode_2, kmode_3) $$// ;
-#endif
 
         x[start + this->flatten($$__A,$$__B,$$__C)] = MAKE_THREEPF($$__A,$$__B,$$__C, kmode_1, kmode_2, kmode_3) $$// ;
       }
@@ -522,8 +517,8 @@ namespace transport
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-        __dtwopf($$__A, $$__B) = 0 $$// + $$__U2_NAME[AC]{__u2}*__tpf_$$__C_$$__B;
-        __dtwopf($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2}*__tpf_$$__A_$$__C;
+        __dtwopf($$__A, $$__B) = 0 $$// + $$__SUM_COORDS[C] __u2_$$__A_$$__C*__tpf_$$__C_$$__B;
+        __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_$$__B_$$__C*__tpf_$$__A_$$__C;
       }
 
 
@@ -610,55 +605,41 @@ namespace transport
         const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
         const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
-        // if desired, check that the u3 tensor is properly symmetric on its final two indices
-        // division by zero errors may occur if any of the u3 components are not zero, but only if
-        // the compiler is not able to optimize away the check
-        // that itself indicates an error, since both terms should be zero giving 0-0
-#ifdef CHECK_U3_SYMMETRY
-        const auto __u3_k1k3k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k3, __k2, __a, __Hsq, __eps};
-        const auto __u3_k2k3k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k3, __k1, __a, __Hsq, __eps};
-        const auto __u3_k3k2k1_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k2, __k1, __a, __Hsq, __eps};
-
-        CHECK_ZERO((__u3_k1k2k3_$$__A_$$__B_$$__C - __u3_k1k3k2_$$__A_$$__C_$$__B)/__u3_k1k2k3_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
-        CHECK_ZERO((__u3_k2k1k3_$$__A_$$__B_$$__C - __u3_k2k3k1_$$__A_$$__C_$$__B)/__u3_k2k1k3_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
-        CHECK_ZERO((__u3_k3k1k2_$$__A_$$__B_$$__C - __u3_k3k2k1_$$__A_$$__C_$$__B)/__u3_k3k1k2_$$__A_$$__B_$$__C,__k1,__k2,__k3) $$// ;
-#endif
-
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_re_k1_$$__C_$$__B;
-        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_re_k1_$$__A_$$__C;
+        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_re_k1_$$__C_$$__B;
+        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_re_k1_$$__A_$$__C;
 
-        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k1}*__twopf_im_k1_$$__C_$$__B;
-        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k1}*__twopf_im_k1_$$__A_$$__C;
+        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_im_k1_$$__C_$$__B;
+        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_im_k1_$$__A_$$__C;
 
-        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_re_k2_$$__C_$$__B;
-        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_re_k2_$$__A_$$__C;
+        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_re_k2_$$__C_$$__B;
+        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_re_k2_$$__A_$$__C;
 
-        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k2}*__twopf_im_k2_$$__C_$$__B;
-        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k2}*__twopf_im_k2_$$__A_$$__C;
+        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_im_k2_$$__C_$$__B;
+        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_im_k2_$$__A_$$__C;
 
-        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_re_k3_$$__C_$$__B;
-        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_re_k3_$$__A_$$__C;
+        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_re_k3_$$__C_$$__B;
+        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_re_k3_$$__A_$$__C;
 
-        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__U2_NAME[AC]{__u2_k3}*__twopf_im_k3_$$__C_$$__B;
-        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__U2_NAME[BC]{__u2_k3}*__twopf_im_k3_$$__A_$$__C;
+        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_im_k3_$$__C_$$__B;
+        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_im_k3_$$__A_$$__C;
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__U2_NAME[AM]{__u2_k1}*__threepf_$$__M_$$__B_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[AMN]{__u3_k1k2k3}*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] __u2_k1_$$__A_$$__M*__threepf_$$__M_$$__B_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[BM]{__u2_k2}*__threepf_$$__A_$$__M_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[BMN]{__u3_k2k1k3}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k2_$$__B_$$__M*__threepf_$$__A_$$__M_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
 
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U2_NAME[CM]{__u2_k3}*__threepf_$$__A_$$__B_$$__M;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
-        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__U3_NAME[CMN]{__u3_k3k1k2}*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k3_$$__C_$$__M*__threepf_$$__A_$$__B_$$__M;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
       }
 
 

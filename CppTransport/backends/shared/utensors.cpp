@@ -43,44 +43,37 @@ namespace macro_packages
 
         const std::vector<replacement_rule_pre> pres =
           { BIND1(pre_u1_tensor),         BIND1(pre_u2_tensor),         BIND1(pre_u3_tensor),
-            BIND1(pre_u1_predef),         BIND1(pre_u2_predef),         BIND1(pre_u3_predef),
-            nullptr,                      nullptr
+            BIND1(pre_u1_predef),         BIND1(pre_u2_predef),         BIND1(pre_u3_predef)
           };
 
         const std::vector<replacement_rule_post> posts =
           { BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook),
-            BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook),
-            nullptr,                      nullptr
+            BIND1(generic_post_hook),     BIND1(generic_post_hook),     BIND1(generic_post_hook)
           };
 
         const std::vector<replacement_rule_index> rules =
           { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
-            BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor),
-            BIND3(replace_u2_name),       BIND3(replace_u3_name)
+            BIND3(replace_1index_tensor), BIND3(replace_2index_tensor), BIND3(replace_3index_tensor)
           };
 
         const std::vector<std::string> names =
           { "U1_TENSOR",                  "U2_TENSOR",                  "U3_TENSOR",
-            "U1_PREDEF",                  "U2_PREDEF",                  "U3_PREDEF",
-            "U2_NAME",                    "U3_NAME"
+            "U1_PREDEF",                  "U2_PREDEF",                  "U3_PREDEF"
           };
 
         const std::vector<unsigned int> args =
           { 0,                            2,                            4,
-            2,                            4,                            6,
-            1,                            1
+            2,                            4,                            6
           };
 
         const std::vector<unsigned int> indices =
           { 1,                            2,                            3,
-            1,                            2,                            3,
-            2,                            3
+            1,                            2,                            3
           };
 
         const std::vector<unsigned int> ranges =
           { 2,                            2,                            2,
-            2,                            2,                            2,
-            2,                            2
+            2,                            2,                            2
           };
 
         assert(pres.size() == posts.size());
@@ -222,53 +215,5 @@ namespace macro_packages
 
         return(map);
       }
+  } // namespace macro_packages
 
-
-    // ******************************************************************
-
-
-    std::string utensors::replace_u2_name(const std::vector<std::string>& args,
-                                                 std::vector<struct index_assignment> indices, void* state)
-      {
-        std::ostringstream out;
-
-        assert(indices.size() == 2);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
-
-        assert(args.size() == 1);
-
-        out << (args.size() >= 1 ? args[0] : this->default_u2) << this->index_pad;
-
-        for(int i = 0; i < indices.size(); i++)
-          {
-            out << (i > 0 ? this->index_pad : "") << index_numeric(indices[i]);
-          }
-
-        return(out.str());
-      }
-
-
-    std::string utensors::replace_u3_name(const std::vector<std::string>& args,
-                                          std::vector<struct index_assignment> indices, void* state)
-      {
-        std::ostringstream out;
-
-        assert(indices.size() == 3);
-        assert(indices[0].species < this->unit->get_number_fields());
-        assert(indices[1].species < this->unit->get_number_fields());
-        assert(indices[2].species < this->unit->get_number_fields());
-
-        assert(args.size() == 1);
-
-        out << (args.size() >= 1 ? args[0] : this->default_u3) << this->index_pad;
-
-        for(int i = 0; i < indices.size(); i++)
-          {
-            out << (i > 0 ? this->index_pad : "") << index_numeric(indices[i]);
-          }
-
-        return(out.str());
-      }
-
-  }
