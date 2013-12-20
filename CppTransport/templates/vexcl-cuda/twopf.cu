@@ -72,11 +72,8 @@ extern "C" __global__ void twopffused( ulong __n,
 
             __dxdt_$$__A[__idx] = __u1_$$__A; $$//
 
-            double __cache_twopf_$$__A_$$__B; $$//
-
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
-            __dtwopf_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
+            __dtwopf_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
           }
       }
   }

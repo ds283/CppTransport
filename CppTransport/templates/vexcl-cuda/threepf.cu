@@ -116,46 +116,35 @@ extern "C" __global__ void threepffused( ulong __n,
 
             __dxdt_$$__A[__idx] = __u1_$$__A; $$//
 
-            double __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_re_k1_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__A,$$__C) * __TWOPF_RE_k1($$__C,$$__B);
+            __dtwopf_re_k1_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__B,$$__C) * __TWOPF_RE_k1($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__A,$$__C) * __TWOPF_RE_k1($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__B,$$__C) * __TWOPF_RE_k1($$__A,$$__C);
-            __dtwopf_re_k1_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_im_k1_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__A,$$__C) * __TWOPF_IM_k1($$__C,$$__B);
+            __dtwopf_im_k1_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__B,$$__C) * __TWOPF_IM_k1($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__A,$$__C) * __TWOPF_IM_k1($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k1($$__B,$$__C) * __TWOPF_IM_k1($$__A,$$__C);
-            __dtwopf_im_k1_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_re_k2_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__A,$$__C) * __TWOPF_RE_k2($$__C,$$__B);
+            __dtwopf_re_k2_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__B,$$__C) * __TWOPF_RE_k2($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__A,$$__C) * __TWOPF_RE_k2($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__B,$$__C) * __TWOPF_RE_k2($$__A,$$__C);
-            __dtwopf_re_k2_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_im_k2_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__A,$$__C) * __TWOPF_IM_k2($$__C,$$__B);
+            __dtwopf_im_k2_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__B,$$__C) * __TWOPF_IM_k2($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__A,$$__C) * __TWOPF_IM_k2($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k2($$__B,$$__C) * __TWOPF_IM_k2($$__A,$$__C);
-            __dtwopf_im_k2_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_re_k3_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__A,$$__C) * __TWOPF_RE_k3($$__C,$$__B);
+            __dtwopf_re_k3_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__B,$$__C) * __TWOPF_RE_k3($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__A,$$__C) * __TWOPF_RE_k3($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__B,$$__C) * __TWOPF_RE_k3($$__A,$$__C);
-            __dtwopf_re_k3_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dtwopf_im_k3_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__A,$$__C) * __TWOPF_IM_k3($$__C,$$__B);
+            __dtwopf_im_k3_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__B,$$__C) * __TWOPF_IM_k3($$__A,$$__C);
 
-            __cache_twopf_$$__A_$$__B  = 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__A,$$__C) * __TWOPF_IM_k3($$__C,$$__B);
-            __cache_twopf_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2_k3($$__B,$$__C) * __TWOPF_IM_k3($$__A,$$__C);
-            __dtwopf_im_k3_$$__A_$$__B[__idx] = __cache_twopf_$$__A_$$__B; $$//
+            __dthreepf_$$__A_$$__B_$$__C[__idx]  = 0 $$// + $$__SUM_COORDS[M] __U2_k1($$__A,$$__M)*__THREEPF($$__M,$$__B,$$__C);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// + $$__SUM_2COORDS[MN] __U3_k1k2k3($$__A,$$__M,$$__N)*__TWOPF_RE_k2($$__M,$$__B)*__TWOPF_RE_k3($$__N,$$__C);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// - $$__SUM_2COORDS[MN] __U3_k1k2k3($$__A,$$__M,$$__N)*__TWOPF_IM_k2($$__M,$$__B)*__TWOPF_IM_k3($$__N,$$__C);
 
-            double __cache_threepf_$$__A_$$__B_$$__C; $$//
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// + $$__SUM_COORDS[M] __U2_k2($$__B,$$__M)*__THREEPF($$__A,$$__M,$$__C);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// + $$__SUM_2COORDS[MN] __U3_k2k1k3($$__B,$$__M,$$__N)*__TWOPF_RE_k1($$__A,$$__M)*__TWOPF_RE_k3($$__N,$$__C);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// - $$__SUM_2COORDS[MN] __U3_k2k1k3($$__B,$$__M,$$__N)*__TWOPF_IM_k1($$__A,$$__M)*__TWOPF_IM_k3($$__N,$$__C);
 
-            __cache_threepf_$$__A_$$__B_$$__C  = 0 $$// + $$__SUM_COORDS[M] __U2_k1($$__A,$$__M)*__THREEPF($$__M,$$__B,$$__C);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// + $$__SUM_2COORDS[MN] __U3_k1k2k3($$__A,$$__M,$$__N)*__TWOPF_RE_k2($$__M,$$__B)*__TWOPF_RE_k3($$__N,$$__C);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// - $$__SUM_2COORDS[MN] __U3_k1k2k3($$__A,$$__M,$$__N)*__TWOPF_IM_k2($$__M,$$__B)*__TWOPF_IM_k3($$__N,$$__C);
-
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// + $$__SUM_COORDS[M] __U2_k2($$__B,$$__M)*__THREEPF($$__A,$$__M,$$__C);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// + $$__SUM_2COORDS[MN] __U3_k2k1k3($$__B,$$__M,$$__N)*__TWOPF_RE_k1($$__A,$$__M)*__TWOPF_RE_k3($$__N,$$__C);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// - $$__SUM_2COORDS[MN] __U3_k2k1k3($$__B,$$__M,$$__N)*__TWOPF_IM_k1($$__A,$$__M)*__TWOPF_IM_k3($$__N,$$__C);
-
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// + $$__SUM_COORDS[M] __U2_k3($$__C,$$__M)*__THREEPF($$__A,$$__B,$$__M);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// + $$__SUM_2COORDS[MN] __U3_k3k1k2($$__C,$$__M,$$__N)*__TWOPF_RE_k1($$__A,$$__M)*__TWOPF_RE_k2($$__B,$$__N);
-            __cache_threepf_$$__A_$$__B_$$__C += 0 $$// - $$__SUM_2COORDS[MN] __U3_k3k1k2($$__C,$$__M,$$__N)*__TWOPF_IM_k1($$__A,$$__M)*__TWOPF_IM_k2($$__B,$$__N);
-            __dthreepf_$$__A_$$__B_$$__C[__idx] = __cache_threepf_$$__A_$$__B_$$__C; $$//
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// + $$__SUM_COORDS[M] __U2_k3($$__C,$$__M)*__THREEPF($$__A,$$__B,$$__M);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// + $$__SUM_2COORDS[MN] __U3_k3k1k2($$__C,$$__M,$$__N)*__TWOPF_RE_k1($$__A,$$__M)*__TWOPF_RE_k2($$__B,$$__N);
+            __dthreepf_$$__A_$$__B_$$__C[__idx] += 0 $$// - $$__SUM_2COORDS[MN] __U3_k3k1k2($$__C,$$__M,$$__N)*__TWOPF_IM_k1($$__A,$$__M)*__TWOPF_IM_k2($$__B,$$__N);
           }
       }
   }
