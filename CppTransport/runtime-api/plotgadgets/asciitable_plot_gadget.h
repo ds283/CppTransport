@@ -18,9 +18,9 @@
 
 #include "gnuplot_i.hpp"
 
-#include "plot_gadget.h"
-#include "messages_en.h"
-#include "asciitable.h"
+#include "transport/plotgadgets/plot_gadget.h"
+#include "transport/utilities/asciitable.h"
+#include "transport/messages_en.h"
 
 // IEEE mandates that if you convert to a string with at least 17sf, then
 // convert back to a double, then you get the same number

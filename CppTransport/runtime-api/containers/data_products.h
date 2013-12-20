@@ -8,8 +8,8 @@
 #ifndef __CPP_TRANSPORT_DATA_PRODUCTS_H_
 #define __CPP_TRANSPORT_DATA_PRODUCTS_H_
 
-#include "background.h"
-#include "twopf.h"
-#include "threepf.h"
+#include "transport/containers/background.h"
+#include "transport/containers/twopf.h"
+#include "transport/containers/threepf.h"
 
 #endif // __CPP_TRANSPORT_DATA_PRODUCTS_H_

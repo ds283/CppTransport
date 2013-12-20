@@ -16,7 +16,7 @@
 #include <stdio.h>
 #include <math.h>
 
-#include "plot_gadget.h"
+#include "transport/plotgadgets/plot_gadget.h"
 
 #define DEFAULT_SCRIPT_OUTPUT (false)
 #define DEFAULT_USE_LATEX     (false)

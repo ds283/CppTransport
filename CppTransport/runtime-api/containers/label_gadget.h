@@ -14,8 +14,8 @@
 #include <string>
 #include <sstream>
 
-#include "default_symbols.h"
-#include "index_selector.h"
+#include "transport/default_symbols.h"
+#include "transport/containers/index_selector.h"
 
 
 namespace transport

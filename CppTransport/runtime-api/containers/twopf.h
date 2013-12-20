@@ -16,15 +16,15 @@
 #include <assert.h>
 #include <math.h>
 
-#include "default_symbols.h"
-#include "asciitable.h"
-#include "latex_output.h"
-#include "label_gadget.h"
-#include "plot_gadget.h"
-#include "index_selector.h"
-#include "messages_en.h"
+#include "transport/default_symbols.h"
+#include "transport/utilities/asciitable.h"
+#include "transport/utilities/latex_output.h"
+#include "transport/containers/label_gadget.h"
+#include "transport/containers/index_selector.h"
+#include "transport/plotgadgets/plot_gadget.h"
+#include "transport/messages_en.h"
 
-#include "background.h"
+#include "transport/containers/background.h"
 
 
 namespace transport
