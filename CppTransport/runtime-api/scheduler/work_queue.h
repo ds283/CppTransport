@@ -11,6 +11,8 @@
 #include <iostream>
 #include <assert.h>
 #include <vector>
+#include <sstream>
+#include <stdexcept>
 
 
 #include "transport/messages_en.h"
@@ -20,6 +22,13 @@
 
 namespace transport
   {
+
+    // forward reference for overload of operator<<
+    template <typename ItemType, typename SizeFunctor> class work_queue;
+
+    // overload operator<< to write a work_queue to a stream
+    template <typename ItemType, typename SizeFunctor>
+    std::ostream& operator<<(std::ostream& out, work_queue<ItemType, SizeFunctor>& obj);
 
     template <typename ItemType, typename SizeFunctor>
     class work_queue
@@ -37,7 +46,28 @@ namespace transport
             // compute memory required by items in the queue
             unsigned int get_memory_required() const { return(this->state_size * this->queue.size()); }
 
+            // queue an work item on this list
             void enqueue_item(const ItemType& item) { queue.push_back(item); }
+
+            // return number of items queued on this list
+            unsigned int size() const { return(this->queue.size()); }
+
+            // overload subscripting operator to access individual items
+            const ItemType& operator[](unsigned int d) const
+              {
+                if(d < this->queue.size())
+                  {
+                    return(this->queue[d]);
+                  }
+                else if(this->queue.size() > 0)
+                  {
+                    return(this->queue.back());
+                  }
+                else
+                  {
+                    throw std::out_of_range(__CPP_TRANSPORT_WORK_QUEUE_RANGE);
+                  }
+              }
 
           protected:
             std::vector<ItemType> queue;
@@ -59,8 +89,29 @@ namespace transport
             // get memory requirements for the current queue
             unsigned int get_memory_required() const { return(this->queue_list.back().get_memory_required()); }
 
-            // return fractional weight of this device
+            // return device associated with this queue
+            const context::device& get_device() const { return(this->device); }
+
+            // return fractional weight of device associated with this queue
             double get_weight() const { return(this->device.get_fractional_weight()); }
+
+            // return number of queues on this device
+            unsigned int size() const { return(this->queue_list.size()); }
+
+            // access queues by overloading subscript operator
+            const device_work_queue& operator[](unsigned int d) const
+              {
+                assert(d < this->queue_list.size());
+
+                if(d < this->queue_list.size())
+                  {
+                    return(this->queue_list[d]);
+                  }
+                else
+                  {
+                    return (this->queue_list.back());
+                  }
+              }
 
             // push item to current queue
             void enqueue_item(const ItemType& item)
@@ -122,7 +173,7 @@ namespace transport
 
 
     template <typename ItemType, typename SizeFunctor>
-    work_queue<ItemType, SizeFunctor>::work_queue(const context& c, const SizeFunctor sf, const std::<double>& ks)
+    work_queue<ItemType, SizeFunctor>::work_queue(const context& c, const SizeFunctor sf, const std::vector<double>& ks)
       : ctx(c), k_lookup(ks), total_items(0), state_size(sf)
       {
         this->clear();
@@ -170,6 +221,41 @@ namespace transport
 
             if(!inserted) this->devices[0].enqueue_item(item);
             this->total_items++;
+          }
+      }
+
+
+    template <typename ItemType, typename SizeFunctor>
+    std::ostream& operator<<(std::ostream& out, work_queue<ItemType, SizeFunctor>& obj)
+      {
+        out << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B << std::endl << std::endl;
+
+        unsigned int d = 0;
+        for(std::vector<work_queue::device_queue>::const_iterator t = obj.queue_list.begin(); t != obj.queue_list.end(); t++, d++)
+          {
+            out << d << ". " << (*t).get_device().get_name() << " (" << __CPP_TRANSPORT_WORK_QUEUE_WEIGHT << " = " << (*t).get_weight() << "), ";
+            if((*t).get_device().get_mem_type() == context::device::bounded)
+              {
+                out << __CPP_TRANSPORT_WORK_QUEUE_MAXMEM << " = " << format_memory((*t).get_device().get_mem_size());
+              }
+            else
+              {
+                out << __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED;
+              }
+            out << std::endl;
+
+            out << (*t).size() << " " << __CPP_TRANSPORT_WORK_QUEUE_QUEUES << std::endl << std::endl;
+            for(unsigned int i = 0; i < (*t).size(); i++)
+              {
+                work_queue::device_work_queue& work = (*t)[i];
+
+                out << "  " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE << " " << i << std::endl;
+                for(unsigned int j = 0; j < work.size(); j++)
+                  {
+                    out << "  " << work[j];
+                  }
+                out << std::endl;
+              }
           }
       }
 

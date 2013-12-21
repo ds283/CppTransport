@@ -50,6 +50,26 @@
 
 #define __CPP_TRANSPORT_ASCIITABLE_OUTPUT     "Error: could not open asciitable gadget output"
 
+#define __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A   "Work queue over"
+#define __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B   "devices:"
+#define __CPP_TRANSPORT_WORK_QUEUE_WEIGHT     "weight"
+#define __CPP_TRANSPORT_WORK_QUEUE_MAXMEM     "max memory"
+#define __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED  "no max memory size"
+#define __CPP_TRANSPORT_WORK_QUEUE_QUEUE      "Queue"
+#define __CPP_TRANSPORT_WORK_QUEUE_QUEUES     "queues"
+#define __CPP_TRANSPORT_WORK_QUEUE_RANGE      "Bad access to device_work_list object"
+
+#define __CPP_TRANSPORT_KCONFIG_SERIAL        "Serial ="
+#define __CPP_TRANSPORT_KCONFIG_KEQUALS       "k ="
+#define __CPP_TRANSPORT_KCONFIG_KTEQUALS      "k_t ="
+#define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS   "alpha ="
+#define __CPP_TRANSPORT_KCONFIG_BETAEQUALS    "beta ="
+
+#define __CPP_TRANSPORT_GIGABYTE              "Gb"
+#define __CPP_TRANSPORT_MEGABYTE              "Mb"
+#define __CPP_TRANSPORT_KILOBYTE              "kb"
+#define __CPP_TRANSPORT_BYTE                  "b"
+
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"
 #define __CPP_TRANSPORT_LOGY_ERROR_A          "Warning: y-value contains no nonzero values for line"

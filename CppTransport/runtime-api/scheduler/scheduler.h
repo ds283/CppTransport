@@ -9,11 +9,17 @@
 
 
 #include <iostream>
+#include <iomanip>
 #include <array>
 #include <vector>
+#include <sstream>
+#include <stdexcept>
 
 #include "transport/scheduler/context.h"
 #include "transport/scheduler/work_queue.h"
+
+
+#define DEFAULT_K_PRECISION (2)
 
 
 namespace transport
@@ -40,6 +46,13 @@ namespace transport
         // to be in any particular order
         unsigned     serial;
       };
+
+    std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj)
+      {
+        std::ostringstream str;
+        str << std::setprecision(DEFAULT_K_PRECISION) << obj.k;
+        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
+      }
 
     struct threepf_kconfig
       {
@@ -74,6 +87,23 @@ namespace transport
         // to be in any particular order
         unsigned                    serial;
       };
+
+    std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj)
+      {
+        std::ostringstream kt_str;
+        std::ostringstream alpha_str;
+        std::ostringstream beta_str;
+
+        kt_str    << std::setprecision(DEFAULT_K_PRECISION) << obj.k_t;
+        alpha_str << std::setprecision(DEFAULT_K_PRECISION) << obj.alpha;
+        beta_str  << std::setprecision(DEFAULT_K_PRECISION) << obj.beta;
+
+        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
+                                                                   << ", " << __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
+                                                                   << ", " << __CPP_TRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
+                                                                   << std::endl;
+      }
+
 
     template <typename SizeFunctor>
     class scheduler
@@ -173,15 +203,13 @@ namespace transport
 
             if(stored_twopf == false)
               {
-              std::cerr << __CPP_TRANSPORT_TWOPF_STORE << std::endl;
-              exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
+                throw std::logic_error(__CPP_TRANSPORT_TWOPF_STORE);
               }
           }
 
         if(stored_background == false)
           {
-            std::cerr << __CPP_TRANSPORT_BACKGROUND_STORE << std::endl;
-            exit(1);  // this error shouldn't happen. TODO: tidy this up; could do with a proper error handler
+            throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
           }
 
         return(work);
