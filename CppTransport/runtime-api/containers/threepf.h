@@ -52,18 +52,6 @@ namespace transport
               }
         };
 
-      struct threepf_kconfig
-        {
-          std::array<unsigned int, 3> indices;
-
-          double                      k_t;
-          double                      alpha;
-          double                      beta;
-          
-          bool                        store_background;
-          bool                        store_twopf;
-        };
-
       template <typename number>
       class threepf
         {
@@ -397,9 +385,9 @@ namespace transport
 
               for(int m = 0; m < raw[l].size(); m++)
                 {
-                  number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
-                                             this->sample_com_ks[this->kconfig_list[i].indices[1]],
-                                             this->sample_com_ks[this->kconfig_list[i].indices[2]]);
+                  number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
+                                             this->sample_com_ks[this->kconfig_list[i].index[1]],
+                                             this->sample_com_ks[this->kconfig_list[i].index[2]]);
 
                   data[l][m] = raw[l][m] / form_factor;
                 }
@@ -434,7 +422,7 @@ namespace transport
 
                               number value = this->samples[l][samples_index][i];
 
-                              // now shift the correlation function if it involves momentum indices
+                              // now shift the correlation function if it involves momentum index
                               number shift = this->construct_dotphi_shift(i, l, m, n, r);
 
                               value += shift;
@@ -465,9 +453,9 @@ namespace transport
 
             for(int m = 0; m < raw[l].size(); m++)
               {
-                number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
-                                           this->sample_com_ks[this->kconfig_list[i].indices[1]],
-                                           this->sample_com_ks[this->kconfig_list[i].indices[2]]);
+                number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
+                                           this->sample_com_ks[this->kconfig_list[i].index[1]],
+                                           this->sample_com_ks[this->kconfig_list[i].index[2]]);
 
                 data[l][m] = raw[l][m] / form_factor;
               }
@@ -484,21 +472,21 @@ namespace transport
 
           if (m >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(m, this->kconfig_list[i].indices[0],
-                                          n, this->kconfig_list[i].indices[1],
-                                          r, this->kconfig_list[i].indices[2], l, 0);
+              shift += this->dotphi_shift(m, this->kconfig_list[i].index[0],
+                                          n, this->kconfig_list[i].index[1],
+                                          r, this->kconfig_list[i].index[2], l, 0);
             }
           if (n >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(n, this->kconfig_list[i].indices[1],
-                                          m, this->kconfig_list[i].indices[0],
-                                          r, this->kconfig_list[i].indices[2], l, 1);
+              shift += this->dotphi_shift(n, this->kconfig_list[i].index[1],
+                                          m, this->kconfig_list[i].index[0],
+                                          r, this->kconfig_list[i].index[2], l, 1);
             }
           if (r >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(r, this->kconfig_list[i].indices[2],
-                                          m, this->kconfig_list[i].indices[0],
-                                          n, this->kconfig_list[i].indices[1], l, 2);
+              shift += this->dotphi_shift(r, this->kconfig_list[i].index[2],
+                                          m, this->kconfig_list[i].index[0],
+                                          n, this->kconfig_list[i].index[1], l, 2);
             }
 
           return(shift);
@@ -620,12 +608,12 @@ namespace transport
               this->parent->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
 
               // get twopf values for this timeslices and appropriate k-modes
-              std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].indices[0]);
-              std::vector<number> twopf_im_k1 = this->twopf_im.get_value(j, kconfig_list[i].indices[0]);
-              std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].indices[1]);
-              std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].indices[1]);
-              std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].indices[2]);
-              std::vector<number> twopf_im_k3 = this->twopf_im.get_value(j, kconfig_list[i].indices[2]);
+              std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].index[0]);
+              std::vector<number> twopf_im_k1 = this->twopf_im.get_value(j, kconfig_list[i].index[0]);
+              std::vector<number> twopf_re_k2 = this->twopf_re.get_value(j, kconfig_list[i].index[1]);
+              std::vector<number> twopf_im_k2 = this->twopf_im.get_value(j, kconfig_list[i].index[1]);
+              std::vector<number> twopf_re_k3 = this->twopf_re.get_value(j, kconfig_list[i].index[2]);
+              std::vector<number> twopf_im_k3 = this->twopf_im.get_value(j, kconfig_list[i].index[2]);
 
               // compute contribution from intrinsic threepf
               data[j][0] = 0;
@@ -715,9 +703,9 @@ namespace transport
             {
               data[j].resize(1);    // only one component
 
-              number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].indices[0]],
-                                         this->sample_com_ks[this->kconfig_list[i].indices[1]],
-                                         this->sample_com_ks[this->kconfig_list[i].indices[2]]);
+              number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
+                                         this->sample_com_ks[this->kconfig_list[i].index[1]],
+                                         this->sample_com_ks[this->kconfig_list[i].index[2]]);
 
               data[j][0] = threepf[j][0] / form_factor;
             }
@@ -732,9 +720,9 @@ namespace transport
           std::vector< std::vector<number> > data(this->sample_points.size());
           
           std::vector< std::vector<number> > threepf  = this->construct_zeta_time_history(i);
-          std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[0]);
-          std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[1]);
-          std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].indices[2]);
+          std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[0]);
+          std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[1]);
+          std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[2]);
           
           for(int j = 0; j < this->sample_points.size(); j++)
             {

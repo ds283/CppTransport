@@ -367,9 +367,9 @@ namespace transport
             std::vector< std::vector<number> > kmode_threepf_history;
 
             // write the time history for this k-configuration
-            this->threepf_kmode(com_ks[kconfig_list[i].indices[0]],
-                                com_ks[kconfig_list[i].indices[1]],
-                                com_ks[kconfig_list[i].indices[2]],
+            this->threepf_kmode(com_ks[kconfig_list[i].index[0]],
+                                com_ks[kconfig_list[i].index[1]],
+                                com_ks[kconfig_list[i].index[2]],
                                 times, real_ics,
                                 kmode_background_history,
                                 kmode_twopf_re_history, kmode_twopf_im_history,
@@ -386,8 +386,8 @@ namespace transport
                   {
                     for(int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
                       {
-                        twopf_re_history[m][n][kconfig_list[i].indices[0]] = kmode_twopf_re_history[m][n];
-                        twopf_im_history[m][n][kconfig_list[i].indices[0]] = kmode_twopf_im_history[m][n];
+                        twopf_re_history[m][n][kconfig_list[i].index[0]] = kmode_twopf_re_history[m][n];
+                        twopf_im_history[m][n][kconfig_list[i].index[0]] = kmode_twopf_im_history[m][n];
                       }
                   }
               }

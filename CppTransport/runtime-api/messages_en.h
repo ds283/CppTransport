@@ -46,6 +46,8 @@
 #define __CPP_TRANSPORT_TWOPF_STORE           "Fatal: failed to find a configuration which would store the two-point function"
 #define __CPP_TRANSPORT_BACKGROUND_STORE      "Fatal: failed to find a configuration which would store the background"
 
+#define __CPP_TRANSPORT_NO_DEVICES            "Fatal: no devices specified in context"
+
 #define __CPP_TRANSPORT_ASCIITABLE_OUTPUT     "Error: could not open asciitable gadget output"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"

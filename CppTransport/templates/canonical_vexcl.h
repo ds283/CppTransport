@@ -343,9 +343,9 @@ namespace transport
           std::vector<double> hst_k3s(kconfig_list.size());
           for(int i = 0; i < kconfig_list.size(); i++)
             {
-              hst_k1s[i] = com_ks[kconfig_list[i].indices[0]];
-              hst_k2s[i] = com_ks[kconfig_list[i].indices[1]];
-              hst_k3s[i] = com_ks[kconfig_list[i].indices[2]];
+              hst_k1s[i] = com_ks[kconfig_list[i].index[0]];
+              hst_k2s[i] = com_ks[kconfig_list[i].index[1]];
+              hst_k3s[i] = com_ks[kconfig_list[i].index[2]];
             }
           vex::copy(hst_k1s, dev_k1s);
           vex::copy(hst_k2s, dev_k2s);
