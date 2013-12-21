@@ -14,6 +14,7 @@
 #define VEXCL_SPLIT_MULTIEXPRESSIONS
 
 #include "transport/transport.h"
+#include "transport/utilities/formatter.h"
 
 #include "$$__CORE"
 
@@ -303,9 +304,9 @@ namespace transport
               double device_mem_required  = static_cast<double>(x.part_size(i)) * $$__MODEL_pool::twopf_state_size * sizeof(double) / (1024.0*1024.0);
 
               std::cout << props.name << std::endl;
-              std::cout << "  Global memory = " << static_cast<double>(props.totalGlobalMem) / (1024.0*1024.0) << " Mb" << std::endl;
-              std::cout << "  Shared memory = " << static_cast<double>(props.sharedMemPerBlock) / (1024.0) << " kb" << std::endl;
-              std::cout << "  State vector  = " << device_mem_required << " Mb" << std::endl;
+              std::cout << "  Global memory = " << format_memory(props.totalGlobalMem) << std::endl;
+              std::cout << "  Shared memory = " << format_memory(props.sharedMemPerBlock) << std::endl;
+              std::cout << "  State vector  = " << format_memory(device_mem_required) << std::endl;
             }
           std::cout << std::endl;
         }
