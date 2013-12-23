@@ -238,7 +238,7 @@ namespace transport
           twopf_state dev_x(ctx.queue(), com_ks.size());
 
           // 1 - background
-          dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->flatten($$__A)];
+          dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->fast_flatten($$__A)];
         
           // 2 - twopf
           this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *times.begin(), hst_bg);

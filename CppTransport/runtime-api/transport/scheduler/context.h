@@ -50,10 +50,10 @@ namespace transport
           {
           }
 
-        unsigned size() const { return(this->devices.size()); }
+        size_t size() const { return(this->devices.size()); }
 
         // add a device to the context
-        void add_device(std::string name, unsigned int mem_size, enum device::memory_type type=device::unbounded, unsigned int weight=1);
+        void add_device(std::string name, unsigned int mem_size=0, enum device::memory_type type=device::unbounded, unsigned int weight=1);
 
         // return fractional weighting (ie., normalized to 1.0) for the dth device
         // d must be within the current size of the context
@@ -72,14 +72,14 @@ namespace transport
 
     void context::add_device(std::string name, unsigned int mem_size, enum device::memory_type type, unsigned int weight)
       {
-        device dev(name, mem_size, type, weight);
+        device dev(name, mem_size, this, type, weight);
 
         this->devices.push_back(dev);
         this->total_weight += weight;
       }
 
 
-    const device& context::get_device(unsigned int d) const
+    const context::device& context::get_device(unsigned int d) const
       {
         assert(d < this->devices.size());
 

@@ -72,18 +72,21 @@ int main(int argc, const char* argv[])
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
-    const double Ncross = 9.0; // horizon-crossing occurs at 9 e-folds from init_values
-    const double Npre   = 7;   // how many e-folds do we wish to track the mode prior to horizon exit?
-    const std::vector<double> ics = model.find_ics(init_values, Ncross, Npre);
+    const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
+    const double Ncross = 9.0;  // horizon-crossing occurs at 9 e-folds from init_values
+    const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
 
-    const double        tmin = 0;          // begin at time t = 0
-    const double        tmax = 60+Npre;    // end 60 e-folds after horizon-crossing
+    // set up initial conditions
+    transport::initial_conditions<double> ics = transport::initial_conditions<double>(init_values, Ninit, Ncross, Npre,
+                                                                                      model.ics_validator_factory(), model.ics_finder_factory());
+
     const unsigned int  tN   = 5000;       // record 5000 samples
 
     std::vector<double> times;
     for(int i = 0; i < tN; i++)
       {
-        times.push_back(tmin + (tmax - tmin)*(double)i/(double)tN);
+        times.push_back(Ninit + (Nmax + Npre - Ninit)*static_cast<double>(i)/tN);
       }
 
     // the conventions for k-numbers are as follows:
@@ -96,14 +99,15 @@ int main(int argc, const char* argv[])
     std::vector<double> ks;
     for(int i = 0; i < kN; i++)
       {
-        ks.push_back(kmin * pow(kmax/kmin, (double)i/(double)kN));
+        ks.push_back(kmin * pow(kmax/kmin, static_cast<double>(i)/kN));
       }
+
+    transport::threepf_task<double> tk = transport::threepf_task<double>(ics, ks, Npre, times, model.kconfig_kstar_factory());
 
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    const double Nstar = 7.0;
-    transport::threepf<double> threepf = model.threepf(ks, Nstar, init_values, times);
+    transport::threepf<double> threepf = model.threepf(tk);
 
     timer.stop();
     timer.report();

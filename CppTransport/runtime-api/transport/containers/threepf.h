@@ -56,19 +56,17 @@ namespace transport
       class threepf
         {
           public:
-            threepf(const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
-              const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
+            threepf(const threepf_task<number>* t, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& tpf_re,
               const std::vector< std::vector< std::vector<number> > >& tpf_im,
               const std::vector< std::vector< std::vector<number> > >& thpf,
-              const std::vector< struct threepf_kconfig >& kl,
               model<number>* p)
               : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
-                Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(sp, b, p),
-                twopf_re(ks, com_ks, Nst, sp, b, tpf_re, p),
-                twopf_im(ks, com_ks, Nst, sp, b, tpf_im, p),
-                samples(thpf), kconfig_list(kl),
+                tk(t),
+                backg(t, b, p),
+                twopf_re(t, b, tpf_re, p),
+                twopf_im(t, b, tpf_im, p),
+                samples(thpf),
                 parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI),
                 plot_precision(DEFAULT_PLOT_PRECISION)
@@ -162,12 +160,7 @@ namespace transport
 
             label_gadget                                            labels;            // holds names (and LaTeX names) for fields
 
-            const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
-
-            const std::vector<double>                               sample_points;     // list of times at which we hold samples
-            const std::vector<double>                               sample_ks;         // list of ks for which we hold samples,
-                                                                                       // normalized to horizon crossing
-            const std::vector<double>                               sample_com_ks;     // list of ks, in comoving units
+            const threepf_task<number>*                             tk;                // task object used to generate this solution
 
             background<number>                                      backg;             // container for background
             twopf<number>                                           twopf_re;          // container for real 2pf
@@ -176,8 +169,6 @@ namespace transport
               // first index: time of observation
               // second index: 2pf component
               // third index: k (ordered according to 'kconfig_list' below)
-            const std::vector< struct threepf_kconfig >             kconfig_list;      // list of k-configurations,
-                                                                                       // in the same order as third index of 'samples'
 
             unsigned int                                            wrap_width;        // position to wrap when output to stream
             bool                                                    output_dotphi;     // output correlation funtions of dot(phi), or the canonical momentum?
@@ -190,13 +181,15 @@ namespace transport
 
       template <typename number>
       void threepf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
-        index_selector<3>* selector, std::string format, bool logy, bool dotphi)
+                                                    index_selector<3>* selector, std::string format, bool logy, bool dotphi)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector<double> sample_points = this->tk->get_sample_times();
           std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->kconfig_list.size(); i++)
+          for(int i = 0; i < kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i) :
                                                                  this->construct_kconfig_momentum_time_history(selector, i);
@@ -208,8 +201,8 @@ namespace transport
               tag << (dotphi ? "derivatives" : "momenta");
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy, tag.str());
+              gadget->plot(fnam.str(), this->make_threepf_title(kconfig_list[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy, tag.str());
             }
         }
 
@@ -217,13 +210,15 @@ namespace transport
       template <typename number>
       template <typename ShapeFunctor>
       void threepf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
-        ShapeFunctor shape, index_selector<3>* selector, std::string format, bool logy, bool dotphi)
+                                                   ShapeFunctor shape, index_selector<3>* selector, std::string format, bool logy, bool dotphi)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector<double> sample_points = this->tk->get_sample_times();
           std::vector<std::string> labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over all momentum configurations
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->kconfig_list.size(); i++)
+          for(int i = 0; i < kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = dotphi ? this->construct_kconfig_dotphi_time_history(selector, i, shape) :
                                                                  this->construct_kconfig_momentum_time_history(selector, i, shape);
@@ -236,19 +231,22 @@ namespace transport
               tag << ", reference shape = " << shape.name();
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                this->sample_points, data, labels, PICK_N_LABEL, SHAPE_LABEL, false, logy, tag.str());
+              gadget->plot(fnam.str(), this->make_threepf_title(kconfig_list[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, SHAPE_LABEL, false, logy, tag.str());
             }
         }
 
 
       template <typename number>
       void threepf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
-        std::string format, bool logy)
+                                              std::string format, bool logy)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector<double> sample_points = this->tk->get_sample_times();
+
           // loop over all momentum configurations
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->kconfig_list.size(); i++)
+          for(int i = 0; i < kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_zeta_time_history(i);
 
@@ -259,8 +257,8 @@ namespace transport
               labels[0] = this->labels.make_zeta_bispectrum_label(gadget->latex_labels());
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
+              gadget->plot(fnam.str(), this->make_threepf_title(kconfig_list[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, THREEPF_LABEL, false, logy);
             }
         }
 
@@ -268,11 +266,14 @@ namespace transport
     template <typename number>
     template <typename ShapeFunctor>
     void threepf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
-      ShapeFunctor shape, std::string format, bool logy)
+                                            ShapeFunctor shape, std::string format, bool logy)
       {
+        std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+        std::vector<double> sample_points = this->tk->get_sample_times();
+
         // loop over all momentum configurations
 #pragma omp for schedule(guided)
-        for(int i = 0; i < this->kconfig_list.size(); i++)
+        for(int i = 0; i < kconfig_list.size(); i++)
           {
             std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, shape);
 
@@ -286,8 +287,8 @@ namespace transport
             tag << "reference shape = " << shape.name();
 
             gadget->set_format(format);
-            gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-              this->sample_points, data, labels, PICK_N_LABEL, "", false, logy, tag.str());
+            gadget->plot(fnam.str(), this->make_threepf_title(kconfig_list[i], gadget->latex_labels()),
+                         sample_points, data, labels, PICK_N_LABEL, "", false, logy, tag.str());
           }
       }
 
@@ -295,9 +296,12 @@ namespace transport
       template <typename number>
       void threepf<number>::reduced_bispectrum_time_history(plot_gadget<number> *gadget, std::string output, std::string format, bool logy)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector<double> sample_points = this->tk->get_sample_times();
+
           // loop over all momentum configurations
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->kconfig_list.size(); i++)
+          for(int i = 0; i < kconfig_list.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_reduced_bispectrum_time_history(i);
               
@@ -308,14 +312,14 @@ namespace transport
               labels[0] = this->labels.make_reduced_bispectrum_label(gadget->latex_labels());
               
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_threepf_title(this->kconfig_list[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, "", false, logy);
+              gadget->plot(fnam.str(), this->make_threepf_title(kconfig_list[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, "", false, logy);
             }
         }
 
 
       template <typename number>
-      std::string threepf<number>::make_threepf_title(const struct threepf_kconfig& config, bool latex)
+      std::string threepf<number>::make_threepf_title(const threepf_kconfig& config, bool latex)
         {
           std::ostringstream title;
 
@@ -342,11 +346,11 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector< std::vector<number> > data(this->tk->get_number_times());
 
           // we want data to be a time series of the 3pf components,
           // depending whether they are enabled by the index_selector
-          for(int l = 0; l < this->sample_points.size(); l++)
+          for(int l = 0; l < this->tk->get_sample_times().size(); l++)
             {
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
@@ -357,7 +361,7 @@ namespace transport
                           std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
                           if(selector->is_on(index_set))
                             {
-                              unsigned int samples_index = this->parent->client_flatten(m,n,r);
+                              unsigned int samples_index = this->parent->flatten(m,n,r);
 
                               data[l].push_back(this->samples[l][samples_index][i]);
                             }
@@ -374,6 +378,8 @@ namespace transport
       template <typename ShapeFunctor>
       std::vector< std::vector<number> > threepf<number>::construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+
           std::vector< std::vector<number> > raw = this->construct_kconfig_momentum_time_history(selector, i);
 
           std::vector< std::vector<number> > data(raw.size());
@@ -385,9 +391,9 @@ namespace transport
 
               for(int m = 0; m < raw[l].size(); m++)
                 {
-                  number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
-                                             this->sample_com_ks[this->kconfig_list[i].index[1]],
-                                             this->sample_com_ks[this->kconfig_list[i].index[2]]);
+                  number form_factor = shape(this->tk->get_k_comoving(kconfig_list[i].index[0]),
+                                             this->tk->get_k_comoving(kconfig_list[i].index[1]),
+                                             this->tk->get_k_comoving(kconfig_list[i].index[2]));
 
                   data[l][m] = raw[l][m] / form_factor;
                 }
@@ -403,11 +409,11 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i)
         {
-          assert(i < this->kconfig_list.size());
+          assert(i < this->tk->get_sample().size());
 
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector< std::vector<number> > data(this->tk->get_number_times());
 
-          for(int l = 0; l < this->sample_points.size(); l++)
+          for(int l = 0; l < this->tk->get_number_times(); l++)
             {
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
@@ -418,7 +424,7 @@ namespace transport
                           std::array<unsigned int, 3> index_set = { (unsigned int)m, (unsigned int)n, (unsigned int)r };
                           if(selector->is_on(index_set))
                             {
-                              unsigned int samples_index = this->parent->client_flatten(m,n,r);
+                              unsigned int samples_index = this->parent->flatten(m,n,r);
 
                               number value = this->samples[l][samples_index][i];
 
@@ -442,6 +448,8 @@ namespace transport
     template <typename ShapeFunctor>
     std::vector< std::vector<number> > threepf<number>::construct_kconfig_dotphi_time_history(index_selector<3>* selector, unsigned int i, ShapeFunctor shape)
       {
+        std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+
         std::vector< std::vector<number> > raw = this->construct_kconfig_dotphi_time_history(selector, i);
 
         std::vector< std::vector<number> > data(raw.size());
@@ -453,9 +461,9 @@ namespace transport
 
             for(int m = 0; m < raw[l].size(); m++)
               {
-                number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
-                                           this->sample_com_ks[this->kconfig_list[i].index[1]],
-                                           this->sample_com_ks[this->kconfig_list[i].index[2]]);
+                number form_factor = shape(this->tk->get_k_comoving(kconfig_list[i].index[0]),
+                                           this->tk->get_k_comoving(kconfig_list[i].index[1]),
+                                           this->tk->get_k_comoving(kconfig_list[i].index[2]));
 
                 data[l][m] = raw[l][m] / form_factor;
               }
@@ -468,25 +476,26 @@ namespace transport
       template <typename number>
       number threepf<number>::construct_dotphi_shift(unsigned int i, unsigned int l, unsigned int m, unsigned int n, unsigned int r)
         {
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
           number shift = 0.0;
 
           if (m >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(m, this->kconfig_list[i].index[0],
-                                          n, this->kconfig_list[i].index[1],
-                                          r, this->kconfig_list[i].index[2], l, 0);
+              shift += this->dotphi_shift(m, kconfig_list[i].index[0],
+                                          n, kconfig_list[i].index[1],
+                                          r, kconfig_list[i].index[2], l, 0);
             }
           if (n >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(n, this->kconfig_list[i].index[1],
-                                          m, this->kconfig_list[i].index[0],
-                                          r, this->kconfig_list[i].index[2], l, 1);
+              shift += this->dotphi_shift(n, kconfig_list[i].index[1],
+                                          m, kconfig_list[i].index[0],
+                                          r, kconfig_list[i].index[2], l, 1);
             }
           if (r >= this->parent->get_N_fields())
             {
-              shift += this->dotphi_shift(r, this->kconfig_list[i].index[2],
-                                          m, this->kconfig_list[i].index[0],
-                                          n, this->kconfig_list[i].index[1], l, 2);
+              shift += this->dotphi_shift(r, kconfig_list[i].index[2],
+                                          m, kconfig_list[i].index[0],
+                                          n, kconfig_list[i].index[1], l, 2);
             }
 
           return(shift);
@@ -505,12 +514,13 @@ namespace transport
         {
           assert(__pos < 3);
 
+          std::vector<double> sample_points = this->tk->get_sample_times();
           std::vector<number> __fields = this->backg.get_value(__time);
 
           std::vector< std::vector< std::vector<number> > > __B_nrm;
-          this->parent->B(__fields, this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_com_ks[__kmode_m], this->sample_points[__time], __B_nrm);
+          this->parent->B(__fields, this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), this->tk->get_k_comoving(__kmode_m), sample_points[__time], __B_nrm);
           std::vector< std::vector< std::vector<number> > > __C_mnr;
-          this->parent->C(__fields, this->sample_com_ks[__kmode_m], this->sample_com_ks[__kmode_n], this->sample_com_ks[__kmode_r], this->sample_points[__time], __C_mnr);
+          this->parent->C(__fields, this->tk->get_k_comoving(__kmode_m), this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), sample_points[__time], __C_mnr);
 
           std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time, __kmode_n);
           std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time, __kmode_r);
@@ -521,7 +531,7 @@ namespace transport
           
           assert(__m >= this->parent->get_N_fields());
           assert(__m <  2*this->parent->get_N_fields());
-          auto __m_species = this->parent->client_species(__m);
+          auto __m_species = this->parent->species(__m);
           
           for(int __i = 0; __i < this->parent->get_N_fields(); __i++)
             {
@@ -538,32 +548,32 @@ namespace transport
                     {
                       case 0: // index __m is on the far left, to the left of both __n and __r
                         // flatten the two possible sets of index contractions: (i,n),(j,r) and (j,r),(i,n)
-                        __i_field_twopf_index_n    = this->parent->client_flatten(__i,__n);
-                        __i_field_twopf_index_r    = this->parent->client_flatten(__i,__r);
-                        __j_field_twopf_index_n    = this->parent->client_flatten(__j,__n);
-                        __j_field_twopf_index_r    = this->parent->client_flatten(__j,__r);
-                        __i_dotfield_twopf_index_n = this->parent->client_flatten(this->parent->client_momentum(__i),__n);
-                        __i_dotfield_twopf_index_r = this->parent->client_flatten(this->parent->client_momentum(__i),__r);
+                        __i_field_twopf_index_n    = this->parent->flatten(__i,__n);
+                        __i_field_twopf_index_r    = this->parent->flatten(__i,__r);
+                        __j_field_twopf_index_n    = this->parent->flatten(__j,__n);
+                        __j_field_twopf_index_r    = this->parent->flatten(__j,__r);
+                        __i_dotfield_twopf_index_n = this->parent->flatten(this->parent->momentum(__i),__n);
+                        __i_dotfield_twopf_index_r = this->parent->flatten(this->parent->momentum(__i),__r);
                         break;
                       
                       case 1: // index __m is in the middle, to the left of __r but the right of __n
                         // flatten the two possible sets of index contractions: (n,i),(j,r) and (n,j),(i,r)
-                        __i_field_twopf_index_n    = this->parent->client_flatten(__n,__i);
-                        __i_field_twopf_index_r    = this->parent->client_flatten(__i,__r);
-                        __j_field_twopf_index_n    = this->parent->client_flatten(__n,__j);
-                        __j_field_twopf_index_r    = this->parent->client_flatten(__j,__r);
-                        __i_dotfield_twopf_index_n = this->parent->client_flatten(__n,this->parent->client_momentum(__i));
-                        __i_dotfield_twopf_index_r = this->parent->client_flatten(this->parent->client_momentum(__i),__r);
+                        __i_field_twopf_index_n    = this->parent->flatten(__n,__i);
+                        __i_field_twopf_index_r    = this->parent->flatten(__i,__r);
+                        __j_field_twopf_index_n    = this->parent->flatten(__n,__j);
+                        __j_field_twopf_index_r    = this->parent->flatten(__j,__r);
+                        __i_dotfield_twopf_index_n = this->parent->flatten(__n,this->parent->momentum(__i));
+                        __i_dotfield_twopf_index_r = this->parent->flatten(this->parent->momentum(__i),__r);
                         break;
                       
                       case 2: // index __m is on the far right, to the right of both __n and __r
                         // flatten the two possible sets of index contractions: (n,i),(r,j) and (n,j),(r,i)
-                        __i_field_twopf_index_n    = this->parent->client_flatten(__n,__i);
-                        __i_field_twopf_index_r    = this->parent->client_flatten(__r,__i);
-                        __j_field_twopf_index_n    = this->parent->client_flatten(__n,__j);
-                        __j_field_twopf_index_r    = this->parent->client_flatten(__r,__j);
-                        __i_dotfield_twopf_index_n = this->parent->client_flatten(__n,this->parent->client_momentum(__i));
-                        __i_dotfield_twopf_index_r = this->parent->client_flatten(__r,this->parent->client_momentum(__i));
+                        __i_field_twopf_index_n    = this->parent->flatten(__n,__i);
+                        __i_field_twopf_index_r    = this->parent->flatten(__r,__i);
+                        __j_field_twopf_index_n    = this->parent->flatten(__n,__j);
+                        __j_field_twopf_index_r    = this->parent->flatten(__r,__j);
+                        __i_dotfield_twopf_index_n = this->parent->flatten(__n,this->parent->momentum(__i));
+                        __i_dotfield_twopf_index_r = this->parent->flatten(__r,this->parent->momentum(__i));
                         break;
                         
                       default:
@@ -594,9 +604,10 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector< std::vector<number> > data(this->tk->get_number_times());
 
-          for(int j = 0; j < this->sample_points.size(); j++)
+          for(int j = 0; j < this->tk->get_number_times(); j++)
             {
               data[j].resize(1);    // only one component of < zeta zeta zeta >
 
@@ -623,7 +634,7 @@ namespace transport
                     {
                       for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                         {
-                          unsigned int samples_index = this->parent->client_flatten(m,n,r);
+                          unsigned int samples_index = this->parent->flatten(m,n,r);
 
                           number value = this->samples[j][samples_index][i];
 
@@ -646,22 +657,22 @@ namespace transport
                           for(int r = 0; r < 2*this->parent->get_N_fields(); r++)
                             {
                               // l, m to left of n and r
-                              unsigned int ln_1_index = this->parent->client_flatten(l,n);
-                              unsigned int lr_1_index = this->parent->client_flatten(l,r);
-                              unsigned int mn_1_index = this->parent->client_flatten(m,n);
-                              unsigned int mr_1_index = this->parent->client_flatten(m,r);
+                              unsigned int ln_1_index = this->parent->flatten(l,n);
+                              unsigned int lr_1_index = this->parent->flatten(l,r);
+                              unsigned int mn_1_index = this->parent->flatten(m,n);
+                              unsigned int mr_1_index = this->parent->flatten(m,r);
 
                               // l, m to left of r but right of n
-                              unsigned int ln_2_index = this->parent->client_flatten(n,l);
-                              unsigned int lr_2_index = this->parent->client_flatten(l,r);
-                              unsigned int mn_2_index = this->parent->client_flatten(n,m);
-                              unsigned int mr_2_index = this->parent->client_flatten(m,r);
+                              unsigned int ln_2_index = this->parent->flatten(n,l);
+                              unsigned int lr_2_index = this->parent->flatten(l,r);
+                              unsigned int mn_2_index = this->parent->flatten(n,m);
+                              unsigned int mr_2_index = this->parent->flatten(m,r);
 
                               // l, m to right of n and r
-                              unsigned int ln_3_index = this->parent->client_flatten(n,l);
-                              unsigned int lr_3_index = this->parent->client_flatten(r,l);
-                              unsigned int mn_3_index = this->parent->client_flatten(n,m);
-                              unsigned int mr_3_index = this->parent->client_flatten(r,m);
+                              unsigned int ln_3_index = this->parent->flatten(n,l);
+                              unsigned int lr_3_index = this->parent->flatten(r,l);
+                              unsigned int mn_3_index = this->parent->flatten(n,m);
+                              unsigned int mr_3_index = this->parent->flatten(r,m);
 
                               shift += (1.0/2.0) * ddN[l][m]*dN[n]*dN[r]*
                                 (  twopf_re_k2[ln_1_index]*twopf_re_k3[mr_1_index]
@@ -695,17 +706,18 @@ namespace transport
       template <typename ShapeFunctor>
       std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i, ShapeFunctor shape)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector< std::vector<number> > data(this->tk->get_number_times());
 
           std::vector< std::vector<number> > threepf = this->construct_zeta_time_history(i);
 
-          for(int j = 0; j < this->sample_points.size(); j++)
+          for(int j = 0; j < this->tk->get_number_times(); j++)
             {
               data[j].resize(1);    // only one component
 
-              number form_factor = shape(this->sample_com_ks[this->kconfig_list[i].index[0]],
-                                         this->sample_com_ks[this->kconfig_list[i].index[1]],
-                                         this->sample_com_ks[this->kconfig_list[i].index[2]]);
+              number form_factor = shape(this->tk[kconfig_list[i].index[0]],
+                                         this->tk[kconfig_list[i].index[1]],
+                                         this->tk[kconfig_list[i].index[2]]);
 
               data[j][0] = threepf[j][0] / form_factor;
             }
@@ -717,14 +729,15 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_reduced_bispectrum_time_history(unsigned int i)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
+          std::vector< std::vector<number> > data(this->tk->get_number_times());
           
           std::vector< std::vector<number> > threepf  = this->construct_zeta_time_history(i);
-          std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[0]);
-          std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[1]);
-          std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(this->kconfig_list[i].index[2]);
+          std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[0]);
+          std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[1]);
+          std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[2]);
           
-          for(int j = 0; j < this->sample_points.size(); j++)
+          for(int j = 0; j < this->tk->get_number_times(); j++)
             {
               data[j].resize(1);    // only one component, fNL(k1, k2, k3)
               

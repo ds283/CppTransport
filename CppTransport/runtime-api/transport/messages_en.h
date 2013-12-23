@@ -57,7 +57,6 @@
 #define __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED  "no max memory size"
 #define __CPP_TRANSPORT_WORK_QUEUE_QUEUE      "Queue"
 #define __CPP_TRANSPORT_WORK_QUEUE_QUEUES     "queues"
-#define __CPP_TRANSPORT_WORK_QUEUE_RANGE      "Bad access to device_work_list object"
 
 #define __CPP_TRANSPORT_KCONFIG_SERIAL        "Serial ="
 #define __CPP_TRANSPORT_KCONFIG_KEQUALS       "k ="
@@ -69,6 +68,14 @@
 #define __CPP_TRANSPORT_MEGABYTE              "Mb"
 #define __CPP_TRANSPORT_KILOBYTE              "kb"
 #define __CPP_TRANSPORT_BYTE                  "b"
+
+#define __CPP_TRANSPORT_WORK_LIST_RANGE       "Out of range when accessing 'device_work_list' object"
+#define __CPP_TRANSPORT_DEVICE_QUEUE_RANGE    "Out of range when accessing 'device_queue' object"
+#define __CPP_TRANSPORT_WORK_QUEUE_RANGE      "Out of range when accessing 'work_queue' object"
+#define __CPP_TRANSPORT_TIMES_RANGE           "Out of range when accessing 'task' object"
+#define __CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE "Out of range when accessing 'twopf_list_task' object"
+
+#define __CPP_TRANSPORT_INTEGRATION_FAIL      "Fatal: integration failure"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"

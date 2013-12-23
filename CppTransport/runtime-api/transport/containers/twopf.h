@@ -41,13 +41,11 @@ namespace transport
       class twopf
         {
           public:
-            twopf(const std::vector<double>& ks, const std::vector<double>& com_ks, double Nst,
-              const std::vector<number>& sp, const std::vector< std::vector<number> >& b,
+            twopf(const twopf_list_task<number>* t, const std::vector< std::vector<number> >& b,
               const std::vector< std::vector< std::vector<number> > >& twopf,
               model<number>* p)
               : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
-                Nstar(Nst), sample_points(sp), sample_ks(ks), sample_com_ks(com_ks),
-                backg(sp, b, p), samples(twopf),
+                tk(t), backg(t, b, p), samples(twopf),
                 parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH),
                 plot_precision(DEFAULT_PLOT_PRECISION)
@@ -89,12 +87,7 @@ namespace transport
 
             label_gadget                                            labels;            // holds names (and LaTeX names) of fields
 
-            const double                                            Nstar;             // when was horizon-crossing for the mode k=1?
-
-            const std::vector<double>                               sample_points;     // list of times at which we hold samples
-            const std::vector<double>                               sample_ks;         // list of ks for which we hold samples,
-                                                                                       // normalized to horizon crossing
-            const std::vector<double>                               sample_com_ks;     // list of ks, in comoving units
+            const twopf_list_task<number>*                          tk;                // task object used to generate this solution
 
             background<number>                                      backg;             // container for background
             const std::vector< std::vector< std::vector<number> > > samples;           // list of samples of 2pf
@@ -114,11 +107,14 @@ namespace transport
       void twopf<number>::components_time_history(plot_gadget<number>* gadget, std::string output,
         index_selector<2>* selector, std::string format, bool logy)
         {
+          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_ks     = this->tk->get_k_list();
+
           std::vector< std::string > labels = this->labels.make_labels(selector, gadget->latex_labels());
 
           // loop over k-modes
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->sample_ks.size(); i++)
+          for(int i = 0; i < sample_ks.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_kmode_time_history(selector, i);
 
@@ -126,8 +122,8 @@ namespace transport
               fnam << output << "_" << i;
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_twopf_title(this->sample_ks[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
+              gadget->plot(fnam.str(), this->make_twopf_title(sample_ks[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
             }
         }
 
@@ -188,9 +184,9 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > twopf<number>::construct_kmode_time_history(index_selector<2>* selector, unsigned int i)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector< std::vector<number> > data(this->tk->get_sample_times().size());
 
-          for(int j = 0; j < this->sample_points.size(); j++)
+          for(int j = 0; j < this->tk->get_sample_times().size(); j++)
             {
               // now, for the chosen k-mode i, slice up the time series
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
@@ -200,7 +196,7 @@ namespace transport
                       std::array<unsigned int, 2> index_set = { (unsigned int)m, (unsigned int)n };
                       if(selector->is_on(index_set))
                         {
-                          unsigned int samples_index = this->parent->client_flatten(m,n);
+                          unsigned int samples_index = this->parent->flatten(m,n);
 
                           data[j].push_back(this->samples[j][samples_index][i]);
                         }
@@ -216,9 +212,12 @@ namespace transport
       void twopf<number>::zeta_time_history(plot_gadget<number>* gadget, std::string output,
         std::string format, bool dimensionless, bool logy)
         {
+          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_ks     = this->tk->get_k_list();
+
           // loop over k-modes
 #pragma omp for schedule(guided)
-          for(int i = 0; i < this->sample_ks.size(); i++)
+          for(int i = 0; i < sample_ks.size(); i++)
             {
               std::vector< std::vector<number> > data = this->construct_zeta_time_history(i, dimensionless);
 
@@ -229,8 +228,8 @@ namespace transport
               labels[0] = this->make_zeta_label(dimensionless, gadget->latex_labels());
 
               gadget->set_format(format);
-              gadget->plot(fnam.str(), this->make_twopf_title(this->sample_ks[i], gadget->latex_labels()),
-                           this->sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
+              gadget->plot(fnam.str(), this->make_twopf_title(sample_ks[i], gadget->latex_labels()),
+                           sample_points, data, labels, PICK_N_LABEL, TWOPF_LABEL, false, logy);
             }
         }
 
@@ -238,10 +237,10 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > twopf<number>::construct_zeta_time_history(unsigned int i, bool dimensionless)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector< std::vector<number> > data(this->tk->get_sample_times().size());
 
           // now arrange data to consist of the <zeta zeta> 2pf
-          for(int j = 0; j < this->sample_points.size(); j++)
+          for(int j = 0; j < this->tk->get_sample_times().size(); j++)
             {
               data[j].resize(1);    // only one components of <zeta zeta>
 
@@ -254,14 +253,15 @@ namespace transport
                 {
                   for(int n = 0; n < 2*this->parent->get_N_fields(); n++)
                     {
-                      unsigned int samples_index = this->parent->client_flatten(m,n);
+                      unsigned int samples_index = this->parent->flatten(m,n);
                       data[j][0] += dN[m]*dN[n]*this->samples[j][samples_index][i];
                     }
                 }
 
               if(dimensionless)   // are we plotting the dimensionless power spectrum?
                 {
-                  data[j][0] *= pow(this->sample_com_ks[i], 3.0) / (2.0*M_PI*M_PI);
+                  // can access comoving k list by overloading
+                  data[j][0] *= pow(this->tk->get_k_comoving(i), 3.0) / (2.0*M_PI*M_PI);
                 }
             }
 
@@ -311,8 +311,8 @@ namespace transport
         {
           std::vector<number> rval(2*this->parent->get_N_fields() * 2*this->parent->get_N_fields());
           
-          assert(time < this->sample_points.size());
-          assert(kmode < this->sample_ks.size());
+          assert(time < this->tk->get_sample_times().size());
+          assert(kmode < this->tk->get_k_list().size());
           
           for(int i = 0; i < 2*this->parent->get_N_fields() * 2*this->parent->get_N_fields(); i++)
             {

@@ -70,7 +70,7 @@ namespace transport
 
           assert(xs.size() == ys.size());
 
-          for(int i = 0; i < columns.size(); i++)
+          for(size_t i = 0; i < columns.size(); i++)
             {
               size_t len;
               if((len = columns[i].size()) > max)
@@ -88,7 +88,7 @@ namespace transport
 
           // max is the column width
           // if we are going to wrap, want to work out how many columns we can fit
-          unsigned int columns_per_display = this->display_width / max;
+          size_t columns_per_display = this->display_width / max;
           if(columns_per_display < 1) columns_per_display = 1;
           if(!wrap_width)             columns_per_display = columns.size();     // if not wrapping, then output all columns at once
 
@@ -99,19 +99,19 @@ namespace transport
               if(columns_output > 0) this->stream << std::endl;
 
               // how many columns to output on this go?
-              unsigned int columns_left     = columns.size() - columns_output;
-              unsigned int columns_to_print = (columns_left < columns_per_display ? columns_left : columns_per_display);
+              size_t columns_left     = columns.size() - columns_output;
+              size_t columns_to_print = (columns_left < columns_per_display ? columns_left : columns_per_display);
 
               // write out column headings
               this->stream << std::right << std::setw((unsigned int)max) << x_name;
-              for(int i = 0; i < columns_to_print; i++)
+              for(size_t i = 0; i < columns_to_print; i++)
                 {
                   this->stream << std::right << std::setw((unsigned int)max) << columns[columns_output + i];
                 }
               this->stream << std::endl;
 
               // write out data
-              for(int i = 0; i < ys.size(); i++)
+              for(size_t i = 0; i < ys.size(); i++)
                 {
                   assert(columns.size() == ys[i].size());
 

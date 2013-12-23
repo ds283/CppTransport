@@ -11,7 +11,8 @@
 
 #include "transport/messages_en.h"
 
-#include "transport/models/model_classes.h"
+#include "transport/models/observers.h"
+#include "transport/models/canonical_model.h"
 
 #include "transport/containers/index_selector.h"
 #include "transport/plotgadgets/plot_gadget.h"

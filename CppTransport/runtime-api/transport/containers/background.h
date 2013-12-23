@@ -12,6 +12,8 @@
 #include <assert.h>
 
 #include "transport/default_symbols.h"
+#include "transport/tasks/task.h"
+#include "transport/models/model.h"
 #include "transport/utilities/asciitable.h"
 #include "transport/utilities/latex_output.h"
 #include "transport/containers/label_gadget.h"
@@ -38,9 +40,9 @@ namespace transport
       class background
         {
           public:
-            background(const std::vector<double>& sp, const std::vector< std::vector<number> >& s, model<number>* p)
+            background(const task<number>* t, const std::vector< std::vector<number> >& s, model<number>* p)
               : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
-                sample_points(sp), samples(s),
+                tk(t), samples(s),
                 parent(p),
                 wrap_width(DEFAULT_WRAP_WIDTH),
                 plot_precision(DEFAULT_PLOT_PRECISION)
@@ -60,10 +62,6 @@ namespace transport
 
             // provide << operator to output data to a stream
             friend std::ostream& operator<< <>(std::ostream& out, background& obj);
-
-            // TODO: find a better way of solving this problem
-            // this is needed to normalize the comoving ks correctly in each $$__MODEL class
-            const std::vector<number>&  __INTERNAL_ONLY_get_value (unsigned int n);
 
             unsigned int get_wrap_width();
             void         set_wrap_width(unsigned int w);
@@ -86,7 +84,7 @@ namespace transport
 
             label_gadget                             labels;            // holds names (and LaTeX names) of fields, and makes labels
 
-            const std::vector<double>                sample_points;     // list of times at which we hold samples for the background
+            const task<number>*                      tk;                // holds task object which generated this solution
 
             const std::vector< std::vector<number> > samples;           // list of samples
               // first index: time of observation
@@ -108,23 +106,25 @@ namespace transport
           std::vector< std::vector<number> > data = this->construct_fields_time_history(selector);
 
           gadget->set_format(format);
-          gadget->plot(output, title, this->sample_points, data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
+          gadget->plot(output, title, this->tk->get_sample_times(), data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
         }
 
 
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_fields_time_history(index_selector<1>* selector)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<double> sample_points = this->tk->get_sample_times();
 
-          for(int l = 0; l < this->sample_points.size(); l++)
+          std::vector< std::vector<number> > data(sample_points.size());
+
+          for(int l = 0; l < sample_points.size(); l++)
             {
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
                   std::array<unsigned int, 1> index_set = { (unsigned int)m };
                   if(selector->is_on(index_set))
                     {
-                      data[l].push_back(this->samples[l][this->parent->client_flatten(m)]);
+                      data[l].push_back(this->samples[l][this->parent->flatten(m)]);
                     }
                 }
             }
@@ -136,15 +136,10 @@ namespace transport
       template <typename number>
       const std::vector<number>& background<number>::get_value(unsigned int n)
         {
-          assert(n < this->sample_points.size());
+          std::vector<double> sample_points = this->tk->get_sample_times();
+          assert(n < sample_points.size());
 
           return(this->samples[n]);
-        }
-
-      template <typename number>
-      const std::vector<number>& background<number>::__INTERNAL_ONLY_get_value(unsigned int n)
-        {
-          return(this->get_value(n));
         }
 
       template <typename number>
@@ -156,7 +151,7 @@ namespace transport
           index_selector<1>* selector = obj.manufacture_selector();
           std::vector<std::string> labels = obj.labels.make_labels(selector, false);
 
-          writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.sample_points, obj.samples);
+          writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.tk->get_sample_times(), obj.samples);
 
           delete selector;
 
@@ -246,7 +241,7 @@ namespace transport
 
           gadget->set_format(format);
           gadget->plot(output, title != "" ? title : this->make_title(k, gadget->latex_labels()),
-                       this->sample_points, data, labels, PICK_N_LABEL, PICK_U2_LABEL, false, logy);
+                       this->tk->get_sample_times(), data, labels, PICK_N_LABEL, PICK_U2_LABEL, false, logy);
         }
 
 
@@ -260,19 +255,21 @@ namespace transport
 
           gadget->set_format(format);
           gadget->plot(output, title != "" ? title : this->make_title(k1, k2, k3, gadget->latex_labels()),
-                       this->sample_points, data, labels, PICK_N_LABEL, PICK_U3_LABEL, false, logy);
+                       this->tk->get_sample_times(), data, labels, PICK_N_LABEL, PICK_U3_LABEL, false, logy);
         }
 
 
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_u2_time_history(index_selector<2>* selector, double k)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<double> sample_points = this->tk->get_sample_times();
 
-          for(int i = 0; i < this->sample_points.size(); i++)
+          std::vector< std::vector<number> > data(sample_points.size());
+
+          for(int i = 0; i < sample_points.size(); i++)
             {
               std::vector< std::vector<number> > u2;
-              this->tensors->u2(this->samples[i], k, this->sample_points[i], u2);
+              this->tensors->u2(this->samples[i], k, sample_points[i], u2);
 
               for(int m = 0; m < 2*this->N_fields; m++)
                 {
@@ -295,12 +292,14 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3)
         {
-          std::vector< std::vector<number> > data(this->sample_points.size());
+          std::vector<double> sample_points = this->tk->get_sample_times();
 
-          for(int i = 0; i < this->sample_points.size(); i++)
+          std::vector< std::vector<number> > data(sample_points.size());
+
+          for(int i = 0; i < sample_points.size(); i++)
             {
               std::vector< std::vector< std::vector<number> > > u3;
-              this->tensors->u3(this->samples[i], k1, k2, k3, this->sample_points[i], u3);
+              this->tensors->u3(this->samples[i], k1, k2, k3, sample_points[i], u3);
 
               for(int m = 0; m < 2*this->N_fields; m++)
                 {

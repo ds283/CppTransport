@@ -239,7 +239,7 @@ namespace transport
           twopf_state dev_x(ctx.queue(), com_ks.size());
 
           // 1 - background
-          dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->flatten($$__A)];
+          dev_x($$__MODEL_pool::backg_start + this->flatten($$__A)) = $$// hst_bg[this->fast_flatten($$__A)];
         
           // 2 - twopf
           this->populate_twopf_ic(dev_x, $$__MODEL_pool::twopf_start, com_ks, *times.begin(), hst_bg);
@@ -468,11 +468,11 @@ namespace transport
           #undef __u2_$$__A_$$__B  $$//
           #undef __u2
 
-          #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_start + this->flatten($$__A,$$__B))))
+          #define __tpf_$$__A_$$__B $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_start + this->fast_flatten($$__A,$$__B))))
 
-          #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor(this->flatten($$__A,$$__B))))
+          #define __u2_$$__A_$$__B  $$// (vex::tag<$$__UNIQUE>(this->u2_tensor(this->fast_flatten($$__A,$$__B))))
 
-          #define __u2(a,b)         $$// this->u2_tensor(this->flatten(a,b))
+          #define __u2(a,b)         $$// this->u2_tensor(this->fast_flatten(a,b))
 
           #undef __background
           #undef __dtwopf
@@ -585,21 +585,21 @@ namespace transport
         #undef __u3_k2k1k3
         #undef __u3_k3k1k2
 
-        #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k1_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k1_start + this->flatten($$__A,$$__B))))
-        #define __twopf_re_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k2_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k2_start + this->flatten($$__A,$$__B))))
-        #define __twopf_re_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k3_start + this->flatten($$__A,$$__B))))
-        #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k3_start + this->flatten($$__A,$$__B))))
-        #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::threepf_start     + this->flatten($$__A,$$__B,$$__C))))
+        #define __twopf_re_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k1_start + this->fast_flatten($$__A,$$__B))))
+        #define __twopf_im_k1_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k1_start + this->fast_flatten($$__A,$$__B))))
+        #define __twopf_re_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k2_start + this->fast_flatten($$__A,$$__B))))
+        #define __twopf_im_k2_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k2_start + this->fast_flatten($$__A,$$__B))))
+        #define __twopf_re_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_re_k3_start + this->fast_flatten($$__A,$$__B))))
+        #define __twopf_im_k3_$$__A_$$__B     $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::twopf_im_k3_start + this->fast_flatten($$__A,$$__B))))
+        #define __threepf_$$__A_$$__B_$$__C   $$// (vex::tag<$$__UNIQUE>(__x($$__MODEL_pool::threepf_start     + this->fast_flatten($$__A,$$__B,$$__C))))
 
-        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor(this->flatten($$__A,$$__B))))
-        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor(this->flatten($$__A,$$__B))))
-        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor(this->flatten($$__A,$$__B))))
+        #define __u2_k1_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k1_tensor(this->fast_flatten($$__A,$$__B))))
+        #define __u2_k2_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k2_tensor(this->fast_flatten($$__A,$$__B))))
+        #define __u2_k3_$$__A_$$__B           $$// (vex::tag<$$__UNIQUE>(this->u2_k3_tensor(this->fast_flatten($$__A,$$__B))))
 
-        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
-        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
-        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->flatten($$__A,$$__B,$$__C)))
+        #define __u3_k1k2k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->fast_flatten($$__A,$$__B,$$__C)))
+        #define __u3_k2k1k3_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->fast_flatten($$__A,$$__B,$$__C)))
+        #define __u3_k3k1k2_$$__A_$$__B_$$__C $$// (vex::tag<$$__UNIQUE>(this->fast_flatten($$__A,$$__B,$$__C)))
 
         #define __u2_k1(a,b)                       this->u2_k1_tensor(this->flatten(a,b))
         #define __u2_k2(a,b)                       this->u2_k2_tensor(this->flatten(a,b))
