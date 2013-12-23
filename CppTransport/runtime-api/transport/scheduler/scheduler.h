@@ -26,7 +26,7 @@ namespace transport
     class scheduler
       {
       public:
-        scheduler(context c)
+        scheduler(context& c)
           : ctx(c)
           {
           }

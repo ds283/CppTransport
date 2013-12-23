@@ -35,7 +35,7 @@ const double phi_init = 10;
 const double chi_init = 12.9;
 
 
-static void output_info(transport::canonical_model<double>& model);
+static void output_info(transport::canonical_model<double>& model, transport::task<double>* tk);
 
 
 // ****************************************************************************
@@ -47,8 +47,6 @@ int main(int argc, const char* argv[])
     // using doubles, with given parameter choices
     const std::vector<double> init_params = { m_phi, m_chi };
     transport::dquad_basic<double> model(M_Planck, init_params);
-
-    output_info(model);
 
     if(argc != 3)
       {
@@ -103,6 +101,8 @@ int main(int argc, const char* argv[])
       }
 
     transport::threepf_task<double> tk = transport::threepf_task<double>(ics, ks, Npre, times, model.kconfig_kstar_factory());
+
+    output_info(model, &tk);
 
     boost::timer::auto_cpu_timer timer;
 
@@ -227,7 +227,7 @@ int main(int argc, const char* argv[])
 
 
 // interrogate an arbitrary canonical_model object and print information about it
-void output_info(transport::canonical_model<double>& model)
+void output_info(transport::canonical_model<double>& model, transport::task<double>* tk)
   {
     std::cout << "Model:   " << model.get_name() << "\n";
     std::cout << "Authors: " << model.get_author() << "\n";
@@ -259,8 +259,8 @@ void output_info(transport::canonical_model<double>& model)
       }
     std::cout << "\n";
 
-    const std::vector<double> f = { phi_init, chi_init };
-    std::cout << "V* = " << model.V(f) << "\n";
+    std::vector<double> ics = tk->get_ics();
+    std::cout << "V* = " << model.V(ics) << "\n";
 
     std::cout << "\n";
   }

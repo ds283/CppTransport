@@ -52,10 +52,12 @@
 
 #define __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A   "Work queue over"
 #define __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B   "devices:"
+#define __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_C   "device:"
 #define __CPP_TRANSPORT_WORK_QUEUE_WEIGHT     "weight"
 #define __CPP_TRANSPORT_WORK_QUEUE_MAXMEM     "max memory"
 #define __CPP_TRANSPORT_WORK_QUEUE_UNBOUNDED  "no max memory size"
-#define __CPP_TRANSPORT_WORK_QUEUE_QUEUE      "Queue"
+#define __CPP_TRANSPORT_WORK_QUEUE_QUEUE_NAME "Queue"
+#define __CPP_TRANSPORT_WORK_QUEUE_QUEUE      "queue"
 #define __CPP_TRANSPORT_WORK_QUEUE_QUEUES     "queues"
 
 #define __CPP_TRANSPORT_KCONFIG_SERIAL        "Serial ="

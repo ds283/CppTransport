@@ -19,7 +19,6 @@
 #include "transport/tasks/initial_conditions.h"
 #include "transport/tasks/task.h"
 #include "transport/scheduler/scheduler.h"
-#import "task.h"
 
 
 #define DEFAULT_ICS_GAP_TOLERANCE (1E-8)

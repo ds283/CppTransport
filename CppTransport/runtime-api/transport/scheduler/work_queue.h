@@ -246,7 +246,9 @@ namespace transport
     template <typename ItemType>
     std::ostream& operator<<(std::ostream& out, work_queue<ItemType>& obj)
       {
-        out << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B << std::endl << std::endl;
+        out << __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_A << " " << obj.ctx.size() << " "
+            << (obj.ctx.size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_B : __CPP_TRANSPORT_WORK_QUEUE_OUTPUT_C)
+            << std::endl << std::endl;
 
         unsigned int d = 0;
         for(typename std::vector<typename work_queue<ItemType>::device_queue>::const_iterator t = obj.device_list.begin(); t != obj.device_list.end(); t++, d++)
@@ -263,15 +265,18 @@ namespace transport
             out << std::endl;
 
             // loop through the queues on this device, emitting them:
-            out << (*t).size() << " " << __CPP_TRANSPORT_WORK_QUEUE_QUEUES << std::endl << std::endl;
+            out << (*t).size() << " "
+                << ((*t).size() > 1 ? __CPP_TRANSPORT_WORK_QUEUE_QUEUES : __CPP_TRANSPORT_WORK_QUEUE_QUEUE)
+                << std::endl << std::endl;
+
             for(unsigned int i = 0; i < (*t).size(); i++)
               {
                 const typename work_queue<ItemType>::device_work_list& work = (*t)[i];
 
-                out << "** " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE << " " << i << std::endl;
+                out << "  ** " << __CPP_TRANSPORT_WORK_QUEUE_QUEUE_NAME << " " << i << std::endl;
                 for(unsigned int j = 0; j < work.size(); j++)
                   {
-                    out << "  " << work[j];
+                    out << "    " << work[j];
                   }
                 out << std::endl;
               }

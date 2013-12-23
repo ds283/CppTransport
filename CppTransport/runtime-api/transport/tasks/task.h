@@ -350,7 +350,7 @@ namespace transport
                     auto maxij  = (ks[i] > ks[j] ? ks[i] : ks[j]);
                     auto maxijk = (maxij > ks[k] ? maxij : ks[k]);
 
-                    if(kconfig.k_t >= 2.0 * maxijk)   // impose the triangle conditions
+                    if(ks[i] + ks[j] + ks[k] >= 2.0 * maxijk)   // impose the triangle conditions
                       {
 
                         kconfig.k1  = ks[i] * normalization;
