@@ -73,7 +73,7 @@ int main(int argc, const char* argv[])
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 9.0;  // horizon-crossing occurs at 9 e-folds from init_values
     const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 59.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
     transport::initial_conditions<double> ics = transport::initial_conditions<double>(init_values, Ninit, Ncross, Npre,
