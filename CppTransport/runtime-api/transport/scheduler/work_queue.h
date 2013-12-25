@@ -70,8 +70,6 @@ namespace transport
                   }
               }
 
-            friend std::ostream& operator<<(std::ostream& out, device_work_list& obj);
-
           protected:
             std::vector<ItemType> queue;
 

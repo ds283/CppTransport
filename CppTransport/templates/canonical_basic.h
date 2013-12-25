@@ -34,8 +34,8 @@ namespace transport
     class $$__MODEL_basic : public $$__MODEL<number>
       {
       public:
-        $$__MODEL_basic(number Mp, const std::vector<number>& ps)
-        : $$__MODEL<number>(Mp, ps)
+        $$__MODEL_basic(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps)
+        : $$__MODEL<number>(mgr, Mp, ps)
           {
           }
 

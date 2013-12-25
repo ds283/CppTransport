@@ -58,6 +58,8 @@ namespace macro_packages
         std::string replace_date          (const std::vector<std::string> &args);
         std::string replace_source        (const std::vector<std::string> &args);
 
+        std::string replace_uid           (const std::vector<std::string> &args);
+
         std::string replace_name          (const std::vector<std::string> &args);
         std::string replace_author        (const std::vector<std::string> &args);
         std::string replace_tag           (const std::vector<std::string> &args);

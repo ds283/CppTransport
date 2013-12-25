@@ -20,6 +20,8 @@
 #include "transport/tasks/task.h"
 #include "transport/scheduler/scheduler.h"
 
+#include "transport/manager/instance_manager.h"
+
 
 #define DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 #define DEFAULT_ICS_TIME_STEPS    (20)
@@ -41,32 +43,42 @@ namespace transport
       public:
         typedef std::vector< std::vector<number> > backg_history;
 
-        model(const std::string& n, const std::string& a, const std::string& t, number Mp,
-          unsigned int N_f, unsigned int N_p,
-          const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-          const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-          const std::vector<std::string>& s_names,
-          const std::vector<number>& ps);
+        // CONSTRUCTORS, DESTRUCTORS
+
+      public:
+        model(instance_manager<number>* m, const std::string& uid,
+              const std::string& n, const std::string& a, const std::string& t, number Mp,
+              unsigned int N_f, unsigned int N_p,
+              const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
+              const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
+              const std::vector<std::string>& s_names,
+              const std::vector<number>& ps);
+
+        virtual ~model();
 
         // EXTRACT MODEL INFORMATION
 
-        const std::string&              get_name();           // return name of model implemented by this object
-        const std::string&              get_author();         // return authors of model implemented by this object
-        const std::string&              get_tag();            // return tagline for model implemented by this object
+      public:
+        const std::string&              get_identity_string();      // return unique string identifying this model
 
-        unsigned int                    get_N_fields();       // return number of fields
-        unsigned int                    get_N_params();       // return number of parameters
+        const std::string&              get_name();                 // return name of model implemented by this object
+        const std::string&              get_author();               // return authors of model implemented by this object
+        const std::string&              get_tag();                  // return tagline for model implemented by this object
 
-        const std::vector<std::string>& get_field_names();    // return vector of field names
-        const std::vector<std::string>& get_f_latex_names();  // return vector of LaTeX field names
-        const std::vector<std::string>& get_param_names();    // return vector of parameter names
-        const std::vector<std::string>& get_p_latex_names();  // return vector of LaTeX parameter names
-        const std::vector<std::string>& get_state_names();    // return vector of state variable names
+        unsigned int                    get_N_fields();             // return number of fields
+        unsigned int                    get_N_params();             // return number of parameters
 
-        const std::vector<number>&      get_parameters();     // return vector of parameter values associated with this instance
+        const std::vector<std::string>& get_field_names();          // return vector of field names
+        const std::vector<std::string>& get_f_latex_names();        // return vector of LaTeX field names
+        const std::vector<std::string>& get_param_names();          // return vector of parameter names
+        const std::vector<std::string>& get_p_latex_names();        // return vector of LaTeX parameter names
+        const std::vector<std::string>& get_state_names();          // return vector of state variable names
+
+        const std::vector<number>&      get_parameters();           // return vector of parameter values associated with this instance
 
         // BASIC PHYSICAL QUANTITIES
 
+      public:
         virtual number                  H(std::vector<number> coords) = 0;       // compute Hubble parameter
         virtual number                  epsilon(std::vector<number> coords) = 0; // compute epsilon
 
@@ -186,6 +198,10 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+        instance_manager<number>*       mgr;                  // manager instance
+
+        const std::string               unique_id;            // unique string identifying this model (+CppTransport version info)
+
         const std::string               name;                 // name of model
         const std::string               author;               // authors
         const std::string               tag;                  // tagline, perhaps used to indicate citations
@@ -212,26 +228,31 @@ namespace transport
     // EXTRACT MODEL INFORMATION
 
     template <typename number>
-    model<number>::model(const std::string& n, const std::string& a, const std::string& t, number Mp,
-      unsigned int N, unsigned int N_p,
-      const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-      const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-      const std::vector<std::string>& s_names,
-      const std::vector<number>& ps)
-      : name(n), author(a), tag(t), M_Planck(Mp),
-        N_fields(N), N_params(N_p),
-        field_names(f_names), f_latex_names(fl_names),
-        param_names(p_names), p_latex_names(pl_names),
-        state_names(s_names),
-        parameters(ps)
+    model<number>::model(instance_manager<number>* m, const std::string& uid,
+                         const std::string& n, const std::string& a, const std::string& t, number Mp,
+                         unsigned int N, unsigned int N_p,
+                         const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
+                         const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
+                         const std::vector<std::string>& s_names,
+                         const std::vector<number>& ps)
+    : mgr(m), unique_id(uid),
+      name(n), author(a), tag(t), M_Planck(Mp),
+      N_fields(N), N_params(N_p),
+      field_names(f_names), f_latex_names(fl_names),
+      param_names(p_names), p_latex_names(pl_names),
+      state_names(s_names),
+      parameters(ps)
       {
+        // Register ourselves with the instance manager
+        mgr->register_model(this, unique_id);
+
         // Perform basic validation of initial data
 
         if(field_names.size() != N_fields)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_FIELD_NAMES_A << field_names.size() << "]"
-                << __CPP_TRANSPORT_WRONG_FIELD_NAMES_B << N_fields << "]";
+              << __CPP_TRANSPORT_WRONG_FIELD_NAMES_B << N_fields << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -240,7 +261,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_A << f_latex_names.size() << "]"
-                << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_B << N_fields << "]";
+              << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_B << N_fields << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -249,7 +270,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_PARAM_NAMES_A << param_names.size() << "]"
-                << __CPP_TRANSPORT_WRONG_PARAM_NAMES_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_PARAM_NAMES_B << N_params << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -259,7 +280,7 @@ namespace transport
             std::ostringstream msg;
 
             msg << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_A << p_latex_names.size() << "]"
-                << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_B << N_params << "]";
 
             throw std::out_of_range(msg.str());
           }
@@ -269,12 +290,25 @@ namespace transport
             std::ostringstream msg;
 
             msg << __CPP_TRANSPORT_WRONG_PARAMS_A << parameters.size() << "]"
-                << __CPP_TRANSPORT_WRONG_PARAMS_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_PARAMS_B << N_params << "]";
 
             throw std::out_of_range(msg.str());
           }
+      }
 
-        return;
+
+    template <typename number>
+    model<number>::~model()
+      {
+        assert(this->mgr != nullptr);
+        mgr->deregister_model(this, this->unique_id);
+      }
+
+
+    template <typename number>
+    const std::string& model<number>::get_identity_string()
+      {
+        return(this->unique_id);
       }
 
 

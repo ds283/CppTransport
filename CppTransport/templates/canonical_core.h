@@ -65,7 +65,7 @@ namespace transport
     class $$__MODEL : public canonical_model<number>
       {
       public:
-        $$__MODEL(number Mp, const std::vector<number>& ps);
+        $$__MODEL(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps);
 
         // BASIC PHYSICAL QUANTITIES
 
@@ -204,12 +204,13 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(number Mp, const std::vector<number>& ps)
-      : canonical_model<number>("$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
-        $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
-        $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
-        $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
-        $$__MODEL_pool::state_names, ps)
+    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps)
+      : canonical_model<number>(mgr, "$$__UNIQUE_ID",
+                                "$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
+                                $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
+                                $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
+                                $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
+                                $$__MODEL_pool::state_names, ps)
       {
       }
 

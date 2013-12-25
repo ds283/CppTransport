@@ -13,6 +13,9 @@
 #include "core.h"
 
 #include "boost/lexical_cast.hpp"
+#include "boost/uuid/uuid.hpp"
+#include "boost/uuid/string_generator.hpp"
+#include "boost/uuid/uuid_io.hpp"
 
 
 #define BIND(X) std::bind(&fundamental::X, this, std::placeholders::_1)
@@ -26,7 +29,7 @@ namespace macro_packages
 
         const std::vector<replacement_rule_simple> rules =
           { BIND(replace_tool) ,          BIND(replace_version),        BIND(replace_guard),       BIND(replace_date),        BIND(replace_source),
-            BIND(replace_name),           BIND(replace_author),         BIND(replace_tag),         BIND(replace_model),
+            BIND(replace_name),           BIND(replace_author),         BIND(replace_tag),         BIND(replace_model),       BIND(replace_uid),
             BIND(replace_header),         BIND(replace_core),
             BIND(replace_number_fields),  BIND(replace_number_params),
             BIND(replace_field_list),     BIND(replace_latex_list),     BIND(replace_param_list),  BIND(replace_platx_list),  BIND(replace_state_list),
@@ -36,7 +39,7 @@ namespace macro_packages
 
         const std::vector<std::string> names =
           { "TOOL",                       "VERSION",                    "GUARD",                   "DATE",                    "SOURCE",
-            "NAME",                       "AUTHOR",                     "TAG",                     "MODEL",
+            "NAME",                       "AUTHOR",                     "TAG",                     "MODEL",                   "UNIQUE_ID",
             "HEADER",                     "CORE",
             "NUMBER_FIELDS",              "NUMBER_PARAMS",
             "FIELD_NAME_LIST",            "LATEX_NAME_LIST",            "PARAM_NAME_LIST",         "PLATX_NAME_LIST",         "STATE_NAME_LIST",
@@ -46,7 +49,7 @@ namespace macro_packages
 
         const std::vector<unsigned int> args =
           { 0,                            0,                            0,                         0,                         0,
-            0,                            0,                            0,                         0,
+            0,                            0,                            0,                         0,                         0,
             0,                            0,
             0,                            0,
             0,                            0,                            0,                         0,                         0,
@@ -195,9 +198,19 @@ namespace macro_packages
       }
 
 
-    std::string fundamental::replace_source(const std::vector<std::string> &args)
+    std::string fundamental::replace_source(const std::vector<std::string>& args)
       {
         return(this->unit->get_model_input());
+      }
+
+
+    std::string fundamental::replace_uid(const std::vector<std::string>& args)
+      {
+        std::string unique_string = this->unit->get_name() + this->unit->get_author() + this->unit->get_tag() + this->unit->get_model() + CPPTRANSPORT_VERSION;
+        boost::uuids::string_generator gen;
+        boost::uuids::uuid id = gen(unique_string);
+
+        return(boost::uuids::to_string(id));
       }
 
 

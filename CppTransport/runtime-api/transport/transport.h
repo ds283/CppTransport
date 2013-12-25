@@ -22,5 +22,7 @@
 
 #include "transport/containers/data_products.h"
 
+#include "transport/manager/task_manager.h"
+
 
 #endif // __CPP_TRANSPORT_TRANSPORT_H_
