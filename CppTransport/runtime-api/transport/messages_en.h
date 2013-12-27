@@ -79,8 +79,12 @@
 
 #define __CPP_TRANSPORT_INTEGRATION_FAIL      "Fatal: integration failure"
 
-#define __CPP_TRANSPORT_INSTANCES_MULTIPLE    "Attempt to add multiple instances of the same model object"
-#define __CPP_TRANSPORT_INSTANCES_DELETE      "Attempt to delete unregistered model object"
+#define __CPP_TRANSPORT_INSTANCES_MULTIPLE    "Attempt to add multiple instances of the same 'model' object"
+#define __CPP_TRANSPORT_INSTANCES_DELETE      "Attempt to delete unregistered 'model' object"
+
+#define __CPP_TRANSPORT_RANGE_INVALID_SPACING "Unknown spacing type in 'range' object"
+
+#define __CPP_TRANSPORT_XML_MISMATCH          "Mismatched node tags when performing XML serialization"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"
