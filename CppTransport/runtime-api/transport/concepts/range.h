@@ -15,8 +15,6 @@
 #include "transport/xml_serializable.h"
 #include "transport/messages_en.h"
 
-#include "dbxml/DbXml.hpp"
-
 
 #define __CPP_TRANSPORT_NODE_RANGE        "value-range"
 #define __CPP_TRANSPORT_NODE_MIN          "min"
