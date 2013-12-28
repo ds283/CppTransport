@@ -84,6 +84,8 @@
 
 #define __CPP_TRANSPORT_RANGE_INVALID_SPACING "Unknown spacing type in 'range' object"
 
+#define __CPP_TRANSPORT_ICS_MISMATCH          "Mismatched number of values when constructing 'initial_conditions' object"
+
 #define __CPP_TRANSPORT_XML_MISMATCH          "Mismatched node tags when performing XML serialization"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
