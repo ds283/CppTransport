@@ -17,6 +17,7 @@
 #include "transport/messages_en.h"
 
 #include "transport/concepts/initial_conditions.h"
+#include "transport/concepts/parameters.h"
 #include "transport/tasks/task.h"
 #include "transport/scheduler/scheduler.h"
 
@@ -117,6 +118,16 @@ namespace transport
         // write information about the task we are processing
         void write_task_data(const task<number>* task, std::ostream& stream,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
+
+        // PARAMETER HANDLING
+
+      protected:
+        // validate parameter values
+        virtual void validate_parameters(const std::vector<number>& input, std::vector<number>& output) = 0;
+
+      public:
+        // make a params_validator for this model
+        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
