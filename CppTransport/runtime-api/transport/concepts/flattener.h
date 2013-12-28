@@ -34,10 +34,17 @@ namespace transport
         constexpr unsigned int momentum(unsigned int a)    const { return((a >= N) ? a : a+N); };
         constexpr unsigned int is_field(unsigned int a)    const { return(a < N); }
         constexpr unsigned int is_momentum(unsigned int a) const { return(a >= N && a <= 2*N); }
+
+        // macros to simplify application of these functions
+        #define SPECIES(a)     this->species(a)
+        #define MOMENTUM(a)    this->momentum(a)
+        #define IS_FIELD(a)    this->is_field(a)
+        #define IS_MOMENTUM(a) this->is_momentum(a)
+        #define FLATTEN        this->flatten
+
       };
 
   }
-
 
 
 #endif //__flattener_H_

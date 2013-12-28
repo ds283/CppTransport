@@ -62,96 +62,67 @@ namespace transport
     // contains code and functionality shared by all the compute backends (OpenMP, MPI, OpenCL, CUDA, ...)
     // these backends are implemented by classes which inherit from this common core
     template <typename number>
-    class $$__MODEL : public canonical_model<number>
+    class $$__MODEL : public canonical_model<number, $$__NUMBER_FIELDS, $$__NUMBER_PARAMS>
       {
       public:
-        $$__MODEL(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps);
+        $$__MODEL(instance_manager<number>* mgr);
 
         // BASIC PHYSICAL QUANTITIES
 
       public:
         // Over-ride functions inherited from 'model'
-        number H(std::vector<number> coords);
-        number epsilon(std::vector<number> coords);
+        number H(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords);
+        number epsilon(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords);
 
         // Over-ride functions inherited from 'canonical_model'
-        number V(std::vector<number> coords);
+        number V(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords);
 
         // INITIAL CONDITIONS HANDLING
 
       protected:
-        void validate_initial_conditions(const std::vector<number>& input, std::vector<number>& output);
+        void validate_initial_conditions(const parameters<number, $$__NUMBER_PARAMS>& p, const std::vector<number>& input, std::vector<number>& output);
 
-        // Over-ride functions inherited from 'model'
       public:
-        typename initial_conditions<number>::ics_validator ics_validator_factory()
+        typename initial_conditions<number, $$__NUMBER_FIELDS>::ics_validator ics_validator_factory()
           {
             return(std::bind(&$$__MODEL::validate_initial_conditions, this, std::placeholders::_1, std::placeholders::_2));
+          }
+
+        // PARAMETERS HANDLING
+
+      protected:
+        void validate_parameters(const std::vector<number>& input, std::vector<number>& output);
+
+      public:
+        typename parameters<number, $$__NUMBER_PARAMS>::params_validator params_validator_factory()
+          {
+            return(std::bind(&$$__MODEL::validate_parameters, this, std::placeholders::_1, std::placeholders::_2));
           }
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
 
       public:
         // calculate gauge transformations to zeta
-        void compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN);
-        void compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+        void compute_gauge_xfm_1(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __state, std::vector<number>& __dN);
+        void compute_gauge_xfm_2(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        void u2(const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2);
-        void u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3);
+        void u2(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2);
+        void u3(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3);
 
-        void A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A);
-        void B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B);
-        void C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C);
-
-        // INDEX FLATTENING FUNCTIONS
-
-      protected:
-        // fast constexpr versions for rapid evaluation during integration
-        constexpr unsigned int fast_flatten(unsigned int a)                                 { return(a); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
-
-        // INDEX TRAITS
-
-      protected:
-        // fast constexpr versions for rapid evaluation during integration
-        constexpr unsigned int fast_species(unsigned int a)   { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); }
-        constexpr unsigned int fast_momentum(unsigned int a)  { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); }
-        constexpr unsigned int is_field(unsigned int a)       { return(a < $$__NUMBER_FIELDS); }
-        constexpr unsigned int is_momentum(unsigned int a)    { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
-        // macros to simplify application of these functions
-        #define SPECIES(a)     this->fast_species(a)
-        #define MOMENTUM(a)    this->fast_momentum(a)
-        #define IS_FIELD(a)    this->is_field(a)
-        #define IS_MOMENTUM(a) this->is_momentum(a)
+        void A(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A);
+        void B(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B);
+        void C(const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C);
 
         // INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
       protected:
-        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
+        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields);
 
-        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const std::vector<number>& __fields);
+        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
-                               double kmode_1, double kmode_2, double kmode_3, double __Ninit, const std::vector<number>& __fields);
-
-        // INDEX-FLATTENING FUNCTIONS
-
-      public:
-        // overridden virtual functions from the 'model' base class,
-        // to be used by data containers
-        unsigned int flatten(unsigned int a)                                 { return(this->fast_flatten(a)); }
-        unsigned int flatten(unsigned int a, unsigned int b)                 { return(this->fast_flatten(a, b)); }
-        unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(this->fast_flatten(a, b, c)); }
-
-        // INDEX TRAITS
-
-      public:
-        // overridden virtual functions from the 'model' base class,
-        // to be used by data containers
-        unsigned int species(unsigned int a)  { return(SPECIES(a)); }
-        unsigned int momentum(unsigned int a) { return(MOMENTUM(a)); }
+                               double kmode_1, double kmode_2, double kmode_3, double __Ninit, const parameters<number, $$__NUMBER_PARAMS>& params, const std::vector<number>& __fields);
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
@@ -163,24 +134,17 @@ namespace transport
 
     // integration - background functor
     template <typename number>
-    class $$__MODEL_background_functor
+    class $$__MODEL_background_functor: public flattener<$$__NUMBER_FIELDS>
       {
       public:
-        $$__MODEL_background_functor(const std::vector<number>& p, number Mp)
-          : parameters(p), M_Planck(Mp)
+        $$__MODEL_background_functor(const parameters<number, $$__NUMBER_PARAMS>& p)
+          : params(p)
           {
           }
 
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
-      private:
-        // constexpr version for rapid evaluation during integration
-        constexpr unsigned int flatten(unsigned int a)                                 { return(a); }
-        constexpr unsigned int flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
-        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
-
-        const number              M_Planck;
-        const std::vector<number> parameters;
+        const parameters<number> params;
       };
 
 
@@ -189,7 +153,8 @@ namespace transport
     class $$__MODEL_background_observer
       {
       public:
-        $$__MODEL_background_observer(typename model<number>::backg_history& h) : history(h)
+        $$__MODEL_background_observer(typename model<number>::backg_history& h)
+          : history(h)
           {
           }
 
@@ -204,27 +169,27 @@ namespace transport
 
 
     template <typename number>
-    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps)
-      : canonical_model<number>(mgr, "$$__UNIQUE_ID",
-                                "$$__NAME", "$$__AUTHOR", "$$__TAG", Mp,
-                                $$__NUMBER_FIELDS, $$__NUMBER_PARAMS,
-                                $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
-                                $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
-                                $$__MODEL_pool::state_names, ps)
+    $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
+      : canonical_model<number, $$__NUMBER_FIELDS, $$__NUMBER_PARAMS>(mgr, "$$__UNIQUE_ID",
+                                                                      "$$__NAME", "$$__AUTHOR", "$$__TAG",
+                                                                      $$__NUMBER_FIELDS,
+                                                                      $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
+                                                                      $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
+                                                                      $$__MODEL_pool::state_names)
       {
       }
 
 
     template <typename number>
-    number $$__MODEL<number>::H(std::vector<number> coords)
+    number $$__MODEL<number>::H(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords)
       {
-        assert(coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 
-        if(coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-            const auto $$__COORDINATE[A] = coords[$$__A];
-            const auto __Mp              = this->M_Planck;
+            const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+            const auto $$__COORDINATE[A] = __coords[$$__A];
+            const auto __Mp              = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -233,22 +198,22 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
 
 
     template <typename number>
-    number $$__MODEL<number>::epsilon(std::vector<number> coords)
+    number $$__MODEL<number>::epsilon(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords)
       {
-        assert(coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 
-        if(coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = this->parameters[$$__1];
-            const auto $$__COORDINATE[A] = coords[$$__A];
-            const auto __Mp              = this->M_Planck;
+            const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+            const auto $$__COORDINATE[A] = __coords[$$__A];
+            const auto __Mp              = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -257,22 +222,22 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
 
 
     template <typename number>
-    number $$__MODEL<number>::V(std::vector<number> coords)
+    number $$__MODEL<number>::V(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __coords)
       {
-        assert(coords.size() == 2*$$__NUMBER_FIELDS);
+        assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 
-        if(coords.size() == 2*$$__NUMBER_FIELDS)
+        if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1] = this->parameters[$$__1];
-            const auto $$__FIELD[a]     = coords[$$__a];
-            const auto __Mp             = this->M_Planck;
+            const auto $$__PARAMETER[1] = __params.get_params()[$$__1];
+            const auto $$__FIELD[a]     = __coords[$$__a];
+            const auto __Mp             = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -281,7 +246,7 @@ namespace transport
         else
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
+            msg << __CPP_TRANSPORT_WRONG_ICS_A << __coords.size() << __CPP_TRANSPORT_WRONG_ICS_B << 2*$$__NUMBER_FIELDS << ")";
             throw std::out_of_range(msg.str());
           }
       }
@@ -291,24 +256,24 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::validate_initial_conditions(const std::vector<number>& __input, std::vector<number>& __output)
+    void $$__MODEL<number>::validate_initial_conditions(const parameters<number, $$__NUMBER_PARAMS>& __params, const std::vector<number>& __input, std::vector<number>& __output)
       {
         __output.clear();
-        __output.reserve(2*this->N_fields);
+        __output.reserve(2*$$__NUMBER_FIELDS);
         __output.insert(__output.end(), __input.begin(), __input.end());
 
-        if(__input.size() == this->N_fields)  // initial conditions for momenta *were not* supplied -- need to compute them
+        if(__input.size() == $$__NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
-            const auto $$__PARAMETER[1] = this->parameters[$$__1];
+            const auto $$__PARAMETER[1] = __params.get_params()[$$__1];
             const auto $$__FIELD[a]     = __input[$$__a];
-            const auto __Mp             = this->M_Planck;
+            const auto __Mp             = __params.get_Mp();
 
             $$__TEMP_POOL{"const auto $1 = $2;"}
 
             __output.push_back($$__SR_VELOCITY[a]);
           }
-        else if(__input.size() == 2*this->N_fields)  // initial conditions for momenta *were* supplied
+        else if(__input.size() == 2*$$__NUMBER_FIELDS)  // initial conditions for momenta *were* supplied
           {
             // need do nothing
           }
@@ -316,9 +281,32 @@ namespace transport
           {
             std::ostringstream msg;
 
-            msg << __CPP_TRANSPORT_WRONG_ICS_A << __input.size()
+            msg << __CPP_TRANSPORT_WRONG_ICS_A << __input.size() << "]"
                 << __CPP_TRANSPORT_WRONG_ICS_B << $$__NUMBER_FIELDS
-                << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << ")";
+                << __CPP_TRANSPORT_WRONG_ICS_C << 2*$$__NUMBER_FIELDS << "]";
+
+            throw std::out_of_range(msg.str());
+          }
+      }
+
+
+    // Handle parameters
+
+
+    template <typename number>
+    void $$__MODEL<number>::validate_parameters(const std::vector<number>& input, std::vector<number>& output)
+      {
+        output.clear();
+
+        if(input.size() == $$__NUMBER_PARAMS)
+          {
+            output = input;
+          }
+        else
+          {
+            std::ostringstream msg;
+
+            msg << __CPP_TRANSPORT_WRONG_PARAMS_A << input.size() << __CPP_TRANSPORT_WRONG_PARAMS_B << $$__NUMBER_PARAMS << ")";
 
             throw std::out_of_range(msg.str());
           }
@@ -332,11 +320,13 @@ namespace transport
     // __fields -- vector of initial conditions for the background fields (or fields+momenta)
     template <typename number>
     number $$__MODEL<number>::make_twopf_re_ic(unsigned int __i, unsigned int __j,
-      double __k, double __Ninit, const std::vector<number>& __fields)
+                                               double __k, double __Ninit,
+                                               const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                                               const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = __params.get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -419,11 +409,13 @@ namespace transport
   // set up initial conditions for the imaginary part of the equal-time two-point function
   template <typename number>
   number $$__MODEL<number>::make_twopf_im_ic(unsigned int __i, unsigned int __j,
-    double __k, double __Ninit, const std::vector<number>& __fields)
+                                             double __k, double __Ninit,
+                                             const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                                             const std::vector<number>& __fields)
     {
-      const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+      const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
       const auto $$__COORDINATE[A] = __fields[$$__A];
-      const auto __Mp              = this->M_Planck;
+      const auto __Mp              = __params.get_Mp();
 
       const auto __Hsq             = $$__HUBBLE_SQ;
       const auto __eps             = $$__EPSILON;
@@ -467,11 +459,13 @@ namespace transport
 
     template <typename number>
     number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
-      double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit, const std::vector<number>& __fields)
+                                              double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit,
+                                              const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                                              const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = __params.get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
@@ -671,12 +665,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_1(const std::vector<number>& __state,
+    void $$__MODEL<number>::compute_gauge_xfm_1(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                                                const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = __params.get_Mp();
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -686,12 +681,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::compute_gauge_xfm_2(const std::vector<number>& __state,
+    void $$__MODEL<number>::compute_gauge_xfm_2(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                                                const std::vector<number>& __state,
                                                 std::vector< std::vector<number> >& __ddN)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = __params.get_Mp();
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -709,11 +705,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::u2(const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2)
+    void $$__MODEL<number>::u2(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                               const std::vector<number>& __fields, double __k, double __N,
+                               std::vector< std::vector<number> >& __u2)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = this->M_Planck;
+        const auto __Mp                   = __params.get_Mp();
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -733,11 +731,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3)
+    void $$__MODEL<number>::u3(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                               const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+                               std::vector< std::vector< std::vector<number> > >& __u3)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = this->M_Planck;
+        const auto __Mp                   = __params.get_Mp();
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -761,11 +761,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A)
+    void $$__MODEL<number>::A(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+                              std::vector< std::vector< std::vector<number> > >& __A)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = this->M_Planck;
+        const auto __Mp                   = __params.get_Mp();
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -789,11 +791,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B)
+    void $$__MODEL<number>::B(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+                              std::vector< std::vector< std::vector<number> > >& __B)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = this->M_Planck;
+        const auto __Mp                   = __params.get_Mp();
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -817,11 +821,13 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C)
+    void $$__MODEL<number>::C(const std::parameters<number, $$__NUMBER_PARAMS>& __params,
+                              const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
+                              std::vector< std::vector< std::vector<number> > >& __C)
       {
-        const auto $$__PARAMETER[1]       = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = this->M_Planck;
+        const auto __Mp                   = __params.get_Mp();
 
         const auto __Hsq                  = $$__HUBBLE_SQ;
         const auto __eps                  = $$__EPSILON;
@@ -887,9 +893,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __x[$$__A];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = this->params.get_Mp();
 
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;

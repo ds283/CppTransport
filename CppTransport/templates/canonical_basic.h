@@ -34,8 +34,8 @@ namespace transport
     class $$__MODEL_basic : public $$__MODEL<number>
       {
       public:
-        $$__MODEL_basic(instance_manager<number>* mgr, number Mp, const std::vector<number>& ps)
-        : $$__MODEL<number>(mgr, Mp, ps)
+        $$__MODEL_basic(instance_manager<number>* mgr)
+        : $$__MODEL<number>(mgr)
           {
           }
 
@@ -90,24 +90,19 @@ namespace transport
 
     // integration - 2pf functor
     template <typename number>
-    class $$__MODEL_basic_twopf_functor
+    class $$__MODEL_basic_twopf_functor: public flattener<$$__NUMBER_FIELDS>
       {
       public:
-        $$__MODEL_basic_twopf_functor(const std::vector<number>& p, const number Mp, double k)
-          : parameters(p), M_Planck(Mp), k_mode(k)
+        $$__MODEL_basic_twopf_functor(const parameters<number, $$__NUMBER_PARAMS>& p, double k)
+          : params(p), k_mode(k)
           {
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
       private:
-        // constexpr version for rapid evaluation during integration
-        constexpr unsigned int fast_flatten(unsigned int a)                                 { return(a); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+        const parameters<number, $$__NUMBER_PARAMS> params;
 
-        const number M_Planck;
-        const std::vector<number>& parameters;
         const double k_mode;
       };
 
@@ -133,24 +128,19 @@ namespace transport
 
     // integration - 3pf functor
     template <typename number>
-    class $$__MODEL_basic_threepf_functor
+    class $$__MODEL_basic_threepf_functor: public flattener<$$__NUMBER_FIELDS>
       {
       public:
-        $$__MODEL_basic_threepf_functor(const std::vector<number>& p, const number Mp, double k1, double k2, double k3)
-          : parameters(p), M_Planck(Mp), kmode_1(k1), kmode_2(k2), kmode_3(k3)
+        $$__MODEL_basic_threepf_functor(const parameters<number, $$__NUMBER_PARAMS>& p, double k1, double k2, double k3)
+          : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
           {
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
       private:
-        // constexpr version for rapid evaluation during integration
-        constexpr unsigned int fast_flatten(unsigned int a)                                 { return(a); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b)                 { return(2*$$__NUMBER_FIELDS*a + b); }
-        constexpr unsigned int fast_flatten(unsigned int a, unsigned int b, unsigned int c) { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); }
+        const parameters<number, $$__NUMBER_PARAMS> params;
 
-        const number M_Planck;
-        const std::vector<number>& parameters;
         const double kmode_1;
         const double kmode_2;
         const double kmode_3;
@@ -178,10 +168,6 @@ namespace transport
         std::vector <std::vector<number>>& twopf_im_history;
         std::vector <std::vector<number>>& threepf_history;
       };
-
-
-    // simplify application of flatten functions
-    #define FLATTEN this->fast_flatten
 
     
     // BACKEND INTERFACE
@@ -478,9 +464,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = this->params.get_Mp();
         const auto __k               = this->k_mode;
         const auto __a               = exp(__t);
         const auto __Hsq             = $$__HUBBLE_SQ;
@@ -541,9 +527,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->parameters[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
-        const auto __Mp              = this->M_Planck;
+        const auto __Mp              = this->params.get_Mp();
         const auto __k1              = this->kmode_1;
         const auto __k2              = this->kmode_2;
         const auto __k3              = this->kmode_3;

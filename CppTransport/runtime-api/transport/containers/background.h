@@ -16,6 +16,7 @@
 #include "transport/models/model.h"
 #include "transport/utilities/asciitable.h"
 #include "transport/utilities/latex_output.h"
+#include "transport/concepts/flattener.h"
 #include "transport/containers/label_gadget.h"
 #include "transport/containers/index_selector.h"
 #include "transport/plotgadgets/plot_gadget.h"
@@ -36,8 +37,8 @@ namespace transport
       std::ostream& operator<<(std::ostream& out, background<number>& obj);
 
 
-      template <typename number>
-      class background
+      template <typename number, unsigned int N>
+      class background: public flattener<N>
         {
           public:
             background(const task<number>* t, const std::vector< std::vector<number> >& s, model<number>* p)

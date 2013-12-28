@@ -19,23 +19,21 @@ namespace transport
 
     // a canonical model: allows an arbitrary number of fields, but flat field-space metric.
     // has a potential but no other structure
-    template <typename number>
-    class canonical_model : public model<number>
+    template <typename number, unsigned int Nf, unsigned int Np>
+    class canonical_model : public model<number, Nf, Np>
       {
       public:
         canonical_model(instance_manager<number>* mgr, const std::string& uid,
-                        const std::string& n, const std::string &a, const std::string& t, number Mp,
-                        unsigned int N_f, unsigned int N_p,
+                        const std::string& n, const std::string &a, const std::string& t,
                         const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
                         const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-                        const std::vector<std::string>& s_names,
-                        const std::vector<number>& ps)
-          : model<number>(mgr, uid, n, a, t, Mp, N_f, N_p, f_names, fl_names, p_names, pl_names, s_names, ps)
+                        const std::vector<std::string>& s_names)
+          : model<number, Nf, Np>(mgr, uid, n, a, t, f_names, fl_names, p_names, pl_names, s_names)
           {
           }
 
         // calculate potential, given a field configuration. Pure virtual, so must be overridden by derived class
-        virtual number                  V(std::vector<number> coords) = 0;
+        virtual number V(const parameters<number>& p, const std::vector<number>& coords) = 0;
       };
 
   }

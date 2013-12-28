@@ -16,6 +16,7 @@
 
 #include "transport/messages_en.h"
 
+#include "transport/concepts/flattener.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
 #include "transport/tasks/task.h"
@@ -33,13 +34,13 @@ namespace transport
     // MODEL OBJECTS -- objects representing inflationary models
 
     // avoid circularity in inclusions
-    template <typename number> class background;
-    template <typename number> class twopf;
-    template <typename number> class threepf;
+    template <typename number, unsigned int N> class background;
+    template <typename number, unsigned int N> class twopf;
+    template <typename number, unsigned int N> class threepf;
 
     // basic class from which all other model representations are derived
-    template <typename number>
-    class model
+    template <typename number, unsigned int Nf, unsigned int Np>
+    class model: public flattener<Nf>
       {
       public:
         typedef std::vector< std::vector<number> > backg_history;
@@ -48,12 +49,10 @@ namespace transport
 
       public:
         model(instance_manager<number>* m, const std::string& uid,
-              const std::string& n, const std::string& a, const std::string& t, number Mp,
-              unsigned int N_f, unsigned int N_p,
+              const std::string& n, const std::string& a, const std::string& t,
               const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
               const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-              const std::vector<std::string>& s_names,
-              const std::vector<number>& ps);
+              const std::vector<std::string>& s_names);
 
         virtual ~model();
 
@@ -66,22 +65,17 @@ namespace transport
         const std::string&              get_author();               // return authors of model implemented by this object
         const std::string&              get_tag();                  // return tagline for model implemented by this object
 
-        unsigned int                    get_N_fields();             // return number of fields
-        unsigned int                    get_N_params();             // return number of parameters
-
         const std::vector<std::string>& get_field_names();          // return vector of field names
         const std::vector<std::string>& get_f_latex_names();        // return vector of LaTeX field names
         const std::vector<std::string>& get_param_names();          // return vector of parameter names
         const std::vector<std::string>& get_p_latex_names();        // return vector of LaTeX parameter names
         const std::vector<std::string>& get_state_names();          // return vector of state variable names
 
-        const std::vector<number>&      get_parameters();           // return vector of parameter values associated with this instance
-
         // BASIC PHYSICAL QUANTITIES
 
       public:
-        virtual number                  H(std::vector<number> coords) = 0;       // compute Hubble parameter
-        virtual number                  epsilon(std::vector<number> coords) = 0; // compute epsilon
+        virtual number                  H(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;       // compute Hubble parameter
+        virtual number                  epsilon(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0; // compute epsilon
 
         // INITIAL CONDITIONS HANDLING
 
@@ -94,24 +88,24 @@ namespace transport
                       double tolerance=DEFAULT_ICS_GAP_TOLERANCE, double time_steps=DEFAULT_ICS_TIME_STEPS);
 
         // get value of H at horizon crossing, which can be used to normalize the comoving ks
-        double get_kstar(const task<number>* tk, double time_steps=DEFAULT_ICS_TIME_STEPS);
+        double get_kstar(const parameters<number, Np>& params, const task<number>* tk, double time_steps=DEFAULT_ICS_TIME_STEPS);
 
       public:
         // make an ics_validator for this model
-        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
+        virtual typename initial_conditions<number, Nf>::ics_validator ics_validator_factory() = 0;
 
         // make an ics_finder for this model
-        typename initial_conditions<number>::ics_finder ics_finder_factory()
+        typename initial_conditions<number, Nf>::ics_finder ics_finder_factory()
           {
-            return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2,
-                             std::placeholders::_3, std::placeholders::_4, std::placeholders::_5,
+            return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
                              DEFAULT_ICS_GAP_TOLERANCE, DEFAULT_ICS_TIME_STEPS));
           }
 
         // make a kconfig_kstar for this model
         typename task<number>::kconfig_kstar kconfig_kstar_factory()
           {
-            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, DEFAULT_ICS_TIME_STEPS));
+            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, std::placeholders::_2, DEFAULT_ICS_TIME_STEPS));
           }
 
       protected:
@@ -127,7 +121,7 @@ namespace transport
 
       public:
         // make a params_validator for this model
-        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
+        virtual typename parameters<number, Np>::params_validator params_validator_factory() = 0;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
@@ -138,32 +132,25 @@ namespace transport
 
         threepf<number>                 threepf   (const threepf_task<number>& tk, bool silent=false);
 
-        // INDEX-FLATTENING FUNCTIONS -- used by container classes
-
-      public:
-        virtual unsigned int            flatten(unsigned int a) = 0;
-        virtual unsigned int            flatten(unsigned int a, unsigned int b) = 0;
-        virtual unsigned int            flatten(unsigned int a, unsigned int b, unsigned int c) = 0;
-
-        // INDEX TRAITS -- used by container classes
-
-        virtual unsigned int            species(unsigned int a) = 0;
-        virtual unsigned int            momentum(unsigned int a) = 0;
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
 
       public:
         // calculate gauge transformations; pure virtual, so must be overridden by derived class
-        virtual void                    compute_gauge_xfm_1(const std::vector<number>& __state, std::vector<number>& __dN) = 0;
-        virtual void                    compute_gauge_xfm_2(const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
+        virtual void compute_gauge_xfm_1(const parameters<number, Np>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+
+        virtual void compute_gauge_xfm_2(const parameters<number, Np>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        virtual void                    u2(const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
-        virtual void                    u3(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
+        virtual void u2(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
 
-        virtual void                    A(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
-        virtual void                    B(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
-        virtual void                    C(const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
+        virtual void u3(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
+
+        virtual void A(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
+
+        virtual void B(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
+
+        virtual void C(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
 
         // BACKEND INTERFACE
 
@@ -217,9 +204,6 @@ namespace transport
         const std::string               author;               // authors
         const std::string               tag;                  // tagline, perhaps used to indicate citations
 
-        const unsigned int              N_fields;             // number of fields in the model
-        const unsigned int              N_params;             // number of parameters in the model
-
         std::vector<std::string>        field_names;          // vector of field names
         std::vector<std::string>        f_latex_names;        // vector of LaTeX names for fields
 
@@ -227,9 +211,6 @@ namespace transport
         std::vector<std::string>        p_latex_names;        // vector of parameter LaTeX names
 
         std::vector<std::string>        state_names;          // vector of state variable names
-
-        number                          M_Planck;             // Planck mass (in arbitrary user-chosen units)
-        std::vector<number>             parameters;           // parameter values
       };
 
 
@@ -238,160 +219,136 @@ namespace transport
 
     // EXTRACT MODEL INFORMATION
 
-    template <typename number>
-    model<number>::model(instance_manager<number>* m, const std::string& uid,
-                         const std::string& n, const std::string& a, const std::string& t, number Mp,
-                         unsigned int N, unsigned int N_p,
-                         const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-                         const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-                         const std::vector<std::string>& s_names,
-                         const std::vector<number>& ps)
+    template <typename number, unsigned int Nf, unsigned int Np>
+    model<number, Nf, Np>::model(instance_manager<number>* m, const std::string& uid,
+                                 const std::string& n, const std::string& a, const std::string& t,
+                                 const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
+                                 const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
+                                 const std::vector<std::string>& s_names)
     : mgr(m), unique_id(uid),
-      name(n), author(a), tag(t), M_Planck(Mp),
-      N_fields(N), N_params(N_p),
+      name(n), author(a), tag(t),
       field_names(f_names), f_latex_names(fl_names),
       param_names(p_names), p_latex_names(pl_names),
-      state_names(s_names),
-      parameters(ps)
+      state_names(s_names)
       {
         // Register ourselves with the instance manager
         mgr->register_model(this, unique_id);
 
         // Perform basic validation of initial data
 
-        if(field_names.size() != N_fields)
+        if(field_names.size() != Nf)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_FIELD_NAMES_A << field_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_FIELD_NAMES_B << N_fields << "]";
+              << __CPP_TRANSPORT_WRONG_FIELD_NAMES_B << Nf << "]";
 
             throw std::out_of_range(msg.str());
           }
 
-        if(f_latex_names.size() != N_fields)
+        if(f_latex_names.size() != Nf)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_A << f_latex_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_B << N_fields << "]";
+              << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_B << Nf << "]";
 
             throw std::out_of_range(msg.str());
           }
 
-        if(param_names.size() != N_params)
+        if(param_names.size() != Np)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_WRONG_PARAM_NAMES_A << param_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_PARAM_NAMES_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_PARAM_NAMES_B << Np << "]";
 
             throw std::out_of_range(msg.str());
           }
 
-        if(p_latex_names.size() != N_params)
+        if(p_latex_names.size() != Np)
           {
             std::ostringstream msg;
 
             msg << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_A << p_latex_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_B << Np << "]";
 
             throw std::out_of_range(msg.str());
           }
 
-        if(parameters.size() != N_params)
+        if(parameters.size() != Np)
           {
             std::ostringstream msg;
 
             msg << __CPP_TRANSPORT_WRONG_PARAMS_A << parameters.size() << "]"
-              << __CPP_TRANSPORT_WRONG_PARAMS_B << N_params << "]";
+              << __CPP_TRANSPORT_WRONG_PARAMS_B << Np << "]";
 
             throw std::out_of_range(msg.str());
           }
       }
 
 
-    template <typename number>
-    model<number>::~model()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    model<number, Nf, Np>::~model()
       {
         assert(this->mgr != nullptr);
         mgr->deregister_model(this, this->unique_id);
       }
 
 
-    template <typename number>
-    const std::string& model<number>::get_identity_string()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::string& model<number, Nf, Np>::get_identity_string()
       {
         return(this->unique_id);
       }
 
 
-    template <typename number>
-    const std::string& model<number>::get_name()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::string& model<number, Nf, Np>::get_name()
       {
         return(this->name);
       }
 
 
-    template <typename number>
-    const std::string& model<number>::get_author()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::string& model<number, Nf, Np>::get_author()
       {
         return(this->author);
       }
 
 
-    template <typename number>
-    const std::string& model<number>::get_tag()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::string& model<number, Nf, Np>::get_tag()
       {
         return(this->tag);
       }
 
-    template <typename number>
-    unsigned int model<number>::get_N_fields()
-      {
-        return(this->N_fields);
-      }
 
-
-    template <typename number>
-    unsigned int model<number>::get_N_params()
-      {
-        return(this->N_params);
-      }
-
-
-    template <typename number>
-    const std::vector<std::string>& model<number>::get_field_names()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::vector<std::string>& model<number, Nf, Np>::get_field_names()
       {
         return(this->field_names);
       }
 
 
-    template <typename number>
-    const std::vector<std::string>& model<number>::get_f_latex_names()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::vector<std::string>& model<number, Nf, Np>::get_f_latex_names()
       {
         return(this->f_latex_names);
       }
 
 
-    template <typename number>
-    const std::vector<std::string>& model<number>::get_param_names()
-      {
-        return(this->param_names);
-      }
-
-
-    template <typename number>
-    const std::vector<std::string>& model<number>::get_p_latex_names()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::vector<std::string>& model<number, Nf, Np>::get_p_latex_names()
       {
         return(this->p_latex_names);
       }
 
-    template <typename number>
-    const std::vector<number>& model<number>::get_parameters()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::vector<number>& model<number, Nf, Np>::get_parameters()
       {
         return(this->parameters);
       }
 
-    template <typename number>
-    const std::vector<std::string>& model<number>::get_state_names()
+    template <typename number, unsigned int Nf, unsigned int Np>
+    const std::vector<std::string>& model<number, Nf, Mp>::get_state_names()
       {
         return(this->state_names);
       }
@@ -400,9 +357,10 @@ namespace transport
     // INITIAL CONDITIONS HANDLING
 
 
-    template <typename number>
-    void model<number>::find_ics(const std::vector<number>& input, std::vector<number>& output, double Ninit, double Ncross, double Npre,
-                                 double tolerance, double time_steps)
+    template <typename number, unsigned int Nf, unsigned int Np>
+    void model<number, Nf, Np>::find_ics(const parameters<number, Np>& params, const std::vector<number>& input, std::vector<number>& output,
+                                         double Ninit, double Ncross, double Npre,
+                                         double tolerance, double time_steps)
       {
         assert(Ncross >= Npre);
 
@@ -442,20 +400,13 @@ namespace transport
       }
 
 
-    template <typename number>
-    void model<number>::write_task_data(const task<number>* task, std::ostream& stream,
-                                        double abs_err, double rel_err, double step_size, std::string stepper_name)
+    template <typename number, unsigned int Nf, unsigned int Np>
+    void model<number, Nf, Np>::write_task_data(const task<number>* task, std::ostream& stream,
+                                                double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
         stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
 
-        std::vector<number> ics = task->get_ics();
-        assert(ics.size() == 2*this->N_fields);
-
-        for(int i = 0; i < this->N_fields; i++)
-          {
-            stream << "  " << this->field_names[i] << " = " << ics[this->flatten(this->species(i))]
-                   << "; d(" << this->field_names[i] << ")/dN = " << ics[this->flatten(this->momentum(i))] << std::endl;
-          }
+        stream << task.get_ics() << std::endl;
 
         stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
                << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
@@ -466,8 +417,8 @@ namespace transport
       }
 
 
-    template <typename number>
-    double model<number>::get_kstar(const task<number>* tk, double time_steps)
+    template <typename number, unsigned int Nf, unsigned int Np>
+    double model<number, Nf, Np>::get_kstar(const parameters<number, Np>& params, const task<number>* tk, double time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
@@ -489,7 +440,7 @@ namespace transport
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
             // Here, we return the normalization constant aH
-            return this->H(history.back()) * exp(tk->get_Nstar());
+            return this->H(params, history.back()) * exp(tk->get_Nstar());
           }
         else
           {
@@ -502,7 +453,7 @@ namespace transport
 
 
     // Integrate the background
-    template <typename number>
+    template <typename number, unsigned int Nf, unsigned int Np>
     transport::background<number> model<number>::background(const task<number>* tk, bool silent)
       {
         assert(tk != nullptr);
@@ -518,7 +469,7 @@ namespace transport
 
 
     // Integrate the twopf
-    template <typename number>
+    template <typename number, unsigned int Nf, unsigned int Np>
     transport::twopf<number> model<number>::twopf(const twopf_task<number>& tk, bool silent)
       {
         context                   ctx  = this->backend_get_context();
@@ -539,7 +490,7 @@ namespace transport
 
 
     // Integrate the threepf
-    template <typename number>
+    template <typename number, unsigned int Nf, unsigned int Np>
     transport::threepf<number> model<number>::threepf(const threepf_task<number>& tk, bool silent)
       {
         context                     ctx  = this->backend_get_context();

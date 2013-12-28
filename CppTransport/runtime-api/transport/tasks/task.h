@@ -18,6 +18,8 @@
 
 
 #include "transport/concepts/initial_conditions.h"
+#include "transport/concepts/parameters.h"
+#include "transport/concepts/range.h"
 #include "transport/messages_en.h"
 
 
@@ -118,85 +120,62 @@ namespace transport
       public:
         typedef std::function<double(task<number>*)> kconfig_kstar;
 
+        // CONSTRUCTOR, DESTRUCTOR
+
         // construct a task with supplied initial conditions
-        task(const initial_conditions<number>& i, double Nst, const std::vector<double>& ts);
+        task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t);
 
         virtual ~task()
           {
           }
 
-        // get initial conditions
-        // guaranteed to be validated
-        const std::vector<number>& get_ics() const { return(ic.get_ics()); }
+        // EXTRACT INFORMATION ABOUT THE TASK
 
-        // get Nstar
-        // horizon-crossing is taken to occur Nstar e-folds after the initial conditions
-        double get_Nstar() const { return(this->Nstar); }
+        // get initial conditions -- these are guaranteed to be validated
+        const initial_conditions<number>& get_ics() const { return(ics); }
 
-        // get initial time
-        double get_Ninit() const;
+        // get parameters
+        const parameters<number>& get_params() const { return(params); }
 
-        // get sampling times
-        const std::vector<double>& get_sample_times() const { return(this->times); }
-
-        // get number of points at which to sample
-        size_t get_number_times() const { return(this->times.size()); }
+        // get sample times
+        const range<double>& get_times() const { return(times); }
 
       protected:
-        initial_conditions<number> ic;
+        const initial_conditions<number> ics;
+        const parameters<number>         params;
 
-        // horizon-crossing time
-        const double               Nstar;
-
-        // list of times at which to sample
-        const std::vector<double>  times;
+        const range<double>              times;
       };
 
 
     template <typename number>
-    task<number>::task(const initial_conditions<number>& i, double Nst, const std::vector<double>& ts)
-      : ic(i), Nstar(Nst), times(ts)
+    task<number>::task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
+      : params(p), ics(i), times(t)
       {
         // validate relation between Nstar and the sampling time
-        assert(times.size() > 0);
-        assert(Nstar > times.front());
-        assert(Nstar < times.back());
+        assert(times.get_steps() > 0);
+        assert(i.get_Nstar() > times.get_min());
+        assert(i.get_Nstar() < times.get_max());
 
-        if(times.size() == 0)
+        if(times.get_steps() == 0)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_NO_TIMES;
             throw std::logic_error(msg.str());
           }
 
-        if(times.front() >= Nstar)
+        if(times.get_min() >= ics.get_Nstar())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << times.front() << ", Nstar = " << Nstar << ")";
+            msg << __CPP_TRANSPORT_NSTAR_TOO_EARLY << " (Ninit = " << times.get_min() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
           }
 
-        if(times.back() <= Nstar)
+        if(times.get_max() <= ics.get_Nstar())
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times.back() << ", Nstar = " << Nstar << ")";
+            msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times.get_max() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
-          }
-      }
-
-
-    template <typename number>
-    double task<number>::get_Ninit() const
-      {
-        assert(this->times.size() > 0);
-
-        if(this->times.size() > 0)
-          {
-            return(this->times.front());
-          }
-        else
-          {
-            throw std::out_of_range(__CPP_TRANSPORT_TIMES_RANGE);
           }
       }
 
@@ -207,8 +186,8 @@ namespace transport
     class twopf_list_task: public task<number>
       {
       public:
-        twopf_list_task(const initial_conditions<number>& i, double Nst, const std::vector<double>& ts)
-          : task<number>(i, Nst, ts)
+        twopf_list_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
+          : task<number>(p, i, t)
           {
           }
 
@@ -243,14 +222,15 @@ namespace transport
         std::vector<double>        comoving_k;
       };
 
+
     // two-point function task
     // we need to specify the wavenumbers k at which we want to sample it
     template <typename number>
     class twopf_task: public twopf_list_task<number>
       {
       public:
-        twopf_task(const initial_conditions<number>& i, const std::vector<double>& ks, double Nst,
-                   const std::vector<double>& ts, typename task<number>::kconfig_kstar kstar);
+        twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                   const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~twopf_task()
           {
@@ -269,31 +249,31 @@ namespace transport
 
     // build a twopf task
     template <typename number>
-    twopf_task<number>::twopf_task(const initial_conditions<number>& i, const std::vector<double>& ks, double Nst,
-                                   const std::vector<double>& ts, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(i, Nst, ts)
+    twopf_task<number>::twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                                   const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar)
+      : twopf_list_task<number>(p, i, t)
       {
         double normalization = kstar(this);
 
         bool stored_background = false;
         // the mapping from the provided list ks to the work list is just one-to-one
-        for(unsigned int i = 0; i < ks.size(); i++)
+        for(unsigned int j = 0; j < ks.size(); j++)
           {
             twopf_kconfig kconfig;
 
-            kconfig.index  = i;
-            kconfig.serial = i;
-            kconfig.k      = ks[i] * normalization;
+            kconfig.index  = j;
+            kconfig.serial = j;
+            kconfig.k      = ks[j] * normalization;
 
             kconfig.store_background = stored_background ? false : (stored_background = true);
 
             config_list.push_back(kconfig);
 
-            this->flat_k.push_back(ks[i]);
-            this->comoving_k.push_back(ks[i] * normalization);
+            this->flat_k.push_back(ks[j]);
+            this->comoving_k.push_back(ks[j] * normalization);
           }
 
-        if(stored_background == false)
+        if(!stored_background)
           {
             throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
           }
@@ -306,8 +286,8 @@ namespace transport
       {
       public:
         // construct a task based on sampling from a cubic lattice of ks
-        threepf_task(const initial_conditions<number>& i, const std::vector<double>& ks, double Nst,
-                     const std::vector<double>& ts, typename task<number>::kconfig_kstar kstar);
+        threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                     const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~threepf_task()
           {
@@ -326,9 +306,9 @@ namespace transport
 
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
-    threepf_task<number>::threepf_task(const initial_conditions<number>& i, const std::vector<double>& ks, double Nst,
-                                       const std::vector<double>& ts, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(i, Nst, ts)
+    threepf_task<number>::threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                                       const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar)
+      : twopf_list_task<number>(p, i, t)
       {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -337,33 +317,33 @@ namespace transport
         double normalization = kstar(this);
 
         unsigned int serial = 0;
-        for(int i = 0; i < ks.size(); i++)
+        for(unsigned int j = 0; j < ks.size(); j++)
           {
             bool stored_twopf = false;
 
-            for(int j = 0; j <= i; j++)
+            for(unsigned int k = 0; k <= j; k++)
               {
-                for(int k = 0; k <= j; k++)
+                for(unsigned int l = 0; l <= k; l++)
                   {
                     threepf_kconfig kconfig;
 
-                    auto maxij  = (ks[i] > ks[j] ? ks[i] : ks[j]);
-                    auto maxijk = (maxij > ks[k] ? maxij : ks[k]);
+                    auto maxij  = (ks[j] > ks[k] ? ks[j] : ks[k]);
+                    auto maxijk = (maxij > ks[l] ? maxij : ks[l]);
 
-                    if(ks[i] + ks[j] + ks[k] >= 2.0 * maxijk)   // impose the triangle conditions
+                    if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
                       {
 
-                        kconfig.k1  = ks[i] * normalization;
-                        kconfig.k2  = ks[j] * normalization;
-                        kconfig.k3  = ks[k] * normalization;
+                        kconfig.k1  = ks[j] * normalization;
+                        kconfig.k2  = ks[k] * normalization;
+                        kconfig.k3  = ks[l] * normalization;
 
-                        kconfig.k_t = (ks[i] + ks[j] + ks[k]) * normalization;
-                        kconfig.beta  = 1.0 - 2.0 * ks[k] / (ks[i] + ks[j] + ks[k]);
-                        kconfig.alpha = 4.0 * ks[i] / (ks[i] + ks[j] + ks[k]) - 1.0 - kconfig.beta;
+                        kconfig.k_t = (ks[j] + ks[k] + ks[l]) * normalization;
+                        kconfig.beta  = 1.0 - 2.0 * ks[l] / (ks[j] + ks[k] + ks[l]);
+                        kconfig.alpha = 4.0 * ks[j] / (ks[j] + ks[k] + ks[l]) - 1.0 - kconfig.beta;
 
-                        kconfig.index[0] = i;
-                        kconfig.index[1] = j;
-                        kconfig.index[2] = k;
+                        kconfig.index[0] = j;
+                        kconfig.index[1] = k;
+                        kconfig.index[2] = l;
 
                         kconfig.store_background = stored_background ? false : (stored_background = true);
                         kconfig.store_twopf      = stored_twopf      ? false : (stored_twopf = true);
@@ -375,16 +355,16 @@ namespace transport
                   }
               }
 
-            if(stored_twopf == false)
+            if(!stored_twopf)
               {
                 throw std::logic_error(__CPP_TRANSPORT_TWOPF_STORE);
               }
 
-            this->flat_k.push_back(ks[i]);
-            this->comoving_k.push_back(ks[i] * normalization);
+            this->flat_k.push_back(ks[j]);
+            this->comoving_k.push_back(ks[j] * normalization);
           }
 
-        if(stored_background == false)
+        if(!stored_background)
           {
             throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
           }

@@ -27,7 +27,13 @@
 namespace transport
   {
 
-    template <typename number>
+    template <typename number, unsigned int N>
+    class parameters: public flattener<N>, public xml_serializable;
+
+    template <typename number, unsigned int N>
+    std::ostream& operator<<(std::ostream& out, parameters<number, N>& obj);
+
+    template <typename number, unsigned int N>
     class parameters: public xml_serializable
       {
       public:
@@ -36,12 +42,19 @@ namespace transport
         // construct parameter set
         parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v);
 
+        // return parameter vector
         const std::vector<number>& get_params() const { return(this->params); }
+
+        // return M_Planck
+        number get_Mp() const { return(this->M_Planck); }
 
         // XML SERIALIZATION INTERFACE
 
       public:
         void serialize_xml(DbXml::XmlEventWriter& writer);
+
+      public:
+        friend std::ostream& operator<< <>(std::ostream& out, parameters<number, N>& obj);
 
         // INTERNAL DATA
 
@@ -53,11 +66,13 @@ namespace transport
       };
 
 
-    template <typename number>
-    parameters<number>::parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v)
+    template <typename number, unsigned int N>
+    parameters<number, N>::parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v)
       : M_Planck(Mp), names(n)
       {
         assert(p.size() == n.size());
+        assert(p.size() == N);
+        assert(n.size() == N);
 
         if(M_Planck <= 0.0)
           {
@@ -76,16 +91,21 @@ namespace transport
       }
 
 
-    template <typename number>
-    void parameters<number>::serialize_xml(DbXml::XmlEventWriter& writer)
+    template <typename number, unsigned int N>
+    void parameters<number, N>::serialize_xml(DbXml::XmlEventWriter& writer)
       {
+        assert(this->params.size() == N);
+        assert(this->names.size() == N);
+
         this->begin_node(writer, __CPP_TRANSPORT_NODE_PARAMETERS);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MPLANCK, this->M_Planck);
         this->begin_node(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
-        for(unsigned int i = 0; i < this->params.size(); i++)
+
+        for(unsigned int i = 0; i < N; i++)
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMETER, this->params[i], __CPP_TRANSPORT_ATTR_NAME, this->names[i]);
           }
+
         this->end_node(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
         this->end_node(writer, __CPP_TRANSPORT_NODE_PARAMETERS);
       }

@@ -23,8 +23,8 @@
 #define __CPP_TRANSPORT_WRONG_PARAMS_A        "Error: supplied number of parameters [= "
 #define __CPP_TRANSPORT_WRONG_PARAMS_B        " does not match expected number [= "
 
-#define __CPP_TRANSPORT_WRONG_ICS_A           "Unexpected number of initial conditions supplied (received "
-#define __CPP_TRANSPORT_WRONG_ICS_B           ", expected "
+#define __CPP_TRANSPORT_WRONG_ICS_A           "Error: supplied number of initial conditions [= "
+#define __CPP_TRANSPORT_WRONG_ICS_B           " does not match expected number [= "
 #define __CPP_TRANSPORT_WRONG_ICS_C           " or "
 
 #define __CPP_TRANSPORT_SOLVING_ICS_MESSAGE   "Solving for background evolution using initial conditions"

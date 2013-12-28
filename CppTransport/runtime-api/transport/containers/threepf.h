@@ -20,6 +20,7 @@
 #include "transport/utilities/latex_output.h"
 #include "transport/utilities/asciitable.h"
 #include "transport/utilities/latex_output.h"
+#include "transport/concepts/flattener.h"
 #include "transport/containers/label_gadget.h"
 #include "transport/containers/index_selector.h"
 #include "transport/plotgadgets/plot_gadget.h"
@@ -52,8 +53,8 @@ namespace transport
               }
         };
 
-      template <typename number>
-      class threepf
+      template <typename number, unsigned int N>
+      class threepf: public flattener<N>
         {
           public:
             threepf(const threepf_task<number>* t, const std::vector< std::vector<number> >& b,
