@@ -48,53 +48,60 @@ namespace transport
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
-        model(instance_manager<number>* m, const std::string& uid,
-              const std::string& n, const std::string& a, const std::string& t,
-              const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-              const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-              const std::vector<std::string>& s_names);
+        model(instance_manager<number>* m, const std::string& uid);
 
         virtual ~model();
 
-        // EXTRACT MODEL INFORMATION
+        // INTERFACE: EXTRACT MODEL INFORMATION
 
       public:
-        const std::string&              get_identity_string();      // return unique string identifying this model
+        //! Return unique string identifying the model (and CppTransport version)
+        virtual const std::string&              get_identity_string() = 0;
 
-        const std::string&              get_name();                 // return name of model implemented by this object
-        const std::string&              get_author();               // return authors of model implemented by this object
-        const std::string&              get_tag();                  // return tagline for model implemented by this object
+        //! Return name of the model implemented by this object
+        virtual const std::string&              get_name() = 0;
+        //! Return authors of the model implemented by this object
+        virtual const std::string&              get_author() = 0;
+        //! Return tagline for the model implemented by this object
+        virtual const std::string&              get_tag() = 0;
 
-        const std::vector<std::string>& get_field_names();          // return vector of field names
-        const std::vector<std::string>& get_f_latex_names();        // return vector of LaTeX field names
-        const std::vector<std::string>& get_param_names();          // return vector of parameter names
-        const std::vector<std::string>& get_p_latex_names();        // return vector of LaTeX parameter names
-        const std::vector<std::string>& get_state_names();          // return vector of state variable names
+        //! Return vector of field names for the model implemented by this object
+        virtual const std::vector<std::string>& get_field_names() = 0;
+        //! Return vector of LaTeX names for the fields of the model implemented by this object
+        virtual const std::vector<std::string>& get_f_latex_names() = 0;
+        //! Return vector of parameter names for the model implemented by this object
+        virtual const std::vector<std::string>& get_param_names() = 0;
+        //! Return vector of LaTeX names for the parameters of the model implemented by this object
+        virtual const std::vector<std::string>& get_p_latex_names() = 0;
+        //! Return vector of names for the phase-space coordinates (fields+momenta) of the model implemented by this object
+        virtual const std::vector<std::string>& get_state_names() = 0;
 
-        // BASIC PHYSICAL QUANTITIES
+        // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
 
       public:
-        virtual number                  H(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;       // compute Hubble parameter
-        virtual number                  epsilon(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0; // compute epsilon
+        //! Compute Hubble rate H given a phase-space configuration
+        virtual number                  H(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;
+        //! Compute slow-roll parameter epsilon given a phase-space configuration
+        virtual number                  epsilon(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;
 
         // INITIAL CONDITIONS HANDLING
 
       protected:
-        // validate initial conditions (optionally adding initial conditions for momenta)
+        //! Validate initial conditions (optionally adding initial conditions for momenta)
         virtual void validate_initial_conditions(const std::vector<number>& input, std::vector<number>& output) = 0;
 
-        // compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
+        //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
         void find_ics(const std::vector<number>& input, std::vector<number>& output, double Ninit, double Ncross, double Npre,
                       double tolerance=DEFAULT_ICS_GAP_TOLERANCE, double time_steps=DEFAULT_ICS_TIME_STEPS);
 
-        // get value of H at horizon crossing, which can be used to normalize the comoving ks
+        //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
         double get_kstar(const parameters<number, Np>& params, const task<number>* tk, double time_steps=DEFAULT_ICS_TIME_STEPS);
 
       public:
-        // make an ics_validator for this model
+        //! Make an 'ics_validator' object for this model
         virtual typename initial_conditions<number, Nf>::ics_validator ics_validator_factory() = 0;
 
-        // make an ics_finder for this model
+        //! Make an 'ics_finder' object for this model
         typename initial_conditions<number, Nf>::ics_finder ics_finder_factory()
           {
             return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
@@ -102,25 +109,25 @@ namespace transport
                              DEFAULT_ICS_GAP_TOLERANCE, DEFAULT_ICS_TIME_STEPS));
           }
 
-        // make a kconfig_kstar for this model
+        //! Make a 'kconfig_kstar' object for this model
         typename task<number>::kconfig_kstar kconfig_kstar_factory()
           {
             return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, std::placeholders::_2, DEFAULT_ICS_TIME_STEPS));
           }
 
       protected:
-        // write information about the task we are processing
+        //! Write information about the task we are processing
         void write_task_data(const task<number>* task, std::ostream& stream,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
         // PARAMETER HANDLING
 
       protected:
-        // validate parameter values
+        //! Validate parameter values
         virtual void validate_parameters(const std::vector<number>& input, std::vector<number>& output) = 0;
 
       public:
-        // make a params_validator for this model
+        //! Make a 'params_validator' objcet for this model
         virtual typename parameters<number, Np>::params_validator params_validator_factory() = 0;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
@@ -197,20 +204,6 @@ namespace transport
 
       protected:
         instance_manager<number>*       mgr;                  // manager instance
-
-        const std::string               unique_id;            // unique string identifying this model (+CppTransport version info)
-
-        const std::string               name;                 // name of model
-        const std::string               author;               // authors
-        const std::string               tag;                  // tagline, perhaps used to indicate citations
-
-        std::vector<std::string>        field_names;          // vector of field names
-        std::vector<std::string>        f_latex_names;        // vector of LaTeX names for fields
-
-        std::vector<std::string>        param_names;          // vector of parameter names
-        std::vector<std::string>        p_latex_names;        // vector of parameter LaTeX names
-
-        std::vector<std::string>        state_names;          // vector of state variable names
       };
 
 
@@ -220,68 +213,11 @@ namespace transport
     // EXTRACT MODEL INFORMATION
 
     template <typename number, unsigned int Nf, unsigned int Np>
-    model<number, Nf, Np>::model(instance_manager<number>* m, const std::string& uid,
-                                 const std::string& n, const std::string& a, const std::string& t,
-                                 const std::vector<std::string>& f_names, const std::vector<std::string>& fl_names,
-                                 const std::vector<std::string>& p_names, const std::vector<std::string>& pl_names,
-                                 const std::vector<std::string>& s_names)
-    : mgr(m), unique_id(uid),
-      name(n), author(a), tag(t),
-      field_names(f_names), f_latex_names(fl_names),
-      param_names(p_names), p_latex_names(pl_names),
-      state_names(s_names)
+    model<number, Nf, Np>::model(instance_manager<number>* m, const std::string& uid)
+    : mgr(m)
       {
         // Register ourselves with the instance manager
-        mgr->register_model(this, unique_id);
-
-        // Perform basic validation of initial data
-
-        if(field_names.size() != Nf)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_FIELD_NAMES_A << field_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_FIELD_NAMES_B << Nf << "]";
-
-            throw std::out_of_range(msg.str());
-          }
-
-        if(f_latex_names.size() != Nf)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_A << f_latex_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_F_LATEX_NAMES_B << Nf << "]";
-
-            throw std::out_of_range(msg.str());
-          }
-
-        if(param_names.size() != Np)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_WRONG_PARAM_NAMES_A << param_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_PARAM_NAMES_B << Np << "]";
-
-            throw std::out_of_range(msg.str());
-          }
-
-        if(p_latex_names.size() != Np)
-          {
-            std::ostringstream msg;
-
-            msg << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_A << p_latex_names.size() << "]"
-              << __CPP_TRANSPORT_WRONG_P_LATEX_NAMES_B << Np << "]";
-
-            throw std::out_of_range(msg.str());
-          }
-
-        if(parameters.size() != Np)
-          {
-            std::ostringstream msg;
-
-            msg << __CPP_TRANSPORT_WRONG_PARAMS_A << parameters.size() << "]"
-              << __CPP_TRANSPORT_WRONG_PARAMS_B << Np << "]";
-
-            throw std::out_of_range(msg.str());
-          }
+        mgr->register_model(this, uid);
       }
 
 
@@ -290,67 +226,6 @@ namespace transport
       {
         assert(this->mgr != nullptr);
         mgr->deregister_model(this, this->unique_id);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::string& model<number, Nf, Np>::get_identity_string()
-      {
-        return(this->unique_id);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::string& model<number, Nf, Np>::get_name()
-      {
-        return(this->name);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::string& model<number, Nf, Np>::get_author()
-      {
-        return(this->author);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::string& model<number, Nf, Np>::get_tag()
-      {
-        return(this->tag);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::vector<std::string>& model<number, Nf, Np>::get_field_names()
-      {
-        return(this->field_names);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::vector<std::string>& model<number, Nf, Np>::get_f_latex_names()
-      {
-        return(this->f_latex_names);
-      }
-
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::vector<std::string>& model<number, Nf, Np>::get_p_latex_names()
-      {
-        return(this->p_latex_names);
-      }
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::vector<number>& model<number, Nf, Np>::get_parameters()
-      {
-        return(this->parameters);
-      }
-
-    template <typename number, unsigned int Nf, unsigned int Np>
-    const std::vector<std::string>& model<number, Nf, Mp>::get_state_names()
-      {
-        return(this->state_names);
       }
 
 

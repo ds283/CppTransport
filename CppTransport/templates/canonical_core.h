@@ -65,9 +65,31 @@ namespace transport
     class $$__MODEL : public canonical_model<number, $$__NUMBER_FIELDS, $$__NUMBER_PARAMS>
       {
       public:
+        // CONSTRUCTOR, DESTRUCTOR
+
         $$__MODEL(instance_manager<number>* mgr);
 
-        // BASIC PHYSICAL QUANTITIES
+        // INTERFACE: EXTRACT MODEL INFORMATION
+
+        const std::string& get_identity_string() { return("$$__UNIQUE_ID"); }
+
+        const std::string& get_name() { return("$$__NAME"); }
+
+        const std::string& get_author() { return("$$__AUTHOR"); }
+
+        const std::string& get_tag() { return("$$__TAG"); }
+
+        const std::string& get_field_name() { return($$__MODEL_pool::field_names); }
+
+        const std::string& get_f_latex_names() { return($$__MODEL_pool::latex_names); }
+
+        const std::string& get_param_names() { return($$__MODEL_pool::param_names); }
+
+        const std::string& get_p_latex_names() { return($$__MODEL_pool::platx_names); }
+
+        const std::string& get_state_names() { return($$__MODEL_pool::state_names); }
+
+        // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
 
       public:
         // Over-ride functions inherited from 'model'
@@ -165,19 +187,17 @@ namespace transport
       };
 
 
-    // IMPLEMENTATION -- CLASS $$__MODEL
+    // CLASS $$__MODEL -- CONSTRUCTORS, DESTRUCTORS
 
 
     template <typename number>
     $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
-      : canonical_model<number, $$__NUMBER_FIELDS, $$__NUMBER_PARAMS>(mgr, "$$__UNIQUE_ID",
-                                                                      "$$__NAME", "$$__AUTHOR", "$$__TAG",
-                                                                      $$__NUMBER_FIELDS,
-                                                                      $$__MODEL_pool::field_names, $$__MODEL_pool::latex_names,
-                                                                      $$__MODEL_pool::param_names, $$__MODEL_pool::platx_names,
-                                                                      $$__MODEL_pool::state_names)
+      : canonical_model<number, $$__NUMBER_FIELDS, $$__NUMBER_PARAMS>(mgr, "$$__UNIQUE_ID")
       {
       }
+
+
+    // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
 
 
     template <typename number>
