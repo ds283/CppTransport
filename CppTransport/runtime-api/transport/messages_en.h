@@ -76,6 +76,7 @@
 #define __CPP_TRANSPORT_WORK_QUEUE_RANGE      "Out of range when accessing 'work_queue' object"
 #define __CPP_TRANSPORT_TIMES_RANGE           "Out of range when accessing 'task' object"
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE "Out of range when accessing 'twopf_list_task' object"
+#define __CPP_TRANSPORT_RANGE_RANGE           "Out of range when accessing 'range' object"
 
 #define __CPP_TRANSPORT_INTEGRATION_FAIL      "Fatal: integration failure"
 
@@ -87,6 +88,7 @@
 #define __CPP_TRANSPORT_ICS_MISMATCH          "Mismatched number of values when constructing 'initial_conditions' object"
 #define __CPP_TRANSPORT_PARAMS_MISMATCH       "Mismatched number of values when constructing 'parameters' object"
 #define __CPP_TRANSPORT_MPLANCK_NEGATIVE      "Nonpositive value for M_Planck is not allowed"
+#define __CPP_TRANSPORT_PARAM_DATA_MISMATCH   "Mismatched parameter and names in 'parameters' object"
 
 #define __CPP_TRANSPORT_XML_MISMATCH          "Mismatched node tags when performing XML serialization"
 

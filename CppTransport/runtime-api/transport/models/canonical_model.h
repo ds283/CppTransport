@@ -19,12 +19,12 @@ namespace transport
 
     // a canonical model: allows an arbitrary number of fields, but flat field-space metric.
     // has a potential but no other structure
-    template <typename number, unsigned int Nf, unsigned int Np>
-    class canonical_model : public model<number, Nf, Np>
+    template <typename number>
+    class canonical_model : public model<number>
       {
       public:
         canonical_model(instance_manager<number>* mgr, const std::string& uid)
-          : model<number, Nf, Np>(mgr, uid)
+          : model<number>(mgr, uid)
           {
           }
 

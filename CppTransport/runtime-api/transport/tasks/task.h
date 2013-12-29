@@ -111,19 +111,23 @@ namespace transport
 
     // TASK STRUCTURES
 
+    template <typename number> class task;
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const task<number>& obj);
 
     // basic task, from which the more specific tasks are derived
     // contains information on the initial conditions, horizon-crossing time and the sampling times
-    template <typename number, unsigned int Nf, unsigned int Np>
+    template <typename number>
     class task
       {
       public:
-        typedef std::function<double(task<number, Nf, Np>*)> kconfig_kstar;
+        typedef std::function<double(task<number>*)> kconfig_kstar;
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        // construct a task with supplied initial conditions
-        task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t);
+        //! construct a task with supplied initial conditions
+        task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t);
 
         virtual ~task()
           {
@@ -131,25 +135,42 @@ namespace transport
 
         // EXTRACT INFORMATION ABOUT THE TASK
 
-        // get initial conditions -- these are guaranteed to be validated
-        const initial_conditions<number, Nf>& get_ics() const { return(ics); }
+        //! get 'initial conditions' object associated with this task
+        const initial_conditions<number>& get_ics() const { return(this->ics); }
 
-        // get parameters
-        const parameters<number, Np>& get_params() const { return(params); }
+        //! get 'parameters' object associated with this task
+        const parameters<number>& get_params() const { return(this->params); }
 
-        // get sample times
-        const range<double>& get_times() const { return(times); }
+        //! get 'range' object representing sample times
+        const range<double>& get_times() const { return(this->times); }
+
+        //! get initial times
+        double get_Ninit() const { return(this->times.get_min()); }
+
+        //! get horizon-crossing time
+        double get_Nstar() const { return(this->ics.get_Nstar()); }
+
+        //! get vector of sample times
+        const std::vector<double>& get_sample_times() const { return(this->times.get_grid()); }
+
+        //! get vector of initial conditions
+        const std::vector<number>& get_initial_conditions() const { return(this->ics.get_vector()); }
+
+        //! get number of samples
+        unsigned int get_N_sample_times() const { return(this->times.size()); }
+
+        friend std::ostream& operator<< <>(std::ostream& out, const task<number>& obj);
 
       protected:
-        const initial_conditions<number, Nf> ics;
-        const parameters<number, Np>         params;
+        const initial_conditions<number> ics;
+        const parameters<number>         params;
 
-        const range<double>                  times;
+        const range<double>              times;
       };
 
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    task<number, Nf, Np>::task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t)
+    template <typename number>
+    task<number>::task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
       : params(p), ics(i), times(t)
       {
         // validate relation between Nstar and the sampling time
@@ -180,14 +201,23 @@ namespace transport
       }
 
 
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const task<number>& obj)
+      {
+        out << obj.params << std::endl;
+        out << obj.ics << std::endl;
+        return(out);
+      }
+
+
     // a task which can be interpreted as a list of ks associated with a two-point function
     // that could be either a literal twopf task, or a threepf task restricted to its twopf component
-    template <typename number, unsigned int Nf, unsigned int Np>
-    class twopf_list_task: public task<number, Nf, Np>
+    template <typename number>
+    class twopf_list_task: public task<number>
       {
       public:
-        twopf_list_task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t)
-          : task<number, Nf, Np>(p, i, t)
+        twopf_list_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
+          : task<number>(p, i, t)
           {
           }
 
@@ -216,21 +246,21 @@ namespace transport
 
       protected:
         // flattened list of conventionally-normalized ks
-        std::vector<double>        flat_k;
+        std::vector<double> flat_k;
 
-        // flattened list of comoving-normalzied ks
-        std::vector<double>        comoving_k;
+        // flattened list of comoving-normalized ks
+        std::vector<double> comoving_k;
       };
 
 
     // two-point function task
     // we need to specify the wavenumbers k at which we want to sample it
-    template <typename number, unsigned int Nf, unsigned int Np>
-    class twopf_task: public twopf_list_task<number, Nf, Np>
+    template <typename number>
+    class twopf_task: public twopf_list_task<number>
       {
       public:
-        twopf_task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t,
-                   const std::vector<double>& ks, typename task<number, Nf, Np>::kconfig_kstar kstar);
+        twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                   const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~twopf_task()
           {
@@ -248,10 +278,10 @@ namespace transport
 
 
     // build a twopf task
-    template <typename number, unsigned int Nf, unsigned int Np>
-    twopf_task<number>::twopf_task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t,
-                                   const std::vector<double>& ks, typename task<number, Nf, Np>::kconfig_kstar kstar)
-      : twopf_list_task<number, Nf, Np>(p, i, t)
+    template <typename number>
+    twopf_task<number>::twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                                   const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+      : twopf_list_task<number>(p, i, t)
       {
         double normalization = kstar(this);
 
@@ -281,13 +311,13 @@ namespace transport
 
 
     // three-point function task
-    template <typename number, unsigned int Nf, unsigned int Np>
-    class threepf_task: public twopf_list_task<number, Nf, Np>
+    template <typename number>
+    class threepf_task: public twopf_list_task<number>
       {
       public:
         // construct a task based on sampling from a cubic lattice of ks
-        threepf_task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t,
-                     const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar);
+        threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                     const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~threepf_task()
           {
@@ -305,10 +335,10 @@ namespace transport
 
 
     // build a 3pf task from a cubic lattice of k-modes
-    template <typename number, unsigned int Nf, unsigned int Np>
-    threepf_task<number>::threepf_task(const parameters<number, Np>& p, const initial_conditions<number, Nf>& i, const range<double>& t,
-                                       const std::vector<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number, Nf, Np>(p, i, t)
+    template <typename number>
+    threepf_task<number>::threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+                                       const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+      : twopf_list_task<number>(p, i, t)
       {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k

@@ -16,7 +16,6 @@
 #include <boost/filesystem/operations.hpp>
 
 #include "dq_basic.h"
-#import "task.h"
 
 
 // ****************************************************************************
@@ -42,11 +41,14 @@ static void output_info(transport::canonical_model<double>& model, transport::ta
 // ****************************************************************************
 
 
-int main(int argc, const char* argv[])
+int main(int argc, char* argv[])
   {
+    // set up an instance of a manager
+    transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv);
+ 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::dquad_basic<double> model();
+    transport::dquad_basic<double> model(mgr);
 
     if(argc != 3)
       {
@@ -68,6 +70,12 @@ int main(int argc, const char* argv[])
 //    py_plt.set_min_x(10);
 //    py_plt.set_max_x(28);
 
+    // set up parameter choices
+    const std::vector<double>     init_params = { m_phi, m_chi };
+    transport::parameters<double> params      =
+                                    transport::parameters<double>(M_Planck, init_params, model.get_param_names(),
+                                                                  model.params_validator_factory());
+
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
@@ -76,17 +84,11 @@ int main(int argc, const char* argv[])
     const double Nmax   = 59.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
-    transport::initial_conditions<double, 2> ics =
-                                               transport::initial_conditions<double, 2>(init_values, model.get_state_names(),
-                                                                                        Ninit, Ncross, Npre,
-                                                                                        model.ics_validator_factory(),
-                                                                                        model.ics_finder_factory());
-
-    // set up parameter choices
-    const std::vector<double> init_params = { m_phi, m_chi };
-    transport::parameters<double, 2> params =
-                                          transport::parameters<double, 2>(M_Planck, init_params, model.get_param_names(),
-                                                                           model.params_validator_factory());
+    transport::initial_conditions<double> ics =
+                                            transport::initial_conditions<double>(params, init_values, model.get_state_names(),
+                                                                                  Ninit, Ncross, Npre,
+                                                                                  model.ics_validator_factory(),
+                                                                                  model.ics_finder_factory());
 
     const unsigned int t_samples = 5000;       // record 5000 samples
 
@@ -101,7 +103,7 @@ int main(int argc, const char* argv[])
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 
-    transport::threepf_task<double> tk = transport::threepf_task<double>(ics, ks, times, model.kconfig_kstar_factory());
+    transport::threepf_task<double> tk = transport::threepf_task<double>(params, ics, times, ks, model.kconfig_kstar_factory());
 
     output_info(model, &tk);
 
@@ -228,8 +230,7 @@ int main(int argc, const char* argv[])
 
 
 // interrogate an arbitrary canonical_model object and print information about it
-template <unsigned int Nf, unsigned int Np>
-void output_info(transport::canonical_model<double>& model, transport::task<double, Nf, Np>* tk)
+void output_info(transport::canonical_model<double>& model, transport::task<double>* tk)
   {
     std::cout << "Model:   " << model.get_name() << "\n";
     std::cout << "Authors: " << model.get_author() << "\n";
@@ -239,11 +240,8 @@ void output_info(transport::canonical_model<double>& model, transport::task<doub
     std::vector<std::string>  params = model.get_param_names();
     const std::vector<double> r_p    = tk->get_params().get_vector();
 
-    assert(fields.size() == Nf);
-    assert(params.size() == Np);
-
-    std::cout << "Fields (" << Nf << "): ";
-    for(int i = 0; i < Nf; i++)
+    std::cout << "Fields (" << model.get_N_fields() << "): ";
+    for(int i = 0; i < model.get_N_fields(); i++)
       {
         if(i > 0)
           {
@@ -251,10 +249,10 @@ void output_info(transport::canonical_model<double>& model, transport::task<doub
           }
         std::cout << fields[i];
       }
-    std::cout << "\n";
+    std::cout << std::endl;
 
-    std::cout << "Parameters (" << Np << "): ";
-    for(int i = 0; i < Np; i++)
+    std::cout << "Parameters (" << model.get_N_params() << "): ";
+    for(int i = 0; i < model.get_N_params(); i++)
       {
         if(i > 0)
           {
@@ -262,9 +260,9 @@ void output_info(transport::canonical_model<double>& model, transport::task<doub
           }
         std::cout << params[i] << " = " << r_p[i];
       }
-    std::cout << "\n";
+    std::cout << std::endl;
 
-    std::cout << "V* = " << model.V(tk->get_params(), tk->get_ics().get_vector()) << "\n";
+    std::cout << "V* = " << model.V(tk->get_params(), tk->get_ics().get_vector()) << std::endl;
 
-    std::cout << "\n";
+    std::cout << std::endl;
   }

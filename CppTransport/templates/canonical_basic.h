@@ -74,10 +74,10 @@ namespace transport
                            std::vector <std::vector<number>>& threepf_history);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
-                               const std::vector<number>& ic, bool imaginary = false);
+                               const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                 double Ninit, const std::vector<number>& ic);
+                                 double Ninit, const parameters<number>& p, const std::vector<number>& ic);
 
         void resize_twopf_history(std::vector <std::vector< std::vector<number> >>& twopf,
                                   size_t num_time_samples, size_t num_kconfigs);
@@ -90,10 +90,10 @@ namespace transport
 
     // integration - 2pf functor
     template <typename number>
-    class $$__MODEL_basic_twopf_functor: public flattener<$$__NUMBER_FIELDS>
+    class $$__MODEL_basic_twopf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
       public:
-        $$__MODEL_basic_twopf_functor(const parameters<number, $$__NUMBER_PARAMS>& p, double k)
+        $$__MODEL_basic_twopf_functor(const parameters<number>& p, double k)
           : params(p), k_mode(k)
           {
           }
@@ -101,7 +101,7 @@ namespace transport
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
       private:
-        const parameters<number, $$__NUMBER_PARAMS> params;
+        const parameters<number> params;
 
         const double k_mode;
       };
@@ -128,10 +128,10 @@ namespace transport
 
     // integration - 3pf functor
     template <typename number>
-    class $$__MODEL_basic_threepf_functor: public flattener<$$__NUMBER_FIELDS>
+    class $$__MODEL_basic_threepf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
       public:
-        $$__MODEL_basic_threepf_functor(const parameters<number, $$__NUMBER_PARAMS>& p, double k1, double k2, double k3)
+        $$__MODEL_basic_threepf_functor(const parameters<number>& p, double k1, double k2, double k3)
           : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
           {
           }
@@ -139,7 +139,7 @@ namespace transport
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
       private:
-        const parameters<number, $$__NUMBER_PARAMS> params;
+        const parameters<number> params;
 
         const double kmode_1;
         const double kmode_2;
@@ -197,7 +197,7 @@ namespace transport
           }
 
         // ensure there is sufficient space for the solution
-        this->resize_twopf_history(twopf, tk->get_number_times(), work.get_total_items());
+        this->resize_twopf_history(twopf, tk->get_N_sample_times(), work.get_total_items());
 
         // get work queue for the zeroth device (should be the only device)
         assert(work.size() == 1);
@@ -239,7 +239,7 @@ namespace transport
                                               std::vector <std::vector<number>>& twopf_history)
       {
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(this->parameters, this->M_Planck, kconfig.k);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
 
         // set up a functor to observe the integration
         $$__MODEL_basic_twopf_observer<number> obs(background_history, twopf_history);
@@ -249,12 +249,12 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number> ics = tk->get_ics();
+        const std::vector<number> ics = tk->get_initial_conditions();
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
         const std::vector<double> times = tk->get_sample_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), ics);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
@@ -269,12 +269,12 @@ namespace transport
     // ics       - iniitial conditions for the background fields (or fields+momenta)
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
-    void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit, const std::vector<number>& ics, bool imaginary)
+    void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit, const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
-        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, p, ics) $$// ;
       }
 
 
@@ -320,9 +320,9 @@ namespace transport
         //   third index  - k mode
         //                  for the 2pf this corresponds to the list in ks (real_ks)
         //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
-        this->resize_twopf_history(twopf_re, tk->get_number_times(), work.get_total_items());
-        this->resize_twopf_history(twopf_im, tk->get_number_times(), work.get_total_items());
-        this->resize_threepf_history(threepf, tk->get_number_times(), work.get_total_items());
+        this->resize_twopf_history(twopf_re, tk->get_N_sample_times(), work.get_total_items());
+        this->resize_twopf_history(twopf_im, tk->get_N_sample_times(), work.get_total_items());
+        this->resize_threepf_history(threepf, tk->get_N_sample_times(), work.get_total_items());
 
         // get work queue for the zeroth device (should be only one device)
         assert(work.size() == 1);
@@ -387,7 +387,7 @@ namespace transport
                                                 std::vector< std::vector<number> >& threepf_history)
       {
         // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  rhs(this->parameters, this->M_Planck, kconfig.k1, kconfig.k2, kconfig.k3);
+        $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
 
         // set up a functor to observe the integration
         $$__MODEL_basic_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history);
@@ -397,22 +397,22 @@ namespace transport
         x.resize($$__MODEL_pool::threepf_state_size);
 
         // fix initial conditions - background
-        std::vector<number> ics = tk->get_ics();
+        std::vector<number> ics = tk->get_initial_conditions();
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs
         std::vector<double> times = tk->get_sample_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);
 
         // fix initial conditions - imaginary 2pfs
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig.k1, times.front(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig.k2, times.front(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig.k3, times.front(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, true);
 
         // fix initial conditions - threepf
-        this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, kconfig, times.front(), ics);
+        this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, kconfig, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
@@ -445,14 +445,15 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
-                                                      double Ninit, const std::vector<number>& ics)
+    void $$__MODEL_basic<number>::populate_threepf_ic(threepf_state<number>& x, unsigned int start,
+                                                      const threepf_kconfig& kconfig, double Ninit,
+                                                      const parameters<number>& p, const std::vector<number>& ics)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::threepf_size);
 
 #undef  MAKE_THREEPF
-#define MAKE_THREEPF(i,j,k,k1,k2,k3) this->make_threepf_ic(i,j,k,k1,k2,k3,Ninit,ics)
+#define MAKE_THREEPF(i,j,k,k1,k2,k3) this->make_threepf_ic(i, j, k, k1, k2, k3, Ninit, p, ics)
 
         x[start + FLATTEN($$__A,$$__B,$$__C)] = MAKE_THREEPF($$__A,$$__B,$$__C, kconfig.k1, kconfig.k2, kconfig.k3) $$// ;
       }

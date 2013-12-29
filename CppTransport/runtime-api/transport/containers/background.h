@@ -37,8 +37,8 @@ namespace transport
       std::ostream& operator<<(std::ostream& out, background<number>& obj);
 
 
-      template <typename number, unsigned int N>
-      class background: public flattener<N>
+      template <typename number>
+      class background
         {
           public:
             background(const task<number>* t, const std::vector< std::vector<number> >& s, model<number>* p)

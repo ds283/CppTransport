@@ -53,8 +53,8 @@ namespace transport
               }
         };
 
-      template <typename number, unsigned int N>
-      class threepf: public flattener<N>
+      template <typename number>
+      class threepf
         {
           public:
             threepf(const threepf_task<number>* t, const std::vector< std::vector<number> >& b,
@@ -347,7 +347,7 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > threepf<number>::construct_kconfig_momentum_time_history(index_selector<3>* selector, unsigned int i)
         {
-          std::vector< std::vector<number> > data(this->tk->get_number_times());
+          std::vector< std::vector<number> > data(this->tk->get_N_sample_times());
 
           // we want data to be a time series of the 3pf components,
           // depending whether they are enabled by the index_selector
@@ -412,9 +412,9 @@ namespace transport
         {
           assert(i < this->tk->get_sample().size());
 
-          std::vector< std::vector<number> > data(this->tk->get_number_times());
+          std::vector< std::vector<number> > data(this->tk->get_N_sample_times());
 
-          for(int l = 0; l < this->tk->get_number_times(); l++)
+          for(int l = 0; l < this->tk->get_N_sample_times(); l++)
             {
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)
                 {
@@ -519,9 +519,9 @@ namespace transport
           std::vector<number> __fields = this->backg.get_value(__time);
 
           std::vector< std::vector< std::vector<number> > > __B_nrm;
-          this->parent->B(__fields, this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), this->tk->get_k_comoving(__kmode_m), sample_points[__time], __B_nrm);
+          this->parent->B(this->tk->get_params(), __fields, this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), this->tk->get_k_comoving(__kmode_m), sample_points[__time], __B_nrm);
           std::vector< std::vector< std::vector<number> > > __C_mnr;
-          this->parent->C(__fields, this->tk->get_k_comoving(__kmode_m), this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), sample_points[__time], __C_mnr);
+          this->parent->C(this->tk->get_params(), __fields, this->tk->get_k_comoving(__kmode_m), this->tk->get_k_comoving(__kmode_n), this->tk->get_k_comoving(__kmode_r), sample_points[__time], __C_mnr);
 
           std::vector<number> __twopf_re_n = this->twopf_re.get_value(__time, __kmode_n);
           std::vector<number> __twopf_re_r = this->twopf_re.get_value(__time, __kmode_r);
@@ -606,9 +606,9 @@ namespace transport
       std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i)
         {
           std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
-          std::vector< std::vector<number> > data(this->tk->get_number_times());
+          std::vector< std::vector<number> > data(this->tk->get_N_sample_times());
 
-          for(int j = 0; j < this->tk->get_number_times(); j++)
+          for(int j = 0; j < this->tk->get_N_sample_times(); j++)
             {
               data[j].resize(1);    // only one component of < zeta zeta zeta >
 
@@ -616,8 +616,8 @@ namespace transport
               std::vector<number> dN;
               std::vector< std::vector<number> > ddN;
 
-              this->parent->compute_gauge_xfm_1(this->backg.get_value(j), dN);
-              this->parent->compute_gauge_xfm_2(this->backg.get_value(j), ddN);
+              this->parent->compute_gauge_xfm_1(this->tk->get_params(), this->backg.get_value(j), dN);
+              this->parent->compute_gauge_xfm_2(this->tk->get_params(), this->backg.get_value(j), ddN);
 
               // get twopf values for this timeslices and appropriate k-modes
               std::vector<number> twopf_re_k1 = this->twopf_re.get_value(j, kconfig_list[i].index[0]);
@@ -708,11 +708,11 @@ namespace transport
       std::vector< std::vector<number> > threepf<number>::construct_zeta_time_history(unsigned int i, ShapeFunctor shape)
         {
           std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
-          std::vector< std::vector<number> > data(this->tk->get_number_times());
+          std::vector< std::vector<number> > data(this->tk->get_N_sample_times());
 
           std::vector< std::vector<number> > threepf = this->construct_zeta_time_history(i);
 
-          for(int j = 0; j < this->tk->get_number_times(); j++)
+          for(int j = 0; j < this->tk->get_N_sample_times(); j++)
             {
               data[j].resize(1);    // only one component
 
@@ -731,14 +731,14 @@ namespace transport
       std::vector< std::vector<number> > threepf<number>::construct_reduced_bispectrum_time_history(unsigned int i)
         {
           std::vector<threepf_kconfig> kconfig_list = this->tk->get_sample();
-          std::vector< std::vector<number> > data(this->tk->get_number_times());
+          std::vector< std::vector<number> > data(this->tk->get_N_sample_times());
           
           std::vector< std::vector<number> > threepf  = this->construct_zeta_time_history(i);
           std::vector< std::vector<number> > twopf_k1 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[0]);
           std::vector< std::vector<number> > twopf_k2 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[1]);
           std::vector< std::vector<number> > twopf_k3 = this->twopf_re.construct_zeta_time_history(kconfig_list[i].index[2]);
           
-          for(int j = 0; j < this->tk->get_number_times(); j++)
+          for(int j = 0; j < this->tk->get_N_sample_times(); j++)
             {
               data[j].resize(1);    // only one component, fNL(k1, k2, k3)
               

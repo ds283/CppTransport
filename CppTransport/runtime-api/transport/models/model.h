@@ -34,13 +34,13 @@ namespace transport
     // MODEL OBJECTS -- objects representing inflationary models
 
     // avoid circularity in inclusions
-    template <typename number, unsigned int N> class background;
-    template <typename number, unsigned int N> class twopf;
-    template <typename number, unsigned int N> class threepf;
+    template <typename number> class background;
+    template <typename number> class twopf;
+    template <typename number> class threepf;
 
     // basic class from which all other model representations are derived
-    template <typename number, unsigned int Nf, unsigned int Np>
-    class model: public flattener<Nf>
+    template <typename number>
+    class model: public abstract_flattener
       {
       public:
         typedef std::vector< std::vector<number> > backg_history;
@@ -48,7 +48,7 @@ namespace transport
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
-        model(instance_manager<number>* m, const std::string& uid);
+        model(instance_manager<number>* m, const std::string& u);
 
         virtual ~model();
 
@@ -65,6 +65,11 @@ namespace transport
         //! Return tagline for the model implemented by this object
         virtual const std::string&              get_tag() = 0;
 
+        //! Return number of fields belonging to the model implemented by this object
+        virtual unsigned int                    get_N_fields() = 0;
+        //! Return number of parameters required by the model implemented by this object
+        virtual unsigned int                    get_N_params() = 0;
+
         //! Return vector of field names for the model implemented by this object
         virtual const std::vector<std::string>& get_field_names() = 0;
         //! Return vector of LaTeX names for the fields of the model implemented by this object
@@ -80,29 +85,30 @@ namespace transport
 
       public:
         //! Compute Hubble rate H given a phase-space configuration
-        virtual number                  H(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;
+        virtual number                  H(const parameters<number>& __params, const std::vector<number>& __coords) = 0;
         //! Compute slow-roll parameter epsilon given a phase-space configuration
-        virtual number                  epsilon(const parameters<number, Np>& __params, const std::vector<number>& __coords) = 0;
+        virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) = 0;
 
         // INITIAL CONDITIONS HANDLING
 
       protected:
         //! Validate initial conditions (optionally adding initial conditions for momenta)
-        virtual void validate_initial_conditions(const std::vector<number>& input, std::vector<number>& output) = 0;
+        virtual void validate_initial_conditions(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
 
         //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
-        void find_ics(const std::vector<number>& input, std::vector<number>& output, double Ninit, double Ncross, double Npre,
-                      double tolerance=DEFAULT_ICS_GAP_TOLERANCE, double time_steps=DEFAULT_ICS_TIME_STEPS);
+        void find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+                      double Ninit, double Ncross, double Npre,
+                      double tolerance=DEFAULT_ICS_GAP_TOLERANCE, unsigned int time_steps=DEFAULT_ICS_TIME_STEPS);
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double get_kstar(const parameters<number, Np>& params, const task<number>* tk, double time_steps=DEFAULT_ICS_TIME_STEPS);
+        double get_kstar(const task<number>* tk, unsigned int time_steps=DEFAULT_ICS_TIME_STEPS);
 
       public:
         //! Make an 'ics_validator' object for this model
-        virtual typename initial_conditions<number, Nf>::ics_validator ics_validator_factory() = 0;
+        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
 
         //! Make an 'ics_finder' object for this model
-        typename initial_conditions<number, Nf>::ics_finder ics_finder_factory()
+        typename initial_conditions<number>::ics_finder ics_finder_factory()
           {
             return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                              std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
@@ -112,7 +118,7 @@ namespace transport
         //! Make a 'kconfig_kstar' object for this model
         typename task<number>::kconfig_kstar kconfig_kstar_factory()
           {
-            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, std::placeholders::_2, DEFAULT_ICS_TIME_STEPS));
+            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, DEFAULT_ICS_TIME_STEPS));
           }
 
       protected:
@@ -128,7 +134,7 @@ namespace transport
 
       public:
         //! Make a 'params_validator' objcet for this model
-        virtual typename parameters<number, Np>::params_validator params_validator_factory() = 0;
+        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
@@ -144,20 +150,20 @@ namespace transport
 
       public:
         // calculate gauge transformations; pure virtual, so must be overridden by derived class
-        virtual void compute_gauge_xfm_1(const parameters<number, Np>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
+        virtual void compute_gauge_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const parameters<number, Np>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        virtual void u2(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
+        virtual void u2(const parameters<number>& __params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;
 
-        virtual void u3(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
+        virtual void u3(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) = 0;
 
-        virtual void A(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
+        virtual void A(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) = 0;
 
-        virtual void B(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
+        virtual void B(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) = 0;
 
-        virtual void C(const parameters<number, Np>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
+        virtual void C(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
 
         // BACKEND INTERFACE
 
@@ -171,12 +177,6 @@ namespace transport
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
         virtual void                    backend_process_backg(const task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
-
-        // 'taskless' background integration,
-        // just raw integration with supplied initial conditions and sampling times
-        // this entry point is needed by the routines to find horizon-crossing values of k*, or to
-        // offset a supplied set of initial conditions
-        virtual void                    backend_raw_backg(const std::vector<number>& ics, const std::vector<double>& times, std::vector< std::vector<number> >& solution) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
@@ -203,7 +203,10 @@ namespace transport
         // INTERNAL DATA
 
       protected:
-        instance_manager<number>*       mgr;                  // manager instance
+        //! copy of instance manager, used for deregistration
+        instance_manager<number>* mgr;
+        //! copy of unique id, used for deregistration
+        const std::string uid;
       };
 
 
@@ -212,30 +215,30 @@ namespace transport
 
     // EXTRACT MODEL INFORMATION
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    model<number, Nf, Np>::model(instance_manager<number>* m, const std::string& uid)
-    : mgr(m)
+    template <typename number>
+    model<number>::model(instance_manager<number>* m, const std::string& u)
+    : mgr(m), uid(u)
       {
         // Register ourselves with the instance manager
         mgr->register_model(this, uid);
       }
 
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    model<number, Nf, Np>::~model()
+    template <typename number>
+    model<number>::~model()
       {
         assert(this->mgr != nullptr);
-        mgr->deregister_model(this, this->unique_id);
+        mgr->deregister_model(this, this->uid);
       }
 
 
     // INITIAL CONDITIONS HANDLING
 
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    void model<number, Nf, Np>::find_ics(const parameters<number, Np>& params, const std::vector<number>& input, std::vector<number>& output,
-                                         double Ninit, double Ncross, double Npre,
-                                         double tolerance, double time_steps)
+    template <typename number>
+    void model<number>::find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+                                 double Ninit, double Ncross, double Npre,
+                                 double tolerance, unsigned int time_steps)
       {
         assert(Ncross >= Npre);
 
@@ -255,13 +258,17 @@ namespace transport
             std::vector< std::vector<number> > history;
 
             // set up times at which we wish to sample -- we just need a few
-            std::vector<double> times;
-            for(unsigned int i = 0; i <= time_steps; i++)
-              {
-                times.push_back(Ninit + (Ncross-Npre)*(static_cast<double>(i)/time_steps));
-              }
+            range<double> times(Ninit, Ncross-Npre, time_steps);
 
-            this->backend_raw_backg(input, times, history);
+            // set up initial conditions
+            // Npre is irrelevant, provided it falls between the beginning and end times
+            double temp_Nstar = (Ninit + Ncross - Npre)/2.0;
+            initial_conditions<double> ics(params, input, this->get_state_names(), temp_Nstar, this->ics_validator_factory());
+
+            // set up a new task object for this integration
+            task<double> tk(params, ics, times);
+
+            this->backend_process_backg(&tk, history, false);
 
             if(history.size() > 0)
               {
@@ -275,13 +282,13 @@ namespace transport
       }
 
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    void model<number, Nf, Np>::write_task_data(const task<number>* task, std::ostream& stream,
-                                                double abs_err, double rel_err, double step_size, std::string stepper_name)
+    template <typename number>
+    void model<number>::write_task_data(const task<number>* task, std::ostream& stream,
+                                        double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
         stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
 
-        stream << task.get_ics() << std::endl;
+        stream << task->get_ics() << std::endl;
 
         stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
                << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
@@ -292,8 +299,8 @@ namespace transport
       }
 
 
-    template <typename number, unsigned int Nf, unsigned int Np>
-    double model<number, Nf, Np>::get_kstar(const parameters<number, Np>& params, const task<number>* tk, double time_steps)
+    template <typename number>
+    double model<number>::get_kstar(const task<number>* tk, unsigned int time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
@@ -301,13 +308,15 @@ namespace transport
         std::vector< std::vector<number> > history;
 
         // set up times at which we wish to sample -- we just need a few
-        std::vector<double> times;
-        for(unsigned int i = 0; i <= time_steps; i++)
-          {
-            times.push_back(tk->get_Ninit() + tk->get_Nstar()*(static_cast<double>(i)/time_steps));
-          }
+        range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
 
-        this->backend_raw_backg(tk->get_ics(), times, history);
+        double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
+        initial_conditions<double> new_ics(tk->get_params(), tk->get_ics().get_vector(), this->get_state_names(),
+                                           new_Npre, this->ics_validator_factory());
+
+        task<double> new_task(tk->get_params(), new_ics, times);
+
+        this->backend_process_backg(&new_task, history, false);
 
         if(history.size() > 0)
           {
@@ -315,7 +324,7 @@ namespace transport
             // use k=1 for the wavenumber which crosses the horizon at time Nstar.
             // This wavenumber should have comoving value k=aH
             // Here, we return the normalization constant aH
-            return this->H(params, history.back()) * exp(tk->get_Nstar());
+            return this->H(tk->get_params(), history.back()) * exp(tk->get_Nstar());
           }
         else
           {
@@ -328,7 +337,7 @@ namespace transport
 
 
     // Integrate the background
-    template <typename number, unsigned int Nf, unsigned int Np>
+    template <typename number>
     transport::background<number> model<number>::background(const task<number>* tk, bool silent)
       {
         assert(tk != nullptr);
@@ -344,7 +353,7 @@ namespace transport
 
 
     // Integrate the twopf
-    template <typename number, unsigned int Nf, unsigned int Np>
+    template <typename number>
     transport::twopf<number> model<number>::twopf(const twopf_task<number>& tk, bool silent)
       {
         context                   ctx  = this->backend_get_context();
@@ -365,7 +374,7 @@ namespace transport
 
 
     // Integrate the threepf
-    template <typename number, unsigned int Nf, unsigned int Np>
+    template <typename number>
     transport::threepf<number> model<number>::threepf(const threepf_task<number>& tk, bool silent)
       {
         context                     ctx  = this->backend_get_context();

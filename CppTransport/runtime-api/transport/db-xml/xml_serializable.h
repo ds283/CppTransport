@@ -38,7 +38,7 @@ namespace transport
 
         // begin XML node (its type is recorded on the stack), with arbitrary number of attributes
         template <typename... attrs>
-        void begin_node(DbXml::XmlEventWriter& writer, const std::string& name, attrs... attributes, bool empty=false);
+        void begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes);
 
         // end the current XML node
         void end_node(DbXml::XmlEventWriter& writer, const std::string& name);
@@ -48,27 +48,30 @@ namespace transport
         void write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes);
 
         // write attributes
+        void write_attributes(DbXml::XmlEventWriter& writer);
+
         template <typename T, typename... attrs>
         void write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes);
 
         // INTERNAL DATA
 
       private:
-
         std::list<std::string> xml_stack;
       };
 
 
     template <typename... attrs>
-    void xml_serializable::begin_node(DbXml::XmlEventWriter& writer, const std::string& name, attrs... attributes, bool empty)
+    void xml_serializable::begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes)
       {
         this->xml_stack.push_front(name);
 
         writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr, sizeof...(attributes), empty);
-        if(sizeof...(attributes) > 0)
-          {
-            this->write_attributes(writer, attributes...);
-          }
+        this->write_attributes(writer, std::forward<attrs>(attributes)...);
+      }
+
+
+    void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer)
+      {
       }
 
 
@@ -79,7 +82,7 @@ namespace transport
 
         writer.writeAttribute(__CPP_TRANSPORT_DBXML_STRING(attr_name.c_str()), nullptr, nullptr,
                               __CPP_TRANSPORT_DBXML_STRING(value.c_str()), true);
-        this->write_attributes(writer, other_attributes...);
+        this->write_attributes(writer, std::forward<attrs>(other_attributes)...);
       }
 
 
@@ -101,7 +104,7 @@ namespace transport
     template <typename T, typename... attrs>
     void xml_serializable::write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes)
       {
-        this->begin_node(writer, name, attributes...);
+        this->begin_node(writer, name, false, std::forward<attrs>(attributes)...);
 
         std::string val = boost::lexical_cast<std::string>(value);
         writer.writeText(DbXml::XmlEventReader::XmlEventType::Characters, __CPP_TRANSPORT_DBXML_STRING(val.c_str()), val.length());

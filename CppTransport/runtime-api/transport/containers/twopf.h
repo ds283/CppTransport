@@ -38,8 +38,8 @@ namespace transport
       std::ostream& operator<<(std::ostream& out, twopf<number>& obj);
 
 
-      template <typename number, unsigned int N>
-      class twopf: public flattener<N>
+      template <typename number>
+      class twopf
         {
           public:
             twopf(const twopf_list_task<number>* t, const std::vector< std::vector<number> >& b,
@@ -247,7 +247,7 @@ namespace transport
 
               // compute gauge transformation
               std::vector<number> dN;
-              this->parent->compute_gauge_xfm_1(this->backg.get_value(j), dN);
+              this->parent->compute_gauge_xfm_1(this->tk->get_params(), this->backg.get_value(j), dN);
 
               data[j][0] = 0;
               for(int m = 0; m < 2*this->parent->get_N_fields(); m++)

@@ -9,6 +9,7 @@
 
 
 #include <vector>
+#include <stdexcept>
 
 #include "math.h"
 
@@ -45,8 +46,22 @@ namespace transport
         value get_min()                       const { return(this->min); }
         value get_max()                       const { return(this->max); }
         unsigned int get_steps()              const { return(this->steps); }
+        unsigned int size()                   const { return(this->grid.size()); }
         spacing_type get_spacing()            const { return(this->spacing); }
         const std::vector<value>& get_grid()  const { return(this->grid); }
+
+        value operator[](unsigned int d) const
+          {
+            assert(d < this->grid.size());
+            if(d < this->grid.size())
+              {
+                return(this->grid[d]);
+              }
+            else
+              {
+                throw std::out_of_range(__CPP_TRANSPORT_RANGE_RANGE);
+              }
+          }
 
         // XML SERIALIZATION INTERFACE
 
@@ -95,11 +110,11 @@ namespace transport
     template <typename value>
     void range<value>::serialize_xml(DbXml::XmlEventWriter& writer)
       {
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_RANGE);
+        this->begin_node(writer, __CPP_TRANSPORT_NODE_RANGE, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : _CPP_TRANSPORT_VALUE_LOGARITHMIC);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : __CPP_TRANSPORT_VALUE_LOGARITHMIC);
         this->end_node(writer, __CPP_TRANSPORT_NODE_RANGE);
       }
 

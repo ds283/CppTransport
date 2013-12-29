@@ -11,40 +11,58 @@
 namespace transport
   {
 
-    template <unsigned int N>
-    class flattener
+    class abstract_flattener
       {
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
-        virtual ~flattener()
+        virtual ~abstract_flattener()
           {
           }
 
-        // INDEX-FLATTENING FUNCTIONS -- used by container classes
+        // INTERFACE: INDEX-FLATTENING FUNCTIONS
 
-      protected:
-        constexpr unsigned int flatten(unsigned int a)                                  const { return(a); };
-        constexpr unsigned int flatten(unsigned int a, unsigned int b)                  const { return(2*N*a + b); };
-        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const { return(2*N*2*N*a + 2*N*b + c); };
+      public:
+        virtual unsigned int flatten(unsigned int a)                                  const = 0;
+        virtual unsigned int flatten(unsigned int a, unsigned int b)                  const = 0;
+        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const = 0;
 
-        // INDEX TRAITS -- used by container classes
+        // INTERFACE: INDEX TRAITS
 
-        constexpr unsigned int species(unsigned int a)     const { return((a >= N) ? a-N : a); };
-        constexpr unsigned int momentum(unsigned int a)    const { return((a >= N) ? a : a+N); };
-        constexpr unsigned int is_field(unsigned int a)    const { return(a < N); }
-        constexpr unsigned int is_momentum(unsigned int a) const { return(a >= N && a <= 2*N); }
-
-        // macros to simplify application of these functions
-        #define SPECIES(a)     this->species(a)
-        #define MOMENTUM(a)    this->momentum(a)
-        #define IS_FIELD(a)    this->is_field(a)
-        #define IS_MOMENTUM(a) this->is_momentum(a)
-        #define FLATTEN        this->flatten
-
+        virtual unsigned int species(unsigned int a)     const = 0;
+        virtual unsigned int momentum(unsigned int a)    const = 0;
+        virtual unsigned int is_field(unsigned int a)    const = 0;
+        virtual unsigned int is_momentum(unsigned int a) const = 0;
       };
 
-  }
+
+    template <unsigned int N>
+    class constexpr_flattener
+      {
+
+        // INTERFACE: INDEX-FLATTENING FUNCTIONS
+
+      protected:
+        constexpr unsigned int flatten(unsigned int a)                                 const { return(a); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b)                 const { return(2*N*a + b); }
+        constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) const { return(2*N*2*N*a + 2*N*b + c); }
+
+        // INTERFACE: INDEX TRAITS
+
+        constexpr unsigned int species(unsigned int a)      const { return((a >= N) ? a-N : a); }
+        constexpr unsigned int momentum(unsigned int a)     const { return((a >= N) ? a : a+N); }
+        constexpr unsigned int is_field(unsigned int a)     const { return(a < N); }
+        constexpr unsigned int is_momentum(unsigned int a)  const { return(a >= N && a <= 2*N); }
+      };
+
+    // macros to simplify application of these functions
+#define SPECIES(a)     this->species(a)
+#define MOMENTUM(a)    this->momentum(a)
+#define IS_FIELD(a)    this->is_field(a)
+#define IS_MOMENTUM(a) this->is_momentum(a)
+#define FLATTEN        this->flatten
+
+  }   // namespace transport
 
 
 #endif //__flattener_H_

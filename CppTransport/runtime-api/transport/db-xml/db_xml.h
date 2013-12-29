@@ -8,8 +8,9 @@
 #define __db_xml_H_
 
 
-
-#define __CPP_TRANSPORT_DBXML_STRING(str) static_cast<const unsigned char*>(str)
+// the Berkeley DB XML API wants all string provided as (const unsigned char*) types
+// Here, this is done with a reinterpret_cast which may be a slight blunt solution
+#define __CPP_TRANSPORT_DBXML_STRING(str) reinterpret_cast<const unsigned char*>(str)
 
 
 
