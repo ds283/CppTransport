@@ -43,7 +43,7 @@ namespace transport
         parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v);
 
         // return parameter vector
-        const std::vector<number>& get_params() const { return(this->params); }
+        const std::vector<number>& get_vector() const { return(this->params); }
 
         // return M_Planck
         number get_Mp() const { return(this->M_Planck); }

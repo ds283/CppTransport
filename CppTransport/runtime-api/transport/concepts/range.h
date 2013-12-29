@@ -12,7 +12,7 @@
 
 #include "math.h"
 
-#include "transport/xml_serializable.h"
+#include "transport/db-xml/xml_serializable.h"
 #include "transport/messages_en.h"
 
 
@@ -37,7 +37,7 @@ namespace transport
         // CONSTRUCTOR
 
       public:
-        range(value mn, value mx, unsigned int st, spacing_type sp);
+        range(value mn, value mx, unsigned int st, spacing_type sp=linear);
 
         // BASIC INTERROGATION
 

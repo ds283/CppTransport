@@ -464,7 +464,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_functor<number>::operator()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->params.get_Mp();
         const auto __k               = this->k_mode;
@@ -527,7 +527,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_functor<number>::operator()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __x[FLATTEN($$__A)];
         const auto __Mp              = this->params.get_Mp();
         const auto __k1              = this->kmode_1;

@@ -187,7 +187,7 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+            const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
             const auto $$__COORDINATE[A] = __coords[$$__A];
             const auto __Mp              = __params.get_Mp();
 
@@ -211,7 +211,7 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+            const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
             const auto $$__COORDINATE[A] = __coords[$$__A];
             const auto __Mp              = __params.get_Mp();
 
@@ -235,7 +235,7 @@ namespace transport
 
         if(__coords.size() == 2*$$__NUMBER_FIELDS)
           {
-            const auto $$__PARAMETER[1] = __params.get_params()[$$__1];
+            const auto $$__PARAMETER[1] = __params.get_vector()[$$__1];
             const auto $$__FIELD[a]     = __coords[$$__a];
             const auto __Mp             = __params.get_Mp();
 
@@ -265,7 +265,7 @@ namespace transport
         if(__input.size() == $$__NUMBER_FIELDS)  // initial conditions for momenta *were not* supplied -- need to compute them
           {
             // supply the missing initial conditions using a slow-roll approximation
-            const auto $$__PARAMETER[1] = __params.get_params()[$$__1];
+            const auto $$__PARAMETER[1] = __params.get_vector()[$$__1];
             const auto $$__FIELD[a]     = __input[$$__a];
             const auto __Mp             = __params.get_Mp();
 
@@ -324,7 +324,7 @@ namespace transport
                                                const std::parameters<number, $$__NUMBER_PARAMS>& __params,
                                                const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __params.get_Mp();
 
@@ -413,7 +413,7 @@ namespace transport
                                              const std::parameters<number, $$__NUMBER_PARAMS>& __params,
                                              const std::vector<number>& __fields)
     {
-      const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+      const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
       const auto $$__COORDINATE[A] = __fields[$$__A];
       const auto __Mp              = __params.get_Mp();
 
@@ -463,7 +463,7 @@ namespace transport
                                               const std::parameters<number, $$__NUMBER_PARAMS>& __params,
                                               const std::vector<number>& __fields)
       {
-        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __fields[$$__A];
         const auto __Mp              = __params.get_Mp();
 
@@ -669,7 +669,7 @@ namespace transport
                                                 const std::vector<number>& __state,
                                                 std::vector<number>& __dN)
       {
-        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __params.get_Mp();
 
@@ -685,7 +685,7 @@ namespace transport
                                                 const std::vector<number>& __state,
                                                 std::vector< std::vector<number> >& __ddN)
       {
-        const auto $$__PARAMETER[1]  = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __params.get_Mp();
 
@@ -709,7 +709,7 @@ namespace transport
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector< std::vector<number> >& __u2)
       {
-        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __params.get_Mp();
 
@@ -735,7 +735,7 @@ namespace transport
                                const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
                                std::vector< std::vector< std::vector<number> > >& __u3)
       {
-        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __params.get_Mp();
 
@@ -765,7 +765,7 @@ namespace transport
                               const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
                               std::vector< std::vector< std::vector<number> > >& __A)
       {
-        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __params.get_Mp();
 
@@ -795,7 +795,7 @@ namespace transport
                               const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
                               std::vector< std::vector< std::vector<number> > >& __B)
       {
-        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __params.get_Mp();
 
@@ -825,7 +825,7 @@ namespace transport
                               const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
                               std::vector< std::vector< std::vector<number> > >& __C)
       {
-        const auto $$__PARAMETER[1]       = __params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A]      = __fields[$$__A];
         const auto __Mp                   = __params.get_Mp();
 
@@ -893,7 +893,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_functor<number>::operator()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t)
       {
-        const auto $$__PARAMETER[1]  = this->params.get_params()[$$__1];
+        const auto $$__PARAMETER[1]  = this->params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __x[$$__A];
         const auto __Mp              = this->params.get_Mp();
 
