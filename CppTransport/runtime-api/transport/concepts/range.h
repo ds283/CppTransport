@@ -29,6 +29,11 @@
 namespace transport
   {
 
+    template <typename value> class range;
+
+    template <typename value>
+    std::ostream& operator<<(std::ostream& out, const range<value>& obj);
+
     template <typename value>
     class range: public xml_serializable
       {
@@ -67,6 +72,8 @@ namespace transport
 
       public:
         void serialize_xml(DbXml::XmlEventWriter& writer);
+
+        friend std::ostream& operator<< <>(std::ostream& out, const range<value>& obj);
 
         // INTERNAL DATA
 
@@ -116,6 +123,16 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : __CPP_TRANSPORT_VALUE_LOGARITHMIC);
         this->end_node(writer, __CPP_TRANSPORT_NODE_RANGE);
+      }
+
+
+    template <typename value>
+    std::ostream& operator<<(std::ostream& out, const range<value>& obj)
+      {
+        out << __CPP_TRANSPORT_RANGE_A << obj.steps
+            << __CPP_TRANSPORT_RANGE_B << (obj.spacing == range<value>::linear ? __CPP_TRANSPORT_RANGE_LINEAR : __CPP_TRANSPORT_RANGE_LOGARITHMIC)
+            << __CPP_TRANSPORT_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_RANGE_D << obj.max << std::endl;
+        return(out);
       }
 
 
