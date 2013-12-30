@@ -92,6 +92,21 @@
 
 #define __CPP_TRANSPORT_XML_MISMATCH          "Mismatched node tags when performing XML serialization"
 
+#define __CPP_TRANSPORT_REPO_MISSING_ROOT     "Root directory not present when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_ENV      "Environment directory not present when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_CNTR     "Containers directory not present when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_MODELS   "Container for model definitions not present or inaccessible when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Container for integration definitions not present or inaccessible when opening repository"
+
+#define __CPP_TRANSPORT_RANGE_A               "Range: "
+#define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
+#define __CPP_TRANSPORT_RANGE_C               ": min = "
+#define __CPP_TRANSPORT_RANGE_D               "max = "
+#define __CPP_TRANSPORT_RANGE_LINEAR          "linear"
+#define __CPP_TRANSPORT_RANGE_LOGARITHMIC     "logarithmic"
+
+#define __CPP_TRANSPORT_TASK_TIMES            "Sampling times: "
+
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"
 #define __CPP_TRANSPORT_LOGY_ERROR_A          "Warning: y-value contains no nonzero values for line"
