@@ -35,7 +35,7 @@ const double phi_init = 10;
 const double chi_init = 12.9;
 
 
-static void output_info(transport::canonical_model<double>& model, transport::task<double>* tk);
+static void output_info(transport::canonical_model<double>* model, transport::task<double>* tk);
 
 
 // ****************************************************************************
@@ -48,7 +48,7 @@ int main(int argc, char* argv[])
  
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::dquad_basic<double> model(mgr);
+    transport::dquad_basic<double>* model = new transport::dquad_basic<double>(mgr);
 
     if(argc != 3)
       {
@@ -73,8 +73,8 @@ int main(int argc, char* argv[])
     // set up parameter choices
     const std::vector<double>     init_params = { m_phi, m_chi };
     transport::parameters<double> params      =
-                                    transport::parameters<double>(M_Planck, init_params, model.get_param_names(),
-                                                                  model.params_validator_factory());
+                                    transport::parameters<double>(M_Planck, init_params, model->get_param_names(),
+                                                                  model->params_validator_factory());
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -85,10 +85,10 @@ int main(int argc, char* argv[])
 
     // set up initial conditions
     transport::initial_conditions<double> ics =
-                                            transport::initial_conditions<double>(params, init_values, model.get_state_names(),
+                                            transport::initial_conditions<double>(params, init_values, model->get_state_names(),
                                                                                   Ninit, Ncross, Npre,
-                                                                                  model.ics_validator_factory(),
-                                                                                  model.ics_finder_factory());
+                                                                                  model->ics_validator_factory(),
+                                                                                  model->ics_finder_factory());
 
     const unsigned int t_samples = 5000;       // record 5000 samples - enough to find a good stepsize
 
@@ -103,14 +103,14 @@ int main(int argc, char* argv[])
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 
-    transport::threepf_task<double> tk = transport::threepf_task<double>(ics, times, ks, model.kconfig_kstar_factory());
+    transport::threepf_task<double> tk = transport::threepf_task<double>(ics, times, ks, model->kconfig_kstar_factory());
 
     output_info(model, &tk);
 
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    transport::threepf<double> threepf = model.int_threepf(tk);
+    transport::threepf<double> threepf = model->int_threepf(tk);
 
     timer.stop();
     timer.report();
@@ -222,6 +222,8 @@ int main(int argc, char* argv[])
     delete u2_selector;
     delete u3_selector;
 
+    // models must all be destroyed before the corresponding manager
+    delete model;
     delete mgr;
 
     return(EXIT_SUCCESS);
@@ -232,18 +234,18 @@ int main(int argc, char* argv[])
 
 
 // interrogate an arbitrary canonical_model object and print information about it
-void output_info(transport::canonical_model<double>& model, transport::task<double>* tk)
+void output_info(transport::canonical_model<double>* model, transport::task<double>* tk)
   {
-    std::cout << "Model:   " << model.get_name() << "\n";
-    std::cout << "Authors: " << model.get_author() << "\n";
-    std::cout << "  -- "     << model.get_tag() << "\n\n";
+    std::cout << "Model:   " << model->get_name() << "\n";
+    std::cout << "Authors: " << model->get_author() << "\n";
+    std::cout << "  -- "     << model->get_tag() << "\n\n";
 
-    std::vector<std::string>  fields = model.get_field_names();
-    std::vector<std::string>  params = model.get_param_names();
+    std::vector<std::string>  fields = model->get_field_names();
+    std::vector<std::string>  params = model->get_param_names();
     const std::vector<double> r_p    = tk->get_params().get_vector();
 
-    std::cout << "Fields (" << model.get_N_fields() << "): ";
-    for(int i = 0; i < model.get_N_fields(); i++)
+    std::cout << "Fields (" << model->get_N_fields() << "): ";
+    for(int i = 0; i < model->get_N_fields(); i++)
       {
         if(i > 0)
           {
@@ -253,8 +255,8 @@ void output_info(transport::canonical_model<double>& model, transport::task<doub
       }
     std::cout << std::endl;
 
-    std::cout << "Parameters (" << model.get_N_params() << "): ";
-    for(int i = 0; i < model.get_N_params(); i++)
+    std::cout << "Parameters (" << model->get_N_params() << "): ";
+    for(int i = 0; i < model->get_N_params(); i++)
       {
         if(i > 0)
           {
@@ -264,7 +266,7 @@ void output_info(transport::canonical_model<double>& model, transport::task<doub
       }
     std::cout << std::endl;
 
-    std::cout << "V* = " << model.V(tk->get_params(), tk->get_ics().get_vector()) << std::endl;
+    std::cout << "V* = " << model->V(tk->get_params(), tk->get_ics().get_vector()) << std::endl;
 
     std::cout << std::endl;
   }
