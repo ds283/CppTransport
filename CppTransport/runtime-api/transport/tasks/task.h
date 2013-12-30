@@ -127,7 +127,7 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
         //! construct a task with supplied initial conditions
-        task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t);
+        task(const initial_conditions<number>& i, const range<double>& t);
 
         virtual ~task()
           {
@@ -139,7 +139,7 @@ namespace transport
         const initial_conditions<number>& get_ics() const { return(this->ics); }
 
         //! get 'parameters' object associated with this task
-        const parameters<number>& get_params() const { return(this->params); }
+        const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
         //! get 'range' object representing sample times
         const range<double>& get_times() const { return(this->times); }
@@ -163,15 +163,13 @@ namespace transport
 
       protected:
         const initial_conditions<number> ics;
-        const parameters<number>         params;
-
         const range<double>              times;
       };
 
 
     template <typename number>
-    task<number>::task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
-      : params(p), ics(i), times(t)
+    task<number>::task(const initial_conditions<number>& i, const range<double>& t)
+      : ics(i), times(t)
       {
         // validate relation between Nstar and the sampling time
         assert(times.get_steps() > 0);
@@ -204,8 +202,8 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const task<number>& obj)
       {
-        out << obj.params << std::endl;
         out << obj.ics << std::endl;
+        out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
         return(out);
       }
 
@@ -216,8 +214,8 @@ namespace transport
     class twopf_list_task: public task<number>
       {
       public:
-        twopf_list_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t)
-          : task<number>(p, i, t)
+        twopf_list_task(const initial_conditions<number>& i, const range<double>& t)
+          : task<number>(i, t)
           {
           }
 
@@ -259,7 +257,7 @@ namespace transport
     class twopf_task: public twopf_list_task<number>
       {
       public:
-        twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+        twopf_task(const initial_conditions<number>& i, const range<double>& t,
                    const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~twopf_task()
@@ -279,9 +277,9 @@ namespace transport
 
     // build a twopf task
     template <typename number>
-    twopf_task<number>::twopf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+    twopf_task<number>::twopf_task(const initial_conditions<number>& i, const range<double>& t,
                                    const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(p, i, t)
+      : twopf_list_task<number>(i, t)
       {
         double normalization = kstar(this);
 
@@ -316,7 +314,7 @@ namespace transport
       {
       public:
         // construct a task based on sampling from a cubic lattice of ks
-        threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+        threepf_task(const initial_conditions<number>& i, const range<double>& t,
                      const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
         ~threepf_task()
@@ -336,9 +334,9 @@ namespace transport
 
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
-    threepf_task<number>::threepf_task(const parameters<number>& p, const initial_conditions<number>& i, const range<double>& t,
+    threepf_task<number>::threepf_task(const initial_conditions<number>& i, const range<double>& t,
                                        const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(p, i, t)
+      : twopf_list_task<number>(i, t)
       {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k

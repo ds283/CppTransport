@@ -53,6 +53,9 @@ namespace transport
                            double Ninit, double Ncross, double Npre,
                            ics_validator v, ics_finder f);
 
+        // return parameters used for these initial conditions
+        const parameters<number>& get_params() const { return(this->params); }
+
         // return vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
 
