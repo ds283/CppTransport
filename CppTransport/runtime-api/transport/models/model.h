@@ -139,11 +139,11 @@ namespace transport
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
       public:
-        background<number>              background(const task<number>* tk, bool silent=false);
+        background<number>              int_background(const task<number>* tk, bool silent=false);
 
-        twopf<number>                   twopf     (const twopf_task<number>& tk, bool silent=false);
+        twopf<number>                   int_twopf     (const twopf_task<number>& tk, bool silent=false);
 
-        threepf<number>                 threepf   (const threepf_task<number>& tk, bool silent=false);
+        threepf<number>                 int_threepf   (const threepf_task<number>& tk, bool silent=false);
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
@@ -268,7 +268,7 @@ namespace transport
             // set up a new task object for this integration
             task<double> tk(ics, times);
 
-            this->backend_process_backg(&tk, history, false);
+            this->backend_process_backg(&tk, history, true);
 
             if(history.size() > 0)
               {
@@ -316,7 +316,7 @@ namespace transport
 
         task<double> new_task(new_ics, times);
 
-        this->backend_process_backg(&new_task, history, false);
+        this->backend_process_backg(&new_task, history, true);
 
         if(history.size() > 0)
           {
@@ -338,7 +338,7 @@ namespace transport
 
     // Integrate the background
     template <typename number>
-    transport::background<number> model<number>::background(const task<number>* tk, bool silent)
+    transport::background<number> model<number>::int_background(const task<number>* tk, bool silent)
       {
         assert(tk != nullptr);
 
@@ -354,7 +354,7 @@ namespace transport
 
     // Integrate the twopf
     template <typename number>
-    transport::twopf<number> model<number>::twopf(const twopf_task<number>& tk, bool silent)
+    transport::twopf<number> model<number>::int_twopf(const twopf_task<number>& tk, bool silent)
       {
         context                   ctx  = this->backend_get_context();
         scheduler                 sch  = scheduler(ctx);
@@ -375,7 +375,7 @@ namespace transport
 
     // Integrate the threepf
     template <typename number>
-    transport::threepf<number> model<number>::threepf(const threepf_task<number>& tk, bool silent)
+    transport::threepf<number> model<number>::int_threepf(const threepf_task<number>& tk, bool silent)
       {
         context                     ctx  = this->backend_get_context();
         scheduler                   sch  = scheduler(ctx);
