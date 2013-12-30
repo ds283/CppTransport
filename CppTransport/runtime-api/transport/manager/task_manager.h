@@ -49,7 +49,6 @@ namespace transport
     task_manager<number>::task_manager(int argc, char* argv[])
       : instance_manager<number>(), environment(argc, argv)
       {
-        std::cerr << "Debugging: I am process " << world.rank() << " of " << world.size() << std::endl;
       }
 
 
