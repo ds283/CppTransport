@@ -266,7 +266,7 @@ namespace transport
             initial_conditions<double> ics(params, input, this->get_state_names(), temp_Nstar, this->ics_validator_factory());
 
             // set up a new task object for this integration
-            task<double> tk(params, ics, times);
+            task<double> tk(ics, times);
 
             this->backend_process_backg(&tk, history, false);
 
@@ -288,7 +288,7 @@ namespace transport
       {
         stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
 
-        stream << task->get_ics() << std::endl;
+        stream << *task << std::endl;
 
         stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
                << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
@@ -314,7 +314,7 @@ namespace transport
         initial_conditions<double> new_ics(tk->get_params(), tk->get_ics().get_vector(), this->get_state_names(),
                                            new_Npre, this->ics_validator_factory());
 
-        task<double> new_task(tk->get_params(), new_ics, times);
+        task<double> new_task(new_ics, times);
 
         this->backend_process_backg(&new_task, history, false);
 
