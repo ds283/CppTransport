@@ -13,7 +13,8 @@
 
 #include "boost/lexical_cast.hpp"
 
-#include "dbxml/DbXml.hpp"
+#include "dbxml/db.h"
+#include "dbxml/dbxml/DbXml.hpp"
 
 #include "transport/db-xml/db_xml.h"
 
