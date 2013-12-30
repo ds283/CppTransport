@@ -90,7 +90,7 @@ int main(int argc, char* argv[])
                                                                                   model.ics_validator_factory(),
                                                                                   model.ics_finder_factory());
 
-    const unsigned int t_samples = 5000;       // record 5000 samples
+    const unsigned int t_samples = 5000;       // record 5000 samples - enough to find a good stepsize
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
 
@@ -98,19 +98,19 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
-    const unsigned int  k_samples = 5;          // number of k-points
+    const double        kmax      = exp(2.0);   // end with the mode which exits the horizon at N=N*+2
+    const unsigned int  k_samples = 4;          // number of k-points
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 
-    transport::threepf_task<double> tk = transport::threepf_task<double>(params, ics, times, ks, model.kconfig_kstar_factory());
+    transport::threepf_task<double> tk = transport::threepf_task<double>(ics, times, ks, model.kconfig_kstar_factory());
 
     output_info(model, &tk);
 
     boost::timer::auto_cpu_timer timer;
 
     // integrate background, 2pf and 3pf together
-    transport::threepf<double> threepf = model.threepf(tk);
+    transport::threepf<double> threepf = model.int_threepf(tk);
 
     timer.stop();
     timer.report();
@@ -221,6 +221,8 @@ int main(int argc, char* argv[])
     delete sq_selector_b;
     delete u2_selector;
     delete u3_selector;
+
+    delete mgr;
 
     return(EXIT_SUCCESS);
   }
