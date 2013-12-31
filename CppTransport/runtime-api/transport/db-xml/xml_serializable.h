@@ -59,7 +59,9 @@ namespace transport
     template <typename... attrs>
     void xml_serializable::begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes) const
       {
-        writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr, sizeof...(attributes), empty);
+        static_assert(sizeof...(attributes) % 2 == 0, "Attributes to xml_serializable::begin_node must occur in (std::string, typename) pairs");
+
+        writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr, sizeof...(attributes)/2, empty);
         this->write_attributes(writer, std::forward<attrs>(attributes)...);
       }
 
@@ -72,6 +74,8 @@ namespace transport
     template <typename T, typename... attrs>
     void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes) const
       {
+        static_assert(sizeof...(other_attributes) % 2 == 0, "Attributes to xml_serializable::write_attributes must occur in (std::string, typename) pairs");
+
         std::string value = boost::lexical_cast<std::string>(attr_val);
 
         writer.writeAttribute(__CPP_TRANSPORT_DBXML_STRING(attr_name.c_str()), nullptr, nullptr,
