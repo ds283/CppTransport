@@ -31,7 +31,7 @@ namespace transport
 
         // SERIALIZATION METHOD
 
-        virtual void serialize_xml(DbXml::XmlEventWriter& writer) = 0;
+        virtual void serialize_xml(DbXml::XmlEventWriter& writer) const = 0;
 
         // STANDARD SERIALIZATION METHODS
 
@@ -39,45 +39,38 @@ namespace transport
 
         // begin XML node (its type is recorded on the stack), with arbitrary number of attributes
         template <typename... attrs>
-        void begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes);
+        void begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes) const;
 
         // end the current XML node
-        void end_node(DbXml::XmlEventWriter& writer, const std::string& name);
+        void end_node(DbXml::XmlEventWriter& writer, const std::string& name) const;
 
         // write a node with a single value type
         template <typename T, typename... attrs>
-        void write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes);
+        void write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes) const;
 
         // write attributes
-        void write_attributes(DbXml::XmlEventWriter& writer);
+        void write_attributes(DbXml::XmlEventWriter& writer) const;
 
         template <typename T, typename... attrs>
-        void write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes);
-
-        // INTERNAL DATA
-
-      private:
-        std::list<std::string> xml_stack;
+        void write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes) const;
       };
 
 
     template <typename... attrs>
-    void xml_serializable::begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes)
+    void xml_serializable::begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes) const
       {
-        this->xml_stack.push_front(name);
-
         writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr, sizeof...(attributes), empty);
         this->write_attributes(writer, std::forward<attrs>(attributes)...);
       }
 
 
-    void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer)
+    void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer) const
       {
       }
 
 
     template <typename T, typename... attrs>
-    void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes)
+    void xml_serializable::write_attributes(DbXml::XmlEventWriter& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes) const
       {
         std::string value = boost::lexical_cast<std::string>(attr_val);
 
@@ -87,23 +80,14 @@ namespace transport
       }
 
 
-    void xml_serializable::end_node(DbXml::XmlEventWriter& writer, const std::string& name)
+    void xml_serializable::end_node(DbXml::XmlEventWriter& writer, const std::string& name) const
       {
-        if(this->xml_stack.size() > 0 && this->xml_stack.front() == name)
-          {
-            this->xml_stack.pop_front();
-
-            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr);
-          }
-        else
-          {
-            throw std::invalid_argument(__CPP_TRANSPORT_XML_MISMATCH);
-          }
+        writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr);
       }
 
 
     template <typename T, typename... attrs>
-    void xml_serializable::write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes)
+    void xml_serializable::write_value_node(DbXml::XmlEventWriter& writer, const std::string& name, const T& value, attrs... attributes) const
       {
         this->begin_node(writer, name, false, std::forward<attrs>(attributes)...);
 

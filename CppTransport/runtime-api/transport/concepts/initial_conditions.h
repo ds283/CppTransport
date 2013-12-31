@@ -17,6 +17,8 @@
 #include "transport/db-xml/xml_serializable.h"
 #include "transport/messages_en.h"
 
+#include "transport/utilities/random_string.h"
+
 
 #define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS "initial-conditions"
 #define __CPP_TRANSPORT_NODE_COORDINATE         "coordinate"
@@ -44,34 +46,59 @@ namespace transport
 
         typedef std::function<void(const parameters<number>&, const std::vector<number>&, std::vector<number>&, double, double, unsigned int)> ics_finder;
 
-        // construct initial conditions from directly-supplied data
-        initial_conditions(const parameters<number>& p, const std::vector<number>& i, const std::vector<std::string>& n,
+        //! Construct named initial conditions from directly-supplied data
+        initial_conditions(const std::string& nm, const parameters<number>& p,
+                           const std::vector<number>& i, const std::vector<std::string>& n,
                            double Npre, ics_validator v);
 
-        // construct initial conditioıns offset from directly-supplied data
-        initial_conditions(const parameters<number>& p, const std::vector<number>& i, const std::vector<std::string>& n,
+        //! Construct anonymized initial conditions from directly-supplied data
+        initial_conditions(const parameters<number>& p,
+                           const std::vector<number>& i, const std::vector<std::string>& n,
+                           double Npre, ics_validator v)
+          : initial_conditions(random_string(), p, i, n, Npre, v)
+          {
+          }
+
+        //! Construct named initial conditions offset from directly-supplied data using a supplied model
+        initial_conditions(const std::string& nm, const parameters<number>& p,
+                           const std::vector<number>& i, const std::vector<std::string>& n,
                            double Ninit, double Ncross, double Npre,
                            ics_validator v, ics_finder f);
 
-        // return parameters used for these initial conditions
+        //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
+        initial_conditions(const parameters<number>& p,
+                           const std::vector<number>& i, const std::vector<std::string>& n,
+                           double Ninit, double Ncross, double Npre,
+                           ics_validator v, ics_finder f)
+          : initial_conditions(random_string(), p, i, n, Ninit, Ncross, Npre, v, f)
+          {
+          }
+
+        //! Return parameters associated with these initial conditions
         const parameters<number>& get_params() const { return(this->params); }
 
-        // return vector of initial conditions
+        //! Return std::vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
 
-        // return relative time of horizon-crossing
+        //! Return relative time of horizon-crossing
         const double get_Nstar() const { return(this->Nstar); }
+
+        //! Return name
+        const std::string& get_name() const { return(this->name); }
 
         // XML SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer);
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
       public:
         friend std::ostream& operator<< <>(std::ostream& out, initial_conditions<number>& obj);
         friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
 
       protected:
+        //! name of this ics/params combination, used for tagging with deposited in a repository
+        const std::string name;
+
         //! copy of parameters
         const parameters<number> params;
 
@@ -86,9 +113,10 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const parameters<number>& p, const std::vector<number>& i, const std::vector<std::string>& n,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
+                                                   const std::vector<number>& i, const std::vector<std::string>& n,
                                                    double Npre, ics_validator v)
-      : params(p), Nstar(Npre), names(n)
+      : name(nm), params(p), Nstar(Npre), names(n)
       {
         // validate supplied initial conditions - we rely on the validator to throw
         // an exception if the supplied number of ics is incorrect
@@ -97,10 +125,11 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const parameters<number>& p, const std::vector<number>& i, const std::vector<std::string>& n,
+    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
+                                                   const std::vector<number>& i, const std::vector<std::string>& n,
                                                    double Ninit, double Ncross, double Npre,
                                                    ics_validator v, ics_finder f)
-      : params(p), Nstar(Npre), names(n)
+      : name(nm), params(p), Nstar(Npre), names(n)
       {
         std::vector<number> validated_ics;
 
@@ -113,7 +142,7 @@ namespace transport
 
 
     template <typename number>
-    void initial_conditions<number>::serialize_xml(DbXml::XmlEventWriter& writer)
+    void initial_conditions<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_NSTAR, this->Nstar);
@@ -126,6 +155,8 @@ namespace transport
 
         this->end_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
         this->end_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+
+        this->params.serialize_xml(writer);
       }
 
 

@@ -50,7 +50,7 @@ namespace transport
         // XML SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer);
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
       public:
         friend std::ostream& operator<< <>(std::ostream& out, parameters<number>& obj);
@@ -89,7 +89,7 @@ namespace transport
 
 
     template <typename number>
-    void parameters<number>::serialize_xml(DbXml::XmlEventWriter& writer)
+    void parameters<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
       {
         assert(this->params.size() == this->names.size());
 

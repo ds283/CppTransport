@@ -16,6 +16,7 @@
 
 #include "transport/messages_en.h"
 
+#include "transport/db-xml/xml_serializable.h"
 #include "transport/concepts/flattener.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
@@ -25,8 +26,10 @@
 #include "transport/manager/instance_manager.h"
 
 
-#define DEFAULT_ICS_GAP_TOLERANCE (1E-8)
-#define DEFAULT_ICS_TIME_STEPS    (20)
+#define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
+#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (20)
+
+#define __CPP_TRANSPORT_NODE_MODEL                "model"
 
 
 namespace transport
@@ -40,7 +43,7 @@ namespace transport
 
     // basic class from which all other model representations are derived
     template <typename number>
-    class model: public abstract_flattener
+    class model: public abstract_flattener, public xml_serializable
       {
       public:
         typedef std::vector< std::vector<number> > backg_history;
@@ -89,7 +92,7 @@ namespace transport
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) = 0;
 
-        // INITIAL CONDITIONS HANDLING
+        // INTERFACE - INITIAL CONDITIONS HANDLING
 
       protected:
         //! Validate initial conditions (optionally adding initial conditions for momenta)
@@ -98,10 +101,11 @@ namespace transport
         //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
         void find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                       double Ninit, double Ncross, double Npre,
-                      double tolerance=DEFAULT_ICS_GAP_TOLERANCE, unsigned int time_steps=DEFAULT_ICS_TIME_STEPS);
+                      double tolerance= __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
+                      unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double get_kstar(const task<number>* tk, unsigned int time_steps=DEFAULT_ICS_TIME_STEPS);
+        double get_kstar(const task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
       public:
         //! Make an 'ics_validator' object for this model
@@ -112,13 +116,13 @@ namespace transport
           {
             return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
                              std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
-                             DEFAULT_ICS_GAP_TOLERANCE, DEFAULT_ICS_TIME_STEPS));
+                             __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
           }
 
         //! Make a 'kconfig_kstar' object for this model
         typename task<number>::kconfig_kstar kconfig_kstar_factory()
           {
-            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, DEFAULT_ICS_TIME_STEPS));
+            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
           }
 
       protected:
@@ -126,7 +130,7 @@ namespace transport
         void write_task_data(const task<number>* task, std::ostream& stream,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
-        // PARAMETER HANDLING
+        // INTERFACE - PARAMETER HANDLING
 
       protected:
         //! Validate parameter values
@@ -135,6 +139,11 @@ namespace transport
       public:
         //! Make a 'params_validator' objcet for this model
         virtual typename parameters<number>::params_validator params_validator_factory() = 0;
+
+        // INTERFACE - XML SERIALIZATION
+
+      public:
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
@@ -393,6 +402,14 @@ namespace transport
 
         transport::threepf<number> tpf(&tk, backg, twopf_re, twopf_im, threepf, this);
         return(tpf);
+      }
+
+    // XML SERIALIZATION
+
+    template <typename number>
+    void model<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+      {
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_MODEL, this->uid);
       }
 
 

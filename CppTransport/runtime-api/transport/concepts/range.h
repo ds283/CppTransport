@@ -71,7 +71,7 @@ namespace transport
         // XML SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer);
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
         friend std::ostream& operator<< <>(std::ostream& out, const range<value>& obj);
 
@@ -115,7 +115,7 @@ namespace transport
 
 
     template <typename value>
-    void range<value>::serialize_xml(DbXml::XmlEventWriter& writer)
+    void range<value>::serialize_xml(DbXml::XmlEventWriter& writer) const
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_RANGE, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);

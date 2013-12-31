@@ -22,6 +22,8 @@
 #include "transport/concepts/range.h"
 #include "transport/messages_en.h"
 
+#include "transport/utilities/random_string.h"
+
 
 #define DEFAULT_K_PRECISION (2)
 
@@ -126,50 +128,65 @@ namespace transport
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        //! construct a task with supplied initial conditions
-        task(const initial_conditions<number>& i, const range<double>& t);
+        //! Construct a named task with supplied initial conditions
+        task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
 
+        //! Construct an anonymized task with supplied initial conditions
+        task(const initial_conditions<number>& i, const range<double>& t)
+          : task(random_string(), i, t)
+          {
+          }
+
+        //! Destroy a task
         virtual ~task()
           {
           }
 
         // EXTRACT INFORMATION ABOUT THE TASK
 
-        //! get 'initial conditions' object associated with this task
+        //! Get 'initial conditions' object associated with this task
         const initial_conditions<number>& get_ics() const { return(this->ics); }
 
-        //! get 'parameters' object associated with this task
+        //! Get 'parameters' object associated with this task
         const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
-        //! get 'range' object representing sample times
+        //! Get 'range' object representing sample times
         const range<double>& get_times() const { return(this->times); }
 
-        //! get initial times
+        //! Get initial times
         double get_Ninit() const { return(this->times.get_min()); }
 
-        //! get horizon-crossing time
+        //! Get horizon-crossing time
         double get_Nstar() const { return(this->ics.get_Nstar()); }
 
-        //! get vector of sample times
+        //! Get std::vector of sample times
         const std::vector<double>& get_sample_times() const { return(this->times.get_grid()); }
 
-        //! get vector of initial conditions
+        //! Get std::vector of initial conditions
         const std::vector<number>& get_initial_conditions() const { return(this->ics.get_vector()); }
 
-        //! get number of samples
+        //! Get number of samples
         unsigned int get_N_sample_times() const { return(this->times.size()); }
+
+        //! Get name
+        const std::string& get_name() const { return(this->name); }
 
         friend std::ostream& operator<< <>(std::ostream& out, const task<number>& obj);
 
       protected:
+        //! Name of this task
+        const std::string&               name;
+
+        //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
+        //! Range of times at which to sample for this task
         const range<double>              times;
       };
 
 
     template <typename number>
-    task<number>::task(const initial_conditions<number>& i, const range<double>& t)
-      : ics(i), times(t)
+    task<number>::task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+      : name(nm), ics(i), times(t)
       {
         // validate relation between Nstar and the sampling time
         assert(times.get_steps() > 0);
@@ -214,8 +231,8 @@ namespace transport
     class twopf_list_task: public task<number>
       {
       public:
-        twopf_list_task(const initial_conditions<number>& i, const range<double>& t)
-          : task<number>(i, t)
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+          : task<number>(nm, i, t)
           {
           }
 
@@ -223,12 +240,13 @@ namespace transport
           {
           }
 
-        // get flattened list of ks at which we sample the threepf
+        //! Get flattened list of ks at which we sample the two-point function
         const std::vector<double>& get_k_list() const { return(this->flat_k); }
 
-        // get flattened list of ks at which we sample the threepf
+        //! Get flattened list of comoving ks at which we sample the two-point function
         const std::vector<double>& get_k_list_comoving() const { return(this->comoving_k); }
 
+        //! Get an comoving k-number identified by its index
         double get_k_comoving(unsigned int d) const
           {
             assert(d < this->comoving_k.size());
@@ -243,10 +261,10 @@ namespace transport
           }
 
       protected:
-        // flattened list of conventionally-normalized ks
+        //! Flattened list of conventionally-normalized ks
         std::vector<double> flat_k;
 
-        // flattened list of comoving-normalized ks
+        //! Flattened list of comoving-normalized ks
         std::vector<double> comoving_k;
       };
 
@@ -257,17 +275,26 @@ namespace transport
     class twopf_task: public twopf_list_task<number>
       {
       public:
-        twopf_task(const initial_conditions<number>& i, const range<double>& t,
+        //! Construct a named two-point function task
+        twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                    const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
+        //! Construct an anonymized two-point function task
+        twopf_task(const initial_conditions<number>& i, const range<double>& t,
+                   const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+          : twopf_task(random_string(), i, t, ks, kstar)
+          {
+          }
+
+        //! Destroy a two-point function task
         ~twopf_task()
           {
           }
 
-        // get list of k-configurations at which to sample the twopf
+        //! Get list of k-configurations at which this task will sample the twopf
         const std::vector<twopf_kconfig>& get_sample() const { return(this->config_list); }
 
-        // get number of k-configurations at which to sample
+        //! Get the number of k-configurations at which this task will sample the twopf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
       protected:
@@ -277,9 +304,9 @@ namespace transport
 
     // build a twopf task
     template <typename number>
-    twopf_task<number>::twopf_task(const initial_conditions<number>& i, const range<double>& t,
+    twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                    const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(i, t)
+      : twopf_list_task<number>(nm, i, t)
       {
         double normalization = kstar(this);
 
@@ -313,18 +340,26 @@ namespace transport
     class threepf_task: public twopf_list_task<number>
       {
       public:
-        // construct a task based on sampling from a cubic lattice of ks
-        threepf_task(const initial_conditions<number>& i, const range<double>& t,
+        //! Construct a named three-point function task based on sampling from a cubic lattice of ks
+        threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                      const range<double>& ks, typename task<number>::kconfig_kstar kstar);
 
+        //! Construct an anonymized three-point function task based on sampling from a cubic lattice of ks
+        threepf_task(const initial_conditions<number>& i, const range<double>& t,
+                     const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+          : threepf_task(random_string(), i, t, ks, kstar)
+          {
+          }
+
+        //! Destroy a three-point function task
         ~threepf_task()
           {
           }
 
-        // get list of k-configurations at which to sample the threepf
+        //! Get list of k-configurations at which this task will sample the threepf
         const std::vector<threepf_kconfig>& get_sample() const { return(this->config_list); }
 
-        // get number of k-configurations at which to sample
+        //! Get the number of k-configurations at which this task will sample the threepf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
       protected:
@@ -334,9 +369,9 @@ namespace transport
 
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
-    threepf_task<number>::threepf_task(const initial_conditions<number>& i, const range<double>& t,
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                        const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(i, t)
+      : twopf_list_task<number>(nm, i, t)
       {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
