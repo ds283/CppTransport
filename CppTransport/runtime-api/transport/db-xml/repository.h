@@ -12,6 +12,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "transport/models/model.h"
 #include "transport/tasks/task.h"
 #include "transport/messages_en.h"
 
@@ -23,8 +24,8 @@
 
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
 #define __CPP_TRANSPORT_REPO_CONTAINERS_LEAF    "containers"
-#define __CPP_TRANSPORT_CNTR_MODELS_LEAF        "models.bdbxml"
-#define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.bdbxml"
+#define __CPP_TRANSPORT_CNTR_MODELS_LEAF        "models.dbxml"
+#define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.dbxml"
 
 
 namespace transport
@@ -34,21 +35,31 @@ namespace transport
     // which must be included to allow creation of repositories
     class repository_creation_key;
 
+    template <typename number>
     class repository
       {
+      public:
+        typedef enum { node_storage, document_storage } storage_type;
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
-        //! open a repository with a specific pathname
+        //! Open a repository with a specific pathname
         repository(const std::string& path);
-        //! create a repository with a specific pathname
-        repository(const std::string& path, const repository_creation_key& key);
+        //! Create a repository with a specific pathname
+        repository(const std::string& path, const repository_creation_key& key, storage_type type=node_storage);
 
-        //! close a repository, including the corresponding containers and environment
+        //! Close a repository, including the corresponding containers and environment
         ~repository();
 
+        //! Write a model/initial conditions/parameters combination to the model database.
+        //! No combination with the supplied name should already exist; if it does, this is considered an error.
+        void write_model(const initial_conditions<number>& ics, const model<number>* m);
 
+        //! Write an integration task to the integration database
+        //! No integration with the supplied name should already exist; if it does, this is considered an error.
+        void write_integration(const twopf_task<number>& t);
+        void write_integration(const threepf_task<number>& t);
 
         // INTERNAL DATA
 
@@ -67,7 +78,7 @@ namespace transport
         // DATABASE ENVIRONMENT
 
         //! Berkeley DB XML environment object corresponding to the open repository
-        DbXml::DB_ENV* env;
+        DB_ENV* env;
         //! Berkeley DB XML XmlManager object corresponding to the open repository
         DbXml::XmlManager* mgr;
 
@@ -143,16 +154,17 @@ namespace transport
         mgr = new DbXml::XmlManager(env, 0);
 
         // open database containers
-        models = DbXml::openContainer(models_path.string().c_str());
-        integrations = DbXml::openContainer(integrations_path.string().c_str());
+        models = this->mgr->openContainer(models_path.string().c_str());
+        integrations = this->mgr->openContainer(integrations_path.string().c_str());
       }
 
 
     // Create a named repository
     template <typename number>
-    repository<number>::repository(const std::string& path, const repository_creation_key& key)
+    repository<number>::repository(const std::string& path, const repository_creation_key& key, storage_type type)
       : env(nullptr), mgr(nullptr)
       {
+        // check whether root directory already exists
         root_path = path;
         if(boost::filesystem::exists(root_path))
           {
@@ -165,6 +177,11 @@ namespace transport
         containers_path = root_path / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
         models_path = containers_path / __CPP_TRANSPORT_CNTR_MODELS_LEAF;
         integrations_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
+
+        // create directories
+        boost::filesystem::create_directories(root_path);
+        boost::filesystem::create_directories(env_path);
+        boost::filesystem::create_directories(containers_path);
 
         int dberr;
         if((dberr = ::db_env_create(&env, 0)) > 0)
@@ -184,14 +201,27 @@ namespace transport
         // set up XmlManager object
         mgr = new DbXml::XmlManager(env, 0);
 
-        // open database containers
-        models = DbXml::createContainer(models_path.string().c_str());
-        integrations = DbXml::createContainer(integrations_path.string().c_str());
+        // create database containers
+        switch(type)
+          {
+            case node_storage:
+              mgr->setDefaultContainerType(DbXml::XmlContainer::NodeContainer);
+              break;
+
+            case document_storage:
+              mgr->setDefaultContainerType(DbXml::XmlContainer::WholedocContainer);
+              break;
+
+            default:
+              assert(false);
+          }
+        models = this->mgr->createContainer(models_path.string().c_str());
+        integrations = this->mgr->createContainer(integrations_path.string().c_str());
 
       }
 
 
-    // Destroy a respository
+    // Destroy a respository object, closing the associated repository
     template <typename number>
     repository<number>::~repository()
       {
@@ -205,6 +235,45 @@ namespace transport
           }
       }
 
+
+    // Write a model/initial conditions/parameters combination to the repository
+    template <typename number>
+    void repository<number>::write_model(const initial_conditions<number>& ics, const model<number>* m)
+      {
+        assert(this->env != nullptr);
+        assert(this->mgr != nullptr);
+
+        try
+          {
+            DbXml::XmlUpdateContext ctx = this->mgr->createUpdateContext();
+
+            DbXml::XmlDocument doc = this->mgr->createDocument();
+            doc.setName(ics.get_name());
+
+            DbXml::XmlEventWriter& writer = this->models.putDocumentAsEventWriter(doc, ctx);
+            writer.writeStartDocument(nullptr, nullptr, nullptr);
+
+            m->serialize_xml(writer);
+            ics.serialize_xml(writer);
+
+            writer.writeEndDocument();
+            writer.close();
+          }
+        catch (DbXml::XmlException& xe)
+          {
+            if(xe.getExceptionCode() == DbXml::XmlException::UNIQUE_ERROR)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_MODEL_EXISTS << " '" << ics.get_name() << "'";
+                throw std::runtime_error(msg.str());
+              }
+            else
+              {
+                std::ostringstream msg;
+                throw std::runtime_error(__CPP_TRANSPORT_REPO_INSERT_ERROR);
+              }
+          }
+      }
 
   }   // namespace transport
 

@@ -97,6 +97,11 @@
 #define __CPP_TRANSPORT_REPO_MISSING_CNTR     "Containers directory not present when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_MODELS   "Container for model definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Container for integration definitions not present or inaccessible when opening repository"
+#define __CPP_TRANSPORT_REPO_MODEL_EXISTS     "Attempt to insert duplicate model specification"
+#define __CPP_TRANSPORT_REPO_INSERT_ERROR     "Error while inserting records into repository"
+#define __CPP_TRANSPORT_REPO_FAIL_ENV         "Failed to construct DBXML environment for repository"
+#define __CPP_TRANSPORT_REPO_ROOT_EXISTS      "Root directory already exists when attempting to construct repository "
+#define __CPP_TRANSPORT_REPO_WRITE_SLAVE      "Attempt to write to repository from MPI slave process"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "

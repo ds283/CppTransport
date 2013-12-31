@@ -13,6 +13,12 @@ namespace transport
 
     class repository_creation_key
       {
+      public:
+        //! Default constructor
+        repository_creation_key()
+          {
+          }
+
       private:
         //! Private copy constructor makes it more difficult to replicate this object
         repository_creation_key(const repository_creation_key& obj)
