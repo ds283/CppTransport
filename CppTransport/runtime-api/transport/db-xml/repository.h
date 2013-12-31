@@ -27,6 +27,7 @@
 #define __CPP_TRANSPORT_CNTR_MODELS_LEAF        "models.dbxml"
 #define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.dbxml"
 
+#define __CPP_TRANSPORT_NODE_MODEL_SPEC         "model-specification"
 
 namespace transport
   {
@@ -192,7 +193,6 @@ namespace transport
             throw std::runtime_error(msg.str());
           }
 
-
         // set up environment to enable logging, transactional support
         // and locking (so multiple processes can access the repository safely)
         u_int32_t env_flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
@@ -217,7 +217,6 @@ namespace transport
           }
         models = this->mgr->createContainer(models_path.string().c_str());
         integrations = this->mgr->createContainer(integrations_path.string().c_str());
-
       }
 
 
@@ -253,8 +252,11 @@ namespace transport
             DbXml::XmlEventWriter& writer = this->models.putDocumentAsEventWriter(doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
+            // write root node
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPEC), nullptr, nullptr, 0, false);
             m->serialize_xml(writer);
             ics.serialize_xml(writer);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPEC), nullptr, nullptr);
 
             writer.writeEndDocument();
             writer.close();
@@ -270,7 +272,8 @@ namespace transport
             else
               {
                 std::ostringstream msg;
-                throw std::runtime_error(__CPP_TRANSPORT_REPO_INSERT_ERROR);
+                msg << __CPP_TRANSPORT_REPO_INSERT_ERROR << xe.getExceptionCode() << ": '" << xe.what() << "')";
+                throw std::runtime_error(msg.str());
               }
           }
       }
