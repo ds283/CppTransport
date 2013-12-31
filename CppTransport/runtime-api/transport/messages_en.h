@@ -99,12 +99,17 @@
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Container for integration definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MODEL_EXISTS     "Attempt to insert duplicate model specification"
 #define __CPP_TRANSPORT_REPO_INTGRTN_EXISTS   "Attempt to insert duplicate integration specification"
-#define __CPP_TRANSPORT_REPO_INSERT_ERROR     "Error while inserting records into repository (DBXML code="
+#define __CPP_TRANSPORT_REPO_INSERT_ERROR     "Error while inserting XML document into repository (DBXML code="
+#define __CPP_TRANSPORT_REPO_QUERY_ERROR      "Error while querying XML document from repository (DBXML code="
 #define __CPP_TRANSPORT_REPO_FAIL_ENV         "Failed to construct DBXML environment for repository"
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS      "Root directory already exists when attempting to construct repository"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE      "Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET          "Attempt to write to repository when unset in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_NULL_MODEL       "Null model when attempting to write to repository"
+#define __CPP_TRANSPORT_REPO_MISSING_TASK     "Repository error: could not find specified task"
+#define __CPP_TRANSPORT_REPO_MISSING_MODEL_A  "Repository error: could not find model"
+#define __CPP_TRANSPORT_REPO_MISSING_MODEL_B  "corresponding to specified task"
+#define __CPP_TRANSPORT_REPO_SKIPPING_TASK    "; skipping this task"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
@@ -122,6 +127,9 @@
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
+
+#define __CPP_TRANSPORT_EXEC_SLAVE            "task_manager::execute_tasks() called on slave process"
+#define __CPP_TRANSPORT_WAIT_MASTER           "task_manager::wait_for_tasks() called on master process"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"

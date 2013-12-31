@@ -13,5 +13,8 @@
 #define __CPP_TRANSPORT_DBXML_STRING(str) reinterpret_cast<const unsigned char*>(str)
 
 
+#define __CPP_TRANSPORT_XQUERY_SEPARATOR "/"
+#define __CPP_TRANSPORT_XQUERY_WILDCARD  "*"
+
 
 #endif //__db_xml_H_

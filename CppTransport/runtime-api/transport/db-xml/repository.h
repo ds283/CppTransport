@@ -15,11 +15,13 @@
 #include "transport/models/model.h"
 #include "transport/tasks/task.h"
 #include "transport/messages_en.h"
+#include "transport/exceptions.h"
 
 #include "dbxml/db.h"
 #include "dbxml/dbxml/DbXml.hpp"
 
 #include "boost/filesystem/operations.hpp"
+#include "exceptions.h"
 
 
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
@@ -57,7 +59,7 @@ namespace transport
         //! Close a repository, including the corresponding containers and environment
         ~repository();
 
-        // INTERFACE - PUSH TASKS TO THE REPOSITORY DATABASE
+        // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
         //! Write a model/initial conditions/parameters combination to the model database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
@@ -73,6 +75,12 @@ namespace transport
       protected:
         //! Write a generic task to the integration database, using a supplied node tag
         void write_integration_task(const task<number>& t, const model<number>* m, const std::string& node);
+
+        // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
+
+      public:
+        //! Query the database for a named task, and reconstruct it if present
+        task<number>& query_task(const std::string& name);
 
         // INTERNAL DATA
 
@@ -300,7 +308,7 @@ namespace transport
             DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
             DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
 
-            // check whether record corresponding to our initial_conditions object is in the database
+            // check whether XML document corresponding to our initial_conditions object is in the database
             try
               {
                 DbXml::XmlDocument doc = models.getDocument(t.get_ics().get_name());
@@ -326,7 +334,7 @@ namespace transport
             DbXml::XmlDocument doc = this->mgr->createDocument();
             doc.setName(t.get_name());
 
-            DbXml::XmlEventWriter& writer = models.putDocumentAsEventWriter(doc, ctx);
+            DbXml::XmlEventWriter& writer = integrations.putDocumentAsEventWriter(doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
             // write root node
@@ -336,11 +344,7 @@ namespace transport
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(t.get_ics().get_name().c_str()), t.get_ics().get_name().length());
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr);
 
-            std::cerr << "Serializing task data" << std::endl;
-
             t.serialize_xml(writer);
-
-            std::cerr << "Finished serializing task data" << std::endl;
 
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_THREEPF_SPEC), nullptr, nullptr);
 
@@ -365,6 +369,90 @@ namespace transport
           }
       }
 
+
+    // Query the database for a named task
+    template <typename number>
+    task<number>& repository<number>::query_task(const std::string& name)
+      {
+        assert(this->env != nullptr);
+        assert(this->mgr != nullptr);
+
+        try
+          {
+            // open database containers
+            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
+            DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+
+            DbXml::XmlDocument task_document;
+            try
+              {
+                // find XML document corresponding to our task name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
+                task_document = integrations.getDocument(name);
+              }
+            catch (DbXml::XmlException& xe)
+              {
+                if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
+                  {
+                    throw runtime_exception(runtime_exception::TASK_NOT_FOUND, name);
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
+                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                  }
+              }
+
+            // convert task XML document to an XmlValue which can be queried
+            DbXml::XmlValue task(task_document);
+
+            // now run a query to find the XML record for the corresponding initial conditions/parameter set
+            std::ostringstream model_query;
+            model_query << "distinct-values(" << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_XQUERY_WILDCARD << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_MODEL_SPECIFIER << ")";
+
+            // create a context for the query
+            DbXml::XmlQueryContext model_ctx = this->mgr->createQueryContext();
+
+            // compile the query
+            DbXml::XmlQueryExpression model_expr = this->mgr->prepare(model_query.str(), model_ctx);
+
+            // execute it and obtain a result set
+            DbXml::XmlResults model_results = model_expr.execute(task, model_ctx);
+
+            if(model_results.size() != 1) throw runtime_exception(runtime_exception::BADLY_FORMED_XML_INTEGRATION, name);
+
+            DbXml::XmlValue model_node;
+            model_results.next(model_node);
+
+            std::string model_name = model_node.asString();
+
+            DbXml::XmlDocument model_document;
+            try
+              {
+                // find XML document corresponding to our model name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
+                model_document = models.getDocument(model_name);
+              }
+            catch (DbXml::XmlException& xe)
+              {
+                if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
+                  {
+                    throw runtime_exception(runtime_exception::MODEL_NOT_FOUND, model_name);
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
+                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+                  }
+              }
+          }
+        catch (DbXml::XmlException& xe)
+          {
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, xe.what());
+          }
+      }
 
   }   // namespace transport
 

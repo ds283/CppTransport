@@ -18,6 +18,7 @@
 #include "transport/manager/instance_manager.h"
 #include "transport/db-xml/repository.h"
 #include "transport/messages_en.h"
+#include "transport/exceptions.h"
 
 
 #define __CPP_TRANSPORT_RANK_MASTER (0)
@@ -49,6 +50,7 @@ namespace transport
 
         // INTERFACE -- REPOSITORY-MANAGEMENT
 
+      public:
         //! Write a model/initial conditions/parameters combination to the repository
         void write_model(const initial_conditions<number>& ics, const model<number>* m);
 
@@ -58,6 +60,7 @@ namespace transport
 
         // INTERFACE -- MASTER-SLAVE API
 
+      public:
         //! Query whether we are the master process
         bool is_master(void) const { return(this->world.rank() == __CPP_TRANSPORT_RANK_MASTER); }
 
@@ -69,6 +72,7 @@ namespace transport
 
         // INTERFACE -- ERROR REPORTING
 
+      public:
         //! Report an error
         void error(const std::string& msg) { std::cout << msg << std::endl; }
 
@@ -158,30 +162,27 @@ namespace transport
     template <typename number>
     void task_manager<number>::write_model(const initial_conditions<number>& ics, const model<number>* m)
       {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
+
         assert(this->repo != nullptr);
 
-        if(this->repo != nullptr)
-          {
-            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-            this->repo->write_model(ics, m);
-          }
-        else
-          {
-            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
-          }
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+
+        this->repo->write_model(ics, m);
       }
 
 
     template <typename number>
     void task_manager<number>::write_integration(const twopf_task<number>& t, const model<number>* m)
       {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
+
         assert(this->repo != nullptr);
         assert(m != nullptr);
 
-        if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
-        if(this->m    == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(this->m    == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
-        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
         this->repo->write_integration(t, m);
       }
 
@@ -189,13 +190,14 @@ namespace transport
     template <typename number>
     void task_manager<number>::write_integration(const threepf_task<number>& t, const model<number>* m)
       {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
+
         assert(this->repo != nullptr);
         assert(m != nullptr);
 
-        if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
-        if(m          == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+        if(m          == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
-        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
         this->repo->write_integration(t, m);
       }
 
@@ -203,9 +205,36 @@ namespace transport
     template <typename number>
     void task_manager<number>::execute_tasks()
       {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        assert(this->repo != nullptr);
+
         for(std::list<std::string>::const_iterator t = this->task_queue.begin(); t != this->task_queue.end(); t++)
           {
-            std::cerr << "Task: name = " << *t << std::endl;
+            try
+              {
+                task<number>& tk = this->repo->query_task(*t);
+              }
+            catch (runtime_exception xe)
+              {
+                if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                    this->error(msg.str());
+                  }
+                else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
+                        << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                    this->error(msg.str());
+                  }
+                else
+                  {
+                    throw xe;
+                  }
+              }
           }
       }
 
@@ -213,7 +242,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::wait_for_tasks()
       {
-
+        if(this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
       }
 
 
