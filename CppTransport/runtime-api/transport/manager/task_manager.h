@@ -94,24 +94,51 @@ namespace transport
     template <typename number>
     void task_manager<number>::write_model(const initial_conditions<number>& ics, const model<number>* m)
       {
-        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-        this->repo->write_model(ics, m);
+        assert(this->repo != nullptr);
+
+        if(this->repo != nullptr)
+          {
+            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
+            this->repo->write_model(ics, m);
+          }
+        else
+          {
+            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+          }
       }
 
 
     template <typename number>
     void task_manager<number>::write_integration(const twopf_task<number>& t)
       {
-        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-        this->repo->write_integration(t);
+        assert(this->repo != nullptr);
+
+        if(this->repo != nullptr)
+          {
+            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
+            this->repo->write_integration(t);
+          }
+        else
+          {
+            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+          }
       }
 
 
     template <typename number>
     void task_manager<number>::write_integration(const threepf_task<number>& t)
       {
-        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-        this->repo->write_integration(t);
+        assert(this->repo != nullptr);
+
+        if(this->repo != nullptr)
+          {
+            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
+            this->repo->write_integration(t);
+          }
+        else
+          {
+            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+          }
       }
 
 
