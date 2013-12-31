@@ -78,11 +78,11 @@ int main(int argc, char* argv[])
 
     transport::threepf_task<double> tk = transport::threepf_task<double>("threepf-1", ics, times, ks, model->kconfig_kstar_factory());
 
-    // write the initial conditions/parameter specification into the model repository
-    mgr->write_model(ics, model);
+//    // write the initial conditions/parameter specification into the model repository
+//    mgr->write_model(ics, model);
 
-//    // write the integration specification into the model repository
-//    mgr->write_integration(tk);
+    // write the initial conditions/parameter specification and integration specification into the model repository
+    mgr->write_integration(tk, model);
 
     delete model;
     delete mgr;     // task_manager adopts its repository and destroys it silently

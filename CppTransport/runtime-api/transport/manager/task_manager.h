@@ -49,8 +49,8 @@ namespace transport
         void write_model(const initial_conditions<number>& ics, const model<number>* m);
 
         //! Write an integration task to the repository
-        void write_integration(const twopf_task<number>& t);
-        void write_integration(const threepf_task<number>& t);
+        void write_integration(const twopf_task<number>& t, const model<number>* m);
+        void write_integration(const threepf_task<number>& t, const model<number>* m);
 
         // MASTER-SLAVE API
 
@@ -110,36 +110,30 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::write_integration(const twopf_task<number>& t)
+    void task_manager<number>::write_integration(const twopf_task<number>& t, const model<number>* m)
       {
         assert(this->repo != nullptr);
+        assert(m != nullptr);
 
-        if(this->repo != nullptr)
-          {
-            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-            this->repo->write_integration(t);
-          }
-        else
-          {
-            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
-          }
+        if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+        if(this->m    == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+
+        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
+        this->repo->write_integration(t, m);
       }
 
 
     template <typename number>
-    void task_manager<number>::write_integration(const threepf_task<number>& t)
+    void task_manager<number>::write_integration(const threepf_task<number>& t, const model<number>* m)
       {
         assert(this->repo != nullptr);
+        assert(m != nullptr);
 
-        if(this->repo != nullptr)
-          {
-            if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
-            this->repo->write_integration(t);
-          }
-        else
-          {
-            throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
-          }
+        if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
+        if(m          == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+
+        if(!this->is_master()) throw std::runtime_error(__CPP_TRANSPORT_REPO_WRITE_SLAVE);
+        this->repo->write_integration(t, m);
       }
 
 

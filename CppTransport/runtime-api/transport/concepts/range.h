@@ -38,12 +38,15 @@ namespace transport
     class range: public xml_serializable
       {
       public:
-        typedef enum { linear, logarithmic } spacing_type;
+        typedef enum { linear, logarithmic, INTERNAL__null_range_object } spacing_type;
 
         // CONSTRUCTOR
 
       public:
+        //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
         range(value mn, value mx, unsigned int st, spacing_type sp=linear);
+        //! Construct a null range object. Used in 'task' objects as placeholders when storing the original wavenumber grid.
+        range();
 
         // BASIC INTERROGATION
 
@@ -91,9 +94,12 @@ namespace transport
     range<value>::range(value mn, value mx, unsigned int st, spacing_type sp)
       : min(mn), max(mx), steps(st), spacing(sp)
       {
+        assert(sp != INTERNAL__null_range_object);
+
         switch(sp)
           {
             case linear:
+            case INTERNAL__null_range_object:
               for(unsigned int i = 0; i <= steps; i++)
                 {
                   grid.push_back(min + (static_cast<double>(i)/steps)*(max-min));
@@ -115,8 +121,17 @@ namespace transport
 
 
     template <typename value>
+    range<value>::range()
+      : min(static_cast<value>(0.0)), max(static_cast<value>(0.0)), steps(0), spacing(INTERNAL__null_range_object)
+      {
+      }
+
+
+    template <typename value>
     void range<value>::serialize_xml(DbXml::XmlEventWriter& writer) const
       {
+        if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
+
         this->begin_node(writer, __CPP_TRANSPORT_NODE_RANGE, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);

@@ -96,6 +96,7 @@ namespace transport
         this->begin_node(writer, name, false, std::forward<attrs>(attributes)...);
 
         std::string val = boost::lexical_cast<std::string>(value);
+        std::cerr << "Writing XML node: tag = " << name << ", value = " << val << std::endl;
         writer.writeText(DbXml::XmlEventReader::XmlEventType::Characters, __CPP_TRANSPORT_DBXML_STRING(val.c_str()), val.length());
 
         this->end_node(writer, name);

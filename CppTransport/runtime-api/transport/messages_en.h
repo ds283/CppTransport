@@ -98,11 +98,13 @@
 #define __CPP_TRANSPORT_REPO_MISSING_MODELS   "Container for model definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Container for integration definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MODEL_EXISTS     "Attempt to insert duplicate model specification"
+#define __CPP_TRANSPORT_REPO_INTGRTN_EXISTS   "Attempt to insert duplicate integration specification"
 #define __CPP_TRANSPORT_REPO_INSERT_ERROR     "Error while inserting records into repository (DBXML code="
 #define __CPP_TRANSPORT_REPO_FAIL_ENV         "Failed to construct DBXML environment for repository"
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS      "Root directory already exists when attempting to construct repository"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE      "Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET          "Attempt to write to repository when unset in 'task_manager'"
+#define __CPP_TRANSPORT_REPO_NULL_MODEL       "Null model when attempting to write to repository"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
@@ -110,8 +112,11 @@
 #define __CPP_TRANSPORT_RANGE_D               "max = "
 #define __CPP_TRANSPORT_RANGE_LINEAR          "linear"
 #define __CPP_TRANSPORT_RANGE_LOGARITHMIC     "logarithmic"
+#define __CPP_TRANSPORT_SERIALIZE_NULL_RANGE  "Error: attempt to serialize null 'range' object"
 
 #define __CPP_TRANSPORT_TASK_TIMES            "Sampling times: "
+#define __CPP_TRANSPORT_TASK_THREEPF_TYPE     "Unknown wavenumber grid type when attempting to write threepf task to repository"
+#define __CPP_TRANSPORT_SERIALIZE_BASE_TASK   "Error: attempt to serialize base 'task' object"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"

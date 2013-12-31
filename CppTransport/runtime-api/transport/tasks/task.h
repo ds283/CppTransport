@@ -17,6 +17,7 @@
 #include <stdexcept>
 
 
+#include "transport/db-xml/xml_serializable.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
 #include "transport/concepts/range.h"
@@ -25,7 +26,20 @@
 #include "transport/utilities/random_string.h"
 
 
-#define DEFAULT_K_PRECISION (2)
+#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
+
+
+#define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE    "twopf-sample-times"
+#define __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE    "twopf-sample-wavenumbers"
+#define __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE  "threepf-sample-times"
+#define __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE  "threepf-sample-wavenumbers"
+#define __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE  "wavenumber-grid"
+#define __CPP_TRANSPORT_VAL_THREEPF_CUBIC     "cubic-lattice"
+#define __CPP_TRANSPORT_VAL_THREEPF_FLS       "fergusson-liguori-shellard"
+#define __CPP_TRANSPORT_NODE_THREEPF_KRANGE   "k-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_KTRANGE  "kt-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_ARANGE   "alpha-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_BRANGE   "beta-range"
 
 
 namespace transport
@@ -56,7 +70,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj)
       {
         std::ostringstream str;
-        str << std::setprecision(DEFAULT_K_PRECISION) << obj.k;
+        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k;
         out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
 
         return(out);
@@ -98,9 +112,9 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(DEFAULT_K_PRECISION) << obj.k_t;
-        alpha_str << std::setprecision(DEFAULT_K_PRECISION) << obj.alpha;
-        beta_str  << std::setprecision(DEFAULT_K_PRECISION) << obj.beta;
+        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t;
+        alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
+        beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 
         out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
           << ", " << __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
@@ -121,7 +135,7 @@ namespace transport
     // basic task, from which the more specific tasks are derived
     // contains information on the initial conditions, horizon-crossing time and the sampling times
     template <typename number>
-    class task
+    class task: public xml_serializable
       {
       public:
         typedef std::function<double(task<number>*)> kconfig_kstar;
@@ -172,6 +186,9 @@ namespace transport
         const std::string& get_name() const { return(this->name); }
 
         friend std::ostream& operator<< <>(std::ostream& out, const task<number>& obj);
+
+        // INTERFACE -- XML SERIALIZATION -- DISALLOW
+        virtual void serialize_xml(DbXml::XmlEventWriter& writer) const { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
 
       protected:
         //! Name of this task
@@ -297,8 +314,17 @@ namespace transport
         //! Get the number of k-configurations at which this task will sample the twopf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
+        // INTERFACE -- XML SERIALIZATION
+
+        //! Serialize this task to the Berkeley DB XML repository
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+
       protected:
+        //! List of k-configurations associated with this task
         std::vector<twopf_kconfig> config_list;
+
+        //! Original range of wavenumber ks used to produce this task. Retained for serialization to the repository
+        const range<double>        original_ks;
       };
 
 
@@ -306,7 +332,7 @@ namespace transport
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                    const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(nm, i, t)
+      : original_ks(ks), twopf_list_task<number>(nm, i, t)
       {
         double normalization = kstar(this);
 
@@ -335,11 +361,26 @@ namespace transport
       }
 
 
+    // serialize a twopf task to the repository
+    template <typename number>
+    void twopf_task<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+      {
+        this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE, false);
+        this->times.serialize_xml(writer);
+        this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
+        this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE, false);
+        this->original_ks.serialize_xml(writer);
+        this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE, false);
+      }
+
+
     // three-point function task
     template <typename number>
     class threepf_task: public twopf_list_task<number>
       {
       public:
+        typedef enum { cubic_lattice, fergusson_liguori_shellard } wavenumber_grid_type;
+
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                      const range<double>& ks, typename task<number>::kconfig_kstar kstar);
@@ -362,8 +403,25 @@ namespace transport
         //! Get the number of k-configurations at which this task will sample the threepf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
+        // INTERFACE -- XML SERIALIZATION
+
+        //! Serialize this task to the Berkeley DB XML repository
+        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+
       protected:
+        //! List of k-configurations associated with this task
         std::vector<threepf_kconfig> config_list;
+
+        //! Wavenumber lattice used to construct this task, retained for serialization
+        const wavenumber_grid_type original_lattice;
+        //! Original cubic lattice, if used, retained for serialization
+        const range<double> original_ks;
+        //! Original kt-grid, if used, retained for serialization
+        const range<double> original_kts;
+        //! Original alpha-grid, if used, retained for serialization
+        const range<double> original_alphas;
+        //! Original beta-grid, if used, retained for serialization
+        const range<double> original_betas;
       };
 
 
@@ -371,7 +429,9 @@ namespace transport
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                        const range<double>& ks, typename task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(nm, i, t)
+      : original_lattice(cubic_lattice), original_ks(ks),
+        original_kts(), original_alphas(), original_betas(),
+        twopf_list_task<number>(nm, i, t)
       {
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
@@ -430,6 +490,46 @@ namespace transport
         if(!stored_background)
           {
             throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
+          }
+      }
+
+
+    // serialize a threepf task to the repository
+    template <typename number>
+    void threepf_task<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+      {
+        this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE, false);
+        this->times.serialize_xml(writer);
+        this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
+
+       switch(this->original_lattice)
+          {
+            case cubic_lattice:
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE, false,
+                               __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_CUBIC);
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE, false);
+              this->original_ks.serialize_xml(writer);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
+              break;
+
+            case fergusson_liguori_shellard:
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE, false,
+                               __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_FLS);
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE, false);
+              this->original_kts.serialize_xml(writer);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE, false);
+              this->original_alphas.serialize_xml(writer);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE);
+              this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE, false);
+              this->original_betas.serialize_xml(writer);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE);
+              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
+            break;
+
+            default:
+              throw std::runtime_error(__CPP_TRANSPORT_TASK_THREEPF_TYPE);
           }
       }
 

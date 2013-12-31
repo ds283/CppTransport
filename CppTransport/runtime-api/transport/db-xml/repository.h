@@ -28,6 +28,10 @@
 #define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.dbxml"
 
 #define __CPP_TRANSPORT_NODE_MODEL_SPEC         "model-specification"
+#define __CPP_TRANSPORT_NODE_TWOPF_SPEC         "twopf-specification"
+#define __CPP_TRANSPORT_NODE_THREEPF_SPEC       "threepf-specification"
+#define __CPP_TRANSPORT_NODE_MODEL_SPECIFIER    "model-specifier"
+
 
 namespace transport
   {
@@ -53,14 +57,22 @@ namespace transport
         //! Close a repository, including the corresponding containers and environment
         ~repository();
 
+        // INTERFACE - PUSH TASKS TO THE REPOSITORY DATABASE
+
         //! Write a model/initial conditions/parameters combination to the model database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         void write_model(const initial_conditions<number>& ics, const model<number>* m);
 
-        //! Write an integration task to the integration database
-        //! No integration with the supplied name should already exist; if it does, this is considered an error.
-        void write_integration(const twopf_task<number>& t);
-        void write_integration(const threepf_task<number>& t);
+        //! Write a threepf integration task to the integration database.
+        //! Delegates write_integration_task() to do the work
+        void write_integration(const twopf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_TWOPF_SPEC); }
+        //! Write a twopf integration task to the integration database
+        //! Delegates write_integration_task() to do the work
+        void write_integration(const threepf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_THREEPF_SPEC); }
+
+      protected:
+        //! Write a generic task to the integration database, using a supplied node tag
+        void write_integration_task(const task<number>& t, const model<number>* m, const std::string& node);
 
         // INTERNAL DATA
 
@@ -226,6 +238,9 @@ namespace transport
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
+        assert(m != nullptr);
+
+        if(m == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
 
         try
           {
@@ -267,6 +282,89 @@ namespace transport
               }
           }
       }
+
+
+    // Write a task to the repository
+    template <typename number>
+    void repository<number>::write_integration_task(const task<number>& t, const model<number>* m, const std::string& node)
+      {
+        assert(this->env != nullptr);
+        assert(this->mgr != nullptr);
+        assert(m != nullptr);
+
+        if(m == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+
+        try
+          {
+            // open database container
+            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
+            DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+
+            // check whether record corresponding to our initial_conditions object is in the database
+            try
+              {
+                DbXml::XmlDocument doc = models.getDocument(t.get_ics().get_name());
+              }
+            catch (DbXml::XmlException& xe)
+              {
+                if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
+                  {
+                    this->write_model(t.get_ics(), m);
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_INSERT_ERROR << xe.getExceptionCode() << ": '" << xe.what() << "')";
+                    throw std::runtime_error(msg.str());
+                  }
+              }
+
+            // now insert task information into the integrations database
+            DbXml::XmlUpdateContext ctx = this->mgr->createUpdateContext();
+
+            // begin XML document representing this integration
+            DbXml::XmlDocument doc = this->mgr->createDocument();
+            doc.setName(t.get_name());
+
+            DbXml::XmlEventWriter& writer = models.putDocumentAsEventWriter(doc, ctx);
+            writer.writeStartDocument(nullptr, nullptr, nullptr);
+
+            // write root node
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr, 0, false);
+
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPECIFIER), nullptr, nullptr, 0, false);
+            writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(t.get_ics().get_name().c_str()), t.get_ics().get_name().length());
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr);
+
+            std::cerr << "Serializing task data" << std::endl;
+
+            t.serialize_xml(writer);
+
+            std::cerr << "Finished serializing task data" << std::endl;
+
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_THREEPF_SPEC), nullptr, nullptr);
+
+            // finalize XML document
+            writer.writeEndDocument();
+            writer.close();
+          }
+        catch (DbXml::XmlException& xe)
+          {
+            if(xe.getExceptionCode() == DbXml::XmlException::UNIQUE_ERROR)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_INTGRTN_EXISTS << " '" << t.get_name() << "'";
+                throw std::runtime_error(msg.str());
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_INSERT_ERROR << xe.getExceptionCode() << ": '" << xe.what() << "')";
+                throw std::runtime_error(msg.str());
+              }
+          }
+      }
+
 
   }   // namespace transport
 
