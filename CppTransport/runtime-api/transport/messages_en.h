@@ -118,6 +118,11 @@
 #define __CPP_TRANSPORT_TASK_THREEPF_TYPE     "Unknown wavenumber grid type when attempting to write threepf task to repository"
 #define __CPP_TRANSPORT_SERIALIZE_BASE_TASK   "Error: attempt to serialize base 'task' object"
 
+#define __CPP_TRANSPORT_MULTIPLE_SET_REPO     "Multiple repository specifiers; the second and subsequent specifiers will be ignored"
+#define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
+#define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
+#define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
+
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"
 #define __CPP_TRANSPORT_LOGY_ERROR_A          "Warning: y-value contains no nonzero values for line"
