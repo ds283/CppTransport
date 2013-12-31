@@ -82,13 +82,6 @@ namespace transport
         DB_ENV* env;
         //! Berkeley DB XML XmlManager object corresponding to the open repository
         DbXml::XmlManager* mgr;
-
-        // DATABASE CONTAINERS
-
-        //! XML container object for models (=choice of model, choice of parameters, choice of initial conditions)
-        DbXml::XmlContainer models;
-        //! XML container object for integrations (=choice of n-point function)
-        DbXml::XmlContainer integrations;
       };
 
 
@@ -153,10 +146,6 @@ namespace transport
 
         // set up XmlManager object
         mgr = new DbXml::XmlManager(env, 0);
-
-        // open database containers
-        models = this->mgr->openContainer(models_path.string().c_str());
-        integrations = this->mgr->openContainer(integrations_path.string().c_str());
       }
 
 
@@ -199,7 +188,7 @@ namespace transport
         env->open(env, env_path.string().c_str(), env_flags, 0);
 
         // set up XmlManager object
-        mgr = new DbXml::XmlManager(env, 0);
+        mgr = new DbXml::XmlManager(env, DbXml::DBXML_ADOPT_DBENV);
 
         // create database containers
         switch(type)
@@ -215,8 +204,8 @@ namespace transport
             default:
               assert(false);
           }
-        models = this->mgr->createContainer(models_path.string().c_str());
-        integrations = this->mgr->createContainer(integrations_path.string().c_str());
+        DbXml::XmlContainer models = this->mgr->createContainer(models_path.string().c_str());
+        DbXml::XmlContainer integrations = this->mgr->createContainer(integrations_path.string().c_str());
       }
 
 
@@ -227,11 +216,7 @@ namespace transport
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
-        if(this->mgr != nullptr) delete this->mgr;
-        if(this->env != nullptr)
-          {
-            this->env->close(this->env, 0);
-          }
+        delete this->mgr;
       }
 
 
@@ -244,12 +229,16 @@ namespace transport
 
         try
           {
+            // open database container
+            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
+
             DbXml::XmlUpdateContext ctx = this->mgr->createUpdateContext();
 
+            // begin XML document representing this model
             DbXml::XmlDocument doc = this->mgr->createDocument();
             doc.setName(ics.get_name());
 
-            DbXml::XmlEventWriter& writer = this->models.putDocumentAsEventWriter(doc, ctx);
+            DbXml::XmlEventWriter& writer = models.putDocumentAsEventWriter(doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
             // write root node
@@ -258,6 +247,7 @@ namespace transport
             ics.serialize_xml(writer);
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPEC), nullptr, nullptr);
 
+            // finalize XML document
             writer.writeEndDocument();
             writer.close();
           }

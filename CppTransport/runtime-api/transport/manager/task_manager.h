@@ -88,6 +88,7 @@ namespace transport
     template <typename number>
     task_manager<number>::~task_manager()
       {
+        delete this->repo;
       }
 
 
