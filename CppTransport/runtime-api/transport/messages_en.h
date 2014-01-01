@@ -82,6 +82,7 @@
 
 #define __CPP_TRANSPORT_INSTANCES_MULTIPLE    "Attempt to add multiple instances of the same 'model' object"
 #define __CPP_TRANSPORT_INSTANCES_DELETE      "Attempt to delete unregistered 'model' object"
+#define __CPP_TRANSPORT_INSTANCES_MISSING     "No registered instance of model with uid"
 
 #define __CPP_TRANSPORT_RANGE_INVALID_SPACING "Unknown spacing type in 'range' object"
 
@@ -92,10 +93,10 @@
 
 #define __CPP_TRANSPORT_XML_MISMATCH          "Mismatched node tags when performing XML serialization"
 
-#define __CPP_TRANSPORT_REPO_MISSING_ROOT     "Root directory not present when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_ROOT     "Root directory does not exist when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_ENV      "Environment directory not present when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_CNTR     "Containers directory not present when opening repository"
-#define __CPP_TRANSPORT_REPO_MISSING_MODELS   "Container for model definitions not present or inaccessible when opening repository"
+#define __CPP_TRANSPORT_REPO_MISSING_PACKAGES "Container for model definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Container for integration definitions not present or inaccessible when opening repository"
 #define __CPP_TRANSPORT_REPO_MODEL_EXISTS     "Attempt to insert duplicate model specification"
 #define __CPP_TRANSPORT_REPO_INTGRTN_EXISTS   "Attempt to insert duplicate integration specification"
@@ -110,6 +111,11 @@
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_A  "Repository error: could not find model"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_B  "corresponding to specified task"
 #define __CPP_TRANSPORT_REPO_SKIPPING_TASK    "; skipping this task"
+#define __CPP_TRANSPORT_REPO_NONE             "Nothing to do: no repository specified"
+#define __CPP_TRANSPORT_BADLY_FORMED_INTGRTN  "Badly formed XML for 'integration' document"
+#define __CPP_TRANSPORT_BADLY_FORMED_PACKAGE  "Badly formed XML for 'package' document"
+#define __CPP_TRANSPORT_BADLY_FORMED_MODEL    "Badly formed XML for 'model' node"
+#define __CPP_TRANSPORT_RUN_REPAIR            "; consider checking database integrity"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "

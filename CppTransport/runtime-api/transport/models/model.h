@@ -16,6 +16,7 @@
 
 #include "transport/messages_en.h"
 
+#include "transport/db-xml/db_xml.h"
 #include "transport/db-xml/xml_serializable.h"
 #include "transport/concepts/flattener.h"
 #include "transport/concepts/initial_conditions.h"
@@ -29,7 +30,7 @@
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 #define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (20)
 
-#define __CPP_TRANSPORT_NODE_MODEL                "model"
+#define __CPP_TRANSPORT_NODE_MODEL                "model-uid"
 
 
 namespace transport
@@ -410,6 +411,17 @@ namespace transport
     void model<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
       {
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MODEL, this->uid);
+      }
+
+
+    // delegate function to deserialize a uid
+    // note that this is declared outside the model class
+    namespace model_delegate
+      {
+        std::string extract_uid(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
+          {
+            return(value.asString());
+          }
       }
 
 

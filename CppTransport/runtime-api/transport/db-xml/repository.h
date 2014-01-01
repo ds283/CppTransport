@@ -12,6 +12,7 @@
 #include <sstream>
 #include <stdexcept>
 
+#include "transport/manager/instance_manager.h"
 #include "transport/models/model.h"
 #include "transport/tasks/task.h"
 #include "transport/messages_en.h"
@@ -26,13 +27,17 @@
 
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
 #define __CPP_TRANSPORT_REPO_CONTAINERS_LEAF    "containers"
-#define __CPP_TRANSPORT_CNTR_MODELS_LEAF        "models.dbxml"
+#define __CPP_TRANSPORT_CNTR_PACKAGES_LEAF      "packages.dbxml"
 #define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.dbxml"
 
-#define __CPP_TRANSPORT_NODE_MODEL_SPEC         "model-specification"
+#define __CPP_TRANSPORT_NODE_PACKAGE_SPEC       "package-specification"
+#define __CPP_TRANSPORT_NODE_PACKAGE_MODEL      "package-model"
+#define __CPP_TRANSPORT_NODE_PACKAGE_ICS        "package-ics"
+
 #define __CPP_TRANSPORT_NODE_TWOPF_SPEC         "twopf-specification"
 #define __CPP_TRANSPORT_NODE_THREEPF_SPEC       "threepf-specification"
-#define __CPP_TRANSPORT_NODE_MODEL_SPECIFIER    "model-specifier"
+#define __CPP_TRANSPORT_NODE_INTGRTN_PACKAGE    "integration-package"
+#define __CPP_TRANSPORT_NODE_INTGRTN_TASK       "integration-task"
 
 
 namespace transport
@@ -61,9 +66,9 @@ namespace transport
 
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
-        //! Write a model/initial conditions/parameters combination to the model database.
+        //! Write a 'model/initial conditions/parameters' combination (a 'package') to the model database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        void write_model(const initial_conditions<number>& ics, const model<number>* m);
+        void write_package(const initial_conditions<number>& ics, const model<number>* m);
 
         //! Write a threepf integration task to the integration database.
         //! Delegates write_integration_task() to do the work
@@ -80,7 +85,19 @@ namespace transport
 
       public:
         //! Query the database for a named task, and reconstruct it if present
-        task<number>& query_task(const std::string& name);
+        task<number>& query_task(const std::string& name, typename instance_manager<number>::model_finder finder);
+
+      protected:
+        //! Query the database for a named model, returned as an XmlValue
+        DbXml::XmlValue get_package_by_name(const std::string& name);
+        //! Query the database for a named integration task, returned as an XmlValue
+        DbXml::XmlValue get_integration_by_name(const std::string& name);
+        //! Given an XmlValue representing an integration schema, extract the associated package name.
+        //! A handle to the associated container is not needed explicitly, but is expected to be held open.
+        std::string get_package_from_integration(DbXml::XmlValue& value, const std::string& name);
+        //! Given an XmlValue representing a package schema, extract the associated model uid.
+        //! A handle to the associated container is not needed explicitly, but is expected to be held open.
+        std::string get_model_uid_from_package(DbXml::XmlValue& value, const std::string& name);
 
         // INTERNAL DATA
 
@@ -92,7 +109,7 @@ namespace transport
         //! BOOST path to containers
         boost::filesystem::path containers_path;
         //! BOOST path to model container
-        boost::filesystem::path models_path;
+        boost::filesystem::path packages_path;
         //! BOOST path to integrations container
         boost::filesystem::path integrations_path;
 
@@ -115,7 +132,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         env_path = root_path / __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF;
@@ -123,7 +140,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_ENV << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         containers_path = root_path / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
@@ -131,15 +148,15 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_CNTR << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        models_path = containers_path / __CPP_TRANSPORT_CNTR_MODELS_LEAF;
-        if(!boost::filesystem::is_regular_file(models_path))
+        packages_path = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
+        if(!boost::filesystem::is_regular_file(packages_path))
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_MODELS << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGES << " '" << path << "'";
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         integrations_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
@@ -147,7 +164,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_INTGRTNS << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         int dberr;
@@ -156,7 +173,7 @@ namespace transport
             if(env != nullptr) env->close(env, 0);
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_ENV << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         // set up environment to enable logging, transactional support
@@ -185,7 +202,7 @@ namespace transport
 
         env_path = root_path / __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF;
         containers_path = root_path / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
-        models_path = containers_path / __CPP_TRANSPORT_CNTR_MODELS_LEAF;
+        packages_path = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
         integrations_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
 
         // create directories
@@ -224,7 +241,7 @@ namespace transport
             default:
               assert(false);
           }
-        DbXml::XmlContainer models = this->mgr->createContainer(models_path.string().c_str());
+        DbXml::XmlContainer packages = this->mgr->createContainer(packages_path.string().c_str());
         DbXml::XmlContainer integrations = this->mgr->createContainer(integrations_path.string().c_str());
       }
 
@@ -242,7 +259,7 @@ namespace transport
 
     // Write a model/initial conditions/parameters combination to the repository
     template <typename number>
-    void repository<number>::write_model(const initial_conditions<number>& ics, const model<number>* m)
+    void repository<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
@@ -253,7 +270,7 @@ namespace transport
         try
           {
             // open database container
-            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
+            DbXml::XmlContainer packages = this->mgr->openContainer(this->packages_path.string().c_str());
 
             DbXml::XmlUpdateContext ctx = this->mgr->createUpdateContext();
 
@@ -261,14 +278,21 @@ namespace transport
             DbXml::XmlDocument doc = this->mgr->createDocument();
             doc.setName(ics.get_name());
 
-            DbXml::XmlEventWriter& writer = models.putDocumentAsEventWriter(doc, ctx);
+            DbXml::XmlEventWriter& writer = packages.putDocumentAsEventWriter(doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
             // write root node
-            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPEC), nullptr, nullptr, 0, false);
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_SPEC), nullptr, nullptr, 0, false);
+
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_MODEL), nullptr, nullptr, 0, false);
             m->serialize_xml(writer);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_MODEL), nullptr, nullptr);
+
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_ICS), nullptr, nullptr, 0, false);
             ics.serialize_xml(writer);
-            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPEC), nullptr, nullptr);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_ICS), nullptr, nullptr);
+
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_SPEC), nullptr, nullptr);
 
             // finalize XML document
             writer.writeEndDocument();
@@ -305,7 +329,7 @@ namespace transport
         try
           {
             // open database container
-            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
+            DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
             DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
 
             // check whether XML document corresponding to our initial_conditions object is in the database
@@ -317,7 +341,7 @@ namespace transport
               {
                 if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
                   {
-                    this->write_model(t.get_ics(), m);
+                    this->write_package(t.get_ics(), m);
                   }
                 else
                   {
@@ -340,13 +364,15 @@ namespace transport
             // write root node
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr, 0, false);
 
-            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_MODEL_SPECIFIER), nullptr, nullptr, 0, false);
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTGRTN_PACKAGE), nullptr, nullptr, 0, false);
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(t.get_ics().get_name().c_str()), t.get_ics().get_name().length());
-            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTGRTN_PACKAGE), nullptr, nullptr);
 
+            writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTGRTN_TASK), nullptr, nullptr, 0, false);
             t.serialize_xml(writer);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTGRTN_TASK), nullptr, nullptr);
 
-            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_THREEPF_SPEC), nullptr, nullptr);
+            writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(node.c_str()), nullptr, nullptr);
 
             // finalize XML document
             writer.writeEndDocument();
@@ -372,87 +398,171 @@ namespace transport
 
     // Query the database for a named task
     template <typename number>
-    task<number>& repository<number>::query_task(const std::string& name)
+    task<number>& repository<number>::query_task(const std::string& name, typename instance_manager<number>::model_finder finder)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
+        // open handles to database containers
+        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+        DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
+
+        // lookup record for the task
+        DbXml::XmlValue task = this->get_integration_by_name(name);
+
+        // extract name of record for initial conditions/parameters and lookup the corresponding record
+        std::string package_name = this->get_package_from_integration(task, name);
+        DbXml::XmlValue package = this->get_package_by_name(package_name);
+
+        // extract uid for model
+        std::string model_uid = this->get_model_uid_from_package(package, package_name);
+
+        std::cerr << "Extracted model uid = " << model_uid << std::endl;
+
+        // use the supplied finder to recover the model
+        // throws an exception if the model cannot be found, which should be caught higher up in the task handler
+        model<number>* model = finder(model_uid);
+
+        std::cerr << "Matched model: name = " << model->get_name() << ", " << model->get_author() << std::endl;
+      }
+
+
+    // Extract package name from an integration schema
+    // -- NOTE THAT THE CORRESPONDING CONTAINER IS EXPECTED TO BE OPEN
+    template <typename number>
+    std::string repository<number>::get_package_from_integration(DbXml::XmlValue& value, const std::string& name)
+      {
+        // run a query to find the XML record for the corresponding initial conditions/parameter package
+        std::ostringstream query;
+        query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_XQUERY_WILDCARD << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_INTGRTN_PACKAGE << ")";
+
+        // create a context for the query
+        DbXml::XmlQueryContext ctx = this->mgr->createQueryContext();
+
+        // compile the query
+        DbXml::XmlQueryExpression expr = this->mgr->prepare(query.str(), ctx);
+
+        // execute it and obtain a result set
+        DbXml::XmlResults results = expr.execute(value, ctx);
+
+        if(results.size() != 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_BADLY_FORMED_INTGRTN << " '" << name << "'" << __CPP_TRANSPORT_RUN_REPAIR;
+            throw runtime_exception(runtime_exception::BADLY_FORMED_XML, msg.str());
+          }
+
+        DbXml::XmlValue node;
+        results.next(node);
+
+        return(node.asString());
+      }
+
+
+    // Extract uid name from a package schema
+    // -- NOTE THAT THE CORRESPONDING CONTAINER IS EXPECTED TO BE OPEN
+    template <typename number>
+    std::string repository<number>::get_model_uid_from_package(DbXml::XmlValue& value, const std::string& name)
+      {
+        std::ostringstream query;
+        query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_PACKAGE_SPEC << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_PACKAGE_MODEL << ")";
+
+        // create a context for the query
+        DbXml::XmlQueryContext ctx = this->mgr->createQueryContext();
+
+        // compile the query
+        DbXml::XmlQueryExpression expr = this->mgr->prepare(query.str(), ctx);
+
+        // execute it and obtain a result set
+        DbXml::XmlResults results = expr.execute(value, ctx);
+
+        if(results.size() != 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_BADLY_FORMED_PACKAGE << " '" << name << "'" << __CPP_TRANSPORT_RUN_REPAIR;
+            throw runtime_exception(runtime_exception::BADLY_FORMED_XML, msg.str());
+          }
+
+        DbXml::XmlValue node;
+        results.next(node);
+
+        return(model_delegate::extract_uid(this->mgr, node));
+      }
+
+
+    template <typename number>
+    DbXml::XmlValue repository<number>::get_integration_by_name(const std::string& name)
+      {
+        assert(this->env != nullptr);
+        assert(this->mgr != nullptr);
+
+        // obtain handles to database container
+        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+
+        DbXml::XmlDocument integration_document;
         try
           {
-            // open database containers
-            DbXml::XmlContainer models = this->mgr->openContainer(this->models_path.string().c_str());
-            DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
-
-            DbXml::XmlDocument task_document;
-            try
-              {
-                // find XML document corresponding to our task name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
-                task_document = integrations.getDocument(name);
-              }
-            catch (DbXml::XmlException& xe)
-              {
-                if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
-                  {
-                    throw runtime_exception(runtime_exception::TASK_NOT_FOUND, name);
-                  }
-                else
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-                  }
-              }
-
-            // convert task XML document to an XmlValue which can be queried
-            DbXml::XmlValue task(task_document);
-
-            // now run a query to find the XML record for the corresponding initial conditions/parameter set
-            std::ostringstream model_query;
-            model_query << "distinct-values(" << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_XQUERY_WILDCARD << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_MODEL_SPECIFIER << ")";
-
-            // create a context for the query
-            DbXml::XmlQueryContext model_ctx = this->mgr->createQueryContext();
-
-            // compile the query
-            DbXml::XmlQueryExpression model_expr = this->mgr->prepare(model_query.str(), model_ctx);
-
-            // execute it and obtain a result set
-            DbXml::XmlResults model_results = model_expr.execute(task, model_ctx);
-
-            if(model_results.size() != 1) throw runtime_exception(runtime_exception::BADLY_FORMED_XML_INTEGRATION, name);
-
-            DbXml::XmlValue model_node;
-            model_results.next(model_node);
-
-            std::string model_name = model_node.asString();
-
-            DbXml::XmlDocument model_document;
-            try
-              {
-                // find XML document corresponding to our model name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
-                model_document = models.getDocument(model_name);
-              }
-            catch (DbXml::XmlException& xe)
-              {
-                if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
-                  {
-                    throw runtime_exception(runtime_exception::MODEL_NOT_FOUND, model_name);
-                  }
-                else
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-                  }
-              }
+            // find XML document corresponding to our integration name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
+            integration_document = integrations.getDocument(name);
           }
         catch (DbXml::XmlException& xe)
           {
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, xe.what());
+            if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
+              {
+                throw runtime_exception(runtime_exception::TASK_NOT_FOUND, name);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
           }
+
+        DbXml::XmlValue integration(integration_document);
+
+        return(integration);
       }
+
+
+    template <typename number>
+    DbXml::XmlValue repository<number>::get_package_by_name(const std::string& name)
+      {
+        assert(this->env != nullptr);
+        assert(this->mgr != nullptr);
+
+        // obtain handles to database container
+        DbXml::XmlContainer packages = this->mgr->openContainer(this->packages_path.string().c_str());
+
+        DbXml::XmlDocument package_document;
+        try
+          {
+            // find XML document corresponding to our model name; will throw a DOCUMENT_NOT_FOUND EXCEPTION if it does not exist
+            package_document = packages.getDocument(name);
+          }
+        catch (DbXml::XmlException& xe)
+          {
+            if(xe.getExceptionCode() == DbXml::XmlException::DOCUMENT_NOT_FOUND)
+              {
+                throw runtime_exception(runtime_exception::MODEL_NOT_FOUND, name);
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_QUERY_ERROR << xe.getExceptionCode() << ": " << xe.what() << "')";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
+          }
+
+        DbXml::XmlValue package(package_document);
+
+        return(package);
+      }
+
 
   }   // namespace transport
 

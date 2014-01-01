@@ -22,8 +22,9 @@ namespace transport
       public:
 
         typedef enum { RUNTIME_ERROR, MPI_ERROR,
-                       TASK_NOT_FOUND, MODEL_NOT_FOUND,
-                       BADLY_FORMED_XML_INTEGRATION, BADLY_FORMED_XML_MODEL
+                       TASK_NOT_FOUND, MODEL_NOT_FOUND, REPO_NOT_FOUND,
+                       BADLY_FORMED_XML,
+                       MISSING_MODEL_INSTANCE
                      } exception_type;
         runtime_exception(exception_type t, const std::string msg)
           : type(t), std::runtime_error(msg)

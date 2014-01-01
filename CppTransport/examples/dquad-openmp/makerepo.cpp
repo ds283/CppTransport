@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     transport::threepf_task<double> tk = transport::threepf_task<double>("threepf-1", ics, times, ks, model->kconfig_kstar_factory());
 
 //    // write the initial conditions/parameter specification into the model repository
-//    mgr->write_model(ics, model);
+//    mgr->write_package(ics, model);
 
     // write the initial conditions/parameter specification and integration specification into the model repository
     mgr->write_integration(tk, model);

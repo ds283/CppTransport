@@ -48,7 +48,7 @@ namespace transport
         //! Destroy a task manager.
         ~task_manager();
 
-        // INTERFACE -- REPOSITORY-MANAGEMENT
+        // INTERFACE -- REPOSITORY MANAGEMENT
 
       public:
         //! Write a model/initial conditions/parameters combination to the repository
@@ -63,6 +63,9 @@ namespace transport
       public:
         //! Query whether we are the master process
         bool is_master(void) const { return(this->world.rank() == __CPP_TRANSPORT_RANK_MASTER); }
+
+        //! Return rank of this process
+        unsigned int get_rank(void) const { return(this->world.rank()); }
 
         //! If we are the master process, execute any queued tasks
         void execute_tasks(void);
@@ -121,7 +124,22 @@ namespace transport
                       {
                         ++i;
                         std::string repo_path = static_cast<std::string>(argv[i]);
-                        repo = new repository<number>(repo_path);
+                        try
+                          {
+                            repo = new repository<number>(repo_path);
+                          }
+                        catch (runtime_exception& xe)
+                          {
+                            if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
+                              {
+                                this->error(xe.what());
+                                repo = nullptr;
+                              }
+                            else
+                              {
+                                throw xe;
+                              }
+                          }
                       }
                   }
                 else if (static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TASK)
@@ -168,7 +186,7 @@ namespace transport
 
         if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
 
-        this->repo->write_model(ics, m);
+        this->repo->write_package(ics, m);
       }
 
 
@@ -207,35 +225,41 @@ namespace transport
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
-        assert(this->repo != nullptr);
-
-        for(std::list<std::string>::const_iterator t = this->task_queue.begin(); t != this->task_queue.end(); t++)
+        if(this->repo == nullptr)
           {
-            try
+            this->error(__CPP_TRANSPORT_REPO_NONE);
+          }
+        else
+          {
+            for(std::list<std::string>::const_iterator t = this->task_queue.begin(); t != this->task_queue.end(); t++)
               {
-                task<number>& tk = this->repo->query_task(*t);
-              }
-            catch (runtime_exception xe)
-              {
-                if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
+                try
                   {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                    this->error(msg.str());
+                    task<number>& tk = this->repo->query_task(*t, this->model_finder_factory());
                   }
-                else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
+                catch (runtime_exception xe)
                   {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
-                        << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                    this->error(msg.str());
-                  }
-                else
-                  {
-                    throw xe;
+                    if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
+                      {
+                        std::ostringstream msg;
+                        msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                        this->error(msg.str());
+                      }
+                    else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
+                      {
+                        std::ostringstream msg;
+                        msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
+                          << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                        this->error(msg.str());
+                      }
+                    else
+                      {
+                        throw xe;
+                      }
                   }
               }
           }
+
       }
 
 
