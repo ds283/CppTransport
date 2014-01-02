@@ -433,16 +433,30 @@ namespace transport
         typename parameters<number>::params_validator p_validator = model->params_validator_factory();
         typename initial_conditions<number>::ics_validator ics_validator = model->ics_validator_factory();
 
+        // get XML schema describing initial conditions/parameters package
+        // this comes from the initial_conditions<number> serialization, and contains an
+        // embedded parameters<number> serialization
         DbXml::XmlValue ics_group = this->get_ics_group(package, package_name);
 
+        // search for the embedded parameters<number> serialization and construct a parameters<number> object from it
         number Mp;
-        std::vector<number> p;
-        std::vector<std::string> n;
-        parameters_delegate::extract(this->mgr, ics_group, Mp, p, n, model->get_param_names());
+        std::vector<number> params;
+        std::vector<std::string> param_names;
+        parameters_delegate::extract(this->mgr, ics_group, Mp, params, param_names, model->get_param_names());
 
-        parameters<number> params(Mp, p, n, p_validator);
+        parameters<number> parameters(Mp, params, param_names, p_validator);
 
-        std::cerr << params;
+        std::cerr << parameters;
+
+        // now construct an initial_conditions<number> object
+        double Nstar;
+        std::vector<number> coords;
+        std::vector<std::string> coord_names;
+        ics_delegate::extract(this->mgr, ics_group, Nstar, coords, coord_names, model->get_state_names());
+
+        initial_conditions<number> ics(package_name, parameters, coords, coord_names, Nstar, ics_validator);
+
+        std::cerr << ics;
       }
 
 

@@ -116,6 +116,7 @@
 #define __CPP_TRANSPORT_BADLY_FORMED_PACKAGE  "Badly formed XML for 'package' document"
 #define __CPP_TRANSPORT_BADLY_FORMED_MODEL    "Badly formed XML for 'model' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS   "Badly formed XML for 'parameters' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_ICS      "Badly formed XML for 'initial_conditions' group"
 #define __CPP_TRANSPORT_RUN_REPAIR            "; consider checking database integrity"
 #define __CPP_TRANSPORT_REPO_FOR_TASK         "for task"
 
@@ -133,6 +134,7 @@
 
 #define __CPP_TRANSPORT_PARAMS_TAG            "Parameters:"
 #define __CPP_TRANSPORT_MPLANCK_TAG           "M_Planck = "
+#define __CPP_TRANSPORT_ICS_TAG               "Initial conditions:"
 
 #define __CPP_TRANSPORT_MULTIPLE_SET_REPO     "Multiple repository specifiers; the second and subsequent specifiers will be ignored"
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
