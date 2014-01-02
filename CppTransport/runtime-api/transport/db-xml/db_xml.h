@@ -20,7 +20,7 @@
 
 
 // the Berkeley DB XML API wants all string provided as (const unsigned char*) types
-// Here, this is done with a reinterpret_cast which may be a slight blunt solution
+// Here, this is done with a reinterpret_cast which may be a slightly blunt solution
 #define __CPP_TRANSPORT_DBXML_STRING(str) reinterpret_cast<const unsigned char*>(str)
 
 
@@ -86,7 +86,7 @@ namespace dbxml_delegate
 
                 if(t_a == this->order_map.end() || t_b == this->order_map.end()) throw transport::runtime_exception(transport::runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_NAMED_LIST_FAIL);
 
-                return((*t_a) < (*t_b));
+                return((*t_a).second < (*t_b).second);
               }
 
           protected:
