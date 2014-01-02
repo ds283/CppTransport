@@ -252,6 +252,12 @@ namespace transport
                           << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                         this->error(msg.str());
                       }
+                    else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
+                      {
+                        std::ostringstream msg;
+                        msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                        this->error(msg.str());
+                      }
                     else
                       {
                         throw xe;

@@ -17,12 +17,15 @@
 #include "transport/tasks/task.h"
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
+#include "transport/concepts/initial_conditions.h"
+#include "transport/concepts/parameters.h"
 
 #include "dbxml/db.h"
 #include "dbxml/dbxml/DbXml.hpp"
 
 #include "boost/filesystem/operations.hpp"
 #include "exceptions.h"
+#import "db_xml.h"
 
 
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
@@ -89,15 +92,18 @@ namespace transport
 
       protected:
         //! Query the database for a named model, returned as an XmlValue
-        DbXml::XmlValue get_package_by_name(const std::string& name);
+        DbXml::XmlDocument get_package_by_name(const std::string& name);
         //! Query the database for a named integration task, returned as an XmlValue
-        DbXml::XmlValue get_integration_by_name(const std::string& name);
+        DbXml::XmlDocument get_integration_by_name(const std::string& name);
         //! Given an XmlValue representing an integration schema, extract the associated package name.
         //! A handle to the associated container is not needed explicitly, but is expected to be held open.
         std::string get_package_from_integration(DbXml::XmlValue& value, const std::string& name);
         //! Given an XmlValue representing a package schema, extract the associated model uid.
         //! A handle to the associated container is not needed explicitly, but is expected to be held open.
         std::string get_model_uid_from_package(DbXml::XmlValue& value, const std::string& name);
+        //! Given an XmlValue representing a package schema, extract the associated ics-group schema
+        //! A handle to the associated container is not needed explicitly, but is expected to be held open.
+        DbXml::XmlValue get_ics_group(DbXml::XmlValue& value, const std::string& name);
 
         // INTERNAL DATA
 
@@ -408,22 +414,35 @@ namespace transport
         DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
 
         // lookup record for the task
-        DbXml::XmlValue task = this->get_integration_by_name(name);
+        DbXml::XmlDocument task_doc = this->get_integration_by_name(name);
+        DbXml::XmlValue task(task_doc);
 
         // extract name of record for initial conditions/parameters and lookup the corresponding record
         std::string package_name = this->get_package_from_integration(task, name);
-        DbXml::XmlValue package = this->get_package_by_name(package_name);
+        DbXml::XmlDocument package_doc = this->get_package_by_name(package_name);
+        DbXml::XmlValue package(package_doc);
 
         // extract uid for model
         std::string model_uid = this->get_model_uid_from_package(package, package_name);
-
-        std::cerr << "Extracted model uid = " << model_uid << std::endl;
 
         // use the supplied finder to recover the model
         // throws an exception if the model cannot be found, which should be caught higher up in the task handler
         model<number>* model = finder(model_uid);
 
-        std::cerr << "Matched model: name = " << model->get_name() << ", " << model->get_author() << std::endl;
+        // obtain parameter and initial-conditions validators from this model
+        typename parameters<number>::params_validator p_validator = model->params_validator_factory();
+        typename initial_conditions<number>::ics_validator ics_validator = model->ics_validator_factory();
+
+        DbXml::XmlValue ics_group = this->get_ics_group(package, package_name);
+
+        number Mp;
+        std::vector<number> p;
+        std::vector<std::string> n;
+        parameters_delegate::extract(this->mgr, ics_group, Mp, p, n, model->get_param_names());
+
+        parameters<number> params(Mp, p, n, p_validator);
+
+        std::cerr << params;
       }
 
 
@@ -438,24 +457,8 @@ namespace transport
           << __CPP_TRANSPORT_XQUERY_WILDCARD << __CPP_TRANSPORT_XQUERY_SEPARATOR
           << __CPP_TRANSPORT_NODE_INTGRTN_PACKAGE << ")";
 
-        // create a context for the query
-        DbXml::XmlQueryContext ctx = this->mgr->createQueryContext();
-
-        // compile the query
-        DbXml::XmlQueryExpression expr = this->mgr->prepare(query.str(), ctx);
-
-        // execute it and obtain a result set
-        DbXml::XmlResults results = expr.execute(value, ctx);
-
-        if(results.size() != 1)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_BADLY_FORMED_INTGRTN << " '" << name << "'" << __CPP_TRANSPORT_RUN_REPAIR;
-            throw runtime_exception(runtime_exception::BADLY_FORMED_XML, msg.str());
-          }
-
-        DbXml::XmlValue node;
-        results.next(node);
+        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
+                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_INTGRTN) + " '" + name + "'");
 
         return(node.asString());
       }
@@ -467,35 +470,36 @@ namespace transport
     std::string repository<number>::get_model_uid_from_package(DbXml::XmlValue& value, const std::string& name)
       {
         std::ostringstream query;
-        query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SEPARATOR
+        query << __CPP_TRANSPORT_XQUERY_SEPARATOR
           << __CPP_TRANSPORT_NODE_PACKAGE_SPEC << __CPP_TRANSPORT_XQUERY_SEPARATOR
-          << __CPP_TRANSPORT_NODE_PACKAGE_MODEL << ")";
+          << __CPP_TRANSPORT_NODE_PACKAGE_MODEL;
 
-        // create a context for the query
-        DbXml::XmlQueryContext ctx = this->mgr->createQueryContext();
-
-        // compile the query
-        DbXml::XmlQueryExpression expr = this->mgr->prepare(query.str(), ctx);
-
-        // execute it and obtain a result set
-        DbXml::XmlResults results = expr.execute(value, ctx);
-
-        if(results.size() != 1)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_BADLY_FORMED_PACKAGE << " '" << name << "'" << __CPP_TRANSPORT_RUN_REPAIR;
-            throw runtime_exception(runtime_exception::BADLY_FORMED_XML, msg.str());
-          }
-
-        DbXml::XmlValue node;
-        results.next(node);
+        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
+                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
 
         return(model_delegate::extract_uid(this->mgr, node));
       }
 
 
+    // Extract an ics group from a package schema
+    // -- NOTE THAT THE CORRESPONDING CONTAINER IS EXPECTED TO BE OPEN
     template <typename number>
-    DbXml::XmlValue repository<number>::get_integration_by_name(const std::string& name)
+    DbXml::XmlValue repository<number>::get_ics_group(DbXml::XmlValue& value, const std::string& name)
+      {
+        std::ostringstream query;
+        query << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_PACKAGE_SPEC << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_PACKAGE_ICS;
+
+        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
+                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
+
+        return(node);
+      }
+
+
+    template <typename number>
+    DbXml::XmlDocument repository<number>::get_integration_by_name(const std::string& name)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
@@ -523,14 +527,12 @@ namespace transport
               }
           }
 
-        DbXml::XmlValue integration(integration_document);
-
-        return(integration);
+        return(integration_document);
       }
 
 
     template <typename number>
-    DbXml::XmlValue repository<number>::get_package_by_name(const std::string& name)
+    DbXml::XmlDocument repository<number>::get_package_by_name(const std::string& name)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
@@ -558,9 +560,7 @@ namespace transport
               }
           }
 
-        DbXml::XmlValue package(package_document);
-
-        return(package);
+        return(package_document);
       }
 
 

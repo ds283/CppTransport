@@ -25,6 +25,7 @@
 #include "transport/scheduler/scheduler.h"
 
 #include "transport/manager/instance_manager.h"
+#import "db_xml.h"
 
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
@@ -420,9 +421,15 @@ namespace transport
       {
         std::string extract_uid(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
           {
-            return(value.asString());
+            std::ostringstream query;
+            query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF
+              << __CPP_TRANSPORT_XQUERY_SEPARATOR << __CPP_TRANSPORT_NODE_MODEL << ")";
+
+            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_MODEL);
+
+            return(node.asString());
           }
-      }
+      }   // namespace model_delegate
 
 
   }    // namespace transport

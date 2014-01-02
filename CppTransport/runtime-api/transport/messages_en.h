@@ -114,8 +114,10 @@
 #define __CPP_TRANSPORT_REPO_NONE             "Nothing to do: no repository specified"
 #define __CPP_TRANSPORT_BADLY_FORMED_INTGRTN  "Badly formed XML for 'integration' document"
 #define __CPP_TRANSPORT_BADLY_FORMED_PACKAGE  "Badly formed XML for 'package' document"
-#define __CPP_TRANSPORT_BADLY_FORMED_MODEL    "Badly formed XML for 'model' node"
+#define __CPP_TRANSPORT_BADLY_FORMED_MODEL    "Badly formed XML for 'model' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_PARAMS   "Badly formed XML for 'parameters' group"
 #define __CPP_TRANSPORT_RUN_REPAIR            "; consider checking database integrity"
+#define __CPP_TRANSPORT_REPO_FOR_TASK         "for task"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
@@ -129,10 +131,15 @@
 #define __CPP_TRANSPORT_TASK_THREEPF_TYPE     "Unknown wavenumber grid type when attempting to write threepf task to repository"
 #define __CPP_TRANSPORT_SERIALIZE_BASE_TASK   "Error: attempt to serialize base 'task' object"
 
+#define __CPP_TRANSPORT_PARAMS_TAG            "Parameters:"
+#define __CPP_TRANSPORT_MPLANCK_TAG           "M_Planck = "
+
 #define __CPP_TRANSPORT_MULTIPLE_SET_REPO     "Multiple repository specifiers; the second and subsequent specifiers will be ignored"
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
+
+#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Lookup failed in dbxml_delegate::named_list"
 
 #define __CPP_TRANSPORT_EXEC_SLAVE            "task_manager::execute_tasks() called on slave process"
 #define __CPP_TRANSPORT_WAIT_MASTER           "task_manager::wait_for_tasks() called on master process"
