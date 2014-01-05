@@ -151,6 +151,57 @@ namespace transport
       }
 
 
+    namespace range_dbxml
+      {
+
+        template <typename number>
+        range<number> extract(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
+          {
+            // strip out range-value XML block
+            std::ostringstream query_range;
+            query_range << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_RANGE;
+
+            DbXml::XmlValue range_node = dbxml_helper::extract_single_node(query_range.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            std::ostringstream query_min;
+            query_min << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_MIN << ")";
+
+            DbXml::XmlValue min_node = dbxml_helper::extract_single_node(query_min.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            std::ostringstream query_max;
+            query_max << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_MAX << ")";
+
+            DbXml::XmlValue max_node = dbxml_helper::extract_single_node(query_max.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            std::ostringstream query_steps;
+            query_steps << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_STEPS << ")";
+
+            DbXml::XmlValue steps_node = dbxml_helper::extract_single_node(query_steps.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            std::ostringstream query_spacing;
+            query_spacing << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+              << __CPP_TRANSPORT_NODE_SPACING << ")";
+
+            DbXml::XmlValue spacing_node = dbxml_helper::extract_single_node(query_spacing.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            typename range<number>::spacing_type sptype = range<number>::linear;
+
+            if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LINEAR) sptype = range<number>::linear;
+            else if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LOGARITHMIC) sptype = range<number>::logarithmic;
+            else throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+            return range<number>(boost::lexical_cast<number>(min_node.asString()),
+                                 boost::lexical_cast<number>(max_node.asString()),
+                                 boost::lexical_cast<unsigned int>(steps_node.asString()),
+                                 sptype);
+          }
+
+      }   // namespace range_dbxml
+
   }   // namespace transport
 
 

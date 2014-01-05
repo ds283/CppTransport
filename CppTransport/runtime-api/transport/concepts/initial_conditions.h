@@ -31,7 +31,7 @@ namespace transport
   {
 
     // functions to extract information from XML schema
-    namespace ics_delegate
+    namespace ics_dbxml
       {
 
         void extract_Nstar(DbXml::XmlManager* mgr, DbXml::XmlValue& value, double& Nstar)
@@ -41,7 +41,7 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_NSTAR << ")";
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             Nstar = boost::lexical_cast<double>(node.asString());
           }
@@ -56,10 +56,10 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_ICS_VALUES;
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             if(node.getLocalName() != __CPP_TRANSPORT_NODE_ICS_VALUES) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-            std::vector< dbxml_delegate::named_list::element<number> > temporary_list;
+            std::vector< dbxml_helper::named_list::element<number> > temporary_list;
 
             DbXml::XmlValue child = node.getFirstChild();
             while(child.getType() != DbXml::XmlValue::NONE)
@@ -74,7 +74,7 @@ namespace transport
                 DbXml::XmlValue value = child.getFirstChild();
                 if(value.getNodeType() != DbXml::XmlValue::TEXT_NODE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
-                temporary_list.push_back(dbxml_delegate::named_list::element<number>(name.getNodeValue(),
+                temporary_list.push_back(dbxml_helper::named_list::element<number>(name.getNodeValue(),
                                                                                      boost::lexical_cast<number>(value.getNodeValue())));
 
                 child = child.getNextSibling();
@@ -82,8 +82,8 @@ namespace transport
 
             if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
-            dbxml_delegate::named_list::ordering order_map = dbxml_delegate::named_list::make_ordering(ordering);
-            dbxml_delegate::named_list::comparator<number> cmp(order_map);
+            dbxml_helper::named_list::ordering order_map = dbxml_helper::named_list::make_ordering(ordering);
+            dbxml_helper::named_list::comparator<number> cmp(order_map);
             std::sort(temporary_list.begin(), temporary_list.end(), cmp);
 
             for(unsigned int i = 0; i < temporary_list.size(); i++)
@@ -104,13 +104,13 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS;
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             extract_Nstar(mgr, node, Nstar);
             extract_coords(mgr, node, c, n, ordering);
           }
 
-      }   // namespace ics_delegate
+      }   // namespace ics_dbxml
 
     template <typename number> class initial_conditions;
 
@@ -203,6 +203,10 @@ namespace transport
         // validate supplied initial conditions - we rely on the validator to throw
         // an exception if the supplied number of ics is incorrect
         v(p, i, ics);
+
+        std::cerr << "Set up parameters:" << std::endl;
+        std::cerr << params << std::endl;
+        std::cerr << "Finished constructor" << std::endl;
       }
 
 
@@ -245,6 +249,9 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
       {
+        out << obj.params << std::endl;
+        out << std::endl;
+
         out << __CPP_TRANSPORT_ICS_TAG << std::endl;
         for(unsigned int i = 0; i < obj.ics.size(); i++)
           {

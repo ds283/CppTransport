@@ -117,6 +117,8 @@
 #define __CPP_TRANSPORT_BADLY_FORMED_MODEL    "Badly formed XML for 'model' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS   "Badly formed XML for 'parameters' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_ICS      "Badly formed XML for 'initial_conditions' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_TASK     "Badly formed XML for 'task' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_RANGE    "Badly formed XML for 'range' group"
 #define __CPP_TRANSPORT_RUN_REPAIR            "; consider checking database integrity"
 #define __CPP_TRANSPORT_REPO_FOR_TASK         "for task"
 
@@ -141,7 +143,7 @@
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
 
-#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Lookup failed in dbxml_delegate::named_list"
+#define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Lookup failed in dbxml_helper::named_list"
 
 #define __CPP_TRANSPORT_EXEC_SLAVE            "task_manager::execute_tasks() called on slave process"
 #define __CPP_TRANSPORT_WAIT_MASTER           "task_manager::wait_for_tasks() called on master process"

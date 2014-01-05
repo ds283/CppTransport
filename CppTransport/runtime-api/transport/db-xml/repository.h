@@ -88,7 +88,7 @@ namespace transport
 
       public:
         //! Query the database for a named task, and reconstruct it if present
-        task<number>& query_task(const std::string& name, typename instance_manager<number>::model_finder finder);
+        task<number>* query_task(const std::string& name, typename instance_manager<number>::model_finder finder);
 
       protected:
         //! Query the database for a named model, returned as an XmlValue
@@ -104,6 +104,13 @@ namespace transport
         //! Given an XmlValue representing a package schema, extract the associated ics-group schema
         //! A handle to the associated container is not needed explicitly, but is expected to be held open.
         DbXml::XmlValue get_ics_group(DbXml::XmlValue& value, const std::string& name);
+
+        //! Build an initial_conditions<> object from an ics-group XML schema
+        initial_conditions<number> build_ics_object(DbXml::XmlValue& ics_group, const std::string& package_name,
+                                                    model<number>* model);
+        //! Build a task<> object from a task-group XML schema
+        task<number>* build_task_object(DbXml::XmlValue& task_group, const initial_conditions<number>& ics,
+                                        model<number>* model, const std::string& task_name);
 
         // INTERNAL DATA
 
@@ -222,7 +229,7 @@ namespace transport
             if(env != nullptr) env->close(env, 0);
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_ENV << " '" << path << "'";
-            throw std::runtime_error(msg.str());
+            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
         // set up environment to enable logging, transactional support
@@ -271,7 +278,7 @@ namespace transport
         assert(this->mgr != nullptr);
         assert(m != nullptr);
 
-        if(m == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         try
           {
@@ -316,7 +323,7 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_INSERT_ERROR << xe.getExceptionCode() << ": '" << xe.what() << "')";
-                throw std::runtime_error(msg.str());
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
           }
       }
@@ -330,7 +337,7 @@ namespace transport
         assert(this->mgr != nullptr);
         assert(m != nullptr);
 
-        if(m == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         try
           {
@@ -353,7 +360,7 @@ namespace transport
                   {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_INSERT_ERROR << xe.getExceptionCode() << ": '" << xe.what() << "')";
-                    throw std::runtime_error(msg.str());
+                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
                   }
               }
 
@@ -404,7 +411,7 @@ namespace transport
 
     // Query the database for a named task
     template <typename number>
-    task<number>& repository<number>::query_task(const std::string& name, typename instance_manager<number>::model_finder finder)
+    task<number>* repository<number>::query_task(const std::string& name, typename instance_manager<number>::model_finder finder)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
@@ -415,10 +422,10 @@ namespace transport
 
         // lookup record for the task
         DbXml::XmlDocument task_doc = this->get_integration_by_name(name);
-        DbXml::XmlValue task(task_doc);
+        DbXml::XmlValue task_group(task_doc);
 
         // extract name of record for initial conditions/parameters and lookup the corresponding record
-        std::string package_name = this->get_package_from_integration(task, name);
+        std::string package_name = this->get_package_from_integration(task_group, name);
         DbXml::XmlDocument package_doc = this->get_package_by_name(package_name);
         DbXml::XmlValue package(package_doc);
 
@@ -429,34 +436,86 @@ namespace transport
         // throws an exception if the model cannot be found, which should be caught higher up in the task handler
         model<number>* model = finder(model_uid);
 
-        // obtain parameter and initial-conditions validators from this model
-        typename parameters<number>::params_validator p_validator = model->params_validator_factory();
-        typename initial_conditions<number>::ics_validator ics_validator = model->ics_validator_factory();
-
         // get XML schema describing initial conditions/parameters package
         // this comes from the initial_conditions<number> serialization, and contains an
         // embedded parameters<number> serialization
         DbXml::XmlValue ics_group = this->get_ics_group(package, package_name);
 
+        // build initial_conditions<> object from this schema
+        initial_conditions<number> ics = this->build_ics_object(ics_group, package_name, model);
+
+        // build task<> object from the original task schema
+        task<number>* tk = this->build_task_object(task_group, ics, model, name);
+
+        std::cerr << *tk << std::endl;
+
+        return(tk);
+      }
+
+
+    // Build a task<> object from an task XML schema
+    template <typename number>
+    task<number>* repository<number>::build_task_object(DbXml::XmlValue& task_group, const initial_conditions<number>& ics,
+                                                        model<number>* model, const std::string& task_name)
+      {
+        task<number>* task = nullptr;
+
+        // first job is to decide what sort of integration we have - a twopf or a threepf?
+        if(!(task_group.getType() == DbXml::XmlValue::NODE && task_group.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+
+        DbXml::XmlValue root_node = task_group.getFirstChild();
+        if(!(root_node.getType() == DbXml::XmlValue::NODE && root_node.getNodeType() == DbXml::XmlValue::ELEMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+
+        // now pull out the integration-task schema
+        std::ostringstream query_task;
+        query_task << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
+          << __CPP_TRANSPORT_NODE_INTGRTN_TASK;
+
+        DbXml::XmlValue task_node = dbxml_helper::extract_single_node(query_task.str(), this->mgr, root_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+
+        // the name of this node should tell us what we are dealing with
+        if(root_node.getNodeName() == __CPP_TRANSPORT_NODE_TWOPF_SPEC)
+          {
+            task = task_dbxml::extract_twopf_task(this->mgr, task_node, task_name, ics, model->kconfig_kstar_factory());
+          }
+        else if(root_node.getNodeName() == __CPP_TRANSPORT_NODE_THREEPF_SPEC)
+          {
+            task = task_dbxml::extract_threepf_task(this->mgr, task_node, task_name, ics, model->kconfig_kstar_factory());
+          }
+        else throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+
+        assert(task != nullptr);
+
+        return(task);
+      }
+
+
+    // Build an initial_conditions<> object from an ics XML schema
+    template <typename number>
+    initial_conditions<number> repository<number>::build_ics_object(DbXml::XmlValue& ics_group, const std::string& package_name,
+                                                                    model<number>* model)
+      {
+        // obtain parameter and initial-conditions validators from this model
+        typename parameters<number>::params_validator p_validator = model->params_validator_factory();
+        typename initial_conditions<number>::ics_validator ics_validator = model->ics_validator_factory();
+
         // search for the embedded parameters<number> serialization and construct a parameters<number> object from it
         number Mp;
         std::vector<number> params;
         std::vector<std::string> param_names;
-        parameters_delegate::extract(this->mgr, ics_group, Mp, params, param_names, model->get_param_names());
+        parameters_dbxml::extract(this->mgr, ics_group, Mp, params, param_names, model->get_param_names());
 
         parameters<number> parameters(Mp, params, param_names, p_validator);
-
-        std::cerr << parameters;
 
         // now construct an initial_conditions<number> object
         double Nstar;
         std::vector<number> coords;
         std::vector<std::string> coord_names;
-        ics_delegate::extract(this->mgr, ics_group, Nstar, coords, coord_names, model->get_state_names());
+        ics_dbxml::extract(this->mgr, ics_group, Nstar, coords, coord_names, model->get_state_names());
 
-        initial_conditions<number> ics(package_name, parameters, coords, coord_names, Nstar, ics_validator);
+        std::cerr << "Test" << std::endl << parameters << std::endl << "End test" << std::endl;
 
-        std::cerr << ics;
+        return initial_conditions<number>(package_name, parameters, coords, coord_names, Nstar, ics_validator);
       }
 
 
@@ -471,8 +530,8 @@ namespace transport
           << __CPP_TRANSPORT_XQUERY_WILDCARD << __CPP_TRANSPORT_XQUERY_SEPARATOR
           << __CPP_TRANSPORT_NODE_INTGRTN_PACKAGE << ")";
 
-        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
-                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_INTGRTN) + " '" + name + "'");
+        DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), this->mgr, value,
+                                                                 std::string(__CPP_TRANSPORT_BADLY_FORMED_INTGRTN) + " '" + name + "'");
 
         return(node.asString());
       }
@@ -488,8 +547,8 @@ namespace transport
           << __CPP_TRANSPORT_NODE_PACKAGE_SPEC << __CPP_TRANSPORT_XQUERY_SEPARATOR
           << __CPP_TRANSPORT_NODE_PACKAGE_MODEL;
 
-        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
-                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
+        DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), this->mgr, value,
+                                                                 std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
 
         return(model_delegate::extract_uid(this->mgr, node));
       }
@@ -505,8 +564,8 @@ namespace transport
           << __CPP_TRANSPORT_NODE_PACKAGE_SPEC << __CPP_TRANSPORT_XQUERY_SEPARATOR
           << __CPP_TRANSPORT_NODE_PACKAGE_ICS;
 
-        DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), this->mgr, value,
-                                                                   std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
+        DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), this->mgr, value,
+                                                                 std::string(__CPP_TRANSPORT_BADLY_FORMED_PACKAGE) + " '" + name + "'");
 
         return(node);
       }

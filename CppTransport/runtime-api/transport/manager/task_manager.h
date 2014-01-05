@@ -235,7 +235,9 @@ namespace transport
               {
                 try
                   {
-                    task<number>& tk = this->repo->query_task(*t, this->model_finder_factory());
+                    task<number>* tk = this->repo->query_task(*t, this->model_finder_factory());
+
+                    delete tk;
                   }
                 catch (runtime_exception xe)
                   {
@@ -253,6 +255,12 @@ namespace transport
                         this->error(msg.str());
                       }
                     else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
+                      {
+                        std::ostringstream msg;
+                        msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                        this->error(msg.str());
+                      }
+                    else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
                       {
                         std::ostringstream msg;
                         msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;

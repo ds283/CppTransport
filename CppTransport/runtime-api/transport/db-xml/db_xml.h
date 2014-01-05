@@ -30,7 +30,7 @@
 #define __CPP_TRANSPORT_XQUERY_WILDCARD  "*"
 
 
-namespace dbxml_delegate
+namespace dbxml_helper
   {
 
     namespace named_list
@@ -118,7 +118,7 @@ namespace dbxml_delegate
         return(node);
       }
 
-  }   // namespace dbxml_delegate
+  }   // namespace dbxml_helper
 
 
 #endif //__db_xml_H_

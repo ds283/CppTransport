@@ -31,7 +31,7 @@ namespace transport
   {
 
     // functions to extract information from XML schema
-    namespace parameters_delegate
+    namespace parameters_dbxml
       {
 
         template <typename number>
@@ -42,7 +42,7 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_MPLANCK << ")";
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             M_Planck = boost::lexical_cast<number>(node.asString());
           }
@@ -57,10 +57,10 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_PRM_VALUES;
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             if(node.getLocalName() != __CPP_TRANSPORT_NODE_PRM_VALUES) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-            std::vector< dbxml_delegate::named_list::element<number> > temporary_list;
+            std::vector< dbxml_helper::named_list::element<number> > temporary_list;
 
             DbXml::XmlValue child = node.getFirstChild();
             while(child.getType() != DbXml::XmlValue::NONE)
@@ -73,9 +73,9 @@ namespace transport
                 if(name.getLocalName() != __CPP_TRANSPORT_ATTR_NAME) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
                 DbXml::XmlValue value = child.getFirstChild();
-                if(value.getNodeType() != DbXml::XmlValue::TEXT_NODE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+                if(!(value.getType() == DbXml::XmlValue::NODE && value.getNodeType() == DbXml::XmlValue::TEXT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
-                temporary_list.push_back(dbxml_delegate::named_list::element<number>(name.getNodeValue(),
+                temporary_list.push_back(dbxml_helper::named_list::element<number>(name.getNodeValue(),
                                                                                      boost::lexical_cast<number>(value.getNodeValue())));
 
                 child = child.getNextSibling();
@@ -83,8 +83,8 @@ namespace transport
 
             if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
-            dbxml_delegate::named_list::ordering order_map = dbxml_delegate::named_list::make_ordering(ordering);
-            dbxml_delegate::named_list::comparator<number> cmp(order_map);
+            dbxml_helper::named_list::ordering order_map = dbxml_helper::named_list::make_ordering(ordering);
+            dbxml_helper::named_list::comparator<number> cmp(order_map);
             std::sort(temporary_list.begin(), temporary_list.end(), cmp);
 
             for(unsigned int i = 0; i < temporary_list.size(); i++)
@@ -105,18 +105,18 @@ namespace transport
             query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
               << __CPP_TRANSPORT_NODE_PARAMETERS;
 
-            DbXml::XmlValue node = dbxml_delegate::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             extract_M_Planck(mgr, node, M_Planck);
             extract_parameters(mgr, node, p, n, ordering);
           }
 
-      }   // namespace parameters_delegate
+      }   // namespace parameters_dbxml
 
     template <typename number> class parameters;
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, parameters<number>& obj);
+    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj);
 
     template <typename number>
     class parameters: public xml_serializable
@@ -141,7 +141,7 @@ namespace transport
         void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
       public:
-        friend std::ostream& operator<< <>(std::ostream& out, parameters<number>& obj);
+        friend std::ostream& operator<< <>(std::ostream& out, const parameters<number>& obj);
 
         // INTERNAL DATA
 
@@ -162,20 +162,11 @@ namespace transport
       {
         assert(p.size() == n.size());
 
-        if(M_Planck <= 0.0)
-          {
-            throw std::invalid_argument(__CPP_TRANSPORT_MPLANCK_NEGATIVE);
-          }
+        if(M_Planck <= 0.0) throw std::invalid_argument(__CPP_TRANSPORT_MPLANCK_NEGATIVE);
 
-        if(p.size() == n.size())
-          {
-            // validate supplied parameters
-            v(p, params);
-          }
-        else
-          {
-            throw std::invalid_argument(__CPP_TRANSPORT_PARAMS_MISMATCH);
-          }
+        // validate supplied parameters
+        if(p.size() == n.size()) v(p, params);
+        else throw std::invalid_argument(__CPP_TRANSPORT_PARAMS_MISMATCH);
       }
 
 
@@ -209,7 +200,7 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, parameters<number>& obj)
+    std::ostream& operator<<(std::ostream& out, const parameters<number>& obj)
       {
         out << __CPP_TRANSPORT_PARAMS_TAG << std::endl;
         out << "  " << __CPP_TRANSPORT_MPLANCK_TAG << obj.M_Planck << std::endl;
