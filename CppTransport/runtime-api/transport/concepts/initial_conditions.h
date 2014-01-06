@@ -115,9 +115,6 @@ namespace transport
     template <typename number> class initial_conditions;
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, initial_conditions<number>& obj);
-
-    template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj);
 
     template <typename number>
@@ -174,7 +171,6 @@ namespace transport
         void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
       public:
-        friend std::ostream& operator<< <>(std::ostream& out, initial_conditions<number>& obj);
         friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
 
       protected:
@@ -248,19 +244,14 @@ namespace transport
 //        out << obj.params << std::endl;
 //        out << std::endl;
 
+        assert(obj.ics.size() == obj.names.size());
+
         out << __CPP_TRANSPORT_ICS_TAG << std::endl;
         for(unsigned int i = 0; i < obj.ics.size(); i++)
           {
             out << "  " << obj.names[i] << " = " << obj.ics[i] << std::endl;
           }
         return(out);
-      }
-
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, initial_conditions<number>& obj)
-      {
-        out << (const initial_conditions<number>)obj;
       }
 
   }
