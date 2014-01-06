@@ -14,6 +14,7 @@
 
 #include "transport/manager/instance_manager.h"
 #include "transport/models/model.h"
+#include "transport/db-xml/db_xml.h"
 #include "transport/tasks/task.h"
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
@@ -24,8 +25,6 @@
 #include "dbxml/dbxml/DbXml.hpp"
 
 #include "boost/filesystem/operations.hpp"
-#include "exceptions.h"
-#import "db_xml.h"
 
 
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"

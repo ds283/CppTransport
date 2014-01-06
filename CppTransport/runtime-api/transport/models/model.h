@@ -25,7 +25,6 @@
 #include "transport/scheduler/scheduler.h"
 
 #include "transport/manager/instance_manager.h"
-#import "db_xml.h"
 
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
