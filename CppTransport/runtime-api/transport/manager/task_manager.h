@@ -24,8 +24,9 @@
 #define __CPP_TRANSPORT_RANK_MASTER (0)
 
 
-#define __CPP_TRANSPORT_SWITCH_REPO "-repo"
-#define __CPP_TRANSPORT_SWITCH_TASK "-task"
+#define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
+#define __CPP_TRANSPORT_SWITCH_TASK     "-task"
+#define __CPP_TRANSPORT_SWITCH_RECOVER  "-recovery"
 
 
 namespace transport
@@ -105,6 +106,7 @@ namespace transport
         if(world.rank() == __CPP_TRANSPORT_RANK_MASTER)
           {
             bool multiple_repo_warn = false;
+            bool recovery = false;
 
             for(unsigned int i = 1; i < argc; i++)
               {
@@ -126,7 +128,7 @@ namespace transport
                         std::string repo_path = static_cast<std::string>(argv[i]);
                         try
                           {
-                            repo = new repository<number>(repo_path);
+                            repo = new repository<number>(repo_path, recovery);
                           }
                         catch (runtime_exception& xe)
                           {
@@ -150,6 +152,11 @@ namespace transport
                         ++i;
                         task_queue.push_back(static_cast<std::string>(argv[i]));
                       }
+                  }
+                else if (static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_RECOVER)
+                  {
+                    if(this->repo != nullptr) this->warn(__CPP_TRANSPORT_RECOVER_NOEFFECT);
+                    else recovery = true;
                   }
                 else
                   {
@@ -236,6 +243,8 @@ namespace transport
                 try
                   {
                     task<number>* tk = this->repo->query_task(*t, this->model_finder_factory());
+
+                    std::cerr << *tk << std::endl;
 
                     delete tk;
                   }

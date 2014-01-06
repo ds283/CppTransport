@@ -342,7 +342,7 @@ namespace transport
 
         if(input.size() == $$__NUMBER_PARAMS)
           {
-            output = input;
+            output.assign(input.begin(), input.end());
           }
         else
           {

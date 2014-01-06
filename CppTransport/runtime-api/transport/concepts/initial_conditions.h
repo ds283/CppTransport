@@ -202,11 +202,7 @@ namespace transport
       {
         // validate supplied initial conditions - we rely on the validator to throw
         // an exception if the supplied number of ics is incorrect
-        v(p, i, ics);
-
-        std::cerr << "Set up parameters:" << std::endl;
-        std::cerr << params << std::endl;
-        std::cerr << "Finished constructor" << std::endl;
+        v(params, i, ics);
       }
 
 
@@ -249,8 +245,8 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
       {
-        out << obj.params << std::endl;
-        out << std::endl;
+//        out << obj.params << std::endl;
+//        out << std::endl;
 
         out << __CPP_TRANSPORT_ICS_TAG << std::endl;
         for(unsigned int i = 0; i < obj.ics.size(); i++)

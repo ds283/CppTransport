@@ -204,6 +204,9 @@ namespace transport
       {
         out << __CPP_TRANSPORT_PARAMS_TAG << std::endl;
         out << "  " << __CPP_TRANSPORT_MPLANCK_TAG << obj.M_Planck << std::endl;
+
+        assert(obj.params.size() == obj.names.size());
+
         for(unsigned int i = 0; i < obj.params.size(); i++)
           {
             out << "  " << obj.names[i] << " = " << obj.params[i] << std::endl;

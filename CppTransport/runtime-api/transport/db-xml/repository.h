@@ -60,7 +60,7 @@ namespace transport
 
       public:
         //! Open a repository with a specific pathname
-        repository(const std::string& path);
+        repository(const std::string& path, bool recovery=false);
         //! Create a repository with a specific pathname
         repository(const std::string& path, const repository_creation_key& key, storage_type type=node_storage);
 
@@ -137,7 +137,7 @@ namespace transport
 
     // Open a named repository
     template <typename number>
-    repository<number>::repository(const std::string& path)
+    repository<number>::repository(const std::string& path, bool recovery)
       : env(nullptr), mgr(nullptr)
       {
         root_path = path;
@@ -192,6 +192,7 @@ namespace transport
         // set up environment to enable logging, transactional support
         // and locking (so multiple processes can access the repository safely)
         u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
+        if(recovery) env_flags = env_flags | DB_RECOVER | DB_CREATE;
         env->open(env, env_path.string().c_str(), env_flags, 0);
 
         // set up XmlManager object
@@ -447,8 +448,6 @@ namespace transport
         // build task<> object from the original task schema
         task<number>* tk = this->build_task_object(task_group, ics, model, name);
 
-        std::cerr << *tk << std::endl;
-
         return(tk);
       }
 
@@ -513,9 +512,9 @@ namespace transport
         std::vector<std::string> coord_names;
         ics_dbxml::extract(this->mgr, ics_group, Nstar, coords, coord_names, model->get_state_names());
 
-        std::cerr << "Test" << std::endl << parameters << std::endl << "End test" << std::endl;
+        initial_conditions<number> ics = initial_conditions<number>(package_name, parameters, coords, coord_names, Nstar, ics_validator);
 
-        return initial_conditions<number>(package_name, parameters, coords, coord_names, Nstar, ics_validator);
+        return(ics);
       }
 
 

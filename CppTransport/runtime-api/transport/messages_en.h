@@ -142,6 +142,7 @@
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
+#define __CPP_TRANSPORT_RECOVER_NOEFFECT      "-recover switch with no effect (follows repository specifier)"
 
 #define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Lookup failed in dbxml_helper::named_list"
 
