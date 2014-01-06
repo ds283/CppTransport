@@ -241,8 +241,7 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
       {
-//        out << obj.params << std::endl;
-//        out << std::endl;
+        out << obj.params << std::endl;
 
         assert(obj.ics.size() == obj.names.size());
 

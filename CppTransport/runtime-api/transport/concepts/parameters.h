@@ -211,6 +211,8 @@ namespace transport
           {
             out << "  " << obj.names[i] << " = " << obj.params[i] << std::endl;
           }
+
+        return(out);
       }
 
   }
