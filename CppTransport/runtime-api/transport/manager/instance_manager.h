@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <stdexcept>
 
+#include "transport/version.h"
 #include "transport/exceptions.h"
 #include "transport/messages_en.h"
 #include "transport/models/model.h"
@@ -86,12 +87,18 @@ namespace transport
         // ensure destructor is declared virtual so that derived types are destroyed
 
       public:
+        //! Destroy an instance manager
         virtual ~instance_manager();
 
         // INTERFACE --MODEL MANAGEMENT API
 
-        // register and deregister models from our list
+        //! Register an instance of a model.
+
+        //! There should be only one registered instance of each unique uid, otherwise an exception is thrown.
+        //! This function checks the version of the translator used to produce this model.
+        //! It should be no later than the version of the runtime api we are running, otherwise an exception is thrown
         void register_model(model<number>* m, const std::string& uid);
+        //! Deregister an instance of a model.
         void deregister_model(model<number>* m, const std::string& uid);
 
         // INTERFACE -- MODEL ACCESS
@@ -101,6 +108,7 @@ namespace transport
         model<number>* find_model(const std::string& i);
 
       public:
+        //! Construct a model_finder function for this instance manager
         model_finder model_finder_factory()
           {
             return(std::bind(&instance_manager<number>::find_model, this, std::placeholders::_1));
@@ -123,6 +131,15 @@ namespace transport
     void instance_manager<number>::register_model(model<number>* m, const std::string& uid)
       {
         assert(m != nullptr);
+
+        unsigned int model_version = m->get_translator_version();
+        if(model_version > __CPP_TRANSPORT_RUNTIME_API_VERSION)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_OLD_RUNTIMEAPI_A << " (" << __CPP_TRANSPORT_RUNTIME_API_VERSION << ") "
+              << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " (" << m->get_name() << " " << model_version << ")";
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+          }
 
         model_instance<number> instance(m, uid);
 
