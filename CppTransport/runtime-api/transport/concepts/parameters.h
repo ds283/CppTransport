@@ -97,7 +97,7 @@ namespace transport
                      const std::vector<std::string>& ordering)
           {
             // run a query to find the parameters XML block from this schema
-            std::string dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PARAMETERS);
+            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PARAMETERS);
 
             DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 

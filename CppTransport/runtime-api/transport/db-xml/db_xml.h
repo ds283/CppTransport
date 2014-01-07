@@ -104,7 +104,7 @@ namespace dbxml_helper
             template <typename... nodes>
             std::string build_node(std::string name, nodes... more_nodes)
               {
-                return(name + static_cast<std::string>("/") + node(more_nodes));
+                return(name + static_cast<std::string>("/") + build_node(more_nodes...));
               }
 
           }   // unnamed namepsace
@@ -113,42 +113,42 @@ namespace dbxml_helper
         template <typename... nodes>
         std::string node_self(nodes... more_nodes)
           {
-            return("." + build_node(more_nodes));
+            return("." + build_node(more_nodes...));
           }
 
 
         template <typename... nodes>
         std::string node_root(nodes... more_nodes)
           {
-            return("/" + build_node(more_nodes));
+            return("/" + build_node(more_nodes...));
           }
 
 
         template <typename... nodes>
         std::string value_self(nodes... more_nodes)
           {
-            return(static_cast<std::string>("distinct_values(") + node_self(more_nodes) + static_cast<std::string>(")"));
+            return(static_cast<std::string>("distinct_values(") + node_self(more_nodes...) + static_cast<std::string>(")"));
           }
 
 
         template <typename... nodes>
         std::string value_root(nodes... more_nodes)
           {
-            return(static_cast<std::string>("distinct-values(") + node_root(mode_nodes) + static_cast<std::string>(")"));
+            return(static_cast<std::string>("distinct-values(") + node_root(more_nodes...) + static_cast<std::string>(")"));
           }
 
 
         template <typename... nodes>
         std::string replace_self(std::string new_value, nodes... more_nodes)
           {
-            return(static_cast<std::string>("replace value of node ") + node_self(more_nodes) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
+            return(static_cast<std::string>("replace value of node ") + node_self(more_nodes...) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
           }
 
 
         template <typename... nodes>
-        std::string replace_self(std::string new_value, nodes... more_nodes)
+        std::string replace_root(std::string new_value, nodes... more_nodes)
           {
-            return(static_cast<std::string>("replace value of node ") + node_root(more_nodes) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
+            return(static_cast<std::string>("replace value of node ") + node_root(more_nodes...) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
           }
 
       } // namespace xquery
@@ -167,13 +167,34 @@ namespace dbxml_helper
           {
             std::ostringstream msg;
             msg << excpt_msg << __CPP_TRANSPORT_RUN_REPAIR;
-            throw transport::runtime_exception(transport::runtime_exception::BADLY_FORMED_XML, excpt_msg);
+            throw transport::runtime_exception(transport::runtime_exception::BADLY_FORMED_XML, msg.str());
           }
 
         DbXml::XmlValue node;
         results.next(node);
 
         return(node);
+      }
+
+
+    inline
+    void execute_update(const std::string& update, DbXml::XmlManager* mgr, DbXml::XmlValue& value, const std::string& except_msg)
+      {
+        DbXml::XmlQueryContext ctx = mgr->createQueryContext();
+
+        DbXml::XmlQueryExpression expr = mgr->prepare(update, ctx);
+
+        try
+          {
+            DbXml::XmlResults results = expr.execute(value, ctx);
+          }
+        catch (DbXml::XmlException& xe)
+          {
+            std::ostringstream msg;
+            msg << except_msg << " (DBXML code=" << xe.getExceptionCode() << ": " << xe.what() << ")";
+            throw transport::runtime_exception(transport::runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+
       }
 
   }   // namespace dbxml_helper

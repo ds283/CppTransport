@@ -661,8 +661,7 @@ namespace transport
               {
                 // we expect just a single krange block
                 std::string k_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
-
-                DbXml::XmlValue krange_node = dbxml_helper::extract_single_node(k_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                DbXml::XmlValue krange_node = dbxml_helper::extract_single_node(k_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> ksample = range_dbxml::extract<double>(mgr, krange_node);
 
@@ -672,20 +671,17 @@ namespace transport
               {
                 // we expect three ranges, specifying the sampling points for k_t, alpha and beta
                 std::string kt_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
-
                 DbXml::XmlValue ktrange_node = dbxml_helper::extract_single_node(kt_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> kt_sample = range_dbxml::extract<double>(mgr, ktrange_node);
 
-                std::ostringstream alpha_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
-
+                std::string alpha_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
                 DbXml::XmlValue arange_node = dbxml_helper::extract_single_node(alpha_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> alpha_sample = range_dbxml::extract<double>(mgr, arange_node);
 
                 std::string beta_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
-
-                DbXml::XmlValue brange_node = dbxml_helper::extract_single_node(beta_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                DbXml::XmlValue brange_node = dbxml_helper::extract_single_node(beta_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> beta_sample = range_dbxml::extract<double>(mgr, brange_node);
 
