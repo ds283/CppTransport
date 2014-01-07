@@ -8,6 +8,9 @@
 #ifndef __CPP_TRANSPORT_MESSAGES_EN_H_
 #define __CPP_TRANSPORT_MESSAGES_EN_H_
 
+#define __CPP_TRANSPORT_OLD_RUNTIMEAPI_A      "Runtime API version"
+#define __CPP_TRANSPORT_OLD_RUNTIMEAPI_B      "is too old for model"
+
 #define __CPP_TRANSPORT_EFOLDS                "e-folds"
 #define __CPP_TRANSPORT_TWOPF_MESSAGE         "Two-point function for"
 #define __CPP_TRANSPORT_THREEPF_MESSAGE       "Three-point function for"
