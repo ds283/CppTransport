@@ -15,13 +15,15 @@
 
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
+#include "transport/tasks/task.h"
 #include "transport/db-xml/repository.h"
-#include "transport/messages_en.h"
-#include "transport/exceptions.h"
 
 #include "transport/scheduler/context.h"
 #include "transport/scheduler/scheduler.h"
 #include "transport/scheduler/work_queue.h"
+
+#include "transport/messages_en.h"
+#include "transport/exceptions.h"
 
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
@@ -62,6 +64,16 @@ namespace transport
     template <typename number>
     class task_manager : public instance_manager<number>
       {
+      public:
+        typedef enum { job_task } job_type;
+
+        class job_descriptor
+          {
+          public:
+            job_type    type;
+            std::string name;
+          };
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -102,13 +114,16 @@ namespace transport
         void wait_for_tasks(void);
 
       protected:
-        //! Dispatch a twopf task to the worker processes
+        //! Process a 'task' job -- tasks are integrations, so this dispatches to the appropriate integrator
+        void process_task(const job_descriptor& job);
+
+        //! Dispatch a twopf 'task' (ie., integration) to the worker processes
         void dispatch_twopf_task(twopf_task<number>* tk, model<number>* m);
 
-        //! Dispatch a threepf task to the worker processes
+        //! Dispatch a threepf 'task' (ie., integration) to the worker processes
         void dispatch_threepf_task(threepf_task<number>* tk, model<number>* m);
 
-        //! Make a device context for the worker processes
+        //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
 
         //! Terminate all worker processes
@@ -138,7 +153,7 @@ namespace transport
         repository<number>* repo;
 
         //! Queue of tasks to process
-        std::list<std::string> task_queue;
+        std::list<job_descriptor> job_queue;
       };
 
 
@@ -193,7 +208,10 @@ namespace transport
                     else
                       {
                         ++i;
-                        task_queue.push_back(static_cast<std::string>(argv[i]));
+                        job_descriptor desc;
+                        desc.type = job_task;
+                        desc.name = argv[i];
+                        job_queue.push_back(desc);
                       }
                   }
                 else if (static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_RECOVER)
@@ -281,71 +299,88 @@ namespace transport
           }
         else
           {
-            for(std::list<std::string>::const_iterator t = this->task_queue.begin(); t != this->task_queue.end(); t++)
+            for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
               {
-                try
+                switch((*t).type)
                   {
-                    model<number>* m = nullptr;
-                    task<number>* tk = this->repo->query_task(*t, m, this->model_finder_factory());
-                    assert(m != nullptr);
+                    case job_task:
+                      this->process_task(*t);
+                      break;
 
-                    // set up work queues for this task, and then distributed to worker processes
-
-                    // dynamic_cast<> is a bit unsubtle
-                    if(dynamic_cast< threepf_task<number>* >(tk))
-                      {
-                        threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                        this->dispatch_threepf_task(three_task, m);
-                      }
-                    else if(dynamic_cast< twopf_task<number>* >(tk))
-                      {
-                        twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                        this->dispatch_twopf_task(two_task, m);
-                      }
-                    else
-                      {
-                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
-                      }
-
-                    delete tk;
-                  }
-                catch (runtime_exception xe)
-                  {
-                    if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
-                      {
-                        std::ostringstream msg;
-                        msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                        this->error(msg.str());
-                      }
-                    else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
-                      {
-                        std::ostringstream msg;
-                        msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
-                          << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                        this->error(msg.str());
-                      }
-                    else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
-                      {
-                        std::ostringstream msg;
-                        msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                        this->error(msg.str());
-                      }
-                    else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
-                      {
-                        std::ostringstream msg;
-                        msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << *t << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                        this->error(msg.str());
-                      }
-                    else
-                      {
-                        throw xe;
-                      }
+                    default:
+                      throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_JOB_TYPE);
                   }
               }
           }
 
         // there is no more work, so ask all workers to shut down
+        // and then exit ourselves
         this->terminate_workers();
+      }
+
+
+    template <typename number>
+    void task_manager<number>::process_task(const job_descriptor& job)
+      {
+        try
+          {
+            model<number>* m = nullptr;
+            task<number>* tk = this->repo->query_task(job.name, m, this->model_finder_factory());
+            assert(m != nullptr);
+
+            // set up work queues for this task, and then distributed to worker processes
+
+            // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
+            // of task will be returned
+            if(dynamic_cast< threepf_task<number>* >(tk))
+              {
+                threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
+                this->dispatch_threepf_task(three_task, m);
+              }
+            else if(dynamic_cast< twopf_task<number>* >(tk))
+              {
+                twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
+                this->dispatch_twopf_task(two_task, m);
+              }
+            else
+              {
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+              }
+
+            delete tk;
+          }
+        catch (runtime_exception xe)
+          {
+            if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
+                  << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
+              {
+                std::ostringstream msg;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
+              {
+                std::ostringstream msg;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else
+              {
+                throw xe;
+              }
+          }
       }
 
 

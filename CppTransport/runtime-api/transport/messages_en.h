@@ -121,6 +121,7 @@
 #define __CPP_TRANSPORT_BADLY_FORMED_RANGE    "Badly formed XML for 'range' group"
 #define __CPP_TRANSPORT_RUN_REPAIR            "; consider checking database integrity"
 #define __CPP_TRANSPORT_REPO_FOR_TASK         "for task"
+#define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE      "Unexpected job type in 'task_manager'"
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
