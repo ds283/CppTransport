@@ -16,8 +16,6 @@
 
 #include "transport/messages_en.h"
 
-#include "transport/db-xml/db_xml.h"
-#include "transport/db-xml/xml_serializable.h"
 #include "transport/concepts/flattener.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
@@ -29,8 +27,6 @@
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 #define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (20)
-
-#define __CPP_TRANSPORT_NODE_MODEL                "model-uid"
 
 
 namespace transport
@@ -47,10 +43,11 @@ namespace transport
 
     // basic class from which all other model representations are derived
     template <typename number>
-    class model: public abstract_flattener, public xml_serializable
+    class model: public abstract_flattener
       {
       public:
         typedef std::vector< std::vector<number> > backg_history;
+
 
         // CONSTRUCTORS, DESTRUCTORS
 
@@ -58,6 +55,7 @@ namespace transport
         model(instance_manager<number>* m, const std::string& u, unsigned int v);
 
         virtual ~model();
+
 
         // INTERFACE: EXTRACT MODEL INFORMATION
 
@@ -98,6 +96,7 @@ namespace transport
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
 
+
         // INTERFACE - INITIAL CONDITIONS HANDLING
 
       protected:
@@ -136,6 +135,7 @@ namespace transport
         void write_task_data(const task<number>* task, std::ostream& stream,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
+
         // INTERFACE - PARAMETER HANDLING
 
       protected:
@@ -146,10 +146,6 @@ namespace transport
         //! Make a 'params_validator' objcet for this model
         virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
-        // INTERFACE - XML SERIALIZATION
-
-      public:
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
 
         // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
 
@@ -416,29 +412,6 @@ namespace transport
         transport::threepf<number> tpf(&tk, backg, twopf_re, twopf_im, threepf, this);
         return(tpf);
       }
-
-    // XML SERIALIZATION
-
-    template <typename number>
-    void model<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
-      {
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_MODEL, this->uid);
-      }
-
-
-    // delegate function to deserialize a uid
-    // note that this is declared outside the model class
-    namespace model_delegate
-      {
-        std::string extract_uid(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
-          {
-            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MODEL);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_MODEL);
-
-            return(node.asString());
-          }
-      }   // namespace model_delegate
 
 
   }    // namespace transport
