@@ -77,6 +77,8 @@
 #define __CPP_TRANSPORT_TIMES_RANGE           "Out of range when accessing 'task' object"
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE "Out of range when accessing 'twopf_list_task' object"
 #define __CPP_TRANSPORT_RANGE_RANGE           "Out of range when accessing 'range' object"
+#define __CPP_TRANSPORT_TWOPF_TASK_LIST_NORM  "Attempt to reset comoving normalization in 'twopf_task_list' object"
+#define __CPP_TRANSPORT_TWOPF_TASK_LIST_UNSET "Attempt to push to 'twopf_task_list' before comoving normalization has been set"
 
 #define __CPP_TRANSPORT_INTEGRATION_FAIL      "Fatal: integration failure"
 

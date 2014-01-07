@@ -60,7 +60,8 @@ namespace transport
         // flag which indicates to the integrator whether to store the background
         bool         store_background;
 
-        // serial number - guaranteed to be unique
+        // serial number - guaranteed to be unique.
+        // used to identify this k-configuration in the SQL database
         unsigned int serial;
 
         friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
@@ -99,7 +100,8 @@ namespace transport
         bool                        store_background;
         bool                        store_twopf;
 
-        // serial number - guaranteed to be unique
+        // serial number - guaranteed to be unique.
+        // used to indentify this k-configuration in the SQL database
         unsigned int                serial;
 
         friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
@@ -242,14 +244,17 @@ namespace transport
       }
 
 
-    // a task which can be interpreted as a list of ks associated with a two-point function
-    // that could be either a literal twopf task, or a threepf task restricted to its twopf component
+    //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
+    //! Ultimately, all n-point-function integrations are of this type because they all solve for the two-point function
+    //! even if the goal is to compute a higher n-point function.
+    //! The key concept associated with a twopf_list_task is a flat vector of wavenumbers
+    //! which describe the points at which we sample the twopf.
     template <typename number>
     class twopf_list_task: public task<number>
       {
       public:
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-          : task<number>(nm, i, t)
+          : comoving_normalization(0.0), normalization_set(false), task<number>(nm, i, t)
           {
           }
 
@@ -257,29 +262,81 @@ namespace transport
           {
           }
 
+        //! Set comoving wavenumber normalization constant
+
+        //! It is an error to try to set this twice, since it could lead to an inconsistent state.
+        //! If a second attempt is made to set the normalization, throws a RUNTIME_ERROR exception.
+        void set_normalization(typename task<number>::kconfig_kstar kstar)
+          {
+            if(this->normalization_set) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TWOPF_TASK_LIST_NORM);
+            normalization_set = true;
+            comoving_normalization = kstar(this);
+          }
+
+        //! Add a wavenumber to the list. The wavenumber should be conventionally normalized.
+
+        //! Simultaneously pushes to the conventionally-normalized and comoving-normalized lists, so they
+        //! are kept in sync. Requires normalization to have been set using set_normalization(),
+        //! otherwise throws a RUNTIME_ERROR exception.
+        void push_twopf_klist(double k)
+          {
+            if(!normalization_set) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TWOPF_TASK_LIST_UNSET);
+            this->conventional_k.push_back(k);
+            this->comoving_k.push_back(k*this->comoving_normalization);
+          }
+
+        //! Convert a conventionally-normalized wavenumber to a comoving wavenumber
+
+        //! Requires normalization to have been set using set_normalization(),
+        //! otherwise throws a RUNTIME_ERROR exception.
+        double comoving_normalize(double k)
+          {
+            if(!normalization_set) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TWOPF_TASK_LIST_UNSET);
+            return(k*this->comoving_normalization);
+          }
+
+        //! Get number of entries in the flat twopf k-list
+        unsigned int get_k_list_size() const { return(this->conventional_k.size()); }
+
         //! Get flattened list of ks at which we sample the two-point function
-        const std::vector<double>& get_k_list() const { return(this->flat_k); }
+        const std::vector<double>& get_k_list() const { return(this->conventional_k); }
 
         //! Get flattened list of comoving ks at which we sample the two-point function
         const std::vector<double>& get_k_list_comoving() const { return(this->comoving_k); }
+
+        //! Get a conventionally normalized k-number identified by its index
+        double get_k(unsigned int d) const
+          {
+            assert(d < this->conventional_k.size());
+            if(d < this->conventional_k.size()) return(this->conventional_k[d]);
+            else throw std::out_of_range(__CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE);
+          }
 
         //! Get an comoving k-number identified by its index
         double get_k_comoving(unsigned int d) const
           {
             assert(d < this->comoving_k.size());
-            if(d < this->comoving_k.size())
-              {
-                return(this->comoving_k[d]);
-              }
-            else
-              {
-                throw std::out_of_range(__CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE);
-              }
+            if(d < this->comoving_k.size()) return(this->comoving_k[d]);
+            else throw std::out_of_range(__CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE);
           }
 
-      protected:
+        // ADD ITEMS TO THE NORMALIZED LIST
+
+        // INTERNAL DATA
+
+      private:
+        //! Normalization constant for comoving ks
+        double comoving_normalization;
+
+        //! Has the normalization constant been set? This is a precondition for adding any wavenumbers of the list.
+        //! It would be cleaner to pass the normalizaiton constant to the constructor,
+        //! but to compute the normalization itself requires a properly-formed task object.
+        //! Therefore we cannot do so until the base constructor has completed.
+        //! This approach is a workaround.
+        bool normalization_set;
+
         //! Flattened list of conventionally-normalized ks
-        std::vector<double> flat_k;
+        std::vector<double> conventional_k;
 
         //! Flattened list of comoving-normalized ks
         std::vector<double> comoving_k;
@@ -334,7 +391,7 @@ namespace transport
                                    const range<double>& ks, typename task<number>::kconfig_kstar kstar)
       : original_ks(ks), twopf_list_task<number>(nm, i, t)
       {
-        double normalization = kstar(this);
+        this->set_normalization(kstar);
 
         bool stored_background = false;
         // the mapping from the provided list ks to the work list is just one-to-one
@@ -344,20 +401,16 @@ namespace transport
 
             kconfig.index  = j;
             kconfig.serial = j;
-            kconfig.k      = ks[j] * normalization;
+            kconfig.k      = this->comoving_normalize(ks[j]);
 
             kconfig.store_background = stored_background ? false : (stored_background = true);
 
             config_list.push_back(kconfig);
 
-            this->flat_k.push_back(ks[j]);
-            this->comoving_k.push_back(ks[j] * normalization);
+            this->push_twopf_klist(ks[j]);
           }
 
-        if(!stored_background)
-          {
-            throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
-          }
+        if(!stored_background) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_BACKGROUND_STORE);
       }
 
 
@@ -447,11 +500,11 @@ namespace transport
         original_kts(), original_alphas(), original_betas(),
         twopf_list_task<number>(nm, i, t)
       {
+        this->set_normalization(kstar);
+
         // step through the lattice of k-modes, recording which are viable triangular configurations
         // we insist on ordering, so i <= j <= k
         bool stored_background = false;
-
-        double normalization = kstar(this);
 
         unsigned int serial = 0;
         for(unsigned int j = 0; j < ks.size(); j++)
@@ -470,11 +523,11 @@ namespace transport
                     if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
                       {
 
-                        kconfig.k1  = ks[j] * normalization;
-                        kconfig.k2  = ks[k] * normalization;
-                        kconfig.k3  = ks[l] * normalization;
+                        kconfig.k1  = this->comoving_normalize(ks[j]);
+                        kconfig.k2  = this->comoving_normalize(ks[k]);
+                        kconfig.k3  = this->comoving_normalize(ks[l]);
 
-                        kconfig.k_t = (ks[j] + ks[k] + ks[l]) * normalization;
+                        kconfig.k_t = this->comoving_normalize(ks[j] + ks[k] + ks[l]);
                         kconfig.beta  = 1.0 - 2.0 * ks[l] / (ks[j] + ks[k] + ks[l]);
                         kconfig.alpha = 4.0 * ks[j] / (ks[j] + ks[k] + ks[l]) - 1.0 - kconfig.beta;
 
@@ -492,19 +545,12 @@ namespace transport
                   }
               }
 
-            if(!stored_twopf)
-              {
-                throw std::logic_error(__CPP_TRANSPORT_TWOPF_STORE);
-              }
+            if(!stored_twopf) throw std::logic_error(__CPP_TRANSPORT_TWOPF_STORE);
 
-            this->flat_k.push_back(ks[j]);
-            this->comoving_k.push_back(ks[j] * normalization);
+            this->push_twopf_klist(ks[j]);
           }
 
-        if(!stored_background)
-          {
-            throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
-          }
+        if(!stored_background) throw std::logic_error(__CPP_TRANSPORT_BACKGROUND_STORE);
       }
 
 
