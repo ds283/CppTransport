@@ -227,8 +227,12 @@ namespace transport
         bool inserted = false;
         for(typename std::vector<device_queue>::iterator t = this->device_list.begin(); t != this->device_list.end(); t++)
           {
-            // enqueue this work item on the first device whose queue is too small
-            if((*t).get_total_items() < static_cast<unsigned int>((*t).get_weight() * this->total_items))
+            // compute difference between current weight and desired weight
+            // is positive if queue is too short, negative if queue is too long
+            double this_delta = (static_cast<double>((*t).get_total_items()) / this->total_items) - (*t).get_weight();
+
+            // insert this item into the first queue which is shorter than desired
+            if(this_delta < 0.0)
               {
                 (*t).enqueue_item(item);
                 inserted = true;
@@ -236,7 +240,10 @@ namespace transport
               }
           }
 
-        if(!inserted) this->device_list[0].enqueue_item(item);
+        if(!inserted)
+          {
+            (*(this->device_list.begin())).enqueue_item(item);
+          }
         this->total_items++;
       }
 
