@@ -21,10 +21,12 @@ namespace transport
 
       public:
 
-        typedef enum { RUNTIME_ERROR, MPI_ERROR,
-                       TASK_NOT_FOUND, MODEL_NOT_FOUND, REPO_NOT_FOUND,
-                       BADLY_FORMED_XML,
-                       MISSING_MODEL_INSTANCE
+        typedef enum { RUNTIME_ERROR,                                     // generic runtime error
+                       MPI_ERROR,                                         // error associated with MPI message passing
+                       TASK_NOT_FOUND, MODEL_NOT_FOUND, REPO_NOT_FOUND,   // missing items in the repository
+                       REPOSITORY_ERROR,                                  // generic repository error
+                       BADLY_FORMED_XML,                                  // badly formed XML document in repository
+                       MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
                      } exception_type;
         runtime_exception(exception_type t, const std::string msg)
           : type(t), std::runtime_error(msg)
