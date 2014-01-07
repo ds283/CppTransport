@@ -23,8 +23,8 @@ namespace transport
     class canonical_model : public model<number>
       {
       public:
-        canonical_model(instance_manager<number>* mgr, const std::string& uid)
-          : model<number>(mgr, uid)
+        canonical_model(instance_manager<number>* mgr, const std::string& uid, unsigned int tver)
+          : model<number>(mgr, uid, tver)
           {
           }
 

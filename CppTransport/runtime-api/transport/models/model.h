@@ -55,7 +55,7 @@ namespace transport
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
-        model(instance_manager<number>* m, const std::string& u);
+        model(instance_manager<number>* m, const std::string& u, unsigned int v);
 
         virtual ~model();
 
@@ -63,9 +63,9 @@ namespace transport
 
       public:
         //! Return unique string identifying the model (and CppTransport version)
-        virtual const std::string&              get_identity_string() const = 0;
+        const std::string&                      get_identity_string() const { return(this->uid); }
 
-        virtual unsigned int                    get_translator_version() const = 0;
+        unsigned int                            get_translator_version() const { return(this->tver); }
 
         //! Return name of the model implemented by this object
         virtual const std::string&              get_name() const = 0;
@@ -222,11 +222,13 @@ namespace transport
 
         // INTERNAL DATA
 
-      protected:
+      private:
         //! copy of instance manager, used for deregistration
         instance_manager<number>* mgr;
         //! copy of unique id, used for deregistration
         const std::string uid;
+        //! copy of translator version used to produce this model, used for registration
+        const unsigned int tver;
       };
 
 
@@ -236,11 +238,11 @@ namespace transport
     // EXTRACT MODEL INFORMATION
 
     template <typename number>
-    model<number>::model(instance_manager<number>* m, const std::string& u)
-    : mgr(m), uid(u)
+    model<number>::model(instance_manager<number>* m, const std::string& u, unsigned int v)
+    : mgr(m), uid(u), tver(v)
       {
         // Register ourselves with the instance manager
-        mgr->register_model(this, uid);
+        mgr->register_model(this, uid, tver);
       }
 
 
@@ -248,7 +250,7 @@ namespace transport
     model<number>::~model()
       {
         assert(this->mgr != nullptr);
-        mgr->deregister_model(this, this->uid);
+        mgr->deregister_model(this, this->uid, tver);
       }
 
 

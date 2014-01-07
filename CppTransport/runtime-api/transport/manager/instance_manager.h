@@ -41,8 +41,8 @@ namespace transport
         // CONSTRUCTOR
 
       public:
-        model_instance(model<number>* m, const std::string& i)
-          : m_ptr(m), uid(i)
+        model_instance(model<number>* m, const std::string& i, unsigned int v)
+          : m_ptr(m), uid(i), tver(v)
           {
             assert(m != nullptr);
           }
@@ -65,6 +65,7 @@ namespace transport
       protected:
         model<number>*    m_ptr;
         const std::string uid;
+        unsigned int      tver;
       };
 
 
@@ -97,9 +98,9 @@ namespace transport
         //! There should be only one registered instance of each unique uid, otherwise an exception is thrown.
         //! This function checks the version of the translator used to produce this model.
         //! It should be no later than the version of the runtime api we are running, otherwise an exception is thrown
-        void register_model(model<number>* m, const std::string& uid);
+        void register_model(model<number>* m, const std::string& uid, unsigned int version);
         //! Deregister an instance of a model.
-        void deregister_model(model<number>* m, const std::string& uid);
+        void deregister_model(model<number>* m, const std::string& uid, unsigned int version);
 
         // INTERFACE -- MODEL ACCESS
 
@@ -128,20 +129,19 @@ namespace transport
 
 
     template <typename number>
-    void instance_manager<number>::register_model(model<number>* m, const std::string& uid)
+    void instance_manager<number>::register_model(model<number>* m, const std::string& uid, unsigned int version)
       {
         assert(m != nullptr);
 
-        unsigned int model_version = m->get_translator_version();
-        if(model_version > __CPP_TRANSPORT_RUNTIME_API_VERSION)
+        if(version > __CPP_TRANSPORT_RUNTIME_API_VERSION)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_OLD_RUNTIMEAPI_A << " (" << __CPP_TRANSPORT_RUNTIME_API_VERSION << ") "
-              << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " (" << m->get_name() << " " << model_version << ")";
+              << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " (" << m->get_name() << " " << version << ")";
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
-        model_instance<number> instance(m, uid);
+        model_instance<number> instance(m, uid, version);
 
         if(std::find(this->models.begin(), this->models.end(), instance) == this->models.end())
           {
@@ -149,17 +149,17 @@ namespace transport
           }
         else
           {
-            throw std::logic_error(__CPP_TRANSPORT_INSTANCES_MULTIPLE);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INSTANCES_MULTIPLE);
           }
       }
 
 
     template <typename number>
-    void instance_manager<number>::deregister_model(model<number>* m, const std::string& uid)
+    void instance_manager<number>::deregister_model(model<number>* m, const std::string& uid, unsigned int version)
       {
         assert(m != nullptr);
 
-        model_instance<number> instance(m, uid);
+        model_instance<number> instance(m, uid, version);
 
         auto t = std::find(this->models.begin(), this->models.end(), instance);
 
@@ -169,7 +169,7 @@ namespace transport
           }
         else
           {
-            throw std::logic_error(__CPP_TRANSPORT_INSTANCES_DELETE);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_INSTANCES_DELETE);
           }
       }
 

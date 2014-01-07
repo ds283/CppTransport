@@ -76,10 +76,6 @@ namespace transport
 
         // INTERFACE: EXTRACT MODEL INFORMATION
 
-        const std::string& get_identity_string() const { return($$__MODEL_pool::unique_id); }
-
-        unsigned int get_translator_version() const { return(static_cast<unsigned int>(100*$$__VERSION)); }
-
         const std::string& get_name() const { return($$__MODEL_pool::name); }
 
         const std::string& get_author() const { return($$__MODEL_pool::author); }
@@ -216,7 +212,7 @@ namespace transport
 
     template <typename number>
     $$__MODEL<number>::$$__MODEL(instance_manager<number>* mgr)
-      : canonical_model<number>(mgr, "$$__UNIQUE_ID")
+      : canonical_model<number>(mgr, "$$__UNIQUE_ID", static_cast<unsigned int>(100*$$__VERSION))
       {
       }
 
