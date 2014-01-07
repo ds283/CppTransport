@@ -38,11 +38,9 @@ namespace transport
         void extract_M_Planck(DbXml::XmlManager* mgr, DbXml::XmlValue& value, number& M_Planck)
           {
             // run a query to pick out the M_Planck node
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_MPLANCK << ")";
+            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MPLANCK);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             M_Planck = boost::lexical_cast<number>(node.asString());
           }
@@ -53,11 +51,9 @@ namespace transport
                                 const std::vector<std::string>& ordering)
           {
             // run a query to pick out the parameter values block
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_PRM_VALUES;
+            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PRM_VALUES);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             if(node.getLocalName() != __CPP_TRANSPORT_NODE_PRM_VALUES) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
             std::vector< dbxml_helper::named_list::element<number> > temporary_list;
@@ -101,11 +97,9 @@ namespace transport
                      const std::vector<std::string>& ordering)
           {
             // run a query to find the parameters XML block from this schema
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_PARAMETERS;
+            std::string dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PARAMETERS);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
             extract_M_Planck(mgr, node, M_Planck);
             extract_parameters(mgr, node, p, n, ordering);

@@ -432,11 +432,9 @@ namespace transport
       {
         std::string extract_uid(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
           {
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF
-              << __CPP_TRANSPORT_XQUERY_SEPARATOR << __CPP_TRANSPORT_NODE_MODEL << ")";
+            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MODEL);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_MODEL);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_MODEL);
 
             return(node.asString());
           }

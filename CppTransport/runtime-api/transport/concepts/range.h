@@ -158,35 +158,25 @@ namespace transport
         range<number> extract(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
           {
             // strip out range-value XML block
-            std::ostringstream query_range;
-            query_range << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_RANGE;
+            std::string query_range = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_RANGE);
 
-            DbXml::XmlValue range_node = dbxml_helper::extract_single_node(query_range.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            DbXml::XmlValue range_node = dbxml_helper::extract_single_node(query_range, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
-            std::ostringstream query_min;
-            query_min << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_MIN << ")";
+            std::string query_min = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MIN);
 
-            DbXml::XmlValue min_node = dbxml_helper::extract_single_node(query_min.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            DbXml::XmlValue min_node = dbxml_helper::extract_single_node(query_min, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
-            std::ostringstream query_max;
-            query_max << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_MAX << ")";
+            std::string query_max = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MAX);
 
-            DbXml::XmlValue max_node = dbxml_helper::extract_single_node(query_max.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            DbXml::XmlValue max_node = dbxml_helper::extract_single_node(query_max, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
-            std::ostringstream query_steps;
-            query_steps << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_STEPS << ")";
+            std::string query_steps = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_STEPS);
 
-            DbXml::XmlValue steps_node = dbxml_helper::extract_single_node(query_steps.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            DbXml::XmlValue steps_node = dbxml_helper::extract_single_node(query_steps, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
-            std::ostringstream query_spacing;
-            query_spacing << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_SPACING << ")";
+            std::string query_spacing = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_SPACING);
 
-            DbXml::XmlValue spacing_node = dbxml_helper::extract_single_node(query_spacing.str(), mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            DbXml::XmlValue spacing_node = dbxml_helper::extract_single_node(query_spacing, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
             typename range<number>::spacing_type sptype = range<number>::linear;
 

@@ -24,10 +24,11 @@
 #define __CPP_TRANSPORT_DBXML_STRING(str) reinterpret_cast<const unsigned char*>(str)
 
 
-#define __CPP_TRANSPORT_XQUERY_VALUES    "distinct-values"
-#define __CPP_TRANSPORT_XQUERY_SELF      "."
-#define __CPP_TRANSPORT_XQUERY_SEPARATOR "/"
-#define __CPP_TRANSPORT_XQUERY_WILDCARD  "*"
+#define __CPP_TRANSPORT_XQUERY_VALUES        "distinct-values"
+#define __CPP_TRANSPORT_XQUERY_REPLACE_VALUE "replace value of node"
+#define __CPP_TRANSPORT_XQUERY_SELF          "."
+#define __CPP_TRANSPORT_XQUERY_SEPARATOR     "/"
+#define __CPP_TRANSPORT_XQUERY_WILDCARD      "*"
 
 
 namespace dbxml_helper
@@ -94,6 +95,70 @@ namespace dbxml_helper
           };
 
       } // namespace named_list
+
+    namespace xquery
+      {
+
+        namespace
+          {
+
+            inline std::string build_node(std::string name)
+              {
+                return(name);
+              }
+
+
+            template <typename... nodes>
+            std::string build_node(std::string name, nodes... more_nodes)
+              {
+                return(name + static_cast<std::string>("/") + node(more_nodes));
+              }
+
+          }   // unnamed namepsace
+
+
+        template <typename... nodes>
+        std::string node_self(nodes... more_nodes)
+          {
+            return("." + build_node(more_nodes));
+          }
+
+
+        template <typename... nodes>
+        std::string node_root(nodes... more_nodes)
+          {
+            return("/" + build_node(more_nodes));
+          }
+
+
+        template <typename... nodes>
+        std::string value_self(nodes... more_nodes)
+          {
+            return(static_cast<std::string>("distinct_values(") + node_self(more_nodes) + static_cast<std::string>(")"));
+          }
+
+
+        template <typename... nodes>
+        std::string value_root(nodes... more_nodes)
+          {
+            return(static_cast<std::string>("distinct-values(") + node_root(mode_nodes) + static_cast<std::string>(")"));
+          }
+
+
+        template <typename... nodes>
+        std::string replace_self(std::string new_value, nodes... more_nodes)
+          {
+            return(static_cast<std::string>("replace value of node ") + node_self(more_nodes) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
+          }
+
+
+        template <typename... nodes>
+        std::string replace_self(std::string new_value, nodes... more_nodes)
+          {
+            return(static_cast<std::string>("replace value of node ") + node_root(more_nodes) + static_cast<std::string>(" with \"") + new_value + static_cast<std::string>("\""));
+          }
+
+      } // namespace xquery
 
 
     inline

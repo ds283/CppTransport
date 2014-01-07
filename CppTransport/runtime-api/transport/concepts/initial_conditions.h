@@ -37,11 +37,9 @@ namespace transport
         void extract_Nstar(DbXml::XmlManager* mgr, DbXml::XmlValue& value, double& Nstar)
           {
             // run a query to pick out the Nstar node
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_VALUES << "(" << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_NSTAR << ")";
+            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_NSTAR);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             Nstar = boost::lexical_cast<double>(node.asString());
           }
@@ -52,11 +50,9 @@ namespace transport
                             const std::vector<std::string>& ordering)
           {
             // run a query to pick out the initial-condition values block
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_ICS_VALUES;
+            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_ICS_VALUES);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             if(node.getLocalName() != __CPP_TRANSPORT_NODE_ICS_VALUES) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
             std::vector< dbxml_helper::named_list::element<number> > temporary_list;
@@ -100,11 +96,9 @@ namespace transport
                      const std::vector<std::string>& ordering)
           {
             // run a query to find the initial conditions XML block from this schema
-            std::ostringstream query;
-            query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS;
+            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             extract_Nstar(mgr, node, Nstar);
             extract_coords(mgr, node, c, n, ordering);
