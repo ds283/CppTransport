@@ -615,19 +615,15 @@ namespace transport
           {
             // run queries to find the twopf specification blocks from this schema
             // there are two: a k-sample block and a t-sample block
-            std::ostringstream query_time;
-            query_time << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE;
+            std::string query_time = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
 
-            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             range<double> tsample = range_dbxml::extract<double>(mgr, tsample_node);
 
-            std::ostringstream query_ks;
-            query_ks << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE;
+            std::string query_ks = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
 
-            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             range<double> ksample = range_dbxml::extract<double>(mgr, ksample_node);
 
@@ -641,19 +637,15 @@ namespace transport
           {
             // run queries to extract the threepf specification blocks from this schema
             // as for the twopf, there are two; but this time the k-range can be more complicated
-            std::ostringstream query_time;
-            query_time << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE;
+            std::string query_time = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
 
-            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             range<double> tsample = range_dbxml::extract<double>(mgr, tsample_node);
 
-            std::ostringstream query_ks;
-            query_ks << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-              << __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE;
+            std::string query_ks = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
 
-            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks.str(), mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             if(ksample_node.getLocalName() != __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
@@ -668,9 +660,7 @@ namespace transport
             if(ksample_type.getNodeValue() == __CPP_TRANSPORT_VAL_THREEPF_CUBIC)
               {
                 // we expect just a single krange block
-                std::ostringstream k_query;
-                k_query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-                  << __CPP_TRANSPORT_NODE_THREEPF_KRANGE;
+                std::string k_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
 
                 DbXml::XmlValue krange_node = dbxml_helper::extract_single_node(k_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
@@ -681,25 +671,19 @@ namespace transport
             else if(ksample_type.getNodeValue() == __CPP_TRANSPORT_VAL_THREEPF_FLS)
               {
                 // we expect three ranges, specifying the sampling points for k_t, alpha and beta
-                std::ostringstream kt_query;
-                kt_query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-                  << __CPP_TRANSPORT_NODE_THREEPF_KTRANGE;
+                std::string kt_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
 
-                DbXml::XmlValue ktrange_node = dbxml_helper::extract_single_node(kt_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                DbXml::XmlValue ktrange_node = dbxml_helper::extract_single_node(kt_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> kt_sample = range_dbxml::extract<double>(mgr, ktrange_node);
 
-                std::ostringstream alpha_query;
-                alpha_query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-                  << __CPP_TRANSPORT_NODE_THREEPF_ARANGE;
+                std::ostringstream alpha_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
 
-                DbXml::XmlValue arange_node = dbxml_helper::extract_single_node(alpha_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                DbXml::XmlValue arange_node = dbxml_helper::extract_single_node(alpha_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
                 range<double> alpha_sample = range_dbxml::extract<double>(mgr, arange_node);
 
-                std::ostringstream beta_query;
-                beta_query << __CPP_TRANSPORT_XQUERY_SELF << __CPP_TRANSPORT_XQUERY_SEPARATOR
-                  << __CPP_TRANSPORT_NODE_THREEPF_BRANGE;
+                std::string beta_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
 
                 DbXml::XmlValue brange_node = dbxml_helper::extract_single_node(beta_query.str(), mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 

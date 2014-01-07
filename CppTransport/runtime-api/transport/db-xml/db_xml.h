@@ -24,13 +24,6 @@
 #define __CPP_TRANSPORT_DBXML_STRING(str) reinterpret_cast<const unsigned char*>(str)
 
 
-#define __CPP_TRANSPORT_XQUERY_VALUES        "distinct-values"
-#define __CPP_TRANSPORT_XQUERY_REPLACE_VALUE "replace value of node"
-#define __CPP_TRANSPORT_XQUERY_SELF          "."
-#define __CPP_TRANSPORT_XQUERY_SEPARATOR     "/"
-#define __CPP_TRANSPORT_XQUERY_WILDCARD      "*"
-
-
 namespace dbxml_helper
   {
 
