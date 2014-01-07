@@ -16,7 +16,7 @@
 #include "boost/uuid/uuid.hpp"
 #include "boost/uuid/string_generator.hpp"
 #include "boost/uuid/uuid_io.hpp"
-
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 #define BIND(X) std::bind(&fundamental::X, this, std::placeholders::_1)
 
@@ -185,16 +185,9 @@ namespace macro_packages
 
     std::string fundamental::replace_date(const std::vector<std::string> &args)
       {
-        time_t     now = time(0);
-        struct tm  tstruct;
-        char       buf[80];
-        tstruct = *localtime(&now);
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        strftime(buf, sizeof(buf), this->time_format.c_str(), &tstruct);
-
-        std::string rval(buf);
-
-        return(rval);
+        return(boost::posix_time::to_simple_string(now));
       }
 
 

@@ -25,7 +25,7 @@ namespace macro_packages
                     std::string ls = "{", std::string le = "}", std::string lsep = ",", std::string lpad = " ",
                     std::string t = OUTPUT_CPPTRANSPORT_TAG,
                     std::string ge = "_H_",
-                    std::string tf = OUTPUT_TIME_FORMAT)
+                    std::string tf = OUTPUT_TIME_FORMAT)  // output format currently unused, since switch to boost date & time library
           : list_start(ls), list_end(le), list_separator(lsep), list_pad(lpad), tag(t), guard_terminator(ge), time_format(tf),
             unique(0),
             replacement_rule_package(u, p)
