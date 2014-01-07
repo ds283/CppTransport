@@ -87,7 +87,7 @@ namespace transport
 
       public:
         //! Query the database for a named task, and reconstruct it if present
-        task<number>* query_task(const std::string& name, typename instance_manager<number>::model_finder finder);
+        task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
 
       protected:
         //! Query the database for a named model, returned as an XmlValue
@@ -411,7 +411,7 @@ namespace transport
 
     // Query the database for a named task
     template <typename number>
-    task<number>* repository<number>::query_task(const std::string& name, typename instance_manager<number>::model_finder finder)
+    task<number>* repository<number>::query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder)
       {
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
@@ -434,7 +434,7 @@ namespace transport
 
         // use the supplied finder to recover the model
         // throws an exception if the model cannot be found, which should be caught higher up in the task handler
-        model<number>* model = finder(model_uid);
+        m = finder(model_uid);
 
         // get XML schema describing initial conditions/parameters package
         // this comes from the initial_conditions<number> serialization, and contains an
@@ -442,10 +442,10 @@ namespace transport
         DbXml::XmlValue ics_group = this->get_ics_group(package, package_name);
 
         // build initial_conditions<> object from this schema
-        initial_conditions<number> ics = this->build_ics_object(ics_group, package_name, model);
+        initial_conditions<number> ics = this->build_ics_object(ics_group, package_name, m);
 
         // build task<> object from the original task schema
-        task<number>* tk = this->build_task_object(task_group, ics, model, name);
+        task<number>* tk = this->build_task_object(task_group, ics, m, name);
 
         return(tk);
       }

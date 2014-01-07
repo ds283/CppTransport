@@ -37,6 +37,9 @@ namespace transport
   {
     // MODEL OBJECTS -- objects representing inflationary models
 
+    // forward declare task manager class to be a friend
+    template <typename number> class task_manager;
+
     // avoid circularity in inclusions
     template <typename number> class background;
     template <typename number> class twopf;
@@ -209,6 +212,11 @@ namespace transport
         // return size of state vectors
         virtual unsigned int            backend_twopf_state_size(void) = 0;
         virtual unsigned int            backend_threepf_state_size(void) = 0;
+
+        // FRIEND CLASSES
+
+      public:
+        friend class task_manager<number>;
 
         // INTERNAL DATA
 

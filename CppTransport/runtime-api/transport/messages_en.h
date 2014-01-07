@@ -148,6 +148,9 @@
 
 #define __CPP_TRANSPORT_EXEC_SLAVE            "task_manager::execute_tasks() called on slave process"
 #define __CPP_TRANSPORT_WAIT_MASTER           "task_manager::wait_for_tasks() called on master process"
+#define __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK  "Unknown derived 'task<number>' class"
+#define __CPP_TRANSPORT_TOO_FEW_WORKERS       "Too few workers: require at least two worker processes to integrate a task"
+#define __CPP_TRANSPORT_UNEXPECTED_MPI        "Unexpected MPI message received"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"

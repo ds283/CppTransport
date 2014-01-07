@@ -11,8 +11,7 @@
 #include <list>
 #include <stdexcept>
 
-#include "boost/mpi/environment.hpp"
-#include "boost/mpi/communicator.hpp"
+#include "boost/mpi.hpp"
 
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
@@ -20,17 +19,45 @@
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
 
-
-#define __CPP_TRANSPORT_RANK_MASTER (0)
+#include "transport/scheduler/context.h"
+#include "transport/scheduler/scheduler.h"
+#include "transport/scheduler/work_queue.h"
 
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
 #define __CPP_TRANSPORT_SWITCH_TASK     "-task"
 #define __CPP_TRANSPORT_SWITCH_RECOVER  "-recovery"
 
+// name for worker devices
+#define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
+
 
 namespace transport
   {
+
+    namespace MPI
+      {
+
+        // MPI messages
+        namespace
+          {
+
+            const unsigned int NEW_TASK = 0;
+            const unsigned int FINISHED_TASK = 1;
+            const unsigned int TERMINATE = 99;
+
+            const unsigned int RANK_MASTER = 0;
+
+            class new_task_payload
+              {
+                std::string repo;
+                std::string task;
+              };
+
+          }   // unnamed namespace
+
+      }   // namespace MPI
+
 
     template <typename number>
     class task_manager : public instance_manager<number>
@@ -63,7 +90,7 @@ namespace transport
 
       public:
         //! Query whether we are the master process
-        bool is_master(void) const { return(this->world.rank() == __CPP_TRANSPORT_RANK_MASTER); }
+        bool is_master(void) const { return(this->world.rank() == MPI::RANK_MASTER); }
 
         //! Return rank of this process
         unsigned int get_rank(void) const { return(this->world.rank()); }
@@ -73,6 +100,22 @@ namespace transport
 
         //! If we are a slave process, poll for instructions to perform work
         void wait_for_tasks(void);
+
+      protected:
+        //! Dispatch a twopf task to the worker processes
+        void dispatch_twopf_task(twopf_task<number>* tk, model<number>* m);
+
+        //! Dispatch a threepf task to the worker processes
+        void dispatch_threepf_task(threepf_task<number>* tk, model<number>* m);
+
+        //! Make a device context for the worker processes
+        context make_workers_context(void);
+
+        //! Terminate all worker processes
+        void terminate_workers(void);
+
+        //! Map worker number to communicator rank
+        constexpr unsigned int worker_rank(unsigned int worker_number) { return(worker_number+1); }
 
         // INTERFACE -- ERROR REPORTING
 
@@ -103,7 +146,7 @@ namespace transport
     task_manager<number>::task_manager(int argc, char* argv[])
       : instance_manager<number>(), environment(argc, argv), repo(nullptr)
       {
-        if(world.rank() == __CPP_TRANSPORT_RANK_MASTER)
+        if(world.rank() == MPI::RANK_MASTER)
           {
             bool multiple_repo_warn = false;
             bool recovery = false;
@@ -242,9 +285,27 @@ namespace transport
               {
                 try
                   {
-                    task<number>* tk = this->repo->query_task(*t, this->model_finder_factory());
+                    model<number>* m = nullptr;
+                    task<number>* tk = this->repo->query_task(*t, m, this->model_finder_factory());
+                    assert(m != nullptr);
 
-                    std::cerr << *tk << std::endl;
+                    // set up work queues for this task, and then distributed to worker processes
+
+                    // dynamic_cast<> is a bit unsubtle
+                    if(dynamic_cast< threepf_task<number>* >(tk))
+                      {
+                        threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
+                        this->dispatch_threepf_task(three_task, m);
+                      }
+                    else if(dynamic_cast< twopf_task<number>* >(tk))
+                      {
+                        twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
+                        this->dispatch_twopf_task(two_task, m);
+                      }
+                    else
+                      {
+                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+                      }
 
                     delete tk;
                   }
@@ -283,6 +344,25 @@ namespace transport
               }
           }
 
+        // there is no more work, so ask all workers to shut down
+        this->terminate_workers();
+      }
+
+
+    template <typename number>
+    void task_manager<number>::terminate_workers()
+      {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
+          }
+
+        // wait for all messages to be received, then exit ourselves
+        boost::mpi::wait_all(requests.begin(), requests.end());
       }
 
 
@@ -290,6 +370,80 @@ namespace transport
     void task_manager<number>::wait_for_tasks()
       {
         if(this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
+
+        bool finished = false;
+        while(!finished)
+          {
+            // wait until a message is available from master
+            boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
+
+            switch(stat.tag())
+              {
+                case MPI::NEW_TASK:
+                  std::cerr << "New task message for worker " << this->world.rank() << std::endl;
+                  // receive the message
+                  this->world.recv(MPI::RANK_MASTER, MPI::NEW_TASK);
+                  break;
+
+                case MPI::TERMINATE:
+                  std::cerr << "worker " << this->world.rank() << " terminating" << std::endl;
+                  // receive the message
+                  this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);
+                  finished = true;
+                  break;
+
+                default:
+                  throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_UNEXPECTED_MPI);
+              }
+          }
+      }
+
+
+    template <typename number>
+    void task_manager<number>::dispatch_twopf_task(twopf_task<number>* tk, model<number>* m)
+      {
+        // set up a work queue representing our workers
+        if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+
+        context ctx = this->make_workers_context();
+        scheduler sch = scheduler(ctx);
+
+        work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
+      }
+
+
+    template <typename number>
+    void task_manager<number>::dispatch_threepf_task(threepf_task<number>* tk, model<number>* m)
+      {
+        // set up a work queue representing our workers
+        if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+
+        context ctx = this->make_workers_context();
+        scheduler sch = scheduler(ctx);
+
+        work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
+
+        std::cout << queue;
+      }
+
+
+    template <typename number>
+    context task_manager<number>::make_workers_context()
+      {
+        context ctx;
+
+        // add devices to this context
+        // in this implementation, we assume that all workers are symmetric and therefore we would like
+        // the work queues to be balanced
+        // In principle, this can be changed if we have more information about the workers
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            std::ostringstream name;
+            name << __CPP_TRANSPORT_WORKER_NAME << i;
+            ctx.add_device(name.str());
+          }
+
+        return(ctx);
       }
 
 
