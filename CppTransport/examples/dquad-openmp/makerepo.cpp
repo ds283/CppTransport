@@ -7,6 +7,7 @@
 #include "dq_basic.h"
 
 #include "transport/db-xml/repository_creation_key.h"
+#import "repository.h"
 
 
 // ****************************************************************************
@@ -83,6 +84,12 @@ int main(int argc, char* argv[])
 
     // write the initial conditions/parameter specification and integration specification into the model repository
     mgr->write_integration(tk, model);
+
+    std::string package_xml = repo->extract_package_document(ics.get_name());
+    std::cout << "Package XML document:" << std::endl << package_xml << std::endl << std::endl;
+
+    std::string task_xml = repo->extract_integration_document(tk.get_name());
+    std::cout << "Integration XML docuemnt:" << std::endl << task_xml << std::endl << std::endl;
 
     delete model;
     delete mgr;     // task_manager adopts its repository and destroys it silently
