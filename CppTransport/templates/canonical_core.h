@@ -76,27 +76,29 @@ namespace transport
 
         // INTERFACE: EXTRACT MODEL INFORMATION
 
-        const std::string& get_identity_string() { return($$__MODEL_pool::unique_id); }
+        const std::string& get_identity_string() const { return($$__MODEL_pool::unique_id); }
 
-        const std::string& get_name() { return($$__MODEL_pool::name); }
+        unsigned int get_translator_version() const { return(static_cast<unsigned int>(100*$$__VERSION)); }
 
-        const std::string& get_author() { return($$__MODEL_pool::author); }
+        const std::string& get_name() const { return($$__MODEL_pool::name); }
 
-        const std::string& get_tag() { return($$__MODEL_pool::tag); }
+        const std::string& get_author() const { return($$__MODEL_pool::author); }
 
-        unsigned int get_N_fields() { return($$__NUMBER_FIELDS); }
+        const std::string& get_tag() const { return($$__MODEL_pool::tag); }
 
-        unsigned int get_N_params() { return($$__NUMBER_PARAMS); }
+        unsigned int get_N_fields() const { return($$__NUMBER_FIELDS); }
 
-        const std::vector< std::string >& get_field_names() { return($$__MODEL_pool::field_names); }
+        unsigned int get_N_params() const { return($$__NUMBER_PARAMS); }
 
-        const std::vector< std::string >& get_f_latex_names() { return($$__MODEL_pool::latex_names); }
+        const std::vector< std::string >& get_field_names() const { return($$__MODEL_pool::field_names); }
 
-        const std::vector< std::string >& get_param_names() { return($$__MODEL_pool::param_names); }
+        const std::vector< std::string >& get_f_latex_names() const { return($$__MODEL_pool::latex_names); }
 
-        const std::vector< std::string >& get_p_latex_names() { return($$__MODEL_pool::platx_names); }
+        const std::vector< std::string >& get_param_names() const { return($$__MODEL_pool::param_names); }
 
-        const std::vector< std::string >& get_state_names() { return($$__MODEL_pool::state_names); }
+        const std::vector< std::string >& get_p_latex_names() const { return($$__MODEL_pool::platx_names); }
+
+        const std::vector< std::string >& get_state_names() const { return($$__MODEL_pool::state_names); }
 
         // INTERFACE: INDEX FLATTENING FUNCTIONS
 
@@ -115,11 +117,11 @@ namespace transport
 
       public:
         // Over-ride functions inherited from 'model'
-        number H(const parameters<number>& __params, const std::vector<number>& __coords);
-        number epsilon(const parameters<number>& __params, const std::vector<number>& __coords);
+        number H(const parameters<number>& __params, const std::vector<number>& __coords) const;
+        number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const;
 
         // Over-ride functions inherited from 'canonical_model'
-        number V(const parameters<number>& __params, const std::vector<number>& __coords);
+        number V(const parameters<number>& __params, const std::vector<number>& __coords) const;
 
         // INITIAL CONDITIONS HANDLING
 
@@ -223,7 +225,7 @@ namespace transport
 
 
     template <typename number>
-    number $$__MODEL<number>::H(const parameters<number>& __params, const std::vector<number>& __coords)
+    number $$__MODEL<number>::H(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
         assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 
@@ -247,7 +249,7 @@ namespace transport
 
 
     template <typename number>
-    number $$__MODEL<number>::epsilon(const parameters<number>& __params, const std::vector<number>& __coords)
+    number $$__MODEL<number>::epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
         assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 
@@ -271,7 +273,7 @@ namespace transport
 
 
     template <typename number>
-    number $$__MODEL<number>::V(const parameters<number>& __params, const std::vector<number>& __coords)
+    number $$__MODEL<number>::V(const parameters<number>& __params, const std::vector<number>& __coords) const
       {
         assert(__coords.size() == 2*$$__NUMBER_FIELDS);
 

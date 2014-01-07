@@ -63,38 +63,40 @@ namespace transport
 
       public:
         //! Return unique string identifying the model (and CppTransport version)
-        virtual const std::string&              get_identity_string() = 0;
+        virtual const std::string&              get_identity_string() const = 0;
+
+        virtual unsigned int                    get_translator_version() const = 0;
 
         //! Return name of the model implemented by this object
-        virtual const std::string&              get_name() = 0;
+        virtual const std::string&              get_name() const = 0;
         //! Return authors of the model implemented by this object
-        virtual const std::string&              get_author() = 0;
+        virtual const std::string&              get_author() const = 0;
         //! Return tagline for the model implemented by this object
-        virtual const std::string&              get_tag() = 0;
+        virtual const std::string&              get_tag() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
-        virtual unsigned int                    get_N_fields() = 0;
+        virtual unsigned int                    get_N_fields() const = 0;
         //! Return number of parameters required by the model implemented by this object
-        virtual unsigned int                    get_N_params() = 0;
+        virtual unsigned int                    get_N_params() const = 0;
 
         //! Return vector of field names for the model implemented by this object
-        virtual const std::vector<std::string>& get_field_names() = 0;
+        virtual const std::vector<std::string>& get_field_names() const = 0;
         //! Return vector of LaTeX names for the fields of the model implemented by this object
-        virtual const std::vector<std::string>& get_f_latex_names() = 0;
+        virtual const std::vector<std::string>& get_f_latex_names() const = 0;
         //! Return vector of parameter names for the model implemented by this object
-        virtual const std::vector<std::string>& get_param_names() = 0;
+        virtual const std::vector<std::string>& get_param_names() const = 0;
         //! Return vector of LaTeX names for the parameters of the model implemented by this object
-        virtual const std::vector<std::string>& get_p_latex_names() = 0;
+        virtual const std::vector<std::string>& get_p_latex_names() const = 0;
         //! Return vector of names for the phase-space coordinates (fields+momenta) of the model implemented by this object
-        virtual const std::vector<std::string>& get_state_names() = 0;
+        virtual const std::vector<std::string>& get_state_names() const = 0;
 
         // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
 
       public:
         //! Compute Hubble rate H given a phase-space configuration
-        virtual number                  H(const parameters<number>& __params, const std::vector<number>& __coords) = 0;
+        virtual number                  H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
         //! Compute slow-roll parameter epsilon given a phase-space configuration
-        virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) = 0;
+        virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
 
         // INTERFACE - INITIAL CONDITIONS HANDLING
 
