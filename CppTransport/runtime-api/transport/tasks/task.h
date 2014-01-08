@@ -94,6 +94,7 @@ namespace transport
         double                      k_t;
         double                      alpha;
         double                      beta;
+        double                      k_t_conventional; // conventionally normalized k_t
 
         // flags which indicate to the integrator whether to
         // store the background and twopf results from this integration
@@ -530,6 +531,8 @@ namespace transport
                         kconfig.k_t = this->comoving_normalize(ks[j] + ks[k] + ks[l]);
                         kconfig.beta  = 1.0 - 2.0 * ks[l] / (ks[j] + ks[k] + ks[l]);
                         kconfig.alpha = 4.0 * ks[j] / (ks[j] + ks[k] + ks[l]) - 1.0 - kconfig.beta;
+
+                        kconfig.k_t_conventional = ks[j] + ks[k] + ks[l];
 
                         kconfig.index[0] = j;
                         kconfig.index[1] = k;

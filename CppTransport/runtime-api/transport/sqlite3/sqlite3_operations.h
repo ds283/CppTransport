@@ -74,6 +74,7 @@ namespace transport
               }
 
             sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
           }
 
 
@@ -130,6 +131,7 @@ namespace transport
               }
 
             sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
           }
 
 
@@ -143,13 +145,14 @@ namespace transport
 
             std::stringstream stmt_text;
             stmt_text << "CREATE TABLE threepf_samples("
-              << "serial      INTEGER PRIMARY KEY,"
-              << "wavenumber1 INTEGER,"
-              << "wavenumber2 INTEGER,"
-              << "wavenumber3 INTEGER,"
-              << "kt_com      DOUBLE,"
-              << "alpha       DOUBLE,"
-              << "beta        DOUBLE,"
+              << "serial          INTEGER PRIMARY KEY,"
+              << "wavenumber1     INTEGER,"
+              << "wavenumber2     INTEGER,"
+              << "wavenumber3     INTEGER,"
+              << "kt_comoving     DOUBLE,"
+              << "kt_conventional DOUBLE,"
+              << "alpha           DOUBLE,"
+              << "beta            DOUBLE,"
               << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial),"
               << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial),"
               << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
@@ -166,7 +169,7 @@ namespace transport
               }
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO threepf_samples VALUES (@serial, @wn1, @wn2, @wn3, @kt, @alpha, @beta)";
+            insert_stmt << "INSERT INTO threepf_samples VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta)";
 
             sqlite3_stmt* stmt;
             sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
@@ -180,8 +183,9 @@ namespace transport
                 sqlite3_bind_int(stmt, 3, threepf_sample[i].index[1]);
                 sqlite3_bind_int(stmt, 4, threepf_sample[i].index[2]);
                 sqlite3_bind_double(stmt, 5, threepf_sample[i].k_t);
-                sqlite3_bind_double(stmt, 6, threepf_sample[i].alpha);
-                sqlite3_bind_double(stmt, 7, threepf_sample[i].beta);
+                sqlite3_bind_double(stmt, 6, threepf_sample[i].k_t_conventional);
+                sqlite3_bind_double(stmt, 7, threepf_sample[i].alpha);
+                sqlite3_bind_double(stmt, 8, threepf_sample[i].beta);
 
                 status = sqlite3_step(stmt);
                 if(status != SQLITE_DONE)
@@ -196,6 +200,7 @@ namespace transport
               }
 
             sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
           }
 
       }   // namespace sqlite3_operations
