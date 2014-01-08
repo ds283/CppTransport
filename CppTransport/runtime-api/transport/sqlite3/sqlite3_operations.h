@@ -13,6 +13,8 @@
 #include "transport/exceptions.h"
 #include "transport/messages_en.h"
 
+#include "boost/lexical_cast.hpp"
+
 #include "sqlite3.h"
 
 
@@ -30,21 +32,48 @@ namespace transport
 
             std::vector<double> sample_times = tk->get_sample_times();
 
-            std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE time_samples("
+            std::stringstream create_stmt;
+            create_stmt << "CREATE TABLE time_samples("
                 << "serial INTEGER PRIMARY KEY,"
                 << "time   DOUBLE"
                 << ");";
 
             char* errmsg = nullptr;
-            int status = sqlite3_exec(db, stmt_text.str().c_str(), nullptr, nullptr, &errmsg);
 
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
             if(status != SQLITE_OK)
               {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL << errmsg << ")";
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }
+
+            std::stringstream insert_stmt;
+            insert_stmt << "INSERT INTO time_samples VALUES (@serial, @time)";
+
+            sqlite3_stmt* stmt;
+            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+
+            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+
+            for(unsigned int i = 0; i < sample_times.size(); i++)
+              {
+                sqlite3_bind_int(stmt, 1, i);
+                sqlite3_bind_double(stmt, 2, sample_times[i]);
+
+                status = sqlite3_step(stmt);
+                if(status != SQLITE_DONE)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL << sqlite3_errmsg(db) << ")";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+
+                sqlite3_clear_bindings(stmt);
+                sqlite3_reset(stmt);
+              }
+
+            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
           }
 
 
