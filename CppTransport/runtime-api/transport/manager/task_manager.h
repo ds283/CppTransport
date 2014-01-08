@@ -16,7 +16,7 @@
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
 #include "transport/tasks/task.h"
-#include "transport/db-xml/repository.h"
+#include "transport/manager/repository.h"
 
 #include "transport/scheduler/context.h"
 #include "transport/scheduler/scheduler.h"
@@ -185,7 +185,7 @@ namespace transport
                         std::string repo_path = static_cast<std::string>(argv[i]);
                         try
                           {
-                            repo = new repository<number>(repo_path, recovery);
+                            repo = repository_factory<number>(repo_path, recovery);
                           }
                         catch (runtime_exception& xe)
                           {
@@ -447,6 +447,12 @@ namespace transport
         // create new output record in the repository XML database, and set up
         // paths to the integration SQL database
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
+
+//        // write time-sample data to the SQL database
+//        this->repo->create_time_sample_table(ctr, tk);
+//
+//        // write twopf k-sample data to the SQL database
+//        this->repo->create_twopf_sample_table(ctr, tk);
       }
 
 

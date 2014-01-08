@@ -6,7 +6,7 @@
 
 #include "dq_basic.h"
 
-#include "transport/db-xml/repository_creation_key.h"
+#include "transport/manager/repository_creation_key.h"
 #import "repository.h"
 
 
@@ -35,7 +35,7 @@ int main(int argc, char* argv[])
     transport::repository_creation_key key;
 
     // create a new repository
-    transport::repository<double>* repo = new transport::repository<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv, repo);

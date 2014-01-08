@@ -22,6 +22,9 @@
 
 #include "transport/containers/data_products.h"
 
+// current implementation uses Berkeley DBXML as the database backend
+#include "transport/db-xml/repository_dbxml.h"
+
 #include "transport/manager/task_manager.h"
 
 
