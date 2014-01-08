@@ -186,8 +186,7 @@ int main(int argc, char* argv[])
 //    delete u3_selector;
 
     // models must all be destroyed before the corresponding manager
-    delete model;
-    delete mgr;
+    delete mgr;   // task manager adopts and destroys its repository, and any registered models
 
     return(EXIT_SUCCESS);
   }

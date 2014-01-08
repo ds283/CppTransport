@@ -52,12 +52,16 @@ namespace transport
           {
           }
 
-        // GET MODEL POINTER
+        //! Get pointer to stored model
         model<number>* get_model() const { return(this->m_ptr); }
+
+        //! Delete stored model
+        void delete_model() { delete(this->m_ptr); }
 
         // COMPARISON OPERATOR
 
       public:
+        //! Equality comparison
         friend bool operator== <>(const model_instance<number>& lhs, const model_instance<number>& rhs);
 
         // INTERNAL DATA
@@ -125,6 +129,14 @@ namespace transport
     template <typename number>
     instance_manager<number>::~instance_manager()
       {
+        // when deleted, models deregister themselves and therefore change iterators into the list.
+        // to handle this, take a copy first
+        std::list< model_instance<number> > models_copy = this->models;
+
+        for(typename std::list< model_instance<number> >::iterator t = models_copy.begin(); t != models_copy.end(); t++)
+          {
+            (*t).delete_model();
+          }
       }
 
 

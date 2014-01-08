@@ -79,9 +79,6 @@ int main(int argc, char* argv[])
 
     transport::threepf_task<double> tk = transport::threepf_task<double>("threepf-1", ics, times, ks, model->kconfig_kstar_factory());
 
-//    // write the initial conditions/parameter specification into the model repository
-//    mgr->write_package(ics, model);
-
     // write the initial conditions/parameter specification and integration specification into the model repository
     mgr->write_integration(tk, model);
 
@@ -91,8 +88,7 @@ int main(int argc, char* argv[])
     std::string task_xml = repo->extract_integration_document(tk.get_name());
     std::cout << "Integration XML docuemnt:" << std::endl << task_xml << std::endl << std::endl;
 
-    delete model;
-    delete mgr;     // task_manager adopts its repository and destroys it silently
+    delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
     return(EXIT_SUCCESS);
   }
