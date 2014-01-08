@@ -16,7 +16,7 @@
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
 
-#include "transport/db-xml/repository_dbxml_operations.h"
+#include "transport/db-xml/dbxml_operations.h"
 
 
 namespace transport
@@ -42,6 +42,11 @@ namespace transport
       //! Close a repository, including the corresponding containers and environment
       ~repository_dbxml();
 
+
+      // INTERFACE -- PATHS
+
+      //! Get path to root of repository
+      const boost::filesystem::path& get_root_path() { return(this->root_path); }
 
       // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
@@ -279,7 +284,7 @@ namespace transport
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID), nullptr, nullptr);
 
             // write data block
-            dbxml_repository::write_package_data_block(writer, m);
+            dbxml_operations::write_package_data_block(writer, m);
 
             // write initial conditions block
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PACKAGE_ICS), nullptr, nullptr, 0, false);
@@ -360,7 +365,7 @@ namespace transport
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(root_node_name.c_str()), nullptr, nullptr, 0, false);
 
             // write data block
-            dbxml_repository::write_integration_data_block(writer, t.get_ics().get_name());
+            dbxml_operations::write_integration_data_block(writer, t.get_ics().get_name());
 
             // write task block
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTGRTN_TASK), nullptr, nullptr, 0, false);
@@ -407,21 +412,21 @@ namespace transport
         DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
 
         // lookup record for the task
-        DbXml::XmlValue integration = dbxml_repository::get_integration_by_name(name, integrations);
+        DbXml::XmlValue integration = dbxml_operations::get_integration_by_name(name, integrations);
         if(!(integration.getType() == DbXml::XmlValue::NODE && integration.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
         // extract name of record for initial conditions/parameters and lookup the corresponding record
-        // note that dbxml_repository::get_integration_by_name() returns an XmlDocument
+        // note that dbxml_operations::get_integration_by_name() returns an XmlDocument
         // when this is cast to an XmlValue, the node type is a DOCUMENT_NODE
         // we want the root note for doing queries, so have to descend to the first child
         DbXml::XmlValue integration_root = integration.getFirstChild();
-        std::string package_name = dbxml_repository::get_package_from_integration(this->mgr, integration_root, name);
-        DbXml::XmlValue package = dbxml_repository::get_package_by_name(package_name, models);
+        std::string package_name = dbxml_operations::get_package_from_integration(this->mgr, integration_root, name);
+        DbXml::XmlValue package = dbxml_operations::get_package_by_name(package_name, models);
         if(!(package.getType() == DbXml::XmlValue::NODE && package.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PACKAGE);
 
         // extract uid for model
         DbXml::XmlValue package_root = package.getFirstChild();
-        std::string model_uid = dbxml_repository::get_model_uid_from_package(this->mgr, package_root, package_name);
+        std::string model_uid = dbxml_operations::get_model_uid_from_package(this->mgr, package_root, package_name);
 
         // use the supplied finder to recover the model
         // throws an exception if the model cannot be found, which should be caught higher up in the task handler
@@ -430,13 +435,13 @@ namespace transport
         // get XML schema describing initial conditions/parameters package
         // this comes from the initial_conditions<number> serialization, and contains an
         // embedded parameters<number> serialization
-        DbXml::XmlValue ics_group = dbxml_repository::get_ics_group(this->mgr, package_root, package_name);
+        DbXml::XmlValue ics_group = dbxml_operations::get_ics_group(this->mgr, package_root, package_name);
 
         // build initial_conditions<> object from this schema
-        initial_conditions<number> ics = dbxml_repository::build_ics_object(this->mgr, ics_group, package_name, m);
+        initial_conditions<number> ics = dbxml_operations::build_ics_object(this->mgr, ics_group, package_name, m);
 
         // build task<> object from the original task schema
-        task<number>* tk = dbxml_repository::build_task_object(this->mgr, integration, ics, m, name);
+        task<number>* tk = dbxml_operations::build_task_object(this->mgr, integration, ics, m, name);
 
         return(tk);
       }
@@ -450,7 +455,7 @@ namespace transport
 
         DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
 
-        DbXml::XmlDocument document = dbxml_repository::get_package_by_name(name, models);
+        DbXml::XmlDocument document = dbxml_operations::get_package_by_name(name, models);
 
         std::string content;
         document.getContent(content);
@@ -466,7 +471,7 @@ namespace transport
 
         DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
 
-        DbXml::XmlDocument document = dbxml_repository::get_integration_by_name(name, integrations);
+        DbXml::XmlDocument document = dbxml_operations::get_integration_by_name(name, integrations);
 
         std::string content;
         document.getContent(content);
@@ -484,9 +489,9 @@ namespace transport
 
         // insert a new output record, and return the corresponding integration_container handle
         typename repository<number>::integration_container ctr =
-                                                             dbxml_repository::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
+                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
 
-        dbxml_repository::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
+        dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 
         return(ctr);
       }
@@ -502,9 +507,9 @@ namespace transport
 
         // insert a new output record, and return the corresponding integration container handle
         typename repository<number>::integration_container ctr =
-                                                             dbxml_repository::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
+                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
 
-        dbxml_repository::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
+        dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 
         std::string content = this->extract_integration_document(tk->get_name());
         std::cerr << "Updated XML document:" << std::endl << content << std::endl << std::endl;

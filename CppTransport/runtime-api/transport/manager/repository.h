@@ -35,20 +35,35 @@ namespace transport
         class integration_container
           {
           public:
+            //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
             integration_container(boost::filesystem::path& dir, boost::filesystem::path& data, unsigned int n)
-              : path_to_directory(dir), path_to_data_container(data), serial_number(n)
+              : path_to_directory(dir), path_to_data_container(data), serial_number(n), data_manager_block(nullptr)
               {
               }
 
-          friend class repository<number>;
+            //! Set data_manager backend data
+            template <typename data_manager_type>
+            void set_data_manager_data(data_manager_type data)
+              {
+                this->data_manager_block = static_cast<void*>(data);  // will fail if data_manager_type not castable to void*
+              }
 
-          protected:
+            //! Return data_manager backend data
+            template <typename data_manager_type>
+            void get_data_manager_data(data_manager_type* data)
+              {
+                *data = static_cast<data_manager_type>(this->data_manager_block);
+              }
+
+            //! Return path to data container
             const boost::filesystem::path& data_container_path() { return(this->path_to_data_container); }
 
           private:
             boost::filesystem::path path_to_directory;
             boost::filesystem::path path_to_data_container;
             unsigned int            serial_number;
+
+            void*                   data_manager_block;
           };
 
 
@@ -61,11 +76,17 @@ namespace transport
           }
 
 
+        // INTERFACE -- PATHS
+
+        //! Get path to root of repository
+        virtual const boost::filesystem::path& get_root_path() = 0;
+
+
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the model database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        void write_package(const initial_conditions<number>& ics, const model<number>* m);
+        virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
 
         //! Write a threepf integration task to the integration database.
         virtual void write_integration(const twopf_task<number>& t, const model<number>* m) = 0;

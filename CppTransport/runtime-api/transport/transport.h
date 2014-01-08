@@ -22,8 +22,11 @@
 
 #include "transport/containers/data_products.h"
 
-// current implementation uses Berkeley DBXML as the database backend
+// current implementation uses Berkeley DBXML as the repository XML database
 #include "transport/db-xml/repository_dbxml.h"
+
+// current implementation uses sqlite3 as the data container database
+#include "transport/sqlite3/data_manager_sqlite3.h"
 
 #include "transport/manager/task_manager.h"
 

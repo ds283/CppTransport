@@ -54,7 +54,7 @@ namespace transport
         // (trivial in this case, and redundant with the k-value 'k' defined below)
         unsigned int index;
 
-        // k-value
+        // *comoving* k-value
         double       k;
 
         // flag which indicates to the integrator whether to store the background
@@ -85,7 +85,7 @@ namespace transport
         // used to look up appropriate values of the power spectrum when constructing reduced 3pfs
         std::array<unsigned int, 3> index;
 
-        // plain comoving (k1,k2,k3) coordinates for this k-configuration
+        // *comoving* (k1,k2,k3) coordinates for this k-configuration
         double                      k1;
         double                      k2;
         double                      k3;

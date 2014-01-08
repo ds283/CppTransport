@@ -70,7 +70,7 @@ namespace transport
 
     // utility functions for manipulating XML documents, but which don't need to be methods for a repository object
     // embedding in an unnamed namespace makes these functions invisible outside this translation unit
-    namespace dbxml_repository
+    namespace dbxml_operations
       {
 
         // Write the data block for a package document
@@ -403,6 +403,8 @@ namespace transport
             DbXml::XmlQueryContext update_ctx = mgr->createQueryContext();
             DbXml::XmlQueryExpression update_expr = mgr->prepare(update, update_ctx);
             DbXml::XmlResults update_results = update_expr.execute(update_ctx, 0);
+
+            return(ctr);
           }
 
 
@@ -473,7 +475,7 @@ namespace transport
           }
 
 
-      }   // namespace dbxml_repository
+      }   // namespace dbxml_operations
 
   }   // namespace transport
 

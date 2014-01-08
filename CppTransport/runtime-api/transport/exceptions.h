@@ -25,6 +25,7 @@ namespace transport
                        MPI_ERROR,                                         // error associated with MPI message passing
                        TASK_NOT_FOUND, MODEL_NOT_FOUND, REPO_NOT_FOUND,   // missing items in the repository
                        REPOSITORY_ERROR,                                  // generic repository error
+                       DATA_CONTAINER_ERROR,                              // generic data-container error
                        BADLY_FORMED_XML,                                  // badly formed XML document in repository
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
                      } exception_type;

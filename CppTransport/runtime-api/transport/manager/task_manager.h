@@ -16,7 +16,9 @@
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
 #include "transport/tasks/task.h"
+
 #include "transport/manager/repository.h"
+#include "transport/manager/data_manager.h"
 
 #include "transport/scheduler/context.h"
 #include "transport/scheduler/scheduler.h"
@@ -148,8 +150,10 @@ namespace transport
         //! BOOST::MPI world communicator
         boost::mpi::communicator world;
 
-        //! Repository object
+        //! Repository manager instance
         repository<number>* repo;
+        //! Data manager instance
+        data_manager<number>* data_mgr;
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
@@ -158,7 +162,7 @@ namespace transport
 
     template <typename number>
     task_manager<number>::task_manager(int argc, char* argv[])
-      : instance_manager<number>(), environment(argc, argv), repo(nullptr)
+      : instance_manager<number>(), environment(argc, argv), repo(nullptr), data_mgr(data_manager_factory<number>())
       {
         if(world.rank() == MPI::RANK_MASTER)
           {
@@ -231,7 +235,7 @@ namespace transport
 
     template <typename number>
     task_manager<number>::task_manager(int argc, char* argv[], repository<number>* r)
-      : instance_manager<number>(), environment(argc, argv), repo(r)
+      : instance_manager<number>(), environment(argc, argv), repo(r), data_mgr(data_manager_factory<number>())
       {
         assert(repo != nullptr);
       }
@@ -448,11 +452,17 @@ namespace transport
         // paths to the integration SQL database
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
 
-//        // write time-sample data to the SQL database
-//        this->repo->create_time_sample_table(ctr, tk);
-//
-//        // write twopf k-sample data to the SQL database
-//        this->repo->create_twopf_sample_table(ctr, tk);
+        // create the data container
+        this->data_mgr->create_container(this->repo, ctr);
+
+        // write time-sample data to the database
+        this->data_mgr->create_time_sample_table(ctr, tk);
+
+        // write twopf k-sample data to the database
+        this->data_mgr->create_twopf_sample_table(ctr, tk);
+
+        // close the data container
+        this->data_mgr->close_container(ctr);
       }
 
 
@@ -472,6 +482,21 @@ namespace transport
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
 
         std::cout << queue;
+
+        // create the data container
+        this->data_mgr->create_container(this->repo, ctr);
+
+        // write time-sample data to the database
+        this->data_mgr->create_time_sample_table(ctr, tk);
+
+        // write twopf k-sample data to the database
+        this->data_mgr->create_twopf_sample_table(ctr, tk);
+
+        // write threepf k-sample data to the database
+        this->data_mgr->create_threepf_sample_table(ctr, tk);
+
+        // close the data container
+        this->data_mgr->close_container(ctr);
       }
 
 
