@@ -77,12 +77,10 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
-        //! Construct a task manager using command-line arguments.
-        //! The repository must exist and be named on the command line.
+        //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[]);
 
-        //! Construct a task manager using a previously-constructed repository object.
-        //! Usually this will be used only when creating a new repository.
+        //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
         task_manager(int argc, char* argv[], repository<number>* r);
 
         //! Destroy a task manager.
@@ -91,11 +89,12 @@ namespace transport
         // INTERFACE -- REPOSITORY MANAGEMENT
 
       public:
-        //! Write a model/initial conditions/parameters combination to the repository
-        void write_model(const initial_conditions<number>& ics, const model<number>* m);
+        //! Write a model/initial conditions/parameters combination (a 'package') to the repository
+        void write_package(const initial_conditions<number>& ics, const model<number>* m);
 
-        //! Write an integration task to the repository
+        //! Write a twopf integration task to the repository
         void write_integration(const twopf_task<number>& t, const model<number>* m);
+        //! Write a threepf integration task to the repository
         void write_integration(const threepf_task<number>& t, const model<number>* m);
 
         // INTERFACE -- MASTER-SLAVE API
@@ -246,7 +245,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::write_model(const initial_conditions<number>& ics, const model<number>* m)
+    void task_manager<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
 
@@ -444,6 +443,10 @@ namespace transport
         scheduler sch = scheduler(ctx);
 
         work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
+
+        // create new output record in the repository XML database, and set up
+        // paths to the integration SQL database
+        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
       }
 
 
@@ -457,6 +460,10 @@ namespace transport
         scheduler sch = scheduler(ctx);
 
         work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
+
+        // create new output record in the repository XML database, and set up
+        // paths to the integration SQL database
+        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
 
         std::cout << queue;
       }
