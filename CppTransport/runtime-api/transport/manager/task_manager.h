@@ -11,8 +11,6 @@
 #include <list>
 #include <stdexcept>
 
-#include "boost/mpi.hpp"
-
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
 #include "transport/tasks/task.h"
@@ -27,6 +25,9 @@
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
 
+#include "boost/mpi.hpp"
+
+#include "boost/serialization/string.hpp"
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
 #define __CPP_TRANSPORT_SWITCH_TASK     "-task"
@@ -46,16 +47,59 @@ namespace transport
         namespace
           {
 
-            const unsigned int NEW_TASK = 0;
+            // MPI message tags
+            const unsigned int NEW_INTEGRATION = 0;
             const unsigned int FINISHED_TASK = 1;
+            const unsigned int DATA_READY = 2;
             const unsigned int TERMINATE = 99;
 
+            // MPI ranks
             const unsigned int RANK_MASTER = 0;
 
-            class new_task_payload
+            // MPI message payloads
+            class new_integration_payload
               {
-                std::string repo;
+              public:
+                //! Null constructor
+                new_integration_payload()
+                  {
+                  }
+
+                //! Value constructor
+                new_integration_payload(const std::string& tk, const std::string& tk_f, const std::string& tmp_d, const std::string& log_d)
+                  : task(tk), taskfile(tk_f), tempdir(tmp_d), logdir(log_d)
+                  {
+                  }
+
+                const std::string& task_name()          const { return(this->task); }
+                boost::filesystem::path taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
+                boost::filesystem::path tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+                boost::filesystem::path logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+
+              private:
+                //! Name of task, to be looked up in repository database
                 std::string task;
+
+                //! Pathname to taskfile
+                std::string taskfile;
+
+                //! Pathname to directory for temporary files
+                std::string tempdir;
+
+                //! Pathname to directory for log files
+                std::string logdir;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & task;
+                    ar & taskfile;
+                    ar & tempdir;
+                    ar & logdir;
+                  }
               };
 
           }   // unnamed namespace
@@ -76,6 +120,7 @@ namespace transport
             std::string name;
           };
 
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -88,6 +133,7 @@ namespace transport
         //! Destroy a task manager.
         ~task_manager();
 
+
         // INTERFACE -- REPOSITORY MANAGEMENT
 
       public:
@@ -98,6 +144,7 @@ namespace transport
         void write_integration(const twopf_task<number>& t, const model<number>* m);
         //! Write a threepf integration task to the repository
         void write_integration(const threepf_task<number>& t, const model<number>* m);
+
 
         // INTERFACE -- MASTER-SLAVE API
 
@@ -115,23 +162,34 @@ namespace transport
         void wait_for_tasks(void);
 
       protected:
-        //! Process a 'task' job -- tasks are integrations, so this dispatches to the appropriate integrator
-        void process_task(const job_descriptor& job);
+        //! Master node: Process a 'task' job -- tasks are integrations, so this dispatches to the appropriate integrator
+        void master_process_task(const job_descriptor& job);
 
-        //! Dispatch a twopf 'task' (ie., integration) to the worker processes
-        void dispatch_twopf_task(twopf_task<number>* tk, model<number>* m);
+        //! Master node: Dispatch a twopf 'task' (ie., integration) to the worker processes
+        void master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m);
 
-        //! Dispatch a threepf 'task' (ie., integration) to the worker processes
-        void dispatch_threepf_task(threepf_task<number>* tk, model<number>* m);
+        //! Master node: Dispatch a threepf 'task' (ie., integration) to the worker processes
+        void master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m);
+
+        //! Slave node: Process a new task instruction
+        void slave_process_task(const MPI::new_integration_payload& payload);
 
         //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
 
+
+        // MPI utility functions
+
+      protected:
         //! Terminate all worker processes
-        void terminate_workers(void);
+        void master_terminate_workers(void);
 
         //! Map worker number to communicator rank
         constexpr unsigned int worker_rank(unsigned int worker_number) { return(worker_number+1); }
+
+        //! Pass new integration task to the workers
+        void new_task_to_workers(typename repository<number>::integration_container& ctr, const std::string& task_name);
+
 
         // INTERFACE -- ERROR REPORTING
 
@@ -248,6 +306,9 @@ namespace transport
       }
 
 
+    // REPOSITORY INTERFACE
+
+
     template <typename number>
     void task_manager<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
       {
@@ -291,6 +352,9 @@ namespace transport
       }
 
 
+    // MASTER FUNCTIONS
+
+
     template <typename number>
     void task_manager<number>::execute_tasks()
       {
@@ -307,7 +371,7 @@ namespace transport
                 switch((*t).type)
                   {
                     case job_task:
-                      this->process_task(*t);
+                      this->master_process_task(*t);
                       break;
 
                     default:
@@ -318,12 +382,12 @@ namespace transport
 
         // there is no more work, so ask all workers to shut down
         // and then exit ourselves
-        this->terminate_workers();
+        this->master_terminate_workers();
       }
 
 
     template <typename number>
-    void task_manager<number>::process_task(const job_descriptor& job)
+    void task_manager<number>::master_process_task(const job_descriptor& job)
       {
         try
           {
@@ -338,12 +402,12 @@ namespace transport
             if(dynamic_cast< threepf_task<number>* >(tk))
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->dispatch_threepf_task(three_task, m);
+                this->master_dispatch_threepf_task(three_task, m);
               }
             else if(dynamic_cast< twopf_task<number>* >(tk))
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->dispatch_twopf_task(two_task, m);
+                this->master_dispatch_twopf_task(two_task, m);
               }
             else
               {
@@ -388,57 +452,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::terminate_workers()
-      {
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
-
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
-          {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
-          }
-
-        // wait for all messages to be received, then exit ourselves
-        boost::mpi::wait_all(requests.begin(), requests.end());
-      }
-
-
-    template <typename number>
-    void task_manager<number>::wait_for_tasks()
-      {
-        if(this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
-
-        bool finished = false;
-        while(!finished)
-          {
-            // wait until a message is available from master
-            boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
-
-            switch(stat.tag())
-              {
-                case MPI::NEW_TASK:
-                  std::cerr << "New task message for worker " << this->world.rank() << std::endl;
-                  // receive the message
-                  this->world.recv(MPI::RANK_MASTER, MPI::NEW_TASK);
-                  break;
-
-                case MPI::TERMINATE:
-                  std::cerr << "worker " << this->world.rank() << " terminating" << std::endl;
-                  // receive the message
-                  this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);
-                  finished = true;
-                  break;
-
-                default:
-                  throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_UNEXPECTED_MPI);
-              }
-          }
-      }
-
-
-    template <typename number>
-    void task_manager<number>::dispatch_twopf_task(twopf_task<number>* tk, model<number>* m)
+    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m)
       {
         // set up a work queue representing our workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
@@ -465,13 +479,16 @@ namespace transport
         // write twopf k-sample data to the database
         this->data_mgr->create_twopf_sample_table(ctr, tk);
 
+        // instruct workers to carry out the calculation
+        this->new_task_to_workers(ctr, tk->get_name());
+
         // close the data container
         this->data_mgr->close_container(ctr);
       }
 
 
     template <typename number>
-    void task_manager<number>::dispatch_threepf_task(threepf_task<number>* tk, model<number>* m)
+    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m)
       {
         // set up a work queue representing our workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
@@ -503,6 +520,9 @@ namespace transport
         // write threepf k-sample data to the database
         this->data_mgr->create_threepf_sample_table(ctr, tk);
 
+        // instruct workers to carry out the calculation
+        this->new_task_to_workers(ctr, tk->get_name());
+
         // close the data container
         this->data_mgr->close_container(ctr);
       }
@@ -525,6 +545,102 @@ namespace transport
           }
 
         return(ctx);
+      }
+
+
+    // SLAVE FUNCTIONS
+
+
+    template <typename number>
+    void task_manager<number>::wait_for_tasks()
+      {
+        if(this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
+
+        bool finished = false;
+        while(!finished)
+          {
+            // wait until a message is available from master
+            boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
+
+            switch(stat.tag())
+              {
+                case MPI::NEW_INTEGRATION:
+                  {
+                    std::cerr << "New integration task for worker " << this->world.rank() << std::endl;
+                    // receive the message
+                    MPI::new_integration_payload payload;
+                    this->world.recv(MPI::RANK_MASTER, MPI::NEW_INTEGRATION, payload);
+                    this->slave_process_task(payload);
+                    break;
+                  }
+
+                case MPI::TERMINATE:
+                  {
+                    std::cerr << "worker " << this->world.rank() << " terminating" << std::endl;
+                    // receive the message
+                    this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);
+                    finished = true;
+                    break;
+                  }
+
+                default:
+                  throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_UNEXPECTED_MPI);
+              }
+          }
+      }
+
+
+    template <typename number>
+    void task_manager<number>::slave_process_task(const MPI::new_integration_payload& payload)
+      {
+        std::cerr << "task name = " << payload.task_name() << std::endl;
+        std::cerr << "taskfile  = " << payload.taskfile_path() << std::endl;
+        std::cerr << "log dir   = " << payload.logdir_path() << std::endl;
+        std::cerr << "temp dir  = " << payload.tempdir_path() << std::endl;
+      }
+
+
+    // MPI UTILITY FUNCTIONS
+
+
+    template <typename number>
+    void task_manager<number>::master_terminate_workers()
+      {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
+          }
+
+        // wait for all messages to be received, then exit ourselves
+        boost::mpi::wait_all(requests.begin(), requests.end());
+      }
+
+
+    template <typename number>
+    void task_manager<number>::new_task_to_workers(typename repository<number>::integration_container& ctr, const std::string& task_name)
+      {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        // get paths the workers will need
+        boost::filesystem::path taskfile_path = this->repo->get_root_path() / ctr.taskfile_path();
+        boost::filesystem::path tempdir_path  = this->repo->get_root_path() / ctr.temporary_files_path();
+        boost::filesystem::path logdir_path   = this->repo->get_root_path() / ctr.log_directory_path();
+
+        MPI::new_integration_payload payload(task_name, taskfile_path.string(), tempdir_path.string(), logdir_path.string());
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_INTEGRATION, payload);
+          }
+
+        // wait for all messages to be received, then return
+        boost::mpi::wait_all(requests.begin(), requests.end());
       }
 
 

@@ -23,6 +23,7 @@
 #define __CPP_TRANSPORT_REPO_CONTAINERS_LEAF    "containers"
 #define __CPP_TRANSPORT_REPO_INTOUTPUT_LEAF     "output"
 #define __CPP_TRANSPORT_REPO_LOGDIR_LEAF        "logs"
+#define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF       "tempfiles"
 #define __CPP_TRANSPORT_REPO_TASKFILE_LEAF      "tasks.sqlite"
 #define __CPP_TRANSPORT_REPO_GROUP_STEM         "group"
 #define __CPP_TRANSPORT_REPO_DATABASE_LEAF      "integration.sqlite"
@@ -366,6 +367,7 @@ namespace transport
             boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
             boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
             boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+            boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
             // insert new output group in the repository database
 
@@ -415,9 +417,10 @@ namespace transport
             // create directories
             boost::filesystem::create_directories(root_path / output_path);
             boost::filesystem::create_directories(root_path / log_path);
+            boost::filesystem::create_directories(root_path / temp_path);
 
             // create integration_container handle and return it
-            typename repository<number>::integration_container ctr(output_path, sql_path, log_path, task_path, serial_number);
+            typename repository<number>::integration_container ctr(output_path, sql_path, log_path, task_path, temp_path, serial_number);
 
             return(ctr);
           }

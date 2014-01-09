@@ -37,9 +37,12 @@ namespace transport
           public:
             //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
             integration_container(const boost::filesystem::path& dir, const boost::filesystem::path& data,
-                                  const boost::filesystem::path& log, const boost::filesystem::path& task, unsigned int n)
+                                  const boost::filesystem::path& log, const boost::filesystem::path& task,
+                                  const boost::filesystem::path& temp, unsigned int n)
               : path_to_directory(dir), path_to_data_container(data),
-                path_to_log_directory(log), path_to_taskfile(task), serial_number(n),
+                path_to_log_directory(log), path_to_taskfile(task),
+                path_to_temp_directory(temp),
+                serial_number(n),
                 data_manager_handle(nullptr), data_manager_taskfile(nullptr)
               {
               }
@@ -87,12 +90,16 @@ namespace transport
             //! Return path to task-data container
             const boost::filesystem::path& taskfile_path() { return(this->path_to_taskfile); }
 
+            //! Return path to directory for temporary files
+            const boost::filesystem::path& temporary_files_path() { return(this->path_to_temp_directory); }
+
           private:
             const boost::filesystem::path path_to_directory;
 
             const boost::filesystem::path path_to_data_container;
             const boost::filesystem::path path_to_log_directory;
             const boost::filesystem::path path_to_taskfile;
+            const boost::filesystem::path path_to_temp_directory;
 
             const unsigned int            serial_number;
 
