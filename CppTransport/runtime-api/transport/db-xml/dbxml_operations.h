@@ -22,6 +22,8 @@
 #define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
 #define __CPP_TRANSPORT_REPO_CONTAINERS_LEAF    "containers"
 #define __CPP_TRANSPORT_REPO_INTOUTPUT_LEAF     "output"
+#define __CPP_TRANSPORT_REPO_LOGDIR_LEAF        "logs"
+#define __CPP_TRANSPORT_REPO_TASKFILE_LEAF      "tasks.sqlite"
 #define __CPP_TRANSPORT_REPO_GROUP_STEM         "group"
 #define __CPP_TRANSPORT_REPO_DATABASE_LEAF      "integration.sqlite"
 #define __CPP_TRANSPORT_CNTR_PACKAGES_LEAF      "packages.dbxml"
@@ -341,6 +343,8 @@ namespace transport
             DbXml::XmlQueryExpression expr = mgr->prepare(query, ctx);
             DbXml::XmlResults results = expr.execute(doc_root, ctx);
 
+            // allocate a serial number
+
             unsigned int output_groups = results.size();  // first available identifier should fall in the range <= output_groups+1
             std::vector<unsigned int> used_serial_numbers;
             DbXml::XmlValue serial_node;
@@ -355,18 +359,15 @@ namespace transport
 
             if(serial_number > output_groups) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NO_SERIALNO);
 
-            // construct relative path to output
+            // construct paths for the various output files and directories
             std::ostringstream output_leaf;
             output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
             boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / task_name / output_leaf.str();
-            boost::filesystem::path sql_path = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+            boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+            boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+            boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
 
-            // create directories
-            boost::filesystem::create_directories(root_path / output_path);
-
-            typename repository<number>::integration_container ctr(output_path, sql_path, serial_number);
-
-            // insert new output group
+            // insert new output group in the repository database
 
             // generate XML for the group
             // there seems no way to do this natively with the DBXML API ...
@@ -394,7 +395,14 @@ namespace transport
               << "<"  << __CPP_TRANSPORT_NODE_OUTPUT_NOTES << "/>"
               << "</" << __CPP_TRANSPORT_NODE_INTOUTPUT_GROUP << ">";
 
-            // to reference this container, we need to add an alias
+            // to reference this container, we need to add an alias -- this is a feature
+            // of Berkeley DB XML
+            // see https://community.oracle.com/message/2191426
+            // and http://download.oracle.com/otndocs/products/berkeleydb/html/xml/2.3.10.html
+            // especially 2.3.8 change #13881 ('changes that require modification' no. 3)
+            // and #14234. #14234 suggests that we could use //// to identify an absolute UNIX
+            // path, but the community.oracle exchange above suggests that aliases are
+            // the preferred solution
             xml_ctr.addAlias(output_leaf.str());
             std::string doc_selector = dbxml_helper::xquery::document(output_leaf.str(), task_name);
 
@@ -403,6 +411,13 @@ namespace transport
             DbXml::XmlQueryContext update_ctx = mgr->createQueryContext();
             DbXml::XmlQueryExpression update_expr = mgr->prepare(update, update_ctx);
             DbXml::XmlResults update_results = update_expr.execute(update_ctx, 0);
+
+            // create directories
+            boost::filesystem::create_directories(root_path / output_path);
+            boost::filesystem::create_directories(root_path / log_path);
+
+            // create integration_container handle and return it
+            typename repository<number>::integration_container ctr(output_path, sql_path, log_path, task_path, serial_number);
 
             return(ctr);
           }

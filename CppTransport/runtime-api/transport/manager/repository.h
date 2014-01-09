@@ -36,34 +36,68 @@ namespace transport
           {
           public:
             //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
-            integration_container(boost::filesystem::path& dir, boost::filesystem::path& data, unsigned int n)
-              : path_to_directory(dir), path_to_data_container(data), serial_number(n), data_manager_block(nullptr)
+            integration_container(const boost::filesystem::path& dir, const boost::filesystem::path& data,
+                                  const boost::filesystem::path& log, const boost::filesystem::path& task, unsigned int n)
+              : path_to_directory(dir), path_to_data_container(data),
+                path_to_log_directory(log), path_to_taskfile(task), serial_number(n),
+                data_manager_handle(nullptr), data_manager_taskfile(nullptr)
               {
               }
 
-            //! Set data_manager backend data
+            //! Set data_manager handle for data container
             template <typename data_manager_type>
-            void set_data_manager_data(data_manager_type data)
+            void set_data_manager_handle(data_manager_type data)
               {
-                this->data_manager_block = static_cast<void*>(data);  // will fail if data_manager_type not castable to void*
+                this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
               }
 
-            //! Return data_manager backend data
+            //! Return data_manager handle for data container
+
+            //! Throws a REPOSTORY_ERROR exception if the handle is unset
             template <typename data_manager_type>
-            void get_data_manager_data(data_manager_type* data)
+            void get_data_manager_handle(data_manager_type* data)
               {
-                *data = static_cast<data_manager_type>(this->data_manager_block);
+                if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE);
+                *data = static_cast<data_manager_type>(this->data_manager_handle);
+              }
+
+            //! Set data_manager handle for taskfile
+            template <typename data_manager_type>
+            void set_data_manager_taskfile(data_manager_type data)
+              {
+                this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
+              }
+
+            //! Return data_manager handle for taskfile
+
+            //! Throws a REPOSITORY_ERROR exception if the handle is unset
+            template <typename data_manager_type>
+            void get_data_manager_taskfile(data_manager_type* data)
+              {
+                if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETTASK);
+                *data = static_cast<data_manager_type>(this->data_manager_taskfile);
               }
 
             //! Return path to data container
             const boost::filesystem::path& data_container_path() { return(this->path_to_data_container); }
 
-          private:
-            boost::filesystem::path path_to_directory;
-            boost::filesystem::path path_to_data_container;
-            unsigned int            serial_number;
+            //! Return path to log directory
+            const boost::filesystem::path& log_directory_path() { return(this->path_to_log_directory); }
 
-            void*                   data_manager_block;
+            //! Return path to task-data container
+            const boost::filesystem::path& taskfile_path() { return(this->path_to_taskfile); }
+
+          private:
+            const boost::filesystem::path path_to_directory;
+
+            const boost::filesystem::path path_to_data_container;
+            const boost::filesystem::path path_to_log_directory;
+            const boost::filesystem::path path_to_taskfile;
+
+            const unsigned int            serial_number;
+
+            void*                         data_manager_handle;
+            void*                         data_manager_taskfile;
           };
 
 

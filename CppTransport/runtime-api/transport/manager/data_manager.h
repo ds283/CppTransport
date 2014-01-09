@@ -53,6 +53,15 @@ namespace transport
         //! Create the table of threepf sample configurations
         virtual void create_threepf_sample_table(typename repository<number>::integration_container& ctr, threepf_task<number>* tk) = 0;
 
+
+        // INTERFACE -- TASK FILES
+
+      public:
+        //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
+        virtual void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue) = 0;
+
+        //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
+        virtual void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue) = 0;
       };
 
   }   // namespace transport

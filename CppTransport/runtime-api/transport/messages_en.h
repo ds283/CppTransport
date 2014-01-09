@@ -128,6 +128,8 @@
 #define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE      "Internal error: Unexpected job type in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_EDITTIME_FAIL    "Repository error: Failed to set last-edit time"
 #define __CPP_TRANSPORT_REPO_NO_SERIALNO      "Repository error: Could not allocate serial number for integration output group"
+#define __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_container'"
+#define __CPP_TRANSPORT_REPO_INTCTR_UNSETTASK   "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_container'"
 
 #define __CPP_TRANSPORT_DATACTR_NOT_CLOSED    "Data container error: Some containers not closed when deleting 'data_manager' object"
 #define __CPP_TRANSPORT_DATACTR_CLOSE         "Data container error: Unexpected error when closing containers on destruction of 'data_manager' object (sqlite3 code="
@@ -135,10 +137,10 @@
 #define __CPP_TRANSPORT_DATACTR_CREATE_B      "(sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_OPEN_A        "Data container error: Could not open data container"
 #define __CPP_TRANSPORT_DATACTR_OPEN_B        "(sqlite3 code="
-#define __CPP_TRANSPORT_DATACTR_NULLPTR       "Data container error: sqlite3 handle is nullptr for container"
 #define __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL  "Data container error: Failed to create time-sample table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL "Data container error: Failed to create twopf-sample table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL "Data container error: Failed to create threepf-sample table in data container (sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL "Data container error: Failed to create tasklist table in data container (sqlite3 code="
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "

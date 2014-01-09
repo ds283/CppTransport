@@ -455,6 +455,10 @@ namespace transport
         // create the data container
         this->data_mgr->create_container(this->repo, ctr);
 
+        // write the task distribution list -- this is subsequently read by the worker proceses,
+        // to find out which work items they should process
+        this->data_mgr->create_taskfile(ctr, queue);
+
         // write time-sample data to the database
         this->data_mgr->create_time_sample_table(ctr, tk);
 
@@ -485,6 +489,10 @@ namespace transport
 
         // create the data container
         this->data_mgr->create_container(this->repo, ctr);
+
+        // write the task distribution list -- this is subsequently read by the worker proceses,
+        // to find out which work items they should process
+        this->data_mgr->create_taskfile(ctr, queue);
 
         // write time-sample data to the database
         this->data_mgr->create_time_sample_table(ctr, tk);

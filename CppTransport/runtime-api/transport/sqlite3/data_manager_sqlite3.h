@@ -78,6 +78,15 @@ namespace transport
         void create_threepf_sample_table(typename repository<number>::integration_container& ctr, threepf_task<number>* tk);
 
 
+        // INTERFACE - TASK FILES
+
+      public:
+        //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
+        void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue);
+
+        //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
+        void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue);
+
         // INTERNAL DATA
 
       private:
@@ -135,21 +144,22 @@ namespace transport
         assert(repo != nullptr);
 
         sqlite3* db = nullptr;
+        sqlite3* taskfile = nullptr;
 
+        // get root directory of repository
         boost::filesystem::path repo_root = repo->get_root_path();
+
+        // get paths of the data container and taskfile relative to the repository root
         boost::filesystem::path ctr_relative = ctr.data_container_path();
+        boost::filesystem::path taskfile_relative = ctr.taskfile_path();
 
+        // construct absolute paths to the data container and repository root
         boost::filesystem::path ctr_path = repo_root / ctr_relative;
+        boost::filesystem::path taskfile_path = repo_root / taskfile_relative;
 
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, flags, nullptr);
 
-        if(status == SQLITE_OK)
-          {
-            // remember this connexion
-            this->open_containers.push_back(db);
-            ctr.set_data_manager_data(db);
-          }
-        else
+        if(status != SQLITE_OK)
           {
             std::ostringstream msg;
             if(db != nullptr)
@@ -167,6 +177,36 @@ namespace transport
         // enable foreign key constraints
         char* errmsg;
         sqlite3_exec(db, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
+
+        // remember this connexion
+        this->open_containers.push_back(db);
+        ctr.set_data_manager_handle(db);
+
+        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, flags, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            sqlite3_close(db);
+
+            std::ostringstream msg;
+            if(taskfile != nullptr)
+              {
+                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(taskfile);
+              }
+            else
+              {
+                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ")";
+              }
+            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        // enable foreign key constraints
+        sqlite3_exec(taskfile, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
+
+        // remember this connexion
+        this->open_containers.push_back(taskfile);
+        ctr.set_data_manager_taskfile(taskfile);
       }
 
 
@@ -175,19 +215,16 @@ namespace transport
     void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_container& ctr)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_data(&db);
+        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
-        if(db != nullptr)
-          {
-            this->open_containers.remove(db);
-            sqlite3_close(db);
-          }
-        else
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_NULLPTR << " '" << ctr.data_container_path().string() << "' ('close_container')";
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+
+        sqlite3* taskfile = nullptr;
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+
+        this->open_containers.remove(taskfile);
+        sqlite3_close(taskfile);
       }
 
 
@@ -196,18 +233,9 @@ namespace transport
     void data_manager_sqlite3<number>::create_time_sample_table(typename repository<number>::integration_container& ctr, task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_data(&db);
+        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
-        if(db != nullptr)
-          {
-            sqlite3_operations::create_time_sample_table(db, tk);
-          }
-        else
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_NULLPTR << " '" << ctr.data_container_path().string() << "' ('create_time_sample_table')";
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+        sqlite3_operations::create_time_sample_table(db, tk);
       }
 
 
@@ -216,18 +244,9 @@ namespace transport
     void data_manager_sqlite3<number>::create_twopf_sample_table(typename repository<number>::integration_container& ctr, twopf_list_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_data(&db);
+        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
-        if(db != nullptr)
-          {
-            sqlite3_operations::create_twopf_sample_table(db, tk);
-          }
-        else
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_NULLPTR << " '" << ctr.data_container_path().string() << "' ('create_twopf_sample_table')";
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+        sqlite3_operations::create_twopf_sample_table(db, tk);
       }
 
 
@@ -236,18 +255,29 @@ namespace transport
     void data_manager_sqlite3<number>::create_threepf_sample_table(typename repository<number>::integration_container& ctr, threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_data(&db);
+        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
-        if(db != nullptr)
-          {
-            sqlite3_operations::create_threepf_sample_table(db, tk);
-          }
-        else
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATACTR_NULLPTR << " '" << ctr.data_container_path().string() << "' ('create_threepf_sample_table')";
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+        sqlite3_operations::create_threepf_sample_table(db, tk);
+      }
+
+    // Create a tasklist based on a work queue of twopf_kconfig-s
+    template <typename number>
+    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue)
+      {
+        sqlite3* taskfile = nullptr;
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::create_taskfile(taskfile, queue);
+      }
+
+    // Create a tasklist based on a work queue of threepf_kconfig-s
+    template <typename number>
+    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue)
+      {
+        sqlite3* taskfile = nullptr;
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::create_taskfile(taskfile, queue);
       }
 
 

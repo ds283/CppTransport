@@ -487,6 +487,8 @@ namespace transport
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
+        // TODO: implement rollback if the integration is not successful
+
         // insert a new output record, and return the corresponding integration_container handle
         typename repository<number>::integration_container ctr =
                                                              dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
@@ -505,14 +507,16 @@ namespace transport
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
+        // TODO: implement rollback if the integration is not successful
+
         // insert a new output record, and return the corresponding integration container handle
         typename repository<number>::integration_container ctr =
                                                              dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
 
         dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 
-        std::string content = this->extract_integration_document(tk->get_name());
-        std::cerr << "Updated XML document:" << std::endl << content << std::endl << std::endl;
+//        std::string content = this->extract_integration_document(tk->get_name());
+//        std::cerr << "Updated XML document:" << std::endl << content << std::endl << std::endl;
 
         return(ctr);
       }

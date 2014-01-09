@@ -36,6 +36,7 @@ namespace transport
       {
       public:
 
+        //! Hold a list of work items for a specific device. The queue for a device is a collection of these work lists.
         class device_work_list
           {
           public:
@@ -44,25 +45,25 @@ namespace transport
               {
               }
 
-            // compute memory required by items in the queue
-            size_t get_memory_required() const { return(this->state_size * this->queue.size()); }
+            //! Compute the memory required to integrate all the items in this list
+            size_t get_memory_required() const { return(this->state_size * this->work_list.size()); }
 
-            // queue an work item on this list
-            void enqueue_item(const ItemType& item) { queue.push_back(item); }
+            //! Add a work item on this list
+            void enqueue_item(const ItemType& item) { work_list.push_back(item); }
 
-            // return number of items queued on this list
-            size_t size() const { return(this->queue.size()); }
+            //! Return the number of items sitting in this list
+            size_t size() const { return(this->work_list.size()); }
 
-            // overload subscripting operator to access individual items
+            //! Access an individual item in the list
             const ItemType& operator[](unsigned int d) const
               {
-                if(d < this->queue.size())
+                if(d < this->work_list.size())
                   {
-                    return(this->queue[d]);
+                    return(this->work_list[d]);
                   }
-                else if(this->queue.size() > 0)
+                else if(this->work_list.size() > 0)
                   {
-                    return(this->queue.back());
+                    return(this->work_list.back());
                   }
                 else
                   {
@@ -70,13 +71,15 @@ namespace transport
                   }
               }
 
-          protected:
-            std::vector<ItemType> queue;
+          private:
+            //! std::vector holding the list of work items
+            std::vector<ItemType> work_list;
 
-            // memory required for the state vector
+            //! Memory required for the state vector, used when computing the memory required to integrate items in the list
             unsigned int state_size;
           };
 
+        //! Hold a queue of work items for a specific device. The queue may be broken into a collection of work lists.
         class device_queue
           {
           public:
@@ -87,19 +90,19 @@ namespace transport
                 queue_list.push_back(device_work_list(state_size));
               }
 
-            // get memory requirements for the current queue
+            //! Compute memory required to integrate all items in this queue
             size_t get_memory_required() const { return(this->queue_list.back().get_memory_required()); }
 
-            // return device associated with this queue
+            //! Return device associated with this queue
             const context::device& get_device() const { return(this->device); }
 
-            // return fractional weight of device associated with this queue
+            //! Return fractional weight of device associated with this queue
             double get_weight() const { return(this->device.get_fractional_weight()); }
 
-            // return number of queues on this device
+            //! Return number of work lists associated with this queue
             size_t size() const { return(this->queue_list.size()); }
 
-            // access queues by overloading subscript operator
+            //! Access individual work lists
             const device_work_list& operator[](unsigned int d) const
               {
                 assert(d < this->queue_list.size());
@@ -114,7 +117,10 @@ namespace transport
                   }
               }
 
-            // push item to current queue
+            //! Add an item to the queue.
+
+            //! If the memory required for the integration is larger than the assigned capacity of the device,
+            //! then a new work list is created and the work-item (and subsequent items) are added to the new list.
             void enqueue_item(const ItemType& item)
               {
                 if(this->device.get_mem_type() == context::device::bounded && this->get_memory_required() > this->device.get_mem_size())
@@ -125,39 +131,42 @@ namespace transport
                 this->total_items++;
               }
 
-            // get total number of items enqueued on the device
+            //! Return total number of items queued on the device, over all work lists
             size_t get_total_items() const { return(this->total_items); }
 
           protected:
-            // create a new queue on the device
+            //! Create a new work list on the device
             void new_queue() { this->queue_list.push_back(device_work_list(this->state_size)); }
 
-            // set of queues of work items for this device
-            // there can be multiple queues on devices with fixed memory
+          private:
+            //! std::vector holding the work lists for this device
             std::vector<device_work_list> queue_list;
 
-            // device corresponding to this queue
+            //! device corresponding to this queue
             const context::device& device;
 
-            // memory required for the state vector
+            //! Memory required for the state vector in a single integration, used when estimating the memory required to integrate a work list
             unsigned int state_size;
 
-            // total number of items enqueued on this device
+            //! Motal number of items queued on this device, over all work lists
             unsigned int total_items;
           };
 
         work_queue(const context& c, unsigned int size);
 
-        // add a work item to the back of the queue
+        //! Add a work item to the queue.
+
+        //! The work item will be assigned to one of the available devices in a way which tries to balance
+        //! the length of the queues to match the predefined device weighting
         void enqueue_work_item(const ItemType& item);
 
-        // number of devices in this queue
+        //! Query number of devices to which we are assigning work
         size_t size() const { return(ctx.size()); }
 
-        // get total pieces of work enqueued
+        //! Query total number of work-items enqueued, counting all devices
         size_t get_total_items() const { return(this->total_items); }
 
-        // access devices by overloading subscript operator
+        //! Access the work queue for an individual device
         const device_queue& operator[](unsigned int d) const
           {
             assert(d < this->device_list.size());
@@ -175,20 +184,21 @@ namespace transport
         friend std::ostream& operator<< <>(std::ostream& out, work_queue<ItemType>& obj);
 
       protected:
-        // clear all queues and start again
+        //! Clear all queues
         void clear();
 
+
+      private:
+        //! Device context
         const context& ctx;
 
-        // vector of device queues, holding all various work items
-        // we have been asked to enqueue
+        //! std::vector holding queues for each device
         std::vector<device_queue> device_list;
 
-        // total number of work items we are holding, summed over all devices and queues
-        // used to work out which queue to push the next item to
+        //! Total number of work items we are holding, summed over all devices
         unsigned int              total_items;
 
-        // size of a state vector
+        //! Memory required for the state vector in a single integration, used when estimating the memory required to integrate a work list
         unsigned int              state_size;
       };
 
