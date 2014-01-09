@@ -8,6 +8,8 @@
 #define __sqlite3_operations_H_
 
 
+#include <set>
+
 #include "transport/tasks/task.h"
 #include "transport/scheduler/work_queue.h"
 
@@ -211,6 +213,7 @@ namespace transport
           }
 
 
+        // Write a taskfile
         template <typename WorkItem>
         void create_taskfile(sqlite3* taskfile, const work_queue<WorkItem>& queue)
           {
@@ -271,6 +274,60 @@ namespace transport
 
             sqlite3_exec(taskfile, "END TRANSACTION", nullptr, nullptr, &errmsg);
             sqlite3_finalize(stmt);
+          }
+
+
+        // Read a taskfile
+        std::set<unsigned int> read_taskfile(const std::string& taskfile_name, unsigned int worker)
+          {
+            sqlite3* taskfile;
+            std::set<unsigned int> work_items;
+
+            int status = sqlite3_open_v2(taskfile_name.c_str(), &taskfile, SQLITE_OPEN_READONLY, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(taskfile != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_A << " '" << taskfile_name << "' " << __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
+                    sqlite3_close(taskfile);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_A << " '" << taskfile_name << "' " << __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // read tasks from the database
+            std::ostringstream select_stmt;
+            select_stmt << "SELECT serial FROM tasklist WHERE worker=" << worker;
+
+            sqlite3_stmt* stmt;
+            sqlite3_prepare_v2(taskfile, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr);
+
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+              {
+                if(status == SQLITE_ROW)
+                  {
+                    int serial = sqlite3_column_int(stmt, 0);
+                    work_items.insert(serial);
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_TASKLIST_READ_A << " '" << taskfile_name << "' " << __CPP_TRANSPORT_DATACTR_TASKLIST_READ_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
+                    sqlite3_finalize(stmt);
+                    sqlite3_close(taskfile);
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+              }
+
+            sqlite3_finalize(stmt);
+            sqlite3_close(taskfile);
+
+            return(work_items);
           }
 
 

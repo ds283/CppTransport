@@ -9,7 +9,8 @@
 
 
 #include <list>
-#include <stdexcept>
+#include <set>
+#include <vector>
 
 #include "transport/models/model.h"
 #include "transport/manager/instance_manager.h"
@@ -28,6 +29,7 @@
 #include "boost/mpi.hpp"
 
 #include "boost/serialization/string.hpp"
+
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
 #define __CPP_TRANSPORT_SWITCH_TASK     "-task"
@@ -51,23 +53,59 @@ namespace transport
             const unsigned int NEW_INTEGRATION = 0;
             const unsigned int FINISHED_TASK = 1;
             const unsigned int DATA_READY = 2;
+            const unsigned int SET_REPOSITORY = 98;
             const unsigned int TERMINATE = 99;
 
             // MPI ranks
             const unsigned int RANK_MASTER = 0;
 
             // MPI message payloads
+
+            class set_repository_payload
+              {
+              public:
+                //! Null constructor (used for receiving messages)
+                set_repository_payload()
+                  {
+                  }
+
+                //! Value constructor (used for constructing messages to send)
+                set_repository_payload(const boost::filesystem::path& rp)
+                  : repository(rp.string())
+                  {
+                  }
+
+                boost::filesystem::path repository_path() const { return(boost::filesystem::path(this->repository)); }
+
+              private:
+                //! Pathname to repository
+                std::string repository;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & repository;
+                  }
+              };
+
+
             class new_integration_payload
               {
               public:
-                //! Null constructor
+                //! Null constructor (used for receiving messages)
                 new_integration_payload()
                   {
                   }
 
-                //! Value constructor
-                new_integration_payload(const std::string& tk, const std::string& tk_f, const std::string& tmp_d, const std::string& log_d)
-                  : task(tk), taskfile(tk_f), tempdir(tmp_d), logdir(log_d)
+                //! Value constructor (used for constructing messages to send)
+                new_integration_payload(const boost::filesystem::path& tk,
+                                        const boost::filesystem::path& tk_f,
+                                        const boost::filesystem::path& tmp_d,
+                                        const boost::filesystem::path& log_d)
+                  : task(tk.string()), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string())
                   {
                   }
 
@@ -107,11 +145,51 @@ namespace transport
       }   // namespace MPI
 
 
+    class work_item_filter
+      {
+      public:
+        //! Construct an empty filter
+        work_item_filter()
+          {
+          }
+
+        work_item_filter(const std::set<unsigned int>& filter_set)
+        : items(filter_set)
+          {
+          }
+
+        //! Add an item to the list of work-items the filter allows
+        void add_work_item(unsigned int serial) { this->items.insert(serial); }
+
+        //! Check whether a work-item is part of the filter
+        bool operator()(unsigned int serial) const { return(this->items.find(serial) != this->items.end()); }
+
+        friend std::ostream& operator<<(std::ostream& out, const work_item_filter& filter);
+
+      private:
+        //! std::set holding work items that we are supposed to process
+        std::set<unsigned int> items;
+      };
+
+
+    std::ostream& operator<<(std::ostream& out, const work_item_filter& filter)
+      {
+        std::cerr << __CPP_TRANSPORT_FILTER_TAG;
+        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); t++)
+          {
+            std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
+          }
+        std::cerr << std::endl;
+        return(out);
+      }
+
+
     template <typename number>
     class task_manager : public instance_manager<number>
       {
       public:
         typedef enum { job_task } job_type;
+
 
         class job_descriptor
           {
@@ -174,6 +252,15 @@ namespace transport
         //! Slave node: Process a new task instruction
         void slave_process_task(const MPI::new_integration_payload& payload);
 
+        //! Slave node: Process a twopf task
+        void slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter);
+
+        //! Slave node: Process a threepf task
+        void slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter);
+
+        //! Slave node: set repository
+        void slave_set_repository(const MPI::set_repository_payload& payload);
+
         //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
 
@@ -184,8 +271,14 @@ namespace transport
         //! Terminate all worker processes
         void master_terminate_workers(void);
 
+        //! Push repository information to worker processes
+        void master_push_repository(void);
+
         //! Map worker number to communicator rank
         constexpr unsigned int worker_rank(unsigned int worker_number) { return(worker_number+1); }
+
+        //! Get worker number
+        constexpr unsigned int worker_number() { return(this->world.rank()-1); }
 
         //! Pass new integration task to the workers
         void new_task_to_workers(typename repository<number>::integration_container& ctr, const std::string& task_name);
@@ -360,12 +453,12 @@ namespace transport
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
-        if(this->repo == nullptr)
-          {
-            this->error(__CPP_TRANSPORT_REPO_NONE);
-          }
+        if(this->repo == nullptr) this->error(__CPP_TRANSPORT_REPO_NONE);
         else
           {
+            // push repository information to all workers
+            this->master_push_repository();
+
             for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
               {
                 switch((*t).type)
@@ -395,7 +488,7 @@ namespace transport
             task<number>* tk = this->repo->query_task(job.name, m, this->model_finder_factory());
             assert(m != nullptr);
 
-            // set up work queues for this task, and then distributed to worker processes
+            // set up work queues for this task, and then distribute to worker processes
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
@@ -566,18 +659,23 @@ namespace transport
               {
                 case MPI::NEW_INTEGRATION:
                   {
-                    std::cerr << "New integration task for worker " << this->world.rank() << std::endl;
-                    // receive the message
                     MPI::new_integration_payload payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::NEW_INTEGRATION, payload);
                     this->slave_process_task(payload);
                     break;
                   }
 
+                case MPI::SET_REPOSITORY:
+                  {
+                    MPI::set_repository_payload payload;
+                    this->world.recv(MPI::RANK_MASTER, MPI::SET_REPOSITORY, payload);
+                    this->slave_set_repository(payload);
+                    break;
+                  }
+
                 case MPI::TERMINATE:
                   {
-                    std::cerr << "worker " << this->world.rank() << " terminating" << std::endl;
-                    // receive the message
+                    std::cerr << "-- worker " << this->worker_number() << " terminating" << std::endl;
                     this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);
                     finished = true;
                     break;
@@ -591,12 +689,117 @@ namespace transport
 
 
     template <typename number>
+    void task_manager<number>::slave_set_repository(const MPI::set_repository_payload& payload)
+      {
+        boost::filesystem::path repo_path = payload.repository_path();
+
+        try
+          {
+            this->repo = repository_factory<number>(repo_path.string());
+          }
+        catch (runtime_exception& xe)
+          {
+            if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
+              {
+                this->error(xe.what());
+                repo = nullptr;
+              }
+            else
+              {
+                throw xe;
+              }
+          }
+      }
+
+
+    template <typename number>
     void task_manager<number>::slave_process_task(const MPI::new_integration_payload& payload)
       {
-        std::cerr << "task name = " << payload.task_name() << std::endl;
-        std::cerr << "taskfile  = " << payload.taskfile_path() << std::endl;
-        std::cerr << "log dir   = " << payload.logdir_path() << std::endl;
-        std::cerr << "temp dir  = " << payload.tempdir_path() << std::endl;
+        // ensure that a valid repository object has been constructed
+        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
+
+        std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.taskfile_path(), this->worker_number());
+        work_item_filter filter(work_items);
+
+        // extract our task from the database
+        // much of this is boiler-plate which is similar to master_process_task()
+        // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
+        try
+          {
+            model<number>* m = nullptr;
+            task<number>* tk = this->repo->query_task(payload.task_name(), m, this->model_finder_factory());
+            assert(m != nullptr);
+
+            // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
+            // of task will be returned
+            if(dynamic_cast< threepf_task<number>* >(tk))
+              {
+                threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
+                this->slave_dispatch_threepf_task(three_task, m, payload, filter);
+              }
+            else if(dynamic_cast< twopf_task<number>* >(tk))
+              {
+                twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
+                this->slave_dispatch_twopf_task(two_task, m, payload, filter);
+              }
+            else
+              {
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+              }
+
+            delete tk;
+          }
+        catch (runtime_exception xe)
+          {
+            if(xe.get_exception_code() == runtime_exception::TASK_NOT_FOUND)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::MODEL_NOT_FOUND)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
+                  << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
+              {
+                std::ostringstream msg;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
+              {
+                std::ostringstream msg;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error(msg.str());
+              }
+            else
+              {
+                throw xe;
+              }
+          }
+
+      }
+
+
+    template <typename number>
+    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter)
+      {
+        std::cerr << "-- new twopf task for worker " << this->world.rank() << std::endl;
+
+        std::cerr << filter;
+      }
+
+
+    template <typename number>
+    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter)
+      {
+        std::cerr << "-- new threepf task for worker " << this->world.rank() << std::endl;
+
+        std::cerr << filter;
       }
 
 
@@ -628,15 +831,36 @@ namespace transport
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
         // get paths the workers will need
+        assert(this->repo != nullptr);
         boost::filesystem::path taskfile_path = this->repo->get_root_path() / ctr.taskfile_path();
         boost::filesystem::path tempdir_path  = this->repo->get_root_path() / ctr.temporary_files_path();
         boost::filesystem::path logdir_path   = this->repo->get_root_path() / ctr.log_directory_path();
 
-        MPI::new_integration_payload payload(task_name, taskfile_path.string(), tempdir_path.string(), logdir_path.string());
+        MPI::new_integration_payload payload(task_name, taskfile_path, tempdir_path, logdir_path);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
           {
             requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_INTEGRATION, payload);
+          }
+
+        // wait for all messages to be received, then return
+        boost::mpi::wait_all(requests.begin(), requests.end());
+      }
+
+
+    template <typename number>
+    void task_manager<number>::master_push_repository()
+      {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        assert(this->repo != nullptr);  // we require this->repo not to be null, but don't throw an exception since this condition should have been checked before calling
+        MPI::set_repository_payload payload(this->repo->get_root_path());
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::SET_REPOSITORY, payload);
           }
 
         // wait for all messages to be received, then return

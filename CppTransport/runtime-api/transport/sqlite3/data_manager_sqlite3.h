@@ -87,6 +87,10 @@ namespace transport
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
         void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue);
 
+        //! Read a list of task assignments for a particular worker
+        std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker);
+
+
         // INTERNAL DATA
 
       private:
@@ -228,6 +232,8 @@ namespace transport
       }
 
 
+    // INDEX TABLE MANAGEMENT
+
     // Create the table of sample times
     template <typename number>
     void data_manager_sqlite3<number>::create_time_sample_table(typename repository<number>::integration_container& ctr, task<number>* tk)
@@ -260,6 +266,9 @@ namespace transport
         sqlite3_operations::create_threepf_sample_table(db, tk);
       }
 
+
+    // TASKFILE MANAGEMENT
+
     // Create a tasklist based on a work queue of twopf_kconfig-s
     template <typename number>
     void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue)
@@ -278,6 +287,13 @@ namespace transport
         ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
+      }
+
+    // Read a taskfile
+    template <typename number>
+    std::set<unsigned int> data_manager_sqlite3<number>::read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker)
+      {
+        return sqlite3_operations::read_taskfile(taskfile.string(), worker);
       }
 
 

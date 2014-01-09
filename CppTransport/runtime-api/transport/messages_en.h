@@ -64,8 +64,8 @@
 #define __CPP_TRANSPORT_WORK_QUEUE_QUEUES     "queues"
 
 #define __CPP_TRANSPORT_KCONFIG_SERIAL        "Serial ="
-#define __CPP_TRANSPORT_KCONFIG_KEQUALS       "k ="
-#define __CPP_TRANSPORT_KCONFIG_KTEQUALS      "k_t ="
+#define __CPP_TRANSPORT_KCONFIG_KEQUALS       "comoving k ="
+#define __CPP_TRANSPORT_KCONFIG_KTEQUALS      "comoving k_t ="
 #define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS   "alpha ="
 #define __CPP_TRANSPORT_KCONFIG_BETAEQUALS    "beta ="
 
@@ -108,7 +108,7 @@
 #define __CPP_TRANSPORT_REPO_FAIL_ENV         "Repository error: Failed to construct DBXML environment for repository"
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS      "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE      "Internal error: Attempt to write to repository from MPI slave process"
-#define __CPP_TRANSPORT_REPO_NOT_SET          "Internal error: Attempt to write to repository when unset in 'task_manager'"
+#define __CPP_TRANSPORT_REPO_NOT_SET          "Internal error: Attempt to access repository when unset in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_NULL_MODEL       "Internal error: Null model when attempting to write to repository"
 #define __CPP_TRANSPORT_REPO_MISSING_TASK     "Repository error: Could not find specified task"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_A  "Repository error: Could not find model"
@@ -141,6 +141,10 @@
 #define __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL "Data container error: Failed to create twopf-sample table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL "Data container error: Failed to create threepf-sample table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL "Data container error: Failed to create tasklist table in data container (sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_A "Data container error: Failed to open tasklist"
+#define __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_B "(sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_TASKLIST_READ_A "Data container error: Failed to read from tasklist"
+#define __CPP_TRANSPORT_DATACTR_TASKLIST_READ_B "(sqlite3 code="
 
 #define __CPP_TRANSPORT_RANGE_A               "Range: "
 #define __CPP_TRANSPORT_RANGE_B               " steps, spacing = "
@@ -171,6 +175,7 @@
 #define __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK  "Internal error: Unknown derived 'task<number>' class"
 #define __CPP_TRANSPORT_TOO_FEW_WORKERS       "Too few workers: require at least two worker processes to integrate a task"
 #define __CPP_TRANSPORT_UNEXPECTED_MPI        "Internal error: Unexpected MPI message received"
+#define __CPP_TRANSPORT_FILTER_TAG            "Filter for work items:"
 
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"

@@ -8,6 +8,8 @@
 #define __data_manager_H_
 
 
+#include <set>
+
 #include "transport/tasks/task.h"
 #include "transport/manager/repository.h"
 
@@ -62,6 +64,9 @@ namespace transport
 
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
         virtual void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue) = 0;
+
+        //! Read a list of task assignments for a particular worker
+        virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;
       };
 
   }   // namespace transport

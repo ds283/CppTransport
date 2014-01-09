@@ -162,14 +162,22 @@ namespace transport
           if(env != nullptr) env->close(env, 0);
           std::ostringstream msg;
           msg << __CPP_TRANSPORT_REPO_FAIL_ENV << " '" << path << "'";
-          throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+          throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
         }
 
-        // set up environment to enable logging, transactional support
-        // and locking (so multiple processes can access the repository safely)
-        u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
-        if(recovery) env_flags = env_flags | DB_RECOVER | DB_CREATE;
-        env->open(env, env_path.string().c_str(), env_flags, 0);
+        // set up environment
+        u_int32_t env_flags = DB_JOINENV;
+        if(recovery || env->open(env, env_path.string().c_str(), env_flags, 0) != 0)
+          {
+            // that failed
+            // instead, try to create a new environment
+            // enable logging, transactional support and locking (so multiple processes can access the repository safely)
+
+            env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
+            if(recovery) env_flags = env_flags | DB_RECOVER | DB_CREATE;
+            env->open(env, env_path.string().c_str(), env_flags, 0);
+
+          }
 
         // set up XmlManager object
         // we have to allow external access in order for XQuery updates to be processed
@@ -207,7 +215,7 @@ namespace transport
             if(env != nullptr) env->close(env, 0);
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_ENV << " '" << path << "'";
-            throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
         // set up environment to enable logging, transactional support
@@ -238,7 +246,7 @@ namespace transport
       }
 
 
-    // Destroy a respository object, closing the associated repository
+    // Destroy a repository object, closing the associated repository
     template <typename number>
     repository_dbxml<number>::~repository_dbxml()
       {
