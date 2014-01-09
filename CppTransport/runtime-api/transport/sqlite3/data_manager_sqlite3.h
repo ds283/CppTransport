@@ -163,6 +163,10 @@ namespace transport
               }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
           }
+
+        // enable foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
       }
 
 
