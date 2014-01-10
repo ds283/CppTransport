@@ -20,7 +20,6 @@
 
 #include "sqlite3.h"
 #include "transport/sqlite3/sqlite3_operations.h"
-#import "data_manager.h"
 
 
 #define __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM "worker"

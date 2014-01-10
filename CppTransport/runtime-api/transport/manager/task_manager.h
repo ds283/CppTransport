@@ -29,7 +29,6 @@
 #include "boost/mpi.hpp"
 
 #include "boost/serialization/string.hpp"
-#import "data_manager.h"
 
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
