@@ -41,22 +41,18 @@ namespace transport
 
         // BACKEND INTERFACE
 
-      protected:
+      public:
         // Set up a context
         context backend_get_context();
 
         // Integrate background and 2-point function on the CPU, using OpenMP
         void backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
-                                   std::vector< std::vector<number> >& backg,
-                                   std::vector< std::vector< std::vector<number> > >& twopf,
+                                   typename data_manager<number>::twopf_batcher& batcher,
                                    bool silent=false);
 
         // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
         void backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
-                                     std::vector< std::vector<number> >& backg,
-                                     std::vector< std::vector< std::vector<number> > >& twopf_re,
-                                     std::vector< std::vector< std::vector<number> > >& twopf_im,
-                                     std::vector< std::vector< std::vector<number> > >& threepf,
+                                     typename data_manager<number>::threepf_batcher& batcher,
                                      bool silent=false);
 
         unsigned int backend_twopf_state_size(void)   { return($$__MODEL_pool::twopf_state_size); }
@@ -66,24 +62,16 @@ namespace transport
 
       protected:
         void twopf_kmode(const twopf_kconfig& kconfig, const task<number>* tk,
-                         std::vector <std::vector<number>>& background_history, std::vector <std::vector<number>>& twopf_history);
+                         typename data_manager<number>::twopf_batcher& batcher);
 
         void threepf_kmode(const threepf_kconfig&, const task<number>* tk,
-                           std::vector <std::vector<number>>& background_history,
-                           std::vector <std::vector<number>>& twopf_re_history, std::vector <std::vector<number>>& twopf_im_history,
-                           std::vector <std::vector<number>>& threepf_history);
+                           typename data_manager<number>::threepf_batcher& batcher);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
 
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
                                  double Ninit, const parameters<number>& p, const std::vector<number>& ic);
-
-        void resize_twopf_history(std::vector <std::vector< std::vector<number> >>& twopf,
-                                  size_t num_time_samples, size_t num_kconfigs);
-
-        void resize_threepf_history(std::vector <std::vector< std::vector<number> >>& threepf,
-                                    size_t num_time_samples, size_t num_kconfigs);
 
       };
 
@@ -109,20 +97,15 @@ namespace transport
 
     // integration - observer object for 2pf
     template <typename number>
-    class $$__MODEL_basic_twopf_observer
+    class $$__MODEL_basic_twopf_observer: public twopf_singleconfig_batch_observer<number>
       {
       public:
-        $$__MODEL_basic_twopf_observer(std::vector <std::vector<number>>& bh,
-                                       std::vector <std::vector<number>>& tpfh)
-          : background_history(bh), twopf_history(tpfh)
+        $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c)
+          : twopf_singleconfig_batch_observer(b, c)
           {
           }
 
         void operator ()(const twopf_state<number>& x, double t);
-
-      private:
-        std::vector <std::vector<number>>& background_history;
-        std::vector <std::vector<number>>& twopf_history;
       };
 
 
@@ -149,24 +132,15 @@ namespace transport
 
     // integration - observer object for 3pf
     template <typename number>
-    class $$__MODEL_basic_threepf_observer
+    class $$__MODEL_basic_threepf_observer: public threepf_singleconfig_batch_observer<number>
       {
       public:
-        $$__MODEL_basic_threepf_observer(std::vector <std::vector<number>>& bh,
-                                         std::vector <std::vector<number>>& twopfh_re,
-                                         std::vector <std::vector<number>>& twopfh_im,
-                                         std::vector <std::vector<number>>& threepfh)
-        : background_history(bh), twopf_re_history(twopfh_re), twopf_im_history(twopfh_im), threepf_history(threepfh)
+        $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c)
+          : threepf_singleconfig_batch_observer(b, c)
           {
           }
 
         void operator ()(const threepf_state<number>& x, double t);
-
-      private:
-        std::vector <std::vector<number>>& background_history;
-        std::vector <std::vector<number>>& twopf_re_history;
-        std::vector <std::vector<number>>& twopf_im_history;
-        std::vector <std::vector<number>>& threepf_history;
       };
 
     
@@ -187,8 +161,7 @@ namespace transport
     // process work queue for twopf
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
-                                                        std::vector< std::vector<number> >& backg,
-                                                        std::vector< std::vector< std::vector<number> > >& twopf,
+                                                        typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
         if(!silent)
@@ -196,10 +169,7 @@ namespace transport
             this->write_task_data(tk, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
           }
 
-        // ensure there is sufficient space for the solution
-        this->resize_twopf_history(twopf, tk->get_N_sample_times(), work.get_total_items());
-
-        // get work queue for the zeroth device (should be the only device)
+        // get work queue for the zeroth device (should be the only device in this backend)
         assert(work.size() == 1);
         const work_queue<twopf_kconfig>::device_queue queues = work[0];
 
@@ -207,42 +177,23 @@ namespace transport
         assert(queues.size() == 1);
         const work_queue<twopf_kconfig>::device_work_list list = queues[0];
 
-#pragma omp parallel for schedule(dynamic)
         for(unsigned int i = 0; i < list.size(); i++)
           {
-            std::vector< std::vector<number> > kmode_background_history;
-            std::vector< std::vector<number> > kmode_twopf_history;
-
             // write the time history for this particular k-mode into kmode_background_history, kmode_twopf_history
-            this->twopf_kmode(list[i], tk, kmode_background_history, kmode_twopf_history);
-
-            if(list[i].store_background)
-              {
-                backg = kmode_background_history;
-              }
-
-            // store this twopf history in the twopf_history object
-            for(int j = 0; j < kmode_twopf_history.size(); j++)             // j steps through the time-slices
-              {
-                for(int k = 0; k < kmode_twopf_history[j].size(); k++)      // k steps through the components
-                  {
-                    twopf[j][k][i] = kmode_twopf_history[j][k];
-                  }
-              }
+            this->twopf_kmode(list[i], tk, batcher);
           }
       }
 
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const task<number>* tk,
-                                              std::vector <std::vector<number>>& background_history,
-                                              std::vector <std::vector<number>>& twopf_history)
+                                              typename data_manager<number>::twopf_batcher& batcher)
       {
         // set up a functor to evolve this system
         $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
 
         // set up a functor to observe the integration
-        $$__MODEL_basic_twopf_observer<number> obs(background_history, twopf_history);
+        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig);
 
         // set up a state vector
         twopf_state<number> x;
@@ -278,34 +229,12 @@ namespace transport
       }
 
 
-    template <typename number>
-    void $$__MODEL_basic<number>::resize_twopf_history(std::vector< std::vector< std::vector<number> > >& twopf,
-                                                       size_t num_time_samples, size_t num_kconfigs)
-      {
-        twopf.resize(num_time_samples);
-
-        for(int i = 0; i < num_time_samples; i++)
-          {
-            twopf[i].resize($$__MODEL_pool::twopf_size);
-
-            for(int j = 0; j < $$__MODEL_pool::twopf_size; j++)
-              {
-                // we need one copy of the components for each k
-                twopf[i][j].resize(num_kconfigs);
-              }
-          }
-      }
-
-
     // THREE-POINT FUNCTION INTEGRATION
 
 
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
-                                                          std::vector< std::vector<number> >& backg,
-                                                          std::vector< std::vector< std::vector<number> > >& twopf_re,
-                                                          std::vector< std::vector< std::vector<number> > >& twopf_im,
-                                                          std::vector< std::vector< std::vector<number> > >& threepf,
+                                                          typename data_manager<number>::threebf_batcher& batcher,
                                                           bool silent)
       {
         if(!silent)
@@ -313,18 +242,7 @@ namespace transport
             this->write_task_data(tk, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
           }
 
-        // ensure there is enough space to store the solution
-        // the index convention is
-        //   first index  - time
-        //   second index - component number
-        //   third index  - k mode
-        //                  for the 2pf this corresponds to the list in ks (real_ks)
-        //                  for the 3pf this is an index into the lattice ks^3 (real_ks)^3
-        this->resize_twopf_history(twopf_re, tk->get_N_sample_times(), work.get_total_items());
-        this->resize_twopf_history(twopf_im, tk->get_N_sample_times(), work.get_total_items());
-        this->resize_threepf_history(threepf, tk->get_N_sample_times(), work.get_total_items());
-
-        // get work queue for the zeroth device (should be only one device)
+        // get work queue for the zeroth device (should be only one device with this backend)
         assert(work.size() == 1);
         const work_queue<threepf_kconfig>::device_queue queues = work[0];
 
@@ -333,64 +251,27 @@ namespace transport
         const work_queue<threepf_kconfig>::device_work_list list = queues[0];
 
         // step through the queue, solving for the three-point functions in each case
-#pragma omp parallel for schedule(dynamic)
         for(unsigned int i = 0; i < list.size(); i++)
           {
-#pragma omp critical
             std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1
               << " " __CPP_TRANSPORT_OF << " " << list.size()
               << std::endl;
 
-            std::vector< std::vector<number> > kmode_background_history;
-            std::vector< std::vector<number> > kmode_twopf_re_history;
-            std::vector< std::vector<number> > kmode_twopf_im_history;
-            std::vector< std::vector<number> > kmode_threepf_history;
-
             // write the time history for this k-configuration
-            this->threepf_kmode(list[i], tk,
-                                kmode_background_history,
-                                kmode_twopf_re_history, kmode_twopf_im_history,
-                                kmode_threepf_history);
-
-            if(list[i].store_background)
-              {
-                backg = kmode_background_history;
-              }
-
-            if(list[i].store_twopf)
-              {
-                for(int m = 0; m < kmode_twopf_re_history.size(); m++)           // m steps through the time-slices
-                  {
-                    for(int n = 0; n < kmode_twopf_re_history[m].size(); n++)    // n steps through the components
-                      {
-                        twopf_re[m][n][list[i].index[0]] = kmode_twopf_re_history[m][n];
-                        twopf_im[m][n][list[i].index[0]] = kmode_twopf_im_history[m][n];
-                      }
-                  }
-              }
-
-            for(int m = 0; m < kmode_threepf_history.size(); m++)             // m steps through the time-slices
-              {
-                for(int n = 0; n < kmode_threepf_history[m].size(); n++)      // n steps through the components
-                  {
-                    threepf[m][n][i] = kmode_threepf_history[m][n];
-                  }
-              }
+            this->threepf_kmode(list[i], tk, batcher);
           }
       }
 
 
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const task<number>* tk,
-                                                std::vector< std::vector<number> >& background_history,
-                                                std::vector< std::vector<number> >& twopf_re_history, std::vector< std::vector<number> >& twopf_im_history,
-                                                std::vector< std::vector<number> >& threepf_history)
+                                                typename data_manager<number>::threepf_batcher& batcher)
       {
         // set up a functor to evolve this system
         $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
 
         // set up a functor to observe the integration
-        $$__MODEL_basic_threepf_observer<number> obs(background_history, twopf_re_history, twopf_im_history, threepf_history);
+        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig);
 
         // set up a state vector
         threepf_state<number> x;
@@ -416,31 +297,6 @@ namespace transport
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-      }
-
-
-    template <typename number>
-    void $$__MODEL_basic<number>::resize_threepf_history(std::vector< std::vector< std::vector<number> > >& threepf,
-                                                         size_t num_time_samples, size_t num_kconfigs)
-      {
-        // the index convention for the threepf history is:
-        //   first index  - time
-        //   second index - component number
-        //   third index  - k mode
-        //                  this is an index into the lattice ks^3, remembering that we insist on the k-modes being ordered
-        //                  in that case, there are N(N+1)(N+2)/6 distinct k-modes
-
-        threepf.resize(num_time_samples);
-
-        for(int i = 0; i < num_time_samples; i++)
-          {
-            threepf[i].resize($$__MODEL_pool::threepf_size);
-
-            for(int j = 0; j < $$__MODEL_pool::threepf_size; j++)
-              {
-                threepf[i][j].resize(num_kconfigs);
-              }
-          }
       }
 
 
@@ -502,23 +358,27 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
-        // allocate storage for state
-        std::vector<number> bg_x ($$__MODEL_pool::backg_size);
+        unsigned int time_serial   = this->get_time_serial();
+        unsigned int config_serial = this->get_config_serial();
+
+        if(this->store_background())
+          {
+            std::vector<number> bg_x ($$__MODEL_pool::backg_size);
+
+            for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
+              {
+                bg_x[i] = x[i];
+              }
+            this->get_batcher().push_backg(time_serial, bg_x);
+          }
+
         std::vector<number> tpf_x($$__MODEL_pool::twopf_size);
 
-        // first, background
-        for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
-          {
-            bg_x[i] = x[i];
-          }
-        this->background_history.push_back(bg_x);
-
-        // then, 2pf
         for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
           {
             tpf_x[i] = x[$$__MODEL_pool::twopf_start + i];
           }
-        this->twopf_history.push_back(tpf_x);
+        this->get_batcher().push_twopf(time_serial, config_serial, tpf_x);
       }
 
 
@@ -623,39 +483,47 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
-        // allocate storage for state
-        std::vector<number> bg_x      ($$__MODEL_pool::backg_size);
-        std::vector<number> twopf_re_x($$__MODEL_pool::twopf_size);
-        std::vector<number> twopf_im_x($$__MODEL_pool::twopf_size);
+        unsigned int time_serial          = this->get_time_serial();
+        unsigned int twopfconfig_serial   = this->get_twopf_config_serial();
+        unsigned int threepfconfig_serial = this->get_threepf_config_serial();
+
+        if(this->store_background())
+          {
+            std::vector<number> bg_x ($$__MODEL_pool::backg_size);
+
+            for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
+              {
+                bg_x[i] = x[i];
+              }
+            this->get_batcher().push_backg(time_serial, bg_x);
+          }
+
+        if(this->store_twopf())
+          {
+            std::vector<number> twopf_re_x($$__MODEL_pool::twopf_size);
+            std::vector<number> twopf_im_x($$__MODEL_pool::twopf_size);
+
+            for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
+              {
+                twopf_re_x[i] = x[$$__MODEL_pool::twopf_re_k1_start + i];
+              }
+            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_re_x, data_manager<number>::threepf_batcher::twopf_real);
+
+            // then, the imaginary part of the 2pf
+            for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
+              {
+                twopf_im_x[i] = x[$$__MODEL_pool::twopf_im_k1_start + i];
+              }
+            this->get_batcher().push_twopf(time_serial, twopfkconfig_serial, twopf_im_x, data_manager<number>::threepf_batcher::twopf_imag);
+          }
+
         std::vector<number> threepf_x ($$__MODEL_pool::threepf_size);
 
-        // first, background
-        for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
-          {
-            bg_x[i] = x[i];
-          }
-        this->background_history.push_back(bg_x);
-
-        // then, real part of the 2pf
-        for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
-          {
-            twopf_re_x[i] = x[$$__MODEL_pool::twopf_re_k1_start + i];
-          }
-        this->twopf_re_history.push_back(twopf_re_x);
-
-        // then, the imaginary part of the 2pf
-        for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
-          {
-            twopf_im_x[i] = x[$$__MODEL_pool::twopf_im_k1_start + i];
-          }
-        this->twopf_im_history.push_back(twopf_im_x);
-
-        // finally, 3pf
         for(int i = 0; i < $$__MODEL_pool::threepf_size; i++)
           {
             threepf_x[i] = x[$$__MODEL_pool::threepf_start + i];
           }
-        this->threepf_history.push_back(threepf_x);
+        this->get_batcher().push_threepf(time_serial, threepfkconfig_serial, threepf_x);
       }
 
 

@@ -19,6 +19,8 @@
 #include "boost/lexical_cast.hpp"
 
 #include "sqlite3.h"
+#include "transport/manager/data_manager.h"
+#import "data_manager.h"
 
 
 namespace transport
@@ -425,9 +427,12 @@ namespace transport
 
         // Write a batch of background values
         template <typename number>
-        void write_backg(sqlite3* db, unsigned int Nfields, const std::vector<typename data_manager<number>::backg_item>& batch)
+        void write_backg(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::backg_item>& batch)
           {
-            assert(db != nullptr);
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO backg VALUES (@time_serial";
@@ -473,9 +478,12 @@ namespace transport
 
         // Write a batch of twopf values
         template <typename number>
-        void write_twopf(sqlite3* db, unsigned int Nfields, twopf_value_type type, const std::vector<typename data_manager<number>::twopf_item>& batch)
+        void write_twopf(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::twopf_item>& batch)
           {
-            assert(db != nullptr);
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO twopf_" << (type == real_twopf ? "re" : "im") << " VALUES (@time_serial, @k_serial";
@@ -522,9 +530,12 @@ namespace transport
 
         // Write a batch of threepf values
         template <typename number>
-        void write_twopf(sqlite3* db, unsigned int Nfields const std::vector<typename data_manager<number>::threepf_item>& batch)
+        void write_twopf(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::threepf_item>& batch)
           {
-            assert(db != nullptr);
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO threepf VALUES (@time_serial, @k_serial";
@@ -566,6 +577,72 @@ namespace transport
 
             sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
             sqlite3_finalize(stmt);
+          }
+
+
+        // Create a temporary container for a twopf integration
+        sqlite3* create_temp_twopf_container(const boost::filesystem::path& container, unsigned int Nfields)
+          {
+            sqlite3* db = nullptr;
+
+            int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(db != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_close(db);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // create the necessary tables
+            create_backg_table(db, Nfields, no_foreign_keys);
+            create_twopf_table(db, Nfields, no_foreign_keys);
+
+            return(db);
+          }
+
+
+        // Create a temporary container for a threepf integration
+        sqlite3* create_temp_threepf_container(const boost::filesystem::path& container, unsigned int Nfields)
+          {
+            sqlite3* db = nullptr;
+
+            int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(db != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_close(db);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // create the necessary tables
+            create_backg_table(db, Nfields, no_foreign_keys);
+            create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
+            create_twopf_table(db, Nfields, imag_twopf, no_foreign_keys);
+            create_threepf_table(db, Nfields, no_foreign_keys);
+
+            return(db);
           }
 
 

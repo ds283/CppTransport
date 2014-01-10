@@ -73,22 +73,53 @@ namespace transport
             threepf_writer threepf;
           };
 
+
+        class generic_batcher;
+
+        typedef enum { replace_container, close_container } replacement_action;
+
+        // data_manager function to close the temporary container and replace it with another one
+        typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
+        // task_manager function to push a container to the master node
+        typedef std::function<void(const std::string&)> container_dispatch_function;
+
         class generic_batcher
           {
           public:
             template <typename handle_type>
-            generic_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn, handle_type h)
-              : capacity(cp), Nfields(Nf), container_path(cn), num_backg(0), manager_handle(static_cast<void*>(h))
+            generic_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+                            container_dispatch_function d, container_replacement_function r,
+                            handle_type h)
+              : capacity(cp), Nfields(Nf), container_path(cn), num_backg(0),
+                dispatcher(d), replacer(r),
+                manager_handle(static_cast<void*>(h))
               {
               }
 
+            //! Return the maximum memory available to this worker
             size_t get_capacity() const { return(this->capacity); }
 
+            //! Set the path to the (new) container
+            void set_container_path(const boost::filesystem::path& path) { this->container_path = path; }
+
+            //! Return the path to the (current) container
             const boost::filesystem::path& get_container_path() const { return(this->container_path); }
 
+            //! Set an implementation-dependent handle
+            template <typename handle_type>
+            void set_manager_handle(handle_type h)  { this->manager_handle = static_cast<void*>(h); }
+
+            //! Return an implementation-dependent handle
             template <typename handle_type>
             void get_manager_handle(handle_type* h) { *h = static_cast<handle_type>(this->manager_handle); }
 
+            //! Return number of fields
+            unsigned int get_number_fields() { return(this->Nfields); }
+
+            //! Close this batcher -- called at the end of an integration
+            void close() { this->flush(close_container); }
+
+            //! Push a background sample
             void push_backg(unsigned int time_serial, const std::vector<number>& values)
               {
                 if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
@@ -97,33 +128,39 @@ namespace transport
                 item.coords      = values;
 
                 this->backg_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush();
+                if(this->storage() > this->capacity) this->flush(replace);
               }
 
           protected:
+            //! Compute the size of all currently-batched results
             virtual size_t storage() const = 0;
 
-            virtual void flush() = 0;
+            //! Flush currently-batched results into the database, and then send to the master process
+            virtual void flush(replacement_action action) = 0;
 
           protected:
-            const unsigned int            capacity;
-            const boost::filesystem::path container_path;
+            const unsigned int             capacity;
 
-            const unsigned int            Nfields;
+            const unsigned int             Nfields;
 
-            unsigned int                  num_backg;
+            unsigned int                   num_backg;
+            std::vector<backg_item>        backg_batch;
 
-            std::vector<backg_item>       backg_batch;
-
-            const void*                   manager_handle;
+            boost::filesystem::path        container_path;
+            void*                          manager_handle;
+            container_dispatch_function    dispatcher;
+            container_replacement_function replacer;
           };
 
         class twopf_batcher: public generic_batcher
           {
           public:
             template <typename handle_type>
-            twopf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn, const twopf_writer_group& w, handle_type h)
-              : generic_batcher(cp, Nf, cn, h), writers(w), num_twopf(0)
+            twopf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+                          const twopf_writer_group& w,
+                          container_dispatch_function d, container_replacement_function r,
+                          handle_type h)
+              : generic_batcher(cp, Nf, cn, d, r, h), writers(w), num_twopf(0)
               {
               }
 
@@ -136,24 +173,27 @@ namespace transport
                 item.elements       = values;
 
                 this->twopf_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush();
+                if(this->storage() > this->capacity) this->flush(replace_container);
               }
 
           protected:
             size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*num_backg
                                             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*num_twopf); }
 
-            void flush()
+            void flush(replacement_action action)
               {
-                this->writers.backg(this->backg_batch);
-                this->writers.twopf(this->twopf_batch);
+                this->writers.backg(this, this->backg_batch);
+                this->writers.twopf(this, this->twopf_batch);
 
                 this->backg_batch.clear();
                 this->twopf_batch.clear();
                 num_backg = num_twopf = 0;
+
+                this->dispatcher(this->container_path.string());
+                this->replacer(this, action);
               }
 
-          private:
+          protected:
             const twopf_writer_group writers;
 
             unsigned int             num_twopf;
@@ -168,9 +208,12 @@ namespace transport
 
             typedef enum { real_twopf, imag_twopf } twopf_type;
 
-            template <handle_type>
-            threepf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn, const threepf_writer_group& w, handle_type h)
-              : generic_batcher(cp, Nf, cn, h), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
+            template <typename handle_type>
+            threepf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+                            const threepf_writer_group& w,
+                            container_dispatch_function d, container_replacement_function r,
+                            handle_type h)
+              : generic_batcher(cp, Nf, cn, d, r, h), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
               {
               }
 
@@ -185,7 +228,7 @@ namespace transport
                 if(type == real_twopf) this->twopf_re_batch.push_back(item);
                 else                   this->twopf_im_batch.push_back(item);
 
-                if(this->storage() > this->capacity) this->flush();
+                if(this->storage() > this->capacity) this->flush(replace_container);
               }
 
             void push_threepf(unsigned int time_serial, unsigned int k_serial, const std::vector<number>& values)
@@ -197,7 +240,7 @@ namespace transport
                 item.elements       = values;
 
                 this->threepf_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush();
+                if(this->storage() > this->capacity) this->flush(replace_container);
               }
 
           protected:
@@ -205,21 +248,24 @@ namespace transport
                                             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(num_twopf_re + num_twopf_im)
                                             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*num_threepf); }
 
-            void flush()
+            void flush(replacement_action action)
               {
-                this->writers.backg(this->backg_batch);
-                this->writers.twopf_re(this->twopf_re_batch);
-                this->writers.twopf_im(this->twopf_im_batch);
-                this->writers.threepf(this->threepf_batch);
+                this->writers.backg(this, this->backg_batch);
+                this->writers.twopf_re(this, this->twopf_re_batch);
+                this->writers.twopf_im(this, this->twopf_im_batch);
+                this->writers.threepf(this, this->threepf_batch);
 
                 this->backg_batch.clear();
                 this->twopf_re_batch.clear();
                 this->twopf_im_batch.clear();
                 this->threepf_batch.clear();
                 num_backg = num_twopf_re = num_twopf_im = num_threepf = 0;
+
+                this->dispatcher(this->container_path.string());
+                this->replacer(this, action);
               }
 
-          private:
+          protected:
             const threepf_writer_group writers;
 
             unsigned int               num_twopf_re;
@@ -289,13 +335,12 @@ namespace transport
 
       public:
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, unsigned int Nfields) = 0;
+        virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                          unsigned int Nfields, container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, unsigned int Nfields) = 0;
-
-        //! Close a temporary container. Returns path to the container.
-        virtual void close_temporary_container(const generic_batcher& handle) = 0;
+        virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                              unsigned int Nfields, container_dispatch_function dispatcher) = 0;
 
 
         // INTERNAL DATA

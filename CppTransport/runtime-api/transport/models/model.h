@@ -23,6 +23,7 @@
 #include "transport/scheduler/scheduler.h"
 
 #include "transport/manager/instance_manager.h"
+#include "transport/manager/data_manager.h"
 
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
@@ -32,14 +33,6 @@
 namespace transport
   {
     // MODEL OBJECTS -- objects representing inflationary models
-
-    // forward declare task manager class to be a friend
-    template <typename number> class task_manager;
-
-    // avoid circularity in inclusions
-    template <typename number> class background;
-    template <typename number> class twopf;
-    template <typename number> class threepf;
 
     // basic class from which all other model representations are derived
     template <typename number>
@@ -147,16 +140,6 @@ namespace transport
         virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
 
-        // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
-
-      public:
-        background<number>              int_background(const task<number>* tk, bool silent=false);
-
-        twopf<number>                   int_twopf     (const twopf_task<number>& tk, bool silent=false);
-
-        threepf<number>                 int_threepf   (const threepf_task<number>& tk, bool silent=false);
-
-
         // CALCULATE MODEL-SPECIFIC QUANTITIES
 
       public:
@@ -178,7 +161,7 @@ namespace transport
 
         // BACKEND INTERFACE
 
-      protected:
+      public:
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
@@ -191,30 +174,21 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        // TODO: remove in-memory calculation
         virtual void                    backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
-                                                              std::vector< std::vector<number> >& backg,
-                                                              std::vector< std::vector< std::vector<number> > >& twopf,
+                                                              typename data_manager<number>::twopf_batcher& batcher,
                                                               bool silent=false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
         // TODO: remove in-memory calculation
         virtual void                    backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
-                                                                std::vector< std::vector<number> >& backg,
-                                                                std::vector< std::vector< std::vector<number> > >& twopf_re,
-                                                                std::vector< std::vector< std::vector<number> > >& twopf_im,
-                                                                std::vector< std::vector< std::vector<number> > >& threepf,
+                                                                typename data_manager<number>::threepf_batcher& batcher
                                                                 bool silent=false) = 0;
 
         // return size of state vectors
         virtual unsigned int            backend_twopf_state_size(void) = 0;
         virtual unsigned int            backend_threepf_state_size(void) = 0;
 
-        // FRIEND CLASSES
-
-      public:
-        friend class task_manager<number>;
 
         // INTERNAL DATA
 
@@ -348,69 +322,6 @@ namespace transport
           {
             throw std::logic_error(__CPP_TRANSPORT_INTEGRATION_FAIL);
           }
-      }
-
-
-    // BASIC BACKGROUND, TWOPF AND THREEPF INTEGRATIONS
-
-
-    // Integrate the background
-    template <typename number>
-    transport::background<number> model<number>::int_background(const task<number>* tk, bool silent)
-      {
-        assert(tk != nullptr);
-
-        std::vector< std::vector<number> > history;
-
-        this->backend_process_backg(tk, history, silent);
-
-        transport::background<number> backg(tk, history, this);
-
-        return(backg);
-      }
-
-
-    // Integrate the twopf
-    template <typename number>
-    transport::twopf<number> model<number>::int_twopf(const twopf_task<number>& tk, bool silent)
-      {
-        context                   ctx  = this->backend_get_context();
-        scheduler                 sch  = scheduler(ctx);
-        work_queue<twopf_kconfig> work = sch.make_queue(this->backend_twopf_state_size(), tk);
-
-        std::cerr << "Work queue:" << std::endl;
-        std::cerr << work;
-
-        std::vector< std::vector<number> >                backg;
-        std::vector< std::vector< std::vector<number> > > twopf;
-
-        backend_process_twopf(work, &tk, backg, twopf, silent);
-
-        transport::twopf<number> tpf(&tk, backg, twopf, this);
-        return(tpf);
-      }
-
-
-    // Integrate the threepf
-    template <typename number>
-    transport::threepf<number> model<number>::int_threepf(const threepf_task<number>& tk, bool silent)
-      {
-        context                     ctx  = this->backend_get_context();
-        scheduler                   sch  = scheduler(ctx);
-        work_queue<threepf_kconfig> work = sch.make_queue(this->backend_threepf_state_size(), tk);
-
-        std::cerr << "Work queue:" << std::endl;
-        std::cerr << work;
-
-        std::vector< std::vector<number> >                backg;
-        std::vector< std::vector< std::vector<number> > > twopf_re;
-        std::vector< std::vector< std::vector<number> > > twopf_im;
-        std::vector< std::vector< std::vector<number> > > threepf;
-
-        backend_process_threepf(work, &tk, backg, twopf_re, twopf_im, threepf, silent);
-
-        transport::threepf<number> tpf(&tk, backg, twopf_re, twopf_im, threepf, this);
-        return(tpf);
       }
 
 

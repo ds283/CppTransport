@@ -168,9 +168,8 @@ namespace transport
 
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
-      protected:
+      public:
         void backend_process_backg(const task<number>* tk, typename model<number>::backg_history& solution, bool silent=false);
-        void backend_raw_backg(const task<number>* tk, const range<double>& times, typename model<number>::backg_history& solution);
       };
 
 
