@@ -20,6 +20,11 @@
 
 #include "sqlite3.h"
 #include "transport/sqlite3/sqlite3_operations.h"
+#import "data_manager.h"
+
+
+#define __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM "worker"
+#define __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN  ".sqlite"
 
 namespace transport
   {
@@ -40,6 +45,12 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
+        //! Create a data_manager_sqlite3 instance
+        data_manager_sqlite3(unsigned int cp)
+          : data_manager<number>(cp)
+          {
+          }
+
         //! Destroy a data_manager_sqlite3 instance
         ~data_manager_sqlite3();
 
@@ -68,14 +79,13 @@ namespace transport
         // INTERFACE -- WRITE INDEX TABLES
 
       public:
-        //! Create the table of sample times
-        void create_time_sample_table(typename repository<number>::integration_container& ctr, task<number>* tk);
+        //! Create tables needed for a twopf container
+        void create_tables(typename repository<number>::integration_container& ctr, twopf_task<number>* tk,
+                           unsigned int Nfields);
 
-        //! Create the table of twopf sample configurations
-        void create_twopf_sample_table(typename repository<number>::integration_container& ctr, twopf_list_task<number>* tk);
-
-        //! Create the table of threepf sample configurations
-        void create_threepf_sample_table(typename repository<number>::integration_container& ctr, threepf_task<number>* tk);
+        //! Create tables needed for a threepf container
+        void create_tables(typename repository<number>::integration_container& ctr, threepf_task<number>* tk,
+                           unsigned int Nfields);
 
 
         // INTERFACE - TASK FILES
@@ -89,6 +99,19 @@ namespace transport
 
         //! Read a list of task assignments for a particular worker
         std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker);
+
+
+        // INTERFACE -- TEMPORARY CONTAINERS
+
+      public:
+        //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
+        typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker, unsigned int Nfields);
+
+        //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
+        typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker, unsigned int Nfields);
+
+        //! Close a temporary container. Returns path to the container.
+        const boost::filesystem::path& close_temporary_container(const typename data_manager<number>::generic_batcher& handle);
 
 
         // INTERNAL DATA
@@ -234,36 +257,34 @@ namespace transport
 
     // INDEX TABLE MANAGEMENT
 
-    // Create the table of sample times
     template <typename number>
-    void data_manager_sqlite3<number>::create_time_sample_table(typename repository<number>::integration_container& ctr, task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_container& ctr,
+                                                     twopf_task<number>* tk, unsigned int Nfields)
       {
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_time_sample_table(db, tk);
-      }
-
-
-    // Create the table of twopf sample configurations
-    template <typename number>
-    void data_manager_sqlite3<number>::create_twopf_sample_table(typename repository<number>::integration_container& ctr, twopf_list_task<number>* tk)
-      {
-        sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
-
         sqlite3_operations::create_twopf_sample_table(db, tk);
+        sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
       }
 
 
-    // Create the table of threepf sample configurations
     template <typename number>
-    void data_manager_sqlite3<number>::create_threepf_sample_table(typename repository<number>::integration_container& ctr, threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_container& ctr,
+                                                     threepf_task<number>* tk, unsigned int Nfields)
       {
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
 
+        sqlite3_operations::create_time_sample_table(db, tk);
+        sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_threepf_sample_table(db, tk);
+        sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -297,12 +318,125 @@ namespace transport
       }
 
 
+    // TEMPORARY CONTAINERS
+
+    template <typename number>
+    typename data_manager<number>::twopf_batcher data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir,
+                                                                                                           unsigned int worker,
+                                                                                                           unsigned int Nfields)
+      {
+        std::ostringstream container_name;
+        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+
+        boost::filesystem::path container = tempdir / container_name;
+        sqlite3* db;
+
+        int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(db != nullptr)
+              {
+                msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                  << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(db);
+              }
+            else
+              {
+                msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                  << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+              }
+            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        // create the necessary tables
+        sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::no_foreign_keys);
+
+        // set up writers
+        typename data_manager<number>::twopf_writer_group writers;
+        writers.backg = std::bind(&sqlite3_operations::write_backg, db, Nfields, std::placeholders::_1);
+        writers.twopf = std::bind(&sqlite3_operations::write_twopf, db, Nfields, sqlite3_operations::real_twopf, std::placeholders::_1);
+
+        // set up batcher
+        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, writers, db);
+
+        // add this database to our list of open connections
+        this->open_containers.push_back(db);
+
+        return(batcher);
+      }
+
+    template <typename number>
+    typename data_manager<number>::threepf_batcher data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir,
+                                                                                                               unsigned int worker,
+                                                                                                               unsigned int Nfields)
+      {
+        std::ostringstream container_name;
+        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+
+        boost::filesystem::path container = tempdir / container_name;
+        sqlite3* db;
+
+        int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(db != nullptr)
+              {
+                msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                  << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(db);
+              }
+            else
+              {
+                msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                  << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+              }
+            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        // create the necessary tables
+        sqlite3_operations::create_backg_table(handle.db, Nfields, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_twopf_table(handle.db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_twopf_table(handle.db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_threepf_table(handle.db, Nfields, sqlite3_operations::no_foreign_keys);
+
+        // set up writers
+        typename data_manager<number>::threepf_writer_group writers;
+        writers.backg    = std::bind(&sqlite3_operations::write_backg, db, Nfields, std::placeholders::_1);
+        writers.twopf_re = std::bind(&sqlite3_operations::write_twopf, db, Nfields, sqlite3_operations::real_twopf, std::placeholders::_1);
+        writers.twopf_im = std::bind(&sqlite3_operations::write_twopf, db, Nfields, sqlite3_operations::imag_twopf, std::placeholders::_1);
+        writers.threepf  = std::bind(&sqlite3_operations::write_threepf, db, Nfields, std::placeholders::_1);
+
+        // set up batcher
+        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, writers, db);
+
+        // add this database to our list of open connections
+        this->open_containers.push_back(db);
+
+        return(batcher);
+      }
+
+    template <typename number>
+    const void data_manager_sqlite3<number>::close_temporary_container(const typename data_manager<number>::generic_batcher& handle)
+      {
+        sqlite3* db = nullptr;
+
+        handle.get_manager_handle(&db);
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+      }
+
+
     // FACTORY FUNCTIONS TO BUILD A DATA_MANAGER
 
     template <typename number>
-    data_manager<number>* data_manager_factory()
+    data_manager<number>* data_manager_factory(unsigned int capacity)
       {
-        return new data_manager_sqlite3<number>();
+        return new data_manager_sqlite3<number>(capacity);
       }
 
 

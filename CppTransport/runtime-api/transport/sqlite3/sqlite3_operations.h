@@ -27,6 +27,10 @@ namespace transport
     namespace sqlite3_operations
       {
 
+        typedef enum { foreign_keys, no_foreign_keys } add_foreign_keys_type;
+
+        typedef enum { real_twopf, imag_twopf } twopf_value_type;
+
         // Create a sample table of times
         template <typename number>
         void create_time_sample_table(sqlite3* db, task<number>* tk)
@@ -328,6 +332,240 @@ namespace transport
             sqlite3_close(taskfile);
 
             return(work_items);
+          }
+
+
+        // Create table for background values
+        void create_backg_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE backg("
+              << "time_serial INTEGER PRIMARY KEY";
+
+            for(unsigned int i = 0; i < 2*Nfields; i++)
+              {
+                create_stmt << ", coord" << i << " DOUBLE";
+              }
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            create_stmt << ");";
+
+            char* errmsg = nullptr;
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL << errmsg << ")";
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+          }
+
+
+        // Create table for twopf values
+        void create_twopf_table(sqlite3* db, unsigned int Nfields, twopf_value_type type=real_twopf, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE twopf_" << (type == real_twopf ? "re" : "im") << "("
+              << "time_serial    INTEGER PRIMARY KEY,"
+              << "kconfig_serial INTEGER,";
+
+            for(unsigned int i = 0; i < 2*Nfields * 2*Nfields; i++)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
+                  << ", FORIEGN KEY(kconfig_serial) REFERENCES twopf_samples(serial)";
+              }
+            create_stmt << ");";
+
+            char* errmsg = nullptr;
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL << errmsg << ")";
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+          }
+
+
+        // Create table for threepf values
+        void create_threepf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE threepf("
+              << "time_serial    INTEGER PRIMARY KEY,"
+              << "kconfig_serial INTEGER";
+
+            for(unsigned int i = 0; i < 2*Nfields * 2*Nfields * 2*Nfields; i++)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
+                  << ", FOREIGN KEY(kconfig_serial) REFERENCES threepf_samples(serial)";
+              }
+            create_stmt << ");";
+
+            char* errmsg = nullptr;
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL << errmsg << ")";
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+          }
+
+
+        // Write a batch of background values
+        template <typename number>
+        void write_backg(sqlite3* db, unsigned int Nfields, const std::vector<typename data_manager<number>::backg_item>& batch)
+          {
+            assert(db != nullptr);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO backg VALUES (@time_serial";
+
+            for(unsigned int i = 0; i < 2*Nfields; i++)
+              {
+                insert_stmt << ", @coord" << i;
+              }
+            insert_stmt << ")";
+
+            sqlite3_stmt* stmt;
+            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+
+            char* errmsg;
+            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+
+            int status;
+
+            for(typename std::vector<typename data_manager<number>::backg_item>::iterator t = batch.begin(); t != batch.end() t++)
+              {
+                sqlite3_bind_int(stmt, 1, (*t).time_serial);
+                for(unsigned int i = 0; i < 2*Nfields; i++)
+                  {
+                    sqlite3_bind_double(stmt, i+2, (*t).coords[i]);
+                  }
+
+                status = sqlite3_step(stmt);
+                if(status != SQLITE_DONE)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+
+                sqlite3_clear_bindings(stmt);
+                sqlite3_reset(stmt);
+              }
+
+            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
+          }
+
+
+        // Write a batch of twopf values
+        template <typename number>
+        void write_twopf(sqlite3* db, unsigned int Nfields, twopf_value_type type, const std::vector<typename data_manager<number>::twopf_item>& batch)
+          {
+            assert(db != nullptr);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO twopf_" << (type == real_twopf ? "re" : "im") << " VALUES (@time_serial, @k_serial";
+
+            for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
+              {
+                insert_stmt << ", @ele" << i;
+              }
+            insert_stmt << ")";
+
+            sqlite3_stmt* stmt;
+            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+
+            char* errmsg;
+            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+
+            int status;
+
+            for(typename std::vector<typename data_manager<number>::twopf_item>::iterator t = batch.begin(); t != batch.end() t++)
+              {
+                sqlite3_bind_int(stmt, 1, (*t).time_serial);
+                sqlite3_bind_int(stmt, 2, (*t).k_serial);
+                for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
+                  {
+                    sqlite3_bind_double(stmt, i+3, (*t).elements[i]);
+                  }
+
+                status = sqlite3_step(stmt);
+                if(status != SQLITE_DONE)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+
+                sqlite3_clear_bindings(stmt);
+                sqlite3_reset(stmt);
+              }
+
+            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
+          }
+
+
+        // Write a batch of threepf values
+        template <typename number>
+        void write_twopf(sqlite3* db, unsigned int Nfields const std::vector<typename data_manager<number>::threepf_item>& batch)
+          {
+            assert(db != nullptr);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO threepf VALUES (@time_serial, @k_serial";
+
+            for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
+              {
+                insert_stmt << ", @ele" << i;
+              }
+            insert_stmt << ")";
+
+            sqlite3_stmt* stmt;
+            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+
+            char* errmsg;
+            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+
+            int status;
+
+            for(typename std::vector<typename data_manager<number>::twopf_item>::iterator t = batch.begin(); t != batch.end() t++)
+              {
+                sqlite3_bind_int(stmt, 1, (*t).time_serial);
+                sqlite3_bind_int(stmt, 2, (*t).k_serial);
+                for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
+                  {
+                    sqlite3_bind_double(stmt, i+3, (*t).elements[i]);
+                  }
+
+                status = sqlite3_step(stmt);
+                if(status != SQLITE_DONE)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+
+                sqlite3_clear_bindings(stmt);
+                sqlite3_reset(stmt);
+              }
+
+            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
+            sqlite3_finalize(stmt);
           }
 
 

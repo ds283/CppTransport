@@ -38,6 +38,8 @@
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
 
+// default storage limit on nodes - 100 Mb
+#define __CPP_TRANSPORT_DEFAULT_STORAGE (100*1024*1024)
 
 namespace transport
   {
@@ -52,7 +54,6 @@ namespace transport
             // MPI message tags
             const unsigned int NEW_INTEGRATION = 0;
             const unsigned int FINISHED_TASK = 1;
-            const unsigned int DATA_READY = 2;
             const unsigned int SET_REPOSITORY = 98;
             const unsigned int TERMINATE = 99;
 
@@ -203,10 +204,10 @@ namespace transport
 
       public:
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
-        task_manager(int argc, char* argv[]);
+        task_manager(int argc, char* argv[], unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], repository<number>* r);
+        task_manager(int argc, char* argv[], repository<number>* r, unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
 
         //! Destroy a task manager.
         ~task_manager();
@@ -308,12 +309,17 @@ namespace transport
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
+
+        //! Storage capacity per worker
+        const unsigned int worker_capacity;
       };
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[])
-      : instance_manager<number>(), environment(argc, argv), repo(nullptr), data_mgr(data_manager_factory<number>())
+    task_manager<number>::task_manager(int argc, char* argv[], unsigned int cp)
+      : instance_manager<number>(), environment(argc, argv),
+        worker_capacity(cp),
+        repo(nullptr), data_mgr(data_manager_factory<number>(cp))
       {
         if(world.rank() == MPI::RANK_MASTER)
           {
@@ -385,8 +391,10 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], repository<number>* r)
-      : instance_manager<number>(), environment(argc, argv), repo(r), data_mgr(data_manager_factory<number>())
+    task_manager<number>::task_manager(int argc, char* argv[], repository<number>* r, unsigned int cp)
+      : instance_manager<number>(), environment(argc, argv),
+        worker_capacity(cp),
+        repo(r), data_mgr(data_manager_factory<number>(cp))
       {
         assert(repo != nullptr);
       }
@@ -566,11 +574,8 @@ namespace transport
         // to find out which work items they should process
         this->data_mgr->create_taskfile(ctr, queue);
 
-        // write time-sample data to the database
-        this->data_mgr->create_time_sample_table(ctr, tk);
-
-        // write twopf k-sample data to the database
-        this->data_mgr->create_twopf_sample_table(ctr, tk);
+        // write the various tables needed in the database
+        this->data_mgr->create_tables(ctr, tk, m->get_number_fields());
 
         // instruct workers to carry out the calculation
         this->new_task_to_workers(ctr, tk->get_name());
@@ -589,13 +594,11 @@ namespace transport
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
 
-        work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
+        work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tk);
 
         // create new output record in the repository XML database, and set up
         // paths to the integration SQL database
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
-
-        std::cout << queue;
 
         // create the data container
         this->data_mgr->create_container(this->repo, ctr);
@@ -604,14 +607,8 @@ namespace transport
         // to find out which work items they should process
         this->data_mgr->create_taskfile(ctr, queue);
 
-        // write time-sample data to the database
-        this->data_mgr->create_time_sample_table(ctr, tk);
-
-        // write twopf k-sample data to the database
-        this->data_mgr->create_twopf_sample_table(ctr, tk);
-
-        // write threepf k-sample data to the database
-        this->data_mgr->create_threepf_sample_table(ctr, tk);
+        // create the various tables needed in the database
+        this->data_mgr->create_tables(ctr, tk, m->get_number_fields());
 
         // instruct workers to carry out the calculation
         this->new_task_to_workers(ctr, tk->get_name());
@@ -786,20 +783,49 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter)
+    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m,
+                                                         const MPI::new_integration_payload& payload,
+                                                         const work_item_filter& filter)
       {
-        std::cerr << "-- new twopf task for worker " << this->world.rank() << std::endl;
+        // dispatch integration to the underlying model
 
-        std::cerr << filter;
+        // create queues based on whatever devices are relevant for the backend
+        context                   ctx  = m->backend_get_context();
+        scheduler                 sch  = scheduler(ctx);
+        work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), tk, filter);
+
+        // make a temporary container object to hold the output of the integration
+        data_manager<number>::twopf_batcher batcher = this->data_mgr->create_temp_twopf_container(payload.tempdir_path(),
+                                                                                                  this->worker, m->get_number_fields());
+
+        // perform the integration
+        m->backend_process_twopf(work, tk, batcher);
+
+        // send a message to the master process, informing it that new data is available to be aggregated
+
+
       }
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter)
+    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m,
+                                                           const MPI::new_integration_payload& payload,
+                                                           const work_item_filter& filter)
       {
-        std::cerr << "-- new threepf task for worker " << this->world.rank() << std::endl;
+        // dispatch integration to the underlying model
 
-        std::cerr << filter;
+        // create queues based on whatever devices are relevant for the backend
+        context                     ctx  = m->backend_get_context();
+        scheduler                   sch  = scheduler(ctx);
+        work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), tk, filter);
+
+        // make a temporary container object to hold the output of the integration
+        data_manager<number>::threepf_batcher batcher = this->data_mgr->create_temp_threepf_container(payload.tempdir_path(),
+                                                                                                      this->worker, m->get_number_fields());
+
+        // perform the integration
+        m->backend_process_threepf(work, tk, batcher);
+
       }
 
 
@@ -855,7 +881,9 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        assert(this->repo != nullptr);  // we require this->repo not to be null, but don't throw an exception since this condition should have been checked before calling
+        // we require this->repo not to be null,
+        // but don't throw an exception since this condition should have been checked before calling
+        assert(this->repo != nullptr);
         MPI::set_repository_payload payload(this->repo->get_root_path());
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
