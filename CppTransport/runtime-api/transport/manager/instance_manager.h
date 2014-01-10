@@ -19,7 +19,6 @@
 #include "transport/version.h"
 #include "transport/exceptions.h"
 #include "transport/messages_en.h"
-#include "transport/models/model.h"
 
 
 namespace transport

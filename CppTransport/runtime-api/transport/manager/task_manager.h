@@ -149,7 +149,7 @@ namespace transport
       }   // namespace MPI
 
 
-    class work_item_filter
+    class work_item_filter: public abstract_filter
       {
       public:
         //! Construct an empty filter
@@ -166,7 +166,8 @@ namespace transport
         void add_work_item(unsigned int serial) { this->items.insert(serial); }
 
         //! Check whether a work-item is part of the filter
-        bool operator()(unsigned int serial) const { return(this->items.find(serial) != this->items.end()); }
+        bool filter(const twopf_kconfig& config)   const { return(this->items.find(config.serial) != this->items.end()); }
+        bool filter(const threepf_kconfig& config) const { return(this->items.find(config.serial) != this->items.end()); }
 
         friend std::ostream& operator<<(std::ostream& out, const work_item_filter& filter);
 
@@ -590,7 +591,7 @@ namespace transport
         this->data_mgr->create_taskfile(ctr, queue);
 
         // write the various tables needed in the database
-        this->data_mgr->create_tables(ctr, tk, m->get_number_fields());
+        this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
         this->master_task_to_workers(ctr, tk->get_name());
@@ -623,7 +624,7 @@ namespace transport
         this->data_mgr->create_taskfile(ctr, queue);
 
         // create the various tables needed in the database
-        this->data_mgr->create_tables(ctr, tk, m->get_number_fields());
+        this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
         this->master_task_to_workers(ctr, tk->get_name());
@@ -658,7 +659,7 @@ namespace transport
 
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
-        for(unsigned int i = 0; i < this->world.size()-1, i++) workers.insert(i);
+        for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
         while(workers.size() > 0)
           {
             // wait until a message is available from a
@@ -859,7 +860,7 @@ namespace transport
         // create queues based on whatever devices are relevant for the backend
         context                   ctx  = m->backend_get_context();
         scheduler                 sch  = scheduler(ctx);
-        work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), tk, filter);
+        work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), *tk, filter);
 
         // make a temporary container object to hold the output of the integration
         typename data_manager<number>::container_dispatch_function dispatcher =
@@ -867,8 +868,8 @@ namespace transport
                                                                                this, std::placeholders::_1);
         typename data_manager<number>::twopf_batcher batcher =
                                                        this->data_mgr->create_temp_twopf_container(payload.tempdir_path(),
-                                                                                                   this->worker,
-                                                                                                   m->get_number_fields(),
+                                                                                                   this->get_rank(),
+                                                                                                   m->get_N_fields(),
                                                                                                    dispatcher);
 
         // perform the integration
@@ -889,7 +890,7 @@ namespace transport
         // create queues based on whatever devices are relevant for the backend
         context                     ctx  = m->backend_get_context();
         scheduler                   sch  = scheduler(ctx);
-        work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), tk, filter);
+        work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), *tk, filter);
 
         // make a temporary container object to hold the output of the integration
         typename data_manager<number>::container_dispatch_function dispatcher =
@@ -897,8 +898,8 @@ namespace transport
                                                                                this, std::placeholders::_1);
         typename data_manager<number>::threepf_batcher batcher =
                                                          this->data_mgr->create_temp_threepf_container(payload.tempdir_path(),
-                                                                                                       this->worker,
-                                                                                                       m->get_number_fields(),
+                                                                                                       this->get_rank(),
+                                                                                                       m->get_N_fields(),
                                                                                                        dispatcher);
 
         // perform the integration
@@ -925,7 +926,7 @@ namespace transport
                     this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
                     std::cerr << "Delete instruction: " << payload << std::endl;
 
-                    this->temporary_conatiner_queue.remove(payload);
+                    this->temporary_container_queue.remove(payload);
                     break;
                   }
               }

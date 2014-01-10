@@ -101,7 +101,7 @@ namespace transport
       {
       public:
         $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c)
-          : twopf_singleconfig_batch_observer(b, c)
+          : twopf_singleconfig_batch_observer<number>(b, c)
           {
           }
 
@@ -136,7 +136,7 @@ namespace transport
       {
       public:
         $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c)
-          : threepf_singleconfig_batch_observer(b, c)
+          : threepf_singleconfig_batch_observer<number>(b, c)
           {
           }
 
@@ -209,6 +209,8 @@ namespace transport
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+        obs.close();
       }
 
 
@@ -234,7 +236,7 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
-                                                          typename data_manager<number>::threebf_batcher& batcher,
+                                                          typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {
         if(!silent)
@@ -297,6 +299,8 @@ namespace transport
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+        obs.close();
       }
 
 
@@ -507,14 +511,14 @@ namespace transport
               {
                 twopf_re_x[i] = x[$$__MODEL_pool::twopf_re_k1_start + i];
               }
-            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_re_x, data_manager<number>::threepf_batcher::twopf_real);
+            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_re_x, data_manager<number>::threepf_batcher::real_twopf);
 
             // then, the imaginary part of the 2pf
             for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
               {
                 twopf_im_x[i] = x[$$__MODEL_pool::twopf_im_k1_start + i];
               }
-            this->get_batcher().push_twopf(time_serial, twopfkconfig_serial, twopf_im_x, data_manager<number>::threepf_batcher::twopf_imag);
+            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_im_x, data_manager<number>::threepf_batcher::imag_twopf);
           }
 
         std::vector<number> threepf_x ($$__MODEL_pool::threepf_size);
@@ -523,7 +527,7 @@ namespace transport
           {
             threepf_x[i] = x[$$__MODEL_pool::threepf_start + i];
           }
-        this->get_batcher().push_threepf(time_serial, threepfkconfig_serial, threepf_x);
+        this->get_batcher().push_threepf(time_serial, threepfconfig_serial, threepf_x);
       }
 
 

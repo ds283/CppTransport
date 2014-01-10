@@ -11,7 +11,6 @@
 #include <string>
 
 #include "transport/manager/instance_manager.h"
-#include "transport/models/model.h"
 #include "transport/tasks/task.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
@@ -21,6 +20,10 @@
 
 namespace transport
   {
+
+    // forward-declare model to avoid circular inclusion
+    template <typename number> class model;
+
     // forward-declare 'key' class used to create repositories
     // the complete declaration is in a separate file,
     // which must be included to allow creation of repositories

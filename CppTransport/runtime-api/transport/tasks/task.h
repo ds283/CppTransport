@@ -78,7 +78,7 @@ namespace transport
       }
 
 
-    struct threepf_kconfig
+    class threepf_kconfig
       {
       public:
         // index of k1, k2, k3 into serial list of k-modes

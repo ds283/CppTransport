@@ -427,7 +427,8 @@ namespace transport
 
         // Write a batch of background values
         template <typename number>
-        void write_backg(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::backg_item>& batch)
+        void write_backg(typename data_manager<number>::generic_batcher* batcher,
+                         const std::vector<typename data_manager<number>::backg_item>& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -451,12 +452,12 @@ namespace transport
 
             int status;
 
-            for(typename std::vector<typename data_manager<number>::backg_item>::iterator t = batch.begin(); t != batch.end() t++)
+            for(typename std::vector<typename data_manager<number>::backg_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 sqlite3_bind_int(stmt, 1, (*t).time_serial);
                 for(unsigned int i = 0; i < 2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+2, (*t).coords[i]);
+                    sqlite3_bind_double(stmt, i+2, static_cast<double>((*t).coords[i]));    // 'number' must be castable to double
                   }
 
                 status = sqlite3_step(stmt);
@@ -478,7 +479,8 @@ namespace transport
 
         // Write a batch of twopf values
         template <typename number>
-        void write_twopf(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::twopf_item>& batch)
+        void write_twopf(twopf_value_type type, typename data_manager<number>::generic_batcher* batcher,
+                         const std::vector<typename data_manager<number>::twopf_item>& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -502,13 +504,13 @@ namespace transport
 
             int status;
 
-            for(typename std::vector<typename data_manager<number>::twopf_item>::iterator t = batch.begin(); t != batch.end() t++)
+            for(typename std::vector<typename data_manager<number>::twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 sqlite3_bind_int(stmt, 1, (*t).time_serial);
-                sqlite3_bind_int(stmt, 2, (*t).k_serial);
+                sqlite3_bind_int(stmt, 2, (*t).kconfig_serial);
                 for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+3, (*t).elements[i]);
+                    sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i]));    // 'number' must be castable to double
                   }
 
                 status = sqlite3_step(stmt);
@@ -530,7 +532,8 @@ namespace transport
 
         // Write a batch of threepf values
         template <typename number>
-        void write_twopf(typename data_manager<number>::generic_batcher* batcher, const std::vector<typename data_manager<number>::threepf_item>& batch)
+        void write_threepf(typename data_manager<number>::generic_batcher* batcher,
+                           const std::vector<typename data_manager<number>::threepf_item>& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -554,13 +557,13 @@ namespace transport
 
             int status;
 
-            for(typename std::vector<typename data_manager<number>::twopf_item>::iterator t = batch.begin(); t != batch.end() t++)
+            for(typename std::vector<typename data_manager<number>::threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 sqlite3_bind_int(stmt, 1, (*t).time_serial);
-                sqlite3_bind_int(stmt, 2, (*t).k_serial);
+                sqlite3_bind_int(stmt, 2, (*t).kconfig_serial);
                 for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+3, (*t).elements[i]);
+                    sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i]));    // 'number' must be castable to double
                   }
 
                 status = sqlite3_step(stmt);
@@ -592,21 +595,21 @@ namespace transport
                 std::ostringstream msg;
                 if(db != nullptr)
                   {
-                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_close(db);
                   }
                 else
                   {
-                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
                   }
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }
 
             // create the necessary tables
             create_backg_table(db, Nfields, no_foreign_keys);
-            create_twopf_table(db, Nfields, no_foreign_keys);
+            create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
 
             return(db);
           }
@@ -624,14 +627,14 @@ namespace transport
                 std::ostringstream msg;
                 if(db != nullptr)
                   {
-                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_close(db);
                   }
                 else
                   {
-                    msg << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATAMGR_TEMPCTR_FAIL_B << status << ")";
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
                   }
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }

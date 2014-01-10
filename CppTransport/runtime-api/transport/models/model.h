@@ -165,29 +165,28 @@ namespace transport
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
-        virtual context                 backend_get_context() = 0;
+        virtual context      backend_get_context() = 0;
 
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void                    backend_process_backg(const task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
+        virtual void         backend_process_backg(const task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void                    backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
-                                                              typename data_manager<number>::twopf_batcher& batcher,
-                                                              bool silent=false) = 0;
+        virtual void         backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+                                                   typename data_manager<number>::twopf_batcher& batcher,
+                                                   bool silent=false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        // TODO: remove in-memory calculation
-        virtual void                    backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
-                                                                typename data_manager<number>::threepf_batcher& batcher
-                                                                bool silent=false) = 0;
+        virtual void         backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+                                                     typename data_manager<number>::threepf_batcher& batcher,
+                                                     bool silent=false) = 0;
 
         // return size of state vectors
-        virtual unsigned int            backend_twopf_state_size(void) = 0;
-        virtual unsigned int            backend_threepf_state_size(void) = 0;
+        virtual unsigned int backend_twopf_state_size(void) = 0;
+        virtual unsigned int backend_threepf_state_size(void) = 0;
 
 
         // INTERNAL DATA

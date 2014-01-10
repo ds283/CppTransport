@@ -345,17 +345,17 @@ namespace transport
         std::ostringstream container_name;
         container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
 
-        boost::filesystem::path container = tempdir / container_name;
+        boost::filesystem::path container = tempdir / container_name.str();
         sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, Nfields);
 
         // set up writers
         typename data_manager<number>::twopf_writer_group writers;
-        writers.backg = std::bind(&sqlite3_operations::write_backg, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf = std::bind(&sqlite3_operations::write_twopf, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
+        writers.backg = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         typename data_manager<number>::container_replacement_function replacer =
-                                                                        std::bind(&data_manager<number>::replace_temp_twopf_container,
+                                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_twopf_container,
                                                                                   this, tempdir, worker, Nfields,
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
@@ -377,20 +377,20 @@ namespace transport
         std::ostringstream container_name;
         container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
 
-        boost::filesystem::path container = tempdir / container_name;
+        boost::filesystem::path container = tempdir / container_name.str();
 
         sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
 
         // set up writers
         typename data_manager<number>::threepf_writer_group writers;
-        writers.backg    = std::bind(&sqlite3_operations::write_backg, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_re = std::bind(&sqlite3_operations::write_twopf, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.twopf_im = std::bind(&sqlite3_operations::write_twopf, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
-        writers.threepf  = std::bind(&sqlite3_operations::write_threepf, std::placeholders::_1, std::placeholders::_2);
+        writers.backg    = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_re = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
+        writers.twopf_im = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::imag_twopf, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf  = std::bind(&sqlite3_operations::write_threepf<number>, std::placeholders::_1, std::placeholders::_2);
 
         // set up a replacement function
         typename data_manager<number>::container_replacement_function replacer =
-                                                                        std::bind(&data_manager<number>::replace_temp_threepf_container,
+                                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_threepf_container,
                                                                                   this, tempdir, worker, Nfields,
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
@@ -405,26 +405,26 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                            unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
-                                                            typename data_manager<number>::replacement_action action)
+    void data_manager_sqlite3<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                                    unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
+                                                                    typename data_manager<number>::replacement_action action)
       {
         sqlite3* db = nullptr;
 
-        batcher.get_manager_handle(&db);
+        batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == data_manager<number>::replace)
+        if(action == data_manager<number>::action_replace)
           {
             std::ostringstream container_name;
             container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
 
-            boost::filesystem::path container = tempdir / container_name;
+            boost::filesystem::path container = tempdir / container_name.str();
 
             sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, Nfields);
 
-            batcher->set_container_name(container);
+            batcher->set_container_path(container);
             batcher->set_manager_handle(db);
 
             this->open_containers.push_back(db);
@@ -433,26 +433,26 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                              unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
-                                                              typename data_manager<number>::replacement_action action)
+    void data_manager_sqlite3<number>::replace_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                                      unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
+                                                                      typename data_manager<number>::replacement_action action)
       {
         sqlite3* db = nullptr;
 
-        batcher.get_manager_handle(&db);
+        batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        if(action == data_manager<number>::replace_container)
+        if(action == data_manager<number>::action_replace)
           {
             std::ostringstream container_name;
             container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
 
-            boost::filesystem::path container = tempdir / container_name;
+            boost::filesystem::path container = tempdir / container_name.str();
 
             sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
 
-            batcher->set_container_name(container);
+            batcher->set_container_path(container);
             batcher->set_manager_handle(db);
 
             this->open_containers.push_back(db);

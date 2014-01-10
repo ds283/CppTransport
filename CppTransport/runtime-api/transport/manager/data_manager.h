@@ -11,6 +11,7 @@
 #include <set>
 
 #include "transport/tasks/task.h"
+#include "transport/scheduler/work_queue.h"
 #include "transport/manager/repository.h"
 
 
@@ -26,12 +27,14 @@ namespace transport
         // data structures for storing individual sample points from each integration
         class backg_item
           {
+          public:
             unsigned int        time_serial;
             std::vector<number> coords;
           };
 
         class twopf_item
           {
+          public:
             unsigned int        time_serial;
             unsigned int        kconfig_serial;
             std::vector<number> elements;
@@ -39,6 +42,7 @@ namespace transport
 
         class threepf_item
           {
+          public:
             unsigned int        time_serial;
             unsigned int        kconfig_serial;
             std::vector<number> elements;
@@ -47,14 +51,18 @@ namespace transport
         // writer functions, used by the compute backends to store the output of each integration
         // in a temporary container
 
+        class generic_batcher;
+        class twopf_batcher;
+        class threepf_batcher;
+
         // background writer
-        typedef std::function<void(const std::vector<backg_item>&)> backg_writer;
+        typedef std::function<void(generic_batcher*, const std::vector<backg_item>&)> backg_writer;
 
         // twopf writer
-        typedef std::function<void(const std::vector<twopf_item>&)> twopf_writer;
+        typedef std::function<void(generic_batcher*, const std::vector<twopf_item>&)> twopf_writer;
 
         // threepf writer requires: threepf writer
-        typedef std::function<void(const std::vector<threepf_item>&)> threepf_writer;
+        typedef std::function<void(generic_batcher*, const std::vector<threepf_item>&)> threepf_writer;
 
         // group writers together in batches for twopf and threepf integrations
         class twopf_writer_group
@@ -74,9 +82,7 @@ namespace transport
           };
 
 
-        class generic_batcher;
-
-        typedef enum { replace_container, close_container } replacement_action;
+        typedef enum { action_replace, action_close } replacement_action;
 
         // data_manager function to close the temporary container and replace it with another one
         typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
@@ -117,7 +123,7 @@ namespace transport
             unsigned int get_number_fields() { return(this->Nfields); }
 
             //! Close this batcher -- called at the end of an integration
-            void close() { this->flush(close_container); }
+            void close() { this->flush(action_close); }
 
             //! Push a background sample
             void push_backg(unsigned int time_serial, const std::vector<number>& values)
@@ -128,7 +134,7 @@ namespace transport
                 item.coords      = values;
 
                 this->backg_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush(replace);
+                if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
           protected:
@@ -173,12 +179,12 @@ namespace transport
                 item.elements       = values;
 
                 this->twopf_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush(replace_container);
+                if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
           protected:
-            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*num_backg
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*num_twopf); }
+            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->num_backg
+                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->num_twopf); }
 
             void flush(replacement_action action)
               {
@@ -187,7 +193,7 @@ namespace transport
 
                 this->backg_batch.clear();
                 this->twopf_batch.clear();
-                num_backg = num_twopf = 0;
+                this->num_backg = this->num_twopf = 0;
 
                 this->dispatcher(this->container_path.string());
                 this->replacer(this, action);
@@ -202,7 +208,7 @@ namespace transport
           };
 
 
-        class threepf_batcher: public generic_batcher;
+        class threepf_batcher: public generic_batcher
           {
           public:
 
@@ -228,7 +234,7 @@ namespace transport
                 if(type == real_twopf) this->twopf_re_batch.push_back(item);
                 else                   this->twopf_im_batch.push_back(item);
 
-                if(this->storage() > this->capacity) this->flush(replace_container);
+                if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
             void push_threepf(unsigned int time_serial, unsigned int k_serial, const std::vector<number>& values)
@@ -240,13 +246,13 @@ namespace transport
                 item.elements       = values;
 
                 this->threepf_batch.push_back(item);
-                if(this->storage() > this->capacity) this->flush(replace_container);
+                if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
           protected:
-            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*num_backg
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(num_twopf_re + num_twopf_im)
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*num_threepf); }
+            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->num_backg
+                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->num_twopf_re + this->num_twopf_im)
+                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->num_threepf); }
 
             void flush(replacement_action action)
               {
@@ -259,7 +265,7 @@ namespace transport
                 this->twopf_re_batch.clear();
                 this->twopf_im_batch.clear();
                 this->threepf_batch.clear();
-                num_backg = num_twopf_re = num_twopf_im = num_threepf = 0;
+                this->num_backg = this->num_twopf_re = this->num_twopf_im = this->num_threepf = 0;
 
                 this->dispatcher(this->container_path.string());
                 this->replacer(this, action);

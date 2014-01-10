@@ -28,6 +28,7 @@ namespace transport
                        DATA_CONTAINER_ERROR,                              // generic data-container error
                        BADLY_FORMED_XML,                                  // badly formed XML document in repository
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
+                       STORAGE_ERROR                                      // error while storing the output of an integration
                      } exception_type;
         runtime_exception(exception_type t, const std::string msg)
           : type(t), std::runtime_error(msg)

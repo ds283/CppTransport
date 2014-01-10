@@ -102,6 +102,8 @@ namespace transport
 
         typename data_manager<number>::twopf_batcher& get_batcher() { return(this->batcher); }
 
+        void close() { this->batcher.close(); }
+
       protected:
         const twopf_kconfig& k_config;
         typename data_manager<number>::twopf_batcher& batcher;
@@ -126,6 +128,8 @@ namespace transport
         bool store_twopf() { return(this->k_config.store_twopf); }
 
         typename data_manager<number>::threepf_batcher& get_batcher() { return(this->batcher); }
+
+        void close() { this->batcher.close(); }
 
       protected:
         const threepf_kconfig& k_config;
