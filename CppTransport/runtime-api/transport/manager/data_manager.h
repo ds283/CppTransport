@@ -133,7 +133,7 @@ namespace transport
                 item.time_serial = time_serial;
                 item.coords      = values;
 
-                this->backg_batch.push_back(item);
+                this->backg_batch.push_back(item), num_backg++;
                 if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
@@ -178,7 +178,7 @@ namespace transport
                 item.kconfig_serial = k_serial;
                 item.elements       = values;
 
-                this->twopf_batch.push_back(item);
+                this->twopf_batch.push_back(item), num_twopf++;
                 if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
@@ -188,6 +188,8 @@ namespace transport
 
             void flush(replacement_action action)
               {
+                std::cerr << "** twopf batcher (capacity=" << format_memory(this->capacity) << ") at size " << format_memory(this->storage()) << ", pushing to master" << std::endl;
+
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf(this, this->twopf_batch);
 
@@ -231,8 +233,8 @@ namespace transport
                 item.kconfig_serial = k_serial;
                 item.elements       = values;
 
-                if(type == real_twopf) this->twopf_re_batch.push_back(item);
-                else                   this->twopf_im_batch.push_back(item);
+                if(type == real_twopf) this->twopf_re_batch.push_back(item), num_twopf_re++;
+                else                   this->twopf_im_batch.push_back(item), num_twopf_im++;
 
                 if(this->storage() > this->capacity) this->flush(action_replace);
               }
@@ -245,7 +247,7 @@ namespace transport
                 item.kconfig_serial = k_serial;
                 item.elements       = values;
 
-                this->threepf_batch.push_back(item);
+                this->threepf_batch.push_back(item), num_threepf++;
                 if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
@@ -256,6 +258,8 @@ namespace transport
 
             void flush(replacement_action action)
               {
+                std::cerr << "** threepf batcher (capacity=" << format_memory(this->capacity) << ") at size " << format_memory(this->storage()) << ", pushing to master" << std::endl;
+
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf_re(this, this->twopf_re_batch);
                 this->writers.twopf_im(this, this->twopf_im_batch);

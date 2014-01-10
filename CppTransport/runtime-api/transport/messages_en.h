@@ -150,6 +150,8 @@
 #define __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL   "Data container error: Failed to create background-value table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL   "Data container error: Failed to create twopf-value table in data container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL "Data container error: Failed to create threepf-value table in data container (sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_DN_DATATAB_FAIL      "Data container error: Failed to create gauge-xfm1-value table in data container (sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_DDN_DATATAB_FAIL     "Data container error: Failed to create gauge-xfm2-value table in data container (sqlite3 code="
 
 #define __CPP_TRANSPORT_NFIELDS_BACKG         "Storage error: Unexpected number of elements when batching output of background"
 #define __CPP_TRANSPORT_NFIELDS_TWOPF         "Storage error: Unexpected number of elements when batching output of twopf"

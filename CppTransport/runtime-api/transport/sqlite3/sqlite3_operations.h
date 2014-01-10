@@ -367,17 +367,19 @@ namespace transport
           {
             std::ostringstream create_stmt;
             create_stmt << "CREATE TABLE twopf_" << (type == real_twopf ? "re" : "im") << "("
-              << "time_serial    INTEGER PRIMARY KEY,"
-              << "kconfig_serial INTEGER,";
+              << "time_serial    INTEGER,"
+              << "kconfig_serial INTEGER";
 
             for(unsigned int i = 0; i < 2*Nfields * 2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
+
+            create_stmt << ", PRIMARY KEY (time_serial, kconfig_serial)";
             if(keys == foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
-                  << ", FORIEGN KEY(kconfig_serial) REFERENCES twopf_samples(serial)";
+                  << ", FOREIGN KEY(kconfig_serial) REFERENCES twopf_samples(serial)";
               }
             create_stmt << ");";
 
@@ -398,13 +400,15 @@ namespace transport
           {
             std::ostringstream create_stmt;
             create_stmt << "CREATE TABLE threepf("
-              << "time_serial    INTEGER PRIMARY KEY,"
+              << "time_serial    INTEGER,"
               << "kconfig_serial INTEGER";
 
             for(unsigned int i = 0; i < 2*Nfields * 2*Nfields * 2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
+
+            create_stmt << ", PRIMARY KEY (time_serial, kconfig_serial)";
             if(keys == foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
@@ -419,6 +423,60 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL << errmsg << ")";
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+          }
+
+
+        // Create table for 1st-order gauge xfm values
+        void create_dN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE gauge_xfm1("
+              << "time_serial    INTEGER PRIMARY KEY";
+
+            for(unsigned int i = 0; i < 2*Nfields; i++)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
+
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            create_stmt << ");";
+
+            char* errmsg = nullptr;
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_DN_DATATAB_FAIL << errmsg << ")";
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+          }
+
+
+        // Create table for 2nd-order gauge xfm values
+        void create_ddN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE gauge_xfm2("
+              << "time_serial    INTEGER PRIMARY KEY";
+
+            for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
+
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            create_stmt << ");";
+
+            char* errmsg = nullptr;
+            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_DDN_DATATAB_FAIL << errmsg << ")";
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }
           }
@@ -618,6 +676,8 @@ namespace transport
         sqlite3* create_temp_threepf_container(const boost::filesystem::path& container, unsigned int Nfields)
           {
             sqlite3* db = nullptr;
+
+            std::cerr << "Creating new threepf container '" << container << "'" << std::endl;
 
             int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 

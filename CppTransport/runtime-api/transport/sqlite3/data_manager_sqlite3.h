@@ -125,6 +125,9 @@ namespace transport
                                             unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
                                             typename data_manager<number>::replacement_action action);
 
+        //! Generate the name for a temporary container
+        boost::filesystem::path generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker);
+
         // INTERNAL DATA
 
       private:
@@ -283,6 +286,7 @@ namespace transport
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -300,6 +304,8 @@ namespace transport
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_ddN_table(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -341,10 +347,8 @@ namespace transport
                                                                                                            unsigned int Nfields,
                                                                                                            typename data_manager<number>::container_dispatch_function dispatcher)
       {
-        std::ostringstream container_name;
-        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+        boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-        boost::filesystem::path container = tempdir / container_name.str();
         sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, Nfields);
 
         // set up writers
@@ -373,10 +377,7 @@ namespace transport
                                                                                                                unsigned int Nfields,
                                                                                                                typename data_manager<number>::container_dispatch_function dispatcher)
       {
-        std::ostringstream container_name;
-        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
-
-        boost::filesystem::path container = tempdir / container_name.str();
+        boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
         sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
 
@@ -416,17 +417,14 @@ namespace transport
 
         if(action == data_manager<number>::action_replace)
           {
-            std::ostringstream container_name;
-            container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+            boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            boost::filesystem::path container = tempdir / container_name.str();
-
-            sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, Nfields);
+            sqlite3* new_db = sqlite3_operations::create_temp_twopf_container(container, Nfields);
 
             batcher->set_container_path(container);
-            batcher->set_manager_handle(db);
+            batcher->set_manager_handle(new_db);
 
-            this->open_containers.push_back(db);
+            this->open_containers.push_back(new_db);
           }
       }
 
@@ -438,24 +436,39 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
+        std::cerr << "** Replacing temporary threepf container '" << batcher->get_container_path() << "', action = " << action << std::endl;
+
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
+        std::cerr << "** Closed sqlite3 handle for '" << batcher->get_container_path() << "'" << std::endl;
+
         if(action == data_manager<number>::action_replace)
           {
-            std::ostringstream container_name;
-            container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+            boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            boost::filesystem::path container = tempdir / container_name.str();
+            std::cerr << "** Opening new threepf container '" << container << "'" << std::endl;
 
-            sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
+            sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
 
             batcher->set_container_path(container);
-            batcher->set_manager_handle(db);
+            batcher->set_manager_handle(new_db);
 
-            this->open_containers.push_back(db);
+            this->open_containers.push_back(new_db);
           }
+      }
+
+
+    template <typename number>
+    boost::filesystem::path data_manager_sqlite3<number>::generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker)
+      {
+        std::ostringstream container_name;
+        container_name << __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM << worker << "_" << this->temporary_container_serial++ << __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN;
+
+        boost::filesystem::path container = tempdir / container_name.str();
+
+        return(container);
       }
 
 

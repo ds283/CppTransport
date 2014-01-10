@@ -670,13 +670,13 @@ namespace transport
                   {
                     std::string payload;
                     this->world.recv(boost::mpi::any_source, MPI::DELETE_CONTAINER, payload);
-                    std::cerr << "Data ready: " << payload << std::endl;
+                    std::cerr << "++ Data ready: " << payload << std::endl;
                     break;
                   }
 
                 case MPI::FINISHED_TASK:
                   {
-                    std::cerr << "Finished task: " << stat.source() << std::endl;
+                    std::cerr << "++ Worker advising finished task: " << stat.source() << std::endl;
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
@@ -874,6 +874,9 @@ namespace transport
         // perform the integration
         m->backend_process_twopf(work, tk, batcher);
 
+        // close the batcher
+        batcher.close();
+
         // wait until all temporary containers have been deleted
         this->slave_wait_temp_containers_deleted();
       }
@@ -904,6 +907,9 @@ namespace transport
         // perform the integration
         m->backend_process_threepf(work, tk, batcher);
 
+        // close the batcher
+        batcher.close();
+
         // wait until all temporary containers have been deleted, and then return
         this->slave_wait_temp_containers_deleted();
       }
@@ -923,7 +929,7 @@ namespace transport
                   {
                     std::string payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
-                    std::cerr << "Delete instruction: " << payload << std::endl;
+                    std::cerr << "++ Slave received delete instruction: " << payload << std::endl;
 
                     this->temporary_container_queue.remove(payload);
                     break;
@@ -979,6 +985,8 @@ namespace transport
     template <typename number>
     void task_manager<number>::slave_push_temp_container(const std::string& ctr)
       {
+        std::cerr << "++ Sending DATA_READY message for container '" << ctr << "'" << std::endl;
+
         // advise master process that data is available in the named container
         this->world.isend(MPI::RANK_MASTER, MPI::DATA_READY, ctr);
 
