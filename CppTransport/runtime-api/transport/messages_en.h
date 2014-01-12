@@ -165,6 +165,7 @@
 #define __CPP_TRANSPORT_DATACTR_THREEPFATTACH "Data container error: Failed to attach temporary container for threepf transfer (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFCOPY   "Data container error: Failed to copy threepf values from temporary container (sqlite3 code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFDETACH "Data container error: Failed to detach temporary container following threepf transfer (sqlite3 code="
+#define __CPP_TRANSPORT_DATACTR_REMOVE_TEMP   "Data container error: Could not remove temporary container"
 
 #define __CPP_TRANSPORT_NFIELDS_BACKG         "Storage error: Unexpected number of elements when batching output of background"
 #define __CPP_TRANSPORT_NFIELDS_TWOPF         "Storage error: Unexpected number of elements when batching output of twopf"

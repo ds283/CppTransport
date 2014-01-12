@@ -717,7 +717,7 @@ namespace transport
                   {
                     MPI::data_ready_payload payload;
                     this->world.recv(stat.source(), MPI::DATA_READY, payload);
-                    std::cerr << "++ Data ready: " << payload.get_container_path() << std::endl;
+                    std::cerr << "++ Master received aggregation request: '" << payload.get_container_path() << std::endl;
 
                     // batch data into the main container
                     switch(payload.get_payload_type())
@@ -745,6 +745,7 @@ namespace transport
 
                 case MPI::FINISHED_TASK:
                   {
+                    this->world.recv(stat.source(), MPI::FINISHED_TASK);
                     std::cerr << "++ Worker advising finished task: " << stat.source() << std::endl;
                     workers.erase(this->worker_number(stat.source()));
                     break;
@@ -1008,6 +1009,12 @@ namespace transport
                     this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
                     std::cerr << "++ Slave received delete instruction: " << payload << std::endl;
 
+                    if(!boost::filesystem::remove(payload))
+                      {
+                        std::ostringstream msg;
+                        msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload << "'";
+                        this->error(msg.str());
+                      }
                     this->temporary_container_queue.remove(payload);
                     break;
                   }

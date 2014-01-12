@@ -105,7 +105,7 @@ namespace transport
 
             // set up a table
             std::stringstream create_stmt;
-            create_stmt << "CREATE TABLE timesamples("
+            create_stmt << "CREATE TABLE time_samples("
                 << "serial INTEGER PRIMARY KEY,"
                 << "time   DOUBLE"
                 << ");";
@@ -113,7 +113,7 @@ namespace transport
             exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO timesamples VALUES (@serial, @time)";
+            insert_stmt << "INSERT INTO time_samples VALUES (@serial, @time)";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -148,7 +148,7 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE twopfsamples("
+            stmt_text << "CREATE TABLE twopf_samples("
               << "serial       INTEGER PRIMARY KEY,"
               << "conventional DOUBLE,"
               << "comoving     DOUBLE"
@@ -157,7 +157,7 @@ namespace transport
             exec(db, stmt_text.str(), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO twopfsamples VALUES (@serial, @conventional, @comoving);";
+            insert_stmt << "INSERT INTO twopf_samples VALUES (@serial, @conventional, @comoving);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -192,7 +192,7 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE threepfsamples("
+            stmt_text << "CREATE TABLE threepf_samples("
               << "serial          INTEGER PRIMARY KEY,"
               << "wavenumber1     INTEGER,"
               << "wavenumber2     INTEGER,"
@@ -201,15 +201,15 @@ namespace transport
               << "kt_conventional DOUBLE,"
               << "alpha           DOUBLE,"
               << "beta            DOUBLE,"
-              << "FOREIGN KEY(wavenumber1) REFERENCES twopfsamples(serial),"
-              << "FOREIGN KEY(wavenumber2) REFERENCES twopfsamples(serial),"
-              << "FOREIGN KEY(wavenumber3) REFERENCES twopfsamples(serial)"
+              << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial),"
+              << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial),"
+              << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
               << ");";
 
             exec(db, stmt_text.str());
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO threepfsamples VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta);";
+            insert_stmt << "INSERT INTO threepf_samples VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -353,7 +353,7 @@ namespace transport
               {
                 create_stmt << ", coord" << i << " DOUBLE";
               }
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES time_samples(serial)";
             create_stmt << ");";
 
             exec(db, create_stmt.str());
@@ -376,8 +376,8 @@ namespace transport
             create_stmt << ", PRIMARY KEY (tserial, kserial)";
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)"
-                  << ", FOREIGN KEY(kserial) REFERENCES twopfsamples(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES time_samples(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES twopf_samples(serial)";
               }
             create_stmt << ");";
 
@@ -401,8 +401,8 @@ namespace transport
             create_stmt << ", PRIMARY KEY (tserial, kserial)";
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)"
-                  << ", FOREIGN KEY(kserial) REFERENCES threepfsamples(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES time_samples(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES threepf_samples(serial)";
               }
             create_stmt << ");";
 
@@ -414,7 +414,7 @@ namespace transport
         void create_dN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
             std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE gaugexfm1("
+            create_stmt << "CREATE TABLE gauge_xfm1("
               << "tserial INTEGER PRIMARY KEY";
 
             for(unsigned int i = 0; i < 2*Nfields; i++)
@@ -422,7 +422,7 @@ namespace transport
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES time_samples(serial)";
             create_stmt << ");";
 
             exec(db, create_stmt.str());
@@ -433,7 +433,7 @@ namespace transport
         void create_ddN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
             std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE gaugexfm2("
+            create_stmt << "CREATE TABLE gauge_xfm2("
               << "tserial INTEGER PRIMARY KEY";
 
             for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
@@ -441,7 +441,7 @@ namespace transport
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES time_samples(serial)";
             create_stmt << ");";
 
             exec(db, create_stmt.str());
@@ -677,7 +677,7 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, write_stmt_text.str().c_str(), write_stmt_text.str().length()+1, &write_stmt, nullptr));
 
             std::ostringstream xfm1_stmt_text;
-            xfm1_stmt_text << "INSERT INTO gaugexfm1 VALUES (@tserial";
+            xfm1_stmt_text << "INSERT INTO gauge_xfm1 VALUES (@tserial";
             for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
               {
                 xfm1_stmt_text << ", @ele" << i;
@@ -687,7 +687,7 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, xfm1_stmt_text.str().c_str(), xfm1_stmt_text.str().length()+1, &xfm1_stmt, nullptr));
 
             std::ostringstream xfm2_stmt_text;
-            xfm2_stmt_text << "INSERT INTO gaugexfm2 VALUES (@tserial";
+            xfm2_stmt_text << "INSERT INTO gauge_xfm2 VALUES (@tserial";
             for(unsigned int i = 0; i < 2*m->get_N_fields()*2*m->get_N_fields(); i++)
               {
                 xfm2_stmt_text << ", @ele" << i;
@@ -700,68 +700,54 @@ namespace transport
             int status;
             while((status = sqlite3_step(read_stmt)) != SQLITE_DONE)
               {
-                if(status == SQLITE_ROW)
+                check_stmt(db, status, __CPP_TRANSPORT_DATACTR_BACKGREAD, SQLITE_ROW);
+
+                int serial = sqlite3_column_int(read_stmt, 0);
+
+                check_stmt(db, sqlite3_bind_int(write_stmt, 1, serial));
+
+                std::vector<number> coords(2*m->get_N_fields());
+                for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
                   {
-                    int serial = sqlite3_column_int(read_stmt, 0);
-                    std::cerr << "Read serial = " << serial << std::endl;
-
-                    check_stmt(db, sqlite3_bind_int(write_stmt, 1, serial));
-
-                    std::vector<number> coords(2*m->get_N_fields());
-                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-                      {
-                        double value = sqlite3_column_double(read_stmt, i+1);
-                        check_stmt(db, sqlite3_bind_double(write_stmt, i+2, value));
-                        coords[i] = static_cast<number>(value);
-
-                        std::cerr << "Read column " << i << " = " << value << std::endl;
-                      }
-
-                    check_stmt(db, sqlite3_step(write_stmt), __CPP_TRANSPORT_DATACTR_BACKGWRITE, SQLITE_DONE);
-                    std::cerr << "-- Written backg value, status = " << status << std::endl;
-
-                    const parameters<number>& params = tk->get_params();
-                    std::vector<number> xfm1;
-
-                    m->compute_gauge_xfm_1(params, coords, xfm1);
-
-                    check_stmt(db, sqlite3_bind_int(xfm1_stmt, 1, serial));
-                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-                      {
-                        check_stmt(db, sqlite3_bind_double(xfm1_stmt, 2 + m->flatten(i), static_cast<double>(xfm1[i])));
-                      }
-
-                    check_stmt(db, sqlite3_step(xfm1_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
-                    std::cerr << "-- Written XFM1 value, status = " << status << std::endl;
-
-                    if(gauge_xfm == gauge_xfm_2)
-                      {
-                        std::vector< std::vector<number> > xfm2;
-                        m->compute_gauge_xfm_2(params, coords, xfm2);
-
-                        check_stmt(db, sqlite3_bind_int(xfm2_stmt, 1, serial));
-                        for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-                          {
-                            for(unsigned int j = 0; j < 2*m->get_N_fields(); j++)
-                              {
-                                check_stmt(db, sqlite3_bind_double(xfm2_stmt, 2 + m->flatten(i, j), static_cast<double>(xfm2[i][j])));
-                              }
-
-                            check_stmt(db, sqlite3_step(xfm2_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
-                          }
-                        check_stmt(db, sqlite3_clear_bindings(xfm2_stmt));
-                        check_stmt(db, sqlite3_reset(xfm2_stmt));
-                      }
+                    double value = sqlite3_column_double(read_stmt, i+1);
+                    check_stmt(db, sqlite3_bind_double(write_stmt, i+2, value));
+                    coords[i] = static_cast<number>(value);
                   }
-                else
+
+                check_stmt(db, sqlite3_step(write_stmt), __CPP_TRANSPORT_DATACTR_BACKGWRITE, SQLITE_DONE);
+
+                const parameters<number>& params = tk->get_params();
+                std::vector<number> xfm1;
+
+                m->compute_gauge_xfm_1(params, coords, xfm1);
+
+                check_stmt(db, sqlite3_bind_int(xfm1_stmt, 1, serial));
+                for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
                   {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_BACKGREAD << sqlite3_errmsg(db) << ")";
-                    sqlite3_finalize(write_stmt);
-                    sqlite3_finalize(xfm1_stmt);
-                    sqlite3_finalize(xfm2_stmt);
-                    sqlite3_finalize(read_stmt);
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                    check_stmt(db, sqlite3_bind_double(xfm1_stmt, 2 + m->flatten(i), static_cast<double>(xfm1[i])));
+                  }
+
+                check_stmt(db, sqlite3_step(xfm1_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
+
+                if(gauge_xfm == gauge_xfm_2)
+                  {
+                    std::vector< std::vector<number> > xfm2;
+                    m->compute_gauge_xfm_2(params, coords, xfm2);
+
+                    check_stmt(db, sqlite3_bind_int(xfm2_stmt, 1, serial));
+                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+                      {
+                        for(unsigned int j = 0; j < 2*m->get_N_fields(); j++)
+                          {
+                            check_stmt(db, sqlite3_bind_double(xfm2_stmt, 2 + m->flatten(i, j), static_cast<double>(xfm2[i][j])));
+                          }
+
+                      }
+
+                    check_stmt(db, sqlite3_step(xfm2_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
+
+                    check_stmt(db, sqlite3_clear_bindings(xfm2_stmt));
+                    check_stmt(db, sqlite3_reset(xfm2_stmt));
                   }
 
                 check_stmt(db, sqlite3_clear_bindings(write_stmt));

@@ -143,7 +143,7 @@ namespace transport
         //! List of open sqlite3 connexions
         std::list< sqlite3* > open_containers;
 
-        //! Serial number used to distinguish temporary containers
+        //! Serial number used to distinguish temporary containers associated with this worker
         unsigned int          temporary_container_serial;
       };
 
@@ -269,13 +269,13 @@ namespace transport
     void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_container& ctr)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(taskfile);
         sqlite3_close(taskfile);
@@ -289,7 +289,7 @@ namespace transport
                                                      twopf_task<number>* tk, unsigned int Nfields)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
@@ -304,7 +304,7 @@ namespace transport
                                                      threepf_task<number>* tk, unsigned int Nfields)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
@@ -325,7 +325,7 @@ namespace transport
     void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue)
       {
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
       }
@@ -335,7 +335,7 @@ namespace transport
     void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue)
       {
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
       }
@@ -486,7 +486,7 @@ namespace transport
                                                              const std::string& temp_ctr, model<number>* m, task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_taskfile(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_1);
         sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
@@ -498,7 +498,7 @@ namespace transport
                                                                const std::string& temp_ctr, model<number>* m, task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_taskfile(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_2);
         sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
