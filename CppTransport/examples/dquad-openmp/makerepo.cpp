@@ -76,16 +76,24 @@ int main(int argc, char* argv[])
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 
-    transport::threepf_task<double> tk = transport::threepf_task<double>("threepf-1", ics, times, ks, model->kconfig_kstar_factory());
+    // construct a threepf task
+    transport::threepf_task<double> tk3 = transport::threepf_task<double>("dquad.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
 
-    // write the initial conditions/parameter specification and integration specification into the model repository
-    mgr->write_integration(tk, model);
+    // construct a twopf task
+    transport::twopf_task<double> tk2 = transport::twopf_task<double>("dquad.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
+
+    // write each initial conditions/parameter specification and integration specification into the model repository
+    mgr->write_integration(tk2, model);
+    mgr->write_integration(tk3, model);
 
     std::string package_xml = repo->extract_package_document(ics.get_name());
     std::cout << "Package XML document:" << std::endl << package_xml << std::endl << std::endl;
 
-    std::string task_xml = repo->extract_integration_document(tk.get_name());
-    std::cout << "Integration XML docuemnt:" << std::endl << task_xml << std::endl << std::endl;
+    std::string task2_xml = repo->extract_integration_document(tk2.get_name());
+    std::cout << "2pf integration XML document:" << std::endl << task2_xml << std::endl << std::endl;
+
+    std::string task3_xml = repo->extract_integration_document(tk3.get_name());
+    std::cout << "3pf integration XML document:" << std::endl << task3_xml << std::endl << std::endl;
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
