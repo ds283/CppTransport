@@ -300,7 +300,7 @@ namespace transport
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
+//        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
@@ -318,8 +318,8 @@ namespace transport
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
-        sqlite3_operations::create_ddN_table(db, Nfields, sqlite3_operations::foreign_keys);
+//        sqlite3_operations::create_dN_table(db, Nfields, sqlite3_operations::foreign_keys);
+//        sqlite3_operations::create_ddN_table(db, Nfields, sqlite3_operations::foreign_keys);
       }
 
 
