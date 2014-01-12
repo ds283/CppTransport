@@ -268,17 +268,22 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_container& ctr)
       {
+        // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
+        // close sqlite3 handle to taskfile
         sqlite3* taskfile = nullptr;
         ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(taskfile);
         sqlite3_close(taskfile);
+
+        // physically remove the taskfile from the disc; it isn't needed any more
+        boost::filesystem::remove(ctr.taskfile_path());
       }
 
 
