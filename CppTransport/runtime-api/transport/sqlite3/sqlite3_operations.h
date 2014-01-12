@@ -12,6 +12,7 @@
 
 #include "transport/tasks/task.h"
 #include "transport/scheduler/work_queue.h"
+#include "transport/models/model.h"
 
 #include "transport/exceptions.h"
 #include "transport/messages_en.h"
@@ -32,6 +33,67 @@ namespace transport
 
         typedef enum { real_twopf, imag_twopf } twopf_value_type;
 
+        typedef enum { gauge_xfm_1, gauge_xfm_2 } gauge_xfm_type;
+
+        // Error-checking utility functions
+        namespace
+          {
+
+            // error-check an exec statement
+            inline void exec(sqlite3* db, const std::string& stmt, const std::string& err)
+              {
+                char* errmsg;
+
+                int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
+
+                if(status != SQLITE_OK)
+                  {
+                    std::ostringstream msg;
+                    msg << err << errmsg << ") [status=" << status << "]";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+              }
+
+            // error-check an exec statement
+            inline void exec(sqlite3* db, const std::string& stmt)
+              {
+                char* errmsg;
+
+                int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
+
+                if(status != SQLITE_OK)
+                  {
+                    std::ostringstream msg;
+                    msg << errmsg << " [status=" << status << "]";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+              }
+
+            // error-check a non-exec statement
+            inline void check_stmt(sqlite3* db, int status, const std::string& err, int check_code=SQLITE_OK)
+              {
+                if(status != check_code)
+                  {
+                    std::ostringstream msg;
+                    msg << err << sqlite3_errmsg(db) << ") [status=" << status << "]";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+              }
+
+            // error-check a non-exec statement
+            inline void check_stmt(sqlite3* db, int status, int check_code=SQLITE_OK)
+              {
+                if(status != check_code)
+                  {
+                    std::ostringstream msg;
+                    msg << sqlite3_errmsg(db) << " [status=" << status << "]";
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+              }
+
+          }   // unnamed namespace
+
+
         // Create a sample table of times
         template <typename number>
         void create_time_sample_table(sqlite3* db, task<number>* tk)
@@ -43,48 +105,34 @@ namespace transport
 
             // set up a table
             std::stringstream create_stmt;
-            create_stmt << "CREATE TABLE time_samples("
+            create_stmt << "CREATE TABLE timesamples("
                 << "serial INTEGER PRIMARY KEY,"
                 << "time   DOUBLE"
                 << ");";
 
-            char* errmsg = nullptr;
-
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO time_samples VALUES (@serial, @time)";
+            insert_stmt << "INSERT INTO timesamples VALUES (@serial, @time)";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+            exec(db, "BEGIN TRANSACTION;");
 
             for(unsigned int i = 0; i < sample_times.size(); i++)
               {
-                sqlite3_bind_int(stmt, 1, i);
-                sqlite3_bind_double(stmt, 2, sample_times[i]);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, sample_times[i]));
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -100,50 +148,36 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE twopf_samples("
+            stmt_text << "CREATE TABLE twopfsamples("
               << "serial       INTEGER PRIMARY KEY,"
               << "conventional DOUBLE,"
               << "comoving     DOUBLE"
               << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, stmt_text.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, stmt_text.str(), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO twopf_samples VALUES (@serial, @conventional, @comoving)";
+            insert_stmt << "INSERT INTO twopfsamples VALUES (@serial, @conventional, @comoving);";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+            exec(db, "BEGIN TRANSACTION;");
 
             for(unsigned int i = 0; i < conventional_list.size(); i++)
               {
-                sqlite3_bind_int(stmt, 1, i);
-                sqlite3_bind_double(stmt, 2, conventional_list[i]);
-                sqlite3_bind_double(stmt, 3, comoving_list[i]);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, conventional_list[i]));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, comoving_list[i]));
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -158,7 +192,7 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE threepf_samples("
+            stmt_text << "CREATE TABLE threepfsamples("
               << "serial          INTEGER PRIMARY KEY,"
               << "wavenumber1     INTEGER,"
               << "wavenumber2     INTEGER,"
@@ -167,54 +201,40 @@ namespace transport
               << "kt_conventional DOUBLE,"
               << "alpha           DOUBLE,"
               << "beta            DOUBLE,"
-              << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial),"
-              << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial),"
-              << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
+              << "FOREIGN KEY(wavenumber1) REFERENCES twopfsamples(serial),"
+              << "FOREIGN KEY(wavenumber2) REFERENCES twopfsamples(serial),"
+              << "FOREIGN KEY(wavenumber3) REFERENCES twopfsamples(serial)"
               << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, stmt_text.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, stmt_text.str());
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO threepf_samples VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta)";
+            insert_stmt << "INSERT INTO threepfsamples VALUES (@serial, @wn1, @wn2, @wn3, @kt_com, @kt_conv, @alpha, @beta);";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+            exec(db, "BEGIN TRANSACTION;");
 
             for(unsigned int i = 0; i < threepf_sample.size(); i++)
               {
-                sqlite3_bind_int(stmt, 1, i);
-                sqlite3_bind_int(stmt, 2, threepf_sample[i].index[0]);
-                sqlite3_bind_int(stmt, 3, threepf_sample[i].index[1]);
-                sqlite3_bind_int(stmt, 4, threepf_sample[i].index[2]);
-                sqlite3_bind_double(stmt, 5, threepf_sample[i].k_t);
-                sqlite3_bind_double(stmt, 6, threepf_sample[i].k_t_conventional);
-                sqlite3_bind_double(stmt, 7, threepf_sample[i].alpha);
-                sqlite3_bind_double(stmt, 8, threepf_sample[i].beta);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, threepf_sample[i].index[0]));
+                check_stmt(db, sqlite3_bind_int(stmt, 3, threepf_sample[i].index[1]));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, threepf_sample[i].index[2]));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, threepf_sample[i].k_t));
+                check_stmt(db, sqlite3_bind_double(stmt, 6, threepf_sample[i].k_t_conventional));
+                check_stmt(db, sqlite3_bind_double(stmt, 7, threepf_sample[i].alpha));
+                check_stmt(db, sqlite3_bind_double(stmt, 8, threepf_sample[i].beta));
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -227,27 +247,19 @@ namespace transport
             // set up a table
             std::stringstream stmt_text;
             stmt_text << "CREATE TABLE tasklist("
-              << "serial INTEGER PRIMARY KEY,"
-              << "worker INTEGER"
+                << "serial INTEGER PRIMARY KEY,"
+                << "worker INTEGER"
               << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(taskfile, stmt_text.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(taskfile, stmt_text.str(), __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL);
 
             std::stringstream insert_stmt;
-            insert_stmt << "INSERT INTO tasklist VALUES (@serial, @worker)";
+            insert_stmt << "INSERT INTO tasklist VALUES (@serial, @worker);";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(taskfile, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(taskfile, sqlite3_prepare_v2(taskfile, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            sqlite3_exec(taskfile, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
+            exec(taskfile, "BEGIN TRANSACTION;");
 
             // work through all items in the queue, writing them into the taskfile
             for(size_t device = 0; device < queue.size(); device++)
@@ -260,25 +272,19 @@ namespace transport
                       {
                         const WorkItem& this_item = this_list[item];
 
-                        sqlite3_bind_int(stmt, 1, this_item.serial);  // unique id of this item of work
-                        sqlite3_bind_int(stmt, 2, device);            // is assigned to this device
+                        check_stmt(taskfile, sqlite3_bind_int(stmt, 1, this_item.serial));  // unique id of this item of work
+                        check_stmt(taskfile, sqlite3_bind_int(stmt, 2, device));            // is assigned to this device
 
-                        status = sqlite3_step(stmt);
-                        if(status != SQLITE_DONE)
-                          {
-                            std::ostringstream msg;
-                            msg << __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL << sqlite3_errmsg(taskfile) << ")";
-                            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                          }
+                        check_stmt(taskfile, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL, SQLITE_DONE);
 
-                        sqlite3_clear_bindings(stmt);
-                        sqlite3_reset(stmt);
+                        check_stmt(taskfile, sqlite3_clear_bindings(stmt));
+                        check_stmt(taskfile, sqlite3_reset(stmt));
                       }
                   }
               }
 
-            sqlite3_exec(taskfile, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(taskfile, "END TRANSACTION;");
+            check_stmt(taskfile, sqlite3_finalize(stmt));
           }
 
 
@@ -307,10 +313,10 @@ namespace transport
 
             // read tasks from the database
             std::ostringstream select_stmt;
-            select_stmt << "SELECT serial FROM tasklist WHERE worker=" << worker;
+            select_stmt << "SELECT serial FROM tasklist WHERE worker=" << worker << ";";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(taskfile, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(taskfile, sqlite3_prepare_v2(taskfile, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
               {
@@ -329,8 +335,8 @@ namespace transport
                   }
               }
 
-            sqlite3_finalize(stmt);
-            sqlite3_close(taskfile);
+            check_stmt(taskfile, sqlite3_finalize(stmt));
+            check_stmt(taskfile, sqlite3_close(taskfile));
 
             return(work_items);
           }
@@ -341,24 +347,16 @@ namespace transport
           {
             std::ostringstream create_stmt;
             create_stmt << "CREATE TABLE backg("
-              << "time_serial INTEGER PRIMARY KEY";
+              << "tserial INTEGER PRIMARY KEY";
 
             for(unsigned int i = 0; i < 2*Nfields; i++)
               {
                 create_stmt << ", coord" << i << " DOUBLE";
               }
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
             create_stmt << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str());
           }
 
 
@@ -367,31 +365,23 @@ namespace transport
           {
             std::ostringstream create_stmt;
             create_stmt << "CREATE TABLE twopf_" << (type == real_twopf ? "re" : "im") << "("
-              << "time_serial    INTEGER,"
-              << "kconfig_serial INTEGER";
+              << "tserial INTEGER,"
+              << "kserial INTEGER";
 
             for(unsigned int i = 0; i < 2*Nfields * 2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            create_stmt << ", PRIMARY KEY (time_serial, kconfig_serial)";
+            create_stmt << ", PRIMARY KEY (tserial, kserial)";
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
-                  << ", FOREIGN KEY(kconfig_serial) REFERENCES twopf_samples(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES twopfsamples(serial)";
               }
             create_stmt << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str());
           }
 
 
@@ -400,31 +390,23 @@ namespace transport
           {
             std::ostringstream create_stmt;
             create_stmt << "CREATE TABLE threepf("
-              << "time_serial    INTEGER,"
-              << "kconfig_serial INTEGER";
+              << "tserial INTEGER,"
+              << "kserial INTEGER";
 
             for(unsigned int i = 0; i < 2*Nfields * 2*Nfields * 2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            create_stmt << ", PRIMARY KEY (time_serial, kconfig_serial)";
+            create_stmt << ", PRIMARY KEY (tserial, kserial)";
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)"
-                  << ", FOREIGN KEY(kconfig_serial) REFERENCES threepf_samples(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES threepfsamples(serial)";
               }
             create_stmt << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str());
           }
 
 
@@ -432,26 +414,18 @@ namespace transport
         void create_dN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
             std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE gauge_xfm1("
-              << "time_serial    INTEGER PRIMARY KEY";
+            create_stmt << "CREATE TABLE gaugexfm1("
+              << "tserial INTEGER PRIMARY KEY";
 
             for(unsigned int i = 0; i < 2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
             create_stmt << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_DN_DATATAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str());
           }
 
 
@@ -459,26 +433,18 @@ namespace transport
         void create_ddN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
             std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE gauge_xfm2("
-              << "time_serial    INTEGER PRIMARY KEY";
+            create_stmt << "CREATE TABLE gaugexfm2("
+              << "tserial INTEGER PRIMARY KEY";
 
             for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(time_serial) REFERENCES time_samples(serial)";
+            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES timesamples(serial)";
             create_stmt << ");";
 
-            char* errmsg = nullptr;
-            int status = sqlite3_exec(db, create_stmt.str().c_str(), nullptr, nullptr, &errmsg);
-
-            if(status != SQLITE_OK)
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_DDN_DATATAB_FAIL << errmsg << ")";
-                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-              }
+            exec(db, create_stmt.str());
           }
 
 
@@ -493,44 +459,35 @@ namespace transport
             unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO backg VALUES (@time_serial";
+            insert_stmt << "INSERT INTO backg VALUES (@tserial";
 
             for(unsigned int i = 0; i < 2*Nfields; i++)
               {
                 insert_stmt << ", @coord" << i;
               }
-            insert_stmt << ")";
+            insert_stmt << ");";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            char* errmsg;
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
-
-            int status;
+            exec(db, "BEGIN TRANSACTION;");
 
             for(typename std::vector<typename data_manager<number>::backg_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                sqlite3_bind_int(stmt, 1, (*t).time_serial);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
                 for(unsigned int i = 0; i < 2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+2, static_cast<double>((*t).coords[i]));    // 'number' must be castable to double
+                    check_stmt(db, sqlite3_bind_double(stmt, i+2, static_cast<double>((*t).coords[i])));    // 'number' must be castable to double
                   }
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -545,45 +502,36 @@ namespace transport
             unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO twopf_" << (type == real_twopf ? "re" : "im") << " VALUES (@time_serial, @k_serial";
+            insert_stmt << "INSERT INTO twopf_" << (type == real_twopf ? "re" : "im") << " VALUES (@tserial, @kserial";
 
             for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
               {
                 insert_stmt << ", @ele" << i;
               }
-            insert_stmt << ")";
+            insert_stmt << ");";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            char* errmsg;
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
-
-            int status;
+            exec(db, "BEGIN TRANSACTION;");
 
             for(typename std::vector<typename data_manager<number>::twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                sqlite3_bind_int(stmt, 1, (*t).time_serial);
-                sqlite3_bind_int(stmt, 2, (*t).kconfig_serial);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
                 for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i]));    // 'number' must be castable to double
+                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i])));    // 'number' must be castable to double
                   }
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -598,45 +546,36 @@ namespace transport
             unsigned int Nfields = batcher->get_number_fields();
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO threepf VALUES (@time_serial, @k_serial";
+            insert_stmt << "INSERT INTO threepf VALUES (@tserial, @kserial";
 
             for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
               {
                 insert_stmt << ", @ele" << i;
               }
-            insert_stmt << ")";
+            insert_stmt << ");";
 
             sqlite3_stmt* stmt;
-            sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr);
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            char* errmsg;
-            sqlite3_exec(db, "BEGIN TRANSACTION", nullptr, nullptr, &errmsg);
-
-            int status;
+            exec(db, "BEGIN TRANSACTION;");
 
             for(typename std::vector<typename data_manager<number>::threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                sqlite3_bind_int(stmt, 1, (*t).time_serial);
-                sqlite3_bind_int(stmt, 2, (*t).kconfig_serial);
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
                 for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
                   {
-                    sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i]));    // 'number' must be castable to double
+                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i])));    // 'number' must be castable to double
                   }
 
-                status = sqlite3_step(stmt);
-                if(status != SQLITE_DONE)
-                  {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL << sqlite3_errmsg(db) << ")";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL, SQLITE_DONE);
 
-                sqlite3_clear_bindings(stmt);
-                sqlite3_reset(stmt);
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            sqlite3_exec(db, "END TRANSACTION", nullptr, nullptr, &errmsg);
-            sqlite3_finalize(stmt);
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -705,6 +644,171 @@ namespace transport
             create_threepf_table(db, Nfields, no_foreign_keys);
 
             return(db);
+          }
+
+
+        // Aggregate the background value table from a temporary container into a principal container
+        template <typename number>
+        void aggregate_backg(sqlite3* db, const std::string& temp_ctr, model<number>* m, task<number>* tk, gauge_xfm_type gauge_xfm)
+          {
+            char* errmsg;
+
+            std::cerr << "Aggregating backg values" << std::endl;
+
+            std::ostringstream attach_stmt;
+            attach_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS tempctr;";
+
+            exec(db, attach_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGATTACH);
+            exec(db, "BEGIN TRANSACTION;");
+
+            std::ostringstream read_stmt_text;
+            read_stmt_text << "SELECT * FROM tempctr.backg;";
+            sqlite3_stmt* read_stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, read_stmt_text.str().c_str(), read_stmt_text.str().length()+1, &read_stmt, nullptr));
+
+            std::ostringstream write_stmt_text;
+            write_stmt_text << "INSERT INTO backg VALUES (@tserial";
+            for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+              {
+                write_stmt_text << ", @coord" << i;
+              }
+            write_stmt_text << ");";
+            sqlite3_stmt* write_stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, write_stmt_text.str().c_str(), write_stmt_text.str().length()+1, &write_stmt, nullptr));
+
+            std::ostringstream xfm1_stmt_text;
+            xfm1_stmt_text << "INSERT INTO gaugexfm1 VALUES (@tserial";
+            for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+              {
+                xfm1_stmt_text << ", @ele" << i;
+              }
+            xfm1_stmt_text << ");";
+            sqlite3_stmt* xfm1_stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, xfm1_stmt_text.str().c_str(), xfm1_stmt_text.str().length()+1, &xfm1_stmt, nullptr));
+
+            std::ostringstream xfm2_stmt_text;
+            xfm2_stmt_text << "INSERT INTO gaugexfm2 VALUES (@tserial";
+            for(unsigned int i = 0; i < 2*m->get_N_fields()*2*m->get_N_fields(); i++)
+              {
+                xfm2_stmt_text << ", @ele" << i;
+              }
+            xfm2_stmt_text << ");";
+            sqlite3_stmt* xfm2_stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, xfm2_stmt_text.str().c_str(), xfm2_stmt_text.str().length()+1, &xfm2_stmt, nullptr));
+
+            // read rows from the temporary container, then write them into the principal database
+            int status;
+            while((status = sqlite3_step(read_stmt)) != SQLITE_DONE)
+              {
+                if(status == SQLITE_ROW)
+                  {
+                    int serial = sqlite3_column_int(read_stmt, 0);
+                    std::cerr << "Read serial = " << serial << std::endl;
+
+                    check_stmt(db, sqlite3_bind_int(write_stmt, 1, serial));
+
+                    std::vector<number> coords(2*m->get_N_fields());
+                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+                      {
+                        double value = sqlite3_column_double(read_stmt, i+1);
+                        check_stmt(db, sqlite3_bind_double(write_stmt, i+2, value));
+                        coords[i] = static_cast<number>(value);
+
+                        std::cerr << "Read column " << i << " = " << value << std::endl;
+                      }
+
+                    check_stmt(db, sqlite3_step(write_stmt), __CPP_TRANSPORT_DATACTR_BACKGWRITE, SQLITE_DONE);
+                    std::cerr << "-- Written backg value, status = " << status << std::endl;
+
+                    const parameters<number>& params = tk->get_params();
+                    std::vector<number> xfm1;
+
+                    m->compute_gauge_xfm_1(params, coords, xfm1);
+
+                    check_stmt(db, sqlite3_bind_int(xfm1_stmt, 1, serial));
+                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+                      {
+                        check_stmt(db, sqlite3_bind_double(xfm1_stmt, 2 + m->flatten(i), static_cast<double>(xfm1[i])));
+                      }
+
+                    check_stmt(db, sqlite3_step(xfm1_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
+                    std::cerr << "-- Written XFM1 value, status = " << status << std::endl;
+
+                    if(gauge_xfm == gauge_xfm_2)
+                      {
+                        std::vector< std::vector<number> > xfm2;
+                        m->compute_gauge_xfm_2(params, coords, xfm2);
+
+                        check_stmt(db, sqlite3_bind_int(xfm2_stmt, 1, serial));
+                        for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
+                          {
+                            for(unsigned int j = 0; j < 2*m->get_N_fields(); j++)
+                              {
+                                check_stmt(db, sqlite3_bind_double(xfm2_stmt, 2 + m->flatten(i, j), static_cast<double>(xfm2[i][j])));
+                              }
+
+                            check_stmt(db, sqlite3_step(xfm2_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
+                          }
+                        check_stmt(db, sqlite3_clear_bindings(xfm2_stmt));
+                        check_stmt(db, sqlite3_reset(xfm2_stmt));
+                      }
+                  }
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATACTR_BACKGREAD << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(write_stmt);
+                    sqlite3_finalize(xfm1_stmt);
+                    sqlite3_finalize(xfm2_stmt);
+                    sqlite3_finalize(read_stmt);
+                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                  }
+
+                check_stmt(db, sqlite3_clear_bindings(write_stmt));
+                check_stmt(db, sqlite3_clear_bindings(xfm1_stmt));
+                check_stmt(db, sqlite3_reset(write_stmt));
+                check_stmt(db, sqlite3_reset(xfm1_stmt));
+              }
+
+            exec(db, "END TRANSACTION;");
+
+            check_stmt(db, sqlite3_finalize(read_stmt));
+            check_stmt(db, sqlite3_finalize(write_stmt));
+            check_stmt(db, sqlite3_finalize(xfm1_stmt));
+            check_stmt(db, sqlite3_finalize(xfm2_stmt));
+
+            exec(db, "DETACH DATABASE tempctr;", __CPP_TRANSPORT_DATACTR_BACKGDETACH);
+            std::cerr << "Finished aggregating twopf values" << std::endl;
+          }
+
+
+        // Aggregate a twopf value table from a temporary container into the principal container
+        void aggregate_twopf(sqlite3* db, const std::string& temp_ctr, twopf_value_type type)
+          {
+            std::cerr << "Aggregating twopf values" << std::endl;
+
+            std::ostringstream copy_stmt;
+            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS tempctr; "
+              << "INSERT INTO twopf_" << (type == real_twopf ? "re" : "im") << " SELECT * FROM tempctr.twopf_" << (type == real_twopf ? "re" : "im") << "; "
+              << "DETACH DATABASE tempctr;";
+
+            std::cerr << "Executing SQL statement: " << copy_stmt.str() << std::endl;
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
+          }
+
+
+        // Aggregate a twopf value table from a temporary container into the principal container
+        void aggregate_threepf(sqlite3* db, const std::string& temp_ctr)
+          {
+            std::cerr << "Aggregating threepf values" << std::endl;
+
+            std::ostringstream copy_stmt;
+            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS tempctr; "
+              << "INSERT INTO threepf SELECT * FROM tempctr.threepf; "
+              << "DETACH DATABASE tempctr;";
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
           }
 
 

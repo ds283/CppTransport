@@ -143,6 +143,49 @@ namespace transport
                   }
               };
 
+
+            class data_ready_payload
+              {
+              public:
+
+                typedef enum { twopf_payload, threepf_payload } payload_type;
+
+                //! Null constructor (used for receiving messages)
+                data_ready_payload()
+                  {
+                  }
+
+                //! Value constructor (used for sending messages)
+                data_ready_payload(const std::string& p, payload_type t)
+                  : container_path(p), payload(t)
+                  {
+                  }
+
+                //! Get container path
+                const std::string& get_container_path() const { return(this->container_path); }
+
+                //! Get payload type
+                payload_type get_payload_type() const { return(this->payload); }
+
+              private:
+                //! Path to container
+                std::string container_path;
+
+                //! Type of container
+                payload_type payload;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & container_path;
+                    ar & payload;
+                  }
+              };
+
+
           }   // unnamed namespace
 
       }   // namespace MPI
@@ -260,7 +303,7 @@ namespace transport
         void master_push_repository(void);
 
         //! Master node: Pass new integration task to the workers
-        void master_task_to_workers(typename repository<number>::integration_container& ctr, const std::string& task_name);
+        void master_task_to_workers(typename repository<number>::integration_container& ctr, task<number>* task_name, model<number>* m);
 
         //! Slave node: Process a new task instruction
         void slave_process_task(const MPI::new_integration_payload& payload);
@@ -278,7 +321,7 @@ namespace transport
         void slave_wait_temp_containers_deleted(void);
 
         //! Push a temporary container to the master process
-        void slave_push_temp_container(const std::string& ctr);
+        void slave_push_temp_container(const std::string& ctr, MPI::data_ready_payload::payload_type type);
 
         //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
@@ -585,7 +628,7 @@ namespace transport
         // create the data container
         this->data_mgr->create_container(this->repo, ctr);
 
-        // write the task distribution list -- this is subsequently read by the worker proceses,
+        // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
         this->data_mgr->create_taskfile(ctr, queue);
 
@@ -593,7 +636,7 @@ namespace transport
         this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
-        this->master_task_to_workers(ctr, tk->get_name());
+        this->master_task_to_workers(ctr, tk, m);
 
         // close the data container
         this->data_mgr->close_container(ctr);
@@ -618,7 +661,7 @@ namespace transport
         // create the data container
         this->data_mgr->create_container(this->repo, ctr);
 
-        // write the task distribution list -- this is subsequently read by the worker proceses,
+        // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
         this->data_mgr->create_taskfile(ctr, queue);
 
@@ -626,7 +669,7 @@ namespace transport
         this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
-        this->master_task_to_workers(ctr, tk->get_name());
+        this->master_task_to_workers(ctr, tk, m);
 
         // close the data container
         this->data_mgr->close_container(ctr);
@@ -634,7 +677,8 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_task_to_workers(typename repository<number>::integration_container& ctr, const std::string& task_name)
+    void task_manager<number>::master_task_to_workers(typename repository<number>::integration_container& ctr,
+                                                      task<number>* tk, model<number>* m)
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
@@ -646,7 +690,7 @@ namespace transport
         boost::filesystem::path tempdir_path  = this->repo->get_root_path() / ctr.temporary_files_path();
         boost::filesystem::path logdir_path   = this->repo->get_root_path() / ctr.log_directory_path();
 
-        MPI::new_integration_payload payload(task_name, taskfile_path, tempdir_path, logdir_path);
+        MPI::new_integration_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
           {
@@ -656,21 +700,46 @@ namespace transport
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
 
+        std::cerr << "++ All workers received NEW_INTEGRATION instruction" << std::endl;
+
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
         while(workers.size() > 0)
           {
-            // wait until a message is available from a
-            boost::mpi::status stat = this->world.probe(boost::mpi::any_source);
+            std::cerr << "++ Master polling for DATA_READY messages" << std::endl;
+            // wait until a message is available from a worker
+            boost::mpi::status stat = this->world.probe();
 
             switch(stat.tag())
               {
                 case MPI::DATA_READY:
                   {
-                    std::string payload;
-                    this->world.recv(boost::mpi::any_source, MPI::DELETE_CONTAINER, payload);
-                    std::cerr << "++ Data ready: " << payload << std::endl;
+                    MPI::data_ready_payload payload;
+                    this->world.recv(stat.source(), MPI::DATA_READY, payload);
+                    std::cerr << "++ Data ready: " << payload.get_container_path() << std::endl;
+
+                    // batch data into the main container
+                    switch(payload.get_payload_type())
+                      {
+                        case MPI::data_ready_payload::twopf_payload:
+                          {
+                            this->data_mgr->aggregate_twopf_batch(ctr, payload.get_container_path(), m, tk);
+                            break;
+                          }
+
+                        case MPI::data_ready_payload::threepf_payload:
+                          {
+                            this->data_mgr->aggregate_threepf_batch(ctr, payload.get_container_path(), m, tk);
+                            break;
+                          }
+
+                        default:
+                          assert(false);
+                      }
+
+                    // instruct worker to remove the temporary container
+                    this->world.isend(stat.source(), MPI::DELETE_CONTAINER, payload.get_container_path());
                     break;
                   }
 
@@ -678,6 +747,12 @@ namespace transport
                   {
                     std::cerr << "++ Worker advising finished task: " << stat.source() << std::endl;
                     workers.erase(this->worker_number(stat.source()));
+                    break;
+                  }
+
+                default:
+                  {
+                    std::cerr << "++ Master received message " << stat.tag() << " waiting in the queue" << std::endl;
                     break;
                   }
               }
@@ -716,6 +791,7 @@ namespace transport
         bool finished = false;
         while(!finished)
           {
+            std::cerr << "-- Slave polling for instructions" << std::endl;
             // wait until a message is available from master
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
@@ -864,7 +940,7 @@ namespace transport
         // make a temporary container object to hold the output of the integration
         typename data_manager<number>::container_dispatch_function dispatcher =
                                                                      std::bind(&task_manager<number>::slave_push_temp_container,
-                                                                               this, std::placeholders::_1);
+                                                                               this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
         typename data_manager<number>::twopf_batcher batcher =
                                                        this->data_mgr->create_temp_twopf_container(payload.tempdir_path(),
                                                                                                    this->get_rank(),
@@ -897,7 +973,7 @@ namespace transport
         // make a temporary container object to hold the output of the integration
         typename data_manager<number>::container_dispatch_function dispatcher =
                                                                      std::bind(&task_manager<number>::slave_push_temp_container,
-                                                                               this, std::placeholders::_1);
+                                                                               this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
         typename data_manager<number>::threepf_batcher batcher =
                                                          this->data_mgr->create_temp_threepf_container(payload.tempdir_path(),
                                                                                                        this->get_rank(),
@@ -920,6 +996,7 @@ namespace transport
       {
         while(this->temporary_container_queue.size() > 0)
           {
+            std::cerr << "-- Slave waiting for DELETE_CONTAINER instructions" << std::endl;
             // wait until a message is available from master
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
@@ -936,6 +1013,7 @@ namespace transport
                   }
               }
           }
+        std::cerr << "-- Slave sending FINISHED_TASK to master" << std::endl;
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK);
       }
 
@@ -983,12 +1061,14 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_push_temp_container(const std::string& ctr)
+    void task_manager<number>::slave_push_temp_container(const std::string& ctr, MPI::data_ready_payload::payload_type type)
       {
         std::cerr << "++ Sending DATA_READY message for container '" << ctr << "'" << std::endl;
 
+        MPI::data_ready_payload payload(ctr, type);
+
         // advise master process that data is available in the named container
-        this->world.isend(MPI::RANK_MASTER, MPI::DATA_READY, ctr);
+        this->world.isend(MPI::RANK_MASTER, MPI::DATA_READY, payload);
 
         // add this container to the list of containers which should be deleted
         this->temporary_container_queue.push_back(ctr);

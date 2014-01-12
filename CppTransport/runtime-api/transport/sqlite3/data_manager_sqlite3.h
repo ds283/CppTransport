@@ -13,6 +13,8 @@
 #include "transport/manager/repository.h"
 #include "transport/manager/data_manager.h"
 
+#include "transport/models/model.h"
+
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
 
@@ -113,6 +115,13 @@ namespace transport
                                                                                      unsigned int worker, unsigned int Nfields,
                                                                                      typename data_manager<number>::container_dispatch_function dispatcher);
 
+        //! Aggregate a temporary twopf container into a principal container
+       void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,
+                                  const std::string& temp_ctr, model<number>* m, task<number>* tk);
+
+        //! Aggregate a temporary threepf container into a principal container
+        void aggregate_threepf_batch(typename repository<number>::integration_container& ctr,
+                                     const std::string& temp_ctr, model<number>* m, task<number>* tk);
 
       protected:
         //! Replace a temporary twopf container with a new one
@@ -246,8 +255,8 @@ namespace transport
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
           }
 
-        // enable foreign key constraints
-        sqlite3_exec(taskfile, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
+//        // enable foreign key constraints
+//        sqlite3_exec(taskfile, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
@@ -436,7 +445,7 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        std::cerr << "** Replacing temporary threepf container '" << batcher->get_container_path() << "', action = " << action << std::endl;
+        std::cerr << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing") << " temporary threepf container '" << batcher->get_container_path() << "'" << std::endl;
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -469,6 +478,32 @@ namespace transport
         boost::filesystem::path container = tempdir / container_name.str();
 
         return(container);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::integration_container& ctr,
+                                                             const std::string& temp_ctr, model<number>* m, task<number>* tk)
+      {
+        sqlite3* db = nullptr;
+        ctr.get_data_manager_taskfile(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_1);
+        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::integration_container& ctr,
+                                                               const std::string& temp_ctr, model<number>* m, task<number>* tk)
+      {
+        sqlite3* db = nullptr;
+        ctr.get_data_manager_taskfile(&db); // throws an exception is handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_2);
+        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::imag_twopf);
+        sqlite3_operations::aggregate_threepf(db, temp_ctr);
       }
 
 

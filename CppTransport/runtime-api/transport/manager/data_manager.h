@@ -18,12 +18,15 @@
 namespace transport
   {
 
+    // forward-declare model to avoid circular references
+    template <typename number> class model;
 
     template <typename number>
     class data_manager
       {
 
       public:
+
         // data structures for storing individual sample points from each integration
         class backg_item
           {
@@ -197,8 +200,12 @@ namespace transport
                 this->twopf_batch.clear();
                 this->num_backg = this->num_twopf = 0;
 
-                this->dispatcher(this->container_path.string());
+                // close current container, and replace with a new one if required
+                std::string old_container = this->container_path.string();
                 this->replacer(this, action);
+
+                // push a message to the master node, indicating that new data is available
+                this->dispatcher(old_container);
               }
 
           protected:
@@ -271,8 +278,12 @@ namespace transport
                 this->threepf_batch.clear();
                 this->num_backg = this->num_twopf_re = this->num_twopf_im = this->num_threepf = 0;
 
-                this->dispatcher(this->container_path.string());
+                // close current container, and replace with a new one if required
+                std::string old_container = this->container_path.string();
                 this->replacer(this, action);
+
+                // push a message to the master node, indicating that new data is available
+                this->dispatcher(old_container);
               }
 
           protected:
@@ -351,6 +362,14 @@ namespace transport
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
                                                               unsigned int Nfields, container_dispatch_function dispatcher) = 0;
+
+        //! Aggregate a temporary twopf container into a principal container
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,
+                                           const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
+
+        //! Aggregate a temporary threepf container into a principal container
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_container& ctr,
+                                             const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
 
 
         // INTERNAL DATA
