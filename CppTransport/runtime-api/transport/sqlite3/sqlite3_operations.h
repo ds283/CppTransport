@@ -677,11 +677,12 @@ namespace transport
 
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        void aggregate_backg(sqlite3* db, const std::string& temp_ctr, model<number>* m, task<number>* tk, gauge_xfm_type gauge_xfm)
+        void aggregate_backg(sqlite3* db, typename repository<number>::integration_container& ctr,
+                             const std::string& temp_ctr, model<number>* m, task<number>* tk, gauge_xfm_type gauge_xfm)
           {
             char* errmsg;
 
-            std::cerr << "Aggregating backg values" << std::endl;
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating threepf values";
 
             std::ostringstream attach_stmt;
             attach_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
@@ -792,14 +793,15 @@ namespace transport
 //            check_stmt(db, sqlite3_finalize(xfm2_stmt));
 
             exec(db, static_cast<std::string>("DETACH DATABASE ") + __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME + ";", __CPP_TRANSPORT_DATACTR_BACKGDETACH);
-            std::cerr << "Finished aggregating twopf values" << std::endl;
           }
 
 
         // Aggregate a twopf value table from a temporary container into the principal container
-        void aggregate_twopf(sqlite3* db, const std::string& temp_ctr, twopf_value_type type)
+        template <typename number>
+        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_container& ctr,
+                             const std::string& temp_ctr, twopf_value_type type)
           {
-            std::cerr << "Aggregating twopf values" << std::endl;
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
@@ -807,22 +809,26 @@ namespace transport
                 << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << "; "
               << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            std::cerr << "Executing SQL statement: " << copy_stmt.str() << std::endl;
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
           }
 
 
         // Aggregate a twopf value table from a temporary container into the principal container
-        void aggregate_threepf(sqlite3* db, const std::string& temp_ctr)
+        template <typename number>
+        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_container& ctr,
+                               const std::string& temp_ctr)
           {
-            std::cerr << "Aggregating threepf values" << std::endl;
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating threepf values";
 
             std::ostringstream copy_stmt;
             copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
               << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
                 << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "; "
               << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
           }

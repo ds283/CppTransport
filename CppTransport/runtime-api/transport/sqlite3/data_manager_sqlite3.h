@@ -60,10 +60,10 @@ namespace transport
 
       public:
         //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
-        void create_container(repository<number>* repo, typename repository<number>::integration_container& ctr);
+        void create_container(typename repository<number>::integration_container& ctr);
 
         //! Open an existing container
-        void open_container(repository<number>* repo, typename repository<number>::integration_container& ctr);
+        void open_container(typename repository<number>::integration_container& ctr);
 
         //! Close an open container
 
@@ -72,7 +72,7 @@ namespace transport
         void close_container(typename repository<number>::integration_container& ctr);
 
       protected:
-        void backend_open_container(repository<number>* repo, typename repository<number>::integration_container& ctr, int flags=SQLITE_OPEN_READWRITE,
+        void backend_open_container(typename repository<number>::integration_container& ctr, int flags=SQLITE_OPEN_READWRITE,
                                     const std::string& excpt_a=default_excpt_a,
                                     const std::string& excpt_b=default_excpt_b);
 
@@ -107,11 +107,13 @@ namespace transport
       public:
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir,
+                                                                                 const boost::filesystem::path& logdir,
                                                                                  unsigned int worker, unsigned int Nfields,
                                                                                  typename data_manager<number>::container_dispatch_function dispatcher);
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir,
+                                                                                     const boost::filesystem::path& logdir,
                                                                                      unsigned int worker, unsigned int Nfields,
                                                                                      typename data_manager<number>::container_dispatch_function dispatcher);
 
@@ -173,43 +175,32 @@ namespace transport
 
     // Create a new container
     template <typename number>
-    void data_manager_sqlite3<number>::create_container(repository<number>* repo, typename repository<number>::integration_container& ctr)
+    void data_manager_sqlite3<number>::create_container(typename repository<number>::integration_container& ctr)
       {
-        assert(repo != nullptr);
-        this->backend_open_container(repo, ctr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
+        this->backend_open_container(ctr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
                                      __CPP_TRANSPORT_DATACTR_CREATE_A, __CPP_TRANSPORT_DATACTR_CREATE_B);
       }
 
 
     // Open an existing container
     template <typename number>
-    void data_manager_sqlite3<number>::open_container(repository<number>* repo, typename repository<number>::integration_container& ctr)
+    void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_container& ctr)
       {
-        assert(repo != nullptr);
-        this->backend_open_container(repo, ctr);
+        this->backend_open_container(ctr);
       }
 
 
     // Backend create/open container
     template <typename number>
-    void data_manager_sqlite3<number>::backend_open_container(repository<number>* repo, typename repository<number>::integration_container& ctr, int flags,
+    void data_manager_sqlite3<number>::backend_open_container(typename repository<number>::integration_container& ctr, int flags,
                                                               const std::string& excpt_a, const std::string& excpt_b)
       {
-        assert(repo != nullptr);
-
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
 
-        // get root directory of repository
-        boost::filesystem::path repo_root = repo->get_root_path();
-
-        // get paths of the data container and taskfile relative to the repository root
-        boost::filesystem::path ctr_relative = ctr.data_container_path();
-        boost::filesystem::path taskfile_relative = ctr.taskfile_path();
-
-        // construct absolute paths to the data container and repository root
-        boost::filesystem::path ctr_path = repo_root / ctr_relative;
-        boost::filesystem::path taskfile_path = repo_root / taskfile_relative;
+        // get paths of the data container and taskfile
+        boost::filesystem::path ctr_path = ctr.data_container_path();
+        boost::filesystem::path taskfile_path = ctr.taskfile_path();
 
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, flags, nullptr);
 
@@ -357,6 +348,7 @@ namespace transport
 
     template <typename number>
     typename data_manager<number>::twopf_batcher data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir,
+                                                                                                           const boost::filesystem::path& logdir,
                                                                                                            unsigned int worker,
                                                                                                            unsigned int Nfields,
                                                                                                            typename data_manager<number>::container_dispatch_function dispatcher)
@@ -377,7 +369,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, writers, dispatcher, replacer, db);
+        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -387,6 +379,7 @@ namespace transport
 
     template <typename number>
     typename data_manager<number>::threepf_batcher data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir,
+                                                                                                               const boost::filesystem::path& logdir,
                                                                                                                unsigned int worker,
                                                                                                                unsigned int Nfields,
                                                                                                                typename data_manager<number>::container_dispatch_function dispatcher)
@@ -409,7 +402,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, writers, dispatcher, replacer, db);
+        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -450,19 +443,21 @@ namespace transport
       {
         sqlite3* db = nullptr;
 
-        std::cerr << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing") << " temporary threepf container '" << batcher->get_container_path() << "'" << std::endl;
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
+            << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
+            << " temporary threepf container '" << batcher->get_container_path() << "'" << std::endl;
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        std::cerr << "** Closed sqlite3 handle for '" << batcher->get_container_path() << "'" << std::endl;
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "** Closed sqlite3 handle for " << batcher->get_container_path();
 
         if(action == data_manager<number>::action_replace)
           {
             boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
-            std::cerr << "** Opening new threepf container '" << container << "'" << std::endl;
+            BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "** Opening new threepf container " << container;
 
             sqlite3* new_db = sqlite3_operations::create_temp_threepf_container(container, Nfields);
 
@@ -493,8 +488,8 @@ namespace transport
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_1);
-        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_backg<number>(db, ctr, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_1);
+        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::real_twopf);
       }
 
 
@@ -505,10 +500,10 @@ namespace transport
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg(db, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_2);
-        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf(db, temp_ctr, sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_threepf(db, temp_ctr);
+        sqlite3_operations::aggregate_backg<number>(db, ctr, temp_ctr, m, tk, sqlite3_operations::gauge_xfm_2);
+        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::imag_twopf);
+        sqlite3_operations::aggregate_threepf<number>(db, ctr, temp_ctr);
       }
 
 

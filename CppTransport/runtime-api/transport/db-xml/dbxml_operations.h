@@ -327,7 +327,8 @@ namespace transport
         template <typename number>
         typename repository<number>::integration_container insert_integration_output(DbXml::XmlManager* mgr, const std::string& task_name,
                                                                                      const boost::filesystem::path& root_path,
-                                                                                     const boost::filesystem::path& container_path)
+                                                                                     const boost::filesystem::path& container_path,
+                                                                                     unsigned int worker)
           {
             assert(mgr != nullptr);
 
@@ -420,7 +421,7 @@ namespace transport
             boost::filesystem::create_directories(root_path / temp_path);
 
             // create integration_container handle and return it
-            typename repository<number>::integration_container ctr(output_path, sql_path, log_path, task_path, temp_path, serial_number);
+            typename repository<number>::integration_container ctr(root_path/output_path, root_path/sql_path, root_path/log_path, root_path/task_path, root_path/temp_path, serial_number, worker);
 
             return(ctr);
           }

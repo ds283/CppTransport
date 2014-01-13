@@ -14,6 +14,20 @@
 #include "transport/scheduler/work_queue.h"
 #include "transport/manager/repository.h"
 
+#include "boost/filesystem/operations.hpp"
+#include "boost/log/core.hpp"
+#include "boost/log/trivial.hpp"
+#include "boost/log/sources/severity_feature.hpp"
+#include "boost/log/sources/severity_logger.hpp"
+#include "boost/log/sinks/sync_frontend.hpp"
+#include "boost/log/sinks/text_file_backend.hpp"
+#include "boost/log/utility/setup/common_attributes.hpp"
+
+
+// log file name
+#define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
+
 
 namespace transport
   {
@@ -90,19 +104,48 @@ namespace transport
         // data_manager function to close the temporary container and replace it with another one
         typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
         // task_manager function to push a container to the master node
-        typedef std::function<void(const std::string&)> container_dispatch_function;
+        typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
+
+        // Types needed for logging
+        typedef enum { normal, notification, warning, error, critical } log_severity_level;
+        typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
         class generic_batcher
           {
           public:
             template <typename handle_type>
-            generic_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+            generic_batcher(unsigned int cap, unsigned int Nf,
+                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h)
-              : capacity(cp), Nfields(Nf), container_path(cn), num_backg(0),
-                dispatcher(d), replacer(r),
+                            handle_type h, unsigned int w)
+              : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
+                dispatcher(d), replacer(r), worker_number(w),
                 manager_handle(static_cast<void*>(h))
               {
+                std::ostringstream log_file;
+                log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+
+                boost::filesystem::path log_path = logdir_path / log_file.str();
+
+                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+                boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+                // Wrap it into the frontend and register in the core.
+                // The backend requires synchronization in the frontend.
+                this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+                core->add_sink(this->log_sink);
+
+                boost::log::add_common_attributes();
+              }
+
+            virtual ~generic_batcher()
+              {
+                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+                core->remove_sink(this->log_sink);
               }
 
             //! Return the maximum memory available to this worker
@@ -140,6 +183,9 @@ namespace transport
                 if(this->storage() > this->capacity) this->flush(action_replace);
               }
 
+            //! Return logger
+            boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
           protected:
             //! Compute the size of all currently-batched results
             virtual size_t storage() const = 0;
@@ -156,20 +202,31 @@ namespace transport
             std::vector<backg_item>        backg_batch;
 
             boost::filesystem::path        container_path;
+            boost::filesystem::path        logdir_path;
+
             void*                          manager_handle;
             container_dispatch_function    dispatcher;
             container_replacement_function replacer;
+
+            unsigned int                   worker_number;
+
+            //! Logger source
+            boost::log::sources::severity_logger<log_severity_level> log_source;
+
+            //! Logger sink
+            boost::shared_ptr< sink_t > log_sink;
           };
 
         class twopf_batcher: public generic_batcher
           {
           public:
             template <typename handle_type>
-            twopf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+            twopf_batcher(unsigned int cap, unsigned int Nf,
+                          const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                           const twopf_writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
-                          handle_type h)
-              : generic_batcher(cp, Nf, cn, d, r, h), writers(w), num_twopf(0)
+                          handle_type h, unsigned int wn)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf(0)
               {
               }
 
@@ -191,7 +248,7 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                std::cerr << "** twopf batcher (capacity=" << format_memory(this->capacity) << ") at size " << format_memory(this->storage()) << ", pushing to master" << std::endl;
+                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf(this, this->twopf_batch);
@@ -200,12 +257,14 @@ namespace transport
                 this->twopf_batch.clear();
                 this->num_backg = this->num_twopf = 0;
 
-                // close current container, and replace with a new one if required
-                std::string old_container = this->container_path.string();
-                this->replacer(this, action);
-
                 // push a message to the master node, indicating that new data is available
-                this->dispatcher(old_container);
+                // note that the order of calls to 'dispatcher' and 'replacer' is important
+                // because 'dispatcher' needs the current path name, not the one create by
+                // 'replacer'
+                this->dispatcher(this);
+
+                // close current container, and replace with a new one if required
+                this->replacer(this, action);
               }
 
           protected:
@@ -224,11 +283,12 @@ namespace transport
             typedef enum { real_twopf, imag_twopf } twopf_type;
 
             template <typename handle_type>
-            threepf_batcher(unsigned int cp, unsigned int Nf, const boost::filesystem::path& cn,
+            threepf_batcher(unsigned int cap, unsigned int Nf,
+                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             const threepf_writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h)
-              : generic_batcher(cp, Nf, cn, d, r, h), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
+                            handle_type h, unsigned int wn)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
               {
               }
 
@@ -265,7 +325,7 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                std::cerr << "** threepf batcher (capacity=" << format_memory(this->capacity) << ") at size " << format_memory(this->storage()) << ", pushing to master" << std::endl;
+                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf_re(this, this->twopf_re_batch);
@@ -278,12 +338,14 @@ namespace transport
                 this->threepf_batch.clear();
                 this->num_backg = this->num_twopf_re = this->num_twopf_im = this->num_threepf = 0;
 
-                // close current container, and replace with a new one if required
-                std::string old_container = this->container_path.string();
-                this->replacer(this, action);
-
                 // push a message to the master node, indicating that new data is available
-                this->dispatcher(old_container);
+                // note that the order of calls to 'dispatcher' and 'replacer' is important
+                // because 'dispatcher' needs the current path name, not the one create by
+                // 'replacer'
+                this->dispatcher(this);
+
+                // close current container, and replace with a new one if required
+                this->replacer(this, action);
               }
 
           protected:
@@ -318,10 +380,10 @@ namespace transport
 
       public:
         //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_container(repository<number>* repo, typename repository<number>::integration_container& ctr) = 0;
+        virtual void create_container(typename repository<number>::integration_container& ctr) = 0;
 
         //! Open an existing container
-        virtual void open_container(repository<number>* repo, typename repository<number>::integration_container& ctr) = 0;
+        virtual void open_container(typename repository<number>::integration_container& ctr) = 0;
 
         //! Close an open container
         virtual void close_container(typename repository<number>::integration_container& ctr) = 0;
@@ -356,12 +418,14 @@ namespace transport
 
       public:
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                          unsigned int Nfields, container_dispatch_function dispatcher) = 0;
+        virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                          unsigned int worker, unsigned int Nfields,
+                                                          container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
-                                                              unsigned int Nfields, container_dispatch_function dispatcher) = 0;
+        virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                              unsigned int worker, unsigned int Nfields,
+                                                              container_dispatch_function dispatcher) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
         virtual void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,

@@ -16,6 +16,18 @@
 #include "transport/concepts/parameters.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/log/core.hpp"
+#include "boost/log/trivial.hpp"
+#include "boost/log/sources/severity_feature.hpp"
+#include "boost/log/sources/severity_logger.hpp"
+#include "boost/log/sinks/sync_frontend.hpp"
+#include "boost/log/sinks/text_file_backend.hpp"
+#include "boost/log/utility/setup/common_attributes.hpp"
+
+
+// log file name
+#define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
 
 
 namespace transport
@@ -35,19 +47,50 @@ namespace transport
       public:
         typedef enum { node_storage, document_storage } storage_type;
 
+        // Types needed for logging
+        typedef enum { normal, notification, warning, error, critical } log_severity_level;
+        typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
+
         class integration_container
           {
           public:
             //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
             integration_container(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                   const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                  const boost::filesystem::path& temp, unsigned int n)
+                                  const boost::filesystem::path& temp, unsigned int n, unsigned int w)
               : path_to_directory(dir), path_to_data_container(data),
                 path_to_log_directory(log), path_to_taskfile(task),
                 path_to_temp_directory(temp),
-                serial_number(n),
+                serial_number(n), worker_number(w),
                 data_manager_handle(nullptr), data_manager_taskfile(nullptr)
               {
+                std::ostringstream log_file;
+                log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+                boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+
+                std::cerr << "Logging to " << log_path << std::endl;
+
+                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+                std::ostringstream log_file_path;
+                boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+                // Wrap it into the frontend and register in the core.
+                // The backend requires synchronization in the frontend.
+                this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+                core->add_sink(this->log_sink);
+
+                boost::log::add_common_attributes();
+              }
+
+            //! Destroy an integration container object
+            ~integration_container()
+              {
+                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+                core->remove_sink(this->log_sink);
               }
 
             //! Set data_manager handle for data container
@@ -84,6 +127,9 @@ namespace transport
                 *data = static_cast<data_manager_type>(this->data_manager_taskfile);
               }
 
+            //! Return logger
+            boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
             //! Return path to data container
             const boost::filesystem::path& data_container_path() { return(this->path_to_data_container); }
 
@@ -105,9 +151,16 @@ namespace transport
             const boost::filesystem::path path_to_temp_directory;
 
             const unsigned int            serial_number;
+            const unsigned int            worker_number;
 
             void*                         data_manager_handle;
             void*                         data_manager_taskfile;
+
+            //! Logger source
+            boost::log::sources::severity_logger<log_severity_level> log_source;
+
+            //! Logger sink
+            boost::shared_ptr< sink_t > log_sink;
           };
 
 
@@ -154,9 +207,9 @@ namespace transport
 
       public:
         //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
-        virtual integration_container integration_new_output(twopf_task<number>* tk) = 0;
+        virtual integration_container integration_new_output(twopf_task<number>* tk, unsigned int worker) = 0;
         //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
-        virtual integration_container integration_new_output(threepf_task<number>* tk) = 0;
+        virtual integration_container integration_new_output(threepf_task<number>* tk, unsigned int worker) = 0;
       };
 
 

@@ -81,9 +81,9 @@ namespace transport
 
         public:
       //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
-      typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk);
+      typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk, unsigned int worker);
       //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
-      typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk);
+      typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk, unsigned int worker);
 
 
       // INTERNAL DATA
@@ -488,7 +488,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(twopf_task<number>* tk)
+    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(twopf_task<number>* tk, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -499,7 +499,9 @@ namespace transport
 
         // insert a new output record, and return the corresponding integration_container handle
         typename repository<number>::integration_container ctr =
-                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
+                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(),
+                                                                                                                 this->root_path, this->integrations_path,
+                                                                                                                 worker);
 
         dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 
@@ -508,7 +510,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(threepf_task<number>* tk)
+    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(threepf_task<number>* tk, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -519,7 +521,9 @@ namespace transport
 
         // insert a new output record, and return the corresponding integration container handle
         typename repository<number>::integration_container ctr =
-                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(), this->root_path, this->integrations_path);
+                                                             dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(),
+                                                                                                                 this->root_path, this->integrations_path,
+                                                                                                                 worker);
 
         dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 

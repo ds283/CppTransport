@@ -8,6 +8,7 @@
 #ifndef __CPP_TRANSPORT_TRANSPORT_H_
 #define __CPP_TRANSPORT_TRANSPORT_H_
 
+#define BOOST_ALL_DYN_LINK
 
 #include "transport/messages_en.h"
 

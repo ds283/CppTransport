@@ -27,7 +27,6 @@
 #include "transport/exceptions.h"
 
 #include "boost/mpi.hpp"
-
 #include "boost/serialization/string.hpp"
 
 
@@ -40,6 +39,7 @@
 
 // default storage limit on nodes - 100 Mb
 #define __CPP_TRANSPORT_DEFAULT_STORAGE (100*1024*1024)
+
 
 namespace transport
   {
@@ -318,10 +318,10 @@ namespace transport
         void slave_set_repository(const MPI::set_repository_payload& payload);
 
         //! Slave node: wait until an instruction has been received to delete all containers
-        void slave_wait_temp_containers_deleted(void);
+        void slave_wait_temp_containers_deleted(typename data_manager<number>::generic_batcher& batcher);
 
         //! Push a temporary container to the master process
-        void slave_push_temp_container(const std::string& ctr, MPI::data_ready_payload::payload_type type);
+        void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
 
         //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
@@ -379,7 +379,7 @@ namespace transport
         worker_capacity(cp),
         repo(nullptr), data_mgr(data_manager_factory<number>(cp))
       {
-        if(world.rank() == MPI::RANK_MASTER)
+        if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
           {
             bool multiple_repo_warn = false;
             bool recovery = false;
@@ -623,10 +623,10 @@ namespace transport
 
         // create new output record in the repository XML database, and set up
         // paths to the integration SQL database
-        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
+        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, this->worker_number());
 
         // create the data container
-        this->data_mgr->create_container(this->repo, ctr);
+        this->data_mgr->create_container(ctr);
 
         // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
@@ -656,10 +656,10 @@ namespace transport
 
         // create new output record in the repository XML database, and set up
         // paths to the integration SQL database
-        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk);
+        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, this->get_rank());
 
         // create the data container
-        this->data_mgr->create_container(this->repo, ctr);
+        this->data_mgr->create_container(ctr);
 
         // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
@@ -686,9 +686,9 @@ namespace transport
 
         // get paths the workers will need
         assert(this->repo != nullptr);
-        boost::filesystem::path taskfile_path = this->repo->get_root_path() / ctr.taskfile_path();
-        boost::filesystem::path tempdir_path  = this->repo->get_root_path() / ctr.temporary_files_path();
-        boost::filesystem::path logdir_path   = this->repo->get_root_path() / ctr.log_directory_path();
+        boost::filesystem::path taskfile_path = ctr.taskfile_path();
+        boost::filesystem::path tempdir_path  = ctr.temporary_files_path();
+        boost::filesystem::path logdir_path   = ctr.log_directory_path();
 
         MPI::new_integration_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path);
 
@@ -700,14 +700,14 @@ namespace transport
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
 
-        std::cerr << "++ All workers received NEW_INTEGRATION instruction" << std::endl;
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ All workers received NEW_INTEGRATION instruction";
 
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
         while(workers.size() > 0)
           {
-            std::cerr << "++ Master polling for DATA_READY messages" << std::endl;
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) <<  "++ Master polling for DATA_READY messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
@@ -717,7 +717,7 @@ namespace transport
                   {
                     MPI::data_ready_payload payload;
                     this->world.recv(stat.source(), MPI::DATA_READY, payload);
-                    std::cerr << "++ Master received aggregation request: '" << payload.get_container_path() << std::endl;
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker sent aggregation request: '" << payload.get_container_path();
 
                     // batch data into the main container
                     switch(payload.get_payload_type())
@@ -746,14 +746,14 @@ namespace transport
                 case MPI::FINISHED_TASK:
                   {
                     this->world.recv(stat.source(), MPI::FINISHED_TASK);
-                    std::cerr << "++ Worker advising finished task: " << stat.source() << std::endl;
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker advising finished task: " << stat.source();
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
 
                 default:
                   {
-                    std::cerr << "++ Master received message " << stat.tag() << " waiting in the queue" << std::endl;
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
                     break;
                   }
               }
@@ -792,7 +792,6 @@ namespace transport
         bool finished = false;
         while(!finished)
           {
-            std::cerr << "-- Slave polling for instructions" << std::endl;
             // wait until a message is available from master
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
@@ -816,7 +815,6 @@ namespace transport
 
                 case MPI::TERMINATE:
                   {
-                    std::cerr << "-- worker " << this->worker_number() << " terminating" << std::endl;
                     this->world.recv(MPI::RANK_MASTER, MPI::TERMINATE);
                     finished = true;
                     break;
@@ -943,10 +941,8 @@ namespace transport
                                                                      std::bind(&task_manager<number>::slave_push_temp_container,
                                                                                this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
         typename data_manager<number>::twopf_batcher batcher =
-                                                       this->data_mgr->create_temp_twopf_container(payload.tempdir_path(),
-                                                                                                   this->get_rank(),
-                                                                                                   m->get_N_fields(),
-                                                                                                   dispatcher);
+                                                       this->data_mgr->create_temp_twopf_container(payload.tempdir_path(), payload.logdir_path(),
+                                                                                                   this->get_rank(), m->get_N_fields(), dispatcher);
 
         // perform the integration
         m->backend_process_twopf(work, tk, batcher);
@@ -955,7 +951,7 @@ namespace transport
         batcher.close();
 
         // wait until all temporary containers have been deleted
-        this->slave_wait_temp_containers_deleted();
+        this->slave_wait_temp_containers_deleted(batcher);
       }
 
 
@@ -976,10 +972,8 @@ namespace transport
                                                                      std::bind(&task_manager<number>::slave_push_temp_container,
                                                                                this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
         typename data_manager<number>::threepf_batcher batcher =
-                                                         this->data_mgr->create_temp_threepf_container(payload.tempdir_path(),
-                                                                                                       this->get_rank(),
-                                                                                                       m->get_N_fields(),
-                                                                                                       dispatcher);
+                                                         this->data_mgr->create_temp_threepf_container(payload.tempdir_path(), payload.logdir_path(),
+                                                                                                       this->get_rank(), m->get_N_fields(), dispatcher);
 
         // perform the integration
         m->backend_process_threepf(work, tk, batcher);
@@ -988,16 +982,16 @@ namespace transport
         batcher.close();
 
         // wait until all temporary containers have been deleted, and then return
-        this->slave_wait_temp_containers_deleted();
+        this->slave_wait_temp_containers_deleted(batcher);
       }
 
 
     template <typename number>
-    void task_manager<number>::slave_wait_temp_containers_deleted()
+    void task_manager<number>::slave_wait_temp_containers_deleted(typename data_manager<number>::generic_batcher& batcher)
       {
         while(this->temporary_container_queue.size() > 0)
           {
-            std::cerr << "-- Slave waiting for DELETE_CONTAINER instructions" << std::endl;
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave waiting for DELETE_CONTAINER instructions";
             // wait until a message is available from master
             boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
@@ -1007,7 +1001,7 @@ namespace transport
                   {
                     std::string payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
-                    std::cerr << "++ Slave received delete instruction: " << payload << std::endl;
+                    BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave received delete instruction: " << payload;
 
                     if(!boost::filesystem::remove(payload))
                       {
@@ -1020,7 +1014,7 @@ namespace transport
                   }
               }
           }
-        std::cerr << "-- Slave sending FINISHED_TASK to master" << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK);
       }
 
@@ -1068,17 +1062,18 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_push_temp_container(const std::string& ctr, MPI::data_ready_payload::payload_type type)
+    void task_manager<number>::slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher,
+                                                         MPI::data_ready_payload::payload_type type)
       {
-        std::cerr << "++ Sending DATA_READY message for container '" << ctr << "'" << std::endl;
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Sending DATA_READY message for container " << batcher->get_container_path();
 
-        MPI::data_ready_payload payload(ctr, type);
+        MPI::data_ready_payload payload(batcher->get_container_path().string(), type);
 
         // advise master process that data is available in the named container
         this->world.isend(MPI::RANK_MASTER, MPI::DATA_READY, payload);
 
         // add this container to the list of containers which should be deleted
-        this->temporary_container_queue.push_back(ctr);
+        this->temporary_container_queue.push_back(batcher->get_container_path().string());
       }
 
 
