@@ -127,6 +127,7 @@
 #define __CPP_TRANSPORT_REPO_FOR_TASK         "for task"
 #define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE      "Internal error: Unexpected job type in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_EDITTIME_FAIL    "Repository error: Failed to set last-edit time"
+#define __CPP_TRANSPORT_REPO_INSERT_FAIL      "Repository error: Could not log new integration output in the database"
 #define __CPP_TRANSPORT_REPO_NO_SERIALNO      "Repository error: Could not allocate serial number for integration output group"
 #define __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_container'"
 #define __CPP_TRANSPORT_REPO_INTCTR_UNSETTASK   "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_container'"
@@ -191,7 +192,6 @@
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
-#define __CPP_TRANSPORT_RECOVER_NOEFFECT      "-recover switch with no effect (follows repository specifier)"
 
 #define __CPP_TRANSPORT_NAMED_LIST_FAIL       "Internal error: Lookup failed in dbxml_helper::named_list"
 

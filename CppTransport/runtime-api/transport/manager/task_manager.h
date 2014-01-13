@@ -32,7 +32,6 @@
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
 #define __CPP_TRANSPORT_SWITCH_TASK     "-task"
-#define __CPP_TRANSPORT_SWITCH_RECOVER  "-recovery"
 
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
@@ -382,7 +381,6 @@ namespace transport
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
           {
             bool multiple_repo_warn = false;
-            bool recovery = false;
 
             for(unsigned int i = 1; i < argc; i++)
               {
@@ -404,7 +402,7 @@ namespace transport
                         std::string repo_path = static_cast<std::string>(argv[i]);
                         try
                           {
-                            repo = repository_factory<number>(repo_path, recovery);
+                            repo = repository_factory<number>(repo_path, this->get_rank() == MPI::RANK_MASTER);   // run recovery if we are the master node
                           }
                         catch (runtime_exception& xe)
                           {
@@ -431,11 +429,6 @@ namespace transport
                         desc.name = argv[i];
                         job_queue.push_back(desc);
                       }
-                  }
-                else if (static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_RECOVER)
-                  {
-                    if(this->repo != nullptr) this->warn(__CPP_TRANSPORT_RECOVER_NOEFFECT);
-                    else recovery = true;
                   }
                 else
                   {

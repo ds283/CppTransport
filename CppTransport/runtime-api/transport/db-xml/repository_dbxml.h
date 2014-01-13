@@ -166,18 +166,10 @@ namespace transport
         }
 
         // set up environment
-        u_int32_t env_flags = DB_JOINENV;
-        if(recovery || env->open(env, env_path.string().c_str(), env_flags, 0) != 0)
-          {
-            // that failed
-            // instead, try to create a new environment
-            // enable logging, transactional support and locking (so multiple processes can access the repository safely)
-
-            env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
-            if(recovery) env_flags = env_flags | DB_RECOVER | DB_CREATE;
-            env->open(env, env_path.string().c_str(), env_flags, 0);
-
-          }
+        // enable logging and locking (so multiple processes can access the repository safely)
+        u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_REGISTER | DB_INIT_TXN | DB_CREATE;
+        if(recovery) env_flags = env_flags | DB_RECOVER;
+        env->open(env, env_path.string().c_str(), env_flags, 0);
 
         // set up XmlManager object
         // we have to allow external access in order for XQuery updates to be processed
@@ -220,7 +212,7 @@ namespace transport
 
         // set up environment to enable logging, transactional support
         // and locking (so multiple processes can access the repository safely)
-        u_int32_t env_flags = DB_CREATE | DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_INIT_TXN;
+        u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_REGISTER | DB_RECOVER | DB_INIT_TXN | DB_CREATE;
         env->open(env, env_path.string().c_str(), env_flags, 0);
 
         // set up XmlManager object
@@ -268,10 +260,13 @@ namespace transport
 
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
+        DbXml::XmlTransaction txn = this->mgr->createTransaction();
         try
           {
             // open database container
-            DbXml::XmlContainer packages = this->mgr->openContainer(this->packages_path.string().c_str());
+            DbXml::XmlContainerConfig packages_config;
+            packages_config.setTransactional(true);
+            DbXml::XmlContainer packages = this->mgr->openContainer(this->packages_path.string().c_str(), packages_config);
 
             DbXml::XmlUpdateContext ctx = this->mgr->createUpdateContext();
 
@@ -279,7 +274,7 @@ namespace transport
             DbXml::XmlDocument doc = this->mgr->createDocument();
             doc.setName(ics.get_name());
 
-            DbXml::XmlEventWriter& writer = packages.putDocumentAsEventWriter(doc, ctx);
+            DbXml::XmlEventWriter& writer = packages.putDocumentAsEventWriter(txn, doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
             // write root node
@@ -305,9 +300,15 @@ namespace transport
             // finalize XML document
             writer.writeEndDocument();
             writer.close();
+
+            // commit the transaction
+            txn.commit();
           }
         catch (DbXml::XmlException& xe)
           {
+            // rollback the transaction
+            txn.abort();
+
             if(xe.getExceptionCode() == DbXml::XmlException::UNIQUE_ERROR)
               {
                 std::ostringstream msg;
@@ -334,16 +335,21 @@ namespace transport
 
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
+        DbXml::XmlTransaction txn = this->mgr->createTransaction();
         try
           {
             // open database container
-            DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
-            DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+            DbXml::XmlContainerConfig models_config;
+            DbXml::XmlContainerConfig int_config;
+            models_config.setTransactional(true);
+            int_config.setTransactional(true);
+            DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str(), models_config);
+            DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str(), int_config);
 
             // check whether XML document corresponding to our initial_conditions object is in the database
             try
               {
-                DbXml::XmlDocument doc = models.getDocument(t.get_ics().get_name());
+                DbXml::XmlDocument doc = models.getDocument(txn, t.get_ics().get_name());
               }
             catch (DbXml::XmlException& xe)
               {
@@ -366,7 +372,7 @@ namespace transport
             DbXml::XmlDocument doc = this->mgr->createDocument();
             doc.setName(t.get_name());
 
-            DbXml::XmlEventWriter& writer = integrations.putDocumentAsEventWriter(doc, ctx);
+            DbXml::XmlEventWriter& writer = integrations.putDocumentAsEventWriter(txn, doc, ctx);
             writer.writeStartDocument(nullptr, nullptr, nullptr);
 
             // write root node
@@ -389,9 +395,15 @@ namespace transport
             // finalize XML document
             writer.writeEndDocument();
             writer.close();
+
+            // commit the transaction
+            txn.commit();
           }
         catch (DbXml::XmlException& xe)
           {
+            // rollback the transaction
+            txn.abort();
+
             if(xe.getExceptionCode() == DbXml::XmlException::UNIQUE_ERROR)
               {
                 std::ostringstream msg;
@@ -416,8 +428,14 @@ namespace transport
         assert(this->mgr != nullptr);
 
         // open handles to database containers
-        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
-        DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
+        DbXml::XmlContainerConfig int_config;
+        DbXml::XmlContainerConfig models_config;
+        int_config.setReadOnly(true);
+        int_config.setTransactional(true);
+        models_config.setReadOnly(true);
+        models_config.setTransactional(true);
+        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str(), int_config);
+        DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str(), models_config);
 
         // lookup record for the task
         DbXml::XmlValue integration = dbxml_operations::get_integration_by_name(name, integrations);
@@ -461,7 +479,10 @@ namespace transport
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
-        DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str());
+        DbXml::XmlContainerConfig models_config;
+        models_config.setReadOnly(true);
+        models_config.setTransactional(true);
+        DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str(), models_config);
 
         DbXml::XmlDocument document = dbxml_operations::get_package_by_name(name, models);
 
@@ -477,7 +498,10 @@ namespace transport
         assert(this->env != nullptr);
         assert(this->mgr != nullptr);
 
-        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str());
+        DbXml::XmlContainerConfig int_config;
+        int_config.setReadOnly(true);
+        int_config.setTransactional(true);
+        DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str(), int_config);
 
         DbXml::XmlDocument document = dbxml_operations::get_integration_by_name(name, integrations);
 
