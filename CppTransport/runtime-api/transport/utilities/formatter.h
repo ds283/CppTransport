@@ -45,7 +45,7 @@ inline std::string format_memory(unsigned int size, unsigned int precision=2)
   }
 
 
-inline std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=2)
+inline std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=3)
   {
     std::ostringstream out;
 
