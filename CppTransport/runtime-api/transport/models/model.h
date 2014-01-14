@@ -25,6 +25,14 @@
 #include "transport/manager/instance_manager.h"
 #include "transport/manager/data_manager.h"
 
+#include "boost/log/core.hpp"
+#include "boost/log/trivial.hpp"
+#include "boost/log/sources/severity_feature.hpp"
+#include "boost/log/sources/severity_logger.hpp"
+#include "boost/log/sinks/sync_frontend.hpp"
+#include "boost/log/sinks/text_file_backend.hpp"
+#include "boost/log/utility/setup/common_attributes.hpp"
+
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
 #define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (20)
@@ -125,7 +133,7 @@ namespace transport
 
       protected:
         //! Write information about the task we are processing
-        void write_task_data(const task<number>* task, std::ostream& stream,
+        void write_task_data(const task<number>* task, typename data_manager<number>::generic_batcher& batcher,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
 
@@ -274,19 +282,18 @@ namespace transport
 
 
     template <typename number>
-    void model<number>::write_task_data(const task<number>* task, std::ostream& stream,
+    void model<number>::write_task_data(const task<number>* task, typename data_manager<number>::generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        stream << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
 
-        stream << *task << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *task;
 
-        stream << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
-               << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
-               << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
-               << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size << std::endl;
-
-        stream << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+          << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
+          << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
+          << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err
+          << ", "  << __CPP_TRANSPORT_STEP_SIZE << " = " << step_size;
       }
 
 

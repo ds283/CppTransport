@@ -644,8 +644,6 @@ namespace transport
           {
             sqlite3* db = nullptr;
 
-            std::cerr << "Creating new threepf container '" << container << "'" << std::endl;
-
             int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
             if(status != SQLITE_OK)

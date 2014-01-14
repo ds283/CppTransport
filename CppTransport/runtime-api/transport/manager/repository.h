@@ -68,8 +68,6 @@ namespace transport
                 log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
                 boost::filesystem::path log_path = path_to_log_directory / log_file.str();
 
-                std::cerr << "Logging to " << log_path << std::endl;
-
                 boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
                 std::ostringstream log_file_path;

@@ -894,10 +894,7 @@ namespace transport
       {
         assert(tk != nullptr);
 
-        if(!silent)
-          {
-            this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
-          }
+//        if(!silent) this->write_task_data(tk, std::cout, $$__BACKG_ABS_ERR, $$__BACKG_REL_ERR, $$__BACKG_STEP_SIZE, "$$__BACKG_STEPPER");
 
         solution.clear();
         solution.reserve(tk->get_N_sample_times());

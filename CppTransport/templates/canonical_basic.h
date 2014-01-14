@@ -153,7 +153,8 @@ namespace transport
       {
         context ctx;
 
-        ctx.add_device("OpenMP");
+        // set up just one device
+        ctx.add_device("OpenMPI");
 
         return(ctx);
       }
@@ -164,10 +165,7 @@ namespace transport
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
-        if(!silent)
-          {
-            this->write_task_data(tk, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
-          }
+        if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be the only device in this backend)
         assert(work.size() == 1);
@@ -237,10 +235,7 @@ namespace transport
                                                           typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {
-        if(!silent)
-          {
-            this->write_task_data(tk, std::cout, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
-          }
+        if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be only one device with this backend)
         assert(work.size() == 1);
@@ -253,9 +248,9 @@ namespace transport
         // step through the queue, solving for the three-point functions in each case
         for(unsigned int i = 0; i < list.size(); i++)
           {
-            std::cout << __CPP_TRANSPORT_SOLVING_CONFIG << " " << i+1
-              << " " __CPP_TRANSPORT_OF << " " << list.size()
-              << std::endl;
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+              << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+              << " " __CPP_TRANSPORT_OF << " " << list.size() << ")";
 
             // write the time history for this k-configuration
             this->threepf_kmode(list[i], tk, batcher);

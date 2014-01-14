@@ -275,6 +275,9 @@ namespace transport
 
         // physically remove the taskfile from the disc; it isn't needed any more
         boost::filesystem::remove(ctr.taskfile_path());
+
+        // physically remove the tempfiles directory
+        boost::filesystem::remove(ctr.temporary_files_path());
       }
 
 
@@ -371,6 +374,8 @@ namespace transport
         // set up batcher
         typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
 
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary twopf container " << container;
+
         // add this database to our list of open connections
         this->open_containers.push_back(db);
 
@@ -403,6 +408,8 @@ namespace transport
 
         // set up batcher
         typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
+
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary threepf container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
@@ -445,7 +452,7 @@ namespace transport
 
         BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
             << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
-            << " temporary threepf container '" << batcher->get_container_path() << "'" << std::endl;
+            << " temporary threepf container '" << batcher->get_container_path() << "'";
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);

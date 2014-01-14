@@ -23,11 +23,14 @@
 #include "transport/scheduler/scheduler.h"
 #include "transport/scheduler/work_queue.h"
 
+#include "transport/utilities/formatter.h"
+
 #include "transport/messages_en.h"
 #include "transport/exceptions.h"
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
+#include "boost/timer/timer.hpp"
 
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
@@ -317,7 +320,7 @@ namespace transport
         void slave_set_repository(const MPI::set_repository_payload& payload);
 
         //! Slave node: wait until an instruction has been received to delete all containers
-        void slave_wait_temp_containers_deleted(typename data_manager<number>::generic_batcher& batcher);
+        void slave_wait_temp_containers_deleted(const boost::timer::cpu_times& elapsed, typename data_manager<number>::generic_batcher& batcher);
 
         //! Push a temporary container to the master process
         void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
@@ -629,6 +632,7 @@ namespace transport
         this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
+        // this call returns when all workers have signalled that their work is done
         this->master_task_to_workers(ctr, tk, m);
 
         // close the data container
@@ -662,6 +666,7 @@ namespace transport
         this->data_mgr->create_tables(ctr, tk, m->get_N_fields());
 
         // instruct workers to carry out the calculation
+        // this call returns when all workers have signalled that their work is done
         this->master_task_to_workers(ctr, tk, m);
 
         // close the data container
@@ -676,6 +681,14 @@ namespace transport
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << *tk;
+
+        // set up a timer to keep track of the total wallclock time used in this integration
+        boost::timer::cpu_timer wallclock_timer;
+        // aggregate cpu times reported by worker processes
+        boost::timer::nanosecond_type total_cpu_time = 0;
 
         // get paths the workers will need
         assert(this->repo != nullptr);
@@ -710,7 +723,7 @@ namespace transport
                   {
                     MPI::data_ready_payload payload;
                     this->world.recv(stat.source(), MPI::DATA_READY, payload);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker sent aggregation request: '" << payload.get_container_path();
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent aggregation request for container '" << payload.get_container_path() << "'";
 
                     // batch data into the main container
                     switch(payload.get_payload_type())
@@ -738,8 +751,11 @@ namespace transport
 
                 case MPI::FINISHED_TASK:
                   {
-                    this->world.recv(stat.source(), MPI::FINISHED_TASK);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker advising finished task: " << stat.source();
+                    boost::timer::nanosecond_type cpu_time = 0;
+                    this->world.recv(stat.source(), MPI::FINISHED_TASK, cpu_time);
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(cpu_time);
+
+                    total_cpu_time += cpu_time;
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
@@ -751,6 +767,10 @@ namespace transport
                   }
               }
           }
+
+        wallclock_timer.stop();
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "'" << wallclock_timer.format();
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total CPU time required by worker processes = " << format_time(total_cpu_time);
       }
 
 
@@ -924,6 +944,9 @@ namespace transport
       {
         // dispatch integration to the underlying model
 
+        // keep track of CPU time
+        boost::timer::cpu_timer timer;
+
         // create queues based on whatever devices are relevant for the backend
         context                   ctx  = m->backend_get_context();
         scheduler                 sch  = scheduler(ctx);
@@ -937,14 +960,20 @@ namespace transport
                                                        this->data_mgr->create_temp_twopf_container(payload.tempdir_path(), payload.logdir_path(),
                                                                                                    this->get_rank(), m->get_N_fields(), dispatcher);
 
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
+
         // perform the integration
-        m->backend_process_twopf(work, tk, batcher);
+        m->backend_process_twopf(work, tk, batcher, true);    // 'true' = work silently
 
         // close the batcher
         batcher.close();
 
+        // all work is now done - stop the timer
+        timer.stop();
+
         // wait until all temporary containers have been deleted
-        this->slave_wait_temp_containers_deleted(batcher);
+        this->slave_wait_temp_containers_deleted(timer.elapsed(), batcher);
       }
 
 
@@ -954,6 +983,9 @@ namespace transport
                                                            const work_item_filter& filter)
       {
         // dispatch integration to the underlying model
+
+        // keep track of CPU time
+        boost::timer::cpu_timer timer;
 
         // create queues based on whatever devices are relevant for the backend
         context                     ctx  = m->backend_get_context();
@@ -968,19 +1000,26 @@ namespace transport
                                                          this->data_mgr->create_temp_threepf_container(payload.tempdir_path(), payload.logdir_path(),
                                                                                                        this->get_rank(), m->get_N_fields(), dispatcher);
 
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
+
         // perform the integration
-        m->backend_process_threepf(work, tk, batcher);
+        m->backend_process_threepf(work, tk, batcher, true);    // 'true' = work silently
 
         // close the batcher
         batcher.close();
 
+        // all work is now done - stop the timer
+        timer.stop();
+
         // wait until all temporary containers have been deleted, and then return
-        this->slave_wait_temp_containers_deleted(batcher);
+        this->slave_wait_temp_containers_deleted(timer.elapsed(), batcher);
       }
 
 
     template <typename number>
-    void task_manager<number>::slave_wait_temp_containers_deleted(typename data_manager<number>::generic_batcher& batcher)
+    void task_manager<number>::slave_wait_temp_containers_deleted(const boost::timer::cpu_times& elapsed,
+                                                                  typename data_manager<number>::generic_batcher& batcher)
       {
         while(this->temporary_container_queue.size() > 0)
           {
@@ -1008,7 +1047,7 @@ namespace transport
               }
           }
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK);
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, elapsed.user);
       }
 
 

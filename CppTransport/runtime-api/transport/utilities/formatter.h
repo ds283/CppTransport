@@ -13,14 +13,16 @@
 
 #include "transport/messages_en.h"
 
-constexpr unsigned int gigabyte = 1024*1024*1024;
-constexpr unsigned int megabyte = 1024*1024;
-constexpr unsigned int kilobyte = 1024;
+#include <boost/timer/timer.hpp>
 
 
 inline std::string format_memory(unsigned int size, unsigned int precision=2)
   {
     std::ostringstream out;
+
+    constexpr unsigned int gigabyte = 1024*1024*1024;
+    constexpr unsigned int megabyte = 1024*1024;
+    constexpr unsigned int kilobyte = 1024;
 
     if(size > gigabyte)
       {
@@ -38,6 +40,32 @@ inline std::string format_memory(unsigned int size, unsigned int precision=2)
       {
         out << size << " " << __CPP_TRANSPORT_BYTE;
       }
+
+    return(out.str());
+  }
+
+
+inline std::string format_time(boost::timer::nanosecond_type time, unsigned int precision=2)
+  {
+    std::ostringstream out;
+
+    constexpr boost::timer::nanosecond_type mu_sec = 1E3;
+    constexpr boost::timer::nanosecond_type m_sec  = 1E3*mu_sec;
+    constexpr boost::timer::nanosecond_type sec    = 1E3*m_sec;
+    constexpr boost::timer::nanosecond_type minute = 60*sec;
+    constexpr boost::timer::nanosecond_type hour   = 60*minute;
+
+    if(time > hour)
+      {
+        out << time/hour << __CPP_TRANSPORT_HOUR << " ";
+        time = time % hour;
+      }
+    if(time > minute)
+      {
+        out << time/minute << __CPP_TRANSPORT_MINUTE << " ";
+        time = time % minute;
+      }
+    out << std::setprecision(precision) << static_cast<double>(time) / sec << __CPP_TRANSPORT_SECOND;
 
     return(out.str());
   }
