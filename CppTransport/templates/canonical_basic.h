@@ -45,12 +45,12 @@ namespace transport
         // Set up a context
         context backend_get_context();
 
-        // Integrate background and 2-point function on the CPU, using OpenMP
+        // Integrate background and 2-point function on the CPU
         void backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
                                    typename data_manager<number>::twopf_batcher& batcher,
                                    bool silent=false);
 
-        // Integrate background, 2-point function and 3-point function on the CPU, using OpenMP
+        // Integrate background, 2-point function and 3-point function on the CPU
         void backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
                                      typename data_manager<number>::threepf_batcher& batcher,
                                      bool silent=false);
