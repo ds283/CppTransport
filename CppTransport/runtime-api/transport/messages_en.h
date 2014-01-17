@@ -206,6 +206,8 @@
 #define __CPP_TRANSPORT_UNEXPECTED_MPI        "Internal error: Unexpected MPI message received"
 #define __CPP_TRANSPORT_FILTER_TAG            "Filter for work items:"
 
+#define __CPP_TRANSPORT_SINGLE_GPU_ONLY       "GPU error: only a single GPU device is currently supported per worker process"
+
 #define __CPP_TRANSPORT_LOGX_ERROR_A          "Warning: x-axis contains zero or negative values for plot"
 #define __CPP_TRANSPORT_LOGX_ERROR_B          "no output produced"
 #define __CPP_TRANSPORT_LOGY_ERROR_A          "Warning: y-value contains no nonzero values for line"

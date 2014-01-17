@@ -89,7 +89,7 @@ namespace transport
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
       private:
-        const parameters<number> params;
+        const parameters<number>& params;
 
         const double k_mode;
       };
@@ -101,7 +101,8 @@ namespace transport
       {
       public:
         $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c)
-          : twopf_singleconfig_batch_observer<number>(b, c)
+          : twopf_singleconfig_batch_observer<number>(b, c, $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
+                                                      $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_start)
           {
           }
 
@@ -122,7 +123,7 @@ namespace transport
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
       private:
-        const parameters<number> params;
+        const parameters<number>& params;
 
         const double kmode_1;
         const double kmode_2;
@@ -136,7 +137,8 @@ namespace transport
       {
       public:
         $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c)
-          : threepf_singleconfig_batch_observer<number>(b, c)
+          : threepf_singleconfig_batch_observer<number>(b, c, $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
+                                                        $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start, $$__MODEL_pool::threepf_start)
           {
           }
 
@@ -165,6 +167,10 @@ namespace transport
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+            << "** OpenMPI compute backend processing twopf task";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+            << work;
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be the only device in this backend)
@@ -177,7 +183,11 @@ namespace transport
 
         for(unsigned int i = 0; i < list.size(); i++)
           {
-            // write the time history for this particular k-mode into kmode_background_history, kmode_twopf_history
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                << " " __CPP_TRANSPORT_OF << " " << list.size() << ")";
+
+            // write the time history for this k-configuration
             this->twopf_kmode(list[i], tk, batcher);
           }
       }
@@ -198,11 +208,11 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number> ics = tk->get_initial_conditions();
+        const std::vector<number>& ics = tk->get_initial_conditions();
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
-        const std::vector<double> times = tk->get_sample_times();
+        const std::vector<double>& times = tk->get_sample_times();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
@@ -215,10 +225,12 @@ namespace transport
     // start     - starting position of twopf components within the state vector
     // kmode     - *comoving normalized* wavenumber for which we will compute the twopf
     // Ninit     - initial time
+    // p         - parameters
     // ics       - iniitial conditions for the background fields (or fields+momenta)
     // imaginary - whether to populate using real or imaginary components of the 2pf
     template <typename number>
-    void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit, const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
+    void $$__MODEL_basic<number>::populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+                                                    const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
       {
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
@@ -235,6 +247,10 @@ namespace transport
                                                           typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+          << "** OpenMPI compute backend processing threepf task";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+            << work;
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be only one device with this backend)
@@ -249,7 +265,7 @@ namespace transport
         for(unsigned int i = 0; i < list.size(); i++)
           {
             BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-              << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+              << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
               << " " __CPP_TRANSPORT_OF << " " << list.size() << ")";
 
             // write the time history for this k-configuration
@@ -272,12 +288,12 @@ namespace transport
         threepf_state<number> x;
         x.resize($$__MODEL_pool::threepf_state_size);
 
-        // fix initial conditions - background
-        std::vector<number> ics = tk->get_initial_conditions();
-        x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
+        // fix initial conditions - background (don't need explicit FLATTEN since it would appear on both sides)
+        const std::vector<number>& ics = tk->get_initial_conditions();
+        x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs
-        std::vector<double> times = tk->get_sample_times();
+        const std::vector<double>& times = tk->get_sample_times();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);
@@ -303,10 +319,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::threepf_size);
 
-#undef  MAKE_THREEPF
-#define MAKE_THREEPF(i,j,k,k1,k2,k3) this->make_threepf_ic(i, j, k, k1, k2, k3, Ninit, p, ics)
-
-        x[start + FLATTEN($$__A,$$__B,$$__C)] = MAKE_THREEPF($$__A,$$__B,$$__C, kconfig.k1, kconfig.k2, kconfig.k3) $$// ;
+        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1, kconfig.k2, kconfig.k3, Ninit, p, ics) $$// ;
       }
 
 
@@ -353,27 +366,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
-        unsigned int time_serial   = this->get_time_serial();
-        unsigned int config_serial = this->get_config_serial();
-
-        if(this->store_background())
-          {
-            std::vector<number> bg_x ($$__MODEL_pool::backg_size);
-
-            for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
-              {
-                bg_x[i] = x[i];
-              }
-            this->get_batcher().push_backg(time_serial, bg_x);
-          }
-
-        std::vector<number> tpf_x($$__MODEL_pool::twopf_size);
-
-        for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
-          {
-            tpf_x[i] = x[$$__MODEL_pool::twopf_start + i];
-          }
-        this->get_batcher().push_twopf(time_serial, config_serial, tpf_x);
+        this->push(x);
       }
 
 
@@ -478,47 +471,8 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
-        unsigned int time_serial          = this->get_time_serial();
-        unsigned int twopfconfig_serial   = this->get_twopf_config_serial();
-        unsigned int threepfconfig_serial = this->get_threepf_config_serial();
+        this->push(x);
 
-        if(this->store_background())
-          {
-            std::vector<number> bg_x ($$__MODEL_pool::backg_size);
-
-            for(int i = 0; i < $$__MODEL_pool::backg_size; i++)
-              {
-                bg_x[i] = x[i];
-              }
-            this->get_batcher().push_backg(time_serial, bg_x);
-          }
-
-        if(this->store_twopf())
-          {
-            std::vector<number> twopf_re_x($$__MODEL_pool::twopf_size);
-            std::vector<number> twopf_im_x($$__MODEL_pool::twopf_size);
-
-            for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
-              {
-                twopf_re_x[i] = x[$$__MODEL_pool::twopf_re_k1_start + i];
-              }
-            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_re_x, data_manager<number>::threepf_batcher::real_twopf);
-
-            // then, the imaginary part of the 2pf
-            for(int i = 0; i < $$__MODEL_pool::twopf_size; i++)
-              {
-                twopf_im_x[i] = x[$$__MODEL_pool::twopf_im_k1_start + i];
-              }
-            this->get_batcher().push_twopf(time_serial, twopfconfig_serial, twopf_im_x, data_manager<number>::threepf_batcher::imag_twopf);
-          }
-
-        std::vector<number> threepf_x ($$__MODEL_pool::threepf_size);
-
-        for(int i = 0; i < $$__MODEL_pool::threepf_size; i++)
-          {
-            threepf_x[i] = x[$$__MODEL_pool::threepf_start + i];
-          }
-        this->get_batcher().push_threepf(time_serial, threepfconfig_serial, threepf_x);
       }
 
 

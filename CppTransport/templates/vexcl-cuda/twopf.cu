@@ -7,20 +7,31 @@ typedef unsigned short      ushort;
 typedef unsigned long long  ulong;
 #endif
 
-extern "C" __global__ void twopffused( ulong __n,
+extern "C" __global__ void twopffused( ulong __n,         // number of k-configurations we are integrating
                                        double __Mp,
                                        $$__PARAM_ARGS,
-                                       $$__COORD_ARGS{__x},
+                                       double* __x,
+                                       double* __dxdt,
                                        double* __klist,
-                                       double __a,
-                                       $$__TWOPF_ARGS{__twopf},
-                                       $$__COORD_ARGS{__dxdt},
-                                       $$__TWOPF_ARGS{__dtwopf} )
+                                       double __a )
   {
     size_t __begin = blockDim.x * blockIdx.x + threadIdx.x;
 
     #define __U2_SIZE    (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
+    #define __BACKG_SIZE (2*$$__NUMBER_FIELDS)
     #define __TWOPF_SIZE (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
+
+    // packing of components into the state vector
+    // (remember that all k-modes for a particular component are packed together, so reads can be coalesced)
+    #define __BACKG_START 0
+    #define __TWOPF_START __BACKG_START + __BACKG_SIZE
+
+    // convenience macros for accessing a particular components and k-configuration of the state vector
+    #define __IN_BACKG(i,c)    __x[(__BACKG_START+i)*__n + c]
+    #define __IN_TWOPF(i,j,c)  __x[(__TWOPF_START+i*2*$$__NUMBER_FIELDS+j)*__n + c]
+
+    #define __OUT_BACKG(i,c)   __dxdt[(__BACKG_START+i)*__n + c]
+    #define __OUT_TWOPF(i,j,c) __dxdt[(__TWOPF_START+i*2*$$__NUMBER_FIELDS+j)*__n + c]
 
     // SPACE NEEDED IN SHARED MEMORY:
     // k-modes: 1 per thread in the block   = sizeof(double)*blockDim.x
@@ -50,7 +61,7 @@ extern "C" __global__ void twopffused( ulong __n,
 
         // read coords into local variables
         // we only need one, which we can choose to be '__begin'
-        double $$__COORDINATE[A] = __x_$$__A[__begin];
+        double $$__COORDINATE[A] = __IN_BACKG($$__A,__begin);
 
         double __Hsq = $$__HUBBLE_SQ;
         double __eps = $$__EPSILON;
@@ -63,17 +74,17 @@ extern "C" __global__ void twopffused( ulong __n,
           {
             // copy the data we need from global memory into shared memory
             __k = __klist[__idx];
-            __TWOPF($$__A, $$__B) = __twopf_$$__A_$$__B[__idx]; $$//
+            __TWOPF($$__A, $$__B) = __IN_TWOPF($$__A,$$__B,__idx); $$//
 
             // compute u2 for the k-mode we are looking at
             $$__TEMP_POOL{"double $1 = $2;"}
 
             __U2($$__A,$$__B) = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
-            __dxdt_$$__A[__idx] = __u1_$$__A; $$//
+            __OUT_BACKG($$__A,__idx) = __u1_$$__A; $$//
 
-            __dtwopf_$$__A_$$__B[__idx]  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
-            __dtwopf_$$__A_$$__B[__idx] += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
+            __OUT_TWOPF($$__A,$$__B,__idx)  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
+            __OUT_TWOPF($$__A,$$__B,__idx) += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
           }
       }
   }

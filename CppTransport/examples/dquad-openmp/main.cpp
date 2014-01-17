@@ -21,20 +21,6 @@
 // ****************************************************************************
 
 
-// set up parameters and initial conditions
-// we work in units where M_p=1, but that's up to us;
-// we could choose something different
-
-const double M_Planck = 1.0;
-
-const double mass		  = 1E-5 * M_Planck;
-const double m_phi    = 9.0 * mass;
-const double m_chi    = 1.0 * mass;
-
-const double phi_init = 10;
-const double chi_init = 12.9;
-
-
 static void output_info(transport::canonical_model<double>* model, transport::task<double>* tk);
 
 
