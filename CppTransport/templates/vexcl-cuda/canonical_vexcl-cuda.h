@@ -495,7 +495,7 @@ namespace transport
           this->start(t, this->get_log(), data_manager<number>::normal);
 
           // allocate storage for state, then copy device vector
-          std::vector<double> hst_x($$__MODEL_pool::twopf_state_size);
+          std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
           vex::copy(x, hst_x);
 
           // push to batcher
@@ -559,7 +559,7 @@ namespace transport
         this->start(t, this->get_log(), data_manager<number>::normal);
 
         // allocate storage, then copy device vector to host in one shot
-        std::vector<double> hst_x($$__MODEL_pool::threepf_state_size);
+        std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*this->group_size());
         vex::copy(x, hst_x);
 
         // push to the batcher

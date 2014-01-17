@@ -105,6 +105,7 @@ namespace transport
           {
           }
 
+        //! Push the current state to the batcher
         template <typename State>
         void push(const State& x)
           {
@@ -156,6 +157,7 @@ namespace transport
           {
           }
 
+        //! Push the current state to the batcher
         template <typename State>
         void push(const State& x)
           {
@@ -221,6 +223,7 @@ namespace transport
           {
           }
 
+        //! Push the current state to the batcher
         template <typename State>
         void push(const State& x)
           {
@@ -248,6 +251,9 @@ namespace transport
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+
+        //! Return number of k-configurations in this group
+        unsigned int group_size() const { return(this->work_list.size()); }
 
       private:
         const work_queue<twopf_kconfig>::device_work_list& work_list;
@@ -279,6 +285,7 @@ namespace transport
           {
           }
 
+        //! Push the current state to the batcher
         template <typename State>
         void push(const State& x)
           {
@@ -316,6 +323,9 @@ namespace transport
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+
+        //! Return number of k-configurations in this group
+        unsigned int group_size() const { return(this->work_list.size()); }
 
       private:
         const work_queue<threepf_kconfig>::device_work_list& work_list;
