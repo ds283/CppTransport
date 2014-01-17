@@ -253,11 +253,11 @@ namespace transport
         const work_queue<twopf_kconfig>::device_work_list& work_list;
         typename data_manager<number>::twopf_batcher&      batcher;
 
-        unsigned int                                  backg_size;
-        unsigned int                                  twopf_size;
+        unsigned int                                       backg_size;
+        unsigned int                                       twopf_size;
 
-        unsigned int                                  backg_start;
-        unsigned int                                  twopf_start;
+        unsigned int                                       backg_start;
+        unsigned int                                       twopf_start;
       };
 
 
@@ -321,14 +321,14 @@ namespace transport
         const work_queue<threepf_kconfig>::device_work_list& work_list;
         typename data_manager<number>::threepf_batcher&      batcher;
 
-        unsigned int                                    backg_size;
-        unsigned int                                    twopf_size;
-        unsigned int                                    threepf_size;
+        unsigned int                                         backg_size;
+        unsigned int                                         twopf_size;
+        unsigned int                                         threepf_size;
 
-        unsigned int                                    backg_start;
-        unsigned int                                    twopf_re_start;
-        unsigned int                                    twopf_im_start;
-        unsigned int                                    threepf_start;
+        unsigned int                                         backg_start;
+        unsigned int                                         twopf_re_start;
+        unsigned int                                         twopf_im_start;
+        unsigned int                                         threepf_start;
       };
 
   } // namespace transport
