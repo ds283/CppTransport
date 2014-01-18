@@ -449,31 +449,25 @@ namespace transport
       template <typename number>
       void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
         {
-          std::cerr << "Entering 2pf functor" << std::endl;
-
           const auto __a = exp(__t);
-
-          std::cerr << "Setting up twopf_kernel object" << std::endl;
 
           std::vector<vex::backend::kernel> twopf_kernel;
 
           assert(this->ctx.size() == 1);
 
-          std::cerr << "Emplacing kernel" << std::endl;
-
+          std::cerr << "Emplacing kernel ..." << std::endl;
           // build a kernel to evolve the twopf and background combined
           twopf_kernel.emplace_back(this->ctx.queue(0),
                                     $$__IMPORT_KERNEL{vexcl-opencl/twopf.cl, twopffused, );}
+          std::cerr << "... done" << std::endl;
 
           struct
             {
               size_t operator()(size_t w_size)
                 {
-                  return(1 + $$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size)*w_size*sizeof(double);
+                  return(1 + $$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size)*w_size*sizeof(cl_double);
                 }
             } twopf_kernel_smem_functor;
-
-          std::cerr << "Pushing arguments" << std::endl;
 
           // apply the twopf kernel
           twopf_kernel[0].push_arg<cl_ulong>(this->k_list.part_size(0));
@@ -484,18 +478,12 @@ namespace transport
           twopf_kernel[0].push_arg(this->k_list(0));
           twopf_kernel[0].push_arg(__a);
 
-          std::cerr << "Setting shared memory" << std::endl;
-
           // set amount of shared memory required per block
           // VexCL passes us the block dimension, so we have to multiply by the required shared memory per thread
           twopf_kernel[0].config(ctx.queue(0), twopf_kernel_smem_functor);
           twopf_kernel[0].set_smem(twopf_kernel_smem_functor);
 
-          std::cerr << "Calling kernel" << std::endl;
-
           twopf_kernel[0](this->ctx.queue(0));
-
-          std::cerr << "Leaving 2pf functor" << std::endl;
         }
 
 
@@ -505,8 +493,6 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
       {
-        std::cerr << "Entering 2pf observer" << std::endl;
-
         this->start(t, this->get_log(), data_manager<number>::normal);
 
         // allocate storage for state, then copy device vector
@@ -517,8 +503,6 @@ namespace transport
         this->push(hst_x);
 
         this->stop();
-
-        std::cerr << "Leaving 2pf observer" << std::endl;
       }
 
 
@@ -542,7 +526,7 @@ namespace transport
           {
             size_t operator()(size_t w_size)
               {
-                return(3*(1 + 2*$$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size + $$__MODEL_pool::u3_size) + $$__MODEL_pool::threepf_size)*w_size*sizeof(double);
+                return(3*(1 + 2*$$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size + $$__MODEL_pool::u3_size) + $$__MODEL_pool::threepf_size)*w_size*sizeof(cl_double);
               }
           } threepf_kernel_smem_functor;
 
