@@ -1047,7 +1047,7 @@ namespace transport
               }
           }
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, elapsed.user);
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, elapsed.wall);
       }
 
 
