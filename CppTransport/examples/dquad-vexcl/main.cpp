@@ -15,14 +15,13 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_vexcl-cuda.h"
+#include "dq_vexcl-opencl.h"
 
 
 // ****************************************************************************
 
 
-static void output_info               (transport::canonical_model<double>& model);
-static void output_opencl_context_info(vex::Context& ctx);
+static void output_info(transport::canonical_model<double>& model);
 
 
 // ****************************************************************************
@@ -258,23 +257,3 @@ void output_info(transport::canonical_model<double>* model, transport::task<doub
     std::cout << std::endl;
   }
 
-
-#ifdef VEXCL_BACKEND_OPENCL
-void output_opencl_context_info(vex::Context& ctx)
-  {
-    std::cout << "Available OpenCL devices:" << std::endl;
-    std::cout << ctx << std::endl;
-
-    for(int i = 0; i < ctx.size(); i++)
-      {
-        cl::Device device = ctx.device(i);
-        std::cout << "Device: " << device.getInfo<CL_DEVICE_NAME>() << std::endl;
-
-        std::cout << "  CL_DEVICE_MAX_PARAMETER_SIZE   = " << device.getInfo<CL_DEVICE_MAX_PARAMETER_SIZE>() << std::endl;
-        std::cout << "  CL_DEVICE_MAX_WRITE_IMAGE_ARGS = " << device.getInfo<CL_DEVICE_MAX_WRITE_IMAGE_ARGS>() << std::endl;
-        std::cout << "  CL_DEVICE_MAX_READ_IMAGE_ARGS  = " << device.getInfo<CL_DEVICE_MAX_READ_IMAGE_ARGS>() << std::endl;
-      }
-
-    std::cout << std::endl;
-  }
-#endif

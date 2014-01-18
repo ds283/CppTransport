@@ -78,6 +78,7 @@ namespace transport
     // generic access to a threepf block with supplied start position, element (i,k,k), configuration c out of n
     #define __GENERIC_THREEPF(state, start, i, j, k, c, n) state[(start + i*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS + j*2*$$__NUMBER_FIELDS + k)*n + c]
 
+
     // *********************************************************************************************
 
 
@@ -453,12 +454,11 @@ namespace transport
 
           std::vector<vex::backend::kernel> twopf_kernel;
 
+          assert(this->ctx.size() == 1);
+
           // build a kernel to evolve the twopf and background combined
-          for(unsigned int d = 0; d < this->ctx.size(); d++)
-            {
-              twopf_kernel.emplace_back(this->ctx.queue(d),
-                                        $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
-            }
+          twopf_kernel.emplace_back(this->ctx.queue(0),
+                                    $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
 
           struct
             {
@@ -515,12 +515,11 @@ namespace transport
 
         std::vector<vex::backend::kernel> threepf_kernel;
 
+        assert(this->ctx.size() == 1);
+
         // build a kernel to evolve the threepf, twopf and backg together
-        for(unsigned int d = 0; d < this->ctx.size(); d++)
-          {
-            threepf_kernel.emplace_back(this->ctx.queue(d),
-                                        $$__IMPORT_KERNEL{vexcl-cuda/threepf.cu, threepffused, );}
-          }
+        threepf_kernel.emplace_back(this->ctx.queue(0),
+                                    $$__IMPORT_KERNEL{vexcl-cuda/threepf.cu, threepffused, );}
 
         struct
           {
