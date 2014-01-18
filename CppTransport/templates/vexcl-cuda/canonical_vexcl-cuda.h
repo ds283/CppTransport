@@ -245,9 +245,12 @@ namespace transport
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
+        std::ostringstream work_msg;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
             << "** VexCL/CUDA compute backend processing twopf task";
-        std::cout << work;
+        work_msg << work;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be the only device in this backend)
@@ -340,9 +343,12 @@ namespace transport
                                                             typename data_manager<number>::threepf_batcher& batcher,
                                                             bool silent)
         {
+          std::ostringstream work_msg;
           BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
               << "** VexCL/CUDA compute backend processing threepf task";
-          std::cout << work;
+          work_msg << work;
+          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+          std::cout << work_msg.str();
           if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
           // get work queue for the zeroth device (should be the only device in this backend)
