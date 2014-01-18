@@ -49,9 +49,9 @@ inline std::string format_time(boost::timer::nanosecond_type time, unsigned int 
   {
     std::ostringstream out;
 
-    constexpr boost::timer::nanosecond_type mu_sec = 1E3;
-    constexpr boost::timer::nanosecond_type m_sec  = 1E3*mu_sec;
-    constexpr boost::timer::nanosecond_type sec    = 1E3*m_sec;
+    constexpr boost::timer::nanosecond_type mu_sec = 1000;
+    constexpr boost::timer::nanosecond_type m_sec  = 1000*mu_sec;
+    constexpr boost::timer::nanosecond_type sec    = 1000*m_sec;
     constexpr boost::timer::nanosecond_type minute = 60*sec;
     constexpr boost::timer::nanosecond_type hour   = 60*minute;
 
