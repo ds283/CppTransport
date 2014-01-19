@@ -619,7 +619,7 @@ namespace transport
 
         // create new output record in the repository XML database, and set up
         // paths to the integration SQL database
-        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, this->worker_number());
+        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, this->get_rank());
 
         // create the data container
         this->data_mgr->create_container(ctr);
