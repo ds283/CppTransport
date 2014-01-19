@@ -25,13 +25,13 @@ kernel void threepffused( ulong __n,         // number of k-configurations we ar
 
     #define __U2_SIZE      (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
     #define __U3_SIZE      (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
-    #define __BACKG_SIZE (2*$$__NUMBER_FIELDS)
+    #define __BACKG_SIZE   (2*$$__NUMBER_FIELDS)
     #define __TWOPF_SIZE   (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
     #define __THREEPF_SIZE (2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS)
 
     // packing of components into the state vector
     // (remember that all k-modes for a particular component are packed together, so reads can be coalesced)
-    #define __BACKG_START 0
+    #define __BACKG_START       0
     #define __TWOPF_RE_K1_START __BACKG_START + __BACKG_SIZE
     #define __TWOPF_IM_K1_START __TWOPF_RE_K1_START + __TWOPF_SIZE
     #define __TWOPF_RE_K2_START __TWOPF_IM_K1_START + __TWOPF_SIZE
