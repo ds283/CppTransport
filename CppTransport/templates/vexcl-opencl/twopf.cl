@@ -72,11 +72,7 @@ kernel void twopffused( ulong __n,         // number of k-configurations we are 
 
         __OUT_BACKG($$__A, __idx) = __u1_$$__A; $$//
 
-        double __temp_$$__A_$$__B = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
-        __temp_$$__A_$$__B += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
-
-        // in CUDA we do this without saving to local storage, which for some reason turns out to be slower
-        // in OpenCL the compiler crashes if we do it the same way as CUDA, so do it using local storage instead
-        __OUT_TWOPF($$__A, $$__B, __idx) = __temp_$$__A_$$__B; $$//
+        __OUT_TWOPF($$__A, $$__B, __idx)  = 0 $$// + $$__SUM_COORDS[C] __U2($$__A,$$__C) * __TWOPF($$__C,$$__B);
+        __OUT_TWOPF($$__A, $$__B, __idx) += 0 $$// + $$__SUM_COORDS[C] __U2($$__B,$$__C) * __TWOPF($$__A,$$__C);
       }
   }
