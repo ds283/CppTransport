@@ -418,11 +418,11 @@ namespace transport
 
               // fix initial conditions - imaginary 2pfs
               this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k1_start,
-                                      list, v1, times.front(), tk->get_params(), ics);
+                                      list, v1, times.front(), tk->get_params(), ics, true);
               this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k2_start,
-                                      list, v2, times.front(), tk->get_params(), ics);
+                                      list, v2, times.front(), tk->get_params(), ics, true);
               this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k3_start,
-                                      list, v3, times.front(), tk->get_params(), ics);
+                                      list, v3, times.front(), tk->get_params(), ics, true);
 
               // fix initial conditions - 3pfs
               this->populate_threepf_ic(hst_x, $$__MODEL_pool::threepf_start, list, times.front(), tk->get_params(), ics);
