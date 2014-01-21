@@ -22,10 +22,17 @@ namespace transport
     class spline1d
       {
       public:
+        //! set up a 1d spline object with given data points
         spline1d(const std::vector<double>& x, const std::vector<number>& y);
+
+        //! destroy object
         ~spline1d();
 
+        //! evaluate the spline at a given value of x
         number eval(double x);
+
+        //! evaluate the spline at a given value of x
+        number operator()(double x) { return(this->eval(x)); }
 
       protected:
         gsl_spline*       spline;
@@ -44,10 +51,10 @@ namespace transport
         double* xs = new double[x.size()];
         double* ys = new double[x.size()];
 
-        for(int i = 0; i < x.size(); i++)
+        for(unsigned int i = 0; i < x.size(); i++)
           {
             // assume 'number' is explicitly castable to 'double'
-            xs[i] = x[i];
+            xs[i] = static_cast<double>(x[i]);
             ys[i] = (double)y[i];
           }
 
