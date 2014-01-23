@@ -34,7 +34,8 @@ int main(int argc, char* argv[])
     transport::repository_creation_key key;
 
     // create a new repository
-    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+//    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
 
     // set up an instance of a manager
