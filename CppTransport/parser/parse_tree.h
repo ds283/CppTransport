@@ -32,13 +32,12 @@ class declaration
       declaration(const quantity& o, const filestack* p); // constructor needed for const members
 
       // return pointer to the symbol table object this declaration corresponds to
-      const quantity*                    get_quantity        () const;
-      virtual void                       print               (std::ostream& stream) const = 0;
+      quantity*        get_quantity() const;
+      virtual void     print       (std::ostream& stream) const = 0;
 
     protected:
-
-      quantity*                          obj;
-      const filestack*                   path;
+      quantity*        obj;
+      const filestack* path;
   };
 
 
@@ -86,7 +85,7 @@ class script
       const struct stepper&              get_background_stepper   () const;
       const struct stepper&              get_perturbations_stepper() const;
 
-      bool                               lookup_symbol            (std::string id, const quantity*& s) const;
+      bool                               lookup_symbol            (std::string id, quantity*& s) const;
 
       unsigned int                       get_number_fields        () const;
       unsigned int                       get_number_params        () const;
@@ -155,7 +154,7 @@ class script
       GiNaC::symbol                      M_Planck;
       std::vector<GiNaC::symbol>         deriv_symbols;
 
-      symbol_table<const quantity>*      table;
+      symbol_table<quantity>*            table;
   };
 
 
