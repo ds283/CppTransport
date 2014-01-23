@@ -195,7 +195,7 @@ namespace transport
 
       protected:
         //! Name of this task
-        const std::string&               name;
+        const std::string                name;
 
         //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
