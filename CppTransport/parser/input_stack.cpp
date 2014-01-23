@@ -93,7 +93,7 @@ std::string input_stack::write() const
   }
 
 
-std::string input_stack::write(unsigned int level) const
+std::string input_stack::write(size_t level) const
   {
     std::ostringstream out;
 

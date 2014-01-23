@@ -34,7 +34,7 @@ class input_stack: public filestack_derivation_helper<input_stack>
 
     void         pop           ();
 
-    std::string  write         (unsigned int level) const;
+    std::string  write         (size_t level) const;
     std::string  write         () const;
 
   protected:

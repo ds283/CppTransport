@@ -37,8 +37,8 @@ class filestack
 
     // generate a list of included files, suitable for producing an error report
     // the list is truncated at depth 'level' to avoid excess verbosity
-    virtual std::string write(unsigned int level) const = 0;
-    virtual std::string write()                   const = 0;
+    virtual std::string write(size_t level) const = 0;
+    virtual std::string write()             const = 0;
 
     virtual filestack* clone() const = 0;
 
