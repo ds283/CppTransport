@@ -12,6 +12,7 @@
 #include <list>
 #include <deque>
 #include <string>
+#include <functional>
 
 
 typedef std::function<void(void)> buffer_flush_handler;
