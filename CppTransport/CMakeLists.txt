@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 2.6)
 project(CppTransport)
 
 find_package(MPI REQUIRED)
-set(CMAKE_LIBRARY_PATH "${CMAKE_LIBRARY_PATH} /home/ds283/Documents/Code/dbxml-2.5.16/install/lib")
-add_definitions(-std=c++11)
+set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /home/ds283/Documents/Code/dbxml-2.5.16/install/lib)
+add_definitions(-std=c++11 -g)
 
 include_directories(./ backends
 					   backends/infrastructure
@@ -81,5 +81,12 @@ target_link_libraries(CppTransport ginac cln boost_system boost_filesystem boost
 
 add_executable(dquad-openmpi examples/dquad-openmp/main.cpp)
 
-target_link_libraries(dquad-openmpi sqlite3 dbmxl db_cxx boost_system boost_filesystem boost_random boost_timer boost_date_time boost_log_support boost_log boost_serialization boost_threads)
+target_link_libraries(dquad-openmpi sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
+target_link_libraries(dquad-openmpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
+target_link_libraries(dquad-openmpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
 
+add_executable(dquad-makerepo examples/dquad-openmp/makerepo.cpp)
+
+target_link_libraries(dquad-makerepo sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
+target_link_libraries(dquad-makerepo /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
+target_link_libraries(dquad-makerepo /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
