@@ -699,7 +699,7 @@ namespace y
 
           if(ok)
             {
-              const quantity* s = nullptr;
+              quantity* s = nullptr;
 
               bool exists = this->root->lookup_symbol(id, s);
 
