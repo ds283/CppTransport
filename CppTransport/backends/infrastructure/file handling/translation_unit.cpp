@@ -112,7 +112,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
         core_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_core()));
       }
     core_guard = boost::to_upper_copy(leafname(core_output));
-    core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
+    core_guard.erase(boost::remove_if(core_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), core_guard.end());
 
     if(implementation_out != "")
       {
@@ -123,7 +123,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
         implementation_output = this->mangle_output_name(name, this->get_template_suffix(driver->get_script()->get_implementation()));
       }
     implementation_guard = boost::to_upper_copy(leafname(implementation_output));
-    implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)));
+    implementation_guard.erase(boost::remove_if(implementation_guard, boost::is_any_of(INVALID_GUARD_CHARACTERS)), implementation_guard.end());
 
     stack = new output_stack;
     outstream = new translator(this);
