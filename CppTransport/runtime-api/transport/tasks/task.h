@@ -523,7 +523,6 @@ namespace transport
 
                     if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
                       {
-
                         kconfig.k1  = this->comoving_normalize(ks[j]);
                         kconfig.k2  = this->comoving_normalize(ks[k]);
                         kconfig.k3  = this->comoving_normalize(ks[l]);
