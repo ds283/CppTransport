@@ -349,13 +349,13 @@ bool script::lookup_symbol(std::string id, quantity*& s) const
 
 unsigned int script::get_number_fields() const
   {
-    return(this->fields.size());
+    return(static_cast<unsigned int>(this->fields.size()));
   }
 
 
 unsigned int script::get_number_params() const
   {
-    return(this->parameters.size());
+    return(static_cast<unsigned int>(this->parameters.size()));
   }
 
 
