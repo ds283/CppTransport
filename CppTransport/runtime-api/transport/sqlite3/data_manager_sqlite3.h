@@ -202,6 +202,8 @@ namespace transport
         boost::filesystem::path ctr_path = ctr.data_container_path();
         boost::filesystem::path taskfile_path = ctr.taskfile_path();
 
+        // open the main container
+
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, flags, nullptr);
 
         if(status != SQLITE_OK)
@@ -227,6 +229,8 @@ namespace transport
         this->open_containers.push_back(db);
         ctr.set_data_manager_handle(db);
 
+        // open the taskfile associated with this container
+
         status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, flags, nullptr);
 
         if(status != SQLITE_OK)
@@ -245,9 +249,6 @@ namespace transport
               }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
           }
-
-//        // enable foreign key constraints
-//        sqlite3_exec(taskfile, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
 
         // remember this connexion
         this->open_containers.push_back(taskfile);

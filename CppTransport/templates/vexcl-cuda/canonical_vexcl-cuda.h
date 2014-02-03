@@ -79,6 +79,13 @@ namespace transport
     #define __GENERIC_THREEPF(state, start, i, j, k, c, n) state[(start + i*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS + j*2*$$__NUMBER_FIELDS + k)*n + c]
 
 
+#define __CPP_TRANSPORT_VEXCL_CUDA "VexCL/CUDA"
+    namespace $$__MODEL_pool
+      {
+        static std::string backend = "";
+      }
+
+
     // *********************************************************************************************
 
 
@@ -91,8 +98,17 @@ namespace transport
           {
             if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, __CPP_TRANSPORT_SINGLE_GPU_ONLY);
 
-            cudaGetDeviceProperties(&this->cuda_device_properties, ctx.device(0).raw());
+            cudaGetDeviceProperties(&cuda_device_properties, ctx.device(0).raw());
+
+            std::ostringstream backend_string;
+            backend_string << __CPP_TRANSPORT_VEXCL_CUDA << " " << cuda_device_properties.name;
+            $$__MODEL_pool::backend = backend_string.str();
           }
+
+        // INTERFACE - EXTRACT MODEL INFORMATION
+
+      public:
+        const std::string& get_backend() const { return($$__MODEL_pool::backend); }
 
         // BACKEND INTERFACE
 

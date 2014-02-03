@@ -77,6 +77,13 @@ namespace transport
     #define __GENERIC_THREEPF(state, start, i, j, k, c, n) state[(start + i*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS + j*2*$$__NUMBER_FIELDS + k)*n + c]
 
 
+    #define __CPP_TRANSPORT_VEXCL_OPENCL "VexCL/OpenCL"
+    namespace $$__MODEL_pool
+      {
+        static std::string backend = "";
+      }
+
+
       // *********************************************************************************************
 
 
@@ -88,7 +95,20 @@ namespace transport
             : $$__MODEL<number>(mgr), ctx(vex::Filter::Type(CL_DEVICE_TYPE_GPU) && vex::Filter::DoublePrecision)
             {
               if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, __CPP_TRANSPORT_SINGLE_GPU_ONLY);
+
+              std::ostringstream backend_string;
+
+              cl::Device dev = ctx.device(0);
+              std::string device_name  = dev.getInfo<CL_DEVICE_NAME>();
+
+              backend_string << __CPP_TRANSPORT_VEXCL_OPENCL << " " << device_name;
+              $$__MODEL_pool::backend = backend_string.str();
             }
+
+          // INTERFACE - EXTRACT MODEL INFORMATION
+
+        public:
+          const std::string& get_backend() const { return($$__MODEL_pool::backend); }
 
           // BACKEND INTERFACE
 

@@ -51,6 +51,9 @@ namespace transport
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
+
+        // Integration container object: forms a handle for a data container when writing the output of an integration
+
         class integration_container
           {
           public:
@@ -100,7 +103,7 @@ namespace transport
 
             //! Return data_manager handle for data container
 
-            //! Throws a REPOSTORY_ERROR exception if the handle is unset
+            //! Throws a REPOSITORY_ERROR exception if the handle is unset
             template <typename data_manager_type>
             void get_data_manager_handle(data_manager_type* data)
               {
@@ -205,9 +208,11 @@ namespace transport
 
       public:
         //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
-        virtual integration_container integration_new_output(twopf_task<number>* tk, unsigned int worker) = 0;
+        virtual integration_container integration_new_output(twopf_task<number>* tk,
+                                                             const std::string& backend, unsigned int worker) = 0;
         //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
-        virtual integration_container integration_new_output(threepf_task<number>* tk, unsigned int worker) = 0;
+        virtual integration_container integration_new_output(threepf_task<number>* tk,
+                                                             const std::string& backend, unsigned int worker) = 0;
       };
 
 

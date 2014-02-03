@@ -72,6 +72,8 @@ namespace transport
         virtual const std::string&              get_author() const = 0;
         //! Return tagline for the model implemented by this object
         virtual const std::string&              get_tag() const = 0;
+        //! Return name of backend used to do the computation
+        virtual const std::string&              get_backend() const = 0;
 
         //! Return number of fields belonging to the model implemented by this object
         virtual unsigned int                    get_N_fields() const = 0;
