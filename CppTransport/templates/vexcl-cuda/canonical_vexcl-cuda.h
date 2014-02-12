@@ -79,6 +79,13 @@ namespace transport
     #define __GENERIC_THREEPF(state, start, i, j, k, c, n) state[(start + i*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS + j*2*$$__NUMBER_FIELDS + k)*n + c]
 
 
+#define __CPP_TRANSPORT_VEXCL_CUDA "VexCL/CUDA"
+    namespace $$__MODEL_pool
+      {
+        static std::string backend = "";
+      }
+
+
     // *********************************************************************************************
 
 
@@ -86,13 +93,23 @@ namespace transport
     class $$__MODEL_vexcl : public $$__MODEL<number>
       {
       public:
-        $$__MODEL_vexcl(instance_manager<number>* mgr)
-          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any)
+	    // worker number is used to pick a particular GPU out of the context
+        $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
+          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
           {
             if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, __CPP_TRANSPORT_SINGLE_GPU_ONLY);
 
-            cudaGetDeviceProperties(&this->cuda_device_properties, ctx.device(0).raw());
+            cudaGetDeviceProperties(&cuda_device_properties, ctx.device(0).raw());
+
+            std::ostringstream backend_string;
+            backend_string << __CPP_TRANSPORT_VEXCL_CUDA << " " << cuda_device_properties.name;
+            $$__MODEL_pool::backend = backend_string.str();
           }
+
+        // INTERFACE - EXTRACT MODEL INFORMATION
+
+      public:
+        const std::string& get_backend() const { return($$__MODEL_pool::backend); }
 
         // BACKEND INTERFACE
 

@@ -110,6 +110,8 @@ namespace transport
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
+        // Batcher objects, used by integration workers to push results into a container
+
         class generic_batcher
           {
           public:
@@ -376,7 +378,7 @@ namespace transport
           }
 
 
-        // INTERFACE -- CONTAINER HANDLING
+        // INTERFACE -- WRITE CONTAINER HANDLING
 
       public:
         //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
@@ -389,7 +391,7 @@ namespace transport
         virtual void close_container(typename repository<number>::integration_container& ctr) = 0;
 
 
-        // INTERFACE -- WRITE INDEX TABLES
+        // INTERFACE -- WRITE INDEX TABLES FOR A CONTAIER
 
       public:
         //! Create tables needed for a twopf container
@@ -401,7 +403,7 @@ namespace transport
                                    unsigned int Nfields) = 0;
 
 
-        // INTERFACE -- TASK FILES
+        // INTERFACE -- TASK FILES FOR A CONTAINER
 
       public:
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s

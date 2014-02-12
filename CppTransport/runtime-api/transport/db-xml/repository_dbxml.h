@@ -31,83 +31,89 @@ namespace transport
     class repository_dbxml: public repository<number>
       {
 
-      // CONSTRUCTOR, DESTRUCTOR
+        // CONSTRUCTOR, DESTRUCTOR
 
-        public:
-      //! Open a repository with a specific pathname
-      repository_dbxml(const std::string& path, bool recovery=false);
-      //! Create a repository with a specific pathname
-      repository_dbxml(const std::string& path, const repository_creation_key& key, typename repository<number>::storage_type type=repository<number>::node_storage);
+      public:
+        //! Open a repository with a specific pathname
+        repository_dbxml(const std::string& path, bool recovery=false);
+        //! Create a repository with a specific pathname
+        repository_dbxml(const std::string& path, const repository_creation_key& key, typename repository<number>::storage_type type=repository<number>::node_storage);
 
-      //! Close a repository, including the corresponding containers and environment
-      ~repository_dbxml();
-
-
-      // INTERFACE -- PATHS
-
-      //! Get path to root of repository
-      const boost::filesystem::path& get_root_path() { return(this->root_path); }
-
-      // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
-
-      //! Write a 'model/initial conditions/parameters' combination (a 'package') to the model database.
-      //! No combination with the supplied name should already exist; if it does, this is considered an error.
-      void write_package(const initial_conditions<number>& ics, const model<number>* m);
-
-      //! Write a threepf integration task to the integration database.
-      //! Delegates write_integration_task() to do the work
-      void write_integration(const twopf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_TWOPF_ROOT); }
-      //! Write a twopf integration task to the integration database
-      //! Delegates write_integration_task() to do the work
-      void write_integration(const threepf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_THREEPF_ROOT); }
-
-        protected:
-      //! Write a generic task to the integration database, using a supplied node tag
-      void write_integration_task(const task<number>& t, const model<number>* m, const std::string& root_node_name);
-
-      // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
-
-        public:
-      //! Query the database for a named task, and reconstruct it if present
-      task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
-
-      //! Extract the XML document for a named package
-      std::string extract_package_document(const std::string& name);
-      //! Extract the XML document for a named integration
-      std::string extract_integration_document(const std::string& name);
+        //! Close a repository, including the corresponding containers and environment
+        ~repository_dbxml();
 
 
-      // INTERFACE -- ADD OUTPUT TO TASKS
+        // INTERFACE -- PATHS
 
-        public:
-      //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
-      typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk, unsigned int worker);
-      //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
-      typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk, unsigned int worker);
+      public:
+        //! Get path to root of repository
+        const boost::filesystem::path& get_root_path() { return(this->root_path); }
 
 
-      // INTERNAL DATA
+        // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
-        private:
-      //! BOOST path to repository root directory
-      boost::filesystem::path root_path;
-      //! BOOST path to repository environment
-      boost::filesystem::path env_path;
-      //! BOOST path to containers
-      boost::filesystem::path containers_path;
-      //! BOOST path to model container
-      boost::filesystem::path packages_path;
-      //! BOOST path to integrations container
-      boost::filesystem::path integrations_path;
+      public:
+        //! Write a 'model/initial conditions/parameters' combination (a 'package') to the model database.
+        //! No combination with the supplied name should already exist; if it does, this is considered an error.
+        void write_package(const initial_conditions<number>& ics, const model<number>* m);
+
+        //! Write a threepf integration task to the integration database.
+        //! Delegates write_integration_task() to do the work
+        void write_integration(const twopf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_TWOPF_ROOT); }
+        //! Write a twopf integration task to the integration database
+        //! Delegates write_integration_task() to do the work
+        void write_integration(const threepf_task<number>& t, const model<number>* m) { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_THREEPF_ROOT); }
+
+      protected:
+        //! Write a generic task to the integration database, using a supplied node tag
+        void write_integration_task(const task<number>& t, const model<number>* m, const std::string& root_node_name);
 
 
-      // DATABASE ENVIRONMENT
+        // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
 
-        private:
-      //! Berkeley DB XML environment object corresponding to the open repository
-      DB_ENV* env;
-      //! Berkeley DB XML XmlManager object corresponding to the open repository
-      DbXml::XmlManager* mgr;
+      public:
+        //! Query the database for a named task, and reconstruct it if present
+        task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
+
+        //! Extract the XML document for a named package
+        std::string extract_package_document(const std::string& name);
+        //! Extract the XML document for a named integration
+        std::string extract_integration_document(const std::string& name);
+
+
+        // INTERFACE -- ADD OUTPUT TO TASKS
+
+      public:
+        //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
+        typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk,
+                                                                                  const std::string& backend, unsigned int worker);
+        //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
+        typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk,
+                                                                                  const std::string& backend, unsigned int worker);
+
+
+        // INTERNAL DATA
+
+      private:
+        //! BOOST path to repository root directory
+        boost::filesystem::path root_path;
+        //! BOOST path to repository environment
+        boost::filesystem::path env_path;
+        //! BOOST path to containers
+        boost::filesystem::path containers_path;
+        //! BOOST path to model container
+        boost::filesystem::path packages_path;
+        //! BOOST path to integrations container
+        boost::filesystem::path integrations_path;
+
+
+        // DATABASE ENVIRONMENT
+
+      private:
+        //! Berkeley DB XML environment object corresponding to the open repository
+        DB_ENV* env;
+        //! Berkeley DB XML XmlManager object corresponding to the open repository
+        DbXml::XmlManager* mgr;
       };
 
 
@@ -165,10 +171,9 @@ namespace transport
           throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
         }
 
-        // set up environment
-        // enable logging and locking (so multiple processes can access the repository safely)
-        u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_REGISTER | DB_INIT_TXN | DB_CREATE;
-        if(recovery) env_flags = env_flags | DB_RECOVER;
+        // set up environment to enable logging, transactional support
+        // and locking (so multiple processes can access the repository safely)
+        u_int32_t env_flags = DB_INIT_LOCK | DB_INIT_LOG | DB_INIT_MPOOL | DB_REGISTER | DB_RECOVER | DB_INIT_TXN | DB_CREATE;
         env->open(env, env_path.string().c_str(), env_flags, 0);
 
         // set up XmlManager object
@@ -233,8 +238,14 @@ namespace transport
             default:
               assert(false);
           }
-        DbXml::XmlContainer packages = this->mgr->createContainer(packages_path.string().c_str());
-        DbXml::XmlContainer integrations = this->mgr->createContainer(integrations_path.string().c_str());
+
+        DbXml::XmlContainerConfig pkg_config;
+        DbXml::XmlContainerConfig int_config;
+        pkg_config.setTransactional(true);
+        int_config.setTransactional(true);
+
+        DbXml::XmlContainer packages = this->mgr->createContainer(packages_path.string().c_str(), pkg_config);
+        DbXml::XmlContainer integrations = this->mgr->createContainer(integrations_path.string().c_str(), int_config);
       }
 
 
@@ -339,17 +350,17 @@ namespace transport
         try
           {
             // open database container
-            DbXml::XmlContainerConfig models_config;
+            DbXml::XmlContainerConfig pkg_config;
             DbXml::XmlContainerConfig int_config;
-            models_config.setTransactional(true);
+            pkg_config.setTransactional(true);
             int_config.setTransactional(true);
-            DbXml::XmlContainer models = this->mgr->openContainer(this->packages_path.string().c_str(), models_config);
+            DbXml::XmlContainer packages = this->mgr->openContainer(this->packages_path.string().c_str(), pkg_config);
             DbXml::XmlContainer integrations = this->mgr->openContainer(this->integrations_path.string().c_str(), int_config);
 
             // check whether XML document corresponding to our initial_conditions object is in the database
             try
               {
-                DbXml::XmlDocument doc = models.getDocument(txn, t.get_ics().get_name());
+                DbXml::XmlDocument doc = packages.getDocument(txn, t.get_ics().get_name());
               }
             catch (DbXml::XmlException& xe)
               {
@@ -512,7 +523,8 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(twopf_task<number>* tk, unsigned int worker)
+    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(twopf_task<number>* tk,
+                                                                                                        const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -525,7 +537,7 @@ namespace transport
         typename repository<number>::integration_container ctr =
                                                              dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(),
                                                                                                                  this->root_path, this->integrations_path,
-                                                                                                                 worker);
+                                                                                                                 backend, worker);
 
         dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 
@@ -534,7 +546,8 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(threepf_task<number>* tk, unsigned int worker)
+    typename repository<number>::integration_container repository_dbxml<number>::integration_new_output(threepf_task<number>* tk,
+                                                                                                        const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -547,7 +560,7 @@ namespace transport
         typename repository<number>::integration_container ctr =
                                                              dbxml_operations::insert_integration_output<number>(this->mgr, tk->get_name(),
                                                                                                                  this->root_path, this->integrations_path,
-                                                                                                                 worker);
+                                                                                                                 backend, worker);
 
         dbxml_operations::update_integration_edit_time(this->mgr, tk->get_name(), this->integrations_path);
 

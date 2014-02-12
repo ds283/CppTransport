@@ -15,7 +15,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_vexcl-opencl.h"
+#include "dq_vexcl-cuda.h"
 
 
 // ****************************************************************************
@@ -34,7 +34,9 @@ int main(int argc, char* argv[])
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
-    transport::dquad_vexcl<double>* model = new transport::dquad_vexcl<double>(mgr);
+	// for the VexCL backends, we have to pass the worker number so that
+	// (if necessary) the backend can select an appropriate GPU
+    transport::dquad_vexcl<double>* model = new transport::dquad_vexcl<double>(mgr, mgr->get_rank());
 
     if(mgr->is_master()) mgr->execute_tasks();
     else                 mgr->wait_for_tasks();
