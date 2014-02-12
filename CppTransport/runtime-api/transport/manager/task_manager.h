@@ -269,6 +269,7 @@ namespace transport
 
         //! Write a twopf integration task to the repository
         void write_integration(const twopf_task<number>& t, const model<number>* m);
+
         //! Write a threepf integration task to the repository
         void write_integration(const threepf_task<number>& t, const model<number>* m);
 
@@ -279,8 +280,11 @@ namespace transport
         //! Query whether we are the master process
         bool is_master(void) const { return(this->world.rank() == MPI::RANK_MASTER); }
 
-        //! Return rank of this process
+        //! Return MPI rank of this process
         unsigned int get_rank(void) const { return(this->world.rank()); }
+
+	    //! Get worker number
+	    unsigned int worker_number() { return(this->world.rank()-1); }
 
         //! If we are the master process, execute any queued tasks
         void execute_tasks(void);
@@ -337,9 +341,6 @@ namespace transport
 
         //! Map communicator rank to worker number
         constexpr unsigned int worker_number(unsigned int worker_rank) { return(worker_rank-1); }
-
-        //! Get worker number
-        unsigned int worker_number() { return(this->world.rank()-1); }
 
 
         // INTERFACE -- ERROR REPORTING

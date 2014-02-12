@@ -93,8 +93,9 @@ namespace transport
     class $$__MODEL_vexcl : public $$__MODEL<number>
       {
       public:
-        $$__MODEL_vexcl(instance_manager<number>* mgr)
-          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any)
+	    // worker number is used to pick a particular GPU out of the context
+        $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
+          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
           {
             if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, __CPP_TRANSPORT_SINGLE_GPU_ONLY);
 
