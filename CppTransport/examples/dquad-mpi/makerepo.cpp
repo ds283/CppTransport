@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
     transport::repository_creation_key key;
 
     // create a new repository
-    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
+//    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
 
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 9.0;  // horizon-crossing occurs at 9 e-folds from init_values
-    const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
     const double Nmax   = 59.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
