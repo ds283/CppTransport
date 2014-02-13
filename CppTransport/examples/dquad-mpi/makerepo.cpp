@@ -34,10 +34,10 @@ int main(int argc, char* argv[])
     transport::repository_creation_key key;
 
     // create a new repository
-//    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
-    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
+//    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv, repo);
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
     const double        kmax      = exp(2.0);   // end with the mode which exits the horizon at N=N*+2
-    const unsigned int  k_samples = 4;          // number of k-points
+    const unsigned int  k_samples = 10;         // number of k-points
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 
