@@ -77,6 +77,11 @@ namespace transport
                 boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
                                      boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
 
+		            // enable auto-flushing of log entries
+		            // this degrades performance, but we are not writing many entries and they
+		            // will not be lost in the event of a crash
+		            backend->auto_flush(true);
+
                 // Wrap it into the frontend and register in the core.
                 // The backend requires synchronization in the frontend.
                 this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));

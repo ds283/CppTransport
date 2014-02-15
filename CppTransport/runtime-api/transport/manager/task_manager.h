@@ -770,7 +770,8 @@ namespace transport
           }
 
         wallclock_timer.stop();
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "'" << wallclock_timer.format();
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "'" << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total CPU time required by worker processes = " << format_time(total_cpu_time);
       }
 
