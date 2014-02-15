@@ -48,7 +48,7 @@ namespace transport
       public:
         //! Create a data_manager_sqlite3 instance
         data_manager_sqlite3(unsigned int cp)
-          : data_manager<number>(cp)
+          : data_manager<number>(cp), temporary_container_serial(0)
           {
           }
 
