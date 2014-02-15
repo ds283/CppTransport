@@ -39,8 +39,11 @@
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
 
-// default storage limit on nodes - 100 Mb
-#define __CPP_TRANSPORT_DEFAULT_STORAGE (100*1024*1024)
+// default storage limit on nodes - 300 Mb
+// on a machine with 8 workers, that would give 2400 Mb or 2.4 Gb
+// this can be increased (either here, or when creating a
+// task_manager object) on machines with more memory
+#define __CPP_TRANSPORT_DEFAULT_STORAGE (300*1024*1024)
 
 
 namespace transport
@@ -193,6 +196,8 @@ namespace transport
       }   // namespace MPI
 
 
+    //! Filter function for work items -- used by slave nodes to filter out
+    //! pieces of work intended for them
     class work_item_filter: public abstract_filter
       {
       public:
