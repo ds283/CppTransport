@@ -323,8 +323,15 @@ namespace transport
         //! Slave node: set repository
         void slave_set_repository(const MPI::set_repository_payload& payload);
 
-        //! Slave node: wait until an instruction has been received to delete all containers
-        void slave_wait_temp_containers_deleted(const boost::timer::cpu_times& elapsed, typename data_manager<number>::generic_batcher& batcher);
+        //! Slave node: clean up after integration: wait for, and process, DELETE_CONTAINER messages until all temporary containers are gone
+        void slave_clean_up(typename data_manager<number>::generic_batcher& batcher);
+
+        //! Slave node: process queued DELETE_CONTAINER messages
+
+        //! Note that this function takes a pointed to a batcher, even though we use references elsewhere.
+        //! This is because batchers will dispatch to this function, setting a pointer to themselves using 'this'.
+        //! Therefore we have to take a pointer; there's no way for an object to get a reference to itself.
+        void slave_process_delete_containers(typename data_manager<number>::generic_batcher* batcher);
 
         //! Push a temporary container to the master process
         void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
@@ -974,8 +981,12 @@ namespace transport
         // all work is now done - stop the timer
         timer.stop();
 
-        // wait until all temporary containers have been deleted
-        this->slave_wait_temp_containers_deleted(timer.elapsed(), batcher);
+        // wait until all temporary containers have been deleted, and then return
+        this->slave_clean_up(batcher);
+
+        // notify master process that all work has been finished
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
       }
 
 
@@ -1015,41 +1026,51 @@ namespace transport
         timer.stop();
 
         // wait until all temporary containers have been deleted, and then return
-        this->slave_wait_temp_containers_deleted(timer.elapsed(), batcher);
+        this->slave_clean_up(batcher);
+
+        // notify master process that all work has been finished
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
       }
 
 
     template <typename number>
-    void task_manager<number>::slave_wait_temp_containers_deleted(const boost::timer::cpu_times& elapsed,
-                                                                  typename data_manager<number>::generic_batcher& batcher)
+    void task_manager<number>::slave_clean_up(typename data_manager<number>::generic_batcher& batcher)
       {
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave entering post-integration cleanup: waiting to delete containers";
+
         while(this->temporary_container_queue.size() > 0)
           {
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave waiting for DELETE_CONTAINER instructions";
-            // wait until a message is available from master
-            boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
-
-            switch(stat.tag())
-              {
-                case MPI::DELETE_CONTAINER:
-                  {
-                    std::string payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
-                    BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave received delete instruction: " << payload;
-
-                    if(!boost::filesystem::remove(payload))
-                      {
-                        std::ostringstream msg;
-                        msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload << "'";
-                        this->error(msg.str());
-                      }
-                    this->temporary_container_queue.remove(payload);
-                    break;
-                  }
-              }
+            this->slave_process_delete_containers(&batcher);
           }
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, elapsed.wall);
+      }
+
+
+    template <typename number>
+    void task_manager<number>::slave_process_delete_containers(typename data_manager<number>::generic_batcher* batcher)
+      {
+//        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave waiting for DELETE_CONTAINER instructions";
+
+        // check for DELETE_CONTAINER instructions from the master node
+        boost::optional<boost::mpi::status> stat = this->world.iprobe(MPI::RANK_MASTER, MPI::DELETE_CONTAINER);
+
+        // work through all queued messages
+        while(stat)
+          {
+            std::string payload;
+            this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
+            BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Slave received delete instruction: " << payload;
+
+            if(!boost::filesystem::remove(payload))
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload << "'";
+                this->error(msg.str());
+              }
+            this->temporary_container_queue.remove(payload);
+
+            stat = this->world.iprobe(MPI::RANK_MASTER, MPI::DELETE_CONTAINER);
+          }
       }
 
 
@@ -1108,6 +1129,9 @@ namespace transport
 
         // add this container to the list of containers which should be deleted
         this->temporary_container_queue.push_back(batcher->get_container_path().string());
+
+        // work through any queued DELETE_CONTAINER messages
+        this->slave_process_delete_containers(batcher);
       }
 
 
