@@ -35,9 +35,9 @@ int main(int argc, char* argv[])
 
     // create a new repository
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
-    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
+//    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv, repo);
@@ -56,7 +56,7 @@ int main(int argc, char* argv[])
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 9.0;  // horizon-crossing occurs at 9 e-folds from init_values
-    const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
     const double Nmax   = 59.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
     const double        kmax      = exp(2.0);   // end with the mode which exits the horizon at N=N*+2
-    const unsigned int  k_samples = 4;          // number of k-points
+    const unsigned int  k_samples = 10;         // number of k-points
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
 

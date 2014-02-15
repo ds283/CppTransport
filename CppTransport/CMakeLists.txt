@@ -79,13 +79,13 @@ add_executable(CppTransport main.cpp
 target_link_libraries(CppTransport ginac cln boost_system boost_filesystem boost_timer boost_date_time)
 
 
-add_executable(dquad-openmpi examples/dquad-openmp/main.cpp)
+add_executable(dquad-mpi examples/dquad-mpi/main.cpp)
 
-target_link_libraries(dquad-openmpi sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
-target_link_libraries(dquad-openmpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
-target_link_libraries(dquad-openmpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
+target_link_libraries(dquad-mpi sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
+target_link_libraries(dquad-mpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
+target_link_libraries(dquad-mpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
 
-add_executable(dquad-makerepo examples/dquad-openmp/makerepo.cpp)
+add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp)
 
 target_link_libraries(dquad-makerepo sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
 target_link_libraries(dquad-makerepo /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
