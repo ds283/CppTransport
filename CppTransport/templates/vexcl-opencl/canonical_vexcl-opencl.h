@@ -91,7 +91,12 @@ namespace transport
       class $$__MODEL_vexcl : public $$__MODEL<number>
         {
         public:
-	      // worker number is used to pick a particular GPU out of the context
+          // worker number is used to pick a particular GPU out of the context
+          // this means that, on machines with multiple GPUs, different MPI
+          // workers can access the different GPUs
+          // the snag is that the master node, worker number 0, must still
+          // be initialized even though it does no work
+          // to handle that, we make it share the first GPU even though it won't queue any work to it
           $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
             : $$__MODEL<number>(mgr), ctx(vex::Filter::Type(CL_DEVICE_TYPE_GPU) && vex::Filter::DoublePrecision && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
             {
