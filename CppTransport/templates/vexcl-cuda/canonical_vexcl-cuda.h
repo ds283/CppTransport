@@ -377,13 +377,17 @@ namespace transport
           assert(work.size() == 1);
           const work_queue<threepf_kconfig>::device_queue queues = work[0];
 
-          // there may be more than one queue if there are too many configurations to integrate
+          // there may be more than one work list if there are too many configurations to integrate
           // with our current GPU memory capacity
           for(unsigned int i = 0; i < queues.size(); i++)
             {
               const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
               // integrate all items on this work list
+              BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << "** VexCL/CUDA compute backend: integrating triangles from work list " << i;
+              BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
 
               // initialize the device's copy of the k-modes
               vex::vector<double> dev_k1s(ctx.queue(), list.size());
