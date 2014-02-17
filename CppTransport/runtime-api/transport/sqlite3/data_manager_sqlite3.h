@@ -453,7 +453,7 @@ namespace transport
 
         BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
             << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
-            << " temporary threepf container '" << batcher->get_container_path() << "'";
+            << " temporary threepf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
