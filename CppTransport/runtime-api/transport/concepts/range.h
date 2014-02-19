@@ -100,22 +100,35 @@ namespace transport
           {
             case linear:
             case INTERNAL__null_range_object:
-              for(unsigned int i = 0; i <= steps; i++)
-                {
-                  grid.push_back(min + (static_cast<double>(i)/steps)*(max-min));
-                }
-              break;
+              {
+                for(unsigned int i = 0; i <= steps; i++)
+                  {
+                    grid.push_back(min + (static_cast<double>(i)/steps)*(max-min));
+                  }
+                break;
+              }
 
+            // the logarithmically-spaced interval isn't translation-invariant
+            // (logarithmic spacing between 10 and 20 doesn't isn't the same as logarithmic
+            // spacing between 110 and 120)
+            // to standardize, and also to allow log-spacing for ranges that contain 0,
+            // we shift the range to begin at 1, perform the log-spacing, and then
+            // reverse the shift
             case logarithmic:
-              for(unsigned int i = 0; i <= steps; i++)
-                {
-                  grid.push_back(min * pow(max/min, static_cast<double>(i)/steps));
-                }
-              break;
+              {
+                double shifted_max = max - (min-1.0);
+                for(unsigned int i = 0; i <= steps; i++)
+                  {
+                    grid.push_back(min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/steps)));
+                  }
+                break;
+              }
 
             default:
-              assert(false);
-              throw std::invalid_argument(__CPP_TRANSPORT_RANGE_INVALID_SPACING);
+              {
+                assert(false);
+                throw std::invalid_argument(__CPP_TRANSPORT_RANGE_INVALID_SPACING);
+              }
           }
       }
 
