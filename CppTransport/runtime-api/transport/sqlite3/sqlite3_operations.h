@@ -680,7 +680,7 @@ namespace transport
           {
             char* errmsg;
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating threepf values";
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating background values";
 
             std::ostringstream attach_stmt;
             attach_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
