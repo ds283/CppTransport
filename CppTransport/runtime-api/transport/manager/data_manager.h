@@ -14,7 +14,10 @@
 #include "transport/scheduler/work_queue.h"
 #include "transport/manager/repository.h"
 
+#include "transport/utilities/formatter.h"
+
 #include "boost/filesystem/operations.hpp"
+#include "boost/timer/timer.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
@@ -255,10 +258,16 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+                // set up a timer to measure how long it takes to flush
+                boost::timer::cpu_timer flush_timer;
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf(this, this->twopf_batch);
+
+                flush_timer.stop();
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
                 this->backg_batch.clear();
                 this->twopf_batch.clear();
@@ -266,7 +275,7 @@ namespace transport
 
                 // push a message to the master node, indicating that new data is available
                 // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one create by
+                // because 'dispatcher' needs the current path name, not the one created by
                 // 'replacer'
                 this->dispatcher(this);
 
@@ -332,12 +341,18 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+                // set up a timer to measure how long it takes to flush
+                boost::timer::cpu_timer flush_timer;
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf_re(this, this->twopf_re_batch);
                 this->writers.twopf_im(this, this->twopf_im_batch);
                 this->writers.threepf(this, this->threepf_batch);
+
+                flush_timer.stop();
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
                 this->backg_batch.clear();
                 this->twopf_re_batch.clear();
@@ -347,7 +362,7 @@ namespace transport
 
                 // push a message to the master node, indicating that new data is available
                 // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one create by
+                // because 'dispatcher' needs the current path name, not the one created by
                 // 'replacer'
                 this->dispatcher(this);
 

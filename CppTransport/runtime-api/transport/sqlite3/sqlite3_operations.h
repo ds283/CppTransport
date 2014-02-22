@@ -680,7 +680,7 @@ namespace transport
           {
             char* errmsg;
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating background values";
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating background values";
 
             std::ostringstream attach_stmt;
             attach_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
@@ -799,7 +799,7 @@ namespace transport
         void aggregate_twopf(sqlite3* db, typename repository<number>::integration_container& ctr,
                              const std::string& temp_ctr, twopf_value_type type)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating twopf values";
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
@@ -807,7 +807,7 @@ namespace transport
                 << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << "; "
               << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Executing SQL statement: " << copy_stmt.str();
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
           }
@@ -818,7 +818,7 @@ namespace transport
         void aggregate_threepf(sqlite3* db, typename repository<number>::integration_container& ctr,
                                const std::string& temp_ctr)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Aggregating threepf values";
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating threepf values";
 
             std::ostringstream copy_stmt;
             copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
@@ -826,7 +826,7 @@ namespace transport
                 << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "; "
               << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "&& Executing SQL statement: " << copy_stmt.str();
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
           }

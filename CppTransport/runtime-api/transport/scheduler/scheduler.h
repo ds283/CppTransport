@@ -12,6 +12,7 @@
 #include <iomanip>
 #include <array>
 #include <vector>
+#include <set>
 #include <sstream>
 #include <stdexcept>
 
@@ -23,6 +24,7 @@
 namespace transport
   {
 
+    //! Abstract filter function, used to filter work items when adding to a schedule
     class abstract_filter
       {
       public:
@@ -30,13 +32,57 @@ namespace transport
         virtual bool filter(const threepf_kconfig& config) const = 0;
       };
 
-
+    //! Empty filter
     class trivial_filter: public abstract_filter
       {
       public:
         bool filter(const twopf_kconfig& config)   const { return(true); }
         bool filter(const threepf_kconfig& config) const { return(true); }
       };
+
+    //! Filter function for work items -- used by slave nodes to filter out
+    //! pieces of work intended for them
+    class work_item_filter: public abstract_filter
+      {
+      public:
+
+        //! Construct an empty filter
+        work_item_filter()
+          {
+          }
+
+        //! Construct a filter from a predefined set of items
+        work_item_filter(const std::set<unsigned int>& filter_set)
+          : items(filter_set)
+          {
+          }
+
+        //! Add an item to the list of work-items included in this filter
+        void add_work_item(unsigned int serial) { this->items.insert(serial); }
+
+        //! Check whether a work-item is part of the filter
+        bool filter(const twopf_kconfig& config)   const { return(this->items.find(config.serial) != this->items.end()); }
+        bool filter(const threepf_kconfig& config) const { return(this->items.find(config.serial) != this->items.end()); }
+
+        //! Declare friend function to write a filter to a stream
+        friend std::ostream& operator<<(std::ostream& out, const work_item_filter& filter);
+
+      private:
+        //! std::set holding work items that we are supposed to process
+        std::set<unsigned int> items;
+      };
+
+    //! Write a filter to a stream
+    std::ostream& operator<<(std::ostream& out, const work_item_filter& filter)
+      {
+        std::cerr << __CPP_TRANSPORT_FILTER_TAG;
+        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); t++)
+          {
+            std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
+          }
+        std::cerr << std::endl;
+        return(out);
+      }
 
 
     class scheduler

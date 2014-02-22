@@ -16,6 +16,8 @@
 #include "transport/manager/instance_manager.h"
 #include "transport/tasks/task.h"
 
+#include "transport/manager/mpi_operations.h"
+
 #include "transport/manager/repository.h"
 #include "transport/manager/data_manager.h"
 
@@ -48,195 +50,6 @@
 
 namespace transport
   {
-
-    namespace MPI
-      {
-
-        // MPI messages
-        namespace
-          {
-
-            // MPI message tags
-            const unsigned int NEW_INTEGRATION = 0;
-            const unsigned int FINISHED_TASK = 1;
-            const unsigned int DATA_READY = 2;
-            const unsigned int DELETE_CONTAINER = 3;
-            const unsigned int SET_REPOSITORY = 98;
-            const unsigned int TERMINATE = 99;
-
-            // MPI ranks
-            const unsigned int RANK_MASTER = 0;
-
-            // MPI message payloads
-
-            class set_repository_payload
-              {
-              public:
-                //! Null constructor (used for receiving messages)
-                set_repository_payload()
-                  {
-                  }
-
-                //! Value constructor (used for constructing messages to send)
-                set_repository_payload(const boost::filesystem::path& rp)
-                  : repository(rp.string())
-                  {
-                  }
-
-                boost::filesystem::path repository_path() const { return(boost::filesystem::path(this->repository)); }
-
-              private:
-                //! Pathname to repository
-                std::string repository;
-
-                // enable boost::serialization support, and hence automated packing for transmission over MPI
-                friend class boost::serialization::access;
-
-                template <typename Archive>
-                void serialize(Archive& ar, unsigned int version)
-                  {
-                    ar & repository;
-                  }
-              };
-
-
-            class new_integration_payload
-              {
-              public:
-                //! Null constructor (used for receiving messages)
-                new_integration_payload()
-                  {
-                  }
-
-                //! Value constructor (used for constructing messages to send)
-                new_integration_payload(const boost::filesystem::path& tk,
-                                        const boost::filesystem::path& tk_f,
-                                        const boost::filesystem::path& tmp_d,
-                                        const boost::filesystem::path& log_d)
-                  : task(tk.string()), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string())
-                  {
-                  }
-
-                const std::string& task_name()          const { return(this->task); }
-                boost::filesystem::path taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
-                boost::filesystem::path tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
-                boost::filesystem::path logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
-
-              private:
-                //! Name of task, to be looked up in repository database
-                std::string task;
-
-                //! Pathname to taskfile
-                std::string taskfile;
-
-                //! Pathname to directory for temporary files
-                std::string tempdir;
-
-                //! Pathname to directory for log files
-                std::string logdir;
-
-                // enable boost::serialization support, and hence automated packing for transmission over MPI
-                friend class boost::serialization::access;
-
-                template <typename Archive>
-                void serialize(Archive& ar, unsigned int version)
-                  {
-                    ar & task;
-                    ar & taskfile;
-                    ar & tempdir;
-                    ar & logdir;
-                  }
-              };
-
-
-            class data_ready_payload
-              {
-              public:
-
-                typedef enum { twopf_payload, threepf_payload } payload_type;
-
-                //! Null constructor (used for receiving messages)
-                data_ready_payload()
-                  {
-                  }
-
-                //! Value constructor (used for sending messages)
-                data_ready_payload(const std::string& p, payload_type t)
-                  : container_path(p), payload(t)
-                  {
-                  }
-
-                //! Get container path
-                const std::string& get_container_path() const { return(this->container_path); }
-
-                //! Get payload type
-                payload_type get_payload_type() const { return(this->payload); }
-
-              private:
-                //! Path to container
-                std::string container_path;
-
-                //! Type of container
-                payload_type payload;
-
-                // enable boost::serialization support, and hence automated packing for transmission over MPI
-                friend class boost::serialization::access;
-
-                template <typename Archive>
-                void serialize(Archive& ar, unsigned int version)
-                  {
-                    ar & container_path;
-                    ar & payload;
-                  }
-              };
-
-
-          }   // unnamed namespace
-
-      }   // namespace MPI
-
-
-    //! Filter function for work items -- used by slave nodes to filter out
-    //! pieces of work intended for them
-    class work_item_filter: public abstract_filter
-      {
-      public:
-        //! Construct an empty filter
-        work_item_filter()
-          {
-          }
-
-        work_item_filter(const std::set<unsigned int>& filter_set)
-        : items(filter_set)
-          {
-          }
-
-        //! Add an item to the list of work-items the filter allows
-        void add_work_item(unsigned int serial) { this->items.insert(serial); }
-
-        //! Check whether a work-item is part of the filter
-        bool filter(const twopf_kconfig& config)   const { return(this->items.find(config.serial) != this->items.end()); }
-        bool filter(const threepf_kconfig& config) const { return(this->items.find(config.serial) != this->items.end()); }
-
-        friend std::ostream& operator<<(std::ostream& out, const work_item_filter& filter);
-
-      private:
-        //! std::set holding work items that we are supposed to process
-        std::set<unsigned int> items;
-      };
-
-
-    std::ostream& operator<<(std::ostream& out, const work_item_filter& filter)
-      {
-        std::cerr << __CPP_TRANSPORT_FILTER_TAG;
-        for(std::set<unsigned int>::iterator t = filter.items.begin(); t != filter.items.end(); t++)
-          {
-            std::cerr << (t != filter.items.begin() ? ", " : " ") << *t;
-          }
-        std::cerr << std::endl;
-        return(out);
-      }
-
 
     template <typename number>
     class task_manager : public instance_manager<number>
@@ -738,6 +551,9 @@ namespace transport
                     this->world.recv(stat.source(), MPI::DATA_READY, payload);
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent aggregation request for container '" << payload.get_container_path() << "'";
 
+                    // set up a timer to measure how long we spend batching
+                    boost::timer::cpu_timer batching_timer;
+
                     // batch data into the main container
                     switch(payload.get_payload_type())
                       {
@@ -757,7 +573,11 @@ namespace transport
                           assert(false);
                       }
 
+                    batching_timer.stop();
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Aggregated temporary container in time " << format_time(batching_timer.elapsed().wall);
+
                     // instruct worker to remove the temporary container
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Sending worker " << stat.source() << " delete instruction for container '" << payload.get_container_path() << "'";
                     this->world.isend(stat.source(), MPI::DELETE_CONTAINER, payload.get_container_path());
                     break;
                   }
