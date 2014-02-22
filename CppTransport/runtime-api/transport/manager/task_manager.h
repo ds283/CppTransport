@@ -607,7 +607,7 @@ namespace transport
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time required by worker processes = " << format_time(total_work_time);
-        BOOST_LOG_SEC(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
       }
 
 
