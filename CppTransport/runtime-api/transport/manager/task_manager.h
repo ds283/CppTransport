@@ -513,8 +513,9 @@ namespace transport
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
-        // aggregate cpu times reported by worker processes
-        boost::timer::nanosecond_type total_cpu_time = 0;
+        // aggregate integration times reported by worker processes
+        boost::timer::nanosecond_type total_work_time = 0;
+        boost::timer::nanosecond_type total_aggregation_time = 0;
 
         // get paths the workers will need
         assert(this->repo != nullptr);
@@ -575,6 +576,7 @@ namespace transport
 
                     batching_timer.stop();
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Aggregated temporary container in time " << format_time(batching_timer.elapsed().wall);
+                    total_aggregation_time += batching_timer.elapsed().wall;
 
                     // instruct worker to remove the temporary container
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Sending worker " << stat.source() << " delete instruction for container '" << payload.get_container_path() << "'";
@@ -584,11 +586,11 @@ namespace transport
 
                 case MPI::FINISHED_TASK:
                   {
-                    boost::timer::nanosecond_type cpu_time = 0;
-                    this->world.recv(stat.source(), MPI::FINISHED_TASK, cpu_time);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(cpu_time);
+                    boost::timer::nanosecond_type work_time = 0;
+                    this->world.recv(stat.source(), MPI::FINISHED_TASK, work_time);
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
 
-                    total_cpu_time += cpu_time;
+                    total_work_time += work_time;
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
@@ -604,7 +606,8 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total CPU time required by worker processes = " << format_time(total_cpu_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time required by worker processes = " << format_time(total_work_time);
+        BOOST_LOG_SEC(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
       }
 
 
@@ -792,7 +795,7 @@ namespace transport
                                                                                this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
         typename data_manager<number>::twopf_batcher batcher =
                                                        this->data_mgr->create_temp_twopf_container(payload.tempdir_path(), payload.logdir_path(),
-                                                                                                   this->get_rank(), m->get_N_fields(), dispatcher);
+                                                                                                   this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -836,7 +839,7 @@ namespace transport
                                                                                this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
         typename data_manager<number>::threepf_batcher batcher =
                                                          this->data_mgr->create_temp_threepf_container(payload.tempdir_path(), payload.logdir_path(),
-                                                                                                       this->get_rank(), m->get_N_fields(), dispatcher);
+                                                                                                       this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
