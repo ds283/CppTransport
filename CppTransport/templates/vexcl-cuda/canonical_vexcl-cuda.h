@@ -79,6 +79,13 @@ namespace transport
     #define __GENERIC_THREEPF(state, start, i, j, k, c, n) state[(start + i*2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS + j*2*$$__NUMBER_FIELDS + k)*n + c]
 
 
+#define __CPP_TRANSPORT_VEXCL_CUDA "VexCL/CUDA"
+    namespace $$__MODEL_pool
+      {
+        static std::string backend = "";
+      }
+
+
     // *********************************************************************************************
 
 
@@ -86,13 +93,28 @@ namespace transport
     class $$__MODEL_vexcl : public $$__MODEL<number>
       {
       public:
-        $$__MODEL_vexcl(instance_manager<number>* mgr)
-          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any)
+        // worker number is used to pick a particular GPU out of the context
+        // this means that, on machines with multiple GPUs, different MPI
+        // workers can access the different GPUs
+        // the snag is that the master node, worker number 0, must still
+        // be initialized even though it does no work
+        // to handle that, we make it share the first GPU even though it won't queue any work to it
+        $$__MODEL_vexcl(instance_manager<number>* mgr, unsigned int w_number)
+          : $$__MODEL<number>(mgr), ctx(vex::Filter::Any && vex::Filter::Position(w_number > 0 ? w_number-1 : 0))
           {
             if(this->ctx.size() != 1) throw runtime_exception(runtime_exception::BACKEND_ERROR, __CPP_TRANSPORT_SINGLE_GPU_ONLY);
 
-            cudaGetDeviceProperties(&this->cuda_device_properties, ctx.device(0).raw());
+            cudaGetDeviceProperties(&cuda_device_properties, ctx.device(0).raw());
+
+            std::ostringstream backend_string;
+            backend_string << __CPP_TRANSPORT_VEXCL_CUDA << " " << cuda_device_properties.name;
+            $$__MODEL_pool::backend = backend_string.str();
           }
+
+        // INTERFACE - EXTRACT MODEL INFORMATION
+
+      public:
+        const std::string& get_backend() const { return($$__MODEL_pool::backend); }
 
         // BACKEND INTERFACE
 
@@ -355,13 +377,17 @@ namespace transport
           assert(work.size() == 1);
           const work_queue<threepf_kconfig>::device_queue queues = work[0];
 
-          // there may be more than one queue if there are too many configurations to integrate
+          // there may be more than one work list if there are too many configurations to integrate
           // with our current GPU memory capacity
           for(unsigned int i = 0; i < queues.size(); i++)
             {
               const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
               // integrate all items on this work list
+              BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << "** VexCL/CUDA compute backend: integrating triangles from work list " << i;
+              BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
 
               // initialize the device's copy of the k-modes
               vex::vector<double> dev_k1s(ctx.queue(), list.size());

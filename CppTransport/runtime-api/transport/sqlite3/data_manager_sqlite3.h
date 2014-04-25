@@ -19,6 +19,7 @@
 #include "transport/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"
+#include "boost/timer/timer.hpp"
 
 #include "sqlite3.h"
 #include "transport/sqlite3/sqlite3_operations.h"
@@ -48,7 +49,7 @@ namespace transport
       public:
         //! Create a data_manager_sqlite3 instance
         data_manager_sqlite3(unsigned int cp)
-          : data_manager<number>(cp)
+          : data_manager<number>(cp), temporary_container_serial(0)
           {
           }
 
@@ -109,13 +110,15 @@ namespace transport
         typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir,
                                                                                  const boost::filesystem::path& logdir,
                                                                                  unsigned int worker, unsigned int Nfields,
-                                                                                 typename data_manager<number>::container_dispatch_function dispatcher);
+                                                                                 typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                 boost::timer::cpu_timer& integration_timer);
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir,
                                                                                      const boost::filesystem::path& logdir,
                                                                                      unsigned int worker, unsigned int Nfields,
-                                                                                     typename data_manager<number>::container_dispatch_function dispatcher);
+                                                                                     typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                     boost::timer::cpu_timer& integration_timer);
 
         //! Aggregate a temporary twopf container into a principal container
        void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,
@@ -202,6 +205,8 @@ namespace transport
         boost::filesystem::path ctr_path = ctr.data_container_path();
         boost::filesystem::path taskfile_path = ctr.taskfile_path();
 
+        // open the main container
+
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, flags, nullptr);
 
         if(status != SQLITE_OK)
@@ -227,6 +232,8 @@ namespace transport
         this->open_containers.push_back(db);
         ctr.set_data_manager_handle(db);
 
+        // open the taskfile associated with this container
+
         status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, flags, nullptr);
 
         if(status != SQLITE_OK)
@@ -245,9 +252,6 @@ namespace transport
               }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
           }
-
-//        // enable foreign key constraints
-//        sqlite3_exec(taskfile, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
@@ -354,7 +358,8 @@ namespace transport
                                                                                                            const boost::filesystem::path& logdir,
                                                                                                            unsigned int worker,
                                                                                                            unsigned int Nfields,
-                                                                                                           typename data_manager<number>::container_dispatch_function dispatcher)
+                                                                                                           typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                                           boost::timer::cpu_timer& integration_timer)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -372,7 +377,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
+        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker, integration_timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary twopf container " << container;
 
@@ -387,7 +392,8 @@ namespace transport
                                                                                                                const boost::filesystem::path& logdir,
                                                                                                                unsigned int worker,
                                                                                                                unsigned int Nfields,
-                                                                                                               typename data_manager<number>::container_dispatch_function dispatcher)
+                                                                                                               typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                                               boost::timer::cpu_timer& integration_timer)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -407,7 +413,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
+        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker, integration_timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary threepf container " << container;
 
@@ -452,7 +458,7 @@ namespace transport
 
         BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
             << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
-            << " temporary threepf container '" << batcher->get_container_path() << "'";
+            << " temporary threepf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);

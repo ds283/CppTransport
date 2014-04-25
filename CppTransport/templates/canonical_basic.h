@@ -5,7 +5,7 @@
 // '$$__HEADER' generated from '$$__SOURCE'
 // processed on $$__DATE
 
-// OpenMP implementation
+// MPI implementation
 
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
@@ -25,11 +25,16 @@ namespace transport
     template <typename number>
     using threepf_state = std::vector<number>;
 
+    namespace $$__MODEL_pool
+      {
+        const static std::string backend = "MPI";
+      }
+
 
     // *********************************************************************************************
 
 
-    // CLASS FOR $$__MODEL 'basic', ie., OpenMP implementation
+    // CLASS FOR $$__MODEL 'basic', ie., MPI implementation
     template <typename number>
     class $$__MODEL_basic : public $$__MODEL<number>
       {
@@ -38,6 +43,11 @@ namespace transport
         : $$__MODEL<number>(mgr)
           {
           }
+
+        // INTERFACE - EXTRACT MODEL INFORMATION
+
+      public:
+        const std::string& get_backend() const { return($$__MODEL_pool::backend); }
 
         // BACKEND INTERFACE
 
@@ -156,7 +166,7 @@ namespace transport
         context ctx;
 
         // set up just one device
-        ctx.add_device("OpenMPI");
+        ctx.add_device($$__MODEL_pool::backend);
 
         return(ctx);
       }
@@ -169,7 +179,7 @@ namespace transport
       {
         std::ostringstream work_msg;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-            << "** OpenMPI compute backend processing twopf task";
+            << "** MPI compute backend processing twopf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
         std::cout << work_msg.str();
@@ -251,7 +261,7 @@ namespace transport
       {
         std::ostringstream work_msg;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-          << "** OpenMPI compute backend processing threepf task";
+          << "** MPI compute backend processing threepf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
         std::cout << work_msg.str();

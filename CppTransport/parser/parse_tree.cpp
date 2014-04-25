@@ -24,7 +24,7 @@ declaration::declaration(const quantity& o, const filestack* p)
   }
 
 
-const quantity* declaration::get_quantity() const
+quantity* declaration::get_quantity() const
   {
     return(this->obj);
   }
@@ -82,7 +82,7 @@ void parameter_declaration::print(std::ostream& stream) const
 script::script()
   : potential_set(false), potential(nullptr), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
   {
-    this->table = new symbol_table<const quantity>(SYMBOL_TABLE_SIZE);
+    this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
 
     // insert M_Planck symbol into the symbol table
     attributes attrs;
@@ -264,8 +264,8 @@ void script::print(std::ostream& stream) const
 bool script::add_field(field_declaration* d)
   {
     // search for an existing entry in the symbol table
-    const quantity* p;
-    bool            exists = this->table->find(d->get_quantity()->get_name(), p);
+    quantity* p;
+    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
 
     if(exists)
       {
@@ -294,8 +294,8 @@ bool script::add_field(field_declaration* d)
 bool script::add_parameter(parameter_declaration* d)
   {
     // search for an existing entry in the symbol table
-    const quantity* p;
-    bool            exists = this->table->find(d->get_quantity()->get_name(), p);
+    quantity* p;
+    bool      exists = this->table->find(d->get_quantity()->get_name(), p);
 
     if(exists)
       {
@@ -341,7 +341,7 @@ const struct stepper& script::get_perturbations_stepper() const
   }
 
 
-bool script::lookup_symbol(std::string id, const quantity*& s) const
+bool script::lookup_symbol(std::string id, quantity*& s) const
   {
     return(this->table->find(id, s));
   }
@@ -349,13 +349,13 @@ bool script::lookup_symbol(std::string id, const quantity*& s) const
 
 unsigned int script::get_number_fields() const
   {
-    return(this->fields.size());
+    return(static_cast<unsigned int>(this->fields.size()));
   }
 
 
 unsigned int script::get_number_params() const
   {
-    return(this->parameters.size());
+    return(static_cast<unsigned int>(this->parameters.size()));
   }
 
 

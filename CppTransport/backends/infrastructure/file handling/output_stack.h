@@ -60,7 +60,7 @@ class output_stack: public filestack_derivation_helper<output_stack>
 
     void              pop               ();
 
-    std::string       write             (unsigned int level) const;
+    std::string       write             (size_t level) const;
     std::string       write             () const;
 
     buffer*           top_buffer        () const;

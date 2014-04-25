@@ -14,7 +14,10 @@
 #include "transport/scheduler/work_queue.h"
 #include "transport/manager/repository.h"
 
+#include "transport/utilities/formatter.h"
+
 #include "boost/filesystem/operations.hpp"
+#include "boost/timer/timer.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
@@ -110,6 +113,8 @@ namespace transport
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
+        // Batcher objects, used by integration workers to push results into a container
+
         class generic_batcher
           {
           public:
@@ -117,10 +122,10 @@ namespace transport
             generic_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w)
+                            handle_type h, unsigned int w, boost::timer::cpu_timer& tm)
               : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
                 dispatcher(d), replacer(r), worker_number(w),
-                manager_handle(static_cast<void*>(h))
+                manager_handle(static_cast<void*>(h)), integration_timer(tm)
               {
                 std::ostringstream log_file;
                 log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -131,6 +136,11 @@ namespace transport
 
                 boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
                                      boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+		            // enable auto-flushing of log entries
+		            // this degrades performance, but we are not writing many entries and they
+		            // will not be lost in the event of a crash
+		            backend->auto_flush(true);
 
                 // Wrap it into the frontend and register in the core.
                 // The backend requires synchronization in the frontend.
@@ -215,6 +225,9 @@ namespace transport
 
             //! Logger sink
             boost::shared_ptr< sink_t > log_sink;
+
+            //! Integration timer - should be stopped while batching
+            boost::timer::cpu_timer& integration_timer;
           };
 
         class twopf_batcher: public generic_batcher
@@ -225,8 +238,8 @@ namespace transport
                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                           const twopf_writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
-                          handle_type h, unsigned int wn)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf(0)
+                          handle_type h, unsigned int wn, boost::timer::cpu_timer& tm)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, tm), writers(w), num_twopf(0)
               {
               }
 
@@ -248,10 +261,19 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
+                // pause integration timer
+                this->integration_timer.stop();
+
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+                // set up a timer to measure how long it takes to flush
+                boost::timer::cpu_timer flush_timer;
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf(this, this->twopf_batch);
+
+                flush_timer.stop();
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
                 this->backg_batch.clear();
                 this->twopf_batch.clear();
@@ -259,12 +281,15 @@ namespace transport
 
                 // push a message to the master node, indicating that new data is available
                 // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one create by
+                // because 'dispatcher' needs the current path name, not the one created by
                 // 'replacer'
                 this->dispatcher(this);
 
                 // close current container, and replace with a new one if required
                 this->replacer(this, action);
+
+                // restart integration timer
+                this->integration_timer.resume();
               }
 
           protected:
@@ -287,8 +312,8 @@ namespace transport
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             const threepf_writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int wn)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
+                            handle_type h, unsigned int wn, boost::timer::cpu_timer& tm)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, tm), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
               {
               }
 
@@ -325,12 +350,21 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage()) << ", pushing to master";
+                // pause integration timer
+                this->integration_timer.stop();
+
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+                // set up a timer to measure how long it takes to flush
+                boost::timer::cpu_timer flush_timer;
 
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf_re(this, this->twopf_re_batch);
                 this->writers.twopf_im(this, this->twopf_im_batch);
                 this->writers.threepf(this, this->threepf_batch);
+
+                flush_timer.stop();
+                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
                 this->backg_batch.clear();
                 this->twopf_re_batch.clear();
@@ -340,12 +374,15 @@ namespace transport
 
                 // push a message to the master node, indicating that new data is available
                 // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one create by
+                // because 'dispatcher' needs the current path name, not the one created by
                 // 'replacer'
                 this->dispatcher(this);
 
                 // close current container, and replace with a new one if required
                 this->replacer(this, action);
+
+                // restart integration timer
+                this->integration_timer.resume();
               }
 
           protected:
@@ -376,7 +413,7 @@ namespace transport
           }
 
 
-        // INTERFACE -- CONTAINER HANDLING
+        // INTERFACE -- WRITE CONTAINER HANDLING
 
       public:
         //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
@@ -389,7 +426,7 @@ namespace transport
         virtual void close_container(typename repository<number>::integration_container& ctr) = 0;
 
 
-        // INTERFACE -- WRITE INDEX TABLES
+        // INTERFACE -- WRITE INDEX TABLES FOR A CONTAIER
 
       public:
         //! Create tables needed for a twopf container
@@ -401,7 +438,7 @@ namespace transport
                                    unsigned int Nfields) = 0;
 
 
-        // INTERFACE -- TASK FILES
+        // INTERFACE -- TASK FILES FOR A CONTAINER
 
       public:
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
@@ -420,12 +457,14 @@ namespace transport
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                           unsigned int worker, unsigned int Nfields,
-                                                          container_dispatch_function dispatcher) = 0;
+                                                          container_dispatch_function dispatcher,
+                                                          boost::timer::cpu_timer& integration_timer) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, unsigned int Nfields,
-                                                              container_dispatch_function dispatcher) = 0;
+                                                              container_dispatch_function dispatcher,
+                                                              boost::timer::cpu_timer& integration_timer) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
         virtual void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,

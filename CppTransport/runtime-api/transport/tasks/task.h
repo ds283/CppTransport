@@ -195,7 +195,7 @@ namespace transport
 
       protected:
         //! Name of this task
-        const std::string&               name;
+        const std::string                name;
 
         //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
@@ -523,7 +523,6 @@ namespace transport
 
                     if(ks[j] + ks[k] + ks[l] >= 2.0 * maxijk)   // impose the triangle conditions
                       {
-
                         kconfig.k1  = this->comoving_normalize(ks[j]);
                         kconfig.k2  = this->comoving_normalize(ks[k]);
                         kconfig.k3  = this->comoving_normalize(ks[l]);

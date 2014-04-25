@@ -60,6 +60,7 @@
 #define __CPP_TRANSPORT_NODE_OUTPUT_CREATED     "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LOCKED      "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUT_NOTES       "notes"
+#define __CPP_TRANSPORT_NODE_OUTPUT_BACKEND     "backend"
 
 #define __CPP_TRANSPORT_VALUE_TRUE              "true"
 #define __CPP_TRANSPORT_VALUE_FALSE             "false"
@@ -114,7 +115,7 @@ namespace transport
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(text_node.c_str()), text_node.length());
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PKGDATA_EDITED), nullptr, nullptr);
 
-            // runtime-api version
+            // runtime-api version used to create the task
             text_node = boost::lexical_cast<std::string>(__CPP_TRANSPORT_RUNTIME_API_VERSION);
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI), nullptr, nullptr, 0, false);
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(text_node.c_str()), text_node.length());
@@ -148,7 +149,7 @@ namespace transport
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(text_node.c_str()), text_node.length());
             writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTDATA_EDITED), nullptr, nullptr);
 
-            // runtime-api version
+            // runtime-api version used to create the integration
             text_node = boost::lexical_cast<std::string>(__CPP_TRANSPORT_RUNTIME_API_VERSION);
             writer.writeStartElement(__CPP_TRANSPORT_DBXML_STRING(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI), nullptr, nullptr, 0, false);
             writer.writeText(DbXml::XmlEventReader::Characters, __CPP_TRANSPORT_DBXML_STRING(text_node.c_str()), text_node.length());
@@ -328,7 +329,7 @@ namespace transport
         typename repository<number>::integration_container insert_integration_output(DbXml::XmlManager* mgr, const std::string& task_name,
                                                                                      const boost::filesystem::path& root_path,
                                                                                      const boost::filesystem::path& container_path,
-                                                                                     unsigned int worker)
+                                                                                     const std::string& backend, unsigned int worker)
           {
             assert(mgr != nullptr);
 
@@ -389,6 +390,9 @@ namespace transport
                   << "<"  << __CPP_TRANSPORT_NODE_OUTPUT_ID << ">"
                   << serial_number
                   << "</" << __CPP_TRANSPORT_NODE_OUTPUT_ID << ">"
+                  << "<"  << __CPP_TRANSPORT_NODE_OUTPUT_BACKEND << ">"
+                  << backend
+                  << "</" << __CPP_TRANSPORT_NODE_OUTPUT_BACKEND << ">"
                   << "<"  << __CPP_TRANSPORT_NODE_OUTPUT_PATH << ">"
                   << output_path.string()
                   << "</" << __CPP_TRANSPORT_NODE_OUTPUT_PATH << ">"
