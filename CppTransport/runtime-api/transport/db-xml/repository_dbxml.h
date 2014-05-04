@@ -31,13 +31,16 @@ namespace transport
     class repository_dbxml: public repository<number>
       {
 
+      public:
+        typedef enum { node_storage, document_storage } storage_type;
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
         //! Open a repository with a specific pathname
         repository_dbxml(const std::string& path, bool recovery=false);
         //! Create a repository with a specific pathname
-        repository_dbxml(const std::string& path, const repository_creation_key& key, typename repository<number>::storage_type type=repository<number>::node_storage);
+        repository_dbxml(const std::string& path, const repository_creation_key& key, storage_type type=node_storage);
 
         //! Close a repository, including the corresponding containers and environment
         ~repository_dbxml();
@@ -184,7 +187,7 @@ namespace transport
 
     // Create a named repository
     template <typename number>
-    repository_dbxml<number>::repository_dbxml(const std::string& path, const repository_creation_key& key, typename repository<number>::storage_type type)
+    repository_dbxml<number>::repository_dbxml(const std::string& path, const repository_creation_key& key, storage_type type)
       : env(nullptr), mgr(nullptr)
       {
         // check whether root directory already exists
@@ -227,11 +230,11 @@ namespace transport
         // create database containers
         switch(type)
           {
-            case repository<number>::node_storage:
+            case node_storage:
               mgr->setDefaultContainerType(DbXml::XmlContainer::NodeContainer);
             break;
 
-            case repository<number>::document_storage:
+            case document_storage:
               mgr->setDefaultContainerType(DbXml::XmlContainer::WholedocContainer);
             break;
 
@@ -581,7 +584,7 @@ namespace transport
 
 
     template <typename number>
-    repository<number>* repository_factory(const std::string& path, const repository_creation_key& key, typename repository<number>::storage_type type=repository<number>::node_storage)
+    repository<number>* repository_factory(const std::string& path, const repository_creation_key& key, storage_type type=node_storage)
       {
         return new repository_dbxml<number>(path, key, type);
       }
