@@ -13,7 +13,7 @@
 
 #include "math.h"
 
-#include "transport/db-xml/xml_serializable.h"
+#include "transport/manager/serializable.h"
 #include "transport/messages_en.h"
 
 
@@ -35,7 +35,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const range<value>& obj);
 
     template <typename value>
-    class range: public xml_serializable
+    class range: public serializable
       {
       public:
         typedef enum { linear, logarithmic, INTERNAL__null_range_object } spacing_type;
@@ -71,10 +71,10 @@ namespace transport
               }
           }
 
-        // XML SERIALIZATION INTERFACE
+        // SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+        void serialize(serialization_writer& writer) const;
 
         friend std::ostream& operator<< <>(std::ostream& out, const range<value>& obj);
 
@@ -141,7 +141,7 @@ namespace transport
 
 
     template <typename value>
-    void range<value>::serialize_xml(DbXml::XmlEventWriter& writer) const
+    void range<value>::serialize(serialization_writer& writer) const
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
 

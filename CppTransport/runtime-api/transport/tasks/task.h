@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 
-#include "transport/db-xml/xml_serializable.h"
+#include "transport/manager/serializable.h"
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
 #include "transport/concepts/range.h"
@@ -138,7 +138,7 @@ namespace transport
     // basic task, from which the more specific tasks are derived
     // contains information on the initial conditions, horizon-crossing time and the sampling times
     template <typename number>
-    class task: public xml_serializable
+    class task: public serializable
       {
       public:
         typedef std::function<double(task<number>*)> kconfig_kstar;
@@ -190,8 +190,8 @@ namespace transport
 
         friend std::ostream& operator<< <>(std::ostream& out, const task<number>& obj);
 
-        // INTERFACE -- XML SERIALIZATION -- DISALLOW
-        virtual void serialize_xml(DbXml::XmlEventWriter& writer) const { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
+        // DISABLE SERIALIZATION INTERFACE
+        void serialize(serialization_writer& writer) const { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
 
       protected:
         //! Name of this task
@@ -374,8 +374,8 @@ namespace transport
 
         // INTERFACE -- XML SERIALIZATION
 
-        //! Serialize this task to the Berkeley DB XML repository
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+        //! Serialize this task to the repository
+        void serialize(serialization_writer& writer) const;
 
       protected:
         //! List of k-configurations associated with this task
@@ -417,13 +417,13 @@ namespace transport
 
     // serialize a twopf task to the repository
     template <typename number>
-    void twopf_task<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+    void twopf_task<number>::serialize(serialization_writer& writer) const
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE, false);
-        this->times.serialize_xml(writer);
+        this->times.serialize(writer);
         this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
         this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE, false);
-        this->original_ks.serialize_xml(writer);
+        this->original_ks.serialize(writer);
         this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
       }
 
@@ -471,10 +471,10 @@ namespace transport
         //! Get the number of k-configurations at which this task will sample the threepf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
-        // INTERFACE -- XML SERIALIZATION
+        // SERIALIZATION INTERFACE
 
-        //! Serialize this task to the Berkeley DB XML repository
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+        //! Serialize this task to the repository
+        void serialize(serialization_writer& writer) const;
 
       protected:
         //! List of k-configurations associated with this task
@@ -569,10 +569,10 @@ namespace transport
 
     // serialize a threepf task to the repository
     template <typename number>
-    void threepf_task<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+    void threepf_task<number>::serialize(serialization_writer& writer) const
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE, false);
-        this->times.serialize_xml(writer);
+        this->times.serialize(writer);
         this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
 
        switch(this->original_lattice)
@@ -581,7 +581,7 @@ namespace transport
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE, false,
                                __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_CUBIC);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE, false);
-              this->original_ks.serialize_xml(writer);
+              this->original_ks.serialize(writer);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
               break;
@@ -590,13 +590,13 @@ namespace transport
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE, false,
                                __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_FLS);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE, false);
-              this->original_kts.serialize_xml(writer);
+              this->original_kts.serialize(writer);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE, false);
-              this->original_alphas.serialize_xml(writer);
+              this->original_alphas.serialize(writer);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE, false);
-              this->original_betas.serialize_xml(writer);
+              this->original_betas.serialize(writer);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE);
               this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
             break;

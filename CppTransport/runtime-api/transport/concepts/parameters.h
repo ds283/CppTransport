@@ -13,7 +13,7 @@
 #include <functional>
 #include <stdexcept>
 
-#include "transport/db-xml/xml_serializable.h"
+#include "transport/manager/serializable.h"
 #include "transport/exceptions.h"
 #include "transport/messages_en.h"
 
@@ -113,7 +113,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const parameters<number>& obj);
 
     template <typename number>
-    class parameters: public xml_serializable
+    class parameters: public serializable
       {
       public:
         typedef std::function<void(const std::vector<number>&, std::vector<number>&)> params_validator;
@@ -129,10 +129,10 @@ namespace transport
         //! Return value of M_Planck
         number get_Mp() const { return(this->M_Planck); }
 
-        // XML SERIALIZATION INTERFACE
+        // SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+        void serialize(serialization_writer& writer) const;
 
       public:
         friend std::ostream& operator<< <>(std::ostream& out, const parameters<number>& obj);
@@ -165,7 +165,7 @@ namespace transport
 
 
     template <typename number>
-    void parameters<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+    void parameters<number>::serialize(serialization_writer& writer) const
       {
         assert(this->params.size() == this->names.size());
 

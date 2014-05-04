@@ -29,7 +29,8 @@ namespace transport
                        BADLY_FORMED_XML,                                  // badly formed XML document in repository
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
                        STORAGE_ERROR,                                     // error while storing the output of an integration
-                       BACKEND_ERROR                                      // problem encountered by a compute backend
+                       BACKEND_ERROR,                                     // problem encountered by a compute backend
+		                   SERIALIZATION_ERROR                                // error encountered during serialization
                      } exception_type;
         runtime_exception(exception_type t, const std::string msg)
           : type(t), std::runtime_error(msg)

@@ -100,6 +100,13 @@
 #define __CPP_TRANSPORT_MPLANCK_NEGATIVE      "Nonpositive value for M_Planck is not allowed"
 #define __CPP_TRANSPORT_PARAM_DATA_MISMATCH   "Internal error: Mismatched parameter and names in 'parameters' object"
 
+#define __CPP_TRANSPORT_SERIAL_NONODE         "Serialization error: node stack is empty, but attempt to add new node '"
+#define __CPP_TRANSPORT_SERIAL_NONODEATTR     "Serialization error: node stack is empty, but attempt to write attribute '"
+#define __CPP_TRANSPORT_SERIAL_NONODEVALUE    "Serialization error: node stack is empty, but attempt to write value '"
+#define __CPP_TRANSPORT_SERIAL_ENDNODE        "Serialization error: no current node, but attempt to end node '"
+#define __CPP_TRANSPORT_SERIAL_ENDNAME_A      "Serialization error: current node is '"
+#define __CPP_TRANSPORT_SERIAL_ENDNAME_B      "', but attempt to end node '"
+
 #define __CPP_TRANSPORT_REPO_MISSING_ROOT     "Repository error: Root directory does not exist"
 #define __CPP_TRANSPORT_REPO_MISSING_ENV      "Repository error: Environment directory not present"
 #define __CPP_TRANSPORT_REPO_MISSING_CNTR     "Repository error: Containers directory not present"

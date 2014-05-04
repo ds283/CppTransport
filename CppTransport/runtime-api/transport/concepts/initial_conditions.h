@@ -14,7 +14,7 @@
 #include <stdexcept>
 
 #include "transport/concepts/parameters.h"
-#include "transport/db-xml/xml_serializable.h"
+#include "transport/manager/serializable.h"
 #include "transport/messages_en.h"
 
 #include "transport/utilities/random_string.h"
@@ -112,7 +112,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj);
 
     template <typename number>
-    class initial_conditions: public xml_serializable  // WARNING: multiple inheritance, but we are only inheriting the interfaces
+    class initial_conditions: public serializable
       {
       public:
         typedef std::function<void(const parameters<number>&, const std::vector<number>&, std::vector<number>&)> ics_validator;
@@ -159,10 +159,10 @@ namespace transport
         //! Return name
         const std::string& get_name() const { return(this->name); }
 
-        // XML SERIALIZATION INTERFACE
+        // SERIALIZATION INTERFACE
 
       public:
-        void serialize_xml(DbXml::XmlEventWriter& writer) const;
+        void serialize(serialization_writer& writer) const;
 
       public:
         friend std::ostream& operator<< <>(std::ostream& out, const initial_conditions<number>& obj);
@@ -214,7 +214,7 @@ namespace transport
 
 
     template <typename number>
-    void initial_conditions<number>::serialize_xml(DbXml::XmlEventWriter& writer) const
+    void initial_conditions<number>::serialize(serialization_writer& writer) const
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_NSTAR, this->Nstar);
@@ -228,7 +228,7 @@ namespace transport
         this->end_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
         this->end_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
-        this->params.serialize_xml(writer);
+        this->params.serialize(writer);
       }
 
 
