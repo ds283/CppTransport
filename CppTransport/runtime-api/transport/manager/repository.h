@@ -45,7 +45,6 @@ namespace transport
     class repository
       {
       public:
-        typedef enum { node_storage, document_storage } storage_type;
 
         // Types needed for logging
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
