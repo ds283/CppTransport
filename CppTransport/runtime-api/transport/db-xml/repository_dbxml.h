@@ -78,6 +78,9 @@ namespace transport
         //! Query the database for a named task, and reconstruct it if present
         task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
 
+
+        // EXTRA FUNCTIONS, NOT DEFINED BY INTERFACE
+
         //! Extract the XML document for a named package
         std::string extract_package_document(const std::string& name);
         //! Extract the XML document for a named integration
@@ -584,7 +587,7 @@ namespace transport
 
 
     template <typename number>
-    repository<number>* repository_factory(const std::string& path, const repository_creation_key& key, storage_type type=node_storage)
+    repository<number>* repository_factory(const std::string& path, const repository_creation_key& key, typename repository_dbxml<number>::storage_type type=repository_dbxml<number>::node_storage)
       {
         return new repository_dbxml<number>(path, key, type);
       }
