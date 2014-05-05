@@ -21,6 +21,7 @@
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE      "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET          "Internal error: Attempt to access repository when unset in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_NULL_MODEL       "Internal error: Null model when attempting to write to repository"
+#define __CPP_TRANSPORT_REPO_NULL_TASK        "Internal error: Null task when attempting to add output to repository"
 #define __CPP_TRANSPORT_REPO_MISSING_TASK     "Repository error: Could not find specified task"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_A  "Repository error: Could not find model"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_B  "corresponding to specified task"
