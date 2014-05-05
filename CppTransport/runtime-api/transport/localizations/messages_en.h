@@ -33,6 +33,7 @@
 #include "transport/localizations/messages_en/repository.h"
 
 #include "transport/localizations/messages_en/repository_uqlite.h"
+#include "transport/localizations/messages_en/unqlite.h"
 
 #include "transport/localizations/messages_en/repository_dbxml.h"
 #include "transport/localizations/messages_en/dbxml.h"

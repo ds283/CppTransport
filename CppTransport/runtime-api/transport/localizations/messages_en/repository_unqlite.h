@@ -13,5 +13,7 @@
 
 #define __CPP_TRANSPORT_REPO_MISSING_DB       "Repository error: unqlite database handles are null"
 
+#define __CPP_TRANSPORT_REPO_MISSING_CLCTN    "Repository error: missing unqlite database collection"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H

@@ -15,5 +15,7 @@
 #define __CPP_TRANSPORT_SERIAL_ENDNAME_A      "Serialization error: current node is '"
 #define __CPP_TRANSPORT_SERIAL_ENDNAME_B      "', but attempt to end node '"
 
+#define __CPP_TRANSPORT_SERIAL_NOT_FINISHED   "Serialization error: node stack is non-empty, but attempt to read contents"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_SERIALIZATION_H

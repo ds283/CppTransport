@@ -16,6 +16,7 @@
 #include "transport/messages.h"
 #include "transport/exceptions.h"
 
+#include "transport/unqlite/unqlite_serializable.h"
 #include "transport/unqlite/unqlite_operations.h"
 
 
@@ -65,16 +66,16 @@ namespace transport
         //! Write a threepf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
         void write_integration(const threepf_task<number>& t, const model<number>* m)
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_THREEPF_ROOT); }
+          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION); }
 
         //! Write a twopf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
         void write_integration(const twopf_task<number>& t, const model<number>* m)
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_NODE_TWOPF_ROOT); }
+          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
 
       protected:
         //! Write a generic integration task to the database, using a supplied node tag
-        void write_integration_task(const task<number>& t, const model<number>* m, const std::string& root_node_name);
+        void write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection);
 
 
         // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE (implements a 'repository' interface)
@@ -173,6 +174,7 @@ namespace transport
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
+        // open containers for reading/writings
         int err;
 
         if((err = unqlite_open(&package_db, packages_path.c_str(), UNQLITE_OPEN_READWRITE)) != UNQLITE_OK)
@@ -188,6 +190,11 @@ namespace transport
             msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << integrations_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
+
+        // ensure default collections are present within each conatiners
+        unqlite_operations::ensure_collection(package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+        unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
+        unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
       }
 
 
@@ -214,6 +221,7 @@ namespace transport
         boost::filesystem::create_directories(root_path);
         boost::filesystem::create_directories(containers_path);
 
+        // create containers
         int err;
 
         if((err = unqlite_open(&package_db, packages_path.c_str(), UNQLITE_OPEN_CREATE)) != UNQLITE_OK)
@@ -229,6 +237,11 @@ namespace transport
             msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << integrations_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
+
+        // create default collection within each conatiners
+        unqlite_operations::create_collection(package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+        unqlite_operations::create_collection(integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
+        unqlite_operations::create_collection(integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
       }
 
 
@@ -255,12 +268,45 @@ namespace transport
         if(this->package_db == nullptr || this->integration_db == nullptr)
           throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
+
+        // create an unqlite_serialization_writer, used to emit the serialized record to the database
+        unqlite_serialization_writer writer;
+
+        // commit initial-conditions name
+        writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, ics.get_name());
+
+        // commit model uid
+        std::string uid = m->get_identity_string();
+        writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
+
+        // commit data block
+        writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
+
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_NAME, m->get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_AUTHOR, m->get_author());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_TAG, m->get_tag());
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_EDITED, boost::posix_time::to_simple_string(now));
+
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
+
+        writer.end_node(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
+
+        // commit initial conditions
+        writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
+        ics.serialize(writer);
+        writer.end_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
+
+        // insert this record in the package database
+        unqlite_operations::store(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, writer.get_contents());
       }
 
 
     // Write a task to the repository
     template <typename number>
-    void repository_unqlite<number>::write_integration_task(const task<number>& t, const model<number>* m, const std::string& root_node_name)
+    void repository_unqlite<number>::write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection)
       {
         assert(this->package_db != nullptr);
         assert(this->integration_db != nullptr);
@@ -269,6 +315,37 @@ namespace transport
         if(this->package_db == nullptr || this->integration_db == nullptr)
           throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
+
+        // create an unqlite_serialization_writer, used to emit the serialized record to the database
+        unqlite_serialization_writer writer;
+
+        // commit task name
+        writer.write_value(__CPP_TRANSPORT_NODE_INTGRTN_NAME, t.get_name());
+
+        // commit data block
+        writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+
+        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, t.get_ics().get_name());
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));
+
+        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
+
+        writer.end_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+
+        // commit task block
+        writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        t.serialize(writer);
+        writer.end_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+
+        // write empty output block: will be populated when integrations are run
+        writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, true);
+        writer.end_node(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+
+        // insert this record in the task database
+        unqlite_operations::store(this->integration_db, collection, writer.get_contents());
       }
 
 
@@ -288,7 +365,7 @@ namespace transport
 
     // Extract package database record as a JSON document
     template <typename number>
-    void repository_unqlite<number>::extract_package_document(const std::string& name)
+    std::string repository_unqlite<number>::extract_package_document(const std::string& name)
       {
         assert(this->package_db != nullptr);
         assert(this->integration_db != nullptr);
@@ -300,7 +377,7 @@ namespace transport
 
     // Extract integration task database record as a JSON document
     template <typename number>
-    void repository_unqlite<number>::extract_integration_document(const std::string& name)
+    std::string repository_unqlite<number>::extract_integration_document(const std::string& name)
       {
         assert(this->package_db != nullptr);
         assert(this->integration_db != nullptr);
