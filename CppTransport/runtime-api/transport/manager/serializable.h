@@ -34,10 +34,12 @@ namespace transport
 					{
 					}
 
-				// OUTPUT METHODS
+
+				// WRITING METHODS
+
 
 				//! Begin a new node at the current level in the tree
-				virtual void start_node(const std::string& name, bool empty) = 0;
+				virtual void start_node(const std::string& name, bool empty=false) = 0;
 
 		    //! End the current node
 				virtual void end_node(const std::string& name) = 0;
@@ -50,6 +52,12 @@ namespace transport
 				virtual void write_value(const std::string& name, unsigned value) = 0;
 				virtual void write_value(const std::string& name, double value) = 0;
 				virtual void write_value(const std::string& name, bool value) = 0;
+
+
+        // OUTPUT METHODS
+
+
+        // None defined as part of the interface -- this is implementation dependent
 
 			};  // class serialization_writer
 

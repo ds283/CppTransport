@@ -41,29 +41,40 @@ namespace transport
           public:
             std::string name;
 
+            // create a virtual destructor to ensure destructors for derived classes get called
+            virtual ~element()
+              {
+              }
+
 		        // 'attribute' marks that this element is an attribute
 		        // it's up to the attribute element whether it uses this information
 		        // at present, it is used to map XML-style attributes
 		        // to a '@' tag for JSON fields
-            virtual std::string stringize(bool attribute=false) = 0;
+            virtual std::string stringize(bool attribute=false) const = 0;
 	        };
 
         class basic_node: public element
 	        {
           public:
+
             std::list<element> attributes;
 
             bool               empty;
 
             std::list<element> contents;
+
+            virtual ~basic_node()
+              {
+              }
 	        };
 
 		    class user_node: public basic_node
 			    {
+          public:
 
 		        //! Stringize this user_node for serialization to UnQLite's JSON document interface
 
-            std::string stringize(bool attribute=false)
+            std::string stringize(bool attribute=false) const
 	            {
                 std::string r;
 
@@ -96,18 +107,21 @@ namespace transport
 			                }
 	                }
 
+                r += " }";
+
 		            return(r);
 	            }
 	        };
 
         class root_node: public basic_node
 	        {
+          public:
 
             //! Stringize this root_node for serialization to UnQLite's JSON document interface.
 		        //! root_node stringizes like user_node, except that we don't generate a field name and a value,
 		        //! only a group of JSON fields surrounded by { ... }
 
-            std::string stringize(bool attribute=false)
+            std::string stringize(bool attribute=false) const
 	            {
                 std::string r = "{ ";
 
@@ -131,6 +145,8 @@ namespace transport
 	                    }
 	                }
 
+                r += " }";
+
 		            return(r);
 	            }
 	        };
@@ -146,7 +162,7 @@ namespace transport
 
 		        //! Stringize the value stored in this element for serialization to UnQLite's JSON document interface
 
-            std::string stringize(bool attribute=false)
+            std::string stringize(bool attribute=false) const
 	            {
                 std::string v = boost::lexical_cast<std::string>(this->value);
 
@@ -173,10 +189,12 @@ namespace transport
 	        {
 	        }
 
-        // OUTPUT METHODS
+
+        // WRITING METHODS (implements a 'serialization writer' interface)
+
 
         //! Begin a new node at the current level in the tree
-        void start_node(const std::string& name, bool empty);
+        void start_node(const std::string& name, bool empty=false);
 
         //! End the current node
         void end_node(const std::string& name);
@@ -189,6 +207,14 @@ namespace transport
         void write_value(const std::string& name, unsigned value);
         void write_value(const std::string& name, double value);
         void write_value(const std::string& name, bool value);
+
+
+        // OUTPUT METHODS (not part of the 'serialization_writer interface'; this is implementation dependent)
+
+
+        //! Extract contents of this serialization_writer as a string
+        const std::string get_contents() const;
+
 
       protected:
 		    root_node root;
@@ -350,6 +376,25 @@ namespace transport
         std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().contents.push_back(ele);
 	    }
+
+
+    // Extract contents of this serialization_writer
+    const std::string unqlite_serialization_writer::get_contents() const
+      {
+        std::string output;
+
+        // ensure top-of-stack object is the root node
+        if(this->node_stack.size() != 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_SERIAL_NOT_FINISHED;
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+          }
+
+        output = this->root.stringize();
+
+        return(output);
+      }
 
 	}
 
