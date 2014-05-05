@@ -186,7 +186,7 @@ namespace transport
 
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
 
-        //! Write a 'model/initial conditions/parameters' combination (a 'package') to the model database.
+        //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
 
@@ -201,11 +201,6 @@ namespace transport
       public:
         //! Query the database for a named task, and reconstruct it if present
         virtual task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder) = 0;
-
-        //! Extract the XML document for a named package
-        virtual std::string extract_package_document(const std::string& name) = 0;
-        //! Extract the XML document for a named integration
-        virtual std::string extract_integration_document(const std::string& name) = 0;
 
 
         // INTERFACE -- ADD OUTPUT TO TASKS
