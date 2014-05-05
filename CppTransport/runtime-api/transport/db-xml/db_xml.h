@@ -186,7 +186,7 @@ namespace dbxml_helper
               {
                 std::ostringstream msg;
                 msg << excpt_msg << __CPP_TRANSPORT_RUN_REPAIR;
-                throw transport::runtime_exception(transport::runtime_exception::BADLY_FORMED_XML, msg.str());
+                throw transport::runtime_exception(transport::runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
             results.next(node);

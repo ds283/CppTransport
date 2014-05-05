@@ -195,7 +195,7 @@ namespace transport
 
             if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LINEAR) sptype = range<number>::linear;
             else if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LOGARITHMIC) sptype = range<number>::logarithmic;
-            else throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+            else throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
             return range<number>(boost::lexical_cast<number>(min_node.asString()),
                                  boost::lexical_cast<number>(max_node.asString()),

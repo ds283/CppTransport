@@ -54,21 +54,21 @@ namespace transport
 
             DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
-            if(node.getLocalName() != __CPP_TRANSPORT_NODE_ICS_VALUES) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            if(node.getLocalName() != __CPP_TRANSPORT_NODE_ICS_VALUES) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
             std::vector< dbxml_helper::named_list::element<number> > temporary_list;
 
             DbXml::XmlValue child = node.getFirstChild();
             while(child.getType() != DbXml::XmlValue::NONE)
               {
                 DbXml::XmlResults attrs = child.getAttributes();
-                if(attrs.size() != 1) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+                if(attrs.size() != 1) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
                 DbXml::XmlValue name;
                 attrs.next(name);
-                if(name.getLocalName() != __CPP_TRANSPORT_ATTR_NAME) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+                if(name.getLocalName() != __CPP_TRANSPORT_ATTR_NAME) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
                 DbXml::XmlValue value = child.getFirstChild();
-                if(value.getNodeType() != DbXml::XmlValue::TEXT_NODE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+                if(value.getNodeType() != DbXml::XmlValue::TEXT_NODE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
                 temporary_list.push_back(dbxml_helper::named_list::element<number>(name.getNodeValue(),
                                                                                      boost::lexical_cast<number>(value.getNodeValue())));
@@ -76,7 +76,7 @@ namespace transport
                 child = child.getNextSibling();
               }
 
-            if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+            if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
             dbxml_helper::named_list::ordering order_map = dbxml_helper::named_list::make_ordering(ordering);
             dbxml_helper::named_list::comparator<number> cmp(order_map);

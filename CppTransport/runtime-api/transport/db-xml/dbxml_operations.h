@@ -297,10 +297,10 @@ namespace transport
             task<number>* task = nullptr;
 
             // first job is to decide what sort of integration we have - a twopf or a threepf?
-            if(!(integration.getType() == DbXml::XmlValue::NODE && integration.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            if(!(integration.getType() == DbXml::XmlValue::NODE && integration.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             DbXml::XmlValue integration_root = integration.getFirstChild();
-            if(!(integration_root.getType() == DbXml::XmlValue::NODE && integration_root.getNodeType() == DbXml::XmlValue::ELEMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            if(!(integration_root.getType() == DbXml::XmlValue::NODE && integration_root.getNodeType() == DbXml::XmlValue::ELEMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             // now pull out the integration-task schema
             std::string query_task = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
@@ -316,7 +316,7 @@ namespace transport
               {
                 task = task_dbxml::extract_threepf_task(mgr, task_node, task_name, ics, model->kconfig_kstar_factory());
               }
-            else throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            else throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             assert(task != nullptr);
 
@@ -342,7 +342,7 @@ namespace transport
               {
                 DbXml::XmlValue doc = get_integration_by_name(task_name, xml_ctr);
 
-                if(!(doc.getType() == DbXml::XmlValue::NODE && doc.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                if(!(doc.getType() == DbXml::XmlValue::NODE && doc.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
                 DbXml::XmlValue doc_root = doc.getFirstChild();
 
                 // find all serial numbers for the output groups associated with this task
@@ -498,7 +498,7 @@ namespace transport
 
                 // extract document, in order to find name of root node
                 DbXml::XmlValue doc = get_integration_by_name(name, xml_ctr);
-                if(!(doc.getType() == DbXml::XmlValue::NODE && doc.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+                if(!(doc.getType() == DbXml::XmlValue::NODE && doc.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
                 DbXml::XmlValue doc_root = doc.getFirstChild();
 
                 // build replacement statement

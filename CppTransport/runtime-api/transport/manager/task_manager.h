@@ -418,7 +418,7 @@ namespace transport
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
               }
-            else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
+            else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
               {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
@@ -759,7 +759,7 @@ namespace transport
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
               }
-            else if(xe.get_exception_code() == runtime_exception::BADLY_FORMED_XML)
+            else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
               {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;

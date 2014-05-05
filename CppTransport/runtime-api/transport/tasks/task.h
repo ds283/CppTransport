@@ -649,15 +649,15 @@ namespace transport
 
             DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
-            if(ksample_node.getLocalName() != __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            if(ksample_node.getLocalName() != __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             DbXml::XmlResults ksample_attrs = ksample_node.getAttributes();
-            if(ksample_attrs.size() != 1) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            if(ksample_attrs.size() != 1) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             DbXml::XmlValue ksample_type;
             ksample_attrs.next(ksample_type);
 
-            if(ksample_type.getLocalName() != __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            if(ksample_type.getLocalName() != __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
             if(ksample_type.getNodeValue() == __CPP_TRANSPORT_VAL_THREEPF_CUBIC)
               {
@@ -689,7 +689,7 @@ namespace transport
 
                 return new threepf_task<number>(name, ics, tsample, kt_sample, alpha_sample, beta_sample, kstar);
               }
-            else throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            else throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
           }
 
       }

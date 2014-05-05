@@ -456,7 +456,7 @@ namespace transport
 
         // lookup record for the task
         DbXml::XmlValue integration = dbxml_operations::get_integration_by_name(name, integrations);
-        if(!(integration.getType() == DbXml::XmlValue::NODE && integration.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+        if(!(integration.getType() == DbXml::XmlValue::NODE && integration.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 
         // extract name of record for initial conditions/parameters and lookup the corresponding record
         // note that dbxml_operations::get_integration_by_name() returns an XmlDocument
@@ -465,7 +465,7 @@ namespace transport
         DbXml::XmlValue integration_root = integration.getFirstChild();
         std::string package_name = dbxml_operations::get_package_from_integration(this->mgr, integration_root, name);
         DbXml::XmlValue package = dbxml_operations::get_package_by_name(package_name, models);
-        if(!(package.getType() == DbXml::XmlValue::NODE && package.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::BADLY_FORMED_XML, __CPP_TRANSPORT_BADLY_FORMED_PACKAGE);
+        if(!(package.getType() == DbXml::XmlValue::NODE && package.getNodeType() == DbXml::XmlValue::DOCUMENT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PACKAGE);
 
         // extract uid for model
         DbXml::XmlValue package_root = package.getFirstChild();
