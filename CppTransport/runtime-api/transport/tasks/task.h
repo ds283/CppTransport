@@ -21,7 +21,7 @@
 #include "transport/concepts/initial_conditions.h"
 #include "transport/concepts/parameters.h"
 #include "transport/concepts/range.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "transport/utilities/random_string.h"
 

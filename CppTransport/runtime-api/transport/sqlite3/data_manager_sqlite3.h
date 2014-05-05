@@ -15,7 +15,7 @@
 
 #include "transport/models/model.h"
 
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 #include "transport/exceptions.h"
 
 #include "boost/filesystem/operations.hpp"

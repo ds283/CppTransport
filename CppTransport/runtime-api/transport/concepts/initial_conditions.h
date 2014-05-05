@@ -15,7 +15,7 @@
 
 #include "transport/concepts/parameters.h"
 #include "transport/manager/serializable.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "transport/utilities/random_string.h"
 

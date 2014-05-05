@@ -14,7 +14,7 @@
 
 #include <math.h>
 
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "transport/concepts/flattener.h"
 #include "transport/concepts/initial_conditions.h"

@@ -16,7 +16,7 @@
 #include "dbxml/dbxml/DbXml.hpp"
 
 #include "transport/exceptions.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 
 // the Berkeley DB XML API wants all string provided as (const unsigned char*) types

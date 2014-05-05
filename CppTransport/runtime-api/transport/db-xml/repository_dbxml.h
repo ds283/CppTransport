@@ -13,7 +13,7 @@
 #include "transport/manager/repository.h"
 
 #include "transport/version.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 #include "transport/exceptions.h"
 
 #include "transport/db-xml/dbxml_operations.h"

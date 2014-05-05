@@ -11,7 +11,7 @@
 #include <iomanip>
 #include <sstream>
 
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include <boost/timer/timer.hpp>
 

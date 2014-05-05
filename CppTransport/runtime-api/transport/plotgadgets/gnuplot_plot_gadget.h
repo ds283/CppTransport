@@ -19,7 +19,7 @@
 #include "gnuplot_i.hpp"
 
 #include "transport/plotgadgets/plot_gadget.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 
 namespace transport

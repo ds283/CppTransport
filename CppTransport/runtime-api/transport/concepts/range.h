@@ -14,7 +14,7 @@
 #include "math.h"
 
 #include "transport/manager/serializable.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 
 #define __CPP_TRANSPORT_NODE_RANGE        "value-range"

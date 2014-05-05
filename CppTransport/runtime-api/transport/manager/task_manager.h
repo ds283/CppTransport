@@ -27,7 +27,7 @@
 
 #include "transport/utilities/formatter.h"
 
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 #include "transport/exceptions.h"
 
 #include "boost/mpi.hpp"

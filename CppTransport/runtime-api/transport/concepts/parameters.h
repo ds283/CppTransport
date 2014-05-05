@@ -15,7 +15,7 @@
 
 #include "transport/manager/serializable.h"
 #include "transport/exceptions.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "boost/lexical_cast.hpp"
 

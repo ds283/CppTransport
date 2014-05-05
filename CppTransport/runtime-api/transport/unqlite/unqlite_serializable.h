@@ -9,7 +9,7 @@
 
 
 #include "transport/exceptions.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "transport/manager/serializable.h"
 
@@ -81,7 +81,7 @@ namespace transport
 	                        {
                             r += std::string(", ");
 
-		                        r += (*t).stringize(true);    // mark this elements as attributes
+		                        r += (*t).stringize(true);    // mark this element as an attribute
 	                        }
 	                    }
 

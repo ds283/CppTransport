@@ -24,7 +24,7 @@
 #include "transport/containers/label_gadget.h"
 #include "transport/containers/index_selector.h"
 #include "transport/plotgadgets/plot_gadget.h"
-#include "transport/messages_en.h"
+#include "transport/messages.h"
 
 #include "transport/containers/background.h"
 #include "transport/containers/twopf.h"
