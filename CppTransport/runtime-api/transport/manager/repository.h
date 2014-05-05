@@ -206,10 +206,10 @@ namespace transport
         // INTERFACE -- ADD OUTPUT TO TASKS
 
       public:
-        //! Insert a record for new twopf output in the task XML database, and set up paths to a suitable SQL container
+        //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container
         virtual integration_container integration_new_output(twopf_task<number>* tk,
                                                              const std::string& backend, unsigned int worker) = 0;
-        //! Insert a record for new threepf output in the task XML database, and set up paths to a suitable SQL container
+        //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
         virtual integration_container integration_new_output(threepf_task<number>* tk,
                                                              const std::string& backend, unsigned int worker) = 0;
       };
