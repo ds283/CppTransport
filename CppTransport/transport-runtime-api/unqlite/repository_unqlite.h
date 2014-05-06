@@ -9,6 +9,9 @@
 
 #include <string>
 #include <sstream>
+#include <list>
+#include <functional>
+#include <utility>
 
 #include "transport-runtime-api/manager/repository.h"
 
@@ -632,8 +635,17 @@ namespace transport
         assert(tk != nullptr);
 
         // check if a suitable record exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+		    unqlite_vm* vm_twopf   = nullptr;
+		    unqlite_vm* vm_threepf = nullptr;
+
+		    unqlite_value* twopf_recs   = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+		    unqlite_value* threepf_recs = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+
+		    if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
+			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+
+		    unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
+		    unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
 
         if(twopf_count + threepf_count == 0)
           {
@@ -648,12 +660,10 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        std::string collection;
-        if(twopf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
-        else                 collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
+		    unqlite_value* recs = nullptr;
 
-        unqlite_vm* vm = nullptr;
-        unqlite_value* recs = unqlite_operations::query(this->integration_db, collection, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME, &vm);
+        if(twopf_count == 1) recs = twopf_recs;
+        else                 recs = threepf_recs;
 
         // find serial numbers for all output groups associated with this task
         std::list<unsigned int> serial_numbers = compute_used_serial_numbers(recs, tk->get_name());
@@ -668,7 +678,8 @@ namespace transport
 
         if(serial_number > serial_numbers.size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NO_SERIALNO);
 
-        unqlite_vm_release(vm);
+        unqlite_vm_release(vm_twopf);
+		    unqlite_vm_release(vm_threepf);
       }
 
 
