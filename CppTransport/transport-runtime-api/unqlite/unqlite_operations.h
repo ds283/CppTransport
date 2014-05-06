@@ -166,7 +166,7 @@ namespace transport
             assert(db != nullptr);
 
             // Compile the script
-            unqlite_vm *vm;
+            unqlite_vm* vm;
             int err;
 
             std::cerr << std::endl << "Executing Jx9 script:" << std::endl
@@ -293,7 +293,7 @@ namespace transport
 
         // extract a JSON representation of a record within a specified collection
         template <typename T, typename... fields>
-        void extract_json(unqlute* db, const std::string& collection, const T& value, fields... field_names)
+        std::string extract_json(unqlite* db, const std::string& collection, const T& value, fields... field_names)
           {
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
 
@@ -318,7 +318,7 @@ namespace transport
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $json
-            unqlite_value json = unqlite_vm_extract_variable(vm, "$json");
+            unqlite_value* json = unqlite_vm_extract_variable(vm, "$json");
 
             if(json == nullptr)
               {
@@ -327,7 +327,7 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
-            std::string json_document = unqlite_value_to_string(json);
+            std::string json_document = unqlite_value_to_string(json, nullptr);
 
             // release the virtual machine
             unqlite_vm_release(vm);
@@ -357,7 +357,7 @@ namespace transport
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $num_records
-            unqlite_value num_records = unqlite_vm_extract_variable(vm, "$num_records");
+            unqlite_value* num_records = unqlite_vm_extract_variable(vm, "$num_records");
 
             if(num_records == nullptr)
               {
@@ -373,6 +373,45 @@ namespace transport
 
             return(num);
           }
+
+
+        // extract array records matching specified criteria
+        // also returns virtual machine for further processing; it should be released when processing is complete
+        template <typename T, typename... fields>
+        unqlite_value* query_count(unqlite* db, const std::string& collection, const T& value, fields... field_names, unqlite_vm** vm)
+          {
+            assert(vm != nullptr);
+
+            std::string query = json_query::build_query(json_query::equals, value, field_names...);
+
+            std::ostringstream jx9;
+
+            jx9 << "$callback = function($rec)"
+              << "  {"
+              << "    if( $rec." + query + " )"
+              << "      { return TRUE; }"
+              << "    else"
+              << "      { return FALSE; }"
+              << "    };"
+              << "$data = db_fetch_all('" << collection << "', $callback);"
+
+            *vm = exec_jx9_vm(db, jx9.str());
+
+            // extract value of $num_records
+            unqlite_value* data = unqlite_vm_extract_variable(vm, "$data");
+
+            if(data == nullptr)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_UNQLITE_UNDEFINED_VARIABLE << " '$data'";
+                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+              }
+
+            return(data);
+          }
+
+
+        //
 
 
       }   // unqlite_operations
