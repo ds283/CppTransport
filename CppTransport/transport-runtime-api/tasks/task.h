@@ -421,10 +421,10 @@ namespace transport
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE, false);
         this->times.serialize(writer);
-        this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
         this->begin_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE, false);
         this->original_ks.serialize(writer);
-        this->end_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
       }
 
 
@@ -573,7 +573,7 @@ namespace transport
       {
         this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE, false);
         this->times.serialize(writer);
-        this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
 
        switch(this->original_lattice)
           {
@@ -582,8 +582,8 @@ namespace transport
                                __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_CUBIC);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE, false);
               this->original_ks.serialize(writer);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_KRANGE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
               break;
 
             case fergusson_liguori_shellard:
@@ -591,14 +591,14 @@ namespace transport
                                __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, __CPP_TRANSPORT_VAL_THREEPF_FLS);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE, false);
               this->original_kts.serialize(writer);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE, false);
               this->original_alphas.serialize(writer);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_ARANGE);
               this->begin_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE, false);
               this->original_betas.serialize(writer);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE);
-              this->end_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_BRANGE);
+              this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
             break;
 
             default:

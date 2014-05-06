@@ -150,7 +150,7 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : __CPP_TRANSPORT_VALUE_LOGARITHMIC);
-        this->end_node(writer, __CPP_TRANSPORT_NODE_RANGE);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_RANGE);
       }
 
 

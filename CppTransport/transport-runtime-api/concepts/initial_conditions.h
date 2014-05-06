@@ -225,8 +225,8 @@ namespace transport
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_COORDINATE, this->ics[i], __CPP_TRANSPORT_ATTR_NAME, this->names[i]);
           }
 
-        this->end_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
-        this->end_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
         this->params.serialize(writer);
       }

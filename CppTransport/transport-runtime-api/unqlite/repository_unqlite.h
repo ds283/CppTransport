@@ -306,12 +306,12 @@ namespace transport
 
         writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
 
-        writer.end_node(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
 
         // commit initial conditions
         writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
         ics.serialize(writer);
-        writer.end_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
+        writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
         // insert this record in the package database
         unqlite_operations::store(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, writer.get_contents());
@@ -364,12 +364,12 @@ namespace transport
 
         writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
 
-        writer.end_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
         // commit task block
         writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
         t.serialize(writer);
-        writer.end_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
 
         // write empty array of output blocks: will be populated when integrations are run
         writer.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, true);

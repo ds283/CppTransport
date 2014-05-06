@@ -17,5 +17,6 @@
 
 #define __CPP_TRANSPORT_SERIAL_NOT_FINISHED   "Serialization error: node stack is non-empty, but attempt to read contents"
 
+#define __CPP_TRANSPORT_SERIAL_VALIDATE_FAIL  "Serialization error: validation failed for element '"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_SERIALIZATION_H

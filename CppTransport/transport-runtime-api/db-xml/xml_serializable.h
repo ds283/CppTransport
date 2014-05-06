@@ -42,7 +42,7 @@ namespace transport
         void begin_node(DbXml::XmlEventWriter& writer, const std::string& name, bool empty, attrs... attributes) const;
 
         // end the current XML node
-        void end_node(DbXml::XmlEventWriter& writer, const std::string& name) const;
+        void end_element(DbXml::XmlEventWriter& writer, const std::string& name) const;
 
         // write a node with a single value type
         template <typename T, typename... attrs>
@@ -84,7 +84,7 @@ namespace transport
       }
 
 
-    void xml_serializable::end_node(DbXml::XmlEventWriter& writer, const std::string& name) const
+    void xml_serializable::end_element(DbXml::XmlEventWriter& writer, const std::string& name) const
       {
         writer.writeEndElement(__CPP_TRANSPORT_DBXML_STRING(name.c_str()), nullptr, nullptr);
       }
@@ -99,7 +99,7 @@ namespace transport
         std::cerr << "Writing XML node: tag = " << name << ", value = " << val << std::endl;
         writer.writeText(DbXml::XmlEventReader::XmlEventType::Characters, __CPP_TRANSPORT_DBXML_STRING(val.c_str()), val.length());
 
-        this->end_node(writer, name);
+        this->end_element(writer, name);
       }
 
   }

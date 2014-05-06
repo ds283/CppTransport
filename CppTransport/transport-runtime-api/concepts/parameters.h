@@ -187,9 +187,9 @@ namespace transport
             throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
           }
 
-        this->end_node(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
 
-        this->end_node(writer, __CPP_TRANSPORT_NODE_PARAMETERS);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_PARAMETERS);
       }
 
 
