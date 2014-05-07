@@ -19,21 +19,26 @@
 namespace transport
 	{
 
-		//! an abstract class which defines a serialization output stream
+    //! The API has some XML-like concepts, such as 'attributes', which may not exist
+    //! in the format which is really used as the backend serialization - eg, JSON
+    //! does not have this conception.
+    //! The original repository was implemented using the Berkeley DB XML
+    //! backend, which explicitly used XML and therefore supported these concepts.
+		//! Berkeley DB XML has since been replaced, but
+    //! they have been retained in order not to break the interface.
+    //! Eventually we might want to look at removing them.
 
-		//! The API has some XML-like concepts, such as 'attributes', which may not exist
-		//! in the format which is really used as the backend serialization - eg, JSON
-		//! would not have this conception.
-		//! The original repository was implemented using the Berkeley DB XML
-		//! backend, which explicitly supported these concepts.
-		//! They have been retained for simplicity, but eventually we might want to
-		//! look at removing them.
+
+		// WRITER INTERFACE
+
+
+		//! an abstract class which defines a serialization output stream
 
 		class serialization_writer
 			{
 
 		  public:
-				// define virtual destructor so that all derived destructors get called correctly
+				//! define virtual destructor so that all derived destructors get called correctly
 				virtual ~serialization_writer()
 					{
 					}
@@ -69,9 +74,57 @@ namespace transport
 			};  // class serialization_writer
 
 
+    // READER INTERFACE
+
+
+    //! an abstract class which defines a serialization input stream
+
+    class serialization_reader
+	    {
+
+      public:
+        //! define virtual destructor so that all derived destructors get called correctly
+        virtual ~serialization_reader()
+	        {
+	        }
+
+
+        // READING METHODS
+
+
+        //! Start reading a new node at the current level in the tree
+        virtual unsigned int start_node(const std::string& name) = 0;
+
+        //! Start reading a new array at the current level in the tree
+        virtual unsigned int start_array(const std::string& name) = 0;
+
+        //! End reading the current node or array
+        virtual void end_element(const std::string& name) = 0;
+
+        //! Read attributes from the current node
+        virtual const std::string read_attribute(const std::string& name) = 0;
+
+        //! Read a value
+        virtual bool read_value(const std::string& name, std::string& value) = 0;
+        virtual bool read_value(const std::string& name, unsigned int& value) = 0;
+        virtual bool read_value(const std::string& name, double& value) = 0;
+        virtual bool read_value(const std::string& name, bool& value) = 0;
+
+
+        // OUTPUT METHODS
+
+
+        // None defined as part of the interface -- this is implementation dependent
+
+	    };  // class serialization_reader
+
+
+		// SERIALIZABLE OBJECT INTERFACE
+
+
 		//! an abstract class which defines the serialization interface
 
-		//! Serialization is used when writing tasks and models with the repository
+		//! Serialization is used when writing tasks and models to the repository
 
     class serializable
       {
@@ -81,12 +134,15 @@ namespace transport
 		      {
 		      }
 
+
 	      // SERIALIZATION INTERFACE
 
 	      //! Serialize this object to the repository. Should be implemented by the derived class
 	      virtual void serialize(serialization_writer& writer) const = 0;
 
-	      // STANDARD SERIALIZATION TOOLS, USABLE BY DERIVED CLASSES WHICH IMPLEMENT SERIALIZATION
+
+	      // STANDARD SERIALIZATION TOOLS, USABLE BY DERIVED CLASSES WHICH IMPLEMENT A VERSION OF THIS INTERFACE
+
 
 	      //! Begin a node, perhaps with an arbitrary number of attributes
 	      template <typename... attrs>
@@ -113,7 +169,13 @@ namespace transport
 		    template <typename T, typename... attrs>
 	      void write_attributes(serialization_writer& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes);
 
+
+		    // STANDARD DESERIALIZATION TOOLS, USABLE BY DERIVED CLASSES WHICH IMPLEMENT A VERSION OF THIS INTERFACE
+
       };  // class serializable
+
+
+		// SERIALIZATION METHODS
 
 
 		// begin a node

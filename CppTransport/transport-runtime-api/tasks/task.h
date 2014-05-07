@@ -17,7 +17,7 @@
 #include <stdexcept>
 
 
-#include "transport-runtime-api/manager/serializable.h"
+#include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/concepts/range.h"

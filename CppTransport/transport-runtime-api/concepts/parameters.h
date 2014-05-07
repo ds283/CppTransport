@@ -13,7 +13,7 @@
 #include <functional>
 #include <stdexcept>
 
-#include "transport-runtime-api/manager/serializable.h"
+#include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
 
