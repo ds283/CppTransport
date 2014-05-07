@@ -18,4 +18,9 @@
 
 #define __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON          "Internal error: attempt to extract JSON representation for multiple records (query="
 
+#define __CPP_TRANSPORT_UNQLITE_READ_NODE_FAIL         "Internal error: failed to read serialized node"
+#define __CPP_TRANSPORT_UNQLITE_READ_ARRAY_FAIL        "Internal error: failed to read serialized array"
+#define __CPP_TRANSPORT_UNQLITE_READ_ATTR_FAIL         "Internal error: failed to read node attribute"
+#define __CPP_TRANSPORT_UNQLITE_READ_VALUE_FAIL        "Internal error: failed to read value"
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_UNQLITE_H

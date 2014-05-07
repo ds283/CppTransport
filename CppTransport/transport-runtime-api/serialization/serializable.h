@@ -36,8 +36,8 @@ namespace transport
 
 		class serialization_writer
 			{
-
 		  public:
+
 				//! define virtual destructor so that all derived destructors get called correctly
 				virtual ~serialization_writer()
 					{
@@ -81,8 +81,8 @@ namespace transport
 
     class serialization_reader
 	    {
-
       public:
+
         //! define virtual destructor so that all derived destructors get called correctly
         virtual ~serialization_reader()
 	        {
@@ -102,7 +102,7 @@ namespace transport
         virtual void end_element(const std::string& name) = 0;
 
         //! Read attributes from the current node
-        virtual const std::string read_attribute(const std::string& name) = 0;
+        virtual bool read_attribute(const std::string& name, std::string& value) = 0;
 
         //! Read a value
         virtual bool read_value(const std::string& name, std::string& value) = 0;

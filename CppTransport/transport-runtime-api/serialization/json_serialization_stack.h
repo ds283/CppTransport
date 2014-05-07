@@ -138,6 +138,12 @@ namespace transport
             //! Push an element to our attributes.
             void push_attribute(element& ele) { this->attributes.push_back(ele); }
 
+		        //! Get number of content elements
+		        unsigned int get_num_elements() { return(this->contents.size()); }
+
+		        //! Get number of attribute elements
+		        unsigned int get_num_attributes() { return(this->attributes.size()); }
+
             //! Enquire whether this node can service a request to pull some particular content.
 		        //! Returns false if it cannot.
             //! Otherwise, returns true and writes the pulled element into the supplied reference.
@@ -676,12 +682,14 @@ namespace transport
         //! Begin a new node at the current level in the tree.
         //! The name is *ignored* if the current node is an array;
         //! the next unread element in the array is returned.
-        //! Returns true if the node was pulled ok.
-        bool pull_start_node(const std::string& name, bool& empty);
+        //! Returns true if the node was pulled ok and writes
+		    //! the number of elements contained, and the number of
+		    //! attributes, in the supplied references
+        bool pull_start_node(const std::string& name, unsigned int& elements, unsigned int& attributes);
 
         //! Begin a new array at the current level in the tree
         //! Returns true if the array was pulled ok.
-        bool pull_start_array(const std::string& name, bool& empty);
+        bool pull_start_array(const std::string& name, unsigned int& elements);
 
         //! End the current element -- node or array.
         //! Raises an exception if there is a mismatch.
@@ -750,7 +758,7 @@ namespace transport
 
 
     // pull: read a new node at the current level
-    bool json_serialization_stack::pull_start_node(const std::string& name, bool& empty)
+    bool json_serialization_stack::pull_start_node(const std::string& name, unsigned int& elements, unsigned int& attributes)
 	    {
         bool rval = false;
 
@@ -774,6 +782,10 @@ namespace transport
 			    {
 				    // cast element up to basic_node; will throw an exception if this isn't possible
 		        std::reference_wrapper<basic_node> node = std::reference_wrapper<basic_node>(dynamic_cast<basic_node&>(ele));
+
+				    elements = node.get().get_num_contents();
+				    attributes = node.get().get_num_contents();
+
 				    this->pull_stack.push_front(node);
 			    }
 
@@ -806,7 +818,7 @@ namespace transport
 
 
     // pull: read a new array at the current level
-    bool json_serialization_stack::pull_start_array(const std::string& name, bool& empty)
+    bool json_serialization_stack::pull_start_array(const std::string& name, unsigned int& elements)
 	    {
         bool rval = false;
 
@@ -828,6 +840,9 @@ namespace transport
 	        {
             // cast element up to basic_node; will throw an exception if this isn't possible
             std::reference_wrapper<basic_node> node = std::reference_wrapper<basic_node>(dynamic_cast<basic_node&>(ele));
+
+		        elements = node.get().get_num_contents();
+
             this->pull_stack.push_front(node);
 	        }
 
@@ -1026,7 +1041,7 @@ namespace transport
         if(this->pull_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1055,7 +1070,7 @@ namespace transport
         if(this->pull_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1084,7 +1099,7 @@ namespace transport
         if(this->pull_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1113,7 +1128,7 @@ namespace transport
         if(this->pull_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
