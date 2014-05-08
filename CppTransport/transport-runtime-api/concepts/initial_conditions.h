@@ -173,8 +173,6 @@ namespace transport
 		                                               typename parameters<number>::params_validator p_validator,
 		                                               typename initial_conditions<number>::ics_validator ics_validator)
 			        {
-								reader->reset();
-
 						    unsigned int Nstar;
 						    reader->read_value(__CPP_TRANSPORT_NODE_NSTAR, Nstar);
 

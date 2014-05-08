@@ -15,6 +15,7 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
+#import "exceptions.h"
 
 
 #define __CPP_TRANSPORT_NODE_RANGE        "value-range"
@@ -145,13 +146,43 @@ namespace transport
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
 
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_RANGE, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : __CPP_TRANSPORT_VALUE_LOGARITHMIC);
-        this->end_element(writer, __CPP_TRANSPORT_NODE_RANGE);
       }
+
+
+		namespace
+			{
+
+				namespace range
+					{
+
+						template <typename value>
+						range<value> deserialize(serialization_reader* reader)
+							{
+								double min, max;
+								unsigned int steps;
+						    std::string spacing;
+
+								reader->read_value(__CPP_TRANSPORT_NODE_MIN, min);
+								reader->read_value(__CPP_TRANSPORT_NODE_MAX, max);
+								reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
+								reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spacing);
+
+						    typename range<value>::spacing_type type = range<value>::linear;
+
+								if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) type = linear;
+								else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) type = logarithmic;
+								else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+							  return(range<value>(static_cast<value>(min), static_cast<value>(max), steps, type));
+							}
+
+					}   // namespace range
+
+			}   // unnamed namespace
 
 
     template <typename value>
@@ -163,47 +194,6 @@ namespace transport
         return(out);
       }
 
-
-    namespace range_dbxml
-      {
-
-        template <typename number>
-        range<number> extract(DbXml::XmlManager* mgr, DbXml::XmlValue& value)
-          {
-            // strip out range-value XML block
-            std::string query_range = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_RANGE);
-
-            DbXml::XmlValue range_node = dbxml_helper::extract_single_node(query_range, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            std::string query_min = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MIN);
-
-            DbXml::XmlValue min_node = dbxml_helper::extract_single_node(query_min, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            std::string query_max = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MAX);
-
-            DbXml::XmlValue max_node = dbxml_helper::extract_single_node(query_max, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            std::string query_steps = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_STEPS);
-
-            DbXml::XmlValue steps_node = dbxml_helper::extract_single_node(query_steps, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            std::string query_spacing = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_SPACING);
-
-            DbXml::XmlValue spacing_node = dbxml_helper::extract_single_node(query_spacing, mgr, range_node, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            typename range<number>::spacing_type sptype = range<number>::linear;
-
-            if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LINEAR) sptype = range<number>::linear;
-            else if(spacing_node.asString() == __CPP_TRANSPORT_VALUE_LOGARITHMIC) sptype = range<number>::logarithmic;
-            else throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-            return range<number>(boost::lexical_cast<number>(min_node.asString()),
-                                 boost::lexical_cast<number>(max_node.asString()),
-                                 boost::lexical_cast<unsigned int>(steps_node.asString()),
-                                 sptype);
-          }
-
-      }   // namespace range_dbxml
 
   }   // namespace transport
 

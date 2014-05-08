@@ -125,8 +125,6 @@ namespace transport
 						                               const std::vector<std::string>& ordering,
 						                               typename parameters<number>::params_validator p_validator)
 							{
-								reader->reset();
-
 								double MPlanck;
 								reader->read_value(__CPP_TRANSPORT_NODE_MPLANCK, MPlanck);
 
