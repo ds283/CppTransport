@@ -291,6 +291,30 @@ namespace transport
           }
 
 
+		    // drop a record within a specified collection
+		    void drop(unqlite* db, const std::string& collection, unsigned int unqlite_id)
+			    {
+				    // first, ensure the named collection is present in this database
+				    ensure_collection(db, collection);
+
+		        std::ostringstream jx9;
+
+						// drop the specified record from the database
+				    jx9 << "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");"
+					      << "if ( !$rc )"
+					      << "  {"
+					      << "    print '" << __CPP_TRANSPORT_REPO_DELETE_ERROR "', " << unqlite_id << ");"
+		            << "  }"
+			          << "$rc = db_commit();"
+			          << "if ( !$rc )"
+						    << "  {"
+						    << "    print '" << __CPP_TRANSPORT_REPO_DELETE_ERROR "', " << unqlite_id << ");"
+			          << "  }";
+
+				    exec_jx9(db, jx9.str());
+			    }
+
+
         // extract a JSON representation of a record within a specified collection
         template <typename T, typename... fields>
         std::string extract_json(unqlite* db, const std::string& collection, const T& value, fields... field_names)
