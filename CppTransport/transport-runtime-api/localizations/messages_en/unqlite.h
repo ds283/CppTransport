@@ -23,4 +23,9 @@
 #define __CPP_TRANSPORT_UNQLITE_READ_ATTR_FAIL         "Internal error: failed to read node attribute"
 #define __CPP_TRANSPORT_UNQLITE_READ_VALUE_FAIL        "Internal error: failed to read value"
 
+#define __CPP_TRANSPORT_UNQLITE_READER_NOT_JSON_OBJECT "Internal error: attempt to construct unqlite_serialization_reader from something which isn't a JSON object"
+#define __CPP_TRANSPORT_UNQLITE_READER_KEY_FAIL        "Internal error: while building stack, key is null or not simple type"
+#define __CPP_TRANSPORT_UNQLITE_READER_VALUE_FAIL      "Internal error: while building stack, value is null"
+
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_UNQLITE_H

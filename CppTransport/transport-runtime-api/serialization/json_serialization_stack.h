@@ -19,7 +19,8 @@
 #include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_SERIALIZABLE_ROOT_NODE "root"
+#define __CPP_TRANSPORT_JSON_ATTRIBUTE_TAG "@@"
+#define __CPP_TRANSPORT_JSON_ROOT_NODE     "root"
 
 
 namespace transport
@@ -594,7 +595,7 @@ namespace transport
 	        {
             std::string v = boost::lexical_cast<std::string>(this->value);
 
-            return((attribute ? std::string("@") : std::string("")) + this->name + ": " + this->value);
+            return((attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string("")) + this->name + ": " + this->value);
 	        }
 
 
@@ -633,7 +634,7 @@ namespace transport
         //! create an json_serialization_stack
 
         void json_serialization_stack()
-	        : root(__CPP_TRANSPORT_SERIALIZABLE_ROOT_NODE, false)
+	        : root(__CPP_TRANSPORT_JSON_ROOT_NODE, false)
 	        {
             // push the root node onto the current stack
             this->push_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
