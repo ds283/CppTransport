@@ -89,7 +89,7 @@ namespace transport
           {
             typedef enum { equals, greater_than, less_than } query_type;
 
-            std::string stringize_query_type(query_type type)
+            std::string stringize_query(query_type type)
               {
                 if(type == equals)       return("=");
                 if(type == greater_than) return(">");
@@ -378,7 +378,7 @@ namespace transport
         // extract array records matching specified criteria
         // also returns virtual machine for further processing; it should be released when processing is complete
         template <typename T, typename... fields>
-        unqlite_value* query_count(unqlite* db, const std::string& collection, const T& value, fields... field_names, unqlite_vm** vm)
+        unqlite_value* query(unqlite* db, const std::string& collection, const T& value, fields... field_names, unqlite_vm** vm)
           {
             assert(vm != nullptr);
 
@@ -393,7 +393,7 @@ namespace transport
               << "    else"
               << "      { return FALSE; }"
               << "    };"
-              << "$data = db_fetch_all('" << collection << "', $callback);"
+              << "$data = db_fetch_all('" << collection << "', $callback);";
 
             *vm = exec_jx9_vm(db, jx9.str());
 

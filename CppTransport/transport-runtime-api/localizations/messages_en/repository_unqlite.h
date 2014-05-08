@@ -16,6 +16,7 @@
 #define __CPP_TRANSPORT_REPO_MISSING_CLCTN    "Repository error: missing unqlite database collection"
 
 #define __CPP_TRANSPORT_REPO_JSON_FAIL        "Repository error: failure when extracting JSON fields from unqlite"
+#define __CPP_TRANSPORT_REPO_JSON_NO_ID       "Repository error: missing UnQLite ID when deserializing JSON block"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H

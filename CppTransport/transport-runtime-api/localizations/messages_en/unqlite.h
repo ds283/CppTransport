@@ -15,6 +15,7 @@
 
 #define __CPP_TRANSPORT_UNQLITE_FAIL_EXECUTE_SCRIPT    "Internal error: failed to execute Jx9 script"
 #define __CPP_TRANSPORT_UNQLITE_VM_OUPTUT              "Internal error: Jx9 output"
+#define __CPP_TRANSPORT_UNQLITE_UNDEFINED_VARIABLE     "Internal error: undefined Jx9 variable"
 
 #define __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON          "Internal error: attempt to extract JSON representation for multiple records (query="
 
