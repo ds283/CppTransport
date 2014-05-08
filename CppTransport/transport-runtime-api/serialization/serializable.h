@@ -94,6 +94,12 @@ namespace transport
 		    //! Reset tree, ready for reading again
 		    virtual void reset() = 0;
 
+		    //! Push bookmark: further calls to reset() will return the tree to this position.
+		    virtual void push_bookmark() = 0;
+
+		    //! Pop bookmark
+		    virtual void pop_bookmark() = 0;
+
         //! Start reading a new node at the current level in the tree
         virtual unsigned int start_node(const std::string& name) = 0;
 

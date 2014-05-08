@@ -19,7 +19,7 @@
 #include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_JSON_ATTRIBUTE_TAG "@@"
+#define __CPP_TRANSPORT_JSON_ATTRIBUTE_TAG "@@@"
 #define __CPP_TRANSPORT_JSON_ROOT_NODE     "root"
 
 
@@ -636,9 +636,12 @@ namespace transport
         void json_serialization_stack()
 	        : root(__CPP_TRANSPORT_JSON_ROOT_NODE, false)
 	        {
-            // push the root node onto the current stack
+            // push the root node onto the current push and pull stacks
             this->push_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
             this->push_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
+
+		        // push the root node as the first bookmark
+		        this->bookmarks.push_front(std::ref(static_cast<basic_node>(this->root)));
 	        }
 
         //! destructor
@@ -673,7 +676,13 @@ namespace transport
         // PULL METHODS (can be used to implement a 'serialization reader' interface)
 
 
-        //! Reset the pull stack to HEAD.
+		    //! Push a bookmark: future pull_reset_head() calls will reset to the current top-of-stack node
+		    void push_bookmark();
+
+		    //! Pop a bookmark
+		    void pop_bookmark();
+
+        //! Reset the pull stack to the last bookmark (HEAD if no bookmarks pushed), clear all read flags
         void pull_reset_head();
 
         //! Reset 'read' counts, either throughout the tree or from the current position.
@@ -720,17 +729,23 @@ namespace transport
 
 
       protected:
+
+		    //! HEAD node for serialization stack
         root_node root;
 
-        // we maintain a stack of nodes representing our current
-        // position within the serialization tree -- one for push, one for pull
-        // the current node is at the top of the stack.
-        // It is initialized to be the 'root' field above by the constructor
-
-        // note that we have to use std::reference_wrapper, because
+        // note that, below, we have to use std::reference_wrapper, because
         // the STL container classes can't ordinarily take references
+
+				//! Push position within the serialization tree.
+		    //! Initialized to the root node (HEAD) by the constructor.
         std::list< std::reference_wrapper<basic_node> > push_stack;
+
+		    //! Pull position within the serialization tree.
+		    //! Initialized to the root node (HEAD) by the constructor.
         std::list< std::reference_wrapper<basic_node> > pull_stack;
+
+		    //! Bookmark stack
+		    std::list< std::reference_wrapper<basic_node> > bookmarks;
 	    };
 
 
@@ -1151,15 +1166,37 @@ namespace transport
 	    }
 
 
-    // Reset head off the pull stack, and mark all items as unread
+		// Push current stack position to bookmarks
+		void json_serialization_stack::push_bookmark()
+			{
+				this->bookmarks.push_front(this->pull_stack.front());
+			}
+
+
+		// Pop bookmark from the stack
+		void json_serialization_stack::pop_bookmark()
+			{
+				if(this->bookmarks.size() <= 1)
+					throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_BOOKMARKS_POPLAST);
+
+				this->bookmarks.pop_front();
+			}
+
+
+    // Reset top-of-stack from the last bookmark, and mark all items as unread
     void json_serialization_stack::pull_reset_head()
 	    {
-        // empty pull stack, and then push root node back to it
-        this->pull_stack.clear();
-        this->pull_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
+		    if(this->bookmarks.size() == 0)
+			    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_BOOKMARKS_EMPTY);
 
-        // mark all items unread, recursively, from the root
-        this->root.set_unread();
+        // empty pull stack, and push the last bookmark back to it
+        this->pull_stack.clear();
+
+        std::reference_wrapper<basic_node> bk_mk = this->bookmarks.front();
+        this->pull_stack.push_front(bk_mk);
+
+        // mark all items unread, recursively, from the bookmark
+		    bk_mk.get().set_unread();
 	    }
 
 
@@ -1167,10 +1204,14 @@ namespace transport
     // Works either from the current position on the stack or the root of the tree
     void json_serialization_stack::pull_reset_unread(json_serialization_stack::position pos)
 	    {
+        if(this->bookmarks.size() == 0)
+	        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_BOOKMARKS_EMPTY);
+
         switch(pos)
 	        {
             case json_serialization_stack::head:
-	            this->root.set_unread();
+	            std::reference_wrapper<basic_node> bk_mk = this->bookmarks.front();
+	            bk_mk.get().set_unread();
             break;
 
             case json_serialization_stack::current:

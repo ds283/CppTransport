@@ -154,6 +154,12 @@ namespace transport
 				//! Reset tree, ready for reading again
 				virtual void reset() override;
 
+				//! Push bookmark: further calls to reset() will return the tree to this position.
+				virtual void push_bookmark() override;
+
+				//! Pop bookmark
+				virtual void pop_bookmark() override;
+
 		    //! Start reading a new node at the current level in the tree.
 				//! Returns number of elements in the node, or throws an
 				//! exception if the node cannot be read.
@@ -185,6 +191,8 @@ namespace transport
 
 
 		  protected:
+
+				//! json_serialization_stack object which is used as the underlying implementation
 				json_serialization_stack stack;
 
 			};
@@ -241,12 +249,14 @@ namespace transport
 					{
 						// must be a value; but it could be either an attribute or one of the contents
 						// check if it is tagged as an attribute
-						if(key_name.find(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) == 0)
+				    const std::string tag = __CPP_TRANSPORT_JSON_ATTRIBUTE_TAG;
+
+						if(key_name.find(tag) == 0)
 							{
 								const char* vn = unqlite_value_to_string(value, nullptr);
 						    const std::string value_name(vn);
 						    std::string untagged_name = key_name;
-								this->stack.write_attribute(untagged_name.erase(0,2), value_name);
+								this->stack.write_attribute(untagged_name.erase(0,tag.length()), value_name);
 							}
 						else
 							{
@@ -389,6 +399,18 @@ namespace transport
 	    {
 				this->stack.pull_reset_head();
 	    }
+
+
+		void virtual unqlite_serialization_reader::push_bookmark()
+			{
+				this->stack.push_bookmark();
+			}
+
+
+		void virtual unqlite_serialization_reader::pop_bookmark()
+			{
+				this->stack.pop_bookmark();
+			}
 
 
 	}   // namespace transport
