@@ -576,7 +576,9 @@ namespace transport
 		    package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
 		    package_reader->push_bookmark();
-		    initial_conditions<number> ics = initial_conditions::deserialize(package_reader, package_name, p_validator, ics_validator);
+		    initial_conditions<number> ics = initial_conditions::deserialize(package_reader, package_name,
+		                                                                     m->get_param_names(), m->get_state_names(),
+		                                                                     p_validator, ics_validator);
 		    package_reader->pop_bookmark();
 
 		    package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);

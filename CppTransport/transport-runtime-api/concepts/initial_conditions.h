@@ -17,6 +17,7 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
 
+#include "transport-runtime-api/utilities/named_list.h"
 #include "transport-runtime-api/utilities/random_string.h"
 
 
@@ -167,6 +168,8 @@ namespace transport
 				    //! Deserialize an initial_conditions object
 		        template <typename number>
 		        initial_conditions<number> deserialize(serialization_reader* reader, const std::string& package_name,
+		                                               const std::vector<std::string>& parameter_ordering,
+		                                               const std::vector<std::string>& field_ordering,
 		                                               typename parameters<number>::params_validator p_validator,
 		                                               typename initial_conditions<number>::ics_validator ics_validator)
 			        {
@@ -177,30 +180,45 @@ namespace transport
 
 						    reader->start_node(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
 						    reader->push_bookmark();
-						    parameters<number> params = parameters::deserialize(reader, p_validator);
+						    parameters<number> params = parameters::deserialize(reader, parameter_ordering, p_validator);
 						    reader->pop_bookmark();
 						    reader->end_element(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
 
 						    unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
-				        std::vector<number> vs;
-				        std::vector<std::string> ns;
-						    for(unsigned int i = 0; i < fields; i++)
+				        std::vector< named_list::element<number> > temp;
+				        for(unsigned int i = 0; i < fields; i++)
 							    {
 								    reader->start_node(__CPP_TRANSPORT_NODE_COORDINATE);
 
 						        std::string field_name;
 								    reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, field_name);
-								    ns.push_back(field_name);
 
 										double field_value;
 								    reader->read_value(__CPP_TRANSPORT_NODE_COORDINATE, field_value);
-								    vs.push_back(static_cast<number>(field_value));
+
+				            temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
+
+								    reader->end_element(__CPP_TRANSPORT_NODE_PARAMETER);
 							    }
 
 						    reader->end_element(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
-						    return(initial_conditions<number>(package_name, params, vs, ns, Nstar, ics_validator));
+				        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
+
+				        named_list::ordering order_map = named_list::make_ordering(field_ordering);
+				        named_list::comparator<number> cmp(order_map);
+				        std::sort(temp.begin(), temp.end(), cmp);
+
+				        std::vector<number> c;
+				        std::vector<std::string> n;
+				        for(unsigned int i = 0; i < temp.size(); i++)
+					        {
+				            c.push_back((temp[i]).get_value());
+				            n.push_back((temp[i]).get_name());
+					        }
+
+						    return(initial_conditions<number>(package_name, params, c, n, Nstar, ics_validator));
 			        }
 
 			    }   // namespace initial_conditions
