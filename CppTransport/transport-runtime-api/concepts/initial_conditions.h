@@ -25,86 +25,11 @@
 #define __CPP_TRANSPORT_ATTR_NAME               "name"
 #define __CPP_TRANSPORT_NODE_NSTAR              "nstar"
 #define __CPP_TRANSPORT_NODE_ICS_VALUES         "values"
+#define __CPP_TRANSPORT_NODE_PARAM_BLOCK        "parameter-block"
 
 
 namespace transport
   {
-
-    // functions to extract information from XML schema
-    namespace ics_dbxml
-      {
-
-        void extract_Nstar(DbXml::XmlManager* mgr, DbXml::XmlValue& value, double& Nstar)
-          {
-            // run a query to pick out the Nstar node
-            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_NSTAR);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-            Nstar = boost::lexical_cast<double>(node.asString());
-          }
-
-
-        template <typename number>
-        void extract_coords(DbXml::XmlManager* mgr, DbXml::XmlValue& value, std::vector<number>& c, std::vector<std::string>& n,
-                            const std::vector<std::string>& ordering)
-          {
-            // run a query to pick out the initial-condition values block
-            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_ICS_VALUES);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-            if(node.getLocalName() != __CPP_TRANSPORT_NODE_ICS_VALUES) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-            std::vector< dbxml_helper::named_list::element<number> > temporary_list;
-
-            DbXml::XmlValue child = node.getFirstChild();
-            while(child.getType() != DbXml::XmlValue::NONE)
-              {
-                DbXml::XmlResults attrs = child.getAttributes();
-                if(attrs.size() != 1) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-                DbXml::XmlValue name;
-                attrs.next(name);
-                if(name.getLocalName() != __CPP_TRANSPORT_ATTR_NAME) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-                DbXml::XmlValue value = child.getFirstChild();
-                if(value.getNodeType() != DbXml::XmlValue::TEXT_NODE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-                temporary_list.push_back(dbxml_helper::named_list::element<number>(name.getNodeValue(),
-                                                                                     boost::lexical_cast<number>(value.getNodeValue())));
-
-                child = child.getNextSibling();
-              }
-
-            if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-            dbxml_helper::named_list::ordering order_map = dbxml_helper::named_list::make_ordering(ordering);
-            dbxml_helper::named_list::comparator<number> cmp(order_map);
-            std::sort(temporary_list.begin(), temporary_list.end(), cmp);
-
-            for(unsigned int i = 0; i < temporary_list.size(); i++)
-              {
-                c.push_back((temporary_list[i]).get_value());
-                n.push_back((temporary_list[i]).get_name());
-              }
-          }
-
-
-        template <typename number>
-        void extract(DbXml::XmlManager* mgr, DbXml::XmlValue& value, double& Nstar,
-                     std::vector<number>& c, std::vector<std::string>& n,
-                     const std::vector<std::string>& ordering)
-          {
-            // run a query to find the initial conditions XML block from this schema
-            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_ICS);
-
-            extract_Nstar(mgr, node, Nstar);
-            extract_coords(mgr, node, c, n, ordering);
-          }
-
-      }   // namespace ics_dbxml
 
     template <typename number> class initial_conditions;
 
@@ -216,9 +141,9 @@ namespace transport
     template <typename number>
     void initial_conditions<number>::serialize(serialization_writer& writer) const
       {
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_NSTAR, this->Nstar);
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, false);
+
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, false);
 
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
@@ -226,10 +151,62 @@ namespace transport
           }
 
         this->end_element(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
-        this->end_element(writer, __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
 
+		    this->begin_node(writer, __CPP_TRANSPORT_NODE_PARAM_BLOCK, false);
         this->params.serialize(writer);
+		    this->end_element(writer, __CPP_TRANSPORT_NODE_PARAM_BLOCK);
       }
+
+
+		namespace
+			{
+
+		    namespace initial_conditions
+			    {
+
+				    //! Deserialize an initial_conditions object
+		        template <typename number>
+		        initial_conditions<number> deserialize(serialization_reader* reader, const std::string& package_name,
+		                                               typename parameters<number>::params_validator p_validator,
+		                                               typename initial_conditions<number>::ics_validator ics_validator)
+			        {
+								reader->reset();
+
+						    unsigned int Nstar;
+						    reader->read_value(__CPP_TRANSPORT_NODE_NSTAR, Nstar);
+
+						    reader->start_node(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
+						    reader->push_bookmark();
+						    parameters<number> params = parameters::deserialize(reader, p_validator);
+						    reader->pop_bookmark();
+						    reader->end_element(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
+
+						    unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+
+				        std::vector<number> vs;
+				        std::vector<std::string> ns;
+						    for(unsigned int i = 0; i < fields; i++)
+							    {
+								    reader->start_node(__CPP_TRANSPORT_NODE_COORDINATE);
+
+						        std::string field_name;
+								    reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, field_name);
+								    ns.push_back(field_name);
+
+										double field_value;
+								    reader->read_value(__CPP_TRANSPORT_NODE_COORDINATE, field_value);
+								    vs.push_back(static_cast<number>(field_value));
+							    }
+
+						    reader->end_element(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+
+						    return(initial_conditions<number>(package_name, params, vs, ns, Nstar, ics_validator));
+			        }
+
+			    }   // namespace initial_conditions
+
+			}   // unnamed namespace
+
 
 
     template <typename number>
