@@ -18,7 +18,6 @@
 #import "exceptions.h"
 
 
-#define __CPP_TRANSPORT_NODE_RANGE        "value-range"
 #define __CPP_TRANSPORT_NODE_MIN          "min"
 #define __CPP_TRANSPORT_NODE_MAX          "max"
 #define __CPP_TRANSPORT_NODE_STEPS        "steps"

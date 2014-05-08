@@ -428,6 +428,36 @@ namespace transport
       }
 
 
+    namespace
+	    {
+
+        namespace twopf_task
+	        {
+
+            template <typename number>
+            twopf_task<number> deserialize(serialization_reader* reader, const std::string& name,
+                                           const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
+	            {
+								reader->start_node(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
+		            reader->push_bookmark();
+		            range<double> times = range::deserialize(reader);
+		            reader->pop_bookmark();
+		            reader->end_element(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
+
+		            reader->start_node(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
+		            reader->push_bookmark();
+		            range<double> ks = range::deserialize(reader);
+		            reader->pop_bookmark();
+		            reader->end_element(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
+
+		            return twopf_task<number>(name, ics, times, ks, kstar);
+	            }
+
+	        }
+
+	    }   // unnamed namespace
+
+
     // three-point function task
     template <typename number>
     class threepf_task: public twopf_list_task<number>
@@ -607,90 +637,67 @@ namespace transport
       }
 
 
-    // functions to construct a task object from an XML schema
-    namespace task_dbxml
-      {
+    namespace
+	    {
 
-        template <typename number>
-        twopf_task<number>* extract_twopf_task(DbXml::XmlManager* mgr, DbXml::XmlValue& value, const std::string& name,
-                                               const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
-          {
-            // run queries to find the twopf specification blocks from this schema
-            // there are two: a k-sample block and a t-sample block
-            std::string query_time = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
+        namespace threepf_task
+	        {
 
-            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+            template <typename number>
+            threepf_task<number> deserialize(serialization_reader* reader, const std::string& name,
+                                             const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
+	            {
+                reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
+                reader->push_bookmark();
+                range<double> times = range::deserialize(reader);
+                reader->pop_bookmark();
+                reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
 
-            range<double> tsample = range_dbxml::extract<double>(mgr, tsample_node);
+                reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
+                std::string sample_type;
+		            reader->read_attribute(__CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE, sample_type);
 
-            std::string query_ks = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
+								if(sample_type == __CPP_TRANSPORT_VAL_THREEPF_CUBIC)
+									{
+										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
+										reader->push_bookmark();
+								    range<double> ks = range::deserialize(reader);
+								    reader->pop_bookmark();
+								    reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
 
-            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
 
-            range<double> ksample = range_dbxml::extract<double>(mgr, ksample_node);
+										return(threepf_task<number>(name, ics, times, ks, kstar));
+									}
+		            else if(sample_type == __CPP_TRANSPORT_VAL_THREEPF_FLS)
+									{
+										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
+										reader->push_bookmark();
+										range<double> kt = range::deserialize(reader);
+										reader->pop_bookmark();
+										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
 
-            return new twopf_task<number>(name, ics, tsample, ksample, kstar);
-          }
+										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
+										reader->push_bookmark();
+										range<double> alpha = range::deserialize(reader);
+										reader->pop_bookmark();
+										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
 
+										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
+										reader->push_bookmark();
+										range<double> beta = range::deserialize(reader);
+										reader->pop_bookmark();
+										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
 
-        template <typename number>
-        threepf_task<number>* extract_threepf_task(DbXml::XmlManager* mgr, DbXml::XmlValue& value, const std::string& name,
-                                                   const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
-          {
-            // run queries to extract the threepf specification blocks from this schema
-            // as for the twopf, there are two; but this time the k-range can be more complicated
-            std::string query_time = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
+										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
 
-            DbXml::XmlValue tsample_node = dbxml_helper::extract_single_node(query_time, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+										return(threepf_task<number>(name, ics, times, kt, alpha, beta, kstar));
+									}
 
-            range<double> tsample = range_dbxml::extract<double>(mgr, tsample_node);
+								throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+	            }
 
-            std::string query_ks = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
-
-            DbXml::XmlValue ksample_node = dbxml_helper::extract_single_node(query_ks, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-            if(ksample_node.getLocalName() != __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-            DbXml::XmlResults ksample_attrs = ksample_node.getAttributes();
-            if(ksample_attrs.size() != 1) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-            DbXml::XmlValue ksample_type;
-            ksample_attrs.next(ksample_type);
-
-            if(ksample_type.getLocalName() != __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-            if(ksample_type.getNodeValue() == __CPP_TRANSPORT_VAL_THREEPF_CUBIC)
-              {
-                // we expect just a single krange block
-                std::string k_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
-                DbXml::XmlValue krange_node = dbxml_helper::extract_single_node(k_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-                range<double> ksample = range_dbxml::extract<double>(mgr, krange_node);
-
-                return new threepf_task<number>(name, ics, tsample, ksample, kstar);
-              }
-            else if(ksample_type.getNodeValue() == __CPP_TRANSPORT_VAL_THREEPF_FLS)
-              {
-                // we expect three ranges, specifying the sampling points for k_t, alpha and beta
-                std::string kt_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
-                DbXml::XmlValue ktrange_node = dbxml_helper::extract_single_node(kt_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-                range<double> kt_sample = range_dbxml::extract<double>(mgr, ktrange_node);
-
-                std::string alpha_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
-                DbXml::XmlValue arange_node = dbxml_helper::extract_single_node(alpha_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-                range<double> alpha_sample = range_dbxml::extract<double>(mgr, arange_node);
-
-                std::string beta_query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
-                DbXml::XmlValue brange_node = dbxml_helper::extract_single_node(beta_query, mgr, ksample_node, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-
-                range<double> beta_sample = range_dbxml::extract<double>(mgr, brange_node);
-
-                return new threepf_task<number>(name, ics, tsample, kt_sample, alpha_sample, beta_sample, kstar);
-              }
-            else throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-          }
+	        }
 
       }
 
