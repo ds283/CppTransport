@@ -344,7 +344,7 @@ namespace transport
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $json
-            unqlite_value* json = unqlite_vm_extract_variable(vm, "$json");
+            unqlite_value* json = unqlite_vm_extract_variable(vm, "json");
 
             if(json == nullptr)
               {
@@ -383,7 +383,7 @@ namespace transport
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $num_records
-            unqlite_value* num_records = unqlite_vm_extract_variable(vm, "$num_records");
+            unqlite_value* num_records = unqlite_vm_extract_variable(vm, "num_records");
 
             if(num_records == nullptr)
               {
@@ -424,7 +424,7 @@ namespace transport
             vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $num_records
-            unqlite_value* data = unqlite_vm_extract_variable(vm, "$data");
+            unqlite_value* data = unqlite_vm_extract_variable(vm, "data");
 
             if(data == nullptr)
               {
