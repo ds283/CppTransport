@@ -134,13 +134,15 @@ namespace transport
             virtual basic_node make_element(const std::string& name, bool empty=false) const = 0;
 
             //! Push an element to our contents.
-            void push_content(element& ele) { this->contents.push_back(ele); }
+		        //! Any element with the same name is removed, because it is assume this push
+		        //! is an attempt to update.
+            void push_content(element& ele);
 
             //! Push an element to our attributes.
-            void push_attribute(element& ele) { this->attributes.push_back(ele); }
+            void push_attribute(element& ele);
 
 		        //! Get number of content elements
-		        unsigned int get_num_elements() { return(this->contents.size()); }
+		        unsigned int get_num_contents() { return(this->contents.size()); }
 
 		        //! Get number of attribute elements
 		        unsigned int get_num_attributes() { return(this->attributes.size()); }
@@ -166,6 +168,28 @@ namespace transport
             //! list of elements representing the contents of this node
             std::list<element> contents;
 	        };
+
+
+        void basic_node::push_attribute(element& ele)
+          {
+		        for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+			        {
+				        if((*t).get_name() == ele.get_name()) t = this->attributes.erase(t);
+			        }
+
+            this->attributes.push_back(ele);
+	        }
+
+
+        void basic_node::push_content(element& ele)
+          {
+            for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	            {
+                if((*t).get_name() == ele.get_name()) t = this->contents.erase(t);
+	            }
+
+            this->contents.push_back(ele);
+	        }
 
 
         void basic_node::set_unread()
@@ -636,9 +660,8 @@ namespace transport
         void json_serialization_stack()
 	        : root(__CPP_TRANSPORT_JSON_ROOT_NODE, false)
 	        {
-            // push the root node onto the current push and pull stacks
-            this->push_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
-            this->push_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
+            // push the root node onto the stack
+            this->node_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
 
 		        // push the root node as the first bookmark
 		        this->bookmarks.push_front(std::ref(static_cast<basic_node>(this->root)));
@@ -667,6 +690,7 @@ namespace transport
         void write_attribute(const std::string& name, const std::string& value);
 
         //! Write a value.
+		    //! If an existing node exists with the same name, its value is replaced.
         void write_value(const std::string& name, const std::string& value);
         void write_value(const std::string& name, unsigned value);
         void write_value(const std::string& name, double value);
@@ -682,7 +706,7 @@ namespace transport
 		    //! Pop a bookmark
 		    void pop_bookmark();
 
-        //! Reset the pull stack to the last bookmark (HEAD if no bookmarks pushed), clear all read flags
+        //! Reset the stack to the last bookmark (HEAD if no bookmarks pushed), clear all read flags
         void pull_reset_head();
 
         //! Reset 'read' counts, either throughout the tree or from the current position.
@@ -721,7 +745,7 @@ namespace transport
         bool read_value(const std::string& name, bool& val);
 
 
-        // OUTPUT METHODS (not part of the 'serialization_writer interface'; this is implementation dependent)
+        // OUTPUT METHODS
 
 
         //! Extract contents of this stack as a string
@@ -736,14 +760,11 @@ namespace transport
         // note that, below, we have to use std::reference_wrapper, because
         // the STL container classes can't ordinarily take references
 
-				//! Push position within the serialization tree.
+				//! Current position within the serialization tree.
 		    //! Initialized to the root node (HEAD) by the constructor.
-        std::list< std::reference_wrapper<basic_node> > push_stack;
+        std::list< std::reference_wrapper<basic_node> > node_stack;
 
-		    //! Pull position within the serialization tree.
-		    //! Initialized to the root node (HEAD) by the constructor.
-        std::list< std::reference_wrapper<basic_node> > pull_stack;
-
+		    
 		    //! Bookmark stack
 		    std::list< std::reference_wrapper<basic_node> > bookmarks;
 	    };
@@ -752,7 +773,7 @@ namespace transport
     // push: create a new node at the current level
     void json_serialization_stack::push_start_node(const std::string& name, bool empty)
 	    {
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << name << "'";
@@ -761,7 +782,7 @@ namespace transport
 
         // get reference to front-of-stack node, and push the new node to its contents
         // then, make the new node the current front-of-stack one
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         // get front-of-stack node to synthesize a new element.
         // if it is a user_node, this will be another user_node.
@@ -769,7 +790,7 @@ namespace transport
         json_serialization_stack::basic_node node = n.get().make_element(name, empty);
 
         n.get().push_content(node);
-        this->push_stack.push_front(node);
+        this->node_stack.push_front(node);
 	    }
 
 
@@ -778,7 +799,7 @@ namespace transport
 	    {
         bool rval = false;
 
-		    if(this->pull_stack.size() == 0)
+		    if(this->node_stack.size() == 0)
 			    {
 		        std::ostringstream msg;
 				    msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << name << "'";
@@ -788,21 +809,21 @@ namespace transport
 		    // get reference to front-of-stack node, and check whether it can service this request
 		    // note, if the top-of-stack item is an array then it will ignore names when we
 		    // make the enquiry
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
 		    element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
 
-		    // if successful, push the node we have just pulled to the top of the pull stack
+		    // if successful, push the node we have just pulled to the top of the stack
 		    if((rval = n.get().pull_content(node, name, ele)))
 			    {
 				    // cast element up to basic_node; will throw an exception if this isn't possible
 		        std::reference_wrapper<basic_node> node = std::reference_wrapper<basic_node>(dynamic_cast<basic_node&>(ele));
 
 				    elements = node.get().get_num_contents();
-				    attributes = node.get().get_num_contents();
+				    attributes = node.get().get_num_attributes();
 
-				    this->pull_stack.push_front(node);
+				    this->node_stack.push_front(node);
 			    }
 
         return(rval);
@@ -813,7 +834,7 @@ namespace transport
     void json_serialization_stack::push_start_array(const std::string& name, bool empty)
 	    {
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << name << "'";
@@ -822,14 +843,14 @@ namespace transport
 
         // get reference to front-of-stack node, and push the new node to its contents
         // then, make the new node the current front-of-stack one
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         // make a new array element; both arrays and nodes can have these as members, so
         // no need to distinguish here
         json_serialization_stack::user_array array(name, empty);
 
         n.get().push_content(array);
-        this->push_stack.push_front(array);
+        this->node_stack.push_front(array);
 	    }
 
 
@@ -838,7 +859,7 @@ namespace transport
 	    {
         bool rval = false;
 
-        if(this->pull_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << name << "'";
@@ -846,12 +867,12 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
 
-        // if successful, push the node we have just pulled to the top of the pull stack
+        // if successful, push the node we have just pulled to the top of the stack
         if((rval = n.get().pull_content(array, name, ele)))
 	        {
             // cast element up to basic_node; will throw an exception if this isn't possible
@@ -859,7 +880,7 @@ namespace transport
 
 		        elements = node.get().get_num_contents();
 
-            this->pull_stack.push_front(node);
+            this->node_stack.push_front(node);
 	        }
 
         return(rval);
@@ -870,7 +891,7 @@ namespace transport
     void json_serialization_stack::push_end_element(const std::string& name)
 	    {
         // can't end the node if it is the root one
-        if(this->push_stack.size() == 1)
+        if(this->node_stack.size() == 1)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_ENDNODE << name << "'";
@@ -879,7 +900,7 @@ namespace transport
 
         // get current front-of-stack node, and check that its name matches the
         // one we have been given; if not raise an error
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         if(n.get().get_name() != name)
 	        {
             std::ostringstream msg;
@@ -896,7 +917,7 @@ namespace transport
 	        }
 
         // pop current front-of-stack node, reverting to whatever was on the stack previously
-        this->push_stack.pop_front();
+        this->node_stack.pop_front();
 	    }
 
 
@@ -904,7 +925,7 @@ namespace transport
 		void json_serialization_stack::pull_end_element(const std::string& name)
 			{
 				// can't end the node if it is the root one
-				if(this->pull_stack.size() == 1)
+				if(this->node_stack.size() == 1)
 					{
 				    std::ostringstream msg;
 						msg << __CPP_TRANSPORT_SERIAL_ENDNODE << name << "'";
@@ -913,7 +934,7 @@ namespace transport
 
 				// get current front-of-stack node, and check that its name matches the
 				// one we have been given; if not, raise an error
-		    std::reference_wrapper<basic_node> n = this->pull_stack.front();
+		    std::reference_wrapper<basic_node> n = this->node_stack.front();
 				if(n.get().get_name() != name)
 					{
 				    std::ostringstream msg;
@@ -922,7 +943,7 @@ namespace transport
 					}
 
 				// pop current front-of-stack node, reverting to whatever was on the stack previously
-				this->pull_stack.pop_front();
+				this->node_stack.pop_front();
 			}
 
 
@@ -931,7 +952,7 @@ namespace transport
 	    {
         json_serialization_stack::value_element<std::string> ele(name, value);
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYATTR << name << "'";
@@ -939,7 +960,7 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this attribute to it
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().push_attribute(ele);
 	    }
 
@@ -949,7 +970,7 @@ namespace transport
 			{
 		    bool rval = false;
 
-		    if(this->pull_stack.size() == 0)
+		    if(this->node_stack.size() == 0)
 			    {
 		        std::ostringstream msg;
 		        msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
@@ -957,7 +978,7 @@ namespace transport
 			    }
 
 		    // get reference to front-of-stack node, and check whether it can service this request
-		    std::reference_wrapper<basic_node> n = this->pull_stack.front();
+		    std::reference_wrapper<basic_node> n = this->node_stack.front();
 
 		    element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
 		    std::reference_wrapper<element> ele(nullele);
@@ -982,15 +1003,15 @@ namespace transport
 	    {
         json_serialization_stack::value_element<std::string> ele(name, value);
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
-        // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        // get reference to current front-of-stack node
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().push_content(ele);
 	    }
 
@@ -999,7 +1020,7 @@ namespace transport
 	    {
         json_serialization_stack::value_element<unsigned int> ele(name, value);
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
@@ -1007,7 +1028,7 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().push_content(ele);
 	    }
 
@@ -1016,7 +1037,7 @@ namespace transport
 	    {
         json_serialization_stack::value_element<double> ele(name, value);
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
@@ -1024,7 +1045,7 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().push_content(ele);
 	    }
 
@@ -1033,7 +1054,7 @@ namespace transport
 	    {
         json_serialization_stack::value_element<bool> ele(name, value);
 
-        if(this->push_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
@@ -1041,7 +1062,7 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->push_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
         n.get().push_content(ele);
 	    }
 
@@ -1054,7 +1075,7 @@ namespace transport
 	    {
         bool rval = false;
 
-        if(this->pull_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
@@ -1062,7 +1083,7 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
@@ -1083,7 +1104,7 @@ namespace transport
 	    {
         bool rval = false;
 
-        if(this->pull_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
@@ -1091,7 +1112,7 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
@@ -1112,7 +1133,7 @@ namespace transport
 	    {
         bool rval = false;
 
-        if(this->pull_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
@@ -1120,7 +1141,7 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
@@ -1141,7 +1162,7 @@ namespace transport
 	    {
         bool rval = false;
 
-        if(this->pull_stack.size() == 0)
+        if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
@@ -1149,7 +1170,7 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->pull_stack.front();
+        std::reference_wrapper<basic_node> n = this->node_stack.front();
 
         element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
         std::reference_wrapper<element> ele(nullele);
@@ -1169,7 +1190,7 @@ namespace transport
 		// Push current stack position to bookmarks
 		void json_serialization_stack::push_bookmark()
 			{
-				this->bookmarks.push_front(this->pull_stack.front());
+				this->bookmarks.push_front(this->node_stack.front());
 			}
 
 
@@ -1189,18 +1210,18 @@ namespace transport
 		    if(this->bookmarks.size() == 0)
 			    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_BOOKMARKS_EMPTY);
 
-        // empty pull stack, and push the last bookmark back to it
-        this->pull_stack.clear();
+        // empty stack, and push the last bookmark back to it
+        this->node_stack.clear();
 
         std::reference_wrapper<basic_node> bk_mk = this->bookmarks.front();
-        this->pull_stack.push_front(bk_mk);
+        this->node_stack.push_front(bk_mk);
 
         // mark all items unread, recursively, from the bookmark
 		    bk_mk.get().set_unread();
 	    }
 
 
-    // Reset read status, leaving the pull stack intact.
+    // Reset read status, leaving the stack intact.
     // Works either from the current position on the stack or the root of the tree
     void json_serialization_stack::pull_reset_unread(json_serialization_stack::position pos)
 	    {
@@ -1215,7 +1236,7 @@ namespace transport
             break;
 
             case json_serialization_stack::current:
-	            std::reference_wrapper<basic_node> n = this->pull_stack.front();
+	            std::reference_wrapper<basic_node> n = this->node_stack.front();
 	            n.get().set_unread();
             break;
 
@@ -1231,7 +1252,7 @@ namespace transport
         std::string output;
 
         // ensure top-of-stack object is the root node
-        if(this->push_stack.size() != 1)
+        if(this->node_stack.size() != 1)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_NOT_FINISHED;
