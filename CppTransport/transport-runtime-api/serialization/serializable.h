@@ -59,7 +59,7 @@ namespace transport
 				//! Write attributes to the current node
 				virtual void write_attribute(const std::string& name, const std::string& value) = 0;
 
-				//! Write a value
+				//! Write a value to the current node
 				virtual void write_value(const std::string& name, const std::string& value) = 0;
 				virtual void write_value(const std::string& name, unsigned value) = 0;
 				virtual void write_value(const std::string& name, double value) = 0;
@@ -91,6 +91,7 @@ namespace transport
 
         // READING METHODS
 
+
 		    //! Reset tree, ready for reading again
 		    virtual void reset() = 0;
 
@@ -112,11 +113,33 @@ namespace transport
         //! Read attributes from the current node
         virtual bool read_attribute(const std::string& name, std::string& value) = 0;
 
-        //! Read a value
+        //! Read a value from the current node
         virtual bool read_value(const std::string& name, std::string& value) = 0;
         virtual bool read_value(const std::string& name, unsigned int& value) = 0;
         virtual bool read_value(const std::string& name, double& value) = 0;
         virtual bool read_value(const std::string& name, bool& value) = 0;
+
+
+		    // UPDATE METHODS
+
+
+		    //! Insert a new node at the current level in the tree
+		    virtual void insert_node(const std::string& name, bool empty=false) = 0;
+
+		    //! Insert a new array at the current level in the tree
+		    virtual void insert_array(const std::string& name, bool empty=false) = 0;
+
+		    //! End the current node/array insertion
+		    virtual void insert_end_element(const std::string& name) = 0;
+
+		    //! Insert attributes in the current node
+		    virtual void insert_attribute(const std::string& name, const std::string& value) = 0;
+
+		    //! Insert a value in the current node
+		    virtual void insert_value(const std::string& name, const std::string& value) = 0;
+		    virtual void insert_value(const std::string& name, unsigned int value) = 0;
+		    virtual void insert_value(const std::string& name, double value) = 0;
+		    virtual void insert_value(const std::string& name, bool value) = 0;
 
 
         // OUTPUT METHODS
@@ -150,32 +173,35 @@ namespace transport
 
 
 	      // STANDARD SERIALIZATION TOOLS, USABLE BY DERIVED CLASSES WHICH IMPLEMENT A VERSION OF THIS INTERFACE
+		    // There's no need to use this interface; the class could use the serialization_writer
+		    // interface directly. Some of these methods are a bit higher level (eg. variadic templates to support
+		    // variable arguments), and save a bit of typing.
 
 
 	      //! Begin a node, perhaps with an arbitrary number of attributes
 	      template <typename... attrs>
-	      void begin_node(serialization_writer& writer, const std::string& name, bool empty, attrs... attributes);
+	      void begin_node(serialization_writer& writer, const std::string& name, bool empty, attrs... attributes) const;
 
         //! Begin an array. Arrays can have no attributes
-        void begin_array(serialization_writer& writer, const std::string& name, bool empty);
+        void begin_array(serialization_writer& writer, const std::string& name, bool empty) const;
 
 	      //! End the current element -- node or array
-	      void end_element(serialization_writer& writer, const std::string& name);
+	      void end_element(serialization_writer& writer, const std::string& name) const;
 
 		    //! Write a node with a single value, but no attributes
         template <typename T>
-        void write_value_node(serialization_writer& writer, const std::string& name, const T& value);
+        void write_value_node(serialization_writer& writer, const std::string& name, const T& value) const;
 
 	      //! Write a node with a single value and attributes
 	      template <typename T, typename... attrs>
-	      void write_value_node(serialization_writer& writer, const std::string& name, const T& value, attrs... attributes);
+	      void write_value_node(serialization_writer& writer, const std::string& name, const T& value, attrs... attributes) const;
 
 	      //! Write attributes: base case, no attributes to write
-	      void write_attributes(serialization_writer& writer);
+	      void write_attributes(serialization_writer& writer) const;
 
 	      //! Write attributes: inductive case
 		    template <typename T, typename... attrs>
-	      void write_attributes(serialization_writer& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes);
+	      void write_attributes(serialization_writer& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes) const;
 
 
 		    // STANDARD DESERIALIZATION TOOLS, USABLE BY DERIVED CLASSES WHICH IMPLEMENT A VERSION OF THIS INTERFACE
@@ -188,7 +214,7 @@ namespace transport
 
 		// begin a node
 		template <typename... attrs>
-		void serializable::begin_node(serialization_writer& writer, const std::string& name, bool empty, attrs... attributes)
+		void serializable::begin_node(serialization_writer& writer, const std::string& name, bool empty, attrs... attributes) const
 			{
 				static_assert(sizeof...(attributes) %2 == 0, "Attributes for serializable::begin_node must occur in (std::string, typename) pairs");
 
@@ -205,7 +231,7 @@ namespace transport
 
 		// write attributes - inductive case
 		template <typename T, typename... attrs>
-		void serializable::write_attributes(serialization_writer& writer, const std::string& attr_name const T& attr_val, attrs... other_attributes)
+		void serializable::write_attributes(serialization_writer& writer, const std::string& attr_name, const T& attr_val, attrs... other_attributes) const
 			{
 				static_assert(sizeof...(other_attributes) % 2 == 0, "Attributes for serializable::write_attributes must occur in (std::string, typename) pairs");
 
@@ -219,14 +245,14 @@ namespace transport
 
 
     // begin an array
-    void begin_array(serialization_writer& writer, const std::string& name, bool empty)
+    void serializable::begin_array(serialization_writer& writer, const std::string& name, bool empty) const
       {
         writer.start_array(name, empty);
       }
 
 
 		// end an element -- node or array
-		void serializable::end_element(serialization_writer& writer, const std::string& name)
+		void serializable::end_element(serialization_writer& writer, const std::string& name) const
 			{
 				writer.end_element(name);
 			}
@@ -234,13 +260,13 @@ namespace transport
 
 		// write a node with a single value
     template <typename T>
-		void serializable::write_value_node(serialization_writer& writer, const std::string name, const T& value)
+		void serializable::write_value_node(serialization_writer& writer, const std::string& name, const T& value) const
 			{
 				writer.write_value(name, value);
 			}
 
 		template <typename T, typename... attrs>
-		void serializable::write_value_node(serialization_writer& writer, const std::string& name, const T& value, attrs... attributes)
+		void serializable::write_value_node(serialization_writer& writer, const std::string& name, const T& value, attrs... attributes) const
 			{
 				this->begin_node(writer, name, false, std::forward<attrs>(attributes)...);
 
