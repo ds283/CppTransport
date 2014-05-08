@@ -151,6 +151,9 @@ namespace transport
 				// READING METHODS -- implements a 'serialization_reader' interface
 
 
+				//! Reset tree, ready for reading again
+				virtual void reset() override;
+
 		    //! Start reading a new node at the current level in the tree.
 				//! Returns number of elements in the node, or throws an
 				//! exception if the node cannot be read.
@@ -253,7 +256,9 @@ namespace transport
 									}
 								else if(unqlite_value_is_int(value))
 									{
-								    this->stack.write_value(key_name, static_cast<unsigned int>(unqlite_value_to_int(value)));
+										int number = unqlite_value_to_int(value);
+										if(number < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+								    this->stack.write_value(key_name, static_cast<unsigned int>(number));
 									}
 								else if(unqlite_value_is_numeric(value))
 									{
@@ -376,6 +381,13 @@ namespace transport
     std::string unqlite_serialization_reader::get_contents() const
 	    {
         return(this->stack.get_contents());
+	    }
+
+
+
+    void virtual unqlite_serialization_reader::reset()
+	    {
+				this->stack.pull_reset_head();
 	    }
 
 

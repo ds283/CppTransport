@@ -91,6 +91,8 @@ namespace transport
 
         // READING METHODS
 
+		    //! Reset tree, ready for reading again
+		    virtual void reset() = 0;
 
         //! Start reading a new node at the current level in the tree
         virtual unsigned int start_node(const std::string& name) = 0;
