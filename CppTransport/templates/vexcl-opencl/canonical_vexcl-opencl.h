@@ -10,9 +10,9 @@
 #ifndef $$__GUARD   // avoid multiple inclusion
 #define $$__GUARD
 
-#include "transport/utilities/formatter.h"
+#include "transport-runtime-api/utilities/formatter.h"
 
-#include "transport/transport.h"
+#include "transport-runtime-api/transport.h"
 
 #include "$$__CORE"
 
