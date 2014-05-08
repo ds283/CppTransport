@@ -137,10 +137,10 @@ namespace transport
 		    unqlite_serialization_reader* deserialize_package(const std::string& name, int& unqlite_id);
 
         //! Insert a record for a specified task, in a specified container.
-        integration_container insert_output(const std::string& collection, task<number>* tk, const std::string& backend, unsigned int worker);
+        typename repository<number>::integration_container insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk);
 
         //! Allocate a new serial number based on the list of used serial numbers from an output record
-        unsigned int allocate_new_serial_number(unqlite_serialization_reader& reader);
+        unsigned int allocate_new_serial_number(unqlite_serialization_reader* reader);
 
 
         // INTERNAL DATA
@@ -567,12 +567,16 @@ namespace transport
 		    // use the supplied finder to recover a model object for this UID
 		    m = finder(uid);
 
+        // obtain parameter and initial-conditions validators from this model
+        typename parameters<number>::params_validator p_validator = m->params_validator_factory();
+        typename initial_conditions<number>::ics_validator ics_validator = m->ics_validator_factory();
+
 		    // move the package serialization reader to the initial conditions block, and use it to
 		    // reconstruct a initial_conditions<> object
 		    package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
 		    package_reader->push_bookmark();
-		    initial_conditions<number> ics = initial_conditions::deserialize(package_reader, m, package_name);
+		    initial_conditions<number> ics = initial_conditions::deserialize(package_reader, package_name, p_validator, ics_validator);
 		    package_reader->pop_bookmark();
 
 		    package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
@@ -693,7 +697,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_container handle
-        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk, backend, worker);
+        typename repository<number>::integration_container ctr = this->insert_output(<#initializer#>, backend, worker, tk);
 
         return(ctr);
       }
@@ -723,89 +727,100 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_container handle
-        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk, backend, worker);
+        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk);
 
         return(ctr);
       }
 
 
-    // Add output for a specified task
-    // We are allowed to assume that all handles exist, tk is not null, and the task exists in the database collection specified
-
-
+    // Add output for a specified task.
+		// We are allowed to assume that the database handles exist, and that the task exists
+		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_container
-    repository_unqlite<number>::insert_output(const std::string& collection, task<number>* tk, const std::string& backend, unsigned int worker)
+    repository_unqlite<number>::insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk)
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
-        assert(tk != nullptr);
+        // get serialization_reader for the named task record
+        int task_id = 0;
+        unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id);
 
-        // check if a suitable record exists
-		    unqlite_vm* vm_twopf   = nullptr;
-		    unqlite_vm* vm_threepf = nullptr;
+        // allocate a new serial number
+		    task_reader->push_bookmark();
+		    unsigned int serial_number = this->allocate_new_serial_number(task_reader);
+		    task_reader->pop_bookmark();
 
-		    unqlite_value* twopf_recs   = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-		    unqlite_value* threepf_recs = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+		    // construct paths for the various output files and directories
+        std::ostringstream output_leaf;
+		    output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf.str();
+        boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+        boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+        boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
-		    if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
-			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+		    // update task_reader with information about the new output group
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-		    unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
-		    unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
+		    task_reader->reset();
 
-        if(twopf_count + threepf_count == 0)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-        else if(twopf_count + threepf_count > 1)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << tk->get_name() << "'" __CPP_TRANSPORT_RUN_REPAIR;
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
-		    unqlite_value* recs = nullptr;
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
-        if(twopf_count == 1) recs = twopf_recs;
-        else                 recs = threepf_recs;
+        std::string tag = boost::lexical_cast<std::string>(serial_number);
+		    task_reader->insert_node(tag);  // name of node doesn't matter, it is ignored in arrays, but should be unique
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, serial_number);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_BACKEND, backend);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_PATH, output_path.string());
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_DATABASE, sql_path.string());
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_CREATED, boost::posix_time::to_simple_string(now));
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_LOCKED, false);
+		    task_reader->insert_node(__CPP_TRANSPORT_NODE_OUTPUT_NOTES, true);
+		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+		    task_reader->insert_end_element(tag);
 
-        if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
-	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
-        // get JSON object representing our record; this is the only component of the output array
-        unqlite_value* rec = unqlite_array_fetch(recs, "1", -1);
+		    // update the task entry for this database
+		    // that means: first, drop this existing record; then
+        unqlite_operations::drop(this->integration_db, collection, task_id);
+        unqlite_operations::store(this->integration_db, collection, task_reader->get_contents());
 
-		    // convert this JSON object to a serialization reader
-		    unqlite_serialization_reader reader(rec);
+		    // create directories
+        boost::filesystem::create_directories(this->root_path / output_path);
+        boost::filesystem::create_directories(this->root_path / log_path);
+        boost::filesystem::create_directories(this->root_path / temp_path);
 
-		    // allocate a new serial number
-		    unsigned int serial_number = this->allocate_new_serial_number(reader);
+		    delete task_reader;
 
-        unqlite_vm_release(vm_twopf);
-		    unqlite_vm_release(vm_threepf);
+		    return typename repository<number>::integration_container(this->root_path/output_path,
+		                                                              this->root_path/sql_path,
+		                                                              this->root_path/log_path,
+		                                                              this->root_path/task_path,
+		                                                              this->root_path/temp_path,
+		                                                              serial_number, worker);
       }
 
 
-    unsigned int repository_unqlite::allocate_new_serial_number(unqlite_serialization_reader& reader)
+    unsigned int repository_unqlite::allocate_new_serial_number(unqlite_serialization_reader* reader)
 	    {
 				// populate list of serial numbers
         std::list<unsigned int> serial_numbers;
 
 		    // reset reader to the beginning
-		    reader.reset();
+		    reader->reset();
 
 		    // start reading from integration output block
-		    unsigned int entries = reader.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 		    for(unsigned int i = 0; i < entries; i++)
 			    {
-				    reader.start_node("");  // name doesn't matter; array elements have no name
+				    reader->start_node("");  // name we supply doesn't matter; array elements have no name
 				    unsigned int sn;
-				    reader.read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, sn);
+				    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, sn);
 				    serial_numbers.push_back(sn);
-				    reader.end_element("");
+				    reader->end_element("");
 			    }
 
         unsigned int serial_number;
