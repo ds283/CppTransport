@@ -17,10 +17,11 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
 
+#include "transport-runtime-api/utilities/named_list.h"
+
 #include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PARAMETERS "parameters"
 #define __CPP_TRANSPORT_NODE_MPLANCK    "mplanck"
 #define __CPP_TRANSPORT_NODE_PRM_VALUES "values"
 #define __CPP_TRANSPORT_NODE_PARAMETER  "parameter"
@@ -30,82 +31,6 @@
 namespace transport
   {
 
-    // functions to extract information from XML schema
-    namespace parameters_dbxml
-      {
-
-        template <typename number>
-        void extract_M_Planck(DbXml::XmlManager* mgr, DbXml::XmlValue& value, number& M_Planck)
-          {
-            // run a query to pick out the M_Planck node
-            std::string query = dbxml_helper::xquery::value_self(__CPP_TRANSPORT_NODE_MPLANCK);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-            M_Planck = boost::lexical_cast<number>(node.asString());
-          }
-
-
-        template <typename number>
-        void extract_parameters(DbXml::XmlManager* mgr, DbXml::XmlValue& value, std::vector<number>& p, std::vector<std::string>& n,
-                                const std::vector<std::string>& ordering)
-          {
-            // run a query to pick out the parameter values block
-            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PRM_VALUES);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-            if(node.getLocalName() != __CPP_TRANSPORT_NODE_PRM_VALUES) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-            std::vector< dbxml_helper::named_list::element<number> > temporary_list;
-
-            DbXml::XmlValue child = node.getFirstChild();
-            while(child.getType() != DbXml::XmlValue::NONE)
-              {
-                DbXml::XmlResults attrs = child.getAttributes();
-                if(attrs.size() != 1) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-                DbXml::XmlValue name;
-                attrs.next(name);
-                if(name.getLocalName() != __CPP_TRANSPORT_ATTR_NAME) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-                DbXml::XmlValue value = child.getFirstChild();
-                if(!(value.getType() == DbXml::XmlValue::NODE && value.getNodeType() == DbXml::XmlValue::TEXT_NODE)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-                temporary_list.push_back(dbxml_helper::named_list::element<number>(name.getNodeValue(),
-                                                                                     boost::lexical_cast<number>(value.getNodeValue())));
-
-                child = child.getNextSibling();
-              }
-
-            if(temporary_list.size() != ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-            dbxml_helper::named_list::ordering order_map = dbxml_helper::named_list::make_ordering(ordering);
-            dbxml_helper::named_list::comparator<number> cmp(order_map);
-            std::sort(temporary_list.begin(), temporary_list.end(), cmp);
-
-            for(unsigned int i = 0; i < temporary_list.size(); i++)
-              {
-                p.push_back((temporary_list[i]).get_value());
-                n.push_back((temporary_list[i]).get_name());
-              }
-          }
-
-
-        template <typename number>
-        void extract(DbXml::XmlManager* mgr, DbXml::XmlValue& value,
-                     number& M_Planck, std::vector<number>& p, std::vector<std::string>& n,
-                     const std::vector<std::string>& ordering)
-          {
-            // run a query to find the parameters XML block from this schema
-            std::string query = dbxml_helper::xquery::node_self(__CPP_TRANSPORT_NODE_PARAMETERS);
-
-            DbXml::XmlValue node = dbxml_helper::extract_single_node(query, mgr, value, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
-
-            extract_M_Planck(mgr, node, M_Planck);
-            extract_parameters(mgr, node, p, n, ordering);
-          }
-
-      }   // namespace parameters_dbxml
 
     template <typename number> class parameters;
 
@@ -169,11 +94,9 @@ namespace transport
       {
         assert(this->params.size() == this->names.size());
 
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_PARAMETERS, false);
-
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MPLANCK, this->M_Planck);
 
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_PRM_VALUES, false);
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRM_VALUES, false);
 
         if(this->params.size() == this->names.size())
           {
@@ -188,9 +111,65 @@ namespace transport
           }
 
         this->end_element(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
-
-        this->end_element(writer, __CPP_TRANSPORT_NODE_PARAMETERS);
       }
+
+
+		namespace
+			{
+
+				namespace parameters
+					{
+
+						template <typename number>
+						parameters<number> deserialize(serialization_reader* reader,
+						                               const std::vector<std::string>& ordering,
+						                               typename parameters<number>::params_validator p_validator)
+							{
+								reader->reset();
+
+								double MPlanck;
+								reader->read_value(__CPP_TRANSPORT_NODE_MPLANCK, MPlanck);
+
+								unsigned int parameters = reader->start_array(__CPP_TRANSPORT_NODE_PRM_VALUES);
+
+						    std::vector< named_list::element<number> > temp;
+								for(unsigned int i = 0; i < parameters; i++)
+									{
+										reader->start_node(__CPP_TRANSPORT_NODE_PARAMETER);
+
+								    std::string param_name;
+										reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, param_name);
+
+										double param_value;
+										reader->read_value(__CPP_TRANSPORT_NODE_PARAMETER, param_value);
+
+										temp.push_back(named_list::element<number>(param_name, static_cast<number>(param_value)));
+
+										reader->end_element(__CPP_TRANSPORT_NODE_PARAMETER);
+									}
+
+								reader->end_element(__CPP_TRANSPORT_NODE_PRM_VALUES);
+
+						    if(temp.size() != ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
+
+						    named_list::ordering order_map = named_list::make_ordering(ordering);
+						    named_list::comparator<number> cmp(order_map);
+						    std::sort(temp.begin(), temp.end(), cmp);
+
+						    std::vector<number> p;
+						    std::vector<std::string> n;
+						    for(unsigned int i = 0; i < temp.size(); i++)
+							    {
+						        p.push_back((temp[i]).get_value());
+						        n.push_back((temp[i]).get_name());
+							    }
+
+								return(parameters<number>(static_cast<number>(MPlanck), p, n, p_validator));
+							}
+
+					}   // namespace parameters
+
+			}   // unnamed namespacae
 
 
     template <typename number>
