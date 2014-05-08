@@ -159,7 +159,7 @@ namespace transport
 					{
 
 						template <typename value>
-						range<value> deserialize(serialization_reader* reader)
+						transport::range<value> deserialize(serialization_reader* reader)
 							{
 								double min, max;
 								unsigned int steps;
@@ -170,13 +170,13 @@ namespace transport
 								reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
 								reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spacing);
 
-						    typename range<value>::spacing_type type = range<value>::linear;
+						    typename transport::range<value>::spacing_type type = transport::range<value>::linear;
 
-								if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) type = linear;
-								else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) type = logarithmic;
+								if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) type = transport::range<value>::linear;
+								else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) type = transport::range<value>::logarithmic;
 								else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
-							  return(range<value>(static_cast<value>(min), static_cast<value>(max), steps, type));
+							  return(transport::range<value>(static_cast<value>(min), static_cast<value>(max), steps, type));
 							}
 
 					}   // namespace range

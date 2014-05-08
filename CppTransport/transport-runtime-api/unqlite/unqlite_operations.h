@@ -13,11 +13,13 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
-#include "unqlite/unqlite.h"
-
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
+extern "C"
+{
+#include "unqlite/unqlite.h"
+}
 
 
 #define __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION "default-packages"
@@ -148,9 +150,9 @@ namespace transport
 
 
         // default consumer for Jx9 virtual machine output -- throw it as an exception
-        int default_unqlite_consumer(const void* data, unsigned int length, void* handle)
+        int default_unqlite_consumer(const char* data, unsigned int length, void* handle)
           {
-            std::string jx9_msg(data, length);
+            std::string jx9_msg = std::string(data, length);
 
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_UNQLITE_VM_OUPTUT << " '" << jx9_msg << "'";
@@ -238,7 +240,7 @@ namespace transport
 
             jx9 << "if( !db_exists('" << collection << "') )"
                 << "  {"
-                << "    $rc = db_create('" << collection << ""');"
+                << "    $rc = db_create('" << collection << "');"
                 << "    if ( !$rc )"
                 << "      {"
                 << "        print db_errlog();"
@@ -402,7 +404,7 @@ namespace transport
         // extract array records matching specified criteria
         // also returns virtual machine for further processing; it should be released when processing is complete
         template <typename T, typename... fields>
-        unqlite_value* query(unqlite* db, const std::string& collection, const T& value, fields... field_names, unqlite_vm** vm)
+        unqlite_value* query(unqlite* db, unqlite_vm*& vm, const std::string& collection, const T& value, fields... field_names)
           {
             assert(vm != nullptr);
 
@@ -419,7 +421,7 @@ namespace transport
               << "    };"
               << "$data = db_fetch_all('" << collection << "', $callback);";
 
-            *vm = exec_jx9_vm(db, jx9.str());
+            vm = exec_jx9_vm(db, jx9.str());
 
             // extract value of $num_records
             unqlite_value* data = unqlite_vm_extract_variable(vm, "$data");

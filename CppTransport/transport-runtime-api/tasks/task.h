@@ -431,26 +431,26 @@ namespace transport
     namespace
 	    {
 
-        namespace twopf_task
+        namespace twopf_task_helper
 	        {
 
             template <typename number>
-            twopf_task<number> deserialize(serialization_reader* reader, const std::string& name,
-                                           const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
+            transport::twopf_task<number> deserialize(serialization_reader* reader, const std::string& name,
+                                                      const transport::initial_conditions<number>& ics, typename transport::task<number>::kconfig_kstar kstar)
 	            {
 								reader->start_node(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
 		            reader->push_bookmark();
-		            range<double> times = range::deserialize(reader);
+                transport::range<double> times = range::deserialize<double>(reader);
 		            reader->pop_bookmark();
 		            reader->end_element(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
 
 		            reader->start_node(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
 		            reader->push_bookmark();
-		            range<double> ks = range::deserialize(reader);
+                transport::range<double> ks = range::deserialize<double>(reader);
 		            reader->pop_bookmark();
 		            reader->end_element(__CPP_TRANSPORT_NODE_TWOPF_KSAMPLE);
 
-		            return twopf_task<number>(name, ics, times, ks, kstar);
+		            return transport::twopf_task<number>(name, ics, times, ks, kstar);
 	            }
 
 	        }
@@ -640,16 +640,16 @@ namespace transport
     namespace
 	    {
 
-        namespace threepf_task
+        namespace threepf_task_helper
 	        {
 
             template <typename number>
-            threepf_task<number> deserialize(serialization_reader* reader, const std::string& name,
-                                             const initial_conditions<number>& ics, typename task<number>::kconfig_kstar kstar)
+            transport::threepf_task<number> deserialize(serialization_reader* reader, const std::string& name,
+                                                        const transport::initial_conditions<number>& ics, typename transport::task<number>::kconfig_kstar kstar)
 	            {
                 reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
                 reader->push_bookmark();
-                range<double> times = range::deserialize(reader);
+                transport::range<double> times = range::deserialize<double>(reader);
                 reader->pop_bookmark();
                 reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
 
@@ -661,37 +661,37 @@ namespace transport
 									{
 										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
 										reader->push_bookmark();
-								    range<double> ks = range::deserialize(reader);
+								    transport::range<double> ks = range::deserialize<double>(reader);
 								    reader->pop_bookmark();
 								    reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KRANGE);
 
 										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
 
-										return(threepf_task<number>(name, ics, times, ks, kstar));
+										return(transport::threepf_task<number>(name, ics, times, ks, kstar));
 									}
 		            else if(sample_type == __CPP_TRANSPORT_VAL_THREEPF_FLS)
 									{
 										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
 										reader->push_bookmark();
-										range<double> kt = range::deserialize(reader);
+								    transport::range<double> kt = range::deserialize<double>(reader);
 										reader->pop_bookmark();
 										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KTRANGE);
 
 										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
 										reader->push_bookmark();
-										range<double> alpha = range::deserialize(reader);
+								    transport::range<double> alpha = range::deserialize<double>(reader);
 										reader->pop_bookmark();
 										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_ARANGE);
 
 										reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
 										reader->push_bookmark();
-										range<double> beta = range::deserialize(reader);
+								    transport::range<double> beta = range::deserialize<double>(reader);
 										reader->pop_bookmark();
 										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_BRANGE);
 
 										reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KSAMPLE);
 
-										return(threepf_task<number>(name, ics, times, kt, alpha, beta, kstar));
+										return(transport::threepf_task<number>(name, ics, times, kt, alpha, beta, kstar));
 									}
 
 								throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);

@@ -6,7 +6,7 @@
 
 #include "dq_basic.h"
 
-#include "transport/manager/repository_creation_key.h"
+#include "transport-runtime-api/manager/repository_creation_key.h"
 
 
 // ****************************************************************************
@@ -34,8 +34,8 @@ int main(int argc, char* argv[])
     transport::repository_creation_key key;
 
     // create a new repository
-//    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
-    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
+//    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
 //    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
 
@@ -89,14 +89,14 @@ int main(int argc, char* argv[])
     mgr->write_integration(tk2, model);
     mgr->write_integration(tk3, model);
 
-    std::string package_xml = repo->extract_package_document(ics.get_name());
-    std::cout << "Package XML document:" << std::endl << package_xml << std::endl << std::endl;
+    std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_package_document(ics.get_name());
+    std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;
 
-    std::string task2_xml = repo->extract_integration_document(tk2.get_name());
-    std::cout << "2pf integration XML document:" << std::endl << task2_xml << std::endl << std::endl;
+    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_integration_document(tk2.get_name());
+    std::cout << "2pf integration JSON document:" << std::endl << task2_json << std::endl << std::endl;
 
-    std::string task3_xml = repo->extract_integration_document(tk3.get_name());
-    std::cout << "3pf integration XML document:" << std::endl << task3_xml << std::endl << std::endl;
+    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_integration_document(tk3.get_name());
+    std::cout << "3pf integration JSON document:" << std::endl << task3_json << std::endl << std::endl;
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 

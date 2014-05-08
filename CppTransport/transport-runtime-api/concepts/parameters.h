@@ -117,13 +117,13 @@ namespace transport
 		namespace
 			{
 
-				namespace parameters
+				namespace parameters_helper
 					{
 
 						template <typename number>
-						parameters<number> deserialize(serialization_reader* reader,
-						                               const std::vector<std::string>& ordering,
-						                               typename parameters<number>::params_validator p_validator)
+						transport::parameters<number> deserialize(serialization_reader* reader,
+						                                          const std::vector<std::string>& ordering,
+						                                          typename transport::parameters<number>::params_validator p_validator)
 							{
 								double MPlanck;
 								reader->read_value(__CPP_TRANSPORT_NODE_MPLANCK, MPlanck);
@@ -162,7 +162,7 @@ namespace transport
 						        n.push_back((temp[i]).get_name());
 							    }
 
-								return(parameters<number>(static_cast<number>(MPlanck), p, n, p_validator));
+								return(transport::parameters<number>(static_cast<number>(MPlanck), p, n, p_validator));
 							}
 
 					}   // namespace parameters

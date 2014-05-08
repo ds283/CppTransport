@@ -162,23 +162,23 @@ namespace transport
 		namespace
 			{
 
-		    namespace initial_conditions
+		    namespace initial_conditions_helper
 			    {
 
 				    //! Deserialize an initial_conditions object
 		        template <typename number>
-		        initial_conditions<number> deserialize(serialization_reader* reader, const std::string& package_name,
-		                                               const std::vector<std::string>& parameter_ordering,
-		                                               const std::vector<std::string>& field_ordering,
-		                                               typename parameters<number>::params_validator p_validator,
-		                                               typename initial_conditions<number>::ics_validator ics_validator)
+		        transport::initial_conditions<number> deserialize(serialization_reader* reader, const std::string& package_name,
+		                                                          const std::vector<std::string>& parameter_ordering,
+		                                                          const std::vector<std::string>& field_ordering,
+		                                                          typename transport::parameters<number>::params_validator p_validator,
+		                                                          typename transport::initial_conditions<number>::ics_validator ics_validator)
 			        {
 						    unsigned int Nstar;
 						    reader->read_value(__CPP_TRANSPORT_NODE_NSTAR, Nstar);
 
 						    reader->start_node(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
 						    reader->push_bookmark();
-						    parameters<number> params = parameters::deserialize(reader, parameter_ordering, p_validator);
+				        transport::parameters<number> params = parameters_helper::deserialize<number>(reader, parameter_ordering, p_validator);
 						    reader->pop_bookmark();
 						    reader->end_element(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
 
@@ -216,7 +216,7 @@ namespace transport
 				            n.push_back((temp[i]).get_name());
 					        }
 
-						    return(initial_conditions<number>(package_name, params, c, n, Nstar, ics_validator));
+						    return(transport::initial_conditions<number>(package_name, params, c, n, Nstar, ics_validator));
 			        }
 
 			    }   // namespace initial_conditions

@@ -224,7 +224,7 @@ namespace transport
 
 
 		// write attributes - base case, nothing to do
-		void serializable::write_attributes(serialization_writer& writer)
+		void serializable::write_attributes(serialization_writer& writer) const
 			{
 			}
 

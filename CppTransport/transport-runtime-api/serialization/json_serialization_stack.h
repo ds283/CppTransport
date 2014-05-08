@@ -53,7 +53,7 @@ namespace transport
 	        {
           public:
             //! Constructor, specified name
-            void element(const std::string& nm)
+            element(const std::string& nm)
 	            : name(nm), read(false)
 	            {
 	            }
@@ -114,14 +114,23 @@ namespace transport
           public:
 
             //! Constructor with specified name and empty state.
-            void basic_node(const std::string& nm, bool emp=false)
+            basic_node(const std::string& nm, bool emp=false)
 	            : empty(emp), element(nm)
 	            {
 	            }
 
-            //! Declare virtual destructor so destructors of derived classes get called
+            //! Declare virtual destructor so destructors of derived classes get called.
+		        //! We also have to delete all the elements.
             virtual ~basic_node()
 	            {
+		            for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+			            {
+				            delete (*t);
+			            }
+		            for(std::list<element*>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+			            {
+				            delete (*t);
+			            }
 	            }
 
             //! Mark this item as unread. Over-rides implementation in 'element', because
@@ -131,15 +140,15 @@ namespace transport
             //! Derived classes should implement a method to make a new contents element,
             //! suitable for storage within this node. What this should be can vary depending whether the node is an array,
             //! a user_node or a root_node
-            virtual basic_node make_element(const std::string& name, bool empty=false) const = 0;
+            virtual basic_node* make_element(const std::string& name, bool empty=false) = 0;
 
             //! Push an element to our contents.
 		        //! Any element with the same name is removed, because it is assume this push
 		        //! is an attempt to update.
-            void push_content(element& ele);
+            void push_content(element* ele);
 
             //! Push an element to our attributes.
-            void push_attribute(element& ele);
+            void push_attribute(element* ele);
 
 		        //! Get number of content elements
 		        unsigned int get_num_contents() { return(this->contents.size()); }
@@ -150,12 +159,12 @@ namespace transport
             //! Enquire whether this node can service a request to pull some particular content.
 		        //! Returns false if it cannot.
             //! Otherwise, returns true and writes the pulled element into the supplied reference.
-            bool pull_content(element_type pull_type, const std::string& name, std::reference_wrapper<element>& ele);
+            bool pull_content(element_type pull_type, const std::string& name, element*& ele);
 
             //! Enquire whether this node can service a request to pull a particular named attribute.
 		        //! Returns false if it cannot.
             //! Otherwise, returns true and writes the pulled element into the supplied reference.
-            bool pull_attribute(element_type pull_type, const std::string& name, std::reference_wrapper<element>& ele);
+            bool pull_attribute(element_type pull_type, const std::string& name, element*& ele);
 
           protected:
 
@@ -163,88 +172,11 @@ namespace transport
             bool empty;
 
             //! list of elements representing attributes
-            std::list<element> attributes;
+            std::list<element*> attributes;
 
             //! list of elements representing the contents of this node
-            std::list<element> contents;
+            std::list<element*> contents;
 	        };
-
-
-        void basic_node::push_attribute(element& ele)
-          {
-		        for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
-			        {
-				        if((*t).get_name() == ele.get_name()) t = this->attributes.erase(t);
-			        }
-
-            this->attributes.push_back(ele);
-	        }
-
-
-        void basic_node::push_content(element& ele)
-          {
-            for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-	            {
-                if((*t).get_name() == ele.get_name()) t = this->contents.erase(t);
-	            }
-
-            this->contents.push_back(ele);
-	        }
-
-
-        void basic_node::set_unread()
-	        {
-            // mark this item's read status
-            this->read = false;
-
-            // mark status of all attributes and contents
-            for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
-	            {
-                (*t).set_unread();
-	            }
-            for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-	            {
-                (*t).set_unread();
-	            }
-	        }
-
-
-        bool basic_node::pull_content(element_type pull_type, const std::string& name, std::reference_wrapper<element>& ele)
-	        {
-		        bool rval = false;
-
-		        // enquire whether any of our contents will accept a pull request of the specified type
-		        for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-			        {
-				        if((*t).pull_enquiry(pull_type, name))
-					        {
-						        ele = std::ref<element>(*t);
-						        rval = true;
-						        break;
-					        }
-			        }
-
-            return(rval);
-	        }
-
-
-		    bool basic_node::pull_attribute(element_type pull_type, const std::string& name, std::reference_wrapper<element>& ele)
-			    {
-				    bool rval = false;
-
-				    // enquire whether any of our attributes will accept a pull request of the specified type
-				    for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
-					    {
-						    if((*t).pull_enquiry(pull_type, name))
-							    {
-								    ele = std::ref<element>(*t);
-								    rval = true;
-								    break;
-							    }
-					    }
-
-				    return(rval);
-			    }
 
 
         class user_node: public basic_node
@@ -252,7 +184,7 @@ namespace transport
           public:
 
             //! Constructor with specified name and empty state
-            void user_node(const std::string& nm, bool emp=false)
+            user_node(const std::string& nm, bool emp=false)
 	            : basic_node(nm, emp)
 	            {
 	            }
@@ -265,7 +197,7 @@ namespace transport
 
             //! Override base_node function to make a new contents element suitable for storage in this node.
             //! For a user_array, this should be a root_node
-            virtual basic_node make_element(const std::string& name, bool empty=false) const override;
+            virtual basic_node* make_element(const std::string& name, bool empty=false) override;
 
 		        //! Override element function to service a named pull enquiry
             virtual bool pull_enquiry(element_type pull_type, const std::string& pull_name) override;
@@ -276,98 +208,12 @@ namespace transport
 	        };
 
 
-        basic_node virtual user_node::make_element(const std::string& name, bool empty=false) const
-	        {
-            user_node n(name, empty);
-            return(n);
-	        }
-
-
-        bool virtual user_node::validate() const
-	        {
-            bool rval = true;
-
-            if(this->empty && this->contents.size() > 0 || !this->empty && this->contents.size() == 0) rval = false;
-
-            return(rval);
-	        }
-
-
-        std::string virtual user_node::stringize(bool attribute=false) const
-	        {
-            std::string r;
-
-            if(this->empty)
-	            {
-                r = this->name + ": ";
-	            }
-            else
-	            {
-                r = this->name + ": { ";
-
-                for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
-	                {
-                    if(t != this->attributes.begin())
-	                    {
-                        r += std::string(", ");
-
-                        r += (*t).stringize(true);    // mark this element as an attribute
-	                    }
-	                }
-
-                for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-	                {
-                    if(t != this->contents.begin())
-	                    {
-                        r += std::string(", ");
-
-                        r += (*t).stringize();
-	                    }
-	                }
-
-                r += " }";
-	            }
-
-            return(r);
-	        }
-
-
-        bool virtual  user_node::pull_enquiry(element_type pull_type, const std::string& pull_name)
-	        {
-		        bool rval = false;
-
-		        // we can service this enquiry if we are unread and it is looking for a node with our name
-		        if(!this->get_read() && pull_type == node && this->get_name() == pull_name)
-			        {
-		            rval = true;
-				        this->set_read();
-			        }
-
-						return(rval);
-	        }
-
-
-        bool virtual user_node::pull_enquiry(element_type pull_type)
-	        {
-            bool rval = false;
-
-            // we can service this enquiry if we are unread and it is looking for a node
-            if(!this->get_read() && pull_type == node)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
-
-
         class user_array: public basic_node
 	        {
           public:
 
             //! Constructor with specified name and empty state
-            void user_array(const std::string& nm, bool emp=false)
+            user_array(const std::string& nm, bool emp=false)
 	            : basic_node(nm, emp)
 	            {
 	            }
@@ -380,7 +226,7 @@ namespace transport
 
             //! Override basic_node function to make a new contents element suitable for storage in this node.
             //! For a user_array, this should be a root_node
-            virtual basic_node make_element(const std::string& name, bool empty=false) const override;
+            virtual basic_node* make_element(const std::string& name, bool empty=false) override;
 
 		        //! Override element function to service a named pull enquiry
             virtual bool pull_enquiry(element_type pull_type, const std::string& pull_name) override;
@@ -390,93 +236,12 @@ namespace transport
 	        };
 
 
-        basic_node virtual user_array::make_element(const std::string& name, bool empty=false) const
-	        {
-            root_node n(name, empty);
-            return(n);
-	        }
-
-
-        bool virtual user_array::validate() const
-	        {
-            bool rval = true;
-
-            if(this->empty && this->contents.size() > 0 || !this->empty && this->contents.size() == 0) rval = false;
-            if(this->attributes.size() > 0) rval = false;
-
-            return(rval);
-	        }
-
-
-        std::string virtual user_array::stringize(bool attribute=false) const
-	        {
-            std::string r;
-
-            if(this->empty)
-	            {
-                r = this->name + ": []";
-	            }
-            else
-	            {
-                r = this->name + ": [ ";
-
-                // arrays have no attributes, so ignore this field.
-                // it should be zero anyway since we were validated when the array was closed.
-
-                for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-	                {
-                    if(t != this->contents.begin())
-	                    {
-                        r += std::string(", ");
-
-                        r += (*t).stringize();
-	                    }
-	                }
-
-                r += " ]";
-	            }
-
-            return(r);
-	        }
-
-
-        bool virtual user_array::pull_enquiry(element_type pull_type, const std::string& pull_name)
-	        {
-            bool rval = false;
-
-		        // we are happy to service this enquiry if we are unread, and if
-		        // it is looking for an array with our name
-		        if(!this->get_read() && pull_type == array && this->get_name() == pull_name)
-			        {
-		            rval = true;
-				        this->set_read();
-			        }
-
-		        return(rval);
-	        }
-
-
-        bool virtual user_array::pull_enquiry(element_type pull_type)
-	        {
-            bool rval = false;
-
-            // we are happy to service this enquiry if we are unread, and if it is looking for an array
-            if(!this->get_read() && pull_type == array)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
-
-
         class root_node: public basic_node
 	        {
           public:
 
             //! Constructor with specified name and empty state
-            void root_node(const std::string& nm, bool emp=false)
+            root_node(const std::string& nm, bool emp=false)
 	            : basic_node(nm, emp)
 	            {
 	            }
@@ -490,7 +255,7 @@ namespace transport
             virtual bool validate() const override;
 
             //! Make a new contents element. For us, this should be a user-node
-            virtual basic_node make_element(const std::string& name, bool empty=false) const override;
+            virtual basic_node* make_element(const std::string& name, bool empty=false) override;
 
             //! Override element function to service a named pull enquiry
             virtual bool pull_enquiry(element_type pull_type, const std::string& pull_name) override;
@@ -500,90 +265,13 @@ namespace transport
 	        };
 
 
-        basic_node virtual root_node::make_element(const std::string& name, bool empty=false) const
-	        {
-            user_node n(name, empty);
-            return(n);
-	        }
-
-
-        bool virtual root_node::validate() const
-	        {
-            bool rval = true;
-
-            if(this->empty && this->contents.size() > 0 || !this->empty && this->contents.size() == 0) rval = false;
-
-            return(rval);
-	        }
-
-
-        std::string virtual root_node::stringize(bool attribute=false) const
-	        {
-            std::string r = "{ ";
-
-            for(std::list<element>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
-	            {
-                if(t != this->attributes.begin())
-	                {
-                    r += std::string(", ");
-
-                    r += (*t).stringize();
-	                }
-	            }
-
-            for(std::list<element>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
-	            {
-                if(t != this->contents.begin())
-	                {
-                    r += std::string(", ");
-
-                    r += (*t).stringize();
-	                }
-	            }
-
-            r += " }";
-
-            return(r);
-	        }
-
-
-        bool virtual root_node::pull_enquiry(element_type pull_type, const std::string& pull_name)
-	        {
-		        bool rval = false;
-
-		        // we are happy to service a pull request if we are unread, and it is looking for a node with our name
-            if(!this->get_read() && pull_type == node && this->get_name() == pull_name)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
-
-
-        bool virtual root_node::pull_enquiry(element_type pull_type)
-	        {
-            bool rval = false;
-
-            // we are happy to service a pull request if we are unread, and it is looking for a node
-            if(!this->get_read() && pull_type == node)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
-
-
         template <typename T>
         class value_element: public element
 	        {
           public:
 
             //! Constructor with specified name and stored value
-            void value_element(const std::string& nm, const T& val)
+            value_element(const std::string& nm, const T& val)
 	            : value(val), element(nm)
 	            {
 	            }
@@ -610,66 +298,32 @@ namespace transport
             bool         get_bool()         { return(boost::lexical_cast<bool>(this->value)); }
 
           protected:
+
             //! Stored value
             T value;
 	        };
-
-
-        std::string virtual value_element::stringize(bool attribute=false) const
-	        {
-            std::string v = boost::lexical_cast<std::string>(this->value);
-
-            return((attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string("")) + this->name + ": " + this->value);
-	        }
-
-
-        bool virtual value_element::pull_enquiry(element_type pull_type, const std::string& pull_name)
-	        {
-            bool rval = false;
-
-            // we are happy to service a pull request if we are unread, and it is looking for a value with our name
-            if(!this->get_read() && pull_type == value && this->get_name() == pull_name)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
-
-
-        bool virtual value_element::pull_enquiry(element_type pull_type)
-	        {
-            bool rval = false;
-
-            // we are happy to service a pull request if we are unread, and it is looking for a value
-            if(!this->get_read() && pull_type == value)
-	            {
-                rval = true;
-                this->set_read();
-	            }
-
-            return(rval);
-	        }
 
 
       public:
 
         //! create an json_serialization_stack
 
-        void json_serialization_stack()
-	        : root(__CPP_TRANSPORT_JSON_ROOT_NODE, false)
+        json_serialization_stack()
 	        {
+		        root = new root_node(__CPP_TRANSPORT_JSON_ROOT_NODE, false);
+
             // push the root node onto the stack
-            this->node_stack.push_front(std::ref(static_cast<basic_node>(this->root)));
+            this->node_stack.push_front(this->root);
 
 		        // push the root node as the first bookmark
-		        this->bookmarks.push_front(std::ref(static_cast<basic_node>(this->root)));
+		        this->bookmarks.push_front(this->root);
 	        }
 
         //! destructor
         ~json_serialization_stack()
 	        {
+		        // destroy root node; its destructor will destroy everything else
+		        delete(this->root);
 	        }
 
 
@@ -755,19 +409,381 @@ namespace transport
       protected:
 
 		    //! HEAD node for serialization stack
-        root_node root;
+        root_node* root;
 
         // note that, below, we have to use std::reference_wrapper, because
         // the STL container classes can't ordinarily take references
 
 				//! Current position within the serialization tree.
 		    //! Initialized to the root node (HEAD) by the constructor.
-        std::list< std::reference_wrapper<basic_node> > node_stack;
+        std::list<basic_node*> node_stack;
 
 		    
 		    //! Bookmark stack
-		    std::list< std::reference_wrapper<basic_node> > bookmarks;
+		    std::list<basic_node*> bookmarks;
 	    };
+
+
+    void json_serialization_stack::basic_node::push_attribute(element* ele)
+	    {
+        for(std::list<element*>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+	        {
+            if((*t)->get_name() == ele->get_name()) t = this->attributes.erase(t);
+	        }
+
+        this->attributes.push_back(ele);
+	    }
+
+
+    void json_serialization_stack::basic_node::push_content(element* ele)
+	    {
+        for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	        {
+            if((*t)->get_name() == ele->get_name()) t = this->contents.erase(t);
+	        }
+
+        this->contents.push_back(ele);
+	    }
+
+
+    void json_serialization_stack::basic_node::set_unread()
+	    {
+        // mark this item's read status
+        this->read = false;
+
+        // mark status of all attributes and contents
+        for(std::list<element*>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+	        {
+            (*t)->set_unread();
+	        }
+        for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	        {
+            (*t)->set_unread();
+	        }
+	    }
+
+
+    bool json_serialization_stack::basic_node::pull_content(element_type pull_type, const std::string& name, element*& ele)
+	    {
+        bool rval = false;
+
+        // enquire whether any of our contents will accept a pull request of the specified type
+        for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	        {
+            if((*t)->pull_enquiry(pull_type, name))
+	            {
+                ele = *t;
+                rval = true;
+                break;
+	            }
+	        }
+
+        return(rval);
+	    }
+
+
+    bool json_serialization_stack::basic_node::pull_attribute(element_type pull_type, const std::string& name, element*& ele)
+	    {
+        bool rval = false;
+
+        // enquire whether any of our attributes will accept a pull request of the specified type
+        for(std::list<element*>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+	        {
+            if((*t)->pull_enquiry(pull_type, name))
+	            {
+                ele = *t;
+                rval = true;
+                break;
+	            }
+	        }
+
+        return(rval);
+	    }
+
+
+    json_serialization_stack::basic_node* json_serialization_stack::user_node::make_element(const std::string& name, bool empty)
+	    {
+        user_node* n = new user_node(name, empty);
+        return(n);
+	    }
+
+
+    bool json_serialization_stack::user_node::validate() const
+	    {
+        bool rval = true;
+
+        if((this->empty && this->contents.size() > 0) || (!this->empty && this->contents.size() == 0)) rval = false;
+
+        return(rval);
+	    }
+
+
+    std::string json_serialization_stack::user_node::stringize(bool attribute) const
+	    {
+        std::string r;
+
+        if(this->empty)
+	        {
+            r = this->name + ": ";
+	        }
+        else
+	        {
+            r = this->name + ": { ";
+
+            for(std::list<element*>::const_iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+	            {
+                if(t != this->attributes.begin())
+	                {
+                    r += std::string(", ");
+
+                    r += (*t)->stringize(true);    // mark this element as an attribute
+	                }
+	            }
+
+            for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	            {
+                if(t != this->contents.begin())
+	                {
+                    r += std::string(", ");
+
+                    r += (*t)->stringize();
+	                }
+	            }
+
+            r += " }";
+	        }
+
+        return(r);
+	    }
+
+
+    bool json_serialization_stack::user_node::pull_enquiry(json_serialization_stack::element_type pull_type, const std::string& pull_name)
+	    {
+        bool rval = false;
+
+        // we can service this enquiry if we are unread and it is looking for a node with our name
+        if(!this->get_read() && pull_type == node && this->get_name() == pull_name)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+    bool json_serialization_stack::user_node::pull_enquiry(json_serialization_stack::element_type pull_type)
+	    {
+        bool rval = false;
+
+        // we can service this enquiry if we are unread and it is looking for a node
+        if(!this->get_read() && pull_type == node)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+    json_serialization_stack::basic_node* json_serialization_stack::user_array::make_element(const std::string& name, bool empty)
+	    {
+        root_node* n = new root_node(name, empty);
+        return(n);
+	    }
+
+
+    bool json_serialization_stack::user_array::validate() const
+	    {
+        bool rval = true;
+
+        if((this->empty && this->contents.size() > 0) || (!this->empty && this->contents.size() == 0)) rval = false;
+        if(this->attributes.size() > 0) rval = false;
+
+        return(rval);
+	    }
+
+
+    std::string json_serialization_stack::user_array::stringize(bool attribute) const
+	    {
+        std::string r;
+
+        if(this->empty)
+	        {
+            r = this->name + ": []";
+	        }
+        else
+	        {
+            r = this->name + ": [ ";
+
+            // arrays have no attributes, so ignore this field.
+            // it should be zero anyway since we were validated when the array was closed.
+
+            for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	            {
+                if(t != this->contents.begin())
+	                {
+                    r += std::string(", ");
+
+                    r += (*t)->stringize();
+	                }
+	            }
+
+            r += " ]";
+	        }
+
+        return(r);
+	    }
+
+
+    bool json_serialization_stack::user_array::pull_enquiry(json_serialization_stack::element_type pull_type, const std::string& pull_name)
+	    {
+        bool rval = false;
+
+        // we are happy to service this enquiry if we are unread, and if
+        // it is looking for an array with our name
+        if(!this->get_read() && pull_type == array && this->get_name() == pull_name)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+    bool json_serialization_stack::user_array::pull_enquiry(json_serialization_stack::element_type pull_type)
+	    {
+        bool rval = false;
+
+        // we are happy to service this enquiry if we are unread, and if it is looking for an array
+        if(!this->get_read() && pull_type == array)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+    json_serialization_stack::basic_node* json_serialization_stack::root_node::make_element(const std::string& name, bool empty)
+	    {
+        user_node* n = new user_node(name, empty);
+        return(n);
+	    }
+
+
+    bool json_serialization_stack::root_node::validate() const
+	    {
+        bool rval = true;
+
+        if((this->empty && this->contents.size() > 0) || (!this->empty && this->contents.size() == 0)) rval = false;
+
+        return(rval);
+	    }
+
+
+    std::string json_serialization_stack::root_node::stringize(bool attribute) const
+	    {
+        std::string r = "{ ";
+
+        for(std::list<element*>::const_iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
+	        {
+            if(t != this->attributes.begin())
+	            {
+                r += std::string(", ");
+
+                r += (*t)->stringize();
+	            }
+	        }
+
+        for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
+	        {
+            if(t != this->contents.begin())
+	            {
+                r += std::string(", ");
+
+                r += (*t)->stringize();
+	            }
+	        }
+
+        r += " }";
+
+        return(r);
+	    }
+
+
+    bool json_serialization_stack::root_node::pull_enquiry(json_serialization_stack::element_type pull_type, const std::string& pull_name)
+	    {
+        bool rval = false;
+
+        // we are happy to service a pull request if we are unread, and it is looking for a node with our name
+        if(!this->get_read() && pull_type == node && this->get_name() == pull_name)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+    bool json_serialization_stack::root_node::pull_enquiry(json_serialization_stack::element_type pull_type)
+	    {
+        bool rval = false;
+
+        // we are happy to service a pull request if we are unread, and it is looking for a node
+        if(!this->get_read() && pull_type == node)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+		template <typename T>
+    std::string json_serialization_stack::value_element<T>::stringize(bool attribute) const
+	    {
+        std::string v = boost::lexical_cast<std::string>(this->value);
+
+        return((attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string("")) + this->name + std::string(": ") + v);
+	    }
+
+
+		template <typename T>
+    bool json_serialization_stack::value_element<T>::pull_enquiry(json_serialization_stack::element_type pull_type, const std::string& pull_name)
+	    {
+        bool rval = false;
+
+        // we are happy to service a pull request if we are unread, and it is looking for a value with our name
+        if(!this->get_read() && (pull_type == element_type::value) && (this->get_name() == pull_name))
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
+
+
+		template <typename T>
+    bool json_serialization_stack::value_element<T>::pull_enquiry(json_serialization_stack::element_type pull_type)
+	    {
+        bool rval = false;
+
+        // we are happy to service a pull request if we are unread, and it is looking for a value
+        if(!this->get_read() && pull_type == element_type::value)
+	        {
+            rval = true;
+            this->set_read();
+	        }
+
+        return(rval);
+	    }
 
 
     // push: create a new node at the current level
@@ -782,14 +798,14 @@ namespace transport
 
         // get reference to front-of-stack node, and push the new node to its contents
         // then, make the new node the current front-of-stack one
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        json_serialization_stack::basic_node* n = this->node_stack.front();
 
         // get front-of-stack node to synthesize a new element.
         // if it is a user_node, this will be another user_node.
         // if it is an array, it will be a root_node.
-        json_serialization_stack::basic_node node = n.get().make_element(name, empty);
+        json_serialization_stack::basic_node* node = n->make_element(name, empty);
 
-        n.get().push_content(node);
+        n->push_content(node);
         this->node_stack.push_front(node);
 	    }
 
@@ -809,19 +825,18 @@ namespace transport
 		    // get reference to front-of-stack node, and check whether it can service this request
 		    // note, if the top-of-stack item is an array then it will ignore names when we
 		    // make the enquiry
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-		    element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele;
 
 		    // if successful, push the node we have just pulled to the top of the stack
-		    if((rval = n.get().pull_content(node, name, ele)))
+		    if((rval = n->pull_content(node, name, ele)))
 			    {
 				    // cast element up to basic_node; will throw an exception if this isn't possible
-		        std::reference_wrapper<basic_node> node = std::reference_wrapper<basic_node>(dynamic_cast<basic_node&>(ele));
+				    basic_node* node = dynamic_cast<basic_node*>(ele);
 
-				    elements = node.get().get_num_contents();
-				    attributes = node.get().get_num_attributes();
+				    elements = node->get_num_contents();
+				    attributes = node->get_num_attributes();
 
 				    this->node_stack.push_front(node);
 			    }
@@ -843,13 +858,13 @@ namespace transport
 
         // get reference to front-of-stack node, and push the new node to its contents
         // then, make the new node the current front-of-stack one
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
         // make a new array element; both arrays and nodes can have these as members, so
         // no need to distinguish here
-        json_serialization_stack::user_array array(name, empty);
+        user_array* array = new user_array(name, empty);
 
-        n.get().push_content(array);
+        n->push_content(array);
         this->node_stack.push_front(array);
 	    }
 
@@ -867,18 +882,17 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-        element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele;
 
         // if successful, push the node we have just pulled to the top of the stack
-        if((rval = n.get().pull_content(array, name, ele)))
+        if((rval = n->pull_content(array, name, ele)))
 	        {
             // cast element up to basic_node; will throw an exception if this isn't possible
-            std::reference_wrapper<basic_node> node = std::reference_wrapper<basic_node>(dynamic_cast<basic_node&>(ele));
+		        basic_node* node = dynamic_cast<basic_node*>(ele);
 
-		        elements = node.get().get_num_contents();
+		        elements = node->get_num_contents();
 
             this->node_stack.push_front(node);
 	        }
@@ -900,16 +914,16 @@ namespace transport
 
         // get current front-of-stack node, and check that its name matches the
         // one we have been given; if not raise an error
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        if(n.get().get_name() != name)
+        basic_node* n = this->node_stack.front();
+        if(n->get_name() != name)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n.get().get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n->get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
         // validate this element
-        if(!n.get().validate())
+        if(!n->validate())
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_VALIDATE_FAIL << name << "'";
@@ -934,11 +948,11 @@ namespace transport
 
 				// get current front-of-stack node, and check that its name matches the
 				// one we have been given; if not, raise an error
-		    std::reference_wrapper<basic_node> n = this->node_stack.front();
-				if(n.get().get_name() != name)
+		    basic_node* n = this->node_stack.front();
+				if(n->get_name() != name)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n.get().get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
+						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n->get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
 						throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					}
 
@@ -950,7 +964,7 @@ namespace transport
     // push: write attributes to the current node
     void json_serialization_stack::write_attribute(const std::string& name, const std::string& value)
 	    {
-        json_serialization_stack::value_element<std::string> ele(name, value);
+        value_element<std::string>* ele = new value_element<std::string>(name, value);
 
         if(this->node_stack.size() == 0)
 	        {
@@ -960,8 +974,8 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this attribute to it
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        n.get().push_attribute(ele);
+        basic_node* n = this->node_stack.front();
+        n->push_attribute(ele);
 	    }
 
 
@@ -978,17 +992,16 @@ namespace transport
 			    }
 
 		    // get reference to front-of-stack node, and check whether it can service this request
-		    std::reference_wrapper<basic_node> n = this->node_stack.front();
+				basic_node* n = this->node_stack.front();
 
-		    element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-		    std::reference_wrapper<element> ele(nullele);
+				element* ele = nullptr;
 
 		    // if successful, extract
-		    if((rval = n.get().pull_attribute(value, name, ele)))
+		    if((rval = n->pull_attribute(value, name, ele)))
 			    {
 		        // cast element up to value_element; will throw an exception if this isn't possible
-		        std::reference_wrapper<value_element> value = std::reference_wrapper<value_element>(dynamic_cast<value_element&>(ele));
-				    val = value.get().get_string();
+				    value_element<std::string>* value = dynamic_cast< value_element<std::string>* >(ele);
+				    val = value->get_string();
 			    }
 
 				return(rval);
@@ -1001,7 +1014,7 @@ namespace transport
 
     void json_serialization_stack::write_value(const std::string& name, const std::string& value)
 	    {
-        json_serialization_stack::value_element<std::string> ele(name, value);
+        value_element<std::string>* ele = new value_element<std::string>(name, value);
 
         if(this->node_stack.size() == 0)
 	        {
@@ -1011,14 +1024,14 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        n.get().push_content(ele);
+        basic_node* n = this->node_stack.front();
+        n->push_content(ele);
 	    }
 
 
     void json_serialization_stack::write_value(const std::string& name, unsigned int value)
 	    {
-        json_serialization_stack::value_element<unsigned int> ele(name, value);
+        value_element<unsigned int>* ele = new value_element<unsigned int>(name, value);
 
         if(this->node_stack.size() == 0)
 	        {
@@ -1028,14 +1041,14 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        n.get().push_content(ele);
+        basic_node* n = this->node_stack.front();
+        n->push_content(ele);
 	    }
 
 
     void json_serialization_stack::write_value(const std::string& name, double value)
 	    {
-        json_serialization_stack::value_element<double> ele(name, value);
+        value_element<double>* ele = new value_element<double>(name, value);
 
         if(this->node_stack.size() == 0)
 	        {
@@ -1045,14 +1058,14 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        n.get().push_content(ele);
+        basic_node* n = this->node_stack.front();
+        n->push_content(ele);
 	    }
 
 
     void json_serialization_stack::write_value(const std::string& name, bool value)
 	    {
-        json_serialization_stack::value_element<bool> ele(name, value);
+        value_element<bool>* ele = new value_element<bool>(name, value);
 
         if(this->node_stack.size() == 0)
 	        {
@@ -1062,8 +1075,8 @@ namespace transport
 	        }
 
         // get reference to current front-of-stack node, and push this value to its contents
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
-        n.get().push_content(ele);
+        basic_node* n = this->node_stack.front();
+        n->push_content(ele);
 	    }
 
 
@@ -1083,17 +1096,16 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-        element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele = nullptr;
 
         // if successful, extract
-        if((rval = n.get().pull_content(value, name, ele)))
+        if((rval = n->pull_content(value, name, ele)))
 	        {
             // cast element up to value_element; will throw an exception if this isn't possible
-            std::reference_wrapper<value_element> value = std::reference_wrapper<value_element>(dynamic_cast<value_element&>(ele));
-            val = value.get().get_string();
+		        value_element<std::string>* value = dynamic_cast< value_element<std::string>* >(ele);
+            val = value->get_string();
 	        }
 
         return(rval);
@@ -1112,17 +1124,16 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-        element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele = nullptr;
 
         // if successful, extract
-        if((rval = n.get().pull_content(value, name, ele)))
+        if((rval = n->pull_content(value, name, ele)))
 	        {
             // cast element up to value_element; will throw an exception if this isn't possible
-            std::reference_wrapper<value_element> value = std::reference_wrapper<value_element>(dynamic_cast<value_element&>(ele));
-            val = value.get().get_unsigned_int();
+		        value_element<unsigned int>* value = dynamic_cast< value_element<unsigned int>* >(ele);
+            val = value->get_unsigned_int();
 	        }
 
         return(rval);
@@ -1141,17 +1152,16 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-        element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele = nullptr;
 
         // if successful, extract
-        if((rval = n.get().pull_content(value, name, ele)))
+        if((rval = n->pull_content(value, name, ele)))
 	        {
             // cast element up to value_element; will throw an exception if this isn't possible
-            std::reference_wrapper<value_element> value = std::reference_wrapper<value_element>(dynamic_cast<value_element&>(ele));
-            val = value.get().get_double();
+		        value_element<double>* value = dynamic_cast< value_element<double>* >(ele);
+            val = value->get_double();
 	        }
 
         return(rval);
@@ -1170,17 +1180,16 @@ namespace transport
 	        }
 
         // get reference to front-of-stack node, and check whether it can service this request
-        std::reference_wrapper<basic_node> n = this->node_stack.front();
+        basic_node* n = this->node_stack.front();
 
-        element nullele(""); // reference wrapper has to be bound to something initially; this is just a placeholder
-        std::reference_wrapper<element> ele(nullele);
+		    element* ele = nullptr;
 
         // if successful, extract
-        if((rval = n.get().pull_content(value, name, ele)))
+        if((rval = n->pull_content(value, name, ele)))
 	        {
             // cast element up to value_element; will throw an exception if this isn't possible
-            std::reference_wrapper<value_element> value = std::reference_wrapper<value_element>(dynamic_cast<value_element&>(ele));
-            val = value.get().get_bool();
+		        value_element<bool>* value = dynamic_cast< value_element<bool>* >(ele);
+            val = value->get_bool();
 	        }
 
         return(rval);
@@ -1213,11 +1222,11 @@ namespace transport
         // empty stack, and push the last bookmark back to it
         this->node_stack.clear();
 
-        std::reference_wrapper<basic_node> bk_mk = this->bookmarks.front();
+        basic_node* bk_mk = this->bookmarks.front();
         this->node_stack.push_front(bk_mk);
 
         // mark all items unread, recursively, from the bookmark
-		    bk_mk.get().set_unread();
+		    bk_mk->set_unread();
 	    }
 
 
@@ -1231,14 +1240,18 @@ namespace transport
         switch(pos)
 	        {
             case json_serialization_stack::head:
-	            std::reference_wrapper<basic_node> bk_mk = this->bookmarks.front();
-	            bk_mk.get().set_unread();
-            break;
+	            {
+                basic_node* bk_mk = this->bookmarks.front();
+                bk_mk->set_unread();
+                break;
+	            }
 
             case json_serialization_stack::current:
-	            std::reference_wrapper<basic_node> n = this->node_stack.front();
-	            n.get().set_unread();
-            break;
+	            {
+                basic_node* n = this->node_stack.front();
+                n->set_unread();
+                break;
+	            }
 
             default:
 	            assert(false);
@@ -1259,7 +1272,7 @@ namespace transport
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
-        output = this->root.stringize();
+        output = this->root->stringize();
 
         return(output);
 	    }

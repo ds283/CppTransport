@@ -22,7 +22,10 @@
 #include "transport-runtime-api/unqlite/unqlite_serializable.h"
 #include "transport-runtime-api/unqlite/unqlite_operations.h"
 
+extern "C"
+{
 #include "unqlite/unqlite.h"
+}
 
 
 #define __CPP_TRANSPORT_UNQLITE_RECORD_ID "__id"
@@ -95,6 +98,7 @@ namespace transport
 
 
       public:
+
         //! Query the database for a named task, and reconstruct it if present
         task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
 
@@ -115,22 +119,24 @@ namespace transport
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        integration_container integration_new_output(twopf_task<number>* tk,
-                                                     const std::string& backend, unsigned int worker);
+        typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk,
+                                                                                  const std::string& backend, unsigned int worker);
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        integration_container integration_new_output(threepf_task<number>* tk,
-                                                     const std::string& backend, unsigned int worker);
+        typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk,
+                                                                                  const std::string& backend, unsigned int worker);
 
 
 		    // INTERNAL UTILITY FUNCTIONS
 
       protected:
 
+		    typedef enum { twopf_task_record, threepf_task_record } task_record_type;
+
 		    //! Convert a named database task into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
-        unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id);
+        unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type);
 
 		    //! Convert a named database package into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
@@ -336,7 +342,7 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_CREATED, boost::posix_time::to_simple_string(now));
         writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
+        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
         writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
 
@@ -394,7 +400,7 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_CREATED, boost::posix_time::to_simple_string(now));
         writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI, __CPP_TRANSPORT_RUNTIME_API_VERSION);
+        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
         writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
@@ -414,7 +420,7 @@ namespace transport
 
 		// Query the database for a named task, returned as a serialization_reader
 		template <typename number>
-		unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id)
+		unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type)
 			{
 		    assert(this->package_db != nullptr);
 		    assert(this->integration_db != nullptr);
@@ -426,8 +432,8 @@ namespace transport
 		    unqlite_vm* vm_twopf   = nullptr;
 		    unqlite_vm* vm_threepf = nullptr;
 
-		    unqlite_value* twopf_recs   = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-		    unqlite_value* threepf_recs = unqlite_operations::query(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+		    unqlite_value* twopf_recs   = unqlite_operations::query(this->integration_db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+		    unqlite_value* threepf_recs = unqlite_operations::query(this->integration_db, vm_threepf, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
 
 		    if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
 			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -450,8 +456,8 @@ namespace transport
 
 		    unqlite_value* recs = nullptr;
 
-		    if(twopf_count == 1) recs = twopf_recs;
-		    else                 recs = threepf_recs;
+		    if(twopf_count == 1) { recs = twopf_recs; type = twopf_task_record; }
+		    else                 { recs = threepf_recs; type = threepf_task_record; }
 
 		    if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
 			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -490,7 +496,7 @@ namespace transport
         // check if a suitable record exists
         unqlite_vm* vm = nullptr;
 
-        unqlite_value* recs = unqlite_operations::query(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+        unqlite_value* recs = unqlite_operations::query(this->package_db, vm, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
 
         if(recs == nullptr || !unqlite_value_is_json_array(recs))
 	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -547,14 +553,15 @@ namespace transport
 
 		    // get serialization_reader for the named task record
 		    int task_id = 0;
-		    unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id);
+		    task_record_type type;
+		    unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
 
 		    // extract data:
         task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
 				// extract the model/initial-conditions/parameters package corresponding to this task
         std::string package_name;
-		    task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, name);
+		    task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, package_name);
 
 		    // get serialization_reader for the named package
 		    int package_id = 0;
@@ -576,9 +583,9 @@ namespace transport
 		    package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
 		    package_reader->push_bookmark();
-		    initial_conditions<number> ics = initial_conditions::deserialize(package_reader, package_name,
-		                                                                     m->get_param_names(), m->get_state_names(),
-		                                                                     p_validator, ics_validator);
+		    initial_conditions<number> ics = initial_conditions_helper::deserialize<number>(package_reader, package_name,
+		                                                                                    m->get_param_names(), m->get_state_names(),
+		                                                                                    p_validator, ics_validator);
 		    package_reader->pop_bookmark();
 
 		    package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
@@ -588,7 +595,26 @@ namespace transport
 				task_reader->reset();
 
 		    task_reader->push_bookmark();
-		    task<number> tk = task::deserialize(task_reader, ics, m, name);
+		    task<number>* rval = nullptr;
+		    switch(type)
+			    {
+		        case twopf_task_record:
+			        {
+		            task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
+		            rval = new task<number>(tk);
+		            break;
+			        }
+
+		        case threepf_task_record:
+			        {
+		            task<number> tk = threepf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
+				        rval = new task<number>(tk);
+		            break;
+			        }
+
+		        default:
+			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
+			    }
 		    task_reader->pop_bookmark();
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
@@ -596,7 +622,6 @@ namespace transport
 		    delete task_reader;
 		    delete package_reader;
 
-		    task<number>* rval = new task<number>(tk);
         return(rval);
       }
 
@@ -699,7 +724,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_container handle
-        typename repository<number>::integration_container ctr = this->insert_output(<#initializer#>, backend, worker, tk);
+        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk);
 
         return(ctr);
       }
@@ -744,7 +769,8 @@ namespace transport
       {
         // get serialization_reader for the named task record
         int task_id = 0;
-        unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id);
+		    task_record_type type;
+        unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
 
         // allocate a new serial number
 		    task_reader->push_bookmark();
@@ -806,7 +832,8 @@ namespace transport
       }
 
 
-    unsigned int repository_unqlite::allocate_new_serial_number(unqlite_serialization_reader* reader)
+		template <typename number>
+    unsigned int repository_unqlite<number>::allocate_new_serial_number(unqlite_serialization_reader* reader)
 	    {
 				// populate list of serial numbers
         std::list<unsigned int> serial_numbers;
