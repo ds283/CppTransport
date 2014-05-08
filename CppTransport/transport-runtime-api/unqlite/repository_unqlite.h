@@ -42,8 +42,10 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
+
         //! Open a repository with a specific pathname
         repository_unqlite(const std::string& path);
+
         //! Create a repository with a specific pathname
         repository_unqlite(const std::string& path, const repository_creation_key& key);
 
@@ -55,6 +57,7 @@ namespace transport
 
 
       public:
+
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() { return(this->root_path); }
 
@@ -63,6 +66,7 @@ namespace transport
 
 
       public:
+
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         void write_package(const initial_conditions<number>& ics, const model<number>* m);
@@ -78,6 +82,7 @@ namespace transport
           { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
 
       protected:
+
         //! Write a generic integration task to the database, using a supplied node tag
         void write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection);
 
@@ -94,6 +99,7 @@ namespace transport
 
         //! Extract the JSON document for a named package
         std::string extract_package_document(const std::string& name);
+
         //! Extract the JSON document for a named integration
         std::string extract_integration_document(const std::string& name);
 
@@ -102,20 +108,24 @@ namespace transport
 
 
       public:
+
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
         integration_container integration_new_output(twopf_task<number>* tk,
                                                      const std::string& backend, unsigned int worker);
+
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
-        //! Delegats insert_output to do the work.
+        //! Delegates insert_output to do the work.
         integration_container integration_new_output(threepf_task<number>* tk,
                                                      const std::string& backend, unsigned int worker);
 
       protected:
+
         //! Insert a record for a specified task, in a specified container
         integration_container insert_output(const std::string& collection, task<number>* tk, const std::string& backend, unsigned int worker);
-        //! Compute list of used serial numbers from an output record
-        std::list<unsigned int> compute_used_serial_numbers(unqlite_value* recs);
+
+        //! Allocate a new serial number based on the list of used serial numbers from an output record
+        unsigned int allocate_new_serial_number(unqlite_serialization_reader& reader);
 
 
         // INTERNAL DATA
@@ -138,7 +148,7 @@ namespace transport
       private:
         unqlite* package_db;
         unqlite* integration_db;
-      };
+	    };
 
 
     // IMPLEMENTATION
@@ -380,7 +390,7 @@ namespace transport
 
         // write empty array of output blocks: will be populated when integrations are run
         writer.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, true);
-        writer.end_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
         // insert this record in the task database
         unqlite_operations::store(this->integration_db, collection, writer.get_contents());
@@ -412,7 +422,7 @@ namespace transport
         else if(twopf_count + threepf_count > 1)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
@@ -485,7 +495,7 @@ namespace transport
         else if(twopf_count + threepf_count > 1)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
         else
@@ -569,63 +579,6 @@ namespace transport
     // We are allowed to assume that all handles exist, tk is not null, and the task exists in the database collection specified
 
 
-
-    // Compute list of used serial numbers
-
-    namespace
-      {
-
-        int extract_serial_numbers(unqlite_value* key, unqlite_value* value, void* handle)
-          {
-            std::list<unsigned int>* serial_numbers = static_cast< std::list<unsigned int>* >(handle);
-
-            if(value == nullptr || !unqlite_value_is_json_object(value)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            unqlite_value* serial = unqlite_array_fetch(value, __CPP_TRANSPORT_NODE_OUTPUT_ID, -1);
-
-            if(serial == nullptr || !unqlite_value_is_int(serial)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            int sn = unqlite_value_to_int(serial);
-
-            if(sn < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            serial_numbers->push_back(static_cast<unsigned int>(sn));
-
-            return(UNQLITE_OK);
-          }
-
-        std::list<unsigned int> compute_used_serial_numbers(unqlite_value* recs, const std::string& name)
-          {
-            if(recs == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'";
-                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-              }
-
-            // get JSON object representing our record; this is the only component of the output array
-            unqlite_value* rec = unqlite_array_fetch(recs, "1", -1);
-
-            if(rec == nullptr || !unqlite_value_is_json_object(rec)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            // get array corresponding to the output list
-            unqlite_value* output = unqlite_array_fetch(rec, __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, -1);
-
-            if(output == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-            // walk over output list, getting serial numbers
-            std::list<unsigned int> serial_numbers;
-
-            int err = unqlite_array_walk(output, extract_serial_numbers, &serial_numbers);
-
-            return(serial_numbers);
-          }
-
-      }   // anonymous namespace
-
-
     template <typename number>
     typename repository<number>::integration_container
     repository_unqlite<number>::insert_output(const std::string& collection, task<number>* tk, const std::string& backend, unsigned int worker)
@@ -650,13 +603,13 @@ namespace transport
         if(twopf_count + threepf_count == 0)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
         else if(twopf_count + threepf_count > 1)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << tk->get_name() << "'" __CPP_TRANSPORT_RUN_REPAIR;
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
@@ -665,22 +618,53 @@ namespace transport
         if(twopf_count == 1) recs = twopf_recs;
         else                 recs = threepf_recs;
 
-        // find serial numbers for all output groups associated with this task
-        std::list<unsigned int> serial_numbers = compute_used_serial_numbers(recs, tk->get_name());
+        if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
+	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
-        // allocate a new serial number
+        // get JSON object representing our record; this is the only component of the output array
+        unqlite_value* rec = unqlite_array_fetch(recs, "1", -1);
 
-        unsigned int serial_number;
-        for(serial_number = 0;
-            serial_number < serial_numbers.size() && std::find(serial_numbers.begin(), serial_numbers.end(), serial_number) != serial_numbers.end();
-            serial_number++)
-          ;
+		    // convert this JSON object to a serialization reader
+		    unqlite_serialization_reader reader(rec);
 
-        if(serial_number > serial_numbers.size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NO_SERIALNO);
+		    // allocate a new serial number
+		    unsigned int serial_number = this->allocate_new_serial_number(reader);
 
         unqlite_vm_release(vm_twopf);
 		    unqlite_vm_release(vm_threepf);
       }
+
+
+    unsigned int repository_unqlite::allocate_new_serial_number(unqlite_serialization_reader& reader)
+	    {
+				// populate list of serial numbers
+        std::list<unsigned int> serial_numbers;
+
+		    // reset reader to the beginning
+		    reader.reset();
+
+		    // start reading from integration output block
+		    unsigned int entries = reader.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    for(unsigned int i = 0; i < entries; i++)
+			    {
+				    reader.start_node("");  // name doesn't matter; array elements have no name
+				    unsigned int sn;
+				    reader.read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, sn);
+				    serial_numbers.push_back(sn);
+				    reader.end_element("");
+			    }
+
+        unsigned int serial_number;
+
+        for(serial_number = 0;
+            serial_number < serial_numbers.size() && std::find(serial_numbers.begin(), serial_numbers.end(), serial_number) != serial_numbers.end();
+            serial_number++)
+	        ;
+
+        if(serial_number > serial_numbers.size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NO_SERIALNO);
+
+        return(serial_number);
+	    }
 
 
     // FACTORY FUNCTIONS TO BUILD A REPOSITORY
@@ -700,7 +684,7 @@ namespace transport
       }
 
 
-  }   // namespace transport
+	}   // namespace transport
 
 
 #endif //__repository_unqlite_H_

@@ -15,6 +15,7 @@
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS "Repository error: Container for integration definitions not present or inaccessible"
 #define __CPP_TRANSPORT_REPO_PACKAGE_EXISTS   "Repository error: Attempt to insert duplicate model specification"
 #define __CPP_TRANSPORT_REPO_INTGRTN_EXISTS   "Repository error: Attempt to insert duplicate integration specification"
+#define __CPP_TRANSPORT_REPO_DUPLICATE_TASK   "Repository error: Duplicate task found in database"
 #define __CPP_TRANSPORT_REPO_INSERT_ERROR     "Repository error: Error while inserting document into repository (backend code="
 #define __CPP_TRANSPORT_REPO_QUERY_ERROR      "Repository error: Error while querying document from repository (backend code="
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS      "Repository error: Root directory already exists"
