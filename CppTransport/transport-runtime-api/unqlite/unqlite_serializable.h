@@ -19,6 +19,9 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/serialization/json_serialization_stack.h"
 
+#include "transport-runtime-api/unqlite/unqlite_data.h"
+
+
 extern "C"
 {
 #include "unqlite/unqlite.h"
@@ -302,7 +305,7 @@ namespace transport
 						    std::string untagged_name = key_name;
 								this->stack.write_attribute(untagged_name.erase(0,tag.length()), value_name);
 							}
-						else
+						else if(key_name != __CPP_TRANSPORT_UNQLITE_RECORD_ID)  // ignore unqlite's internal ID field
 							{
 								if(unqlite_value_is_bool(value))
 									{

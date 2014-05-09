@@ -152,14 +152,32 @@ namespace transport
           }   // namespace json_query
 
 
+		    // debug helper utility: prints out array contents
+		    int array_printer(unqlite_value* key, unqlite_value* value, void* handle)
+			    {
+				    assert(key != nullptr);
+				    assert(value != nullptr);
+
+		        std::cerr << "key   = " << unqlite_value_to_string(key, nullptr)
+			                << " (is_integer = " << unqlite_value_is_int(key) << ","
+			                << " is_string = " << unqlite_value_is_string(key)
+			                << ")" << std::endl;
+		        std::cerr << "value = " << unqlite_value_to_string(value, nullptr) << std::endl;
+
+		        return(UNQLITE_OK);
+			    }
+
+
         // default consumer for Jx9 virtual machine output -- throw it as an exception
         int default_unqlite_consumer(const char* data, unsigned int length, void* handle)
           {
             std::string jx9_msg = std::string(data, length);
 
             std::ostringstream msg;
+
             msg << __CPP_TRANSPORT_UNQLITE_VM_OUPTUT << " '" << jx9_msg << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+//            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+            std::cerr << msg.str() << std::endl;
 
             return(UNQLITE_OK);
           }
@@ -229,6 +247,8 @@ namespace transport
         // execute a Jx9 script which does not need output variables to be extracted
         void exec_jx9(unqlite* db, const std::string& jx9)
           {
+            assert(db != nullptr);
+
             unqlite_vm* vm = exec_jx9_vm(db, jx9);
 
             // release the virtual machine
@@ -239,6 +259,8 @@ namespace transport
         // create a collection within a specified database
         void create_collection(unqlite* db, const std::string& collection)
           {
+            assert(db != nullptr);
+
             std::ostringstream jx9;
 
             jx9 << "if( !db_exists('" << collection << "') )"
@@ -258,6 +280,8 @@ namespace transport
         // ensure a collection is present within a specified database
         void ensure_collection(unqlite* db, const std::string& collection)
           {
+            assert(db != nullptr);
+
             std::ostringstream jx9;
 
             jx9 << "if( !db_exists('" << collection << "') )"
@@ -272,6 +296,8 @@ namespace transport
         // store a record within a specified collection
         void store(unqlite* db, const std::string& collection, const std::string& record)
           {
+            assert(db != nullptr);
+
             // first, ensure the named collection is present in the database
             ensure_collection(db, collection);
 
@@ -299,6 +325,8 @@ namespace transport
 		    // drop a record within a specified collection
 		    void drop(unqlite* db, const std::string& collection, unsigned int unqlite_id)
 			    {
+		        assert(db != nullptr);
+
 				    // first, ensure the named collection is present in this database
 				    ensure_collection(db, collection);
 
@@ -324,6 +352,8 @@ namespace transport
         template <typename T, typename... fields>
         std::string extract_json(unqlite* db, const std::string& collection, const T& value, fields... field_names)
           {
+            assert(db != nullptr);
+
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
 
             std::ostringstream jx9;
@@ -370,6 +400,8 @@ namespace transport
         template <typename T, typename... fields>
         unsigned int query_count(unqlite* db, const std::string& collection, const T& value, fields... field_names)
           {
+            assert(db != nullptr);
+
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
 
             std::ostringstream jx9;
@@ -412,7 +444,8 @@ namespace transport
         template <typename T, typename... fields>
         unqlite_value* query(unqlite* db, unqlite_vm*& vm, const std::string& collection, const T& value, fields... field_names)
           {
-            assert(vm != nullptr);
+		        assert(db != nullptr);
+            assert(vm == nullptr);
 
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
 
@@ -441,9 +474,6 @@ namespace transport
 
             return(data);
           }
-
-
-        //
 
 
       }   // unqlite_operations

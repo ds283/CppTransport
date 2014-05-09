@@ -7,6 +7,7 @@
 #ifndef __repository_unqlite_H_
 #define __repository_unqlite_H_
 
+#include <assert.h>
 #include <string>
 #include <sstream>
 #include <list>
@@ -19,16 +20,15 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
+#include "transport-runtime-api/unqlite/unqlite_data.h"
 #include "transport-runtime-api/unqlite/unqlite_serializable.h"
 #include "transport-runtime-api/unqlite/unqlite_operations.h"
+
 
 extern "C"
 {
 #include "unqlite/unqlite.h"
 }
-
-
-#define __CPP_TRANSPORT_UNQLITE_RECORD_ID "__id"
 
 
 namespace transport
@@ -418,6 +418,59 @@ namespace transport
       }
 
 
+		namespace
+			{
+
+				typedef struct
+					{
+						// input data
+						unsigned int cmp;
+						std::string str_cmp;
+
+						// output data
+						int id;
+						unqlite_serialization_reader* reader;
+					} array_extraction_data;
+
+
+				// array_walk callback to extract n'th component of an array
+				int array_extract(unqlite_value* key, unqlite_value* value, void* handle)
+					{
+						assert(key != nullptr);
+						assert(value != nullptr);
+						assert(handle != nullptr);
+
+						array_extraction_data* data = static_cast<array_extraction_data*>(handle);
+
+						bool match = false;
+
+						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key)) match = true;
+						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr))) match = true;
+
+						if(match)
+							{
+								assert(data->reader == nullptr);
+
+						    // convert this JSON object to a serialization reader
+						    data->reader = new unqlite_serialization_reader(value);
+
+						    // extract internal UnQLite ID for this record
+						    unqlite_value* id = unqlite_array_fetch(value, __CPP_TRANSPORT_UNQLITE_RECORD_ID, -1);
+
+						    if(id == nullptr || !unqlite_value_is_int(id))
+							    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
+
+						    data->id = unqlite_value_to_int(id);
+
+						    std::cerr << "Extracting task document (id=" << data->id << "): " << data->reader->get_contents() << std::endl;
+							}
+
+						return(UNQLITE_OK);
+					}
+
+			}   // unnamed namespace
+
+
 		// Query the database for a named task, returned as a serialization_reader
 		template <typename number>
 		unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type)
@@ -455,31 +508,27 @@ namespace transport
 			    }
 
 		    unqlite_value* recs = nullptr;
+				unqlite_vm*    vm   = nullptr;
 
-		    if(twopf_count == 1) { recs = twopf_recs; type = twopf_task_record; }
-		    else                 { recs = threepf_recs; type = threepf_task_record; }
+		    if(twopf_count == 1) { recs = twopf_recs; vm = vm_twopf, type = twopf_task_record; }
+		    else                 { recs = threepf_recs; vm = vm_threepf, type = threepf_task_record; }
 
 		    if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
-			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL);
 
-		    // get JSON object representing our record; this is the only component of the output array
-		    unqlite_value* rec = unqlite_array_fetch(recs, "1", -1);
+				array_extraction_data data;
+				data.cmp     = 0;
+				data.str_cmp = boost::lexical_cast<std::string>(data.cmp);
+				data.id      = -1;
+				data.reader  = nullptr;
 
-		    // convert this JSON object to a serialization reader
-		    unqlite_serialization_reader* reader = new unqlite_serialization_reader(rec);
-
-				// extract internal UnQLite ID for this record
-				unqlite_value* id = unqlite_array_fetch(rec, __CPP_TRANSPORT_UNQLITE_RECORD_ID, -1);
-
-				if(id == nullptr || !unqlite_value_is_int(id))
-					throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
-
-				unqlite_id = unqlite_value_to_int(id);
+				unqlite_array_walk(recs, &array_extract, &data);
 
 				unqlite_vm_release(vm_twopf);
 				unqlite_vm_release(vm_threepf);
 
-				return(reader);
+				unqlite_id = data.id;
+				return(data.reader);
 			}
 
 
@@ -517,25 +566,20 @@ namespace transport
 	        }
 
         if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
-	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_PKG_EXTRACT_FAIL);
 
-        // get JSON object representing our record; this is the only component of the output array
-        unqlite_value* rec = unqlite_array_fetch(recs, "1", -1);
+        array_extraction_data data;
+        data.cmp     = 0;
+        data.str_cmp = boost::lexical_cast<std::string>(data.cmp);
+        data.id      = -1;
+        data.reader  = nullptr;
 
-        // convert this JSON object to a serialization reader
-        unqlite_serialization_reader* reader = new unqlite_serialization_reader(rec);
-
-        // extract internal UnQLite ID for this record
-        unqlite_value* id = unqlite_array_fetch(rec, __CPP_TRANSPORT_UNQLITE_RECORD_ID, -1);
-
-        if(id == nullptr || !unqlite_value_is_int(id))
-	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
-
-        unqlite_id = unqlite_value_to_int(id);
+        unqlite_array_walk(recs, &array_extract, &data);
 
         unqlite_vm_release(vm);
 
-        return(reader);
+        unqlite_id = data.id;
+        return(data.reader);
 	    }
 
 
@@ -545,11 +589,10 @@ namespace transport
       {
         assert(this->package_db != nullptr);
         assert(this->integration_db != nullptr);
-        assert(m != nullptr);
+        assert(m == nullptr);
 
         if(this->package_db == nullptr || this->integration_db == nullptr)
           throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
 		    // get serialization_reader for the named task record
 		    int task_id = 0;
@@ -565,7 +608,7 @@ namespace transport
 
 		    // get serialization_reader for the named package
 		    int package_id = 0;
-		    unqlite_serialization_reader* package_reader = this->deserialize_package(name, package_id);
+		    unqlite_serialization_reader* package_reader = this->deserialize_package(package_name, package_id);
 
 		    // extract UID for model
         std::string uid;
