@@ -34,7 +34,7 @@ include_directories(./ backends
 					/usr/include
 					/usr/local/include
 					${Boost_INCLUDE_DIRS}
-					${MPI_INCLUDE_DIRS}
+					${MPI_CXX_INCLUDE_PATH}
 					${GINAC_INCLUDE_DIRS})
 
 
