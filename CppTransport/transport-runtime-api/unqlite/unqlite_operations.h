@@ -259,7 +259,7 @@ namespace transport
 
             jx9 << "if( !db_exists('" << collection << "') )"
                 << "  {"
-                << "    print '" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " " << collection << "';"
+                << "    print '" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " \"" << collection << "\"';"
                 << "  }";
 
             exec_jx9(db, jx9.str());
