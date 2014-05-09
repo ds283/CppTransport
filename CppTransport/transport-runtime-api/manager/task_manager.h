@@ -231,7 +231,7 @@ namespace transport
                         std::string repo_path = static_cast<std::string>(argv[i]);
                         try
                           {
-                            repo = repository_factory<number>(repo_path, this->get_rank() == MPI::RANK_MASTER);   // run recovery if we are the master node
+                            repo = repository_factory<number>(repo_path);
                           }
                         catch (runtime_exception& xe)
                           {
