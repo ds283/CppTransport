@@ -37,7 +37,6 @@ extern "C"
 #define __CPP_TRANSPORT_CNTR_PACKAGES_LEAF      "packages.unqlite"
 #define __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF  "integrations.unqlite"
 
-// #define __CPP_TRANSPORT_NODE_PACKAGE_ROOT       "package-specification"
 #define __CPP_TRANSPORT_NODE_PACKAGE_NAME       "package-name"
 #define __CPP_TRANSPORT_NODE_PACKAGE_MODELUID   "package-model-uid"
 #define __CPP_TRANSPORT_NODE_PACKAGE_DATA       "package-data"
