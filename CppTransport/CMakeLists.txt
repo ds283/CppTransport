@@ -6,7 +6,9 @@ find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "compile flags" FORCE)
+SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/" )
+
+SET ( CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
