@@ -3,8 +3,10 @@ cmake_minimum_required(VERSION 2.6)
 project(CppTransport)
 
 find_package(MPI REQUIRED)
-set(CMAKE_LIBRARY_PATH ${CMAKE_LIBRARY_PATH} /home/ds283/Documents/Code/dbxml-2.5.16/install/lib)
-add_definitions(-std=c++11 -g)
+find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
+find_package(GiNaC REQUIRED)
+
+SET ( CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "compile flags" FORCE)
 
 include_directories(./ backends
 					   backends/infrastructure
@@ -25,9 +27,13 @@ include_directories(./ backends
 					   parser/bison
 					   "transport objects"
 					   utilities
+					   unqlite
+					   transport-runtime-api
 					/usr/include
 					/usr/local/include
-					/home/ds283/Documents/Code/dbxml-2.5.16/install/include)
+					${Boost_INCLUDE_DIRS}
+					${MPI_INCLUDE_DIRS}
+					${GiNaC_INCLUDE_DIRS})
 
 
 add_executable(CppTransport main.cpp
@@ -76,17 +82,12 @@ add_executable(CppTransport main.cpp
 							utilities/finder.cpp
 							utilities/to_printable.cpp)
 
-target_link_libraries(CppTransport ginac cln boost_system boost_filesystem boost_timer boost_date_time)
+target_link_libraries(CppTransport ${GiNaC_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(dquad-mpi examples/dquad-mpi/main.cpp)
+add_executable(dquad-mpi examples/dquad-mpi/main.cpp unqlite/unqlite.c)
+target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
-target_link_libraries(dquad-mpi sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
-target_link_libraries(dquad-mpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
-target_link_libraries(dquad-mpi /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
 
-add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp)
-
-target_link_libraries(dquad-makerepo sqlite3 boost_system boost_filesystem boost_random boost_timer boost_date_time boost_mpi boost_log_setup boost_log boost_serialization boost_thread)
-target_link_libraries(dquad-makerepo /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdbxml.so)
-target_link_libraries(dquad-makerepo /home/ds283/Documents/Code/dbxml-2.5.16/install/lib/libdb_cxx.so)
+add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp unqlite/unqlite.c)
+target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
