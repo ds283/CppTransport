@@ -35,7 +35,7 @@ include_directories(./ backends
 					/usr/local/include
 					${Boost_INCLUDE_DIRS}
 					${MPI_INCLUDE_DIRS}
-					${GiNaC_INCLUDE_DIRS})
+					${GINAC_INCLUDE_DIRS})
 
 
 add_executable(CppTransport main.cpp
@@ -84,7 +84,7 @@ add_executable(CppTransport main.cpp
 							utilities/finder.cpp
 							utilities/to_printable.cpp)
 
-target_link_libraries(CppTransport ${GiNaC_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
 add_executable(dquad-mpi examples/dquad-mpi/main.cpp unqlite/unqlite.c)
