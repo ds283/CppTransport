@@ -81,12 +81,12 @@ namespace transport
         //! Write a threepf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
         void write_integration(const threepf_task<number>& t, const model<number>* m)
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION); }
+          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
 
         //! Write a twopf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
         void write_integration(const twopf_task<number>& t, const model<number>* m)
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
+          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION); }
 
       protected:
 
@@ -693,7 +693,7 @@ namespace transport
             if(twopf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
             else                 collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
 
-            rval = unqlite_operations::extract_json(this->package_db, collection, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+            rval = unqlite_operations::extract_json(this->integration_db, collection, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
           }
 
         return(rval);

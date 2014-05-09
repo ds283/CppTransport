@@ -145,7 +145,7 @@ namespace transport
             //! Push an element to our contents.
 		        //! Any element with the same name is removed, because it is assume this push
 		        //! is an attempt to update.
-            void push_content(element* ele);
+            virtual void push_content(element* ele);
 
             //! Push an element to our attributes.
             void push_attribute(element* ele);
@@ -217,6 +217,10 @@ namespace transport
 	            : basic_node(nm, emp)
 	            {
 	            }
+
+		        //! Override default push_content() method. For arrays, we don't want
+		        //! to over-write elements with the same name
+		        virtual void push_content(element* ele) override;
 
             //! Stringize this user_array for serialization to JSON
             virtual std::string stringize(bool attribute=false) const override;
@@ -296,6 +300,15 @@ namespace transport
             unsigned int get_unsigned_int() { return(boost::lexical_cast<unsigned int>(this->value)); }
             double       get_double()       { return(boost::lexical_cast<double>(this->value)); }
             bool         get_bool()         { return(boost::lexical_cast<bool>(this->value)); }
+
+          protected:
+
+		        //! Convert value to string for JSON output.
+		        //! Partly done this way because string values need to be quoted.
+            std::string to_string(const std::string& v) const;
+		        std::string to_string(const unsigned int& v) const;
+		        std::string to_string(const double& v) const;
+		        std::string to_string(const bool& v) const;
 
           protected:
 
@@ -418,7 +431,6 @@ namespace transport
 		    //! Initialized to the root node (HEAD) by the constructor.
         std::list<basic_node*> node_stack;
 
-		    
 		    //! Bookmark stack
 		    std::list<basic_node*> bookmarks;
 	    };
@@ -520,40 +532,37 @@ namespace transport
 
     std::string json_serialization_stack::user_node::stringize(bool attribute) const
 	    {
-        std::string r;
+        std::ostringstream output;
 
         if(this->empty)
 	        {
-            r = this->name + ": ";
+            output << "'" << this->name << "': ";
 	        }
         else
 	        {
-            r = this->name + ": { ";
+            output << "'" << this->name << "': { ";
 
+		        unsigned int count = 0;
             for(std::list<element*>::const_iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
 	            {
-                if(t != this->attributes.begin())
-	                {
-                    r += std::string(", ");
+                if(count > 0) output << ", ";
 
-                    r += (*t)->stringize(true);    // mark this element as an attribute
-	                }
+                output << (*t)->stringize(true);    // mark this element as an attribute
+		            count++;
 	            }
 
             for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
 	            {
-                if(t != this->contents.begin())
-	                {
-                    r += std::string(", ");
+                if(count > 0) output << ", ";
 
-                    r += (*t)->stringize();
-	                }
+                output << (*t)->stringize();
+		            count++;
 	            }
 
-            r += " }";
+            output << " }";
 	        }
 
-        return(r);
+        return(output.str());
 	    }
 
 
@@ -587,6 +596,12 @@ namespace transport
 	    }
 
 
+    void json_serialization_stack::user_array::push_content(element* ele)
+	    {
+        this->contents.push_back(ele);
+	    }
+
+
     json_serialization_stack::basic_node* json_serialization_stack::user_array::make_element(const std::string& name, bool empty)
 	    {
         root_node* n = new root_node(name, empty);
@@ -607,33 +622,32 @@ namespace transport
 
     std::string json_serialization_stack::user_array::stringize(bool attribute) const
 	    {
-        std::string r;
+        std::ostringstream output;
 
         if(this->empty)
 	        {
-            r = this->name + ": []";
+            output << "'" << this->name << "': []";
 	        }
         else
 	        {
-            r = this->name + ": [ ";
+            output << "'" << this->name << "': [ ";
 
             // arrays have no attributes, so ignore this field.
             // it should be zero anyway since we were validated when the array was closed.
 
+		        unsigned int count = 0;
             for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
 	            {
-                if(t != this->contents.begin())
-	                {
-                    r += std::string(", ");
+                if(count > 0) output << ", ";
 
-                    r += (*t)->stringize();
-	                }
+                output << (*t)->stringize();
+		            count++;
 	            }
 
-            r += " ]";
+            output << " ]";
 	        }
 
-        return(r);
+        return(output.str());
 	    }
 
 
@@ -689,24 +703,21 @@ namespace transport
 	    {
         std::string r = "{ ";
 
+		    unsigned int count = 0;
         for(std::list<element*>::const_iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
 	        {
-            if(t != this->attributes.begin())
-	            {
-                r += std::string(", ");
+            if(count > 0) r += std::string(", ");
 
-                r += (*t)->stringize();
-	            }
+            r += (*t)->stringize(true);
+		        count++;
 	        }
 
         for(std::list<element*>::const_iterator t = this->contents.begin(); t != this->contents.end(); t++)
 	        {
-            if(t != this->contents.begin())
-	            {
-                r += std::string(", ");
+            if(count > 0) r += std::string(", ");
 
-                r += (*t)->stringize();
-	            }
+            r += (*t)->stringize();
+		        count++;
 	        }
 
         r += " }";
@@ -748,9 +759,42 @@ namespace transport
 		template <typename T>
     std::string json_serialization_stack::value_element<T>::stringize(bool attribute) const
 	    {
-        std::string v = boost::lexical_cast<std::string>(this->value);
+		    std::ostringstream output;
 
-        return((attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string("")) + this->name + std::string(": ") + v);
+				output << "'" << (attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string(""))
+											<< this->name
+							 << "': "
+							 << this->to_string(this->value);
+
+				return(output.str());
+	    }
+
+
+		template <typename T>
+		std::string json_serialization_stack::value_element<T>::to_string(const std::string& v) const
+			{
+				return(std::string("'") + v + std::string("'"));
+			}
+
+
+		template <typename T>
+		std::string json_serialization_stack::value_element<T>::to_string(const unsigned int& v) const
+			{
+				return(boost::lexical_cast<std::string>(v));
+			}
+
+
+    template <typename T>
+    std::string json_serialization_stack::value_element<T>::to_string(const double& v) const
+	    {
+        return(boost::lexical_cast<std::string>(v));
+	    }
+
+
+    template <typename T>
+    std::string json_serialization_stack::value_element<T>::to_string(const bool& v) const
+	    {
+        return(boost::lexical_cast<std::string>(v));
 	    }
 
 

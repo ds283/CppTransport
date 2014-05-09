@@ -24,7 +24,7 @@
 #define __CPP_TRANSPORT_REPO_NULL_MODEL         "Internal error: Null model when attempting to write to repository"
 #define __CPP_TRANSPORT_REPO_NULL_TASK          "Internal error: Null task when attempting to add output to repository"
 #define __CPP_TRANSPORT_REPO_MISSING_TASK       "Repository error: Could not find specified task"
-#define __CPP_TRANSPORT_REPO_MISSING_PACKAGE    "Repository error: Coult not find specified package"
+#define __CPP_TRANSPORT_REPO_MISSING_PACKAGE    "Repository error: Could not find specified package"
 #define __CPP_TRANSPORT_REPO_DUPLICATE_TASK     "Repository error: Duplicate task"
 #define __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE  "Repository error: Duplicate package"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_A    "Repository error: Could not find model"

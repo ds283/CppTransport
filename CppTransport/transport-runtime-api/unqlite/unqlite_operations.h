@@ -93,7 +93,7 @@ namespace transport
 
             std::string stringize_query(query_type type)
               {
-                if(type == equals)       return("=");
+                if(type == equals)       return("==");
                 if(type == greater_than) return(">");
                 if(type == less_than)    return("<");
 
@@ -105,7 +105,7 @@ namespace transport
               {
                 std::ostringstream r;
 
-                r << field << " " << stringize_query(type) << " '" << value << "'";
+                r << "'" << field << "' " << stringize_query(type) << " '" << value << "'";
 
                 return(r.str());
               }
@@ -115,7 +115,7 @@ namespace transport
               {
                 std::ostringstream r;
 
-                r << field << " " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
+                r << "'" << field << "' " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
 
                 return(r.str());
               }
@@ -125,7 +125,7 @@ namespace transport
               {
                 std::ostringstream r;
 
-                r << field << " " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
+                r << "'" << field << "' " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
 
                 return(r.str());
               }
@@ -135,7 +135,7 @@ namespace transport
               {
                 std::ostringstream r;
 
-                r << field << " " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
+                r << "'" << field << "' " << stringize_query(type) << " " << boost::lexical_cast<std::string>(value);
 
                 return(r.str());
               }
@@ -144,7 +144,11 @@ namespace transport
             template <typename T, typename... other_fields>
             std::string build_query(query_type type, const T& value, std::string field, other_fields... more_fields)
               {
-                std::string r = field + "." + build_query(type, value, more_fields...);
+                std::ostringstream r;
+
+		            r << "'" << field << "'." << build_query(type, value, more_fields...);
+
+		            return(r.str());
               }
           }   // namespace json_query
 
@@ -171,8 +175,8 @@ namespace transport
             unqlite_vm* vm;
             int err;
 
-            std::cerr << std::endl << "Executing Jx9 script:" << std::endl
-              << jx9 << std::endl;
+//            std::cerr << std::endl << "Executing Jx9 script:" << std::endl
+//              << jx9 << std::endl;
 
             err = unqlite_compile(db, jx9.c_str(), jx9.length(), &vm);
 
@@ -259,7 +263,7 @@ namespace transport
 
             jx9 << "if( !db_exists('" << collection << "') )"
                 << "  {"
-                << "    print '" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " \"" << collection << "\"';"
+                << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " '" << collection << "'\";"
                 << "  }";
 
             exec_jx9(db, jx9.str());
@@ -281,12 +285,12 @@ namespace transport
                 << "$rc  = db_store('" << collection << "', $rec);"
                 << "if ( !$rc )"
                 << "  {"
-                << "    print '" << __CPP_TRANSPORT_REPO_INSERT_ERROR "', $rc, ')';"
+                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\";"
                 << "  }"
                 << "$rc = db_commit();"
                 << "if ( !$rc )"
                 << "  {"
-                << "    print '" << __CPP_TRANSPORT_REPO_INSERT_ERROR "', $rc, ')';"
+                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\";"
                 << "  }";
 
             exec_jx9(db, jx9.str());
@@ -305,12 +309,12 @@ namespace transport
 				    jx9 << "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");"
 					      << "if ( !$rc )"
 					      << "  {"
-					      << "    print '" << __CPP_TRANSPORT_REPO_DELETE_ERROR "', " << unqlite_id << ");"
+					      << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR "'" << unqlite_id << "'\");"
 		            << "  }"
 			          << "$rc = db_commit();"
 			          << "if ( !$rc )"
 						    << "  {"
-						    << "    print '" << __CPP_TRANSPORT_REPO_DELETE_ERROR "', " << unqlite_id << ");"
+						    << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR "'" << unqlite_id << "'\");"
 			          << "  }";
 
 				    exec_jx9(db, jx9.str());
@@ -331,11 +335,12 @@ namespace transport
                 << "      { return TRUE; }"
                 << "    else"
                 << "      { return FALSE; }"
-                << "    };"
+                << "  };"
                 << "$data = db_fetch_all('" << collection << "', $callback);"
-                << "if( count($data) != 1)"
+	              << "$num_records = count($data);"
+                << "if( $num_records != 1 )"
                 << "  {"
-                << "    print '" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << query << ")';"
+                << "    print \"" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << "$num_records)\";"
                 << "    return;"
                 << "  }"
                 << "$ele = reset($data);"         // reset() moves array pointer back to the beginning, and returns the value of the first object
@@ -392,7 +397,9 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
 
-            unsigned int num = unqlite_value_to_int(num_records);
+		        int signed_num = unqlite_value_to_int(num_records);
+		        if(signed_num < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+            unsigned int num = static_cast<unsigned int>(signed_num);
 
             // release the virtual machine
             unqlite_vm_release(vm);
