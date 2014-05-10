@@ -50,6 +50,8 @@ namespace transport
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
+		    // Read-only/Read-write access to the repository
+		    typedef enum { readonly, readwrite } access_type;
 
         // Integration container object: forms a handle for a data container when writing the output of an integration
 
@@ -172,6 +174,7 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
+
         //! Close a repository, including the corresponding containers and environment. In practice this would always be delegated to the implementation class
         virtual ~repository()
           {

@@ -380,12 +380,12 @@ namespace transport
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
-            if(dynamic_cast< threepf_task<number>* >(tk))
+            if(dynamic_cast< threepf_task<number>* >(tk) != nullptr)
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
                 this->master_dispatch_threepf_task(three_task, m);
               }
-            else if(dynamic_cast< twopf_task<number>* >(tk))
+            else if(dynamic_cast< twopf_task<number>* >(tk) != nullptr)
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
                 this->master_dispatch_twopf_task(two_task, m);
@@ -684,7 +684,8 @@ namespace transport
 
         try
           {
-            this->repo = repository_factory<number>(repo_path.string());
+            std::cerr << "Slave process " << this->get_rank() << " opening repository " << repo_path << std::endl;
+            this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly);
           }
         catch (runtime_exception& xe)
           {

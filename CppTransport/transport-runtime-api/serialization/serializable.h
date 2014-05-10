@@ -107,8 +107,14 @@ namespace transport
         //! Start reading a new array at the current level in the tree
         virtual unsigned int start_array(const std::string& name) = 0;
 
+		    //! Start reading a new array element at the current level in the tree
+		    virtual unsigned int start_array_element() = 0;
+
         //! End reading the current node or array
         virtual void end_element(const std::string& name) = 0;
+
+		    //! End reading the current array element
+		    virtual void end_array_element() = 0;
 
         //! Read attributes from the current node
         virtual bool read_attribute(const std::string& name, std::string& value) = 0;

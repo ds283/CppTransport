@@ -127,7 +127,7 @@ namespace transport
             default:
               {
                 assert(false);
-                throw std::invalid_argument(__CPP_TRANSPORT_RANGE_INVALID_SPACING);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
               }
           }
       }
@@ -148,7 +148,21 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, (this->spacing == linear) ? __CPP_TRANSPORT_VALUE_LINEAR : __CPP_TRANSPORT_VALUE_LOGARITHMIC);
+
+		    switch(this->spacing)
+			    {
+		        case linear:
+			        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LINEAR));
+				      break;
+
+		        case logarithmic:
+			        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC));
+				      break;
+
+		        default:
+			        assert(false);
+		          throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
+			    }
       }
 
 
@@ -169,6 +183,8 @@ namespace transport
 								reader->read_value(__CPP_TRANSPORT_NODE_MAX, max);
 								reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
 								reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spacing);
+
+						    std::cerr << "Range group read spacing = " << spacing << std::endl;
 
 						    typename transport::range<value>::spacing_type type = transport::range<value>::linear;
 

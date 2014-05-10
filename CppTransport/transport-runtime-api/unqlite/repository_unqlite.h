@@ -51,7 +51,7 @@ namespace transport
       public:
 
         //! Open a repository with a specific pathname
-        repository_unqlite(const std::string& path);
+        repository_unqlite(const std::string& path, typename repository<number>::access_type mode=repository<number>::access_type::readwrite);
 
         //! Create a repository with a specific pathname
         repository_unqlite(const std::string& path, const repository_creation_key& key);
@@ -177,7 +177,7 @@ namespace transport
 
     // Open a named repository
     template <typename number>
-    repository_unqlite<number>::repository_unqlite(const std::string& path)
+    repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode)
       : package_db(nullptr), integration_db(nullptr)
       {
         root_path = path;
@@ -217,17 +217,18 @@ namespace transport
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        // open containers for reading/writings
+        // open containers for reading/writing
         int err;
+		    unsigned int m = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
-        if((err = unqlite_open(&package_db, packages_path.c_str(), UNQLITE_OPEN_READWRITE)) != UNQLITE_OK)
+        if((err = unqlite_open(&package_db, packages_path.c_str(), m)) != UNQLITE_OK)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << packages_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        if((err = unqlite_open(&integration_db, integrations_path.c_str(), UNQLITE_OPEN_READWRITE)) != UNQLITE_OK)
+        if((err = unqlite_open(&integration_db, integrations_path.c_str(), m)) != UNQLITE_OK)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << integrations_path << "'";
@@ -444,8 +445,16 @@ namespace transport
 
 						bool match = false;
 
-						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key)) match = true;
-						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr))) match = true;
+						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key))
+							{
+						    match = true;
+						    std::cerr << "Found numeric match for key " << data->cmp << std::endl;
+							}
+						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr)))
+							{
+						    match = true;
+						    std::cerr << "Found string match for key '" << data->str_cmp << "'" << std::endl;
+							}
 
 						if(match)
 							{
@@ -462,7 +471,8 @@ namespace transport
 
 						    data->id = unqlite_value_to_int(id);
 
-						    std::cerr << "Extracting task document (id=" << data->id << "): " << data->reader->get_contents() << std::endl;
+						    std::cerr << "Extracted document from JSON array (id=" << data->id << ")" << std::endl
+						              << data->reader->get_contents() << std::endl << std::endl;
 							}
 
 						return(UNQLITE_OK);
@@ -606,6 +616,8 @@ namespace transport
         std::string package_name;
 		    task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, package_name);
 
+        task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+
 		    // get serialization_reader for the named package
 		    int package_id = 0;
 		    unqlite_serialization_reader* package_reader = this->deserialize_package(package_name, package_id);
@@ -624,34 +636,33 @@ namespace transport
 		    // move the package serialization reader to the initial conditions block, and use it to
 		    // reconstruct a initial_conditions<> object
 		    package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
-
 		    package_reader->push_bookmark();
 		    initial_conditions<number> ics = initial_conditions_helper::deserialize<number>(package_reader, package_name,
 		                                                                                    m->get_param_names(), m->get_state_names(),
 		                                                                                    p_validator, ics_validator);
 		    package_reader->pop_bookmark();
-
 		    package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
-		    // reset read data from the task record, and use it to reconstruct
-		    // a task<> object
+		    // reset read data from the task record, and use it to reconstruct a task<> object
 				task_reader->reset();
 
+		    // move the task reader to the task description block, and use it to reconstruct a task<>
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
 		    task_reader->push_bookmark();
 		    task<number>* rval = nullptr;
 		    switch(type)
 			    {
 		        case twopf_task_record:
 			        {
-		            task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
-		            rval = new task<number>(tk);
+		            twopf_task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
+		            rval = new twopf_task<number>(tk);
 		            break;
 			        }
 
 		        case threepf_task_record:
 			        {
-		            task<number> tk = threepf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
-				        rval = new task<number>(tk);
+		            threepf_task<number> tk = threepf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
+				        rval = new threepf_task<number>(tk);
 		            break;
 			        }
 
@@ -659,8 +670,7 @@ namespace transport
 			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 			    }
 		    task_reader->pop_bookmark();
-
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
 
 		    delete task_reader;
 		    delete package_reader;
@@ -816,6 +826,7 @@ namespace transport
         unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
 
         // allocate a new serial number
+		    // note that this will mark the __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT node as read
 		    task_reader->push_bookmark();
 		    unsigned int serial_number = this->allocate_new_serial_number(task_reader);
 		    task_reader->pop_bookmark();
@@ -832,16 +843,17 @@ namespace transport
 		    // update task_reader with information about the new output group
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
+		    // reset reader to that __CPP_TRANSPORT_NODE_INTGRTN_DATA becomes available for reading again
 		    task_reader->reset();
 
 		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
         std::string tag = boost::lexical_cast<std::string>(serial_number);
-		    task_reader->insert_node(tag);  // name of node doesn't matter, it is ignored in arrays, but should be unique
+		    task_reader->insert_node(tag);  // name of node doesn't matter; it is ignored in arrays, but should be unique
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, serial_number);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_BACKEND, backend);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_PATH, output_path.string());
@@ -854,10 +866,16 @@ namespace transport
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
+        std::cerr << "REPOSITORY: New task record contents:" << std::endl
+	        << task_reader->get_contents() << std::endl << std::endl;
+
 		    // update the task entry for this database
 		    // that means: first, drop this existing record; then
         unqlite_operations::drop(this->integration_db, collection, task_id);
+        std::cerr << "REPOSITORY: Dropped old record" << std::endl;
+
         unqlite_operations::store(this->integration_db, collection, task_reader->get_contents());
+        std::cerr << "REPOSITORY: Stored new record" << std::endl;
 
 		    // create directories
         boost::filesystem::create_directories(this->root_path / output_path);
@@ -881,9 +899,6 @@ namespace transport
 				// populate list of serial numbers
         std::list<unsigned int> serial_numbers;
 
-		    // reset reader to the beginning
-		    reader->reset();
-
 		    // start reading from integration output block
 		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 		    for(unsigned int i = 0; i < entries; i++)
@@ -894,6 +909,7 @@ namespace transport
 				    serial_numbers.push_back(sn);
 				    reader->end_element("");
 			    }
+				reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
         unsigned int serial_number;
 
@@ -912,9 +928,9 @@ namespace transport
 
 
     template <typename number>
-    repository<number>* repository_factory(const std::string& path)
+    repository <number>* repository_factory(const std::string& path, typename repository<number>::access_type mode=repository<number>::access_type::readwrite)
       {
-        return new repository_unqlite<number>(path);
+        return new repository_unqlite<number>(path, mode);
       }
 
 

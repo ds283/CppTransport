@@ -35,7 +35,9 @@
 #include "transport-runtime-api/localizations/messages_en/repository_unqlite.h"
 #include "transport-runtime-api/localizations/messages_en/unqlite.h"
 
-#include "transport-runtime-api/localizations/messages_en/repository_dbxml.h"
-#include "transport-runtime-api/localizations/messages_en/dbxml.h"
+#include "transport-runtime-api/localizations/messages_en/named_list.h"
+
+//#include "transport-runtime-api/localizations/messages_en/repository_dbxml.h"
+//#include "transport-runtime-api/localizations/messages_en/dbxml.h"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

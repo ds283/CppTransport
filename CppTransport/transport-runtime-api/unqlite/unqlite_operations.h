@@ -16,6 +16,10 @@
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
+
+#define __CPP_TRANSPORT_PRINT_JX9_SCRIPTS
+
+
 extern "C"
 {
 #include "unqlite/unqlite.h"
@@ -168,16 +172,20 @@ namespace transport
 			    }
 
 
-        // default consumer for Jx9 virtual machine output -- throw it as an exception
+        // default consumer for Jx9 virtual machine output;
+		    // pass everything to the supplied stream buffer.
         int default_unqlite_consumer(const char* data, unsigned int length, void* handle)
           {
+		        assert(data != nullptr);
+		        assert(handle != nullptr);
+
             std::string jx9_msg = std::string(data, length);
 
-            std::ostringstream msg;
+            std::ostringstream* msg_buf = static_cast<std::ostringstream*>(handle);
 
-            msg << __CPP_TRANSPORT_UNQLITE_VM_OUPTUT << " '" << jx9_msg << "'";
+            (*msg_buf) << (msg_buf->str().empty() ? "" : ", ") << "'" << jx9_msg << "'";
 //            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
-            std::cerr << msg.str() << std::endl;
+//            std::cerr << msg.str() << std::endl;
 
             return(UNQLITE_OK);
           }
@@ -192,8 +200,10 @@ namespace transport
             unqlite_vm* vm;
             int err;
 
-//            std::cerr << std::endl << "Executing Jx9 script:" << std::endl
-//              << jx9 << std::endl;
+		        #ifdef __CPP_TRANSPORT_PRINT_JX9_SCRIPTS
+            std::cerr << std::endl << "Executing Jx9 script:" << std::endl
+              << jx9 << std::endl << std::endl;
+		        #endif
 
             err = unqlite_compile(db, jx9.c_str(), jx9.length(), &vm);
 
@@ -221,7 +231,8 @@ namespace transport
               }
 
             // install a VM output consumer
-            err = unqlite_vm_config(vm, UNQLITE_VM_CONFIG_OUTPUT, default_unqlite_consumer, 0);
+            std::ostringstream output_buffer;
+            err = unqlite_vm_config(vm, UNQLITE_VM_CONFIG_OUTPUT, default_unqlite_consumer, &output_buffer);
 
             if(err != UNQLITE_OK)
               {
@@ -239,6 +250,12 @@ namespace transport
                 msg << __CPP_TRANSPORT_UNQLITE_FAIL_EXECUTE_SCRIPT;
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
               }
+		        if(!output_buffer.str().empty())
+			        {
+		            std::ostringstream msg;
+			          msg << __CPP_TRANSPORT_UNQLITE_VM_OUPTUT << " " << output_buffer.str();
+		            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+			        }
 
             return(vm);
           }
@@ -263,15 +280,15 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "if( !db_exists('" << collection << "') )"
-                << "  {"
-                << "    $rc = db_create('" << collection << "');"
-                << "    if ( !$rc )"
-                << "      {"
-                << "        print db_errlog();"
-                << "        return;"
-                << "      }"
-                << "  }";
+            jx9 << "if( !db_exists('" << collection << "') )" << std::endl
+                << "  {" << std::endl
+                << "    $rc = db_create('" << collection << "');" << std::endl
+                << "    if ( !$rc )" << std::endl
+                << "      {" << std::endl
+                << "        print db_errlog();" << std::endl
+                << "        return;" << std::endl
+                << "      }" << std::endl
+                << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
           }
@@ -284,10 +301,10 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "if( !db_exists('" << collection << "') )"
-                << "  {"
-                << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " '" << collection << "'\";"
-                << "  }";
+            jx9 << "if( !db_exists('" << collection << "') )" << std::endl
+                << "  {" << std::endl
+                << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " '" << collection << "'\";" << std::endl
+                << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
           }
@@ -306,17 +323,17 @@ namespace transport
             // insert this record in the database; commit as soon as we are done
             // for batch insert, it would be preferable to wait until the end of the
             // batch before committing, but we don't expect the repository to be used that way
-            jx9 << "$rec = [ " << record << " ];"
-                << "$rc  = db_store('" << collection << "', $rec);"
-                << "if ( !$rc )"
-                << "  {"
-                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\";"
-                << "  }"
-                << "$rc = db_commit();"
-                << "if ( !$rc )"
-                << "  {"
-                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\";"
-                << "  }";
+            jx9 << "$rec = [ " << record << " ];" << std::endl
+                << "$rc  = db_store('" << collection << "', $rec);" << std::endl
+                << "if ( !$rc )" << std::endl
+                << "  {" << std::endl
+                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\", db_errlog();" << std::endl
+                << "  }" << std::endl
+                << "$rc = db_commit();" << std::endl
+                << "if ( !$rc )" << std::endl
+                << "  {" << std::endl
+                << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'$rc')\", db_errlog();" << std::endl
+                << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
           }
@@ -333,16 +350,22 @@ namespace transport
 		        std::ostringstream jx9;
 
 						// drop the specified record from the database
-				    jx9 << "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");"
-					      << "if ( !$rc )"
-					      << "  {"
-					      << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR "'" << unqlite_id << "'\");"
-		            << "  }"
-			          << "$rc = db_commit();"
-			          << "if ( !$rc )"
-						    << "  {"
-						    << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR "'" << unqlite_id << "'\");"
-			          << "  }";
+				    // FIXME: consider removing PRECOMMIT phase, if it turns out not to be required by UnQLite
+				    jx9 << "$rc = db_commit();" << std::endl
+					      << "if ( !$rc )" << std::endl
+					      << "  {" << std::endl
+					      << "    print \"" << __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+					      << "  }" << std::endl
+		            << "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");" << std::endl
+					      << "if ( !$rc )" << std::endl
+					      << "  {" << std::endl
+					      << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+		            << "  }" << std::endl
+			          << "$rc = db_commit();" << std::endl
+			          << "if ( !$rc )" << std::endl
+						    << "  {" << std::endl
+						    << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+			          << "  }" << std::endl;
 
 				    exec_jx9(db, jx9.str());
 			    }
@@ -358,22 +381,22 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "$callback = function($rec)"
-                << "  {"
-                << "    if( $rec." + query + " )"
-                << "      { return TRUE; }"
-                << "    else"
-                << "      { return FALSE; }"
-                << "  };"
-                << "$data = db_fetch_all('" << collection << "', $callback);"
-	              << "$num_records = count($data);"
-                << "if( $num_records != 1 )"
-                << "  {"
-                << "    print \"" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << "$num_records)\";"
-                << "    return;"
-                << "  }"
-                << "$ele = reset($data);"         // reset() moves array pointer back to the beginning, and returns the value of the first object
-                << "$json = json_encode($ele);";
+            jx9 << "$callback = function($rec)" << std::endl
+                << "  {" << std::endl
+                << "    if( $rec." + query + " )" << std::endl
+                << "      { return TRUE; }" << std::endl
+                << "    else" << std::endl
+                << "      { return FALSE; }" << std::endl
+                << "  };" << std::endl
+                << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
+	              << "$num_records = count($data);" << std::endl
+                << "if( $num_records != 1 )" << std::endl
+                << "  {" << std::endl
+                << "    print \"" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << "$num_records)\";" << std::endl
+                << "    return;" << std::endl
+                << "  }" << std::endl
+                << "$ele = reset($data);" << std::endl         // reset() moves array pointer back to the beginning, and returns the value of the first object
+                << "$json = json_encode($ele);" << std::endl;
 
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
@@ -406,15 +429,15 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "$callback = function($rec)"
-                << "  {"
-                << "    if( $rec." + query + " )"
-                << "      { return TRUE; }"
-                << "    else"
-                << "      { return FALSE; }"
-                << "    };"
-                << "$data = db_fetch_all('" << collection << "', $callback);"
-                << "$num_records = count($data);";
+            jx9 << "$callback = function($rec)" << std::endl
+                << "  {" << std::endl
+                << "    if( $rec." + query + " )" << std::endl
+                << "      { return TRUE; }" << std::endl
+                << "    else" << std::endl
+                << "      { return FALSE; }" << std::endl
+                << "    };" << std::endl
+                << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
+                << "$num_records = count($data);" << std::endl;
 
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
@@ -451,14 +474,14 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "$callback = function($rec)"
-              << "  {"
-              << "    if( $rec." + query + " )"
-              << "      { return TRUE; }"
-              << "    else"
-              << "      { return FALSE; }"
-              << "    };"
-              << "$data = db_fetch_all('" << collection << "', $callback);";
+            jx9 << "$callback = function($rec)" << std::endl
+              << "  {" << std::endl
+              << "    if( $rec." + query + " )" << std::endl
+              << "      { return TRUE; }" << std::endl
+              << "    else" << std::endl
+              << "      { return FALSE; }" << std::endl
+              << "    };" << std::endl
+              << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl;
 
             vm = exec_jx9_vm(db, jx9.str());
 

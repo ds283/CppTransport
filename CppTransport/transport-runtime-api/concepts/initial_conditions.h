@@ -21,7 +21,6 @@
 #include "transport-runtime-api/utilities/random_string.h"
 
 
-#define __CPP_TRANSPORT_NODE_INITIAL_CONDITIONS "initial-conditions"
 #define __CPP_TRANSPORT_NODE_COORDINATE         "coordinate"
 #define __CPP_TRANSPORT_ATTR_NAME               "name"
 #define __CPP_TRANSPORT_NODE_NSTAR              "nstar"
@@ -182,12 +181,12 @@ namespace transport
 						    reader->pop_bookmark();
 						    reader->end_element(__CPP_TRANSPORT_NODE_PARAM_BLOCK);
 
-						    unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+						    unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_ICS_VALUES);
 
 				        std::vector< named_list::element<number> > temp;
 				        for(unsigned int i = 0; i < fields; i++)
 							    {
-								    reader->start_node(__CPP_TRANSPORT_NODE_COORDINATE);
+								    reader->start_array_element();
 
 						        std::string field_name;
 								    reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, field_name);
@@ -197,10 +196,10 @@ namespace transport
 
 				            temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
 
-								    reader->end_element(__CPP_TRANSPORT_NODE_PARAMETER);
+								    reader->end_array_element();
 							    }
 
-						    reader->end_element(__CPP_TRANSPORT_NODE_INITIAL_CONDITIONS);
+						    reader->end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
 
 				        if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 

@@ -15,7 +15,6 @@
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS   "Repository error: Badly formed XML for 'parameters' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_ICS      "Repository error: Badly formed XML for 'initial_conditions' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_TASK     "Repository error: Badly formed XML for 'task' group"
-#define __CPP_TRANSPORT_BADLY_FORMED_RANGE    "Repository error: Badly formed XML for 'range' group"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_DBXML_H

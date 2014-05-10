@@ -18,6 +18,8 @@
 #define __CPP_TRANSPORT_REPO_INSERT_ERROR       "Repository error: Error while inserting document into repository (backend code="
 #define __CPP_TRANSPORT_REPO_QUERY_ERROR        "Repository error: Error while querying document from repository (backend code="
 #define __CPP_TRANSPORT_REPO_DELETE_ERROR       "Repository error: Error while deleting repository document (backend id="
+#define __CPP_TRANSPORT_REPO_COMMIT_ERROR       "Repository error: Error while committing changes to repository (backend id="
+#define __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR    "Repository error: Error while preparing to commit changes to repository (backend id="
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS        "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE        "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET            "Internal error: Attempt to access repository when unset in 'task_manager'"

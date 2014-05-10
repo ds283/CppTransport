@@ -23,6 +23,9 @@
 #define __CPP_TRANSPORT_JSON_ROOT_NODE     "root"
 
 
+//#define __CPP_TRANSPORT_JSON_DEBUG
+
+
 namespace transport
 	{
 
@@ -145,10 +148,10 @@ namespace transport
             //! Push an element to our contents.
 		        //! Any element with the same name is removed, because it is assume this push
 		        //! is an attempt to update.
-            virtual void push_content(element* ele);
+            virtual void push_content(element* ele, bool is_insert);
 
             //! Push an element to our attributes.
-            void push_attribute(element* ele);
+            void push_attribute(element* ele, bool is_insert);
 
 		        //! Get number of content elements
 		        unsigned int get_num_contents() { return(this->contents.size()); }
@@ -220,7 +223,7 @@ namespace transport
 
 		        //! Override default push_content() method. For arrays, we don't want
 		        //! to over-write elements with the same name
-		        virtual void push_content(element* ele) override;
+		        virtual void push_content(element* ele, bool is_insert) override;
 
             //! Stringize this user_array for serialization to JSON
             virtual std::string stringize(bool attribute=false) const override;
@@ -237,6 +240,12 @@ namespace transport
 
 		        //! Override element function to service a nameless pull enquiry
 		        virtual bool pull_enquiry(element_type pull_type) override;
+
+		        //! Can't pull content from an array, only elements, so delete the pull_content() method we inherit.
+		        bool pull_content(element_type pull_type, const std::string& name, element*& ele) = delete;
+
+		        //! Instead of pulling content, we have to pull elmenets
+		        bool pull_element(element*& ele);
 	        };
 
 
@@ -269,14 +278,37 @@ namespace transport
 	        };
 
 
+		    class basic_value_element: public element
+			    {
+		      public:
+
+				    //! Constructor with specified name
+				    basic_value_element(const std::string& nm)
+				      : element(nm)
+					    {
+					    }
+
+				    //! Virtual destructor
+				    virtual ~basic_value_element()
+					    {
+					    }
+
+		        //! Convert content to different representations, if possible
+		        virtual std::string  get_string() const = 0;
+		        virtual unsigned int get_unsigned_int() const = 0;
+		        virtual double       get_double() const = 0;
+		        virtual bool         get_bool() const = 0;
+			    };
+
+
         template <typename T>
-        class value_element: public element
+        class value_element: public basic_value_element
 	        {
           public:
 
             //! Constructor with specified name and stored value
             value_element(const std::string& nm, const T& val)
-	            : value(val), element(nm)
+	            : value(val), basic_value_element(nm)
 	            {
 	            }
 
@@ -295,11 +327,12 @@ namespace transport
 		        //! OVerride element function to service a nameless pull enquiry
 		        virtual bool pull_enquiry(element_type pull_type) override;
 
-		        //! Convert content to different representations, if possible
-		        std::string  get_string()       { return(boost::lexical_cast<std::string>(this->value)); }
-            unsigned int get_unsigned_int() { return(boost::lexical_cast<unsigned int>(this->value)); }
-            double       get_double()       { return(boost::lexical_cast<double>(this->value)); }
-            bool         get_bool()         { return(boost::lexical_cast<bool>(this->value)); }
+		        //! Convert content to different representations, if possible.
+		        //! Implements the basic_value_element conversion interface.
+		        std::string  get_string()       const override { return(boost::lexical_cast<std::string>(this->value)); }
+            unsigned int get_unsigned_int() const override { return(boost::lexical_cast<unsigned int>(this->value)); }
+            double       get_double()       const override { return(boost::lexical_cast<double>(this->value)); }
+            bool         get_bool()         const override { return(boost::lexical_cast<bool>(this->value)); }
 
           protected:
 
@@ -344,24 +377,24 @@ namespace transport
 
 
         //! Begin a new node at the current level in the tree.
-        void push_start_node(const std::string& name, bool empty=false);
+        void push_start_node(const std::string& name, bool empty=false, bool is_insert=false);
 
         //! Begin a new array at the current level in the tree.
-        void push_start_array(const std::string& name, bool empty=false);
+        void push_start_array(const std::string& name, bool empty=false, bool is_insert=false);
 
         //! End the current element -- node or array.
         //! Raises an exception if there is a mismatch.
-        void push_end_element(const std::string& name);
+        void push_end_element(const std::string& name, bool is_insert=false);
 
         //! Write attributes to the current node.
-        void write_attribute(const std::string& name, const std::string& value);
+        void write_attribute(const std::string& name, const std::string& value, bool is_insert=false);
 
         //! Write a value.
 		    //! If an existing node exists with the same name, its value is replaced.
-        void write_value(const std::string& name, const std::string& value);
-        void write_value(const std::string& name, unsigned value);
-        void write_value(const std::string& name, double value);
-        void write_value(const std::string& name, bool value);
+        void write_value(const std::string& name, const std::string& value, bool is_insert=false);
+        void write_value(const std::string& name, unsigned value, bool is_insert=false);
+        void write_value(const std::string& name, double value, bool is_insert=false);
+        void write_value(const std::string& name, bool value, bool is_insert=false);
 
 
         // PULL METHODS (can be used to implement a 'serialization reader' interface)
@@ -392,9 +425,17 @@ namespace transport
         //! Returns true if the array was pulled ok.
         bool pull_start_array(const std::string& name, unsigned int& elements);
 
+		    //! Begin a new array element at the current level in the tree.
+		    //! Returns true if the pull succeeded.
+		    bool pull_array_element(unsigned int& elements);
+
         //! End the current element -- node or array.
         //! Raises an exception if there is a mismatch.
         void pull_end_element(const std::string& name);
+
+		    //! End the current array element.
+		    //! Raises an exception if the top-of-stack item isn't an array.
+		    void pull_end_array_element();
 
         //! Read a named attribute from the current node.
         //! Returns true if the attribute could be read, in which case its
@@ -436,8 +477,10 @@ namespace transport
 	    };
 
 
-    void json_serialization_stack::basic_node::push_attribute(element* ele)
+    void json_serialization_stack::basic_node::push_attribute(element* ele, bool is_insert)
 	    {
+		    // is_insert not needed (at the moment) for push_attribute
+
         for(std::list<element*>::iterator t = this->attributes.begin(); t != this->attributes.end(); t++)
 	        {
             if((*t)->get_name() == ele->get_name()) t = this->attributes.erase(t);
@@ -447,7 +490,7 @@ namespace transport
 	    }
 
 
-    void json_serialization_stack::basic_node::push_content(element* ele)
+    void json_serialization_stack::basic_node::push_content(element* ele, bool is_insert)
 	    {
         for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
 	        {
@@ -455,6 +498,8 @@ namespace transport
 	        }
 
         this->contents.push_back(ele);
+
+		    if(is_insert) this->empty = false;
 	    }
 
 
@@ -479,6 +524,10 @@ namespace transport
 	    {
         bool rval = false;
 
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+		    std::cerr << "JSON: node '" << this->get_name() << "' searching contents for '" << name << "', type = " << pull_type << "; ";
+		    #endif
+
         // enquire whether any of our contents will accept a pull request of the specified type
         for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
 	        {
@@ -489,6 +538,10 @@ namespace transport
                 break;
 	            }
 	        }
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+		    std::cerr << (rval ? "accepted." : "declined.") << std::endl;
+		    #endif
 
         return(rval);
 	    }
@@ -596,9 +649,10 @@ namespace transport
 	    }
 
 
-    void json_serialization_stack::user_array::push_content(element* ele)
+    void json_serialization_stack::user_array::push_content(element* ele, bool is_insert)
 	    {
         this->contents.push_back(ele);
+		    if(is_insert) this->empty = false;
 	    }
 
 
@@ -681,6 +735,32 @@ namespace transport
         return(rval);
 	    }
 
+
+		bool json_serialization_stack::user_array::pull_element(element*& ele)
+			{
+				bool rval = false;
+
+				#ifdef __CPP_TRANSPORT_JSON_DEBUG
+				std::cerr << "JSON: array '" << this->get_name() << "' searching for an available element; ";
+				#endif
+
+				// enquire whether any of our contents are available
+				for(std::list<element*>::iterator t = this->contents.begin(); t != this->contents.end(); t++)
+					{
+						if((*t)->pull_enquiry(node))
+							{
+								ele = *t;
+								rval = true;
+								break;
+							}
+					}
+
+				#ifdef __CPP_TRANSPORT_JSON_DEBUG
+				std::cerr << (rval ? "accepted." : "declined.") << std::endl;
+				#endif
+
+				return(rval);
+			}
 
     json_serialization_stack::basic_node* json_serialization_stack::root_node::make_element(const std::string& name, bool empty)
 	    {
@@ -831,7 +911,7 @@ namespace transport
 
 
     // push: create a new node at the current level
-    void json_serialization_stack::push_start_node(const std::string& name, bool empty)
+    void json_serialization_stack::push_start_node(const std::string& name, bool empty, bool is_insert)
 	    {
         if(this->node_stack.size() == 0)
 	        {
@@ -849,8 +929,12 @@ namespace transport
         // if it is an array, it will be a root_node.
         json_serialization_stack::basic_node* node = n->make_element(name, empty);
 
-        n->push_content(node);
+        n->push_content(node, is_insert);
         this->node_stack.push_front(node);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: start writing node '" << name << "'" << std::endl;
+		    #endif
 	    }
 
 
@@ -883,6 +967,16 @@ namespace transport
 				    attributes = node->get_num_attributes();
 
 				    this->node_stack.push_front(node);
+
+				    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+				    std::cerr << "JSON: start reading node '" << node->get_name() << "'" << std::endl;
+				    #endif
+			    }
+		    else
+			    {
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+		        std::cerr << "JSON: failed to start reading node '" << name << "'" << std::endl;
+				    #endif
 			    }
 
         return(rval);
@@ -890,7 +984,7 @@ namespace transport
 
 
     // push: create a new array
-    void json_serialization_stack::push_start_array(const std::string& name, bool empty)
+    void json_serialization_stack::push_start_array(const std::string& name, bool empty, bool is_insert)
 	    {
 
         if(this->node_stack.size() == 0)
@@ -908,8 +1002,12 @@ namespace transport
         // no need to distinguish here
         user_array* array = new user_array(name, empty);
 
-        n->push_content(array);
+        n->push_content(array, is_insert);
         this->node_stack.push_front(array);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Start writing array '" << name << "'" << std::endl;
+		    #endif
 	    }
 
 
@@ -928,25 +1026,77 @@ namespace transport
         // get reference to front-of-stack node, and check whether it can service this request
         basic_node* n = this->node_stack.front();
 
-		    element* ele;
+		    element* ele = nullptr;
 
         // if successful, push the node we have just pulled to the top of the stack
         if((rval = n->pull_content(array, name, ele)))
 	        {
-            // cast element up to basic_node; will throw an exception if this isn't possible
+            // cast element up to basic_node
 		        basic_node* node = dynamic_cast<basic_node*>(ele);
 
 		        elements = node->get_num_contents();
 
             this->node_stack.push_front(node);
+
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: start reading array '" << node->get_name() << "'" << std::endl;
+		        #endif
+	        }
+        else
+	        {
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: failed to start reading array '" << name << "'" << std::endl;
+		        #endif
 	        }
 
         return(rval);
 	    }
 
 
+		// pull: read a new array element at the current level
+		bool json_serialization_stack::pull_array_element(unsigned int& elements)
+			{
+				bool rval = false;
+
+		    if(this->node_stack.size() == 0)
+			    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_PULLEMPTYARRAY);
+
+		    // get reference to front-of-stack node, and check whether it is (1) an array, and (2) can service this request
+		    basic_node* n = this->node_stack.front();
+
+ 				user_array* a = dynamic_cast<user_array*>(n);
+
+				if(a != nullptr)
+					{
+						element* ele = nullptr;
+
+						if((rval = a->pull_element(ele)))
+							{
+								basic_node* node = dynamic_cast<basic_node*>(ele);
+
+								elements = node->get_num_contents();
+
+								this->node_stack.push_front(node);
+
+								#ifdef __CPP_TRANSPORT_JSON_DEBUG
+								std::cerr << "JSON: start reading array element '" << node->get_name() << "'" << std::endl;
+								#endif
+							}
+						else
+							{
+								#ifdef __CPP_TRANSPORT_JSON_DEBUG
+						    std::cerr << "JSON: failed to start reading array element" << std::endl;
+								#endif
+							}
+					}
+				else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_NO_TOP_ARRAY);
+
+				return(rval);
+			}
+
+
     // push: end the current node
-    void json_serialization_stack::push_end_element(const std::string& name)
+    void json_serialization_stack::push_end_element(const std::string& name, bool is_insert)
 	    {
         // can't end the node if it is the root one
         if(this->node_stack.size() == 1)
@@ -967,7 +1117,7 @@ namespace transport
 	        }
 
         // validate this element
-        if(!n->validate())
+        if(!is_insert && !n->validate())
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_SERIAL_VALIDATE_FAIL << name << "'";
@@ -976,6 +1126,10 @@ namespace transport
 
         // pop current front-of-stack node, reverting to whatever was on the stack previously
         this->node_stack.pop_front();
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Finished writing element '" << name << "'" << std::endl;
+		    #endif
 	    }
 
 
@@ -1000,13 +1154,43 @@ namespace transport
 						throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					}
 
+				#ifdef __CPP_TRANSPORT_JSON_DEBUG
+		    std::cerr << "JSON: finished reading element '" << n->get_name() << "'" << std::endl;
+				#endif
+
 				// pop current front-of-stack node, reverting to whatever was on the stack previously
 				this->node_stack.pop_front();
 			}
 
 
+		// pull: end current array element
+		void json_serialization_stack::pull_end_array_element()
+			{
+		    // can't end the node if it is the root one
+		    if(this->node_stack.size() == 1)
+			    {
+		        std::ostringstream msg;
+		        msg << __CPP_TRANSPORT_SERIAL_END_ARRAY_ELEMENT;
+		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+			    }
+
+		    // pop current front-of-stack node, reverting to whatever was on the stack previously
+		    this->node_stack.pop_front();
+
+				// check that the new front-of-stack node is an array
+		    basic_node* n = this->node_stack.front();
+
+		    user_array* a = dynamic_cast<user_array*>(n);
+		    if(a == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TOP_OF_STACK_NOT_ARRAY);
+
+				#ifdef __CPP_TRANSPORT_JSON_DEBUG
+		    std::cerr << "JSON: finished reading array element" << std::endl;
+				#endif
+			}
+
+
     // push: write attributes to the current node
-    void json_serialization_stack::write_attribute(const std::string& name, const std::string& value)
+    void json_serialization_stack::write_attribute(const std::string& name, const std::string& value, bool is_insert)
 	    {
         value_element<std::string>* ele = new value_element<std::string>(name, value);
 
@@ -1019,7 +1203,11 @@ namespace transport
 
         // get reference to current front-of-stack node, and push this attribute to it
         basic_node* n = this->node_stack.front();
-        n->push_attribute(ele);
+        n->push_attribute(ele, is_insert);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Wrote attribute '" << name << "' = '" << value << "'" << std::endl;
+		    #endif
 	    }
 
 
@@ -1037,15 +1225,18 @@ namespace transport
 
 		    // get reference to front-of-stack node, and check whether it can service this request
 				basic_node* n = this->node_stack.front();
-
 				element* ele = nullptr;
 
-		    // if successful, extract
 		    if((rval = n->pull_attribute(value, name, ele)))
 			    {
-		        // cast element up to value_element; will throw an exception if this isn't possible
-				    value_element<std::string>* value = dynamic_cast< value_element<std::string>* >(ele);
+		        // if successful, extract
+				    basic_value_element* value = dynamic_cast< basic_value_element* >(ele);
+				    if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
 				    val = value->get_string();
+
+				    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+		        std::cerr << "JSON: Read attribute '" << name << "' = '" << val << "'" << std::endl;
+				    #endif
 			    }
 
 				return(rval);
@@ -1056,7 +1247,7 @@ namespace transport
     //   There are specializations of this function for strings, unsigned integers, doubles and booleans
 
 
-    void json_serialization_stack::write_value(const std::string& name, const std::string& value)
+    void json_serialization_stack::write_value(const std::string& name, const std::string& value, bool is_insert)
 	    {
         value_element<std::string>* ele = new value_element<std::string>(name, value);
 
@@ -1069,11 +1260,15 @@ namespace transport
 
         // get reference to current front-of-stack node
         basic_node* n = this->node_stack.front();
-        n->push_content(ele);
+        n->push_content(ele, is_insert);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Wrote string value '" << name << "' = '" << value << "'" << std::endl;
+		    #endif
 	    }
 
 
-    void json_serialization_stack::write_value(const std::string& name, unsigned int value)
+    void json_serialization_stack::write_value(const std::string& name, unsigned value, bool is_insert)
 	    {
         value_element<unsigned int>* ele = new value_element<unsigned int>(name, value);
 
@@ -1086,11 +1281,15 @@ namespace transport
 
         // get reference to current front-of-stack node, and push this value to its contents
         basic_node* n = this->node_stack.front();
-        n->push_content(ele);
+        n->push_content(ele, is_insert);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Wrote unsigned int value '" << name << "' = " << value << std::endl;
+		    #endif
 	    }
 
 
-    void json_serialization_stack::write_value(const std::string& name, double value)
+    void json_serialization_stack::write_value(const std::string& name, double value, bool is_insert)
 	    {
         value_element<double>* ele = new value_element<double>(name, value);
 
@@ -1103,11 +1302,15 @@ namespace transport
 
         // get reference to current front-of-stack node, and push this value to its contents
         basic_node* n = this->node_stack.front();
-        n->push_content(ele);
+        n->push_content(ele, is_insert);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Wrote double value '" << name << "' = " << value << std::endl;
+		    #endif
 	    }
 
 
-    void json_serialization_stack::write_value(const std::string& name, bool value)
+    void json_serialization_stack::write_value(const std::string& name, bool value, bool is_insert)
 	    {
         value_element<bool>* ele = new value_element<bool>(name, value);
 
@@ -1120,7 +1323,11 @@ namespace transport
 
         // get reference to current front-of-stack node, and push this value to its contents
         basic_node* n = this->node_stack.front();
-        n->push_content(ele);
+        n->push_content(ele, is_insert);
+
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << "JSON: Wrote boolean value '" << name << "' = " << value << std::endl;
+		    #endif
 	    }
 
 
@@ -1141,15 +1348,18 @@ namespace transport
 
         // get reference to front-of-stack node, and check whether it can service this request
         basic_node* n = this->node_stack.front();
-
 		    element* ele = nullptr;
 
-        // if successful, extract
         if((rval = n->pull_content(value, name, ele)))
 	        {
-            // cast element up to value_element; will throw an exception if this isn't possible
-		        value_element<std::string>* value = dynamic_cast< value_element<std::string>* >(ele);
+            // if successful, extract
+		        basic_value_element* value = dynamic_cast< basic_value_element* >(ele);
+            if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
             val = value->get_string();
+
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+		        std::cerr << "JSON: read string value '" << name << "' = '" << val << "'" << std::endl;
+		        #endif
 	        }
 
         return(rval);
@@ -1169,15 +1379,18 @@ namespace transport
 
         // get reference to front-of-stack node, and check whether it can service this request
         basic_node* n = this->node_stack.front();
-
 		    element* ele = nullptr;
 
-        // if successful, extract
         if((rval = n->pull_content(value, name, ele)))
 	        {
-            // cast element up to value_element; will throw an exception if this isn't possible
-		        value_element<unsigned int>* value = dynamic_cast< value_element<unsigned int>* >(ele);
+            // if successful, extract
+		        basic_value_element* value = dynamic_cast< basic_value_element* >(ele);
+            if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
             val = value->get_unsigned_int();
+
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: read unsigned int value '" << name << "' = " << val << std::endl;
+		        #endif
 	        }
 
         return(rval);
@@ -1197,15 +1410,18 @@ namespace transport
 
         // get reference to front-of-stack node, and check whether it can service this request
         basic_node* n = this->node_stack.front();
-
 		    element* ele = nullptr;
 
-        // if successful, extract
         if((rval = n->pull_content(value, name, ele)))
 	        {
-            // cast element up to value_element; will throw an exception if this isn't possible
-		        value_element<double>* value = dynamic_cast< value_element<double>* >(ele);
+            // if successful, extract
+		        basic_value_element* value = dynamic_cast<basic_value_element*>(ele);
+            if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
             val = value->get_double();
+
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: read double value '" << name << "' = " << val << std::endl;
+		        #endif
 	        }
 
         return(rval);
@@ -1225,15 +1441,18 @@ namespace transport
 
         // get reference to front-of-stack node, and check whether it can service this request
         basic_node* n = this->node_stack.front();
-
 		    element* ele = nullptr;
 
-        // if successful, extract
         if((rval = n->pull_content(value, name, ele)))
 	        {
-            // cast element up to value_element; will throw an exception if this isn't possible
-		        value_element<bool>* value = dynamic_cast< value_element<bool>* >(ele);
+            // if successful, extract
+		        basic_value_element* value = dynamic_cast< basic_value_element* >(ele);
+            if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
             val = value->get_bool();
+
+		        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: read bool value '" << name << "' = " << val << std::endl;
+		        #endif
 	        }
 
         return(rval);
@@ -1263,6 +1482,10 @@ namespace transport
 		    if(this->bookmarks.size() == 0)
 			    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_BOOKMARKS_EMPTY);
 
+		    #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::cerr << std::endl << "JSON: RESETTING STACK TO TOP BOOKMARK" << std::endl << std::endl;
+		    #endif
+
         // empty stack, and push the last bookmark back to it
         this->node_stack.clear();
 
@@ -1287,6 +1510,11 @@ namespace transport
 	            {
                 basic_node* bk_mk = this->bookmarks.front();
                 bk_mk->set_unread();
+
+								#ifdef __CPP_TRANSPORT_JSON_DEBUG
+                std::cerr << std::endl << "JSON: RESETTING READ COUNT FROM LAST BOOKMARK" << std::endl << std::endl;
+								#endif
+
                 break;
 	            }
 
@@ -1294,6 +1522,11 @@ namespace transport
 	            {
                 basic_node* n = this->node_stack.front();
                 n->set_unread();
+
+								#ifdef __CPP_TRANSPORT_JSON_DEBUG
+                std::cerr << std::endl << "JSON: RESETTING READ COUNT FROM TOP-OF-STACK" << std::endl << std::endl;
+								#endif
+
                 break;
 	            }
 

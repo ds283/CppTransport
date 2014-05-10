@@ -22,6 +22,9 @@
 #include "transport-runtime-api/unqlite/unqlite_data.h"
 
 
+//#define __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+
+
 extern "C"
 {
 #include "unqlite/unqlite.h"
@@ -93,13 +96,13 @@ namespace transport
 
     void unqlite_serialization_writer::start_node(const std::string& name, bool empty)
 	    {
-				this->stack.push_start_node(name, empty);
+        this->stack.push_start_node(name, empty);
 	    }
 
 
     void unqlite_serialization_writer::start_array(const std::string& name, bool empty)
 	    {
-				this->stack.push_start_array(name, empty);
+        this->stack.push_start_array(name, empty);
 	    }
 
 
@@ -111,31 +114,31 @@ namespace transport
 
     void unqlite_serialization_writer::write_attribute(const std::string& name, const std::string& value)
 	    {
-				this->stack.write_attribute(name, value);
+        this->stack.write_attribute(name, value);
 	    }
 
 
     void unqlite_serialization_writer::write_value(const std::string& name, const std::string& value)
 	    {
-				this->stack.write_value(name, value);
+        this->stack.write_value(name, value);
 	    }
 
 
     void unqlite_serialization_writer::write_value(const std::string& name, unsigned value)
 	    {
-				this->stack.write_value(name, value);
+        this->stack.write_value(name, value);
 	    }
 
 
     void unqlite_serialization_writer::write_value(const std::string& name, double value)
 	    {
-				this->stack.write_value(name, value);
+        this->stack.write_value(name, value);
 	    }
 
 
     void unqlite_serialization_writer::write_value(const std::string& name, bool value)
 	    {
-				this->stack.write_value(name, value);
+        this->stack.write_value(name, value);
 	    }
 
 
@@ -189,8 +192,18 @@ namespace transport
 				//! exception if the node cannot be read.
 		    virtual unsigned int start_array(const std::string& name) override;
 
+				//! Start reading a new array element at the current level in the tree.
+				//! Returns the number of elments it contains, or throws an
+				//! exception if the top-of-stack node isn't an array, or there are no
+				//! more elements to be read.
+				virtual unsigned int start_array_element() override;
+
 		    //! End reading the current node or array
 		    virtual void end_element(const std::string& name) override;
+
+				//! End reading the current array element.
+				//! Throws an exception if the top-of-stack node isn't an array.
+				virtual void end_array_element() override;
 
 		    //! Read attributes from the current node
 		    virtual bool read_attribute(const std::string& name, std::string& value) override;
@@ -252,6 +265,10 @@ namespace transport
 				if(root == nullptr || !unqlite_value_is_json_object(root))
 					throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_UNQLITE_READER_NOT_JSON_OBJECT);
 
+		    #ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+        std::cerr << std::endl << "READER: Beginning to parse JSON object" << std::endl;
+		    #endif
+
 		    // walk through the JSON object, pushing elements on to the stack as we go
         std::function<int(unqlite_value*,unqlite_value*)> f = std::bind(&unqlite_serialization_reader::array_walker, this,
                                                                         std::placeholders::_1, std::placeholders::_2);
@@ -259,6 +276,10 @@ namespace transport
 
 		    // reset stack position to HEAD
 		    this->stack.pull_reset_head();
+
+		    #ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+        std::cerr << "READER: Finished parsing JSON object" << std::endl << std::endl;
+		    #endif
 	    }
 
 
@@ -276,21 +297,41 @@ namespace transport
 					{
 						// push this on the stack as a new node
 						unsigned int number = static_cast<unsigned int>(unqlite_array_count(value));
-						this->stack.push_start_node(key_name, number==0);
+				    this->stack.push_start_node(key_name, number == 0);
+
+						#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+				    std::cerr << "READER: Reading node '" << key_name << "'" << std::endl;
+						#endif
+
 				    std::function<int(unqlite_value*,unqlite_value*)> f = std::bind(&unqlite_serialization_reader::array_walker, this,
 				                                                                    std::placeholders::_1, std::placeholders::_2);
 				    unqlite_array_walk(value, &unqlite_serializable_array_walker, &f);
-						this->stack.push_end_element(key_name);
+
+						#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+				    std::cerr << "READER: Finished node '" << key_name << "'" << std::endl;
+						#endif
+
+				    this->stack.push_end_element(key_name);
 					}
 				else if(unqlite_value_is_json_array(value))
 					{
 						// push this on the stack as a new array
 						unsigned int number = static_cast<unsigned int>(unqlite_array_count(value));
-						this->stack.push_start_array(key_name, number==0);
+				    this->stack.push_start_array(key_name, number == 0);
+
+						#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+				    std::cerr << "READER: Reading array '" << key_name << "'" << std::endl;
+						#endif
+
 				    std::function<int(unqlite_value*,unqlite_value*)> f = std::bind(&unqlite_serialization_reader::array_walker, this,
 				                                                                    std::placeholders::_1, std::placeholders::_2);
 				    unqlite_array_walk(value, &unqlite_serializable_array_walker, &f);
-						this->stack.push_end_element(key_name);
+
+						#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+				    std::cerr << "READER: Finished array '" << key_name << "'" << std::endl;
+						#endif
+
+				    this->stack.push_end_element(key_name);
 					}
 				else
 					{
@@ -302,30 +343,56 @@ namespace transport
 							{
 								const char* vn = unqlite_value_to_string(value, nullptr);
 						    const std::string value_name(vn);
+
+								// erase tag from key value
 						    std::string untagged_name = key_name;
-								this->stack.write_attribute(untagged_name.erase(0,tag.length()), value_name);
+								untagged_name.erase(0, tag.length());
+
+								#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+						    std::cerr << "READER: Attribute '" << untagged_name << "' = '" << value_name << "'" << std::endl;
+								#endif
+
+						    this->stack.write_attribute(untagged_name, value_name);
 							}
 						else if(key_name != __CPP_TRANSPORT_UNQLITE_RECORD_ID)  // ignore unqlite's internal ID field
 							{
 								if(unqlite_value_is_bool(value))
 									{
+										#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+								    std::cerr << "READER: boolean '" << key_name << "' = " << static_cast<bool>(unqlite_value_to_bool(value)) << std::endl;
+										#endif
+
 								    this->stack.write_value(key_name, static_cast<bool>(unqlite_value_to_bool(value)));
 									}
 								else if(unqlite_value_is_int(value))
 									{
 										int number = unqlite_value_to_int(value);
 										if(number < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+
+										#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+								    std::cerr << "READER: unsigned int '" << key_name << "' = " << static_cast<unsigned int>(number) << std::endl;
+										#endif
+
 								    this->stack.write_value(key_name, static_cast<unsigned int>(number));
 									}
-								else if(unqlite_value_is_numeric(value))
+								else if(unqlite_value_is_float(value))
 									{
-										this->stack.write_value(key_name, unqlite_value_to_double(value));
+										#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+								    std::cerr << "READER: double '" << key_name << "' = " << unqlite_value_to_double(value) << std::endl;
+										#endif
+
+								    this->stack.write_value(key_name, unqlite_value_to_double(value));
 									}
 								else
 									{
-										const char* vn = unqlite_value_to_string(value, nullptr);
-										const std::string value_name(vn);
-										this->stack.write_value(key_name, value_name);
+										const char* vs = unqlite_value_to_string(value, nullptr);
+										const std::string value_string(vs);
+
+										#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+								    std::cerr << "READER: string '" << key_name << "' = '" << value_string << "'" << std::endl;
+										#endif
+
+								    this->stack.write_value(key_name, value_string);
 									}
 							}
 					}
@@ -364,10 +431,27 @@ namespace transport
 	    }
 
 
+		unsigned int unqlite_serialization_reader::start_array_element()
+			{
+				unsigned int num_elements;
+
+				if(!this->stack.pull_array_element(num_elements))
+					throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_UNQLITE_READ_ARRAY_ELT_FAIL);
+
+				return(num_elements);
+			}
+
+
     void unqlite_serialization_reader::end_element(const std::string& name)
 	    {
 				this->stack.pull_end_element(name);
 	    }
+
+
+		void unqlite_serialization_reader::end_array_element()
+			{
+				this->stack.pull_end_array_element();
+			}
 
 
     bool unqlite_serialization_reader::read_attribute(const std::string& name, std::string& value)
@@ -444,6 +528,7 @@ namespace transport
 
     void unqlite_serialization_reader::reset()
 	    {
+//		    assert(false);  // FIXME: disable this method until I work out how to handle restoration of stack elements
 				this->stack.pull_reset_head();
 	    }
 
@@ -462,49 +547,52 @@ namespace transport
 
 		void unqlite_serialization_reader::insert_node(const std::string& name, bool empty)
 			{
-				this->stack.push_start_node(name, empty);
+				#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
+		    std::cerr << "READER: Inserting node '" << name << "'" << std::endl;
+				#endif
+		    this->stack.push_start_node(name, empty, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_array(const std::string& name, bool empty)
 			{
-				this->stack.push_start_array(name, empty);
+		    this->stack.push_start_array(name, empty, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_end_element(const std::string& name)
 			{
-				this->stack.push_end_element(name);
+		    this->stack.push_end_element(name, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_attribute(const std::string& name, const std::string& value)
 			{
-				this->stack.write_attribute(name, value);
+		    this->stack.write_attribute(name, value, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_value(const std::string& name, const std::string& value)
 			{
-				this->stack.write_value(name, value);
+		    this->stack.write_value(name, value, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_value(const std::string& name, unsigned int value)
 			{
-				this->stack.write_value(name, value);
+		    this->stack.write_value(name, value, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_value(const std::string& name, double value)
 			{
-				this->stack.write_value(name, value);
+		    this->stack.write_value(name, value, true);
 			}
 
 
 		void unqlite_serialization_reader::insert_value(const std::string& name, bool value)
 			{
-				this->stack.write_value(name, value);
+		    this->stack.write_value(name, value, true);
 			}
 
 	}   // namespace transport

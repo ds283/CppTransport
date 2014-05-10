@@ -133,7 +133,7 @@ namespace transport
 						    std::vector< named_list::element<number> > temp;
 								for(unsigned int i = 0; i < parameters; i++)
 									{
-										reader->start_node(__CPP_TRANSPORT_NODE_PARAMETER);
+										reader->start_array_element();
 
 								    std::string param_name;
 										reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, param_name);
@@ -143,7 +143,7 @@ namespace transport
 
 										temp.push_back(named_list::element<number>(param_name, static_cast<number>(param_value)));
 
-										reader->end_element(__CPP_TRANSPORT_NODE_PARAMETER);
+										reader->end_array_element();
 									}
 
 								reader->end_element(__CPP_TRANSPORT_NODE_PRM_VALUES);
