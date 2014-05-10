@@ -217,7 +217,7 @@ namespace transport
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        // open containers for reading/writing
+        // open containers for reading (slave processes) or reading/writing (master process)
         int err;
 		    unsigned int m = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
@@ -235,7 +235,7 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        // ensure default collections are present within each conatiners
+        // ensure default collections are present within each containers
         unqlite_operations::ensure_collection(package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
         unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
         unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
@@ -860,7 +860,7 @@ namespace transport
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_DATABASE, sql_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_CREATED, boost::posix_time::to_simple_string(now));
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_LOCKED, false);
-		    task_reader->insert_node(__CPP_TRANSPORT_NODE_OUTPUT_NOTES, true);
+		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUT_NOTES, true);
 		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
 		    task_reader->insert_end_element(tag);
 
