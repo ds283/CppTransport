@@ -589,7 +589,7 @@ namespace transport
 
         if(this->empty)
 	        {
-            output << "'" << this->name << "': ";
+            output << "'" << this->name << "': {}";
 	        }
         else
 	        {
