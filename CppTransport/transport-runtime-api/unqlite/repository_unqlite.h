@@ -888,11 +888,11 @@ namespace transport
 		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 		    for(unsigned int i = 0; i < entries; i++)
 			    {
-				    reader->start_node("");  // name we supply doesn't matter; array elements have no name
+				    reader->start_array_element();
 				    unsigned int sn;
 				    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, sn);
 				    serial_numbers.push_back(sn);
-				    reader->end_element("");
+				    reader->end_array_element();
 			    }
 				reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
