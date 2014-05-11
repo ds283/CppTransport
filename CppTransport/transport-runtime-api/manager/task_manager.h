@@ -435,15 +435,15 @@ namespace transport
     template <typename number>
     void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m)
       {
-        // set up a work queue representing our workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
+        // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
 
         work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
 
-        // create new output record in the repository XML database, and set up
+        // create new output record in the repository database, and set up
         // paths to the integration SQL database
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 
@@ -469,15 +469,15 @@ namespace transport
     template <typename number>
     void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m)
       {
-        // set up a work queue representing our workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
+        // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
 
         work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tk);
 
-        // create new output record in the repository XML database, and set up
+        // create new output record in the repository database, and set up
         // paths to the integration SQL database
         typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 

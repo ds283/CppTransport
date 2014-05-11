@@ -211,15 +211,15 @@ namespace transport
               {
                 if(err == UNQLITE_COMPILE_ERR)
                   {
-                    const char *zbuf;
+                    const char * buf;
                     int length;
 
                     // extract compile-time error log
-                    unqlite_config(db, UNQLITE_CONFIG_JX9_ERR_LOG, &zbuf, &length);
+                    unqlite_config(db, UNQLITE_CONFIG_JX9_ERR_LOG, &buf, &length);
 
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_UNQLITE_FAIL_COMPILE_LOG;
-                    if(length > 0) msg << " '" << zbuf << "'";
+                    if(length > 0) msg << " '" << buf << "'";
                     throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
                   }
                 else
@@ -328,12 +328,13 @@ namespace transport
                 << "if ( !$rc )" << std::endl
                 << "  {" << std::endl
                 << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\", db_errlog();" << std::endl
-                << "  }" << std::endl
-                << "$rc = db_commit();" << std::endl
-                << "if ( !$rc )" << std::endl
-                << "  {" << std::endl
-                << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'$rc')\", db_errlog();" << std::endl
                 << "  }" << std::endl;
+// FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
+//                << "$rc = db_commit();" << std::endl
+//                << "if ( !$rc )" << std::endl
+//                << "  {" << std::endl
+//                << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'$rc')\", db_errlog();" << std::endl
+//                << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
           }
@@ -350,22 +351,25 @@ namespace transport
 		        std::ostringstream jx9;
 
 						// drop the specified record from the database
-				    // FIXME: consider removing PRECOMMIT phase, if it turns out not to be required by UnQLite
-				    jx9 << "$rc = db_commit();" << std::endl
-					      << "if ( !$rc )" << std::endl
-					      << "  {" << std::endl
-					      << "    print \"" << __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
-					      << "  }" << std::endl
-		            << "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");" << std::endl
+				    jx9 <<
+// FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
+//					         "$rc = db_commit();" << std::endl
+//					      << "if ( !$rc )" << std::endl
+//					      << "  {" << std::endl
+//					      << "    print \"" << __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+//					      << "  }" << std::endl
+//	              <<
+			             "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");" << std::endl
 					      << "if ( !$rc )" << std::endl
 					      << "  {" << std::endl
 					      << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
-		            << "  }" << std::endl
-			          << "$rc = db_commit();" << std::endl
-			          << "if ( !$rc )" << std::endl
-						    << "  {" << std::endl
-						    << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
-			          << "  }" << std::endl;
+		            << "  }" << std::endl;
+// FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
+//			          << "$rc = db_commit();" << std::endl
+//			          << "if ( !$rc )" << std::endl
+//						    << "  {" << std::endl
+//						    << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+//			          << "  }" << std::endl;
 
 				    exec_jx9(db, jx9.str());
 			    }
