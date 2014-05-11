@@ -184,8 +184,6 @@ namespace transport
 								reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
 								reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spacing);
 
-						    std::cerr << "Range group read spacing = " << spacing << std::endl;
-
 						    typename transport::range<value>::spacing_type type = transport::range<value>::linear;
 
 								if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) type = transport::range<value>::linear;

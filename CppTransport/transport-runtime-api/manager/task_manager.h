@@ -684,7 +684,6 @@ namespace transport
 
         try
           {
-            std::cerr << "Slave process " << this->get_rank() << " opening repository " << repo_path << std::endl;
             this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly);
           }
         catch (runtime_exception& xe)

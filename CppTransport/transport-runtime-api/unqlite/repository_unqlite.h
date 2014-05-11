@@ -446,16 +446,8 @@ namespace transport
 
 						bool match = false;
 
-						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key))
-							{
-						    match = true;
-						    std::cerr << "Found numeric match for key " << data->cmp << std::endl;
-							}
-						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr)))
-							{
-						    match = true;
-						    std::cerr << "Found string match for key '" << data->str_cmp << "'" << std::endl;
-							}
+						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key)) match = true;
+						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr))) match = true;
 
 						if(match)
 							{
@@ -471,9 +463,6 @@ namespace transport
 							    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
 
 						    data->id = unqlite_value_to_int(id);
-
-						    std::cerr << "Extracted document from JSON array (id=" << data->id << ")" << std::endl
-						              << data->reader->get_contents() << std::endl << std::endl;
 							}
 
 						return(UNQLITE_OK);
@@ -867,16 +856,11 @@ namespace transport
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
-        std::cerr << "REPOSITORY: New task record contents:" << std::endl
-	        << task_reader->get_contents() << std::endl << std::endl;
-
 		    // update the task entry for this database
 		    // that means: first, drop this existing record; then
         unqlite_operations::drop(this->integration_db, collection, task_id);
-        std::cerr << "REPOSITORY: Dropped old record" << std::endl;
 
         unqlite_operations::store(this->integration_db, collection, task_reader->get_contents());
-        std::cerr << "REPOSITORY: Stored new record" << std::endl;
 
 		    // create directories
         boost::filesystem::create_directories(this->root_path / output_path);

@@ -17,7 +17,7 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
-#define __CPP_TRANSPORT_PRINT_JX9_SCRIPTS
+//#define __CPP_TRANSPORT_PRINT_JX9_SCRIPTS
 
 
 extern "C"
@@ -30,7 +30,6 @@ extern "C"
 #define __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION   "twopf-tasks"
 #define __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION "threepf-tasks"
 
-#define __CPP_TRANSPORT_REPO_ENVIRONMENT_LEAF   "env"
 #define __CPP_TRANSPORT_REPO_CONTAINERS_LEAF    "containers"
 #define __CPP_TRANSPORT_REPO_INTOUTPUT_LEAF     "output"
 #define __CPP_TRANSPORT_REPO_LOGDIR_LEAF        "logs"
@@ -53,8 +52,6 @@ extern "C"
 #define __CPP_TRANSPORT_NODE_PKGDATA_EDITED     "last-edit-time"
 #define __CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI "runtime-api-version"
 
-#define __CPP_TRANSPORT_NODE_TWOPF_ROOT         "twopf-specification"
-#define __CPP_TRANSPORT_NODE_THREEPF_ROOT       "threepf-specification"
 #define __CPP_TRANSPORT_NODE_INTGRTN_TASK       "integration-task"
 #define __CPP_TRANSPORT_NODE_INTGRTN_DATA       "integration-data"
 #define __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT     "integration-output"
@@ -65,7 +62,6 @@ extern "C"
 #define __CPP_TRANSPORT_NODE_INTDATA_EDITED     "last-edit-time"
 #define __CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI "runtime-api-version"
 
-#define __CPP_TRANSPORT_NODE_INTOUTPUT_GROUP    "output-group"
 #define __CPP_TRANSPORT_NODE_OUTPUT_ID          "serial-number"
 #define __CPP_TRANSPORT_NODE_OUTPUT_PATH        "output-path"
 #define __CPP_TRANSPORT_NODE_OUTPUT_DATABASE    "database-path"
@@ -73,12 +69,6 @@ extern "C"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LOCKED      "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUT_NOTES       "notes"
 #define __CPP_TRANSPORT_NODE_OUTPUT_BACKEND     "backend"
-
-#define __CPP_TRANSPORT_VALUE_TRUE              "true"
-#define __CPP_TRANSPORT_VALUE_FALSE             "false"
-
-
-#define __CPP_TRANSPORT_UPDATE_ALIAS            "updatectr"
 
 
 namespace transport
