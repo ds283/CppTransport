@@ -223,7 +223,6 @@ namespace transport
 			}   // unnamed namespace
 
 
-
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj)
       {

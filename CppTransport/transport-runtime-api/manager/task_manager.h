@@ -55,6 +55,7 @@ namespace transport
     class task_manager : public instance_manager<number>
       {
       public:
+
         typedef enum { job_task } job_type;
 
 
@@ -69,6 +70,7 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
+
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
         task_manager(int argc, char* argv[], unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
 
@@ -82,27 +84,23 @@ namespace transport
         // INTERFACE -- REPOSITORY MANAGEMENT
 
       public:
-        //! Write a model/initial conditions/parameters combination (a 'package') to the repository
-        void write_package(const initial_conditions<number>& ics, const model<number>* m);
 
-        //! Write a twopf integration task to the repository
-        void write_integration(const twopf_task<number>& t, const model<number>* m);
-
-        //! Write a threepf integration task to the repository
-        void write_integration(const threepf_task<number>& t, const model<number>* m);
+		    //! Return handle to repository
+		    repository<number>* get_repository();
 
 
         // INTERFACE -- MASTER-SLAVE API
 
       public:
+
         //! Query whether we are the master process
         bool is_master(void) const { return(this->world.rank() == MPI::RANK_MASTER); }
 
         //! Return MPI rank of this process
         unsigned int get_rank(void) const { return(this->world.rank()); }
 
-	    //! Get worker number
-	    unsigned int worker_number() { return(this->world.rank()-1); }
+		    //! Get worker number
+		    unsigned int worker_number() { return(this->world.rank()-1); }
 
         //! If we are the master process, execute any queued tasks
         void execute_tasks(void);
@@ -111,6 +109,7 @@ namespace transport
         void wait_for_tasks(void);
 
       protected:
+
         //! Master node: Process a 'task' job -- tasks are integrations, so this dispatches to the appropriate integrator
         void master_process_task(const job_descriptor& job);
 
@@ -161,6 +160,7 @@ namespace transport
         // MPI utility functions
 
       protected:
+
         //! Map worker number to communicator rank
         constexpr unsigned int worker_rank(unsigned int worker_number) { return(worker_number+1); }
 
@@ -171,6 +171,7 @@ namespace transport
         // INTERFACE -- ERROR REPORTING
 
       public:
+
         //! Report an error
         void error(const std::string& msg) { std::cout << msg << std::endl; }
 
@@ -180,6 +181,7 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+
         //! BOOST::MPI environment
         boost::mpi::environment environment;
         //! BOOST::MPI world communicator
@@ -290,48 +292,15 @@ namespace transport
     // REPOSITORY INTERFACE
 
 
-    template <typename number>
-    void task_manager<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
-      {
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
+		template <typename number>
+		repository<number>* task_manager<number>::get_repository()
+			{
+				assert(this->repo != nullptr);
 
-        assert(this->repo != nullptr);
+				if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
 
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
-
-        this->repo->write_package(ics, m);
-      }
-
-
-    template <typename number>
-    void task_manager<number>::write_integration(const twopf_task<number>& t, const model<number>* m)
-      {
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
-
-        assert(this->repo != nullptr);
-        assert(m != nullptr);
-
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
-        if(m          == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
-
-        this->repo->write_integration(t, m);
-      }
-
-
-    template <typename number>
-    void task_manager<number>::write_integration(const threepf_task<number>& t, const model<number>* m)
-      {
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_REPO_WRITE_SLAVE);
-
-        assert(this->repo != nullptr);
-        assert(m != nullptr);
-
-        if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
-        if(m          == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
-
-        this->repo->write_integration(t, m);
-      }
-
+				return(this->repo);
+			}
 
     // MASTER FUNCTIONS
 
@@ -444,7 +413,7 @@ namespace transport
         work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
 
         // create new output record in the repository database, and set up
-        // paths to the integration SQL database
+        // paths to the integration database
         typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 
         // create the data container
@@ -478,7 +447,7 @@ namespace transport
         work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tk);
 
         // create new output record in the repository database, and set up
-        // paths to the integration SQL database
+        // paths to the integration database
         typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 
         // create the data container

@@ -47,6 +47,7 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
+
         //! Create a data_manager_sqlite3 instance
         data_manager_sqlite3(unsigned int cp)
           : data_manager<number>(cp), temporary_container_serial(0)
@@ -60,13 +61,15 @@ namespace transport
         // INTERFACE -- CONTAINER HANDLING
 
       public:
-        //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
+
+        //! Create a new container associated with an integration_writer object.
+        //! Never overwrites existing data; if the container already exists, an exception is thrown
         void create_container(typename repository<number>::integration_writer& ctr);
 
-        //! Open an existing container
-        void open_container(typename repository<number>::integration_writer& ctr);
+//        //! Open an existing container
+//        void open_container(typename repository<number>::integration_writer& ctr);
 
-        //! Close an open container
+        //! Close an open container associated with an integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to write using an integration_writer will lead to unsubtle errors.
@@ -185,12 +188,12 @@ namespace transport
       }
 
 
-    // Open an existing container
-    template <typename number>
-    void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_writer& ctr)
-      {
-        this->backend_open_container(ctr);
-      }
+//    // Open an existing container
+//    template <typename number>
+//    void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_writer& ctr)
+//      {
+//        this->backend_open_container(ctr);
+//      }
 
 
     // Backend create/open container

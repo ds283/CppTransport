@@ -86,8 +86,8 @@ int main(int argc, char* argv[])
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("dquad.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
 
     // write each initial conditions/parameter specification and integration specification into the model repository
-    mgr->write_integration(tk2, model);
-    mgr->write_integration(tk3, model);
+    repo->write_integration(tk2, model);
+    repo->write_integration(tk3, model);
 
     std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_package_document(ics.get_name());
     std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;

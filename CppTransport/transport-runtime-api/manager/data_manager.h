@@ -401,7 +401,8 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
-        //! Create a data_manager instance
+
+        //! Create a data_manager instance with a nominated capacity per batcher
         data_manager(unsigned int cp)
           : capacity(cp)
           {
@@ -416,19 +417,22 @@ namespace transport
         // INTERFACE -- WRITE CONTAINER HANDLING
 
       public:
-        //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
+
+        //! Create a new container associated with an integration_writer object.
+        //! Never overwrites existing data; if the container already exists, an exception is thrown
         virtual void create_container(typename repository<number>::integration_writer& ctr) = 0;
 
-        //! Open an existing container
-        virtual void open_container(typename repository<number>::integration_writer& ctr) = 0;
+//        //! Open an existing container
+//        virtual void open_container(typename repository<number>::integration_writer& ctr) = 0;
 
-        //! Close an open container
+        //! Close an open container associated with an integration_writer
         virtual void close_container(typename repository<number>::integration_writer& ctr) = 0;
 
 
-        // INTERFACE -- WRITE INDEX TABLES FOR A CONTAIER
+        // INTERFACE -- WRITE INDEX TABLES FOR A CONTAINER
 
       public:
+
         //! Create tables needed for a twopf container
         virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
                                    unsigned int Nfields) = 0;
@@ -441,6 +445,7 @@ namespace transport
         // INTERFACE -- TASK FILES FOR A CONTAINER
 
       public:
+
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
         virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue) = 0;
 
@@ -454,6 +459,7 @@ namespace transport
         // INTERFACE -- TEMPORARY CONTAINERS
 
       public:
+
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                           unsigned int worker, unsigned int Nfields,
@@ -478,6 +484,7 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+
         //! Maximum memory available to each worker process
         unsigned int capacity;
       };

@@ -128,7 +128,7 @@ namespace transport
       public:
 
 		    //! Enumerate the output available from a named task
-        virtual typename repository<number>::task_descriptor enumerate_task(const std::string& name) override;
+        virtual std::list<typename repository<number>::output_group> enumerate_task_output(const std::string& name) override;
 
 
         // INTERNAL UTILITY FUNCTIONS
@@ -161,6 +161,10 @@ namespace transport
 
         //! Allocate a new serial number based on the list of used serial numbers from an output record
         unsigned int allocate_new_serial_number(unqlite_serialization_reader* reader);
+
+		    //! Extract an output-group data block.
+		    //! The supplied unqlite_serialization_reader should point to an unread output-group JSON object.
+		    typename repository<number>::output_group extract_output_group_data(unqlite_serialization_reader* reader);
 
 
         // INTERNAL DATA
@@ -1004,6 +1008,85 @@ namespace transport
 
         return(serial_number);
 	    }
+
+
+		// Enumerate the output groups associated with some named task.
+		// The output group descriptors returned by this function can be used to set up
+		// integration_reader objects, which allow the corresponding integration output
+		// to be extracted from the database
+		template <typename number>
+		std::list<typename repository<number>::output_group> repository_unqlite<number>::enumerate_task_output(const std::string& name)
+			{
+		    std::list<typename repository<number>::output_group> group_list;
+
+				// open a new transaction, if necessary. After this we can assume the database handles are live
+				this->begin_transaction();
+
+				// get a serialization_reader for the named task record
+				int task_id = 0;
+				task_record_type type;
+				unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
+
+				// move the serialization reader to the output-group block
+				unsigned int num_groups = task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+
+				for(unsigned int i = 0; i < num_groups; i++)
+					{
+						task_reader->start_array_element();
+						typename repository<number>::output_group group_data = this->extract_output_group_data(task_reader);
+						group_list.push_back(group_data);
+						task_reader->end_array_element();
+					}
+
+				task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+
+				// commit transaction
+				this->commit_transaction();
+
+				delete task_reader;
+
+				return(group_list);
+			}
+
+
+		// Extract an output-group data block from a task record.
+		template <typename number>
+		typename repository<number>::output_group repository_unqlite<number>::extract_output_group_data(unqlite_serialization_reader* reader)
+			{
+				// extract data about the group
+				unsigned int serial_number;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, serial_number);
+
+		    std::string backend;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_BACKEND, backend);
+
+		    std::string data_root;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_PATH, data_root);
+
+		    std::string data_container;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_DATABASE, data_container);
+
+		    std::string creation_time;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_CREATED, creation_time);
+
+				bool locked;
+			  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LOCKED, locked);
+
+		    std::list<std::string> notes;
+				unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+				for(unsigned int i = 0; i < num_notes; i++)
+					{
+				    std::string note;
+						reader->start_array_element();
+						reader->read_value(__CPP_TRANSPORT_NODE_NOTE, note);
+						notes.push_back(note);
+						reader->end_array_element();
+					}
+				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+
+				return typename repository<number>::output_group(serial_number, backend, data_root, data_container,
+																												 creation_time, locked, notes);
+			}
 
 
     // FACTORY FUNCTIONS TO BUILD A REPOSITORY

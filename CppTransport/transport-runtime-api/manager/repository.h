@@ -8,6 +8,7 @@
 #define __repository_H_
 
 
+#include <iostream>
 #include <string>
 
 #include "transport-runtime-api/manager/instance_manager.h"
@@ -55,17 +56,22 @@ namespace transport
 		    //! Read-only/Read-write access to the repository
 		    typedef enum { readonly, readwrite } access_type;
 
-        //! Integration container object: forms a handle for a data container when writing the output of an integration
+
+		    // DATA CONTAINER WRITE HANDLE
+
+        //! Integration container writer: forms a handle for a data container when writing the output of an integration
 
         class integration_writer
           {
 
           public:
 
-            //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
+            //! Construct an integration container object.
+            //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
+		        //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
-                                  const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                  const boost::filesystem::path& temp, unsigned int n, unsigned int w)
+                               const boost::filesystem::path& log, const boost::filesystem::path& task,
+                               const boost::filesystem::path& temp, unsigned int n, unsigned int w)
               : path_to_directory(dir), path_to_data_container(data),
                 path_to_log_directory(log), path_to_taskfile(task),
                 path_to_temp_directory(temp),
@@ -99,6 +105,7 @@ namespace transport
             //! Destroy an integration container object
             ~integration_writer()
               {
+		            // remove logging objects
                 boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
                 core->remove_sink(this->log_sink);
@@ -153,7 +160,11 @@ namespace transport
             //! Return path to directory for temporary files
             const boost::filesystem::path& temporary_files_path() { return(this->path_to_temp_directory); }
 
+
+		        // INTERNAL DATA
+
           private:
+
             const boost::filesystem::path path_to_directory;
 
             const boost::filesystem::path path_to_data_container;
@@ -174,89 +185,112 @@ namespace transport
             boost::shared_ptr< sink_t > log_sink;
           };
 
-		    //! Output group descriptor. Used to enumerate the output groups available for a particular task
 
-		    class output_group
+        // OUTPUT GROUPS
+
+        //! Output group descriptor. Used to enumerate the output groups available for a particular task
+        class output_group
+	        {
+
+          public:
+
+            //! Create an output_group descriptor
+            output_group(unsigned int sn, const std::string& be, const std::string& path, const std::string& ctr,
+                         const std::string& ctime, bool lock, const std::list<std::string>& nt)
+	            : serial(sn), backend(be), output_path(path), database_path(ctr),
+	              created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt)
+	            {
+	            }
+
+            //! Destroy an output_group descriptor
+            ~output_group() = default;
+
+		        //! Write self to output stream
+		        void write(std::ostream& out) const
+			        {
+		            out << __CPP_TRANSPORT_OUTPUT_GROUP_SERIAL << " = " << this->serial
+			            << " (" << __CPP_TRANSPORT_OUTPUT_GROUP_BACKEND << " '" << this->backend << "'";
+		            if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
+		            out << ")" << std::endl;
+		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_ROOT << " = " << this->output_path << std::endl;
+		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA << " = " << this->database_path << std::endl;
+		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
+
+		            unsigned int count = 0;
+		            for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+			            {
+		                out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
+		                out << "    " << *t << std::endl;
+		                count++;
+			            }
+			        }
+
+            // INTERFACE
+
+          public:
+
+            //! Get name of backend used to generate this output group
+            const std::string& get_backend() { return(this->backend); }
+
+            //! Get creation time
+            const boost::posix_time::ptime& get_creation_time() { return(this->created); }
+
+            //! Get locked flag
+            bool get_lock_status() { return(this->locked); }
+
+            //! Get notes
+            const std::list<std::string>& get_notes() { return(this->notes); }
+
+            // PRIVATE DATA
+
+          private:
+
+            //! Internal serial number. Not user-visible.
+            unsigned int serial;
+
+            //! Name of integration backend used to generate this output group
+            std::string backend;
+
+            //! Path of parent directory containing the output, usually residing within the repository
+            boost::filesystem::path output_path;
+
+            //! Path to output database
+            boost::filesystem::path database_path;
+
+            //! Creation time
+            boost::posix_time::ptime created;
+
+            //! Flag indicating whether or not this output group is locked
+            bool locked;
+
+            //! Array of strings representing notes attached to this group
+            std::list<std::string> notes;
+	        };
+
+
+		    // DATA CONTAINER READ HANDLE
+
+		    //! Integration container reader: forms a handle for a data container when reading the an integration from the database
+
+		    class integration_reader
 			    {
 
 		      public:
 
-				    //! Create an output_group descriptor
-				    output_group(unsigned int sn, const std::string& be, const std::string& path, const std::string& ctime,
-				                 bool lock, const std::list<std::string>& nt)
-		          : serial(sn), backend(be), output_path(path),
-		            created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt)
+				    //! Construct an integration reader object.
+				    //! After creation, the data container is not yet open; that must be done later
+				    //! by the task_manager which can depute a data_manager object of its choice to do the work.
+				    integration_reader(const output_group& og)
+				      : group(og)
 					    {
 					    }
 
-				    //! Destroy an output_group descriptor
-				    ~output_group() = default;
 
-			      // INTERFACE
-
-		      public:
-
-			      //! Get name of backend used to generate this output group
-				    const std::string& get_backend() { return(this->backend); }
-
-						//! Get creation time
-				    const boost::posix_time::ptime& get_creation_time() { return(this->created); }
-
-						//! Get locked flag
-				    bool get_lock_status() { return(this->locked); }
-
-				    //! Get notes
-				    const std::list<std::string>& get_notes() { return(this->notes); }
-
-			      // PRIVATE DATA
+				    // INTERNAL DATA
 
 		      private:
 
-				    //! Internal serial number. Not user-visible.
-				    unsigned int serial;
-
-				    //! Name of integration backend used to generate this output group
-				    std::string backend;
-
-				    //! Path of parent directory containing the output, usually residing within the repository
-				    boost::filesystem::path output_path;
-
-				    //! Path to output database
-				    boost::filesystem::path database_path;
-
-				    //! Creation time
-				    boost::posix_time::ptime created;
-
-				    //! Flag indicating whether or not this output group is locked
-				    bool locked;
-
-				    //! Array of strings representing notes attached to this group
-				    std::list<std::string> notes;
-			    };
-
-		    //! Task descriptor
-
-		    class task_descriptor
-			    {
-
-		      private:
-
-				    //! time sample range
-				    range<double> tsample;
-
-
-
-						//! Does this task contain background data?
-				    bool contains_bg_data;
-
-				    //! Does this task contain twopf data?
-				    bool contains_twopf_data;
-
-				    //! Does this task contain threepf data?
-				    bool contains_threepf_data;
-
-				    //! List of output groups associated with this task
-				    std::list<output_group> groups;
+				    output_group& group;
 
 			    };
 
@@ -329,8 +363,8 @@ namespace transport
 
       public:
 
-		    //! Enumerate the output available from a named task
-				virtual task_descriptor enumerate_task(const std::string& name) = 0;
+		    //! Enumerate the output groups available from a named task
+				virtual std::list<output_group> enumerate_task_output(const std::string& name) = 0;
 
 
 				// PRIVATE DATA
@@ -344,6 +378,15 @@ namespace transport
         const boost::filesystem::path root_path;
 
 	    };
+
+
+    // output an output_group descriptor to a standard stream
+		template <typename number>
+    std::ostream& operator<<(std::ostream& out, const typename repository<number>::output_group& group)
+	    {
+		    group.write(out);
+        return(out);
+	    }
 
 
   }   // namespace transport

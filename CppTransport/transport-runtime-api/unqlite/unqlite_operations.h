@@ -68,6 +68,7 @@ extern "C"
 #define __CPP_TRANSPORT_NODE_OUTPUT_CREATED     "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LOCKED      "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUT_NOTES       "notes"
+#define __CPP_TRANSPORT_NODE_NOTE               "note"
 #define __CPP_TRANSPORT_NODE_OUTPUT_BACKEND     "backend"
 
 
