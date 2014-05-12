@@ -88,6 +88,9 @@ namespace transport
 		    //! Return handle to repository
 		    repository<number>* get_repository();
 
+		    //! Return handle to data manager
+		    data_manager<number>* get_data_manager();
+
 
         // INTERFACE -- MASTER-SLAVE API
 
@@ -301,6 +304,18 @@ namespace transport
 
 				return(this->repo);
 			}
+
+
+		template <typename number>
+		data_manager<number>* task_manager<number>::get_data_manager()
+			{
+				assert(this->data_mgr != nullptr);
+
+				if(this->data_mgr == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NOT_SET);
+
+				return(this->data_mgr);
+			}
+
 
     // MASTER FUNCTIONS
 
