@@ -1045,6 +1045,11 @@ namespace transport
 
 				delete task_reader;
 
+				// sort the output groups into descending order of creation date, so the first element in the
+				// list is the most recent data group.
+				// This is usually what would be required.
+				group_list.sort(&output_group_helper::comparator<number>);
+
 				return(group_list);
 			}
 

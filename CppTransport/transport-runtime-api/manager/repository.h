@@ -230,16 +230,16 @@ namespace transport
           public:
 
             //! Get name of backend used to generate this output group
-            const std::string& get_backend() { return(this->backend); }
+            const std::string& get_backend() const { return(this->backend); }
 
             //! Get creation time
-            const boost::posix_time::ptime& get_creation_time() { return(this->created); }
+            const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
             //! Get locked flag
-            bool get_lock_status() { return(this->locked); }
+            bool get_lock_status() const { return(this->locked); }
 
             //! Get notes
-            const std::list<std::string>& get_notes() { return(this->notes); }
+            const std::list<std::string>& get_notes() const { return(this->notes); }
 
             // PRIVATE DATA
 
@@ -387,6 +387,18 @@ namespace transport
 		    group.write(out);
         return(out);
 	    }
+
+
+		namespace output_group_helper
+			{
+
+				template <typename number>
+				bool comparator(const typename repository<number>::output_group& A, const typename repository<number>::output_group& B)
+					{
+						return(A.get_creation_time() > B.get_creation_time());
+					}
+
+			}
 
 
   }   // namespace transport
