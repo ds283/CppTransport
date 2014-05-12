@@ -417,24 +417,24 @@ namespace transport
 
       public:
         //! Create a new container. Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_container(typename repository<number>::integration_container& ctr) = 0;
+        virtual void create_container(typename repository<number>::integration_writer& ctr) = 0;
 
         //! Open an existing container
-        virtual void open_container(typename repository<number>::integration_container& ctr) = 0;
+        virtual void open_container(typename repository<number>::integration_writer& ctr) = 0;
 
         //! Close an open container
-        virtual void close_container(typename repository<number>::integration_container& ctr) = 0;
+        virtual void close_container(typename repository<number>::integration_writer& ctr) = 0;
 
 
         // INTERFACE -- WRITE INDEX TABLES FOR A CONTAIER
 
       public:
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_container& ctr, twopf_task<number>* tk,
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
                                    unsigned int Nfields) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_container& ctr, threepf_task<number>* tk,
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk,
                                    unsigned int Nfields) = 0;
 
 
@@ -442,10 +442,10 @@ namespace transport
 
       public:
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<twopf_kconfig>& queue) = 0;
+        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue) = 0;
 
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_container& ctr, const work_queue<threepf_kconfig>& queue) = 0;
+        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue) = 0;
 
         //! Read a list of task assignments for a particular worker
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;
@@ -467,11 +467,11 @@ namespace transport
                                                               boost::timer::cpu_timer& integration_timer) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_container& ctr,
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
                                            const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
 
         //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_container& ctr,
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
                                              const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
 
 

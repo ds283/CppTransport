@@ -127,7 +127,7 @@ namespace transport
         void master_push_repository(void);
 
         //! Master node: Pass new integration task to the workers
-        void master_task_to_workers(typename repository<number>::integration_container& ctr, task<number>* task_name, model<number>* m);
+        void master_task_to_workers(typename repository<number>::integration_writer& ctr, task<number>* task_name, model<number>* m);
 
         //! Slave node: Process a new task instruction
         void slave_process_task(const MPI::new_integration_payload& payload);
@@ -445,7 +445,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration SQL database
-        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 
         // create the data container
         this->data_mgr->create_container(ctr);
@@ -479,7 +479,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration SQL database
-        typename repository<number>::integration_container ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
 
         // create the data container
         this->data_mgr->create_container(ctr);
@@ -501,7 +501,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_task_to_workers(typename repository<number>::integration_container& ctr,
+    void task_manager<number>::master_task_to_workers(typename repository<number>::integration_writer& ctr,
                                                       task<number>* tk, model<number>* m)
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);

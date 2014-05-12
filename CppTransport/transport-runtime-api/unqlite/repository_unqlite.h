@@ -24,6 +24,9 @@
 #include "transport-runtime-api/unqlite/unqlite_serializable.h"
 #include "transport-runtime-api/unqlite/unqlite_operations.h"
 
+#include "boost/filesystem/operations.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
+
 
 extern "C"
 {
@@ -67,16 +70,16 @@ namespace transport
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        void write_package(const initial_conditions<number>& ics, const model<number>* m);
+        virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) override;
 
         //! Write a threepf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
-        void write_integration(const threepf_task<number>& t, const model<number>* m)
+        virtual void write_integration(const threepf_task<number>& t, const model<number>* m) override
           { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
 
         //! Write a twopf integration to the integration database.
         //! Delegates write_integration_task() to do the work.
-        void write_integration(const twopf_task<number>& t, const model<number>* m)
+        virtual void write_integration(const twopf_task<number>& t, const model<number>* m) override
           { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION); }
 
       protected:
@@ -91,7 +94,7 @@ namespace transport
       public:
 
         //! Query the database for a named task, and reconstruct it if present
-        task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder);
+        virtual task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder) override;
 
 
         // EXTRA FUNCTIONS, NOT DEFINED BY INTERFACE
@@ -110,16 +113,25 @@ namespace transport
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        typename repository<number>::integration_container integration_new_output(twopf_task<number>* tk,
-                                                                                  const std::string& backend, unsigned int worker);
+        virtual typename repository<number>::integration_writer integration_new_output(twopf_task<number>* tk,
+                                                                                          const std::string& backend, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        typename repository<number>::integration_container integration_new_output(threepf_task<number>* tk,
-                                                                                  const std::string& backend, unsigned int worker);
+        virtual typename repository<number>::integration_writer integration_new_output(threepf_task<number>* tk,
+                                                                                          const std::string& backend, unsigned int worker) override;
 
 
-		    // INTERNAL UTILITY FUNCTIONS
+		    // INTERFACE -- QUERY OUTPUT FROM A TASK (implements a 'repository' interface)
+
+
+      public:
+
+		    //! Enumerate the output available from a named task
+        virtual typename repository<number>::task_descriptor enumerate_task(const std::string& name) override;
+
+
+        // INTERNAL UTILITY FUNCTIONS
 
       protected:
 
@@ -145,7 +157,7 @@ namespace transport
 		    unqlite_serialization_reader* deserialize_package(const std::string& name, int& unqlite_id);
 
         //! Insert a record for a specified task, in a specified container.
-        typename repository<number>::integration_container insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk);
+        typename repository<number>::integration_writer insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk);
 
         //! Allocate a new serial number based on the list of used serial numbers from an output record
         unsigned int allocate_new_serial_number(unqlite_serialization_reader* reader);
@@ -826,7 +838,7 @@ namespace transport
 
     // Add output for a twopf task
     template <typename number>
-    typename repository<number>::integration_container
+    typename repository<number>::integration_writer
     repository_unqlite<number>::integration_new_output(twopf_task<number>* tk,
                                                        const std::string& backend, unsigned int worker)
       {
@@ -846,8 +858,8 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        // insert a new output record, and return the corresponding integration_container handle
-        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk);
+        // insert a new output record, and return the corresponding integration_writer handle
+        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk);
 
 		    // close database handles
         this->commit_transaction();
@@ -858,7 +870,7 @@ namespace transport
 
     // Add output for a threepf task
     template <typename number>
-    typename repository<number>::integration_container
+    typename repository<number>::integration_writer
     repository_unqlite<number>::integration_new_output(threepf_task<number>* tk,
                                                        const std::string& backend, unsigned int worker)
       {
@@ -878,8 +890,8 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        // insert a new output record, and return the corresponding integration_container handle
-        typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk);
+        // insert a new output record, and return the corresponding integration_writer handle
+        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk);
 
 		    // commit transaction
         this->commit_transaction();
@@ -892,7 +904,7 @@ namespace transport
 		// We are allowed to assume that the database handles are already open, and that the task exists
 		// in an appropriate collection
     template <typename number>
-    typename repository<number>::integration_container
+    typename repository<number>::integration_writer
     repository_unqlite<number>::insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk)
       {
         // get serialization_reader for the named task record
@@ -954,7 +966,7 @@ namespace transport
 
 		    delete task_reader;
 
-		    return typename repository<number>::integration_container(this->get_root_path()/output_path,
+		    return typename repository<number>::integration_writer(this->get_root_path()/output_path,
 		                                                              this->get_root_path()/sql_path,
 		                                                              this->get_root_path()/log_path,
 		                                                              this->get_root_path()/task_path,

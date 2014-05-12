@@ -675,7 +675,7 @@ namespace transport
 
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        void aggregate_backg(sqlite3* db, typename repository<number>::integration_container& ctr,
+        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr,
                              const std::string& temp_ctr, model<number>* m, task<number>* tk, gauge_xfm_type gauge_xfm)
           {
             char* errmsg;
@@ -796,7 +796,7 @@ namespace transport
 
         // Aggregate a twopf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_container& ctr,
+        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_writer& ctr,
                              const std::string& temp_ctr, twopf_value_type type)
           {
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
@@ -815,7 +815,7 @@ namespace transport
 
         // Aggregate a twopf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_container& ctr,
+        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_writer& ctr,
                                const std::string& temp_ctr)
           {
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating threepf values";

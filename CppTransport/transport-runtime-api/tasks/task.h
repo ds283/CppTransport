@@ -141,6 +141,7 @@ namespace transport
     class task: public serializable
       {
       public:
+
         typedef std::function<double(task<number>*)> kconfig_kstar;
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -194,6 +195,7 @@ namespace transport
         void serialize(serialization_writer& writer) const { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
 
       protected:
+
         //! Name of this task
         const std::string                name;
 
@@ -254,6 +256,7 @@ namespace transport
     class twopf_list_task: public task<number>
       {
       public:
+
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
           : comoving_normalization(0.0), normalization_set(false), task<number>(nm, i, t)
           {
@@ -265,7 +268,7 @@ namespace transport
 
         //! Set comoving wavenumber normalization constant
 
-        //! It is an error to try to set this twice, since it could lead to an inconsistent state.
+        //! It is an error to try to set this twice, since it could lead to inconsistent results.
         //! If a second attempt is made to set the normalization, throws a RUNTIME_ERROR exception.
         void set_normalization(typename task<number>::kconfig_kstar kstar)
           {
@@ -326,6 +329,7 @@ namespace transport
         // INTERNAL DATA
 
       private:
+
         //! Normalization constant for comoving ks
         double comoving_normalization;
 
@@ -463,6 +467,7 @@ namespace transport
     class threepf_task: public twopf_list_task<number>
       {
       public:
+
         typedef enum { cubic_lattice, fergusson_liguori_shellard } wavenumber_grid_type;
 
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks

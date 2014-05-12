@@ -23,6 +23,7 @@
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
 
 
 // log file name
@@ -44,22 +45,25 @@ namespace transport
     template <typename number>
     class repository
       {
+
       public:
 
-        // Types needed for logging
+        //! Types needed for logging
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
-		    // Read-only/Read-write access to the repository
+		    //! Read-only/Read-write access to the repository
 		    typedef enum { readonly, readwrite } access_type;
 
-        // Integration container object: forms a handle for a data container when writing the output of an integration
+        //! Integration container object: forms a handle for a data container when writing the output of an integration
 
-        class integration_container
+        class integration_writer
           {
+
           public:
+
             //! Construct an integration container object. It is not associated with anything in the data_manager backend; that must be done later
-            integration_container(const boost::filesystem::path& dir, const boost::filesystem::path& data,
+            integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                   const boost::filesystem::path& log, const boost::filesystem::path& task,
                                   const boost::filesystem::path& temp, unsigned int n, unsigned int w)
               : path_to_directory(dir), path_to_data_container(data),
@@ -93,7 +97,7 @@ namespace transport
               }
 
             //! Destroy an integration container object
-            ~integration_container()
+            ~integration_writer()
               {
                 boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
@@ -170,6 +174,92 @@ namespace transport
             boost::shared_ptr< sink_t > log_sink;
           };
 
+		    //! Output group descriptor. Used to enumerate the output groups available for a particular task
+
+		    class output_group
+			    {
+
+		      public:
+
+				    //! Create an output_group descriptor
+				    output_group(unsigned int sn, const std::string& be, const std::string& path, const std::string& ctime,
+				                 bool lock, const std::list<std::string>& nt)
+		          : serial(sn), backend(be), output_path(path),
+		            created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt)
+					    {
+					    }
+
+				    //! Destroy an output_group descriptor
+				    ~output_group() = default;
+
+			      // INTERFACE
+
+		      public:
+
+			      //! Get name of backend used to generate this output group
+				    const std::string& get_backend() { return(this->backend); }
+
+						//! Get creation time
+				    const boost::posix_time::ptime& get_creation_time() { return(this->created); }
+
+						//! Get locked flag
+				    bool get_lock_status() { return(this->locked); }
+
+				    //! Get notes
+				    const std::list<std::string>& get_notes() { return(this->notes); }
+
+			      // PRIVATE DATA
+
+		      private:
+
+				    //! Internal serial number. Not user-visible.
+				    unsigned int serial;
+
+				    //! Name of integration backend used to generate this output group
+				    std::string backend;
+
+				    //! Path of parent directory containing the output, usually residing within the repository
+				    boost::filesystem::path output_path;
+
+				    //! Path to output database
+				    boost::filesystem::path database_path;
+
+				    //! Creation time
+				    boost::posix_time::ptime created;
+
+				    //! Flag indicating whether or not this output group is locked
+				    bool locked;
+
+				    //! Array of strings representing notes attached to this group
+				    std::list<std::string> notes;
+			    };
+
+		    //! Task descriptor
+
+		    class task_descriptor
+			    {
+
+		      private:
+
+				    //! time sample range
+				    range<double> tsample;
+
+
+
+						//! Does this task contain background data?
+				    bool contains_bg_data;
+
+				    //! Does this task contain twopf data?
+				    bool contains_twopf_data;
+
+				    //! Does this task contain threepf data?
+				    bool contains_threepf_data;
+
+				    //! List of output groups associated with this task
+				    std::list<output_group> groups;
+
+			    };
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -189,6 +279,8 @@ namespace transport
 
         // INTERFACE -- ADMIN DATA
 
+      public:
+
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() { return(this->root_path); };
 
@@ -197,6 +289,8 @@ namespace transport
 
 
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
+
+      public:
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
@@ -211,19 +305,33 @@ namespace transport
         // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
 
       public:
-        //! Query the database for a named task, and reconstruct it if present
+
+        //! Query the database for a named task, and reconstruct it (and a suitable model object
+		    //! which can process it) using the supplied model finder.
+		    //! If successful, a pointer to the task is returned and a pointer to the model object
+		    //! which can process it is written to the reference parameter m.
         virtual task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder) = 0;
 
 
         // INTERFACE -- ADD OUTPUT TO TASKS
 
       public:
+
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container
-        virtual integration_container integration_new_output(twopf_task<number>* tk,
+        virtual integration_writer integration_new_output(twopf_task<number>* tk,
                                                              const std::string& backend, unsigned int worker) = 0;
         //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
-        virtual integration_container integration_new_output(threepf_task<number>* tk,
+        virtual integration_writer integration_new_output(threepf_task<number>* tk,
                                                              const std::string& backend, unsigned int worker) = 0;
+
+
+		    // INTERFACE - QUERY FOR OUTPUT FROM A TASK
+
+      public:
+
+		    //! Enumerate the output available from a named task
+				virtual task_descriptor enumerate_task(const std::string& name) = 0;
+
 
 				// PRIVATE DATA
 
