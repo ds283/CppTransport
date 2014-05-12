@@ -60,15 +60,6 @@ namespace transport
         ~repository_unqlite();
 
 
-        // INTERFACE -- PATHS (implements a 'repository' interface)
-
-
-      public:
-
-        //! Get path to root of repository
-        const boost::filesystem::path& get_root_path() { return(this->root_path); }
-
-
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE (implements a 'repository' interface)
 
 
@@ -134,6 +125,17 @@ namespace transport
 
 		    typedef enum { twopf_task_record, threepf_task_record } task_record_type;
 
+		    //! Notionally begin a transaction on the database.
+		    //! Currently this is implemented by opening the database at the beginning of an 'atomic' transaction,
+		    //! and then closing it at the end.
+		    //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
+		    void begin_transaction();
+
+		    //! Notionally commit a transaction to the database.
+		    //! Currently this is implemented by closing the database at the end of an 'atomic' transaction.
+		    //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
+		    void commit_transaction();
+
 		    //! Convert a named database task into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
         unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type);
@@ -152,38 +154,37 @@ namespace transport
         // INTERNAL DATA
 
       private:
-        //! BOOST path to the repository root directory
-        boost::filesystem::path root_path;
 
         //! BOOST path to data containers (parent directory for the following containers)
         boost::filesystem::path containers_path;
         //! BOOST path to container for packages
         boost::filesystem::path packages_path;
         //! BOOST path to container for integrations
-        boost::filesystem::path integrations_path;
+        boost::filesystem::path tasks_path;
 
 
         // UNQLITE DATABASE HANDLES
 
 
       private:
+
         unqlite* package_db;
-        unqlite* integration_db;
+        unqlite* task_db;
+
+		    unsigned int open_clients;
 	    };
 
 
     // IMPLEMENTATION
 
 
-    // Open a named repository
+    // Create a repository object associated with a pathname
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode)
-      : package_db(nullptr), integration_db(nullptr)
+      : package_db(nullptr), task_db(nullptr), open_clients(0), repository<number>(path, mode)
       {
-        root_path = path;
-
         // supplied path should be a directory which exists
-        if(!boost::filesystem::is_directory(root_path))
+        if(!boost::filesystem::is_directory(path))
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_ROOT << " '" << path << "'";
@@ -191,7 +192,7 @@ namespace transport
           }
 
         // database containers should be present in an existing directory
-        containers_path = root_path / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
+        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
         if(!boost::filesystem::is_directory(containers_path))
           {
             std::ostringstream msg;
@@ -208,9 +209,9 @@ namespace transport
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        // integrations database should be present inside the container direcotry
-        integrations_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
-        if(!boost::filesystem::is_regular_file(integrations_path))
+        // integrations database should be present inside the container directory
+        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
+        if(!boost::filesystem::is_regular_file(tasks_path))
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_INTGRTNS << " '" << path << "'";
@@ -218,74 +219,83 @@ namespace transport
           }
 
         // open containers for reading (slave processes) or reading/writing (master process)
-        int err;
 		    unsigned int m = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
-        if((err = unqlite_open(&package_db, packages_path.c_str(), m)) != UNQLITE_OK)
+		    unqlite* pkg_db;
+		    unqlite* tk_db;
+
+        if(unqlite_open(&pkg_db, packages_path.c_str(), m) != UNQLITE_OK)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << packages_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        if((err = unqlite_open(&integration_db, integrations_path.c_str(), m)) != UNQLITE_OK)
+        if(unqlite_open(&tk_db, tasks_path.c_str(), m) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << integrations_path << "'";
+            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << tasks_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
         // ensure default collections are present within each containers
-        unqlite_operations::ensure_collection(package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
-        unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
-        unqlite_operations::ensure_collection(integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+        unqlite_operations::ensure_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+        unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
+        unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+
+		    // close repository until it is needed later
+		    unqlite_close(pkg_db);
+		    unqlite_close(tk_db);
       }
 
 
     // Create a named repository
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, const repository_creation_key& key)
-      : package_db(nullptr), integration_db(nullptr)
+      : package_db(nullptr), task_db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite)
       {
         // check whether root directory for the repository already exists -- it shouldn't
-        root_path = path;
-
-        if(boost::filesystem::exists(root_path))
+        if(boost::filesystem::exists(path))
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_ROOT_EXISTS << " '" << path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        containers_path = root_path / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
+        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
         packages_path = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
-        integrations_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
+        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
 
         // create directory structure
-        boost::filesystem::create_directories(root_path);
+        boost::filesystem::create_directories(this->get_root_path());
         boost::filesystem::create_directories(containers_path);
 
         // create containers
-        int err;
+        unqlite* pkg_db;
+        unqlite* tk_db;
 
-        if((err = unqlite_open(&package_db, packages_path.c_str(), UNQLITE_OPEN_CREATE)) != UNQLITE_OK)
+        if(unqlite_open(&pkg_db, packages_path.c_str(), UNQLITE_OPEN_CREATE) != UNQLITE_OK)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << packages_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        if((err = unqlite_open(&integration_db, integrations_path.c_str(), UNQLITE_OPEN_CREATE)) != UNQLITE_OK)
+        if(unqlite_open(&tk_db, tasks_path.c_str(), UNQLITE_OPEN_CREATE) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << integrations_path << "'";
+            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << tasks_path << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        // create default collection within each conatiners
-        unqlite_operations::create_collection(package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
-        unqlite_operations::create_collection(integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
-        unqlite_operations::create_collection(integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+        // create default collection within each containers
+        unqlite_operations::create_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+        unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
+        unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+
+        // close repository until it is needed later
+        unqlite_close(pkg_db);
+        unqlite_close(tk_db);
       }
 
 
@@ -293,34 +303,99 @@ namespace transport
     template <typename number>
     repository_unqlite<number>::~repository_unqlite()
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
-
-        unqlite_close(this->package_db);
-        unqlite_close(this->integration_db);
+		    // clean up open handles if they exist
+        if(this->package_db != nullptr) unqlite_close(this->package_db);
+        if(this->task_db != nullptr) unqlite_close(this->task_db);
       }
+
+
+		// Open database handles.
+		template <typename number>
+		void repository_unqlite<number>::begin_transaction()
+			{
+				// If open_clients > 0, then the handles should be open; otherwise, they should be closed
+				assert((this->open_clients > 0 && this->package_db != nullptr) || (this->open_clients == 0 && this->package_db == nullptr));
+				assert((this->open_clients > 0 && this->task_db != nullptr)    || (this->open_clients == 0 && this->task_db == nullptr));
+
+				if((this->open_clients == 0 && this->package_db != nullptr) ||
+					 (this->open_clients == 0 && this->task_db != nullptr))
+					throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_OPEN);
+
+				if((this->open_clients > 0 && this->package_db == nullptr) ||
+					 (this->open_clients > 0 && this->task_db == nullptr))
+					throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_CLOSED);
+
+				if(this->open_clients == 0)
+					{
+				    unsigned int m = (this->get_access_mode() == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
+
+				    if(unqlite_open(&(this->package_db), packages_path.c_str(), m) != UNQLITE_OK)
+					    {
+				        std::ostringstream msg;
+				        msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << this->packages_path << "'";
+				        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					    }
+
+				    if(unqlite_open(&(this->task_db), tasks_path.c_str(), m) != UNQLITE_OK)
+					    {
+				        std::ostringstream msg;
+				        msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << this->tasks_path << "'";
+				        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					    }
+
+				    // ensure default collections are present within each containers
+				    unqlite_operations::ensure_collection(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
+				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+					}
+
+				this->open_clients++;
+			}
+
+
+    // Close database handles
+    template <typename number>
+    void repository_unqlite<number>::commit_transaction()
+	    {
+		    // open_clients should be > 0 and the handles should be open
+		    assert(this->open_clients > 0);
+        assert(this->package_db != nullptr);
+        assert(this->task_db != nullptr);
+
+		    if(this->open_clients <= 0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_NOT_OPEN);
+
+        if(this->package_db == nullptr || this->task_db == nullptr)
+	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_CLOSED);
+
+		    this->open_clients--;
+
+		    if(this->open_clients == 0)
+			    {
+		        unqlite_close(this->package_db), this->package_db = nullptr;
+		        unqlite_close(this->task_db), this->task_db = nullptr;
+			    }
+	    }
 
 
     // Write a model/initial-conditions/parameters combination to the repository
     template <typename number>
     void repository_unqlite<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
-      {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
+	    {
         assert(m != nullptr);
 
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // check if a package with this name already exists
         unsigned int count = unqlite_operations::query_count(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, ics.get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
         if(count > 0)
-          {
+	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_PACKAGE_EXISTS << " '" << ics.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
+	        }
 
         // create an unqlite_serialization_writer, used to emit the serialized record to the database
         unqlite_serialization_writer writer;
@@ -354,38 +429,40 @@ namespace transport
 
         // insert this record in the package database
         unqlite_operations::store(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, writer.get_contents());
-      }
+
+        // commit transaction
+        this->commit_transaction();
+	    }
 
 
     // Write a task to the repository
     template <typename number>
     void repository_unqlite<number>::write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection)
-      {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
+	    {
         assert(m != nullptr);
 
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // check if an integration task with this name already exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
 
         if(twopf_count + threepf_count > 0)
-          {
+	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_INTGRTN_EXISTS << " '" << t.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
+	        }
 
         // check whether the specified initial_conditions object is already in the database; if not, insert it
         unsigned int count = unqlite_operations::query_count(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, t.get_ics().get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
         if(count == 0)
-          {
+	        {
             this->write_package(t.get_ics(), m);
-          }
+	        }
 
         // create an unqlite_serialization_writer, used to emit the serialized record to the database
         unqlite_serialization_writer writer;
@@ -416,131 +493,131 @@ namespace transport
         writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
         // insert this record in the task database
-        unqlite_operations::store(this->integration_db, collection, writer.get_contents());
-      }
+        unqlite_operations::store(this->task_db, collection, writer.get_contents());
+
+        // commit transaction
+        this->commit_transaction();
+	    }
 
 
-		namespace
-			{
+    namespace
+	    {
 
-				typedef struct
-					{
-						// input data
-						unsigned int cmp;
-						std::string str_cmp;
+        typedef struct
+	        {
+            // input data
+            unsigned int cmp;
+            std::string str_cmp;
 
-						// output data
-						int id;
-						unqlite_serialization_reader* reader;
-					} array_extraction_data;
-
-
-				// array_walk callback to extract n'th component of an array
-				int array_extract(unqlite_value* key, unqlite_value* value, void* handle)
-					{
-						assert(key != nullptr);
-						assert(value != nullptr);
-						assert(handle != nullptr);
-
-						array_extraction_data* data = static_cast<array_extraction_data*>(handle);
-
-						bool match = false;
-
-						if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key)) match = true;
-						if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr))) match = true;
-
-						if(match)
-							{
-								assert(data->reader == nullptr);
-
-						    // convert this JSON object to a serialization reader
-						    data->reader = new unqlite_serialization_reader(value);
-
-						    // extract internal UnQLite ID for this record
-						    unqlite_value* id = unqlite_array_fetch(value, __CPP_TRANSPORT_UNQLITE_RECORD_ID, -1);
-
-						    if(id == nullptr || !unqlite_value_is_int(id))
-							    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
-
-						    data->id = unqlite_value_to_int(id);
-							}
-
-						return(UNQLITE_OK);
-					}
-
-			}   // unnamed namespace
+            // output data
+            int id;
+            unqlite_serialization_reader* reader;
+	        } array_extraction_data;
 
 
-		// Query the database for a named task, returned as a serialization_reader
-		template <typename number>
-		unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type)
-			{
-		    assert(this->package_db != nullptr);
-		    assert(this->integration_db != nullptr);
+        // array_walk callback to extract n'th component of an array
+        int array_extract(unqlite_value* key, unqlite_value* value, void* handle)
+	        {
+            assert(key != nullptr);
+            assert(value != nullptr);
+            assert(handle != nullptr);
 
-		    if(this->package_db == nullptr || this->integration_db == nullptr)
-			    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+            array_extraction_data* data = static_cast<array_extraction_data*>(handle);
 
-		    // check if a suitable record exists
-		    unqlite_vm* vm_twopf   = nullptr;
-		    unqlite_vm* vm_threepf = nullptr;
+            bool match = false;
 
-		    unqlite_value* twopf_recs   = unqlite_operations::query(this->integration_db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-		    unqlite_value* threepf_recs = unqlite_operations::query(this->integration_db, vm_threepf, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+            if(unqlite_value_is_int(key) && data->cmp == unqlite_value_to_int(key)) match = true;
+            if(unqlite_value_is_string(key) && data->str_cmp == std::string(unqlite_value_to_string(key, nullptr))) match = true;
 
-		    if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
-			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+            if(match)
+	            {
+                assert(data->reader == nullptr);
 
-		    unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
-		    unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
+                // convert this JSON object to a serialization reader
+                data->reader = new unqlite_serialization_reader(value);
 
-		    if(twopf_count + threepf_count == 0)
-			    {
-		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
-		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-			    }
-		    else if(twopf_count + threepf_count > 1)
-			    {
-		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
-		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-			    }
+                // extract internal UnQLite ID for this record
+                unqlite_value* id = unqlite_array_fetch(value, __CPP_TRANSPORT_UNQLITE_RECORD_ID, -1);
 
-		    unqlite_value* recs = nullptr;
-				unqlite_vm*    vm   = nullptr;
+                if(id == nullptr || !unqlite_value_is_int(id))
+	                throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_NO_ID);
 
-		    if(twopf_count == 1) { recs = twopf_recs; vm = vm_twopf, type = twopf_task_record; }
-		    else                 { recs = threepf_recs; vm = vm_threepf, type = threepf_task_record; }
+                data->id = unqlite_value_to_int(id);
+	            }
 
-		    if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
-			    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL);
+            return(UNQLITE_OK);
+	        }
 
-				array_extraction_data data;
-				data.cmp     = 0;
-				data.str_cmp = boost::lexical_cast<std::string>(data.cmp);
-				data.id      = -1;
-				data.reader  = nullptr;
+	    }   // unnamed namespace
 
-				unqlite_array_walk(recs, &array_extract, &data);
 
-				unqlite_vm_release(vm_twopf);
-				unqlite_vm_release(vm_threepf);
+    // Query the database for a named task, returned as a serialization_reader
+    template <typename number>
+    unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type)
+	    {
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
 
-				unqlite_id = data.id;
-				return(data.reader);
-			}
+        // check if a suitable record exists
+        unqlite_vm* vm_twopf   = nullptr;
+        unqlite_vm* vm_threepf = nullptr;
+
+        unqlite_value* twopf_recs   = unqlite_operations::query(this->task_db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unqlite_value* threepf_recs = unqlite_operations::query(this->task_db, vm_threepf, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+
+        if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
+	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+
+        unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
+        unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
+
+        if(twopf_count + threepf_count == 0)
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+	        }
+        else if(twopf_count + threepf_count > 1)
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+	        }
+
+        unqlite_value* recs = nullptr;
+        unqlite_vm*    vm   = nullptr;
+
+        if(twopf_count == 1) { recs = twopf_recs; vm = vm_twopf, type = twopf_task_record; }
+        else                 { recs = threepf_recs; vm = vm_threepf, type = threepf_task_record; }
+
+        if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
+	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL);
+
+        array_extraction_data data;
+        data.cmp     = 0;
+        data.str_cmp = boost::lexical_cast<std::string>(data.cmp);
+        data.id      = -1;
+        data.reader  = nullptr;
+
+        unqlite_array_walk(recs, &array_extract, &data);
+
+        unqlite_vm_release(vm_twopf);
+        unqlite_vm_release(vm_threepf);
+
+        // commit transaction
+        this->commit_transaction();
+
+        unqlite_id = data.id;
+        return(data.reader);
+	    }
 
 
     // Query the database for a named package, returned as a serialization_reader
     template <typename number>
     unqlite_serialization_reader* repository_unqlite<number>::deserialize_package(const std::string& name, int& unqlite_id)
 	    {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
-
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
 
         // check if a suitable record exists
         unqlite_vm* vm = nullptr;
@@ -578,6 +655,9 @@ namespace transport
 
         unqlite_vm_release(vm);
 
+        // commit transaction
+        this->commit_transaction();
+
         unqlite_id = data.id;
         return(data.reader);
 	    }
@@ -586,66 +666,64 @@ namespace transport
     // Query the database for a named task, which is reconstructed and returned as a task<> object
     template <typename number>
     task<number>* repository_unqlite<number>::query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder)
-      {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
+	    {
         assert(m == nullptr);
 
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
 
-		    // get serialization_reader for the named task record
-		    int task_id = 0;
-		    task_record_type type;
-		    unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
+        // get serialization_reader for the named task record
+        int task_id = 0;
+        task_record_type type;
+        unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
 
-		    // extract data:
+        // extract data:
         task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
-				// extract the model/initial-conditions/parameters package corresponding to this task
+        // extract the model/initial-conditions/parameters package corresponding to this task
         std::string package_name;
-		    task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, package_name);
+        task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, package_name);
 
         task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
 
-		    // get serialization_reader for the named package
-		    int package_id = 0;
-		    unqlite_serialization_reader* package_reader = this->deserialize_package(package_name, package_id);
+        // get serialization_reader for the named package
+        int package_id = 0;
+        unqlite_serialization_reader* package_reader = this->deserialize_package(package_name, package_id);
 
-		    // extract UID for model
+        // extract UID for model
         std::string uid;
-		    package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
+        package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
 
-		    // use the supplied finder to recover a model object for this UID
-		    m = finder(uid);
+        // use the supplied finder to recover a model object for this UID
+        m = finder(uid);
 
         // obtain parameter and initial-conditions validators from this model
         typename parameters<number>::params_validator p_validator = m->params_validator_factory();
         typename initial_conditions<number>::ics_validator ics_validator = m->ics_validator_factory();
 
-		    // move the package serialization reader to the initial conditions block, and use it to
-		    // reconstruct a initial_conditions<> object
-		    package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
-		    package_reader->push_bookmark();
-		    initial_conditions<number> ics = initial_conditions_helper::deserialize<number>(package_reader, package_name,
-		                                                                                    m->get_param_names(), m->get_state_names(),
-		                                                                                    p_validator, ics_validator);
-		    package_reader->pop_bookmark();
-		    package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
+        // move the package serialization reader to the initial conditions block, and use it to
+        // reconstruct a initial_conditions<> object
+        package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
+        package_reader->push_bookmark();
+        initial_conditions<number> ics = initial_conditions_helper::deserialize<number>(package_reader, package_name,
+                                                                                        m->get_param_names(), m->get_state_names(),
+                                                                                        p_validator, ics_validator);
+        package_reader->pop_bookmark();
+        package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
-		    // reset read data from the task record, and use it to reconstruct a task<> object
-				task_reader->reset();
+        // reset read data from the task record, and use it to reconstruct a task<> object
+        task_reader->reset();
 
-		    // move the task reader to the task description block, and use it to reconstruct a task<>
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
-		    task_reader->push_bookmark();
-		    task<number>* rval = nullptr;
-		    switch(type)
-			    {
-		        case twopf_task_record:
-			        {
-		            twopf_task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
-		            rval = new twopf_task<number>(tk);
+        // move the task reader to the task description block, and use it to reconstruct a task<>
+        task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        task_reader->push_bookmark();
+        task<number>* rval = nullptr;
+        switch(type)
+	        {
+            case twopf_task_record:
+	            {
+                twopf_task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
+                rval = new twopf_task<number>(tk);
 		            break;
 			        }
 
@@ -662,6 +740,9 @@ namespace transport
 		    task_reader->pop_bookmark();
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
 
+		    // commit transaction
+        this->commit_transaction();
+
 		    delete task_reader;
 		    delete package_reader;
 
@@ -673,11 +754,8 @@ namespace transport
     template <typename number>
     std::string repository_unqlite<number>::extract_package_document(const std::string& name)
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
-
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
 
         // check a suitable record exists
         unsigned int count = unqlite_operations::query_count(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
@@ -698,6 +776,9 @@ namespace transport
         // extract this record in JSON format
         std::string document = unqlite_operations::extract_json(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
 
+		    // commit transaction
+        this->commit_transaction();
+
         return(document);
       }
 
@@ -706,15 +787,12 @@ namespace transport
     template <typename number>
     std::string repository_unqlite<number>::extract_integration_document(const std::string& name)
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
-
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
 
         std::string rval;
 
@@ -736,8 +814,11 @@ namespace transport
             if(twopf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
             else                 collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
 
-            rval = unqlite_operations::extract_json(this->integration_db, collection, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+            rval = unqlite_operations::extract_json(this->task_db, collection, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
           }
+
+		    // commit transaction
+        this->commit_transaction();
 
         return(rval);
       }
@@ -749,16 +830,15 @@ namespace transport
     repository_unqlite<number>::integration_new_output(twopf_task<number>* tk,
                                                        const std::string& backend, unsigned int worker)
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
         assert(tk != nullptr);
 
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -768,6 +848,9 @@ namespace transport
 
         // insert a new output record, and return the corresponding integration_container handle
         typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk);
+
+		    // close database handles
+        this->commit_transaction();
 
         return(ctr);
       }
@@ -779,16 +862,15 @@ namespace transport
     repository_unqlite<number>::integration_new_output(threepf_task<number>* tk,
                                                        const std::string& backend, unsigned int worker)
       {
-        assert(this->package_db != nullptr);
-        assert(this->integration_db != nullptr);
         assert(tk != nullptr);
 
-        if(this->package_db == nullptr || this->integration_db == nullptr)
-          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_MISSING_DB);
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->integration_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -799,12 +881,15 @@ namespace transport
         // insert a new output record, and return the corresponding integration_container handle
         typename repository<number>::integration_container ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk);
 
+		    // commit transaction
+        this->commit_transaction();
+
         return(ctr);
       }
 
 
     // Add output for a specified task.
-		// We are allowed to assume that the database handles exist, and that the task exists
+		// We are allowed to assume that the database handles are already open, and that the task exists
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_container
@@ -857,23 +942,23 @@ namespace transport
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
 		    // update the task entry for this database
-		    // that means: first, drop this existing record; then
-        unqlite_operations::drop(this->integration_db, collection, task_id);
+		    // that means: first, drop this existing record; then, store a copy of the updated one
+        unqlite_operations::drop(this->task_db, collection, task_id);
 
-        unqlite_operations::store(this->integration_db, collection, task_reader->get_contents());
+        unqlite_operations::store(this->task_db, collection, task_reader->get_contents());
 
 		    // create directories
-        boost::filesystem::create_directories(this->root_path / output_path);
-        boost::filesystem::create_directories(this->root_path / log_path);
-        boost::filesystem::create_directories(this->root_path / temp_path);
+        boost::filesystem::create_directories(this->get_root_path() / output_path);
+        boost::filesystem::create_directories(this->get_root_path() / log_path);
+        boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
 		    delete task_reader;
 
-		    return typename repository<number>::integration_container(this->root_path/output_path,
-		                                                              this->root_path/sql_path,
-		                                                              this->root_path/log_path,
-		                                                              this->root_path/task_path,
-		                                                              this->root_path/temp_path,
+		    return typename repository<number>::integration_container(this->get_root_path()/output_path,
+		                                                              this->get_root_path()/sql_path,
+		                                                              this->get_root_path()/log_path,
+		                                                              this->get_root_path()/task_path,
+		                                                              this->get_root_path()/temp_path,
 		                                                              serial_number, worker);
       }
 

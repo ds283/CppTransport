@@ -175,16 +175,25 @@ namespace transport
 
       public:
 
+		    //! Create a repository object
+		    repository(const std::string& path, access_type mode)
+		      : root_path(path), access_mode(mode)
+			    {
+			    }
+
         //! Close a repository, including the corresponding containers and environment. In practice this would always be delegated to the implementation class
         virtual ~repository()
           {
           }
 
 
-        // INTERFACE -- PATHS
+        // INTERFACE -- ADMIN DATA
 
         //! Get path to root of repository
-        virtual const boost::filesystem::path& get_root_path() = 0;
+        const boost::filesystem::path& get_root_path() { return(this->root_path); };
+
+		    //! Get access mode
+		    const access_type& get_access_mode() { return(this->access_mode); }
 
 
         // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
@@ -215,7 +224,18 @@ namespace transport
         //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
         virtual integration_container integration_new_output(threepf_task<number>* tk,
                                                              const std::string& backend, unsigned int worker) = 0;
-      };
+
+				// PRIVATE DATA
+
+      protected:
+
+		    //! Access mode
+        const access_type access_mode;
+
+        //! BOOST path to the repository root directory
+        const boost::filesystem::path root_path;
+
+	    };
 
 
   }   // namespace transport

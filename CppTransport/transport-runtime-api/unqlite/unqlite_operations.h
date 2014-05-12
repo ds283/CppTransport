@@ -209,13 +209,15 @@ namespace transport
 
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_UNQLITE_FAIL_COMPILE_LOG;
-                    if(length > 0) msg << " '" << buf << "'";
+                    if(length > 0) msg << " '" << buf << "'" << std::endl;
+		                msg << jx9 << std::endl;
                     throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
                   }
                 else
                   {
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_UNQLITE_FAIL_COMPILE << err << ")";
+                    msg << __CPP_TRANSPORT_UNQLITE_FAIL_COMPILE << err << ")" << std::endl;
+		                msg << jx9 << std::endl;
                     throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
                   }
               }

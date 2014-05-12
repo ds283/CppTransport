@@ -8,22 +8,24 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H
 
 
-#define __CPP_TRANSPORT_REPO_FAIL_PKG          "Repository error: failed to open package container"
-#define __CPP_TRANSPORT_REPO_FAIL_INTGN        "Repository error: failed to open integration container"
+#define __CPP_TRANSPORT_REPO_FAIL_PKG           "Repository error: failed to open package container"
+#define __CPP_TRANSPORT_REPO_FAIL_INTGN         "Repository error: failed to open integration container"
 
-#define __CPP_TRANSPORT_REPO_MISSING_DB        "Repository error: UnQLite database handles are null"
+#define __CPP_TRANSPORT_REPO_DATABASES_OPEN     "Repository error: UnQLite database handles unexpectedly open"
+#define __CPP_TRANSPORT_REPO_DATABASES_CLOSED   "Repository error: UnQLite database handles unexpectedly closed"
+#define __CPP_TRANSPORT_REPO_DATABASES_NOT_OPEN "Repository error: UnQLite database handles closed, but should be open"
 
-#define __CPP_TRANSPORT_REPO_MISSING_CLCTN     "Repository error: missing UnQLite database collection"
+#define __CPP_TRANSPORT_REPO_MISSING_CLCTN      "Repository error: missing UnQLite database collection"
 
-#define __CPP_TRANSPORT_REPO_JSON_FAIL         "Repository error: failure when extracting JSON fields from unqlite"
-#define __CPP_TRANSPORT_REPO_JSON_NO_ID        "Repository error: missing UnQLite ID when deserializing JSON block"
-#define __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL "Repository error: failure when extracting task record from JSON array"
-#define __CPP_TRANSPORT_REPO_PKG_EXTRACT_FAIL  "Repository error: failure when extracting package record from JSON array"
+#define __CPP_TRANSPORT_REPO_JSON_FAIL          "Repository error: failure when extracting JSON fields from unqlite"
+#define __CPP_TRANSPORT_REPO_JSON_NO_ID         "Repository error: missing UnQLite ID when deserializing JSON block"
+#define __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL  "Repository error: failure when extracting task record from JSON array"
+#define __CPP_TRANSPORT_REPO_PKG_EXTRACT_FAIL   "Repository error: failure when extracting package record from JSON array"
 
-#define __CPP_TRANSPORT_BADLY_FORMED_RANGE     "Repository error: Badly formed JSON document for 'range' group"
-#define __CPP_TRANSPORT_BADLY_FORMED_PARAMS    "Repository error: Badly formed JSON for 'parameters' group"
-#define __CPP_TRANSPORT_BADLY_FORMED_ICS       "Repository error: Badly formed JSON for 'initial_conditions' group"
-#define __CPP_TRANSPORT_BADLY_FORMED_TASK      "Repository error: Badly formed JSON for 'task' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_RANGE      "Repository error: Badly formed JSON document for 'range' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_PARAMS     "Repository error: Badly formed JSON for 'parameters' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_ICS        "Repository error: Badly formed JSON for 'initial_conditions' group"
+#define __CPP_TRANSPORT_BADLY_FORMED_TASK       "Repository error: Badly formed JSON for 'task' group"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H
