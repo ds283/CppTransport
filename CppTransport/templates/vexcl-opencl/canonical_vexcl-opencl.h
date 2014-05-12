@@ -123,12 +123,12 @@ namespace transport
           context backend_get_context();
 
           // Integrate background and 2-point function on a OpenCL device
-          void backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+          void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                      typename data_manager<number>::twopf_batcher& batcher,
                                      bool silent=false);
 
           // Integrate background, 2-point function and 3-point function on a OpenCL device
-          void backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+          void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                        typename data_manager<number>::threepf_batcher& batcher,
                                        bool silent=false);
 
@@ -266,7 +266,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $$__MODEL_vexcl<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+    void $$__MODEL_vexcl<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
@@ -368,7 +368,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_vexcl<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+    void $$__MODEL_vexcl<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                                           typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {

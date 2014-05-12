@@ -113,7 +113,7 @@ namespace transport
                       unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double get_kstar(const task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double get_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
       public:
         //! Make an 'ics_validator' object for this model
@@ -128,14 +128,14 @@ namespace transport
           }
 
         //! Make a 'kconfig_kstar' object for this model
-        typename task<number>::kconfig_kstar kconfig_kstar_factory()
+        typename integration_task<number>::kconfig_kstar kconfig_kstar_factory()
           {
             return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
           }
 
       protected:
         //! Write information about the task we are processing
-        void write_task_data(const task<number>* task, typename data_manager<number>::generic_batcher& batcher,
+        void write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
 
@@ -180,17 +180,17 @@ namespace transport
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void         backend_process_backg(const task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
+        virtual void         backend_process_backg(const integration_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void         backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+        virtual void         backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                                    typename data_manager<number>::twopf_batcher& batcher,
                                                    bool silent=false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void         backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+        virtual void         backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                                      typename data_manager<number>::threepf_batcher& batcher,
                                                      bool silent=false) = 0;
 
@@ -267,7 +267,7 @@ namespace transport
             initial_conditions<double> ics(params, input, this->get_state_names(), temp_Nstar, this->ics_validator_factory());
 
             // set up a new task object for this integration
-            task<double> tk(ics, times);
+            integration_task<double> tk(ics, times);
 
             this->backend_process_backg(&tk, history, true);
 
@@ -284,7 +284,7 @@ namespace transport
 
 
     template <typename number>
-    void model<number>::write_task_data(const task<number>* task, typename data_manager<number>::generic_batcher& batcher,
+    void model<number>::write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
@@ -300,7 +300,7 @@ namespace transport
 
 
     template <typename number>
-    double model<number>::get_kstar(const task<number>* tk, unsigned int time_steps)
+    double model<number>::get_kstar(const integration_task<number>* tk, unsigned int time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there
@@ -314,7 +314,7 @@ namespace transport
         initial_conditions<double> new_ics(tk->get_params(), tk->get_ics().get_vector(), this->get_state_names(),
                                            new_Npre, this->ics_validator_factory());
 
-        task<double> new_task(new_ics, times);
+        integration_task<double> new_task(new_ics, times);
 
         this->backend_process_backg(&new_task, history, true);
 

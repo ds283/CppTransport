@@ -169,7 +169,7 @@ namespace transport
         // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
 
       public:
-        void backend_process_backg(const task<number>* tk, typename model<number>::backg_history& solution, bool silent=false);
+        void backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false);
       };
 
 
@@ -890,7 +890,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::backend_process_backg(const task<number>* tk, typename model<number>::backg_history& solution, bool silent)
+    void $$__MODEL<number>::backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
       {
         assert(tk != nullptr);
 

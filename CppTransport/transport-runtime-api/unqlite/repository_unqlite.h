@@ -72,20 +72,24 @@ namespace transport
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) override;
 
-        //! Write a threepf integration to the integration database.
+        //! Write a threepf integration task to the database.
         //! Delegates write_integration_task() to do the work.
-        virtual void write_integration(const threepf_task<number>& t, const model<number>* m) override
+        virtual void write_task(const threepf_task<number>& t, const model<number>* m) override
           { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION); }
 
-        //! Write a twopf integration to the integration database.
+        //! Write a twopf integration task to the database.
         //! Delegates write_integration_task() to do the work.
-        virtual void write_integration(const twopf_task<number>& t, const model<number>* m) override
+        virtual void write_task(const twopf_task<number>& t, const model<number>* m) override
           { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION); }
+
+        //! Write an output task to the database
+        virtual void write_task(const output_task<number>& t) override;
+
 
       protected:
 
         //! Write a generic integration task to the database, using a supplied node tag
-        void write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection);
+        void write_integration_task(const integration_task<number>& t, const model<number>* m, const std::string& collection);
 
 
         // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE (implements a 'repository' interface)
@@ -103,7 +107,7 @@ namespace transport
         std::string extract_package_document(const std::string& name);
 
         //! Extract the JSON document for a named integration
-        std::string extract_integration_document(const std::string& name);
+        std::string extract_task_document(const std::string& name);
 
 
         // INTERFACE -- ADD OUTPUT TO TASKS (implements a 'repository' interface)
@@ -135,7 +139,7 @@ namespace transport
 
       protected:
 
-		    typedef enum { twopf_task_record, threepf_task_record } task_record_type;
+		    typedef enum { twopf_record, threepf_record, output_record } task_type;
 
 		    //! Notionally begin a transaction on the database.
 		    //! Currently this is implemented by opening the database at the beginning of an 'atomic' transaction,
@@ -150,7 +154,7 @@ namespace transport
 
 		    //! Convert a named database task into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
-        unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type);
+        unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id, task_type& type);
 
 		    //! Convert a named database package into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
@@ -164,7 +168,15 @@ namespace transport
 
 		    //! Extract an output-group data block.
 		    //! The supplied unqlite_serialization_reader should point to an unread output-group JSON object.
-		    typename repository<number>::output_group extract_output_group_data(unqlite_serialization_reader* reader);
+		    typename repository<number>::output_group extract_output_group_data(const std::string& task, unqlite_serialization_reader* reader);
+
+		    //! Extract an integration task from a serialization reader
+		    task<number>* query_integration_task(const std::string& name, task_type type,
+		                                         model<number>*& m, typename instance_manager<number>::model_finder finder,
+		                                         unqlite_serialization_reader* reader);
+
+		    //! Extract an outut task from a serialization reader
+		    task<number>* query_output_task(const std::string& name, unqlite_serialization_reader* reader);
 
 
         // INTERNAL DATA
@@ -258,6 +270,7 @@ namespace transport
         unqlite_operations::ensure_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
         unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
         unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+        unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
 
 		    // close repository until it is needed later
 		    unqlite_close(pkg_db);
@@ -308,6 +321,7 @@ namespace transport
         unqlite_operations::create_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
         unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
         unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+        unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
 
         // close repository until it is needed later
         unqlite_close(pkg_db);
@@ -363,6 +377,7 @@ namespace transport
 				    unqlite_operations::ensure_collection(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
 				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
 				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
+				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
 					}
 
 				this->open_clients++;
@@ -426,15 +441,15 @@ namespace transport
         // commit data block
         writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_NAME, m->get_name());
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_AUTHOR, m->get_author());
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_TAG, m->get_tag());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_NAME, m->get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_AUTHOR, m->get_author());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_TAG, m->get_tag());
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_CREATED, boost::posix_time::to_simple_string(now));
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_EDITED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_PKGDATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
         writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
 
@@ -453,7 +468,7 @@ namespace transport
 
     // Write a task to the repository
     template <typename number>
-    void repository_unqlite<number>::write_integration_task(const task<number>& t, const model<number>* m, const std::string& collection)
+    void repository_unqlite<number>::write_integration_task(const integration_task<number>& t, const model<number>* m, const std::string& collection)
 	    {
         assert(m != nullptr);
 
@@ -462,14 +477,17 @@ namespace transport
 
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
-        // check if an integration task with this name already exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        // check if a task with this name already exists
+        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unsigned int output_count  = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_OUTPUT_NAME);
 
-        if(twopf_count + threepf_count > 0)
+		    unsigned int total = twopf_count + threepf_count + output_count;
+
+        if(total > 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_INTGRTN_EXISTS << " '" << t.get_name() << "'";
+            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << t.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
@@ -484,20 +502,20 @@ namespace transport
         unqlite_serialization_writer writer;
 
         // commit task name
-        writer.write_value(__CPP_TRANSPORT_NODE_INTGRTN_NAME, t.get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
 
         // commit data block
-        writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+        writer.start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, t.get_ics().get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_PACKAGE, t.get_ics().get_name());
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_CREATED, boost::posix_time::to_simple_string(now));
-        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_INTDATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
-        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
         // commit task block
         writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
@@ -510,6 +528,57 @@ namespace transport
 
         // insert this record in the task database
         unqlite_operations::store(this->task_db, collection, writer.get_contents());
+
+        // commit transaction
+        this->commit_transaction();
+	    }
+
+
+    // Write an output task to the database
+		template <typename number>
+		void repository_unqlite<number>::write_task(const output_task<number>& t)
+	    {
+		    // open a new transaction, if necessary. After this we can assume the database handles are live
+		    this->begin_transaction();
+
+        // check if a task with this name already exists
+        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int output_count  = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+
+        unsigned int total = twopf_count + threepf_count + output_count;
+
+        if(total > 0)
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << t.get_name() << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+	        }
+
+		    // create an unqlite_serialization_writer, used to emit the serialized record to the database
+		    unqlite_serialization_writer writer;
+
+		    // commit task name
+		    writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
+
+		    // commit data block
+		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
+
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));
+
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+
+		    // commit task block
+		    writer.start_node(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+		    t.serialize(writer);
+		    writer.end_element(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+
+		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+
+        // insert this record in the task database
+        unqlite_operations::store(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, writer.get_contents());
 
         // commit transaction
         this->commit_transaction();
@@ -569,7 +638,7 @@ namespace transport
 
     // Query the database for a named task, returned as a serialization_reader
     template <typename number>
-    unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_record_type& type)
+    unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_type& type)
 	    {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -577,23 +646,29 @@ namespace transport
         // check if a suitable record exists
         unqlite_vm* vm_twopf   = nullptr;
         unqlite_vm* vm_threepf = nullptr;
+		    unqlite_vm* vm_output  = nullptr;
 
-        unqlite_value* twopf_recs   = unqlite_operations::query(this->task_db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unqlite_value* threepf_recs = unqlite_operations::query(this->task_db, vm_threepf, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unqlite_value* twopf_recs   = unqlite_operations::query(this->task_db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unqlite_value* threepf_recs = unqlite_operations::query(this->task_db, vm_threepf, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unqlite_value* output_recs  = unqlite_operations::query(this->task_db, vm_output, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
 
-        if(twopf_recs == nullptr || threepf_recs == nullptr || !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs))
+        if(twopf_recs == nullptr || threepf_recs == nullptr || output_recs == nullptr ||
+	         !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs) || !unqlite_value_is_json_array(output_recs))
 	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
         unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
         unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
+		    unsigned int output_count  = static_cast<unsigned int>(unqlite_array_count(output_recs));
 
-        if(twopf_count + threepf_count == 0)
+		    unsigned int total = twopf_count + threepf_count + output_count;
+
+        if(total == 0)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
-        else if(twopf_count + threepf_count > 1)
+        else if(total > 1)
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
@@ -603,8 +678,9 @@ namespace transport
         unqlite_value* recs = nullptr;
         unqlite_vm*    vm   = nullptr;
 
-        if(twopf_count == 1) { recs = twopf_recs; vm = vm_twopf, type = twopf_task_record; }
-        else                 { recs = threepf_recs; vm = vm_threepf, type = threepf_task_record; }
+        if(twopf_count == 1)        { recs = twopf_recs;   vm = vm_twopf;   type = twopf_record;   }
+        else if(threepf_count == 1) { recs = threepf_recs; vm = vm_threepf; type = threepf_record; }
+		    else                        { recs = output_recs;  vm = vm_output;  type = output_record;  }
 
         if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
 	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL);
@@ -619,6 +695,7 @@ namespace transport
 
         unqlite_vm_release(vm_twopf);
         unqlite_vm_release(vm_threepf);
+		    unqlite_vm_release(vm_output);
 
         // commit transaction
         this->commit_transaction();
@@ -690,17 +767,55 @@ namespace transport
 
         // get serialization_reader for the named task record
         int task_id = 0;
-        task_record_type type;
+        task_type type;
         unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
 
+        task<number>* rval = nullptr;
+
+        switch(type)
+	        {
+            case twopf_record:
+	            rval = this->query_integration_task(name, type, m, finder, task_reader);
+            break;
+
+            case threepf_record:
+	            rval = this->query_integration_task(name, type, m, finder, task_reader);
+            break;
+
+            case output_record:
+	            rval = this->query_output_task(name, task_reader);
+            break;
+
+            default:
+	            assert(false);
+	        }
+
+        // commit transaction
+        this->commit_transaction();
+
+        delete task_reader;
+
+        return (rval);
+	    }
+
+
+		// Extract integration task
+		template <typename number>
+		task<number>* repository_unqlite<number>::query_integration_task(const std::string& name, task_type type,
+		                                                                 model<number>*& m, typename instance_manager<number>::model_finder finder,
+																																		 unqlite_serialization_reader* task_reader)
+			{
+				assert(m == nullptr);
+				assert(task_reader != nullptr);
+
         // extract data:
-        task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
 
         // extract the model/initial-conditions/parameters package corresponding to this task
         std::string package_name;
-        task_reader->read_value(__CPP_TRANSPORT_NODE_INTDATA_PACKAGE, package_name);
+        task_reader->read_value(__CPP_TRANSPORT_NODE_TASK_DATA_PACKAGE, package_name);
 
-        task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
         // get serialization_reader for the named package
         int package_id = 0;
@@ -733,17 +848,19 @@ namespace transport
         // move the task reader to the task description block, and use it to reconstruct a task<>
         task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
         task_reader->push_bookmark();
-        task<number>* rval = nullptr;
+
+				task<number>* rval = nullptr;
+
         switch(type)
 	        {
-            case twopf_task_record:
+            case twopf_record:
 	            {
                 twopf_task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
                 rval = new twopf_task<number>(tk);
 		            break;
 			        }
 
-		        case threepf_task_record:
+		        case threepf_record:
 			        {
 		            threepf_task<number> tk = threepf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
 				        rval = new threepf_task<number>(tk);
@@ -756,14 +873,30 @@ namespace transport
 		    task_reader->pop_bookmark();
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
 
-		    // commit transaction
-        this->commit_transaction();
-
-		    delete task_reader;
 		    delete package_reader;
 
         return(rval);
       }
+
+
+		// Extract output task
+		template <typename number>
+		task<number>* repository_unqlite<number>::query_output_task(const std::string& name, unqlite_serialization_reader* reader)
+			{
+				assert(reader != nullptr);
+
+				// move the task reader to the task description block, and use it to reconstruct a task<>
+				reader->start_node(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+				reader->push_bookmark();
+
+				output_task<number> tk = output_task_helper::deserialize<number>(reader, name);
+				task<number>* rval = new output_task<number>(tk);
+
+				reader->pop_bookmark();
+				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+
+				return(rval);
+			}
 
 
     // Extract package database record as a JSON document
@@ -801,24 +934,27 @@ namespace transport
 
     // Extract integration task database record as a JSON document
     template <typename number>
-    std::string repository_unqlite<number>::extract_integration_document(const std::string& name)
+    std::string repository_unqlite<number>::extract_task_document(const std::string& name)
       {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int twopf_count   = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int threepf_count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unsigned int output_count  = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+
+		    unsigned int total = twopf_count + threepf_count + output_count;
 
         std::string rval;
 
-        if(twopf_count + threepf_count == 0)
+        if(total == 0)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
-        else if(twopf_count + threepf_count > 1)
+        else if(total > 1)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
@@ -827,10 +963,11 @@ namespace transport
         else
           {
             std::string collection;
-            if(twopf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
-            else                 collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
+            if(twopf_count == 1)        collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
+            else if(threepf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
+		        else                        collection = __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION;
 
-            rval = unqlite_operations::extract_json(this->task_db, collection, name, __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+            rval = unqlite_operations::extract_json(this->task_db, collection, name, __CPP_TRANSPORT_NODE_TASK_NAME);
           }
 
 		    // commit transaction
@@ -854,7 +991,7 @@ namespace transport
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -886,7 +1023,7 @@ namespace transport
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_INTGRTN_NAME);
+        unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -913,7 +1050,7 @@ namespace transport
       {
         // get serialization_reader for the named task record
         int task_id = 0;
-		    task_record_type type;
+		    task_type type;
         unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
 
         // allocate a new serial number
@@ -934,25 +1071,27 @@ namespace transport
 		    // update task_reader with information about the new output group
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-		    // reset reader to that __CPP_TRANSPORT_NODE_INTGRTN_DATA becomes available for reading again
+		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_DATA becomes available for reading again
 		    task_reader->reset();
 
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_INTDATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_DATA);
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
 		    task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
         std::string tag = boost::lexical_cast<std::string>(serial_number);
 		    task_reader->insert_node(tag);  // name of node doesn't matter; it is ignored in arrays, but should be unique
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, serial_number);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_BACKEND, backend);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_PATH, output_path.string());
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_DATABASE, sql_path.string());
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_CREATED, boost::posix_time::to_simple_string(now));
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUT_LOCKED, false);
-		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUT_NOTES, true);
-		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, serial_number);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, output_path.string());
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, sql_path.string());
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(now));
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, false);
+		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, true);
+		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
+		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, true);
+		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 		    task_reader->insert_end_element(tag);
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
@@ -991,7 +1130,7 @@ namespace transport
 			    {
 				    reader->start_array_element();
 				    unsigned int sn;
-				    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, sn);
+				    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, sn);
 				    serial_numbers.push_back(sn);
 				    reader->end_array_element();
 			    }
@@ -1024,7 +1163,7 @@ namespace transport
 
 				// get a serialization_reader for the named task record
 				int task_id = 0;
-				task_record_type type;
+				task_type type;
 				unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
 
 				// move the serialization reader to the output-group block
@@ -1033,7 +1172,7 @@ namespace transport
 				for(unsigned int i = 0; i < num_groups; i++)
 					{
 						task_reader->start_array_element();
-						typename repository<number>::output_group group_data = this->extract_output_group_data(task_reader);
+						typename repository<number>::output_group group_data = this->extract_output_group_data(name, task_reader);
 						group_list.push_back(group_data);
 						task_reader->end_array_element();
 					}
@@ -1056,41 +1195,52 @@ namespace transport
 
 		// Extract an output-group data block from a task record.
 		template <typename number>
-		typename repository<number>::output_group repository_unqlite<number>::extract_output_group_data(unqlite_serialization_reader* reader)
+		typename repository<number>::output_group repository_unqlite<number>::extract_output_group_data(const std::string& task, unqlite_serialization_reader* reader)
 			{
 				// extract data about the group
 				unsigned int serial_number;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_ID, serial_number);
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, serial_number);
 
 		    std::string backend;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_BACKEND, backend);
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
 
 		    std::string data_root;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_PATH, data_root);
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, data_root);
 
 		    std::string data_container;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_DATABASE, data_container);
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, data_container);
 
 		    std::string creation_time;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_CREATED, creation_time);
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, creation_time);
 
 				bool locked;
-			  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LOCKED, locked);
+			  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, locked);
 
 		    std::list<std::string> notes;
-				unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+				unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
 				for(unsigned int i = 0; i < num_notes; i++)
 					{
 				    std::string note;
 						reader->start_array_element();
-						reader->read_value(__CPP_TRANSPORT_NODE_NOTE, note);
+						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, note);
 						notes.push_back(note);
 						reader->end_array_element();
 					}
-				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_NOTES);
+				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
 
-				return typename repository<number>::output_group(serial_number, backend, data_root, data_container,
-																												 creation_time, locked, notes);
+		    std::list<std::string> tags;
+				unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+				for(unsigned int i = 0; i < num_tags; i++)
+					{
+				    std::string tag;
+						reader->start_array_element();
+						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
+						tags.push_back(tag);
+						reader->end_array_element();
+					}
+
+				return typename repository<number>::output_group(task, serial_number, backend, data_root, data_container,
+																												 creation_time, locked, notes, tags);
 			}
 
 

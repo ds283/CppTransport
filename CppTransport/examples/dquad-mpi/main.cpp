@@ -21,7 +21,7 @@
 // ****************************************************************************
 
 
-static void output_info(transport::canonical_model<double>* model, transport::task<double>* tk);
+static void output_info(transport::canonical_model<double>* model, transport::integration_task<double>* tk);
 
 
 // ****************************************************************************
@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     // using doubles, with given parameter choices
     transport::dquad_basic<double>* model = new transport::dquad_basic<double>(mgr);
 
-    if(mgr->is_master()) mgr->execute_tasks();
-    else                 mgr->wait_for_tasks();
+//    if(mgr->is_master()) mgr->execute_tasks();
+//    else                 mgr->wait_for_tasks();
 
 		if(mgr->is_master())
 			{
@@ -49,6 +49,8 @@ int main(int argc, char* argv[])
 		        t->write(std::cout);
 		        std::cout << std::endl;
 			    }
+
+
 			}
 
 //    transport::python_plot_gadget<double>     py_plt(python);
@@ -188,7 +190,7 @@ int main(int argc, char* argv[])
 
 
 // interrogate an arbitrary canonical_model object and print information about it
-void output_info(transport::canonical_model<double>* model, transport::task<double>* tk)
+void output_info(transport::canonical_model<double>* model, transport::integration_task<double>* tk)
   {
     std::cout << "Model:   " << model->get_name() << "\n";
     std::cout << "Authors: " << model->get_author() << "\n";

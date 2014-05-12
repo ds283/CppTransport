@@ -41,7 +41,7 @@ namespace transport
       class background
         {
           public:
-            background(const task<number>* t, const std::vector< std::vector<number> >& s, model<number>* p)
+            background(const integration_task<number>* t, const std::vector< std::vector<number> >& s, model<number>* p)
               : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
                 tk(t), samples(s),
                 parent(p),
@@ -85,7 +85,7 @@ namespace transport
 
             label_gadget                             labels;            // holds names (and LaTeX names) of fields, and makes labels
 
-            const task<number>*                      tk;                // holds task object which generated this solution
+            const integration_task<number>*                      tk;                // holds task object which generated this solution
 
             const std::vector< std::vector<number> > samples;           // list of samples
               // first index: time of observation

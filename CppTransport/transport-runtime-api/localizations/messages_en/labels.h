@@ -34,6 +34,7 @@
 #define __CPP_TRANSPORT_OUTPUT_GROUP_DATA     "Data container"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_CREATED  "Creation date"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_NOTE     "Note"
+#define __CPP_TRANSPORT_OUTPUT_GROUP_TAGS     "tags:"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

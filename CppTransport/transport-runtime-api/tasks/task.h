@@ -31,6 +31,7 @@
 
 #define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE    "twopf-sample-times"
 #define __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE    "twopf-sample-wavenumbers"
+
 #define __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE  "threepf-sample-times"
 #define __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE  "threepf-sample-wavenumbers"
 #define __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE  "wavenumber-grid"
@@ -40,6 +41,14 @@
 #define __CPP_TRANSPORT_NODE_THREEPF_KTRANGE  "kt-range"
 #define __CPP_TRANSPORT_NODE_THREEPF_ARANGE   "alpha-range"
 #define __CPP_TRANSPORT_NODE_THREEPF_BRANGE   "beta-range"
+
+#define __CPP_TRANSPORT_NODE_OUTPUT_NAME      "name"
+#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "elements"
+#define __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT   "element"
+#define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
+#define __CPP_TRANSPORT_NODE_OUTPUT_LABEL     "label"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS      "tags"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG       "tag"
 
 
 namespace transport
@@ -132,37 +141,259 @@ namespace transport
       }
 
 
-    // TASK STRUCTURES
+		// TASK STRUCTURES -- GENERIC
 
-    template <typename number> class task;
+		//! A 'task' is the basic, abstract task from which all other types of task are derived.
+
+		template <typename number>
+		class task: public serializable
+			{
+		  public:
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+				//! Construct a named task
+				task(const std::string& nm)
+					: name(nm)
+					{
+					}
+
+				//! Destroy a task
+				virtual ~task() = default;
+
+
+				// INTERFACE
+
+		    //! Get name
+		    const std::string& get_name() const { return(this->name); }
+
+				// INTERNAL DATA
+
+		  protected:
+
+		    //! Name of this task
+		    const std::string                name;
+			};
+
+
+		// TASK STRUCTURES -- OUTPUT TASK
+
+		// An output task is a list of outputs to be generated.
+		// Each output is identified by an integration task, and output descriptor,
+		// and a list of tags identifying the output group to use. If no tags
+		// are given, the most recent output group is used.
+
+		class output_task_element
+			{
+		  public:
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+				//! Construct an output task element, given a parent task name, an output name and a list of tags to match
+				output_task_element(const std::string& tk, const std::string& op, const std::list<std::string>& tgs)
+					: task_name(tk), output_name(op), tags(tgs)
+					{
+					}
+
+				//! Destroy an output task element
+				~output_task_element() = default;
+
+
+				// INTERFACE - EXTRACT DETAILS
+
+				//! Get name of task associated with this task element
+				const std::string& get_task() const { return(this->task_name); }
+
+				//! Get name of output associated with this task element
+				const std::string& get_label() const { return(this->task_name); }
+
+				//! Get tags associated with this task element
+				const std::list<std::string>& get_tags() const { return(this->tags); }
+
+
+				// INTERNAL DATA
+
+		  protected:
+
+				//! Name of the integration task this output is associated with
+				const std::string task_name;
+
+				//! Name of the output record (part of the task description, specifying which eg. plot to produce) this output is associated with
+				const std::string output_name;
+
+				//! List of tags to match against the output groups
+				std::list<std::string> tags;
+			};
+
+
+    template <typename number> class output_task;
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const task<number>& obj);
+    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
-    // basic task, from which the more specific tasks are derived
-    // contains information on the initial conditions, horizon-crossing time and the sampling times
+		//! An 'output_task' is a specialization of 'task' which generates a set of outputs.
+
+		template <typename number>
+		class output_task: public task<number>
+			{
+		  public:
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+				//! Construct a named output task
+				output_task(const std::string& nm, std::list<output_task_element>& eles)
+					: elements(eles), task<number>(nm)
+					{
+					}
+
+				//! Destroy an output task
+				~output_task() = default;
+
+		    //! Write to a standard output stream
+		    friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
+
+		    // SERIALIZATION (implements a 'serializable' interface)
+
+		    //! Serialize this task to the repository
+		    virtual void serialize(serialization_writer& writer) const override;
+
+				// INTERNAL DATA
+
+		  protected:
+
+				//! List of output elements which make up this task
+				std::list<output_task_element> elements;
+			};
+
+
     template <typename number>
-    class task: public serializable
-      {
+    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
+	    {
+		    out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
+		    for(std::list<output_task_element>::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
+			    {
+				    out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << (*t).get_task() << ", "
+					              << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << (*t).get_label() << "." << std::endl;
+				    out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
+
+					  unsigned int count = 0;
+		        const std::list<std::string>& tags = (*t).get_tags();
+				    for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+					    {
+						    if(count > 0) out << ", ";
+						    out << *u;
+					    }
+				    out << std::endl;
+			    }
+
+        return(out);
+	    }
+
+
+		// serialize an output task to the repository
+		template <typename number>
+		void output_task<number>::serialize(serialization_writer& writer) const
+			{
+				this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
+
+				for(std::list<output_task_element>::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+					{
+						this->begin_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT, false);
+
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task());
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_label());
+
+				    const std::list<std::string>& tags = (*t).get_tags();
+
+				    this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
+						for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+							{
+								this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
+							}
+						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT);
+
+						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT);
+					}
+
+				this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+			}
+
+
+		namespace output_task_helper
+			{
+
+				template <typename number>
+				transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name)
+					{
+						unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+
+				    std::list<output_task_element> elements;
+						for(unsigned int i = 0; i < num_elements; i++)
+							{
+								reader->start_array_element();
+
+						    std::string task;
+							  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task);
+
+						    std::string label;
+								reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
+
+						    std::list<std::string> tags;
+								unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+								for(unsigned int j = 0; j < num_tags; j++)
+									{
+										reader->start_array_element();
+								    std::string tag;
+										reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
+										tags.push_back(tag);
+										reader->end_array_element();
+									}
+								reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+
+								reader->end_array_element();
+							}
+
+				    reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+
+						return transport::output_task<number>(name, elements);
+					}
+
+			}   // namespace output_task_helper
+
+
+    // TASK STRUCTURES -- INTEGRATION TASKS
+
+    template <typename number> class integration_task;
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj);
+
+		//! An 'integration_task' is a specialization of 'task'. It contains the basic information
+		//! needed to carry out an integration. The more specialized two- and three-pf integration
+		//! tasks are derived from it.
+
+		//! An 'integration_task' contains information on the initial conditions, horizon-crossing
+		//! time and sampling times. It is enough to integrate the background.
+    template <typename number>
+    class integration_task: public task<number>
+	    {
       public:
 
-        typedef std::function<double(task<number>*)> kconfig_kstar;
+        typedef std::function<double(integration_task<number>*)> kconfig_kstar;
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        //! Construct a named task with supplied initial conditions
-        task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
+        //! Construct a named integration task with supplied initial conditions
+        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
 
-        //! Construct an anonymized task with supplied initial conditions
-        task(const initial_conditions<number>& i, const range<double>& t)
-          : task(random_string(), i, t)
+        //! Construct an anonymized integration task with supplied initial conditions
+        integration_task(const initial_conditions<number>& i, const range<double>& t)
+          : integration_task(random_string(), i, t)
           {
           }
 
-        //! Destroy a task
-        virtual ~task()
-          {
-          }
+        //! Destroy an integration task
+        virtual ~integration_task() = default;
 
         // EXTRACT INFORMATION ABOUT THE TASK
 
@@ -190,18 +421,17 @@ namespace transport
         //! Get number of samples
         unsigned int get_N_sample_times() const { return(this->times.size()); }
 
-        //! Get name
-        const std::string& get_name() const { return(this->name); }
+				//! Write to a standard output stream
+        friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
 
-        friend std::ostream& operator<< <>(std::ostream& out, const task<number>& obj);
 
-        // DISABLE SERIALIZATION INTERFACE
-        void serialize(serialization_writer& writer) const { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
+        // DISABLE SERIALIZATION
+
+		    //! Throw an exception if any attempt is made to serialize an integration_task.
+		    //! Only twopf and threepf integration tasks can be serialized.
+        virtual void serialize(serialization_writer& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
 
       protected:
-
-        //! Name of this task
-        const std::string                name;
 
         //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
@@ -211,8 +441,8 @@ namespace transport
 
 
     template <typename number>
-    task<number>::task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-      : name(nm), ics(i), times(t)
+    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+      : ics(i), times(t), task<number>(nm)
       {
         // validate relation between Nstar and the sampling time
         assert(times.get_steps() > 0);
@@ -243,7 +473,7 @@ namespace transport
 
 
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const task<number>& obj)
+    std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
       {
         out << obj.ics << std::endl;
         out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
@@ -257,24 +487,22 @@ namespace transport
     //! The key concept associated with a twopf_list_task is a flat vector of wavenumbers
     //! which describe the points at which we sample the twopf.
     template <typename number>
-    class twopf_list_task: public task<number>
+    class twopf_list_task: public integration_task<number>
       {
       public:
 
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-          : comoving_normalization(0.0), normalization_set(false), task<number>(nm, i, t)
+          : comoving_normalization(0.0), normalization_set(false), integration_task<number>(nm, i, t)
           {
           }
 
-        ~twopf_list_task()
-          {
-          }
+        ~twopf_list_task() = default;
 
         //! Set comoving wavenumber normalization constant
 
         //! It is an error to try to set this twice, since it could lead to inconsistent results.
         //! If a second attempt is made to set the normalization, throws a RUNTIME_ERROR exception.
-        void set_normalization(typename task<number>::kconfig_kstar kstar)
+        void set_normalization(typename integration_task<number>::kconfig_kstar kstar)
           {
             if(this->normalization_set) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TWOPF_TASK_LIST_NORM);
             normalization_set = true;
@@ -360,19 +588,17 @@ namespace transport
       public:
         //! Construct a named two-point function task
         twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                   const range<double>& ks, typename task<number>::kconfig_kstar kstar);
+                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar);
 
         //! Construct an anonymized two-point function task
         twopf_task(const initial_conditions<number>& i, const range<double>& t,
-                   const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
           : twopf_task(random_string(), i, t, ks, kstar)
           {
           }
 
         //! Destroy a two-point function task
-        ~twopf_task()
-          {
-          }
+        ~twopf_task() = default;
 
         //! Get list of k-configurations at which this task will sample the twopf
         const std::vector<twopf_kconfig>& get_sample() const { return(this->config_list); }
@@ -380,12 +606,14 @@ namespace transport
         //! Get the number of k-configurations at which this task will sample the twopf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
-        // INTERFACE -- XML SERIALIZATION
+
+        // SERIALIZATION (implements a 'serializable' interface)
 
         //! Serialize this task to the repository
-        void serialize(serialization_writer& writer) const;
+        virtual void serialize(serialization_writer& writer) const override;
 
       protected:
+
         //! List of k-configurations associated with this task
         std::vector<twopf_kconfig> config_list;
 
@@ -397,7 +625,7 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                   const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
       : original_ks(ks), twopf_list_task<number>(nm, i, t)
       {
         this->set_normalization(kstar);
@@ -444,7 +672,7 @@ namespace transport
 
             template <typename number>
             transport::twopf_task<number> deserialize(serialization_reader* reader, const std::string& name,
-                                                      const transport::initial_conditions<number>& ics, typename transport::task<number>::kconfig_kstar kstar)
+                                                      const transport::initial_conditions<number>& ics, typename transport::integration_task<number>::kconfig_kstar kstar)
 	            {
 								reader->start_node(__CPP_TRANSPORT_NODE_TWOPF_TSAMPLE);
 		            reader->push_bookmark();
@@ -476,11 +704,11 @@ namespace transport
 
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                     const range<double>& ks, typename task<number>::kconfig_kstar kstar);
+                     const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar);
 
         //! Construct an anonymized three-point function task based on sampling from a cubic lattice of ks
         threepf_task(const initial_conditions<number>& i, const range<double>& t,
-                     const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+                     const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
           : threepf_task(random_string(), i, t, ks, kstar)
           {
           }
@@ -489,20 +717,18 @@ namespace transport
         //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                      const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                     typename task<number>::kconfig_kstar kstar);
+                     typename integration_task<number>::kconfig_kstar kstar);
 
         //! Construct an anonymized three-point function task based on sampling in FLS parameters
         threepf_task(const initial_conditions<number>& i, const range<double>& t,
                      const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                     typename task<number>::kconfig_kstar kstar)
+                     typename integration_task<number>::kconfig_kstar kstar)
           : threepf_task(random_string(), i, t, kts, alphas, betas, kstar)
           {
           }
 
         //! Destroy a three-point function task
-        ~threepf_task()
-          {
-          }
+        ~threepf_task() = default;
 
         //! Get list of k-configurations at which this task will sample the threepf
         const std::vector<threepf_kconfig>& get_sample() const { return(this->config_list); }
@@ -510,10 +736,11 @@ namespace transport
         //! Get the number of k-configurations at which this task will sample the threepf
         unsigned int get_number_kconfigs() const { return(this->config_list.size()); }
 
-        // SERIALIZATION INTERFACE
+
+        // SERIALIZATION (implements a 'serialiazble' interface)
 
         //! Serialize this task to the repository
-        void serialize(serialization_writer& writer) const;
+        virtual void serialize(serialization_writer& writer) const override;
 
       protected:
         //! List of k-configurations associated with this task
@@ -535,7 +762,7 @@ namespace transport
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                       const range<double>& ks, typename task<number>::kconfig_kstar kstar)
+                                       const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
       : original_lattice(cubic_lattice), original_ks(ks),
         original_kts(), original_alphas(), original_betas(),
         twopf_list_task<number>(nm, i, t)
@@ -597,7 +824,7 @@ namespace transport
 
     // build a threepf task from sampling at specific values of the Fergusson-Shellard-Liguori parameters k_t, alpha, beta
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, const range<double>& kts, const range<double>& alphas, const range<double>& betas, typename task<number>::kconfig_kstar kstar)
+    threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, const range<double>& kts, const range<double>& alphas, const range<double>& betas, typename integration_task<number>::kconfig_kstar kstar)
       : original_lattice(fergusson_liguori_shellard), original_ks(),
         original_kts(kts), original_alphas(alphas), original_betas(betas),
         twopf_list_task<number>(nm, i, t)
@@ -654,7 +881,7 @@ namespace transport
 
             template <typename number>
             transport::threepf_task<number> deserialize(serialization_reader* reader, const std::string& name,
-                                                        const transport::initial_conditions<number>& ics, typename transport::task<number>::kconfig_kstar kstar)
+                                                        const transport::initial_conditions<number>& ics, typename transport::integration_task<number>::kconfig_kstar kstar)
 	            {
                 reader->start_node(__CPP_TRANSPORT_NODE_THREEPF_TSAMPLE);
                 reader->push_bookmark();

@@ -16,5 +16,10 @@
 #define __CPP_TRANSPORT_TASK_THREEPF_TYPE     "Unknown wavenumber grid type when attempting to write threepf task to repository"
 #define __CPP_TRANSPORT_SERIALIZE_BASE_TASK   "Error: attempt to serialize base 'task' object"
 
+#define __CPP_TRANSPORT_OUTPUT_ELEMENTS       "Output items: "
+#define __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK   "task"
+#define __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT "output"
+#define __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS   "tags"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASKS_H

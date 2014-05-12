@@ -117,7 +117,9 @@ namespace transport
 
         class generic_batcher
           {
+
           public:
+
             template <typename handle_type>
             generic_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
@@ -197,6 +199,7 @@ namespace transport
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
           protected:
+
             //! Compute the size of all currently-batched results
             virtual size_t storage() const = 0;
 
@@ -204,6 +207,7 @@ namespace transport
             virtual void flush(replacement_action action) = 0;
 
           protected:
+
             const unsigned int             capacity;
 
             const unsigned int             Nfields;
@@ -344,6 +348,7 @@ namespace transport
               }
 
           protected:
+
             size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->num_backg
                                             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->num_twopf_re + this->num_twopf_im)
                                             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->num_threepf); }
@@ -386,6 +391,7 @@ namespace transport
               }
 
           protected:
+
             const threepf_writer_group writers;
 
             unsigned int               num_twopf_re;
@@ -395,6 +401,7 @@ namespace transport
             std::vector<twopf_item>    twopf_re_batch;
             std::vector<twopf_item>    twopf_im_batch;
             std::vector<threepf_item>  threepf_batch;
+
           };
 
 
@@ -422,11 +429,14 @@ namespace transport
         //! Never overwrites existing data; if the container already exists, an exception is thrown
         virtual void create_container(typename repository<number>::integration_writer& ctr) = 0;
 
-//        //! Open an existing container
-//        virtual void open_container(typename repository<number>::integration_writer& ctr) = 0;
-
         //! Close an open container associated with an integration_writer
         virtual void close_container(typename repository<number>::integration_writer& ctr) = 0;
+
+		    //! Open an existing container associated with an integration_reader object.
+		    virtual void open_container(typename repository<number>::integration_reader& ctr) = 0;
+
+		    //! Close an open container associated with an integration_reader
+		    virtual void close_container(typename repository<number>::integration_reader& ctr) = 0;
 
 
         // INTERFACE -- WRITE INDEX TABLES FOR A CONTAINER
@@ -474,11 +484,11 @@ namespace transport
 
         //! Aggregate a temporary twopf container into a principal container
         virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
-                                           const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
+                                           const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) = 0;
 
         //! Aggregate a temporary threepf container into a principal container
         virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
-                                             const std::string& temp_ctr, model<number>* m, task<number>* tk) = 0;
+                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) = 0;
 
 
         // INTERNAL DATA

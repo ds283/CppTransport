@@ -14,7 +14,7 @@
 #define __CPP_TRANSPORT_REPO_MISSING_PACKAGES   "Repository error: Container for model definitions not present or inaccessible"
 #define __CPP_TRANSPORT_REPO_MISSING_INTGRTNS   "Repository error: Container for integration definitions not present or inaccessible"
 #define __CPP_TRANSPORT_REPO_PACKAGE_EXISTS     "Repository error: Attempt to insert duplicate model specification"
-#define __CPP_TRANSPORT_REPO_INTGRTN_EXISTS     "Repository error: Attempt to insert duplicate integration specification"
+#define __CPP_TRANSPORT_REPO_TASK_EXISTS     "Repository error: Attempt to insert duplicate integration specification"
 #define __CPP_TRANSPORT_REPO_INSERT_ERROR       "Repository error: Error while inserting document into repository (backend code="
 #define __CPP_TRANSPORT_REPO_QUERY_ERROR        "Repository error: Error while querying document from repository (backend code="
 #define __CPP_TRANSPORT_REPO_DELETE_ERROR       "Repository error: Error while deleting repository document (backend id="

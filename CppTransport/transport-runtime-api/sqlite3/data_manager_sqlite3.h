@@ -58,80 +58,88 @@ namespace transport
         ~data_manager_sqlite3();
 
 
-        // INTERFACE -- CONTAINER HANDLING
+        // INTERFACE -- CONTAINER HANDLING (implements a 'data_manager' interface)
 
       public:
 
         //! Create a new container associated with an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        void create_container(typename repository<number>::integration_writer& ctr);
-
-//        //! Open an existing container
-//        void open_container(typename repository<number>::integration_writer& ctr);
+        virtual void create_container(typename repository<number>::integration_writer& ctr) override;
 
         //! Close an open container associated with an integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to write using an integration_writer will lead to unsubtle errors.
-        void close_container(typename repository<number>::integration_writer& ctr);
+        virtual void close_container(typename repository<number>::integration_writer& ctr) override;
 
-      protected:
-        void backend_open_container(typename repository<number>::integration_writer& ctr, int flags=SQLITE_OPEN_READWRITE,
-                                    const std::string& excpt_a=default_excpt_a,
-                                    const std::string& excpt_b=default_excpt_b);
+		    //! Open an existing container associated with an integration_reader object.
+		    virtual void open_container(typename repository<number>::integration_reader& ctr) override;
+
+		    //! Close an open container associated with an integration_reader object.
+
+		    //! Any open sqlite3 handles are closed. Attempting to read from the container after closing
+		    //! will lead to unsubtle errors.
+		    virtual void close_container(typename repository<number>::integration_reader& ctr) override;
 
 
-        // INTERFACE -- WRITE INDEX TABLES
+        // INTERFACE -- WRITE INDEX TABLES (implements a 'data_manager' interface)
 
       public:
+
         //! Create tables needed for a twopf container
-        void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
-                           unsigned int Nfields);
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
+                                   unsigned int Nfields) override;
 
         //! Create tables needed for a threepf container
-        void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk,
-                           unsigned int Nfields);
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk,
+                                   unsigned int Nfields) override;
 
 
-        // INTERFACE - TASK FILES
+        // INTERFACE - TASK FILES (implements a 'data_manager' interface)
 
       public:
+
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue);
+        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue) override;
 
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue);
+        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue) override;
 
         //! Read a list of task assignments for a particular worker
-        std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker);
+        virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) override;
 
 
-        // INTERFACE -- TEMPORARY CONTAINERS
+        // INTERFACE -- TEMPORARY CONTAINERS (implements a 'data_manager' interface)
 
       public:
+
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir,
-                                                                                 const boost::filesystem::path& logdir,
-                                                                                 unsigned int worker, unsigned int Nfields,
-                                                                                 typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                 boost::timer::cpu_timer& integration_timer);
+        virtual typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir,
+                                                                                         const boost::filesystem::path& logdir,
+                                                                                         unsigned int worker, unsigned int Nfields,
+                                                                                         typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                         boost::timer::cpu_timer& integration_timer) override;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir,
-                                                                                     const boost::filesystem::path& logdir,
-                                                                                     unsigned int worker, unsigned int Nfields,
-                                                                                     typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                     boost::timer::cpu_timer& integration_timer);
+        virtual typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir,
+                                                                                             const boost::filesystem::path& logdir,
+                                                                                             unsigned int worker, unsigned int Nfields,
+                                                                                             typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                             boost::timer::cpu_timer& integration_timer) override;
 
         //! Aggregate a temporary twopf container into a principal container
-       void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
-                                  const std::string& temp_ctr, model<number>* m, task<number>* tk);
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
+                                           const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
 
         //! Aggregate a temporary threepf container into a principal container
-        void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
-                                     const std::string& temp_ctr, model<number>* m, task<number>* tk);
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
+                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
+
+
+		    // INTERNAL UTILITY FUNCTIONS
 
       protected:
+
         //! Replace a temporary twopf container with a new one
         void replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
                                           unsigned int Nfields, typename data_manager<number>::generic_batcher* batcher,
@@ -148,11 +156,15 @@ namespace transport
         // INTERNAL DATA
 
       private:
+
         //! List of open sqlite3 connexions
         std::list< sqlite3* > open_containers;
 
-        //! Serial number used to distinguish temporary containers associated with this worker
+        //! Serial number used to distinguish
+        //! the set of temporary containers associated with this worker.
+		    //! Begins at zero and is incremented as temporary containers are generated.
         unsigned int          temporary_container_serial;
+
       };
 
 
@@ -183,24 +195,6 @@ namespace transport
     template <typename number>
     void data_manager_sqlite3<number>::create_container(typename repository<number>::integration_writer& ctr)
       {
-        this->backend_open_container(ctr, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE,
-                                     __CPP_TRANSPORT_DATACTR_CREATE_A, __CPP_TRANSPORT_DATACTR_CREATE_B);
-      }
-
-
-//    // Open an existing container
-//    template <typename number>
-//    void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_writer& ctr)
-//      {
-//        this->backend_open_container(ctr);
-//      }
-
-
-    // Backend create/open container
-    template <typename number>
-    void data_manager_sqlite3<number>::backend_open_container(typename repository<number>::integration_writer& ctr, int flags,
-                                                              const std::string& excpt_a, const std::string& excpt_b)
-      {
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
 
@@ -210,22 +204,22 @@ namespace transport
 
         // open the main container
 
-        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, flags, nullptr);
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
         if(status != SQLITE_OK)
-          {
+	        {
             std::ostringstream msg;
             if(db != nullptr)
-              {
-                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ": " << sqlite3_errmsg(db) << ")";
+	            {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
                 sqlite3_close(db);
-              }
+	            }
             else
-              {
-                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ")";
-              }
+	            {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+	            }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+	        }
 
         // enable foreign key constraints
         char* errmsg;
@@ -237,24 +231,24 @@ namespace transport
 
         // open the taskfile associated with this container
 
-        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, flags, nullptr);
+        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
         if(status != SQLITE_OK)
-          {
+	        {
             sqlite3_close(db);
 
             std::ostringstream msg;
             if(taskfile != nullptr)
-              {
-                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ": " << sqlite3_errmsg(db) << ")";
+	            {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
                 sqlite3_close(taskfile);
-              }
+	            }
             else
-              {
-                msg << excpt_a << " '" << ctr_path.string() << "' " << excpt_b << status << ")";
-              }
+	            {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+	            }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
+	        }
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
@@ -262,7 +256,7 @@ namespace transport
       }
 
 
-    // Close a container
+    // Close a container after writing
     template <typename number>
     void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_writer& ctr)
       {
@@ -286,6 +280,20 @@ namespace transport
         // physically remove the tempfiles directory
         boost::filesystem::remove(ctr.temporary_files_path());
       }
+
+
+		// Open a container for reading
+		template <typename number>
+		void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_reader& ctr)
+			{
+			}
+
+
+		// Close a container after reading
+		template <typename number>
+		void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_reader& ctr)
+			{
+			}
 
 
     // INDEX TABLE MANAGEMENT
@@ -499,7 +507,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
-                                                             const std::string& temp_ctr, model<number>* m, task<number>* tk)
+                                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
       {
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -511,7 +519,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
-                                                               const std::string& temp_ctr, model<number>* m, task<number>* tk)
+                                                               const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
       {
         sqlite3* db = nullptr;
         ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr

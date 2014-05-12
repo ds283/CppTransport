@@ -195,10 +195,12 @@ namespace transport
           public:
 
             //! Create an output_group descriptor
-            output_group(unsigned int sn, const std::string& be, const std::string& path, const std::string& ctr,
-                         const std::string& ctime, bool lock, const std::list<std::string>& nt)
-	            : serial(sn), backend(be), output_path(path), database_path(ctr),
-	              created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt)
+            output_group(const std::string& tn,
+                         unsigned int sn, const std::string& be, const std::string& path, const std::string& ctr,
+                         const std::string& ctime, bool lock,
+                         const std::list<std::string>& nt, const std::list<std::string>& tg)
+	            : task(tn), serial(sn), backend(be), output_path(path), database_path(ctr),
+	              created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt), tags(tg)
 	            {
 	            }
 
@@ -223,6 +225,16 @@ namespace transport
 		                out << "    " << *t << std::endl;
 		                count++;
 			            }
+
+		            count = 0;
+				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_TAGS << ": ";
+		            for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+			            {
+				            if(count > 0) out << ", ";
+				            out << *t;
+		                count++;
+			            }
+				        out << std::endl;
 			        }
 
             // INTERFACE
@@ -241,30 +253,39 @@ namespace transport
             //! Get notes
             const std::list<std::string>& get_notes() const { return(this->notes); }
 
+		        //! Get tags
+		        const std::list<std::string>& get_tags() const { return(this->tags); }
+
             // PRIVATE DATA
 
           private:
 
+		        //! Parent task associated with this output. Not ordinarily user-visible.
+		        const std::string task;
+
             //! Internal serial number. Not user-visible.
-            unsigned int serial;
+            const unsigned int serial;
 
             //! Name of integration backend used to generate this output group
-            std::string backend;
+            const std::string backend;
 
             //! Path of parent directory containing the output, usually residing within the repository
-            boost::filesystem::path output_path;
+            const boost::filesystem::path output_path;
 
             //! Path to output database
-            boost::filesystem::path database_path;
+            const boost::filesystem::path database_path;
 
             //! Creation time
-            boost::posix_time::ptime created;
+            const boost::posix_time::ptime created;
 
             //! Flag indicating whether or not this output group is locked
-            bool locked;
+            const bool locked;
 
             //! Array of strings representing notes attached to this group
-            std::list<std::string> notes;
+            const std::list<std::string> notes;
+
+		        //! Array of strings representing metadata tags
+		        const std::list<std::string> tags;
 	        };
 
 
@@ -281,16 +302,36 @@ namespace transport
 				    //! After creation, the data container is not yet open; that must be done later
 				    //! by the task_manager which can depute a data_manager object of its choice to do the work.
 				    integration_reader(const output_group& og)
-				      : group(og)
+				      : group(og), data_manager_handle(nullptr)
 					    {
 					    }
+
+		        //! Set data_manager handle for data container
+		        template <typename data_manager_type>
+		        void set_data_manager_handle(data_manager_type data)
+			        {
+		            this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
+			        }
+
+		        //! Return data_manager handle for data container
+
+		        //! Throws a REPOSITORY_ERROR exception if the handle is unset
+		        template <typename data_manager_type>
+		        void get_data_manager_handle(data_manager_type* data)
+			        {
+		            if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE);
+		            *data = static_cast<data_manager_type>(this->data_manager_handle);
+			        }
 
 
 				    // INTERNAL DATA
 
 		      private:
 
+				    //! Copy of the output_group descriptor for the group we are associated with
 				    output_group& group;
+
+		        void*         data_manager_handle;
 
 			    };
 
@@ -330,10 +371,14 @@ namespace transport
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
 
-        //! Write a threepf integration task to the integration database.
-        virtual void write_integration(const twopf_task<number>& t, const model<number>* m) = 0;
-        //! Write a twopf integration task to the integration database
-        virtual void write_integration(const threepf_task<number>& t, const model<number>* m) = 0;
+        //! Write a threepf integration task to the database.
+        virtual void write_task(const twopf_task<number>& t, const model<number>* m) = 0;
+
+        //! Write a twopf integration task to the database
+        virtual void write_task(const threepf_task<number>& t, const model<number>* m) = 0;
+
+		    //! Write an output task to the database
+		    virtual void write_task(const output_task<number>& t) = 0;
 
 
         // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
@@ -392,6 +437,7 @@ namespace transport
 		namespace output_group_helper
 			{
 
+				// used for sorting a list of output_groups into decreasing chronological order
 				template <typename number>
 				bool comparator(const typename repository<number>::output_group& A, const typename repository<number>::output_group& B)
 					{

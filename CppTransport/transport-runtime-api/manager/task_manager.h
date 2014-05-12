@@ -129,7 +129,7 @@ namespace transport
         void master_push_repository(void);
 
         //! Master node: Pass new integration task to the workers
-        void master_task_to_workers(typename repository<number>::integration_writer& ctr, task<number>* task_name, model<number>* m);
+        void master_integration_task_to_workers(typename repository<number>::integration_writer& ctr, integration_task<number>* task_name, model<number>* m);
 
         //! Slave node: Process a new task instruction
         void slave_process_task(const MPI::new_integration_payload& payload);
@@ -374,6 +374,10 @@ namespace transport
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
                 this->master_dispatch_twopf_task(two_task, m);
               }
+	          else if(dynamic_cast< output_task<number>* >(tk) != nullptr)
+	            {
+                std::cerr << "Output tasks not implemented yet!" << std::endl;
+	            }
             else
               {
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
@@ -443,7 +447,7 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        this->master_task_to_workers(ctr, tk, m);
+        this->master_integration_task_to_workers(ctr, tk, m);
 
         // close the data container
         this->data_mgr->close_container(ctr);
@@ -477,7 +481,7 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        this->master_task_to_workers(ctr, tk, m);
+        this->master_integration_task_to_workers(ctr, tk, m);
 
         // close the data container
         this->data_mgr->close_container(ctr);
@@ -485,8 +489,8 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_task_to_workers(typename repository<number>::integration_writer& ctr,
-                                                      task<number>* tk, model<number>* m)
+    void task_manager<number>::master_integration_task_to_workers(typename repository<number>::integration_writer& ctr,
+                                                                  integration_task<number>* tk, model<number>* m)
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 

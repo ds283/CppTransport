@@ -56,12 +56,12 @@ namespace transport
         context backend_get_context();
 
         // Integrate background and 2-point function on the CPU
-        void backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+        void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                    typename data_manager<number>::twopf_batcher& batcher,
                                    bool silent=false);
 
         // Integrate background, 2-point function and 3-point function on the CPU
-        void backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+        void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                      typename data_manager<number>::threepf_batcher& batcher,
                                      bool silent=false);
 
@@ -71,10 +71,10 @@ namespace transport
         // INTERNAL API
 
       protected:
-        void twopf_kmode(const twopf_kconfig& kconfig, const task<number>* tk,
+        void twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
                          typename data_manager<number>::twopf_batcher& batcher);
 
-        void threepf_kmode(const threepf_kconfig&, const task<number>* tk,
+        void threepf_kmode(const threepf_kconfig&, const integration_task<number>* tk,
                            typename data_manager<number>::threepf_batcher& batcher);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
@@ -173,7 +173,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $$__MODEL_basic<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const task<number>* tk,
+    void $$__MODEL_basic<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
@@ -206,7 +206,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const task<number>* tk,
+    void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
                                               typename data_manager<number>::twopf_batcher& batcher)
       {
         // set up a functor to evolve this system
@@ -255,7 +255,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const task<number>* tk,
+    void $$__MODEL_basic<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                                           typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {
@@ -289,7 +289,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const task<number>* tk,
+    void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
                                                 typename data_manager<number>::threepf_batcher& batcher)
       {
         // set up a functor to evolve this system

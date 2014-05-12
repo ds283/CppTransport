@@ -86,16 +86,16 @@ int main(int argc, char* argv[])
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("dquad.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
 
     // write each initial conditions/parameter specification and integration specification into the model repository
-    repo->write_integration(tk2, model);
-    repo->write_integration(tk3, model);
+    repo->write_task(tk2, model);
+    repo->write_task(tk3, model);
 
     std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_package_document(ics.get_name());
     std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;
 
-    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_integration_document(tk2.get_name());
+    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_task_document(tk2.get_name());
     std::cout << "2pf integration JSON document:" << std::endl << task2_json << std::endl << std::endl;
 
-    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_integration_document(tk3.get_name());
+    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_task_document(tk3.get_name());
     std::cout << "3pf integration JSON document:" << std::endl << task3_json << std::endl << std::endl;
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models

@@ -12,6 +12,8 @@
 #define __CPP_TRANSPORT_NFIELDS_TWOPF         "Storage error: Unexpected number of elements when batching output of twopf"
 #define __CPP_TRANSPORT_NFIELDS_THREEPF       "Storage error: Unexpected number of elements when batching output of threepf"
 
+#define __CPP_TRANSPORT_DATAMGR_NOT_SET       "Internal error: Attempt to access data manager when unset in 'task_manager'"
+
 #define __CPP_TRANSPORT_DATACTR_NOT_CLOSED    "Data container error: Some containers not closed when deleting 'data_manager' object"
 #define __CPP_TRANSPORT_DATACTR_CLOSE         "Data container error: Unexpected error when closing containers on destruction of 'data_manager' object (backend code="
 #define __CPP_TRANSPORT_DATACTR_CREATE_A      "Data container error: Could not create data container"
