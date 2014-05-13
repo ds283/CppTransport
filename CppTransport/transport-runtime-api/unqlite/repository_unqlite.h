@@ -98,7 +98,8 @@ namespace transport
       public:
 
         //! Query the database for a named task, and reconstruct it if present
-        virtual task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder) override;
+        virtual task<number>* query_task(const std::string& name, model_list<number>& mlist,
+                                         typename instance_manager<number>::model_finder finder) override;
 
 
         // EXTRA FUNCTIONS, NOT DEFINED BY INTERFACE
@@ -172,11 +173,13 @@ namespace transport
 
 		    //! Extract an integration task from a serialization reader
 		    task<number>* query_integration_task(const std::string& name, task_type type,
-		                                         model<number>*& m, typename instance_manager<number>::model_finder finder,
+		                                         model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
 		                                         unqlite_serialization_reader* reader);
 
 		    //! Extract an outut task from a serialization reader
-		    task<number>* query_output_task(const std::string& name, unqlite_serialization_reader* reader);
+		    task<number>* query_output_task(const std::string& name,
+		                                    model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
+		                                    unqlite_serialization_reader* reader);
 
 
         // INTERNAL DATA
@@ -758,9 +761,10 @@ namespace transport
 
     // Query the database for a named task, which is reconstructed and returned as a task<> object
     template <typename number>
-    task<number>* repository_unqlite<number>::query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder)
+    task<number>* repository_unqlite<number>::query_task(const std::string& name, model_list<number>& mlist,
+                                                         typename instance_manager<number>::model_finder finder)
 	    {
-        assert(m == nullptr);
+        assert(mlist.size() == 0);
 
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -772,18 +776,19 @@ namespace transport
 
         task<number>* rval = nullptr;
 
+		    // work out how to build an appropriate task based on the record type
         switch(type)
 	        {
             case twopf_record:
-	            rval = this->query_integration_task(name, type, m, finder, task_reader);
+	            rval = this->query_integration_task(name, type, mlist, finder, task_reader);
             break;
 
             case threepf_record:
-	            rval = this->query_integration_task(name, type, m, finder, task_reader);
+	            rval = this->query_integration_task(name, type, mlist, finder, task_reader);
             break;
 
             case output_record:
-	            rval = this->query_output_task(name, task_reader);
+	            rval = this->query_output_task(name, mlist, finder, task_reader);
             break;
 
             default:
@@ -802,10 +807,10 @@ namespace transport
 		// Extract integration task
 		template <typename number>
 		task<number>* repository_unqlite<number>::query_integration_task(const std::string& name, task_type type,
-		                                                                 model<number>*& m, typename instance_manager<number>::model_finder finder,
-																																		 unqlite_serialization_reader* task_reader)
+		                                                                 model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
+		                                                                 unqlite_serialization_reader* task_reader)
 			{
-				assert(m == nullptr);
+				assert(mlist.size() == 0);
 				assert(task_reader != nullptr);
 
         // extract data:
@@ -826,7 +831,8 @@ namespace transport
         package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
 
         // use the supplied finder to recover a model object for this UID
-        m = finder(uid);
+        model<number>* m = finder(uid);
+				mlist.push_back(m);
 
         // obtain parameter and initial-conditions validators from this model
         typename parameters<number>::params_validator p_validator = m->params_validator_factory();
@@ -881,7 +887,9 @@ namespace transport
 
 		// Extract output task
 		template <typename number>
-		task<number>* repository_unqlite<number>::query_output_task(const std::string& name, unqlite_serialization_reader* reader)
+		task<number>* repository_unqlite<number>::query_output_task(const std::string& name,
+		                                                            model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
+		                                                            unqlite_serialization_reader* reader)
 			{
 				assert(reader != nullptr);
 
@@ -890,6 +898,30 @@ namespace transport
 				reader->push_bookmark();
 
 				output_task<number> tk = output_task_helper::deserialize<number>(reader, name);
+
+				// work through the output task, finding models and pushing suitable references to the model list
+				for(unsigned int i = 0; i < tk.size(); i++)
+					{
+						const output_task_element& element = tk.get(i);
+
+				    // get serialization_reader for the named package
+				    int package_id = 0;
+						task_type type;
+				    unqlite_serialization_reader* package_reader = this->deserialize_task(element.get_task(), package_id, type);
+
+						// ensure named task is of integration type
+						if(type != twopf_record || type != threepf_record)
+							throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
+
+				    // extract UID for model
+				    std::string uid;
+				    package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
+
+				    // use the supplied finder to recover a model object for this UID
+				    model<number>* m = finder(uid);
+				    mlist.push_back(m);
+					}
+
 				task<number>* rval = new output_task<number>(tk);
 
 				reader->pop_bookmark();

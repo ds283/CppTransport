@@ -13,6 +13,7 @@
 
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/model_list.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
 
@@ -388,8 +389,10 @@ namespace transport
         //! Query the database for a named task, and reconstruct it (and a suitable model object
 		    //! which can process it) using the supplied model finder.
 		    //! If successful, a pointer to the task is returned and a pointer to the model object
-		    //! which can process it is written to the reference parameter m.
-        virtual task<number>* query_task(const std::string& name, model<number>*& m, typename instance_manager<number>::model_finder finder) = 0;
+		    //! which can process it is pushed to the model list mlist.
+		    //! mlist should be empty.
+        virtual task<number>* query_task(const std::string& name, model_list<number>& mlist,
+                                         typename instance_manager<number>::model_finder finder) = 0;
 
 
         // INTERFACE -- ADD OUTPUT TO TASKS

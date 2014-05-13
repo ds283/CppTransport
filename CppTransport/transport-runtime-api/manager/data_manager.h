@@ -35,7 +35,10 @@
 namespace transport
   {
 
-    // forward-declare model to avoid circular references
+    // forward-declare model to avoid circular references:
+		// model.h includes data_manager.h, and conversely
+		// data_manager needs to know about model objects.
+		// The compromise is that data_manager.h should be included before model.h
     template <typename number> class model;
 
     template <typename number>

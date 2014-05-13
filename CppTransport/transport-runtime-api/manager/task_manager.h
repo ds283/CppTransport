@@ -15,6 +15,7 @@
 #include "transport-runtime-api/models/model.h"
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/model_list.h"
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
@@ -119,10 +120,10 @@ namespace transport
         void master_process_task(const job_descriptor& job);
 
         //! Master node: Dispatch a twopf 'task' (ie., integration) to the worker processes
-        void master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
+        void master_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags);
 
         //! Master node: Dispatch a threepf 'task' (ie., integration) to the worker processes
-        void master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
+        void master_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags);
 
         //! Master node: Terminate all worker processes
         void master_terminate_workers(void);
@@ -137,10 +138,10 @@ namespace transport
         void slave_process_task(const MPI::new_integration_payload& payload);
 
         //! Slave node: Process a twopf task
-        void slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter);
+        void slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const MPI::new_integration_payload& payload, const work_item_filter& filter);
 
         //! Slave node: Process a threepf task
-        void slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const MPI::new_integration_payload& payload, const work_item_filter& filter);
+        void slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const MPI::new_integration_payload& payload, const work_item_filter& filter);
 
         //! Slave node: set repository
         void slave_set_repository(const MPI::set_repository_payload& payload);
@@ -369,9 +370,12 @@ namespace transport
       {
         try
           {
-            model<number>* m = nullptr;
-            task<number>* tk = this->repo->query_task(job.name, m, this->model_finder_factory());
-            assert(m != nullptr);
+						// query a task with the name we're looking for from the database
+		        model_list<number> mlist;
+            task<number>* tk = this->repo->query_task(job.name, mlist, this->model_finder_factory());
+
+		        // check that a model instance was returned -- we'll need this
+            assert(mlist.size() > 0);
 
             // set up work queues for this task, and then distribute to worker processes
 
@@ -380,12 +384,12 @@ namespace transport
             if(dynamic_cast< threepf_task<number>* >(tk) != nullptr)
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->master_dispatch_threepf_task(three_task, m, job.tags);
+                this->master_dispatch_threepf_task(three_task, mlist, job.tags);
               }
             else if(dynamic_cast< twopf_task<number>* >(tk) != nullptr)
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->master_dispatch_twopf_task(two_task, m, job.tags);
+                this->master_dispatch_twopf_task(two_task, mlist, job.tags);
               }
 	          else if(dynamic_cast< output_task<number>* >(tk) != nullptr)
 	            {
@@ -434,13 +438,19 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
+    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags)
       {
+		    // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+
+		    // should have exactly one model instance
+		    if(mlist.size() != 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
         // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
+
+		    model<number>* m = mlist.front();
 
         work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
 
@@ -468,13 +478,19 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
+    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags)
       {
+        // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+
+        // should have exactly one model instance
+        if(mlist.size() != 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
         // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
+
+        model<number>* m = mlist.front();
 
         work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tk);
 
@@ -716,21 +732,21 @@ namespace transport
         // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
         try
           {
-            model<number>* m = nullptr;
-            task<number>* tk = this->repo->query_task(payload.task_name(), m, this->model_finder_factory());
-            assert(m != nullptr);
+		        model_list<number> mlist;
+            task<number>* tk = this->repo->query_task(payload.task_name(), mlist, this->model_finder_factory());
+            assert(mlist.size() > 0);
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
             if(dynamic_cast< threepf_task<number>* >(tk))
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->slave_dispatch_threepf_task(three_task, m, payload, filter);
+                this->slave_dispatch_threepf_task(three_task, mlist, payload, filter);
               }
             else if(dynamic_cast< twopf_task<number>* >(tk))
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->slave_dispatch_twopf_task(two_task, m, payload, filter);
+                this->slave_dispatch_twopf_task(two_task, mlist, payload, filter);
               }
             else
               {
@@ -776,7 +792,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m,
+    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist,
                                                          const MPI::new_integration_payload& payload,
                                                          const work_item_filter& filter)
       {
@@ -784,6 +800,11 @@ namespace transport
 
         // keep track of CPU time
         boost::timer::cpu_timer timer;
+
+        if(mlist.size() != 1)
+	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
+
+        model<number>* m = mlist.front();
 
         // create queues based on whatever devices are relevant for the backend
         context                   ctx  = m->backend_get_context();
@@ -820,7 +841,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m,
+    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist,
                                                            const MPI::new_integration_payload& payload,
                                                            const work_item_filter& filter)
       {
@@ -828,6 +849,11 @@ namespace transport
 
         // keep track of CPU time
         boost::timer::cpu_timer timer;
+
+				if(mlist.size() != 1)
+					throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
+
+				model<number>* m = mlist.front();
 
         // create queues based on whatever devices are relevant for the backend
         context                     ctx  = m->backend_get_context();

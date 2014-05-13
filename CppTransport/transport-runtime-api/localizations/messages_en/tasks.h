@@ -12,6 +12,8 @@
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_NORM  "Internal error: Attempt to reset comoving normalization in 'twopf_task_list' object"
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_UNSET "Internal error: Attempt to push to 'twopf_task_list' before comoving normalization has been set"
 
+#define __CPP_TRANSPORT_OUTPUT_TASK_RANGE     "Internal error: Out of range when accessing 'outout_task' object"
+
 #define __CPP_TRANSPORT_TASK_TIMES            "Sampling times: "
 #define __CPP_TRANSPORT_TASK_THREEPF_TYPE     "Unknown wavenumber grid type when attempting to write threepf task to repository"
 #define __CPP_TRANSPORT_SERIALIZE_BASE_TASK   "Error: attempt to serialize base 'task' object"

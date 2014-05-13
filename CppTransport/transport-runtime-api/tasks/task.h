@@ -13,6 +13,7 @@
 #include <iomanip>
 #include <array>
 #include <vector>
+#include <list>
 #include <sstream>
 #include <stdexcept>
 
@@ -241,7 +242,7 @@ namespace transport
 				// CONSTRUCTOR, DESTRUCTOR
 
 				//! Construct a named output task
-				output_task(const std::string& nm, std::list<output_task_element>& eles)
+				output_task(const std::string& nm, std::vector<output_task_element>& eles)
 					: elements(eles), task<number>(nm)
 					{
 					}
@@ -251,6 +252,21 @@ namespace transport
 
 		    //! Write to a standard output stream
 		    friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
+
+
+				// INTERFACE
+
+				//! Obtain number of task elements
+				unsigned int size() const { return(this->elements.size()); }
+
+				//! Obtain a specific element
+				const output_task_element& get(unsigned int i)
+					{
+						if(i >= this->elements.size())
+							throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
+
+						return(this->elements[i]);
+					}
 
 		    // SERIALIZATION (implements a 'serializable' interface)
 
@@ -262,7 +278,7 @@ namespace transport
 		  protected:
 
 				//! List of output elements which make up this task
-				std::list<output_task_element> elements;
+				std::vector<output_task_element> elements;
 			};
 
 
@@ -296,7 +312,7 @@ namespace transport
 			{
 				this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
 
-				for(std::list<output_task_element>::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+				for(std::vector<output_task_element>::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 					{
 						this->begin_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT, false);
 
@@ -327,7 +343,7 @@ namespace transport
 					{
 						unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
 
-				    std::list<output_task_element> elements;
+				    std::vector<output_task_element> elements;
 						for(unsigned int i = 0; i < num_elements; i++)
 							{
 								reader->start_array_element();
