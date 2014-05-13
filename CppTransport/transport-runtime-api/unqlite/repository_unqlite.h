@@ -1092,21 +1092,24 @@ namespace transport
 		    unsigned int serial_number = this->allocate_new_serial_number(task_reader);
 		    task_reader->pop_bookmark();
 
-		    // construct paths for the various output files and directories
-        std::ostringstream output_leaf;
-		    output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
-        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf.str();
+		    // get current time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+		    // construct paths for the various output files and directories.
+		    // We use the ISO form of the current time to label the output group directory.
+		    // This means the repository directory structure will be human-readable if necessary.
+        std::string output_leaf = boost::posix_time::to_iso_string(now);
+//		    output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf;
         boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
         boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
         boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
         boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
-		    // update task_reader with information about the new output group
-        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-
 		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_DATA becomes available for reading again
 		    task_reader->reset();
 
+        // update task_reader with information about the new output group
 		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
