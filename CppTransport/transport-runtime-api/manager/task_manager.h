@@ -37,6 +37,7 @@
 
 #define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
 #define __CPP_TRANSPORT_SWITCH_TASK     "-task"
+#define __CPP_TRANSPORT_SWITCH_TAG      "-tag"
 
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
@@ -62,8 +63,9 @@ namespace transport
         class job_descriptor
           {
           public:
-            job_type    type;
-            std::string name;
+            job_type               type;
+            std::string            name;
+		        std::list<std::string> tags;
           };
 
 
@@ -117,10 +119,10 @@ namespace transport
         void master_process_task(const job_descriptor& job);
 
         //! Master node: Dispatch a twopf 'task' (ie., integration) to the worker processes
-        void master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m);
+        void master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
 
         //! Master node: Dispatch a threepf 'task' (ie., integration) to the worker processes
-        void master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m);
+        void master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
 
         //! Master node: Terminate all worker processes
         void master_terminate_workers(void);
@@ -216,6 +218,8 @@ namespace transport
           {
             bool multiple_repo_warn = false;
 
+            std::list<std::string> tags;
+
             for(unsigned int i = 1; i < argc; i++)
               {
                 if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
@@ -252,18 +256,27 @@ namespace transport
                           }
                       }
                   }
-                else if (static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TASK)
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TASK)
                   {
                     if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TASK_ID);
                     else
                       {
                         ++i;
+
                         job_descriptor desc;
                         desc.type = job_task;
                         desc.name = argv[i];
+		                    desc.tags = tags;
+
                         job_queue.push_back(desc);
+		                    tags.clear();
                       }
                   }
+	              else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
+	                {
+		                if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TAG);
+		                else            tags.push_back(std::string(argv[++i]));
+	                }
                 else
                   {
                     std::ostringstream msg;
@@ -367,12 +380,12 @@ namespace transport
             if(dynamic_cast< threepf_task<number>* >(tk) != nullptr)
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->master_dispatch_threepf_task(three_task, m);
+                this->master_dispatch_threepf_task(three_task, m, job.tags);
               }
             else if(dynamic_cast< twopf_task<number>* >(tk) != nullptr)
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->master_dispatch_twopf_task(two_task, m);
+                this->master_dispatch_twopf_task(two_task, m, job.tags);
               }
 	          else if(dynamic_cast< output_task<number>* >(tk) != nullptr)
 	            {
@@ -421,7 +434,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m)
+    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
       {
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
@@ -433,7 +446,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, tags, m->get_backend(), this->get_rank());
 
         // create the data container
         this->data_mgr->create_container(ctr);
@@ -455,7 +468,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m)
+    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
       {
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
@@ -467,7 +480,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer ctr = this->repo->integration_new_output(tk, tags, m->get_backend(), this->get_rank());
 
         // create the data container
         this->data_mgr->create_container(ctr);

@@ -11,6 +11,7 @@
 #define __CPP_TRANSPORT_MULTIPLE_SET_REPO     "Multiple repository specifiers; the second and subsequent specifiers will be ignored"
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
+#define __CPP_TRANSPORT_EXPECTED_TAG          "Too few arguments: expected metadata tag"
 #define __CPP_TRANSPORT_UNKNOWN_SWITCH        "Unknown command-line switch"
 
 

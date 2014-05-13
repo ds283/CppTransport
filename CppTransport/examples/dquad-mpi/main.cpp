@@ -36,8 +36,8 @@ int main(int argc, char* argv[])
     // using doubles, with given parameter choices
     transport::dquad_basic<double>* model = new transport::dquad_basic<double>(mgr);
 
-//    if(mgr->is_master()) mgr->execute_tasks();
-//    else                 mgr->wait_for_tasks();
+    if(mgr->is_master()) mgr->execute_tasks();
+    else                 mgr->wait_for_tasks();
 
 		if(mgr->is_master())
 			{

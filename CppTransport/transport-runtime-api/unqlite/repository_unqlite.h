@@ -117,13 +117,13 @@ namespace transport
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer integration_new_output(twopf_task<number>* tk,
-                                                                                          const std::string& backend, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer integration_new_output(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                       const std::string& backend, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer integration_new_output(threepf_task<number>* tk,
-                                                                                          const std::string& backend, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer integration_new_output(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                       const std::string& backend, unsigned int worker) override;
 
 
 		    // INTERFACE -- QUERY OUTPUT FROM A TASK (implements a 'repository' interface)
@@ -161,7 +161,7 @@ namespace transport
 		    unqlite_serialization_reader* deserialize_package(const std::string& name, int& unqlite_id);
 
         //! Insert a record for a specified task, in a specified container.
-        typename repository<number>::integration_writer insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk);
+        typename repository<number>::integration_writer insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk, const std::list<std::string>& tags);
 
         //! Allocate a new serial number based on the list of used serial numbers from an output record
         unsigned int allocate_new_serial_number(unqlite_serialization_reader* reader);
@@ -518,9 +518,9 @@ namespace transport
         writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
         // commit task block
-        writer.start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        writer.start_node(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
         t.serialize(writer);
-        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
 
         // write empty array of output blocks: will be populated when integrations are run
         writer.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, true);
@@ -571,9 +571,9 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
 		    // commit task block
-		    writer.start_node(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 		    t.serialize(writer);
-		    writer.end_element(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 
 		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
@@ -846,7 +846,7 @@ namespace transport
         task_reader->reset();
 
         // move the task reader to the task description block, and use it to reconstruct a task<>
-        task_reader->start_node(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
         task_reader->push_bookmark();
 
 				task<number>* rval = nullptr;
@@ -871,7 +871,7 @@ namespace transport
 			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 			    }
 		    task_reader->pop_bookmark();
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_TASK);
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
 
 		    delete package_reader;
 
@@ -886,14 +886,14 @@ namespace transport
 				assert(reader != nullptr);
 
 				// move the task reader to the task description block, and use it to reconstruct a task<>
-				reader->start_node(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+				reader->start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 				reader->push_bookmark();
 
 				output_task<number> tk = output_task_helper::deserialize<number>(reader, name);
 				task<number>* rval = new output_task<number>(tk);
 
 				reader->pop_bookmark();
-				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_TASK);
+				reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 
 				return(rval);
 			}
@@ -980,7 +980,7 @@ namespace transport
     // Add output for a twopf task
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::integration_new_output(twopf_task<number>* tk,
+    repository_unqlite<number>::integration_new_output(twopf_task<number>* tk, const std::list<std::string>& tags,
                                                        const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
@@ -1000,7 +1000,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk);
+        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk, tags);
 
 		    // close database handles
         this->commit_transaction();
@@ -1012,7 +1012,7 @@ namespace transport
     // Add output for a threepf task
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::integration_new_output(threepf_task<number>* tk,
+    repository_unqlite<number>::integration_new_output(threepf_task<number>* tk, const std::list<std::string>& tags,
                                                        const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
@@ -1032,7 +1032,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk);
+        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk, tags);
 
 		    // commit transaction
         this->commit_transaction();
@@ -1046,7 +1046,8 @@ namespace transport
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk)
+    repository_unqlite<number>::insert_output(const std::string& collection, const std::string& backend,
+                                              unsigned int worker, task <number>* tk, const std::list<std::string>& tags)
       {
         // get serialization_reader for the named task record
         int task_id = 0;
@@ -1080,19 +1081,28 @@ namespace transport
 
 		    task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
-        std::string tag = boost::lexical_cast<std::string>(serial_number);
-		    task_reader->insert_node(tag);  // name of node doesn't matter; it is ignored in arrays, but should be unique
+        std::string array_serial = boost::lexical_cast<std::string>(serial_number);
+		    task_reader->insert_node(array_serial);  // name of node doesn't matter; it is ignored in arrays, but should be unique
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, serial_number);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, output_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, sql_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(now));
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, false);
+
 		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, true);
 		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
-		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, true);
+
+		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);
+		    for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); t++)
+			    {
+				    task_reader->insert_node(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG);
+				    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *t);
+				    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG);
+			    }
 		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-		    task_reader->insert_end_element(tag);
+
+		    task_reader->insert_end_element(array_serial);
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
 
@@ -1238,6 +1248,7 @@ namespace transport
 						tags.push_back(tag);
 						reader->end_array_element();
 					}
+				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
 				return typename repository<number>::output_group(task, serial_number, backend, data_root, data_container,
 																												 creation_time, locked, notes, tags);

@@ -61,10 +61,10 @@ extern "C"
 
 #define __CPP_TRANSPORT_NODE_TASK_DATA             "task-data"
 
-#define __CPP_TRANSPORT_NODE_INTGRTN_TASK          "integration-task"
+#define __CPP_TRANSPORT_NODE_TASK_INTGRTN          "integration-task"
 #define __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT        "integration-output"
 
-#define __CPP_TRANSPORT_NODE_OUTPUT_TASK           "output-task"
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT           "output-task"
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_ID        "serial-number"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH      "output-path"
@@ -81,8 +81,8 @@ extern "C"
 namespace transport
   {
 
-    // utility functions for manipulating XML documents, but which don't need to be methods for a repository object
-    // embedding in an unnamed namespace makes these functions invisible outside this translation unit
+    // utility functions for manipulating UnQLite documents, but which don't need to be methods for a repository object
+
     namespace unqlite_operations
       {
 

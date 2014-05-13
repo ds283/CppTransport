@@ -47,8 +47,8 @@
 #define __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT   "element"
 #define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LABEL     "label"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS      "tags"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG       "tag"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS "tags"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG  "tag"
 
 
 namespace transport
