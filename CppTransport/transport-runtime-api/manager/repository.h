@@ -189,8 +189,6 @@ namespace transport
 
         // OUTPUT GROUPS
 
-		    // forward declare output_group
-		    class output_group;
 
 		    //! Data product descriptor. Used to enumerate the data products associated with an output group.
 		    class data_product
@@ -202,6 +200,14 @@ namespace transport
 				    data_product(const std::string& nm, const std::string& pt, const std::string& ctime)
 		          : name(nm), path(pt), created(boost::posix_time::time_from_string(ctime))
 					    {
+					    }
+
+				    //! Write self to output stream
+				    void write(std::ostream& out) const
+					    {
+								out << __CPP_TRANSPORT_DATAPRODUCT_NAME << " = " << this->name
+										<< __CPP_TRANSPORT_DATAPRODUCT_PATH << " = " << this->path
+										<< __CPP_TRANSPORT_DATAPRODUCT_CREATED << " " << created;
 					    }
 
 
@@ -268,6 +274,14 @@ namespace transport
 				            out << *t;
 		                count++;
 			            }
+
+				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_PRODUCTS << ": " << std::endl;
+				        for(typename std::list<data_product>::const_iterator t = this->data_products.begin(); t != this->data_products.end(); t++)
+			            {
+				            (*t).write(out);
+						        out << std::endl;
+			            }
+
 				        out << std::endl;
 			        }
 
@@ -466,6 +480,14 @@ namespace transport
 
 	    };
 
+
+		// output a data_product descriptor to a standard stream
+		template <typename number>
+		std::ostream& operator<<(std::ostream& out, const typename repository<number>::data_product& product)
+			{
+				product.write(out);
+				return(out);
+			}
 
     // output an output_group descriptor to a standard stream
 		template <typename number>
