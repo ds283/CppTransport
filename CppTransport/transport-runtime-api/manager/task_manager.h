@@ -168,10 +168,10 @@ namespace transport
       protected:
 
         //! Map worker number to communicator rank
-        constexpr unsigned int worker_rank(unsigned int worker_number) { return(worker_number+1); }
+        constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
 
         //! Map communicator rank to worker number
-        constexpr unsigned int worker_number(unsigned int worker_rank) { return(worker_rank-1); }
+        constexpr unsigned int worker_number(unsigned int worker_rank) const { return(worker_rank-1); }
 
 
         // INTERFACE -- ERROR REPORTING

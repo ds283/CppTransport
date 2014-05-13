@@ -20,8 +20,8 @@
 #include "transport-runtime-api/utilities/asciitable.h"
 #include "transport-runtime-api/utilities/latex_output.h"
 #include "transport-runtime-api/concepts/flattener.h"
-#include "transport-runtime-api/containers/label_gadget.h"
-#include "transport-runtime-api/containers/index_selector.h"
+#include "transport-runtime-api/derived-products/utilities/label_gadget.h"
+#include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/plotgadgets/plot_gadget.h"
 #include "transport-runtime-api/messages.h"
 

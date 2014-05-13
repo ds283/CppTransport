@@ -1100,11 +1100,12 @@ namespace transport
 		    // This means the repository directory structure will be human-readable if necessary.
         std::string output_leaf = boost::posix_time::to_iso_string(now);
 //		    output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
-        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf;
-        boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
-        boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
-        boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
-        boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+        boost::filesystem::path output_path  = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf;
+        boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+        boost::filesystem::path log_path     = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path task_path    = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+        boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+        boost::filesystem::path derived_path = output_path / __CPP_TRANSPORT_REPO_DERIVED_DATA_LEAF;
 
 		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_DATA becomes available for reading again
 		    task_reader->reset();
@@ -1122,6 +1123,7 @@ namespace transport
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, output_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, sql_path.string());
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED, derived_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(now));
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, false);
 
@@ -1137,6 +1139,9 @@ namespace transport
 			    }
 		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
+		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS, true);
+		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS);
+
 		    task_reader->insert_end_element(array_serial);
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
@@ -1151,6 +1156,7 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / output_path);
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
+        boost::filesystem::create_directories(this->get_root_path() / derived_path);
 
 		    delete task_reader;
 
@@ -1255,20 +1261,45 @@ namespace transport
 		    std::string data_container;
 				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, data_container);
 
+		    std::string derived_root;
+				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED, derived_root);
+
 		    std::string creation_time;
 				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, creation_time);
 
 				bool locked;
 			  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, locked);
 
+		    std::list<typename repository<number>::data_product> products;
+				unsigned int num_products = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS);
+				for(unsigned int i = 0; i < num_products; i++)
+					{
+						reader->start_array_element();
+
+				    std::string product;
+						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCT, product);
+				    std::string path;
+						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PATH, path);
+				    std::string creation_time;
+						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_CREATED, creation_time);
+
+						typename repository<number>::data_product pd = typename repository<number>::data_product(product, path, creation_time);
+						products.push_back(pd);
+
+						reader->end_array_element();
+					}
+				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS);
+
 		    std::list<std::string> notes;
 				unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
 				for(unsigned int i = 0; i < num_notes; i++)
 					{
-				    std::string note;
 						reader->start_array_element();
+
+				    std::string note;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, note);
 						notes.push_back(note);
+
 						reader->end_array_element();
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
@@ -1277,16 +1308,18 @@ namespace transport
 				unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 				for(unsigned int i = 0; i < num_tags; i++)
 					{
-				    std::string tag;
 						reader->start_array_element();
+
+				    std::string tag;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
 						tags.push_back(tag);
+
 						reader->end_array_element();
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-				return typename repository<number>::output_group(task, serial_number, backend, data_root, data_container,
-																												 creation_time, locked, notes, tags);
+				return typename repository<number>::output_group(task, serial_number, backend, data_root, derived_root,
+				                                                 data_container, creation_time, locked, products, notes, tags);
 			}
 
 

@@ -15,7 +15,7 @@
 #include <sstream>
 
 #include "transport-runtime-api/default_symbols.h"
-#include "transport-runtime-api/containers/index_selector.h"
+#include "transport-runtime-api/derived-products/utilities/index_selector.h"
 
 
 namespace transport

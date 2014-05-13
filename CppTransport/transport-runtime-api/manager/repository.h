@@ -189,6 +189,37 @@ namespace transport
 
         // OUTPUT GROUPS
 
+		    // forward declare output_group
+		    class output_group;
+
+		    //! Data product descriptor. Used to enumerate the data products associated with an output group.
+		    class data_product
+			    {
+
+		      public:
+
+				    //! Create a data_product descriptor
+				    data_product(const std::string& nm, const std::string& pt, const std::string& ctime)
+		          : name(nm), path(pt), created(boost::posix_time::time_from_string(ctime))
+					    {
+					    }
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Name of this data product
+				    const std::string name;
+
+				    //! Path to this product in the repository
+				    boost::filesystem::path path;
+
+				    //! Creation date
+				    boost::posix_time::ptime created;
+			    };
+
+
         //! Output group descriptor. Used to enumerate the output groups available for a particular task
         class output_group
 	        {
@@ -198,10 +229,12 @@ namespace transport
             //! Create an output_group descriptor
             output_group(const std::string& tn,
                          unsigned int sn, const std::string& be, const std::string& path, const std::string& ctr,
-                         const std::string& ctime, bool lock,
+                         const std::string& dr, const std::string& ctime, bool lock,
+                         const std::list<data_product> pd,
                          const std::list<std::string>& nt, const std::list<std::string>& tg)
-	            : task(tn), serial(sn), backend(be), output_path(path), database_path(ctr),
-	              created(boost::posix_time::time_from_string(ctime)), locked(lock), notes(nt), tags(tg)
+	            : task(tn), serial(sn), backend(be), output_path(path), database_path(ctr), derived_path(dr),
+	              created(boost::posix_time::time_from_string(ctime)), locked(lock), data_products(pd),
+	              notes(nt), tags(tg)
 	            {
 	            }
 
@@ -276,8 +309,14 @@ namespace transport
             //! Path to output database
             const boost::filesystem::path database_path;
 
+		        //! Path to derived data products
+		        const boost::filesystem::path derived_path;
+
             //! Creation time
             const boost::posix_time::ptime created;
+
+		        //! List of data products associated with this output group
+		        const std::list<data_product> data_products;
 
             //! Flag indicating whether or not this output group is locked
             const bool locked;

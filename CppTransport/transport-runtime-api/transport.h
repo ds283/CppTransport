@@ -15,7 +15,7 @@
 #include "transport-runtime-api/models/observers.h"
 #include "transport-runtime-api/models/canonical_model.h"
 
-#include "transport-runtime-api/containers/index_selector.h"
+#include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/plotgadgets/plot_gadget.h"
 #include "transport-runtime-api/plotgadgets/python_plot_gadget.h"
 #include "transport-runtime-api/plotgadgets/gnuplot_plot_gadget.h"

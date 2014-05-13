@@ -22,6 +22,8 @@
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/concepts/range.h"
+#include "transport-runtime-api/derived-products/derived_product.h"
+
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/utilities/random_string.h"
