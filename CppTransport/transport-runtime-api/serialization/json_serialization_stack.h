@@ -169,6 +169,10 @@ namespace transport
             //! Otherwise, returns true and writes the pulled element into the supplied reference.
             bool pull_attribute(element_type pull_type, const std::string& name, element*& ele);
 
+		        //! Merge two nodes. The contents of the second node are erased.
+		        void merge(basic_node* other_node);
+
+
           protected:
 
             //! true = this node is empty, or should be empty. Used during validation.
@@ -396,6 +400,9 @@ namespace transport
         void write_value(const std::string& name, double value, bool is_insert=false);
         void write_value(const std::string& name, bool value, bool is_insert=false);
 
+		    //! Insert the contents of another json_serialization_stack
+		    void merge(json_serialization_stack& other_stack);
+
 
         // PULL METHODS (can be used to implement a 'serialization reader' interface)
 
@@ -564,6 +571,19 @@ namespace transport
 
         return(rval);
 	    }
+
+
+		void json_serialization_stack::basic_node::merge(json_serialization_stack::basic_node* other_node)
+			{
+		    // walk through elements from the second node
+		    for(std::list<element*>::iterator t = other_node->contents.begin(); t != other_node->contents.end(); t++)
+			    {
+				    this->push_content(*t, true);
+			    }
+
+		    // clear contents of second node, resetting it to an empty state.
+				other_node->contents.clear();
+			}
 
 
     json_serialization_stack::basic_node* json_serialization_stack::user_node::make_element(const std::string& name, bool empty)
@@ -1329,6 +1349,22 @@ namespace transport
         std::cerr << "JSON: Wrote boolean value '" << name << "' = " << value << std::endl;
 		    #endif
 	    }
+
+
+		void json_serialization_stack::merge(json_serialization_stack& other_stack)
+			{
+		    if(this->node_stack.size() == 0)
+			    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_PUSHEMTPY_MERGE);
+
+		    // get reference to current front-of-stack node, and push this value to its contents
+		    basic_node* n = this->node_stack.front();
+
+		    // merge root node of second stack with our own top-of-stack element.
+		    // This empties the contents of the second stack.
+				// The element* handles orphaned in this way are now part of our own stack,
+				// and will be deallocated when that is destroyed.
+		    n->merge(other_stack.root);
+			}
 
 
 		// Pull: Read values from the current node

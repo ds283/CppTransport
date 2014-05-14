@@ -63,6 +63,9 @@ extern "C"
 
 #define __CPP_TRANSPORT_NODE_TASK_INTGRTN                 "integration-task"
 #define __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT               "integration-output"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC         "derived-product-specifications"
+
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME         "product-name"
 
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT                  "output-task"
 

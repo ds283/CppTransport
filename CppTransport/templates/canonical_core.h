@@ -20,6 +20,7 @@
 
 namespace transport
   {
+
     template <typename number>
     using backg_state = std::vector<number>;
 
@@ -69,107 +70,133 @@ namespace transport
     template <typename number>
     class $$__MODEL : public canonical_model<number>
       {
-      public:
+
         // CONSTRUCTOR, DESTRUCTOR
 
+      public:
+
         $$__MODEL(instance_manager<number>* mgr);
+		    ~$$__MODEL() = default;
 
-        // INTERFACE: EXTRACT MODEL INFORMATION
 
-        const std::string& get_name() const { return($$__MODEL_pool::name); }
-
-        const std::string& get_author() const { return($$__MODEL_pool::author); }
-
-        const std::string& get_tag() const { return($$__MODEL_pool::tag); }
-
-        unsigned int get_N_fields() const { return($$__NUMBER_FIELDS); }
-
-        unsigned int get_N_params() const { return($$__NUMBER_PARAMS); }
-
-        const std::vector< std::string >& get_field_names() const { return($$__MODEL_pool::field_names); }
-
-        const std::vector< std::string >& get_f_latex_names() const { return($$__MODEL_pool::latex_names); }
-
-        const std::vector< std::string >& get_param_names() const { return($$__MODEL_pool::param_names); }
-
-        const std::vector< std::string >& get_p_latex_names() const { return($$__MODEL_pool::platx_names); }
-
-        const std::vector< std::string >& get_state_names() const { return($$__MODEL_pool::state_names); }
-
-        // INTERFACE: INDEX FLATTENING FUNCTIONS
-
-        unsigned int flatten(unsigned int a)                                  const { return(a); };
-        unsigned int flatten(unsigned int a, unsigned int b)                  const { return(2*$$__NUMBER_FIELDS*a + b); };
-        unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
-
-        // INTERFACE: INDEX TRAITS
-
-        unsigned int species(unsigned int a)      const { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
-        unsigned int momentum(unsigned int a)     const { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
-        unsigned int is_field(unsigned int a)     const { return(a < $$__NUMBER_FIELDS); }
-        unsigned int is_momentum(unsigned int a)  const { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
-
-        // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
+        // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
       public:
+
+        virtual const std::string& get_name() const override { return($$__MODEL_pool::name); }
+
+        virtual const std::string& get_author() const override { return($$__MODEL_pool::author); }
+
+        virtual const std::string& get_tag() const override { return($$__MODEL_pool::tag); }
+
+        virtual unsigned int get_N_fields() const override { return($$__NUMBER_FIELDS); }
+
+        virtual unsigned int get_N_params() const override { return($$__NUMBER_PARAMS); }
+
+        virtual const std::vector< std::string >& get_field_names() const override { return($$__MODEL_pool::field_names); }
+
+        virtual const std::vector< std::string >& get_f_latex_names() const override { return($$__MODEL_pool::latex_names); }
+
+        virtual const std::vector< std::string >& get_param_names() const override { return($$__MODEL_pool::param_names); }
+
+        virtual const std::vector< std::string >& get_p_latex_names() const override { return($$__MODEL_pool::platx_names); }
+
+        virtual const std::vector< std::string >& get_state_names() const override { return($$__MODEL_pool::state_names); }
+
+
+        // INDEX FLATTENING FUNCTIONS -- implements an 'abstract_flattener' interface
+
+      public:
+
+        virtual unsigned int flatten(unsigned int a)                                  const override { return(a); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b)                  const override { return(2*$$__NUMBER_FIELDS*a + b); };
+        virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
+
+
+        // INDEX TRAITS -- implements an 'abstract_flattener' interface
+
+      public:
+
+        virtual unsigned int species(unsigned int a)      const override { return((a >= $$__NUMBER_FIELDS) ? a-$$__NUMBER_FIELDS : a); };
+        virtual unsigned int momentum(unsigned int a)     const override { return((a >= $$__NUMBER_FIELDS) ? a : a+$$__NUMBER_FIELDS); };
+        virtual unsigned int is_field(unsigned int a)     const override { return(a < $$__NUMBER_FIELDS); }
+        virtual unsigned int is_momentum(unsigned int a)  const override { return(a >= $$__NUMBER_FIELDS && a <= 2*$$__NUMBER_FIELDS); }
+
+
+        // COMPUTE BASIC PHYSICAL QUANTITIES -- implements a 'model'/'canonical_model' interface
+
+      public:
+
         // Over-ride functions inherited from 'model'
-        number H(const parameters<number>& __params, const std::vector<number>& __coords) const;
-        number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const;
+        virtual number H(const parameters<number>& __params, const std::vector<number>& __coords) const override;
+        virtual number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const override;
 
         // Over-ride functions inherited from 'canonical_model'
-        number V(const parameters<number>& __params, const std::vector<number>& __coords) const;
+        virtual number V(const parameters<number>& __params, const std::vector<number>& __coords) const override;
 
-        // INITIAL CONDITIONS HANDLING
+
+        // INITIAL CONDITIONS HANDLING -- implements a 'model' interface
 
       protected:
+
         void validate_initial_conditions(const parameters<number>& p, const std::vector<number>& input, std::vector<number>& output);
 
       public:
-        typename initial_conditions<number>::ics_validator ics_validator_factory()
+
+        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() override
           {
             return(std::bind(&$$__MODEL::validate_initial_conditions, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
           }
 
-        // PARAMETERS HANDLING
+
+        // PARAMETER HANDLING -- implements a 'model' interface
 
       protected:
+
         void validate_parameters(const std::vector<number>& input, std::vector<number>& output);
 
       public:
-        typename parameters<number>::params_validator params_validator_factory()
+
+        virtual typename parameters<number>::params_validator params_validator_factory() override
           {
             return(std::bind(&$$__MODEL::validate_parameters, this, std::placeholders::_1, std::placeholders::_2));
           }
 
-        // CALCULATE MODEL-SPECIFIC QUANTITIES
+
+        // CALCULATE MODEL-SPECIFIC QUANTITIES -- implements a 'model' interface
 
       public:
+
         // calculate gauge transformations to zeta
-        void compute_gauge_xfm_1(const parameters<number>& params, const std::vector<number>& __state, std::vector<number>& __dN);
-        void compute_gauge_xfm_2(const parameters<number>& params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN);
+        virtual void compute_gauge_xfm_1(const parameters<number>& params, const std::vector<number>& __state, std::vector<number>& __dN) override;
+        virtual void compute_gauge_xfm_2(const parameters<number>& params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
-        void u2(const parameters<number>& params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2);
-        void u3(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3);
+        virtual void u2(const parameters<number>& params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
+        virtual void u3(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __u3) override;
 
-        void A(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A);
-        void B(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B);
-        void C(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C);
+        virtual void A(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __A) override;
+        virtual void B(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __B) override;
+        virtual void C(const parameters<number>& params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) override;
 
-        // INITIAL CONDITIONS FOR N-POINT FUNCTIONS
+
+        // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
+
+      public:
+
+        virtual void backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
+
+
+        // CALCULTAE CONDITIONS FOR N-POINT FUNCTIONS
 
       protected:
+
         number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
 
         number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                double kmode_1, double kmode_2, double kmode_3, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
-
-        // BACKEND INTERFACE (PARTIAL IMPLEMENTATION -- WE PROVIDE A COMMON BACKGROUND INTEGRATOR)
-
-      public:
-        void backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false);
       };
 
 

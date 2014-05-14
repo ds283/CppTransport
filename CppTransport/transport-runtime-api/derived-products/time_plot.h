@@ -18,6 +18,10 @@
 #define __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN (15)
 
 
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS "time-plot-serial-numbers"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN  "serial-number"
+
+
 namespace transport
 	{
 
@@ -72,6 +76,14 @@ namespace transport
 				    //! get serial numbers of sample times
 				    const std::vector<unsigned int>& get_time_sample_sns() { return(this->time_sample_sns); }
 
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
 				    // WRITE SELF TO STANDARD STREAM
 
 		      public:
@@ -121,6 +133,22 @@ namespace transport
 
 
 				template <typename number>
+				void time_plot<number>::serialize(serialization_writer& writer) const
+					{
+						this->begin_array(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS, this->time_sample_sns.size() == 0);
+				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+					    {
+				        this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
+				        this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, this->time_sample_sns[i]);
+				        this->end_element(writer, "arrayelt");
+					    }
+						this->end_element(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
+
+						this->plot2d_product<number>::serialize(writer);
+					}
+
+
+				template <typename number>
 				void time_plot<number>::write(std::ostream& out)
 					{
 						this->wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_SN_LABEL " ");
@@ -131,9 +159,9 @@ namespace transport
 						    std::ostringstream msg;
 								msg << (*t);
 
-								this->wrap_option(out, true, msg.str(), count);
+						    this->wrap_list_item(out, true, msg.str(), count);
 							}
-						if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) this->wrap_option(out, true, ", ...", count);
+						if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) this->wrap_list_item(out, true, "...", count);
 
 						this->wrap_newline(out);
 						this->plot2d_product<number>::write(out);

@@ -11,6 +11,7 @@
 #define __CPP_TRANSPORT_SERIAL_PUSHEMPTY         "Serialization error: push stack is empty, but attempt to write new node '"
 #define __CPP_TRANSPORT_SERIAL_PUSHEMPTYATTR     "Serialization error: push stack is empty, but attempt to write new attribute '"
 #define __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE    "Serialization error: push stack is empty, but attempt to write new value '"
+#define __CPP_TRANSPORT_SERIAL_PUSHEMTPY_MERGE   "Serialization error: push stack is empty, but attempt to merge with second serialization stack"
 
 #define __CPP_TRANSPORT_SERIAL_PULLEMPTY         "Serialization error: pull stack is empty, but attempt to read node '"
 #define __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR     "Serialization error: pull stack is empty, but attempt to read attribute '"

@@ -60,12 +60,14 @@ namespace transport
         // COMPARISON OPERATOR
 
       public:
+
         //! Equality comparison
         friend bool operator== <>(const model_instance<number>& lhs, const model_instance<number>& rhs);
 
         // INTERNAL DATA
 
       protected:
+
         model<number>*    m_ptr;
         const std::string uid;
         unsigned int      tver;

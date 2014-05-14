@@ -147,6 +147,8 @@ namespace transport
 		    virtual void insert_value(const std::string& name, double value) = 0;
 		    virtual void insert_value(const std::string& name, bool value) = 0;
 
+		    //! Insert the contents of a serialization_writer
+		    virtual void insert_writer_contents(serialization_writer& writer) = 0;
 
         // OUTPUT METHODS
 

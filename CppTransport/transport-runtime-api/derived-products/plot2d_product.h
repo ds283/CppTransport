@@ -13,7 +13,27 @@
 #include "transport-runtime-api/derived-products/derived_product.h"
 
 #include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
 
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX        "log-x"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY        "log-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY        "abs-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX    "reverse-x"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY    "reverse-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX       "latex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL      "x-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT "x-label-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL      "y-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT "y-label-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE       "title"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT  "title-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND      "legend"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS  "legend-position"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR   "top-right"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR   "bottom-right"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL   "bottom-left"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL   "top-left"
 
 namespace transport
 	{
@@ -179,6 +199,12 @@ namespace transport
 				    void set_legend_position(legend_pos pos) { this->position = pos; }
 
 
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    virtual void serialize(serialization_writer& writer) const override;
+
 				    // WRITE SELF TO A STANDARD STREAM
 
 		      public:
@@ -236,26 +262,70 @@ namespace transport
 
 
 				template <typename number>
+				void plot2d_product<number>::serialize(serialization_writer& writer) const
+					{
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, this->log_x);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, this->log_y);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, this->abs_y);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, this->reverse_x);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, this->reverse_y);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, this->use_LaTeX);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, this->x_label);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, this->x_label_text);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, this->y_label);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, this->y_label_text);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, this->title);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, this->title_text);
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, this->legend);
+
+						switch(this->position)
+							{
+						    case top_left:
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL));
+									break;
+
+						    case top_right:
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR));
+							    break;
+
+						    case bottom_left:
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL));
+							    break;
+
+						    case bottom_right:
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR));
+							    break;
+
+						    default:
+							    assert(false);
+							    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION);
+							}
+
+						this->derived_product<number>::serialize(writer);
+					}
+
+
+				template <typename number>
 				void plot2d_product<number>::write(std::ostream& out)
 					{
 						unsigned int count = 0;
 
-				    this->wrap_option(out, this->log_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGX, count);
-				    this->wrap_option(out, this->log_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGY, count);
-				    this->wrap_option(out, this->abs_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_ABSY, count);
-				    this->wrap_option(out, this->reverse_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEX, count);
-				    this->wrap_option(out, this->reverse_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEY, count);
-				    this->wrap_option(out, this->use_LaTeX, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LATEX, count);
-				    this->wrap_option(out, this->x_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_XLABEL, count);
+				    this->wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGX, count);
+				    this->wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGY, count);
+				    this->wrap_list_item(out, this->abs_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_ABSY, count);
+				    this->wrap_list_item(out, this->reverse_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEX, count);
+				    this->wrap_list_item(out, this->reverse_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEY, count);
+				    this->wrap_list_item(out, this->use_LaTeX, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LATEX, count);
+				    this->wrap_list_item(out, this->x_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_XLABEL, count);
 						if(this->x_label)
 							this->wrap_value(out, this->x_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_option(out, this->y_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_YLABEL, count);
+				    this->wrap_list_item(out, this->y_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_YLABEL, count);
 						if(this->y_label)
 							this->wrap_value(out, this->y_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_option(out, this->title, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_TITLE, count);
+				    this->wrap_list_item(out, this->title, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_TITLE, count);
 						if(this->title)
 							this->wrap_value(out, this->title_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_option(out, this->legend, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND, count);
+				    this->wrap_list_item(out, this->legend, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND, count);
 
 						if(this->legend)
 							{

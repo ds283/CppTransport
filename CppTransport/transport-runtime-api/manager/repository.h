@@ -16,6 +16,7 @@
 #include "transport-runtime-api/tasks/model_list.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
+#include "transport-runtime-api/derived-products/derived_product.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/log/core.hpp"
@@ -226,6 +227,40 @@ namespace transport
 			    };
 
 
+		    //! Derived product descriptor. Used to enumerate the derived product types associated with a particular task
+		    class derived_product
+			    {
+
+		      public:
+
+				    //! Create a derived_product descriptor
+				    derived_product(const std::string& tk, const std::string& pn)
+		          : parent_task(tk), name(pn)
+					    {
+					    }
+
+				    //! Destroy a derived_product descriptor
+				    ~derived_product() = default;
+
+
+				    // INTERFACE
+
+				    //! Get product name
+				    const std::string& get_name() const { return(this->name); }
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Name of parent task. Not ordinarily user-accessible.
+				    const std::string& parent_task;
+
+				    //! Name of this derived product specification
+				    const std::string& name;
+			    };
+
+
         //! Output group descriptor. Used to enumerate the output groups available for a particular task
         class output_group
 	        {
@@ -408,7 +443,7 @@ namespace transport
           }
 
 
-        // INTERFACE -- ADMIN DATA
+        // ADMIN DATA
 
       public:
 
@@ -419,7 +454,7 @@ namespace transport
 		    const access_type& get_access_mode() { return(this->access_mode); }
 
 
-        // INTERFACE -- PUSH TASKS TO THE REPOSITORY DATABASE
+        // PUSH TASKS TO THE REPOSITORY DATABASE
 
       public:
 
@@ -437,7 +472,7 @@ namespace transport
 		    virtual void write_task(const output_task<number>& t) = 0;
 
 
-        // INTERFACE -- PULL TASKS FROM THE REPOSITORY DATABASE
+        // PULL TASKS FROM THE REPOSITORY DATABASE
 
       public:
 
@@ -450,7 +485,7 @@ namespace transport
                                          typename instance_manager<number>::model_finder finder) = 0;
 
 
-        // INTERFACE -- ADD OUTPUT TO TASKS
+        // ADD AN OUTPUT-GROUP TO A TASK
 
       public:
 
@@ -462,12 +497,27 @@ namespace transport
                                                           const std::string& backend, unsigned int worker) = 0;
 
 
-		    // INTERFACE - QUERY FOR OUTPUT FROM A TASK
+		    // PULL OUTPUT-GROUPS FROM A TASK
 
       public:
 
 		    //! Enumerate the output groups available from a named task
 				virtual std::list<output_group> enumerate_task_output(const std::string& name) = 0;
+
+
+        // PUSH DERIVED-PRODUCT SPECIFICATIONS TO THE DATABASE
+
+      public:
+
+        //! Write a derived product specification
+        virtual void write_derived_data(const derived_data::derived_product<number>& d) = 0;
+
+
+        // PULL DERIVED-PRODUCT SPECIFICATIONS FROM THE DATABASE
+
+      public:
+
+        virtual std::list<typename repository<number>::derived_product> enumerate_task_derived_products(const std::string& name) = 0;
 
 
 				// PRIVATE DATA

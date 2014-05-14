@@ -14,6 +14,17 @@
 #include "transport-runtime-api/derived-products/data_view.h"
 
 
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_BACKGROUND_TIME_PLOT "background-time-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TWOPF_TIME_PLOT      "twopf-time-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_THREEPF_TIME_PLOT    "threepf-time-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TWOPF_SPECTRUM_PLOT  "twopf-spectrum-plot"
+
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FIELD_INDICES        "active-field-indices"
+
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
+
+
 namespace transport
 	{
 
@@ -51,13 +62,13 @@ namespace transport
 		      public:
 
 				    //! Get name of this derived data product
-				    const std::string& get_name() { return(this->name); }
+				    const std::string& get_name() const { return(this->name); }
 
 				    //! Get filename associated with this derived data product
 				    const std::string& get_filename() { return(this->name); }
 
 				    //! Get parent task
-				    task<number>& get_parent_task() { return(this->tk); }
+				    const task<number>& get_parent_task() const { return(this->parent); }
 
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group
@@ -78,13 +89,20 @@ namespace transport
 				    void wrap_out(std::ostream& out, const std::string& text);
 
 				    //! Output an option to a stream
-				    void wrap_option(std::ostream& out, bool value, const std::string& label, unsigned int& count);
+				    void wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count);
 
 				    //! Output a string value to a stream
 				    void wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count);
 
 				    //! Output a new line
 				    void wrap_newline(std::ostream& out) { this->cpos = 0; out << std::endl; }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    virtual void serialize(serialization_writer& writer) const override;
 
 		        // INTERNAL DATA
 
@@ -119,7 +137,7 @@ namespace transport
 
 
 				template <typename number>
-				void derived_product<number>::wrap_option(std::ostream& out, bool value, const std::string& label, unsigned int& count)
+				void derived_product<number>::wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count)
 					{
 						if(value)
 							{
@@ -142,7 +160,27 @@ namespace transport
 						this->cpos += value.length() + label.length() + 5;
 					}
 
-			}   // namespace derived_data
+
+				template <typename number>
+				void derived_product<number>::serialize(serialization_writer& writer) const
+					{
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename);
+					}
+
+
+		    namespace
+			    {
+
+		        namespace derived_product_helper
+			        {
+
+			        }   // namespace derived_product_helper
+
+			    }   // unnamed namespace
+
+
+
+	}   // namespace derived_data
 
 	}   // namespace transport
 

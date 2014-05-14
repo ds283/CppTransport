@@ -22,6 +22,8 @@
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
 
+#include "transport-runtime-api/derived-products/utilities/index_selector.h"
+
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/manager/data_manager.h"
 
@@ -46,21 +48,24 @@ namespace transport
     template <typename number>
     class model: public abstract_flattener
       {
+
       public:
+
         typedef std::vector< std::vector<number> > backg_history;
 
 
         // CONSTRUCTORS, DESTRUCTORS
 
       public:
+
         model(instance_manager<number>* m, const std::string& u, unsigned int v);
+		    ~model();
 
-        virtual ~model();
 
-
-        // INTERFACE: EXTRACT MODEL INFORMATION
+        // EXTRACT MODEL INFORMATION
 
       public:
+
         //! Return unique string identifying the model (and CppTransport version)
         const std::string&                      get_identity_string() const { return(this->uid); }
 
@@ -91,20 +96,23 @@ namespace transport
         //! Return vector of names for the phase-space coordinates (fields+momenta) of the model implemented by this object
         virtual const std::vector<std::string>& get_state_names() const = 0;
 
-        // INTERFACE: COMPUTE BASIC PHYSICAL QUANTITIES
+
+        // COMPUTE BASIC PHYSICAL QUANTITIES
 
       public:
+
         //! Compute Hubble rate H given a phase-space configuration
         virtual number                  H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
         //! Compute slow-roll parameter epsilon given a phase-space configuration
         virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
 
 
-        // INTERFACE - INITIAL CONDITIONS HANDLING
+        // INITIAL CONDITIONS HANDLING
 
       protected:
-        //! Validate initial conditions (optionally adding initial conditions for momenta)
-        virtual void validate_initial_conditions(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
+
+//        //! Validate initial conditions (optionally adding initial conditions for momenta)
+//        virtual void validate_initial_conditions(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
 
         //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
         void find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
@@ -116,6 +124,7 @@ namespace transport
         double get_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
       public:
+
         //! Make an 'ics_validator' object for this model
         virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
 
@@ -136,26 +145,24 @@ namespace transport
             return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
           }
 
-      protected:
-        //! Write information about the task we are processing
-        void write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
-                             double abs_err, double rel_err, double step_size, std::string stepper_name);
-
 
         // INTERFACE - PARAMETER HANDLING
 
-      protected:
-        //! Validate parameter values
-        virtual void validate_parameters(const std::vector<number>& input, std::vector<number>& output) = 0;
+//      protected:
+//
+//        //! Validate parameter values
+//        virtual void validate_parameters(const std::vector<number>& input, std::vector<number>& output) = 0;
 
       public:
-        //! Make a 'params_validator' objcet for this model
+
+        //! Make a 'params_validator' object for this model
         virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
 
       public:
+
         // calculate gauge transformations; pure virtual, so must be overridden by derived class
         virtual void compute_gauge_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
@@ -172,9 +179,11 @@ namespace transport
 
         virtual void C(const parameters<number>& __params, const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N, std::vector< std::vector< std::vector<number> > >& __C) = 0;
 
-        // BACKEND INTERFACE
+
+        // BACKEND
 
       public:
+
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
@@ -202,13 +211,25 @@ namespace transport
         virtual unsigned int backend_threepf_state_size(void) = 0;
 
 
+        // INTERNAL UTILITY FUNCTIONS
+
+      protected:
+
+        //! Write information about the task we are processing
+        void write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
+                             double abs_err, double rel_err, double step_size, std::string stepper_name);
+
+
         // INTERNAL DATA
 
       private:
+
         //! copy of instance manager, used for deregistration
         instance_manager<number>* mgr;
+
         //! copy of unique id, used for deregistration
         const std::string uid;
+
         //! copy of translator version used to produce this model, used for registration
         const unsigned int tver;
       };

@@ -99,19 +99,24 @@ int main(int argc, char* argv[])
     repo->write_task(tk3, model);
 
 		// construct some derived data products; first, simply plots of the background
+
+    transport::index_selector<1> bg_sel(model->get_N_fields());
+		bg_sel.all();
     transport::derived_data::background<double> twopf_bg_plot =
-	                                                transport::derived_data::background<double>("dquad.twopf-1.background", "background", tk2,
-                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter));
+	                                                transport::derived_data::background<double>("dquad.twopf-1.background", "background.pdf", tk2,
+                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
+                                                                                              bg_sel, model);
     transport::derived_data::background<double> threepf_bg_plot =
-	                                                transport::derived_data::background<double>("dquad.threepf-1.background", "background", tk3,
-                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter));
+	                                                transport::derived_data::background<double>("dquad.threepf-1.background", "background.pdf", tk3,
+                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
+	                                                                                            bg_sel, model);
 
     std::cout << "2pf background plot:" << std::endl << twopf_bg_plot << std::endl;
     std::cout << "3pf background plot:" << std::endl << threepf_bg_plot << std::endl;
 
-//		// write derived data products representing these background plots to the database
-//		repo->write_derived_data(twopf_bg_plot);
-//		repo->write_derived_data(threepf_bg_plot);
+		// write derived data products representing these background plots to the database
+		repo->write_derived_data(twopf_bg_plot);
+		repo->write_derived_data(threepf_bg_plot);
 //
 //		// construct an output task
 //    transport::output_task<double> twopf_output   = transport::output_task<double>("make-dquad.twopf-1.background", tk2, twopf_bg_plot);
@@ -121,13 +126,13 @@ int main(int argc, char* argv[])
 //		repo->write_task(twopf_output);
 //		repo->write_task(threepf_output);
 
-    std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_package_document(ics.get_name());
+    std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_package_document(ics.get_name());
     std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;
 
-    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_task_document(tk2.get_name());
+    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_task_document(tk2.get_name());
     std::cout << "2pf integration JSON document:" << std::endl << task2_json << std::endl << std::endl;
 
-    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_task_document(tk3.get_name());
+    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_task_document(tk3.get_name());
     std::cout << "3pf integration JSON document:" << std::endl << task3_json << std::endl << std::endl;
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models

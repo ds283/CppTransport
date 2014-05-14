@@ -48,6 +48,11 @@ namespace transport
 
 			}   // unnamed namespace
 
+
+		// Forward declare unqlite_serialization_reader for friending
+		class unqlite_serialization_reader;
+
+
     //! implements an UnQLite version of the serialization_writer interface
 		class unqlite_serialization_writer: public serialization_writer
 			{
@@ -86,6 +91,8 @@ namespace transport
 
 				//! Extract stringized contents in JSON format
 				std::string get_contents() const;
+
+				friend class unqlite_serialization_reader;
 
 
 		  protected:
@@ -236,6 +243,10 @@ namespace transport
 				virtual void insert_value(const std::string& name, double value) override;
 				virtual void insert_value(const std::string& name, bool value) override;
 
+		    //! Insert the contents of a serialization_writer.
+				//! Destroys the contents of the writer object, which becomes empty.
+		    virtual void insert_writer_contents(serialization_writer& writer) override;
+
 
 		    // OUTPUT METHODS -- implementation dependent, not part of the interface
 
@@ -250,12 +261,6 @@ namespace transport
 				json_serialization_stack stack;
 
 			};
-
-
-		namespace
-			{
-
-			}   // anonymous namespace
 
 
     unqlite_serialization_reader::unqlite_serialization_reader(unqlite_value* root)
@@ -593,6 +598,13 @@ namespace transport
 		void unqlite_serialization_reader::insert_value(const std::string& name, bool value)
 			{
 		    this->stack.write_value(name, value, true);
+			}
+
+
+		void unqlite_serialization_reader::insert_writer_contents(serialization_writer& writer)
+			{
+				unqlite_serialization_writer& unq_writer = dynamic_cast<unqlite_serialization_writer&>(writer);
+				this->stack.merge(unq_writer.stack);
 			}
 
 	}   // namespace transport

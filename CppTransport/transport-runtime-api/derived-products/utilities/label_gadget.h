@@ -53,7 +53,7 @@ namespace transport
     inline std::vector< std::string > label_gadget::make_labels(index_selector<1>* selector, bool latex)
       {
         std::vector< std::string > labels;
-        unsigned int dimension = selector->get_dimension();
+        unsigned int dimension = (selector->get_range() == index_selector<1>::all_range ? 2 : 1);
 
         for(int m = 0; m < dimension*this->N_fields; m++)
           {
@@ -81,7 +81,7 @@ namespace transport
     inline std::vector< std::string > label_gadget::make_labels(index_selector<2>* selector, bool latex)
       {
         std::vector< std::string > labels;
-        unsigned int dimension = selector->get_dimension();
+        unsigned int dimension = (selector->get_range() == index_selector<2>::all_range ? 2 : 1);
 
         for(int m = 0; m < dimension*this->N_fields; m++)
           {
@@ -114,7 +114,7 @@ namespace transport
     inline std::vector< std::string > label_gadget::make_labels(index_selector<3> *selector, bool latex)
       {
         std::vector< std::string > labels;
-        unsigned int dimension = selector->get_dimension();
+        unsigned int dimension = (selector->get_range() == index_selector<3>::all_range ? 2 : 1);
 
         for(int m = 0; m < dimension*this->N_fields; m++)
           {
