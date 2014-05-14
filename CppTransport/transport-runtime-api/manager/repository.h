@@ -256,6 +256,7 @@ namespace transport
 		            out << ")" << std::endl;
 		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_ROOT << " = " << this->output_path << std::endl;
 		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA << " = " << this->database_path << std::endl;
+				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DERIVED << " = " << this->derived_path << std::endl;
 		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
 
 		            unsigned int count = 0;
@@ -274,6 +275,7 @@ namespace transport
 				            out << *t;
 		                count++;
 			            }
+				        out << std::endl;
 
 				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_PRODUCTS << ": " << std::endl;
 				        for(typename std::list<data_product>::const_iterator t = this->data_products.begin(); t != this->data_products.end(); t++)

@@ -57,7 +57,7 @@ namespace transport
         // SERIALIZATION INTERFACE
 
       public:
-        void serialize(serialization_writer& writer) const;
+        virtual void serialize(serialization_writer& writer) const override;
 
       public:
         friend std::ostream& operator<< <>(std::ostream& out, const parameters<number>& obj);

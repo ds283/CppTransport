@@ -69,8 +69,8 @@ namespace transport
                 twopf_im(t, b, tpf_im, p),
                 samples(thpf),
                 parent(p),
-                wrap_width(DEFAULT_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI),
-                plot_precision(DEFAULT_PLOT_PRECISION)
+                wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH), output_dotphi(DEFAULT_OUTPUT_DOTPHI),
+                plot_precision(__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
               {}
 
             background<number>& get_background();

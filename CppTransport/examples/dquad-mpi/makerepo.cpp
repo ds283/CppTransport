@@ -29,18 +29,27 @@ const double chi_init = 12.9;
 // ****************************************************************************
 
 
+// filter to determine which time values are included on plots
+bool time_filter(double N)
+	{
+    return(true); // plot all values of the time
+	}
+
+
 int main(int argc, char* argv[])
   {
+		if(argc != 2)
+			{
+		    std::cerr << "makerepo: Too few arguments. Expected repository name" << std::endl;
+		    exit(EXIT_FAILURE);
+			}
+
     transport::repository_creation_key key;
 
-    // create a new repository
-    transport::repository<double>* repo = transport::repository_factory<double>("/Users/ds283/Documents/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/home/ds283/Documents/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/Volumes/sulis/CppTransport-repository/test", key);
-//    transport::repository<double>* repo = transport::repository_factory<double>("/home/d/ds/ds283/CppTransport-repository/test", key);
+    transport::repository<double>* repo = transport::repository_factory<double>(argv[1], key);
 
     // set up an instance of a manager
-    transport::task_manager<double>* mgr = new transport::task_manager<double>(argc, argv, repo);
+    transport::task_manager<double>* mgr = new transport::task_manager<double>(0, nullptr, repo);
 
     // set up an instance of the double quadratic model,
     // using doubles, with given parameter choices
@@ -88,6 +97,29 @@ int main(int argc, char* argv[])
     // write each initial conditions/parameter specification and integration specification into the model repository
     repo->write_task(tk2, model);
     repo->write_task(tk3, model);
+
+		// construct some derived data products; first, simply plots of the background
+    transport::derived_data::background<double> twopf_bg_plot =
+	                                                transport::derived_data::background<double>("dquad.twopf-1.background", "background", tk2,
+                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter));
+    transport::derived_data::background<double> threepf_bg_plot =
+	                                                transport::derived_data::background<double>("dquad.threepf-1.background", "background", tk3,
+                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter));
+
+    std::cout << "2pf background plot:" << std::endl << twopf_bg_plot << std::endl;
+    std::cout << "3pf background plot:" << std::endl << threepf_bg_plot << std::endl;
+
+//		// write derived data products representing these background plots to the database
+//		repo->write_derived_data(twopf_bg_plot);
+//		repo->write_derived_data(threepf_bg_plot);
+//
+//		// construct an output task
+//    transport::output_task<double> twopf_output   = transport::output_task<double>("make-dquad.twopf-1.background", tk2, twopf_bg_plot);
+//    transport::output_task<double> threepf_output = transport::output_task<double>("make-dquad.threepf-1.background", tk3, threepf_bg_plot);
+//
+//		// write output tasks to the database
+//		repo->write_task(twopf_output);
+//		repo->write_task(threepf_output);
 
     std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->extract_package_document(ics.get_name());
     std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;

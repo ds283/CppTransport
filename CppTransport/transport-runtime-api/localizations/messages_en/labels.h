@@ -32,6 +32,7 @@
 #define __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED   "locked"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_ROOT     "Output group root directory"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_DATA     "Data container"
+#define __CPP_TRANSPORT_OUTPUT_GROUP_DERIVED  "Derived data root directory"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_CREATED  "Creation date"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_NOTE     "Note"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_TAGS     "tags"

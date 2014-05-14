@@ -45,8 +45,8 @@ namespace transport
               : labels(p->get_N_fields(), p->get_field_names(), p->get_f_latex_names()),
                 tk(t), samples(s),
                 parent(p),
-                wrap_width(DEFAULT_WRAP_WIDTH),
-                plot_precision(DEFAULT_PLOT_PRECISION)
+                wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH),
+                plot_precision(__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
               {}
 
             index_selector<1>* manufacture_selector();

@@ -8,35 +8,57 @@
 #ifndef __CPP_TRANSPORT_INDEX_SELECTOR_H_
 #define __CPP_TRANSPORT_INDEX_SELECTOR_H_
 
+
 #include <array>
 #include <vector>
 
 #include <assert.h>
 
+
 namespace transport
   {
 
+		//! Select active indices for a d-component object in an N_f-field model
     template <unsigned int indices>
     class index_selector
       {
-      public:
-        index_selector(unsigned int N_f, unsigned int d=2);
 
+      public:
+
+        index_selector(unsigned int N_f, unsigned int d=2);
+		    ~index_selector() = default;
+
+		    //! Disable all indices
         void none   ();
+				//! Activate all indices
         void all    ();
+		    //! Set a specific index combination on
         void set_on (std::array<unsigned int, indices>& which);
+		    //! Set a specific index combination off
         void set_off(std::array<unsigned int, indices>& which);
+		    //! Check whether a specific combination is active
         bool is_on  (std::array<unsigned int, indices>& which);
 
+		    //! Get number of indices
         unsigned int get_dimension() { return(this->dimension); }
+		    //! Get number of fields
         unsigned int get_fields()    { return(this->N_fields); }
 
+
+		    // INTERNAL DATA
+
       protected:
+
+		    //! Number of fields
         const unsigned int        N_fields;
+		    //! Number of indices - rank or dimension of the associated tensor
         const unsigned int        dimension;
 
+		    //! Total number of on/of toggles
         unsigned int              size;           // total number of components
+		    //! Vector representing the state of each on/off toggle
         std::vector<bool>         enabled;
+		    //! Look-up table of displacements into the vector of on/off toggles
         std::vector<unsigned int> displacements;
       };
 

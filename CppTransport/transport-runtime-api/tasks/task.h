@@ -74,7 +74,7 @@ namespace transport
         bool         store_background;
 
         //! serial number - guaranteed to be unique.
-        //! used to identify this k-configuration in the SQL database
+        //! used to identify this k-configuration in the database
         unsigned int serial;
 
 		    //! Output to a standard stream
@@ -117,7 +117,7 @@ namespace transport
         bool                        store_twopf;
 
         //! serial number - guaranteed to be unique.
-        //! used to indentify this k-configuration in the SQL database
+        //! used to indentify this k-configuration in the database
         unsigned int                serial;
 
 		    //! Output to a standard stream
@@ -404,7 +404,10 @@ namespace transport
         //! Construct a named integration task with supplied initial conditions
         integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
 
-        //! Construct an anonymized integration task with supplied initial conditions
+        //! Construct an anonymized integration task with supplied initial conditions.
+		    //! Anonymized tasks are used for things like constructing initial conditions,
+		    //! integrating the background only, finding H at horizon-crossing etc.
+		    //! Science output is expected to be generated using named tasks.
         integration_task(const initial_conditions<number>& i, const range<double>& t)
           : integration_task(random_string(), i, t)
           {

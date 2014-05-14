@@ -70,9 +70,6 @@
 #define PICK_U2_LABEL              (gadget->latex_labels() ? U2_LABEL_LATEX : U2_LABEL)
 #define PICK_U3_LABEL              (gadget->latex_labels() ? U3_LABEL_LATEX : U3_LABEL)
 
-#define DEFAULT_WRAP_WIDTH         (135)
-#define DEFAULT_PLOT_PRECISION     (3)
-
 #define DEFAULT_OUTPUT_DOTPHI      (true)
 
 

@@ -165,11 +165,11 @@ namespace transport
 
     class serializable
       {
+
       public:
+
 				// define virtual destructor so that all derived destructors get called correctly
-	      virtual ~serializable()
-		      {
-		      }
+	      virtual ~serializable() = default;
 
 
 	      // SERIALIZATION INTERFACE

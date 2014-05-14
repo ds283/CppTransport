@@ -38,4 +38,8 @@
 
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 
+// derived products
+#include "transport-runtime-api/localizations/messages_en/plot2d_product.h"
+#include "transport-runtime-api/localizations/messages_en/time_plot.h"
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

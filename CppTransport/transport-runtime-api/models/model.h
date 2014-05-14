@@ -127,7 +127,10 @@ namespace transport
                              __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
           }
 
-        //! Make a 'kconfig_kstar' object for this model
+        //! Make a 'kconfig_kstar' object for this model.
+		    //! This is callback function which computes the value of H = k* at horizon crossing,
+		    //! which must be known in order to convert from conventionally-normalized to
+		    //! comoving wavenumbers
         typename integration_task<number>::kconfig_kstar kconfig_kstar_factory()
           {
             return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));

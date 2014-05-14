@@ -1278,8 +1278,11 @@ namespace transport
 
 				    std::string product;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCT, product);
+						// FIXME: Do some validation to check that this data product is really available for this output group?
+
 				    std::string path;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PATH, path);
+
 				    std::string creation_time;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_CREATED, creation_time);
 
@@ -1318,8 +1321,9 @@ namespace transport
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-				return typename repository<number>::output_group(task, serial_number, backend, data_root, derived_root,
-				                                                 data_container, creation_time, locked, products, notes, tags);
+				return typename repository<number>::output_group(task, serial_number, backend, data_root,
+				                                                 data_container, derived_root, creation_time,
+				                                                 locked, products, notes, tags);
 			}
 
 
