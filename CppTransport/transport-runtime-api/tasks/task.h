@@ -194,7 +194,7 @@ namespace transport
 
 				//! Construct an output task element, given a parent task name, an output name and a list of tags to match
 				output_task_element(const std::string& tk, const std::string& op, const std::list<std::string>& tgs)
-					: task_name(tk), output_name(op), tags(tgs)
+					: task_name(tk), derived_product_name(op), tags(tgs)
 					{
 					}
 
@@ -208,7 +208,7 @@ namespace transport
 				const std::string& get_task() const { return(this->task_name); }
 
 				//! Get name of output associated with this task element
-				const std::string& get_label() const { return(this->task_name); }
+				const std::string& get_label() const { return(this->derived_product_name); }
 
 				//! Get tags associated with this task element
 				const std::list<std::string>& get_tags() const { return(this->tags); }
@@ -218,11 +218,11 @@ namespace transport
 
 		  protected:
 
-				//! Name of the integration task this output is associated with
+				//! Name of the integration task with which this output is associated
 				const std::string task_name;
 
-				//! Name of the output record (part of the task description, specifying which eg. plot to produce) this output is associated with
-				const std::string output_name;
+				//! Name of the derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
+				const std::string derived_product_name;
 
 				//! List of tags to match against the output groups
 				std::list<std::string> tags;
@@ -243,10 +243,39 @@ namespace transport
 
 				// CONSTRUCTOR, DESTRUCTOR
 
-				//! Construct a named output task
-				output_task(const std::string& nm, std::vector<output_task_element>& eles)
+				//! Construct a named output task using a supplied list of elements
+				output_task(const std::string& nm, const std::vector<output_task_element>& eles)
 					: elements(eles), task<number>(nm)
 					{
+					}
+
+				//! Construct a named output task using a supplied single derived_product<> object.
+				//! No tags provided.
+				//! (Would be nice to delegate to the constructor which accepts tags, but delegation
+				//! has to happen in the initializer list -- as far as I know)
+				output_task(const std::string& nm, typename derived_data::derived_product<number>& prod)
+					: task<number>(nm)
+					{
+						elements.clear();
+
+						// set up empty list of tags
+				    std::list<std::string> tags;
+
+						// extract task name
+				    const std::string& task_name = prod.get_parent_task().get_name();
+						elements.push_back(output_task_element(task_name, nm, tags));
+					}
+
+				//! Construct a named output task using a supplied single derived_product<> object.
+				//! Tags provided.
+				output_task(const std::string& nm, typename derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+					: task<number>(nm)
+					{
+						elements.clear();
+
+				    // extract task name
+				    const std::string& task_name = prod.get_parent_task().get_name();
+				    elements.push_back(output_task_element(task_name, nm, tags));
 					}
 
 				//! Destroy an output task
@@ -288,7 +317,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
 	    {
 		    out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
-		    for(std::list<output_task_element>::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
+		    for(std::vector<output_task_element>::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
 			    {
 				    out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << (*t).get_task() << ", "
 					              << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << (*t).get_label() << "." << std::endl;
@@ -316,7 +345,7 @@ namespace transport
 
 				for(std::vector<output_task_element>::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 					{
-						this->begin_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT, false);
+						this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
 
 						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task());
 						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_label());
@@ -328,9 +357,9 @@ namespace transport
 							{
 								this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
 							}
-						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT);
+						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT);
+						this->end_element(writer, "arrayelt");
 					}
 
 				this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);

@@ -251,7 +251,7 @@ namespace transport
           }
 
         // database containers should be present in an existing directory
-        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
+        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
         if(!boost::filesystem::is_directory(containers_path))
           {
             std::ostringstream msg;
@@ -269,7 +269,7 @@ namespace transport
           }
 
         // integrations database should be present inside the container directory
-        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
+        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_TASKS_LEAF;
         if(!boost::filesystem::is_regular_file(tasks_path))
           {
             std::ostringstream msg;
@@ -322,9 +322,9 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_CONTAINERS_LEAF;
+        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
         packages_path = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
-        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_INTEGRATIONS_LEAF;
+        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_TASKS_LEAF;
 
         // create directory structure
         boost::filesystem::create_directories(this->get_root_path());
