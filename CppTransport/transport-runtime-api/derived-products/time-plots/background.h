@@ -30,7 +30,7 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
-		        background(const std::string& name, const std::string& filename, integration_task<number>& tk,
+		        background(const std::string& name, const std::string& filename, const integration_task<number>& tk,
 		                   typename plot2d_product<number>::time_filter filter,
 		                   index_selector<1>& sel, model<number>* m)
 			        : active_indices(sel), mdl(m), time_plot<number>(name, filename, tk, filter)
@@ -70,6 +70,14 @@ namespace transport
 				    void write(std::ostream& out);
 
 
+		        // CLONE
+
+		      public:
+
+		        //! Virtual copy
+		        virtual derived_product<number>* clone() const override { return new background<number>(static_cast<const background<number>&>(*this)); }
+
+
 				    // INTERNAL DATA
 
 		      private:
@@ -78,6 +86,8 @@ namespace transport
 				    index_selector<1> active_indices;
 
 				    //! record model object with which we are associated
+				    //! (although this is a pointer we don't care if it is shallow-copied,
+				    //! because all model<> instances are handled by the instance_manager)
 				    model<number>* mdl;
 
 			    };

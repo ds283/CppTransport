@@ -100,7 +100,8 @@ namespace transport
 
       public:
 
-        //! Query the database for a named task, and reconstruct it if present
+        //! Query the database for a named task, and reconstruct it if present.
+		    //! Supports both integration_task<> and output_task<> items.
         virtual task<number>* query_task(const std::string& name, model_list<number>& mlist,
                                          typename instance_manager<number>::model_finder finder) override;
 
@@ -934,7 +935,7 @@ namespace transport
 				// work through the output task, finding models and pushing suitable references to the model list
 				for(unsigned int i = 0; i < tk.size(); i++)
 					{
-						const output_task_element& element = tk.get(i);
+						const output_task_element<number>& element = tk.get(i);
 
 				    // get serialization_reader for the named package
 				    int package_id = 0;
@@ -1366,7 +1367,7 @@ namespace transport
     void repository_unqlite<number>::write_derived_data(const derived_data::derived_product<number>& d)
 	    {
 		    // get name of task associated with this derived product
-        const std::string& task_name = d.get_parent_task().get_name();
+        const std::string& task_name = d.get_parent_task()->get_name();
 
 				// enumerate derived products associated with this task
         std::list<typename repository<number>::derived_product> product_list = this->enumerate_task_derived_products(task_name);

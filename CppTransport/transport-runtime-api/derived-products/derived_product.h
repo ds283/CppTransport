@@ -48,13 +48,26 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
-		        derived_product(const std::string& nm, const std::string& fnam, task<number>& tk)
-		          : name(nm), filename(fnam), parent(tk),
+				    //! Construct a derived product object.
+		        derived_product(const std::string& nm, const std::string& fnam, const task<number>& tk)
+		          : name(nm), filename(fnam), parent(tk.clone()),
 		            wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH), cpos(0)
 			        {
+						    assert(parent != nullptr);
 			        }
 
-		        virtual ~derived_product() = default;
+				    //! Override default copy constructor to generate a deep copy of the task object
+				    derived_product(const derived_product<number>& obj)
+				      : name(obj.name), filename(obj.filename), parent(obj.parent->clone())
+					    {
+						    assert(parent != nullptr);
+					    }
+
+		        virtual ~derived_product()
+			        {
+								assert(this->parent != nullptr);
+				        delete this->parent;
+			        }
 
 
 		        // DERIVED PRODUCT INTERFACE
@@ -68,7 +81,7 @@ namespace transport
 				    const std::string& get_filename() { return(this->name); }
 
 				    //! Get parent task
-				    const task<number>& get_parent_task() const { return(this->parent); }
+				    const task<number>* get_parent_task() const { return(this->parent); }
 
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group
@@ -104,6 +117,13 @@ namespace transport
 
 				    virtual void serialize(serialization_writer& writer) const override;
 
+
+				    // CLONE
+
+		      public:
+
+				    virtual derived_product<number>* clone() const = 0;
+
 		        // INTERNAL DATA
 
 		      protected:
@@ -114,8 +134,9 @@ namespace transport
 		        //! Standardized filename
 		        const std::string filename;
 
-		        //! Parent task which which this derived data-product is associated
-		        task<number>& parent;
+		        //! Parent task which which this derived data-product is associated.
+				    //! We store our own copy.
+		        task<number>* parent;
 
 				    // WRAPPED OUTPUT
 

@@ -170,242 +170,21 @@ namespace transport
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
+
+				// CLONE
+
+				//! Clone this task object using a virtual copy idiom.
+				//! Given a pointer just to the base class task<>, it isn't possible
+				//! to perform a deepy copy. This method avoids that problem.
+				virtual task<number>* clone() const = 0;
+
 				// INTERNAL DATA
 
 		  protected:
 
 		    //! Name of this task
-		    const std::string                name;
+		    const std::string name;
 			};
-
-
-		// TASK STRUCTURES -- OUTPUT TASK
-
-		// An output task is a list of outputs to be generated.
-		// Each output is identified by an integration task, and output descriptor,
-		// and a list of tags identifying the output group to use. If no tags
-		// are given, the most recent output group is used.
-
-		class output_task_element
-			{
-		  public:
-
-				// CONSTRUCTOR, DESTRUCTOR
-
-				//! Construct an output task element, given a parent task name, an output name and a list of tags to match
-				output_task_element(const std::string& tk, const std::string& op, const std::list<std::string>& tgs)
-					: task_name(tk), derived_product_name(op), tags(tgs)
-					{
-					}
-
-				//! Destroy an output task element
-				~output_task_element() = default;
-
-
-				// INTERFACE - EXTRACT DETAILS
-
-				//! Get name of task associated with this task element
-				const std::string& get_task() const { return(this->task_name); }
-
-				//! Get name of output associated with this task element
-				const std::string& get_label() const { return(this->derived_product_name); }
-
-				//! Get tags associated with this task element
-				const std::list<std::string>& get_tags() const { return(this->tags); }
-
-
-				// INTERNAL DATA
-
-		  protected:
-
-				//! Name of the integration task with which this output is associated
-				const std::string task_name;
-
-				//! Name of the derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
-				const std::string derived_product_name;
-
-				//! List of tags to match against the output groups
-				std::list<std::string> tags;
-			};
-
-
-    template <typename number> class output_task;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
-
-		//! An 'output_task' is a specialization of 'task' which generates a set of outputs.
-
-		template <typename number>
-		class output_task: public task<number>
-			{
-		  public:
-
-				// CONSTRUCTOR, DESTRUCTOR
-
-				//! Construct a named output task using a supplied list of elements
-				output_task(const std::string& nm, const std::vector<output_task_element>& eles)
-					: elements(eles), task<number>(nm)
-					{
-					}
-
-				//! Construct a named output task using a supplied single derived_product<> object.
-				//! No tags provided.
-				//! (Would be nice to delegate to the constructor which accepts tags, but delegation
-				//! has to happen in the initializer list -- as far as I know)
-				output_task(const std::string& nm, typename derived_data::derived_product<number>& prod)
-					: task<number>(nm)
-					{
-						elements.clear();
-
-						// set up empty list of tags
-				    std::list<std::string> tags;
-
-						// extract task name
-				    const std::string& task_name = prod.get_parent_task().get_name();
-						elements.push_back(output_task_element(task_name, nm, tags));
-					}
-
-				//! Construct a named output task using a supplied single derived_product<> object.
-				//! Tags provided.
-				output_task(const std::string& nm, typename derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
-					: task<number>(nm)
-					{
-						elements.clear();
-
-				    // extract task name
-				    const std::string& task_name = prod.get_parent_task().get_name();
-				    elements.push_back(output_task_element(task_name, nm, tags));
-					}
-
-				//! Destroy an output task
-				~output_task() = default;
-
-		    //! Write to a standard output stream
-		    friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
-
-
-				// INTERFACE
-
-				//! Obtain number of task elements
-				unsigned int size() const { return(this->elements.size()); }
-
-				//! Obtain a specific element
-				const output_task_element& get(unsigned int i)
-					{
-						if(i >= this->elements.size())
-							throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
-
-						return(this->elements[i]);
-					}
-
-		    // SERIALIZATION (implements a 'serializable' interface)
-
-		    //! Serialize this task to the repository
-		    virtual void serialize(serialization_writer& writer) const override;
-
-				// INTERNAL DATA
-
-		  protected:
-
-				//! List of output elements which make up this task
-				std::vector<output_task_element> elements;
-			};
-
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
-	    {
-		    out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
-		    for(std::vector<output_task_element>::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
-			    {
-				    out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << (*t).get_task() << ", "
-					              << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << (*t).get_label() << "." << std::endl;
-				    out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
-
-					  unsigned int count = 0;
-		        const std::list<std::string>& tags = (*t).get_tags();
-				    for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
-					    {
-						    if(count > 0) out << ", ";
-						    out << *u;
-					    }
-				    out << std::endl;
-			    }
-
-        return(out);
-	    }
-
-
-		// serialize an output task to the repository
-		template <typename number>
-		void output_task<number>::serialize(serialization_writer& writer) const
-			{
-				this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
-
-				for(std::vector<output_task_element>::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
-					{
-						this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
-
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task());
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_label());
-
-				    const std::list<std::string>& tags = (*t).get_tags();
-
-				    this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
-						for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
-							{
-								this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
-							}
-						this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-
-						this->end_element(writer, "arrayelt");
-					}
-
-				this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
-			}
-
-
-		namespace output_task_helper
-			{
-
-				template <typename number>
-				transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name)
-					{
-						unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
-
-				    std::vector<output_task_element> elements;
-						for(unsigned int i = 0; i < num_elements; i++)
-							{
-								reader->start_array_element();
-
-						    std::string task;
-							  reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task);
-
-						    std::string label;
-								reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
-
-						    std::list<std::string> tags;
-								unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-								for(unsigned int j = 0; j < num_tags; j++)
-									{
-										reader->start_array_element();
-								    std::string tag;
-										reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
-										tags.push_back(tag);
-										reader->end_array_element();
-									}
-								reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-
-								reader->end_array_element();
-							}
-
-				    reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
-
-						return transport::output_task<number>(name, elements);
-					}
-
-			}   // namespace output_task_helper
 
 
     // TASK STRUCTURES -- INTEGRATION TASKS
@@ -471,15 +250,22 @@ namespace transport
         //! Get number of samples
         unsigned int get_N_sample_times() const { return(this->times.size()); }
 
-				//! Write to a standard output stream
-        friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
-
 
         // DISABLE SERIALIZATION
 
 		    //! Throw an exception if any attempt is made to serialize an integration_task.
 		    //! Only twopf and threepf integration tasks can be serialized.
         virtual void serialize(serialization_writer& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
+
+
+        // CLONE
+
+        //! Virtual copy
+        virtual task<number>* clone() const override { return new integration_task<number>(static_cast<const integration_task<number>&>(*this)); }
+
+
+        //! Write to a standard output stream
+        friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
 
       protected:
 
@@ -662,6 +448,15 @@ namespace transport
         //! Serialize this task to the repository
         virtual void serialize(serialization_writer& writer) const override;
 
+
+        // CLONE
+
+        //! Virtual copy
+        virtual task<number>* clone() const override { return new twopf_task<number>(static_cast<const twopf_task<number>&>(*this)); }
+
+
+		    // INTERNAL DATA
+
       protected:
 
         //! List of k-configurations associated with this task
@@ -791,6 +586,15 @@ namespace transport
 
         //! Serialize this task to the repository
         virtual void serialize(serialization_writer& writer) const override;
+
+
+        // CLONE
+
+        //! Virtual copy
+        virtual task<number>* clone() const override { return new threepf_task<number>(static_cast<const threepf_task<number>&>(*this)); }
+
+
+		    // INTERNAL DATA
 
       protected:
         //! List of k-configurations associated with this task
@@ -986,6 +790,250 @@ namespace transport
 	        }
 
       }
+
+
+    // TASK STRUCTURES -- OUTPUT TASK
+
+    // An output task is a list of outputs to be generated.
+    // Each output is identified by an integration task, and output descriptor,
+    // and a list of tags identifying the output group to use. If no tags
+    // are given, the most recent output group is used.
+
+    template <typename number>
+    class output_task_element
+	    {
+      public:
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+        //! Construct an output task element, given a derived product and a list of tags to match.
+		    //! (Recall that the derived product knows which task it belongs to, so that information is
+		    //! also implicitly available.)
+        output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs)
+	        : product(dp.clone()), tags(tgs)
+	        {
+		        assert(product != nullptr);
+	        }
+
+		    //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
+		    output_task_element(const output_task_element<number>& obj)
+		      : product(obj.product->clone()), tags(obj.tags)
+			    {
+			    }
+
+        //! Destroy an output task element
+        ~output_task_element()
+	        {
+		        assert(this->product != nullptr);
+
+            delete this->product;
+	        }
+
+
+        // INTERFACE - EXTRACT DETAILS
+
+        //! Get name of task associated with this task element
+        const std::string& get_task() const { return(this->product->get_parent_task()->get_name()); }
+
+        //! Get name of derived product associated with this task element
+        const std::string& get_label() const { return(this->product->get_name()); }
+
+        //! Get tags associated with this task element
+        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! Pointer to derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
+        derived_data::derived_product<number>* product;
+
+        //! List of tags to match against the output groups
+        std::list<std::string> tags;
+	    };
+
+
+    template <typename number> class output_task;
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
+
+    //! An 'output_task' is a specialization of 'task' which generates a set of outputs.
+
+    template <typename number>
+    class output_task: public task<number>
+	    {
+      public:
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+        //! Construct a named output task using a supplied list of elements
+        output_task(const std::string& nm, typename std::vector< output_task_element<number> >& eles)
+	        : elements(eles), task<number>(nm)
+	        {
+	        }
+
+        //! Construct a named output task using a supplied single derived_product<> object.
+        //! No tags provided.
+        //! (Would be nice to delegate to the constructor which accepts tags, but delegation
+        //! has to happen in the initializer list -- as far as I know)
+        output_task(const std::string& nm, const derived_data::derived_product<number>& prod)
+	        : task<number>(nm)
+	        {
+            elements.clear();
+
+            // set up empty list of tags
+            std::list<std::string> tags;
+
+            elements.push_back(output_task_element<number>(prod, tags));
+	        }
+
+        //! Construct a named output task using a supplied single derived_product<> object.
+        //! Tags provided.
+        output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+	        : task<number>(nm)
+	        {
+            elements.clear();
+
+            elements.push_back(output_task_element<number>(prod, tags));
+	        }
+
+        //! Destroy an output task
+        ~output_task() = default;
+
+        //! Write to a standard output stream
+        friend std::ostream& operator<< <>(std::ostream& out, const output_task<number>& obj);
+
+
+        // INTERFACE
+
+        //! Obtain number of task elements
+        unsigned int size() const { return(this->elements.size()); }
+
+        //! Obtain a specific element
+        const output_task_element<number>& get(unsigned int i)
+	        {
+            if(i >= this->elements.size())
+	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
+
+            return(this->elements[i]);
+	        }
+
+        // SERIALIZATION (implements a 'serializable' interface)
+
+        //! Serialize this task to the repository
+        virtual void serialize(serialization_writer& writer) const override;
+
+
+        // CLONE
+
+        //! Virtual copy
+        virtual task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
+
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! List of output elements which make up this task
+        typename std::vector< output_task_element<number> > elements;
+	    };
+
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const output_task<number>& obj)
+	    {
+        out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
+        for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
+	        {
+            out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << (*t).get_task() << ", "
+	            << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << (*t).get_label() << "." << std::endl;
+            out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
+
+            unsigned int count = 0;
+            const std::list<std::string>& tags = (*t).get_tags();
+            for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+	            {
+                if(count > 0) out << ", ";
+                out << *u;
+	            }
+            out << std::endl;
+	        }
+
+        return(out);
+	    }
+
+
+    // serialize an output task to the repository
+    template <typename number>
+    void output_task<number>::serialize(serialization_writer& writer) const
+	    {
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
+
+        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+	        {
+            this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
+
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task());
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_label());
+
+            const std::list<std::string>& tags = (*t).get_tags();
+
+            this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
+            for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+	            {
+                this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
+	            }
+            this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+
+            this->end_element(writer, "arrayelt");
+	        }
+
+        this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+	    }
+
+
+    namespace output_task_helper
+	    {
+
+        template <typename number>
+        transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name)
+	        {
+            unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+
+            typename std::vector< output_task_element<number> > elements;
+            for(unsigned int i = 0; i < num_elements; i++)
+	            {
+                reader->start_array_element();
+
+                std::string task;
+                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task);
+
+                std::string label;
+                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
+
+                std::list<std::string> tags;
+                unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+                for(unsigned int j = 0; j < num_tags; j++)
+	                {
+                    reader->start_array_element();
+                    std::string tag;
+                    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
+                    tags.push_back(tag);
+                    reader->end_array_element();
+	                }
+                reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+
+                reader->end_array_element();
+	            }
+
+            reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+
+            return transport::output_task<number>(name, elements);
+	        }
+
+	    }   // namespace output_task_helper
 
 
   }   // namespace transport

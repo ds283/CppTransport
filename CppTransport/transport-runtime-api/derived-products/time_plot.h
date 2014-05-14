@@ -40,7 +40,7 @@ namespace transport
 
 				    // CONSTRUCTOR, DESTRUCTOR
 
-				    time_plot(const std::string& name, const std::string& filename, integration_task<number>& tk,
+				    time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
 				              typename plot2d_product<number>::time_filter filter)
 					    : plot2d_product<number>(name, filename, tk, filter)
 					    {

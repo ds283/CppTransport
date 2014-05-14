@@ -66,8 +66,8 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
-		        plot2d_product(const std::string& name, const std::string& filename, integration_task<number>& tk,
-		                       time_filter tf)
+
+		        plot2d_product(const std::string& name, const std::string& filename, const integration_task<number>& tk, time_filter tf)
 		          : filter(tf), derived_product<number>(name, filename, tk)
 			        {
 			        }
@@ -204,6 +204,7 @@ namespace transport
 		      public:
 
 				    virtual void serialize(serialization_writer& writer) const override;
+
 
 				    // WRITE SELF TO A STANDARD STREAM
 
