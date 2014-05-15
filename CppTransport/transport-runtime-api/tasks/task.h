@@ -49,6 +49,7 @@
 #define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "derived-data-tasks"
 #define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LABEL     "label"
+#define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL    "serial"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS "tags"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG  "tag"
 
@@ -75,6 +76,7 @@ namespace transport
         //! serial number - guaranteed to be unique.
         //! used to identify this k-configuration in the database
         unsigned int serial;
+        unsigned int get_serial() const { return(this->serial); }
 
 		    //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
@@ -118,6 +120,7 @@ namespace transport
         //! serial number - guaranteed to be unique.
         //! used to indentify this k-configuration in the database
         unsigned int                serial;
+		    unsigned int                get_serial() const { return(this->serial); }
 
 		    //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
@@ -798,6 +801,11 @@ namespace transport
     // and a list of tags identifying the output group to use. If no tags
     // are given, the most recent output group is used.
 
+		template <typename number> class output_task_element;
+
+		template <typename number>
+		std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj);
+
     template <typename number>
     class output_task_element
 	    {
@@ -808,15 +816,15 @@ namespace transport
         //! Construct an output task element, given a derived product and a list of tags to match.
 		    //! (Recall that the derived product knows which task it belongs to, so that information is
 		    //! also implicitly available.)
-        output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs)
-	        : product(dp.clone()), tags(tgs)
+        output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs, unsigned int sn)
+	        : product(dp.clone()), tags(tgs), serial(sn)
 	        {
 		        assert(product != nullptr);
 	        }
 
 		    //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
 		    output_task_element(const output_task_element<number>& obj)
-		      : product(obj.product->clone()), tags(obj.tags)
+		      : product(obj.product->clone()), tags(obj.tags), serial(obj.serial)
 			    {
 			    }
 
@@ -843,6 +851,12 @@ namespace transport
         //! Get tags associated with this task element
         const std::list<std::string>& get_tags() const { return(this->tags); }
 
+		    //! Get serial number of this element
+		    unsigned int get_serial() const { return(this->serial); }
+
+
+		    //! Write to a standard output stream
+		    friend std::ostream& operator<< <>(std::ostream& out, const output_task_element<number>& obj);
 
         // INTERNAL DATA
 
@@ -853,7 +867,29 @@ namespace transport
 
         //! List of tags to match against the output groups
         std::list<std::string> tags;
+
+		    //! Internal serial number
+		    unsigned int serial;
 	    };
+
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
+	    {
+        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << " " << obj.get_task_name() << ", "
+	        << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << "." << std::endl;
+        out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
+
+        unsigned int count = 0;
+        const std::list<std::string>& tags = obj.get_tags();
+        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+	        {
+            if(count > 0) out << ", ";
+            out << *u;
+	        }
+
+        return(out);
+	    }
 
 
     template <typename number> class output_task;
@@ -888,7 +924,7 @@ namespace transport
             // set up empty list of tags
             std::list<std::string> tags;
 
-            elements.push_back(output_task_element<number>(prod, tags));
+            elements.push_back(output_task_element<number>(prod, tags, 0));
 	        }
 
         //! Construct a named output task using a supplied single derived_product<> object.
@@ -898,7 +934,7 @@ namespace transport
 	        {
             elements.clear();
 
-            elements.push_back(output_task_element<number>(prod, tags));
+            elements.push_back(output_task_element<number>(prod, tags, 0));
 	        }
 
         //! Destroy an output task
@@ -913,8 +949,14 @@ namespace transport
         //! Obtain number of task elements
         unsigned int size() const { return(this->elements.size()); }
 
+		    //! Obtain task elements
+		    const typename std::vector< output_task_element<number> >& get_elements() const
+			    {
+				    return(this->elements);
+			    }
+
         //! Obtain a specific element
-        const output_task_element<number>& get(unsigned int i)
+        const output_task_element<number>& get(unsigned int i) const
 	        {
             if(i >= this->elements.size())
 	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
@@ -949,17 +991,7 @@ namespace transport
         out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
         for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
 	        {
-            out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << " " << (*t).get_task_name() << ", "
-	            << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << (*t).get_product_name() << "." << std::endl;
-            out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
-
-            unsigned int count = 0;
-            const std::list<std::string>& tags = (*t).get_tags();
-            for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
-	            {
-                if(count > 0) out << ", ";
-                out << *u;
-	            }
+		        out << *t << std::endl;
             out << std::endl;
 	        }
 
@@ -979,6 +1011,7 @@ namespace transport
 
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task_name());
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_product_name());
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_SERIAL, (*t).get_serial());
 
             const std::list<std::string>& tags = (*t).get_tags();
 
@@ -1030,6 +1063,9 @@ namespace transport
                 std::string label;
                 reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
 
+		            unsigned int serial;
+		            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_SERIAL, serial);
+
                 std::list<std::string> tags;
                 unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
                 for(unsigned int j = 0; j < num_tags; j++)
@@ -1054,7 +1090,7 @@ namespace transport
                 derived_data::derived_product<number>* dp = pfinder(dynamic_cast< integration_task<number>* >(tk), label);
 
 		            // construct a output_task_element<> object wrapping these elements, and push it to the list
-		            elements.push_back(output_task_element<number>(*dp, tags));
+		            elements.push_back(output_task_element<number>(*dp, tags, serial));
 
 		            // the repository-supplied objects can now be deleted; output_task_element performs a deep copy,
 		            // so there is no risk of dangling pointers or references

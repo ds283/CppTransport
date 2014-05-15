@@ -32,7 +32,7 @@ extern "C"
 #define __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION         "output-tasks"
 
 #define __CPP_TRANSPORT_REPO_REPOSITORY_LEAF              "database"
-#define __CPP_TRANSPORT_REPO_INTOUTPUT_LEAF               "output"
+#define __CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF              "output"
 #define __CPP_TRANSPORT_REPO_LOGDIR_LEAF                  "logs"
 #define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF                 "tempfiles"
 #define __CPP_TRANSPORT_REPO_TASKFILE_LEAF                "tasks.sqlite"

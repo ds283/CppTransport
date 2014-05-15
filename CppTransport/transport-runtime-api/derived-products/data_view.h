@@ -14,7 +14,7 @@ namespace transport
 	{
 
 		//! Forward-declare the derivation_data_delegate class.
-		//! This depends on repository.h to specify an integration_reader object,
+		//! This depends on repository.h to specify an derived_content_writer object,
 		//! which it uses to suck output from the database; but
 		//! repository.h depends on the derived products,
 		//! in order to get them in and out of the database.

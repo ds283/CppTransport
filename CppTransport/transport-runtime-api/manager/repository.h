@@ -126,7 +126,7 @@ namespace transport
             template <typename data_manager_type>
             void get_data_manager_handle(data_manager_type* data)
               {
-                if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE);
+                if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
                 *data = static_cast<data_manager_type>(this->data_manager_handle);
               }
 
@@ -143,7 +143,7 @@ namespace transport
             template <typename data_manager_type>
             void get_data_manager_taskfile(data_manager_type* data)
               {
-                if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETTASK);
+                if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
                 *data = static_cast<data_manager_type>(this->data_manager_taskfile);
               }
 
@@ -151,40 +151,40 @@ namespace transport
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
             //! Return path to data container
-            const boost::filesystem::path& data_container_path() { return(this->path_to_data_container); }
+            const boost::filesystem::path& data_container_path() const { return(this->path_to_data_container); }
 
             //! Return path to log directory
-            const boost::filesystem::path& log_directory_path() { return(this->path_to_log_directory); }
+            const boost::filesystem::path& log_directory_path() const { return(this->path_to_log_directory); }
 
             //! Return path to task-data container
-            const boost::filesystem::path& taskfile_path() { return(this->path_to_taskfile); }
+            const boost::filesystem::path& taskfile_path() const { return(this->path_to_taskfile); }
 
             //! Return path to directory for temporary files
-            const boost::filesystem::path& temporary_files_path() { return(this->path_to_temp_directory); }
+            const boost::filesystem::path& temporary_files_path() const { return(this->path_to_temp_directory); }
 
 
 		        // INTERNAL DATA
 
           private:
 
-            const boost::filesystem::path path_to_directory;
+            const boost::filesystem::path                            path_to_directory;
 
-            const boost::filesystem::path path_to_data_container;
-            const boost::filesystem::path path_to_log_directory;
-            const boost::filesystem::path path_to_taskfile;
-            const boost::filesystem::path path_to_temp_directory;
+            const boost::filesystem::path                            path_to_data_container;
+            const boost::filesystem::path                            path_to_log_directory;
+            const boost::filesystem::path                            path_to_taskfile;
+            const boost::filesystem::path                            path_to_temp_directory;
 
-            const unsigned int            serial_number;
-            const unsigned int            worker_number;
+            const unsigned int                                       serial_number;
+            const unsigned int                                       worker_number;
 
-            void*                         data_manager_handle;
-            void*                         data_manager_taskfile;
+            void*                                                    data_manager_handle;
+            void*                                                    data_manager_taskfile;
 
             //! Logger source
             boost::log::sources::severity_logger<log_severity_level> log_source;
 
             //! Logger sink
-            boost::shared_ptr< sink_t > log_sink;
+            boost::shared_ptr< sink_t >                              log_sink;
           };
 
 
@@ -384,45 +384,101 @@ namespace transport
 
 		    //! Integration container reader: forms a handle for a data container when reading the an integration from the database
 
-		    class integration_reader
+		    class derived_content_writer
 			    {
 
 		      public:
 
-				    //! Construct an integration reader object.
-				    //! After creation, the data container is not yet open; that must be done later
-				    //! by the task_manager which can depute a data_manager object of its choice to do the work.
-				    integration_reader(const output_group& og)
-				      : group(og), data_manager_handle(nullptr)
+				    //! Construct a derived-content-writer object.
+				    derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
+				                           const boost::filesystem::path& task, const boost::filesystem::path& temp,
+				                           unsigned int w)
+				      : path_to_directory(dir), path_to_log_directory(log),
+				        path_to_taskfile(task), path_to_temp_directory(temp),
+				        worker_number(w), data_manager_taskfile(nullptr)
 					    {
+				        std::ostringstream log_file;
+						    log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+				        boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+
+				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+				        std::ostringstream log_file_path;
+				        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+					                           boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+				        // enable auto-flushing of log entries
+				        // this degrades performance, but we are not writing many entries and they
+				        // will not be lost in the event of a crash
+				        backend->auto_flush(true);
+
+				        // Wrap it into the frontend and register in the core.
+				        // The backend requires synchronization in the frontend.
+				        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+				        core->add_sink(this->log_sink);
+
+				        boost::log::add_common_attributes();
 					    }
 
-		        //! Set data_manager handle for data container
+				    //! Destroy a derived_content_writer object
+				    ~derived_content_writer()
+					    {
+						    // remove logging objects
+				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+						    core->remove_sink(this->log_sink);
+					    }
+
+		        //! Set data_manager handle for taskfile
 		        template <typename data_manager_type>
-		        void set_data_manager_handle(data_manager_type data)
+		        void set_data_manager_taskfile(data_manager_type data)
 			        {
-		            this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
+		            this->data_manager_taskfile = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
 			        }
 
 		        //! Return data_manager handle for data container
 
 		        //! Throws a REPOSITORY_ERROR exception if the handle is unset
 		        template <typename data_manager_type>
-		        void get_data_manager_handle(data_manager_type* data)
+		        void get_data_manager_taskfile(data_manager_type* data)
 			        {
-		            if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE);
-		            *data = static_cast<data_manager_type>(this->data_manager_handle);
+		            if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK);
+		            *data = static_cast<data_manager_type>(this->data_manager_taskfile);
 			        }
+
+				    //! Return logger
+				    boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
+				    //! Return path to log directory
+				    const boost::filesystem::path& log_directory_path() const { return(this->path_to_log_directory); }
+
+				    //! Return path to task-data container
+				    const boost::filesystem::path& taskfile_path() const { return(this->path_to_taskfile); }
+
+				    //! Return path to directory for temporary files
+				    const boost::filesystem::path& temporary_files_path() const { return(this->path_to_temp_directory); }
 
 
 				    // INTERNAL DATA
 
 		      private:
 
-				    //! Copy of the output_group descriptor for the group we are associated with
-				    output_group& group;
+				    const boost::filesystem::path                            path_to_directory;
 
-		        void*         data_manager_handle;
+				    const boost::filesystem::path                            path_to_log_directory;
+				    const boost::filesystem::path                            path_to_taskfile;
+				    const boost::filesystem::path                            path_to_temp_directory;
+
+				    const unsigned int                                       worker_number;
+
+				    void*                                                    data_manager_taskfile;
+
+				    //! Logger source
+				    boost::log::sources::severity_logger<log_severity_level> log_source;
+
+				    //! Logger sink
+				    boost::shared_ptr< sink_t >                              log_sink;
 
 			    };
 
@@ -490,11 +546,11 @@ namespace transport
       public:
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container
-        virtual integration_writer integration_new_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                          const std::string& backend, unsigned int worker) = 0;
+        virtual integration_writer new_output_group(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                    const std::string& backend, unsigned int worker) = 0;
         //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
-        virtual integration_writer integration_new_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                          const std::string& backend, unsigned int worker) = 0;
+        virtual integration_writer new_output_group(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                    const std::string& backend, unsigned int worker) = 0;
 
 
 		    // PULL OUTPUT-GROUPS FROM A TASK
@@ -522,6 +578,15 @@ namespace transport
 
         //! Query a derived product specification
         virtual derived_data::derived_product<number>* query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m) = 0;
+
+
+		    // ADD DERIVED CONTENT FROM AN OUTPUT TASK
+
+      public:
+
+		    //! Add derived content
+		    virtual derived_content_writer new_derived_content(output_task<number>* tk, const std::list<std::string>& tags,
+		                                                   unsigned int worker) = 0;
 
 
 				// PRIVATE DATA

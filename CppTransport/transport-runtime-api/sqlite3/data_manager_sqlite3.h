@@ -62,24 +62,24 @@ namespace transport
 
       public:
 
-        //! Create a new container associated with an integration_writer object.
+        //! Create data files for a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_container(typename repository<number>::integration_writer& ctr) override;
+        virtual void create_writer(typename repository<number>::integration_writer& ctr) override;
 
-        //! Close an open container associated with an integration_writer object.
+        //! Close an open integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
-        //! After closing, attempting to write using an integration_writer will lead to unsubtle errors.
-        virtual void close_container(typename repository<number>::integration_writer& ctr) override;
+        //! After closing, attempting to use an integration_writer will lead to unsubtle errors.
+        virtual void close_writer(typename repository<number>::integration_writer& ctr) override;
 
-		    //! Open an existing container associated with an integration_reader object.
-		    virtual void open_container(typename repository<number>::integration_reader& ctr) override;
+		    //! Create data files for a new derived_content_writer object.
+		    virtual void create_writer(typename repository<number>::derived_content_writer& ctr) override;
 
-		    //! Close an open container associated with an integration_reader object.
+		    //! Close an open derived_content_writer object.
 
-		    //! Any open sqlite3 handles are closed. Attempting to read from the container after closing
+		    //! Any open sqlite3 handles are closed. Attempting to use the writer after closing
 		    //! will lead to unsubtle errors.
-		    virtual void close_container(typename repository<number>::integration_reader& ctr) override;
+		    virtual void close_writer(typename repository<number>::derived_content_writer& ctr) override;
 
 
         // INTERFACE -- WRITE INDEX TABLES (implements a 'data_manager' interface)
@@ -95,15 +95,18 @@ namespace transport
                                    unsigned int Nfields) override;
 
 
-        // INTERFACE - TASK FILES (implements a 'data_manager' interface)
+        // TASK FILES -- implements a 'data_manager' interface
 
       public:
 
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue) override;
+        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue) override;
 
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue) override;
+        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue) override;
+
+        //! Create a list of task assignments, over a number of devices, for a work queue of output_task_element-s
+        virtual void create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue) override;
 
         //! Read a list of task assignments for a particular worker
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) override;
@@ -191,9 +194,9 @@ namespace transport
       }
 
 
-    // Create a new container
+    // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::create_container(typename repository<number>::integration_writer& ctr)
+    void data_manager_sqlite3<number>::create_writer(typename repository<number>::integration_writer& ctr)
       {
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
@@ -240,12 +243,12 @@ namespace transport
             std::ostringstream msg;
             if(taskfile != nullptr)
 	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
                 sqlite3_close(taskfile);
 	            }
             else
 	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
 	            }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 	        }
@@ -256,9 +259,9 @@ namespace transport
       }
 
 
-    // Close a container after writing
+    // Close data files associated with an integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_writer& ctr)
+    void data_manager_sqlite3<number>::close_writer(typename repository<number>::integration_writer& ctr)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -282,17 +285,56 @@ namespace transport
       }
 
 
-		// Open a container for reading
+		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::open_container(typename repository<number>::integration_reader& ctr)
+		void data_manager_sqlite3<number>::create_writer(typename repository<number>::derived_content_writer& ctr)
 			{
+				sqlite3* taskfile = nullptr;
+
+				// get path to taskfile
+		    boost::filesystem::path taskfile_path = ctr.taskfile_path();
+
+				// open the taskfile
+
+				int status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+				if(status != SQLITE_OK)
+					{
+				    std::ostringstream msg;
+						if(taskfile != nullptr)
+							{
+								msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
+								sqlite3_close(taskfile);
+							}
+						else
+							{
+								msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+							}
+						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+					}
+
+				// remember this connexion
+				this->open_containers.push_back(taskfile);
+				ctr.set_data_manager_taskfile(taskfile);
 			}
 
 
-		// Close a container after reading
+		// Close data files for a derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::close_container(typename repository<number>::integration_reader& ctr)
+		void data_manager_sqlite3<number>::close_writer(typename repository<number>::derived_content_writer& ctr)
 			{
+				// close sqlite3 handle to taskfile
+				sqlite3* taskfile = nullptr;
+				ctr.get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
+
+				this->open_containers.remove(taskfile);
+				sqlite3_close(taskfile);
+
+				// physically remove the taskfile from the disc; it isn't needed any more
+//		    boost::filesystem::remove(ctr.taskfile_path());
+
+				// physically remove the tempfiles directory
+//		    boost::filesystem::remove(ctr.temporary_files_path());
 			}
 
 
@@ -336,23 +378,33 @@ namespace transport
 
     // Create a tasklist based on a work queue of twopf_kconfig-s
     template <typename number>
-    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue)
+    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue)
       {
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
       }
 
     // Create a tasklist based on a work queue of threepf_kconfig-s
     template <typename number>
-    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue)
+    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue)
       {
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
       }
+
+		// Create a tasklist based on a work queue of output_task_elements
+		template <typename number>
+		void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue)
+			{
+				sqlite3* taskfile = nullptr;
+				writer.get_data_manager_taskfile(&taskfile);  // throws an exception if the handle is unset, so the return value is guaranteed not to be nullptr
+
+		    sqlite3_operations::create_taskfile(taskfile, queue);
+			}
 
     // Read a taskfile
     template <typename number>

@@ -428,18 +428,18 @@ namespace transport
 
       public:
 
-        //! Create a new container associated with an integration_writer object.
+        //! Create data files for an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_container(typename repository<number>::integration_writer& ctr) = 0;
+        virtual void create_writer(typename repository<number>::integration_writer& ctr) = 0;
 
-        //! Close an open container associated with an integration_writer
-        virtual void close_container(typename repository<number>::integration_writer& ctr) = 0;
+        //! Close an open container integration_writer object.
+        virtual void close_writer(typename repository<number>::integration_writer& ctr) = 0;
 
-		    //! Open an existing container associated with an integration_reader object.
-		    virtual void open_container(typename repository<number>::integration_reader& ctr) = 0;
+        //! Create data files for a new derived_content_writer object.
+        virtual void create_writer(typename repository<number>::derived_content_writer& ctr) = 0;
 
-		    //! Close an open container associated with an integration_reader
-		    virtual void close_container(typename repository<number>::integration_reader& ctr) = 0;
+        //! Close an open derived_content_writer object.
+        virtual void close_writer(typename repository<number>::derived_content_writer& ctr) = 0;
 
 
         // INTERFACE -- WRITE INDEX TABLES FOR A CONTAINER
@@ -455,15 +455,18 @@ namespace transport
                                    unsigned int Nfields) = 0;
 
 
-        // INTERFACE -- TASK FILES FOR A CONTAINER
+        // INTERFACE -- TASK FILES
 
       public:
 
         //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<twopf_kconfig>& queue) = 0;
+        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue) = 0;
 
         //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& ctr, const work_queue<threepf_kconfig>& queue) = 0;
+        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue) = 0;
+
+		    //! Create a list of task assignments, over a number of devices, for a work queue of output_task_element-s
+		    virtual void create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue) = 0;
 
         //! Read a list of task assignments for a particular worker
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;

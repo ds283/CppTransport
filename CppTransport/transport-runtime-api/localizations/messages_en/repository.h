@@ -38,8 +38,9 @@
 #define __CPP_TRANSPORT_REPO_FOR_TASK                    "for task"
 #define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: Unexpected job type in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_NO_SERIALNO                 "Repository error: Could not allocate serial number for integration output group"
-#define __CPP_TRANSPORT_REPO_INTCTR_UNSETHANDLE          "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_container'"
-#define __CPP_TRANSPORT_REPO_INTCTR_UNSETTASK            "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_container'"
+#define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
+#define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"
+#define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
 
 #define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS      "Repository error: Attempt to insert duplicate derived-product specification"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived-product specifications for non integration task"

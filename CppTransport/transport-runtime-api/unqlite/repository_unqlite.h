@@ -126,13 +126,13 @@ namespace transport
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer integration_new_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                       const std::string& backend, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer new_output_group(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                 const std::string& backend, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer integration_new_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                       const std::string& backend, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer new_output_group(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                 const std::string& backend, unsigned int worker) override;
 
       protected:
 
@@ -191,6 +191,16 @@ namespace transport
 
 		        return(this->query_derived_data(tk, product, mlist.back()));
 	        }
+
+
+        // ADD DERIVED CONTENT FROM AN OUTPUT TASK -- implements a 'repository' interface
+
+      public:
+
+        //! Add derived content
+        virtual typename repository<number>::derived_content_writer new_derived_content(output_task<number>* tk, const std::list<std::string>& tags,
+                                                                                        unsigned int worker) override;
+
 
         // PULL RECORDS FROM THE REPOSITORY DATABASE IN JSON FORMAT -- implements a 'json_extractible_repository' interface
         // FIXME: This interface isn't codified yet; need to add a 'json_extractible_repository' concept
@@ -1044,15 +1054,15 @@ namespace transport
     // Add output for a twopf task
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::integration_new_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                       const std::string& backend, unsigned int worker)
+    repository_unqlite<number>::new_output_group(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                 const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
+        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
+
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
-
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
         unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
@@ -1076,15 +1086,15 @@ namespace transport
     // Add output for a threepf task
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::integration_new_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                       const std::string& backend, unsigned int worker)
+    repository_unqlite<number>::new_output_group(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                 const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
+        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
+
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
-
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
         // check this task name exists in the database
         unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
@@ -1131,8 +1141,8 @@ namespace transport
 		    // We use the ISO form of the current time to label the output group directory.
 		    // This means the repository directory structure will be human-readable if necessary.
         std::string output_leaf = boost::posix_time::to_iso_string(now);
-//		    output_leaf << __CPP_TRANSPORT_REPO_GROUP_STEM << serial_number;
-        boost::filesystem::path output_path  = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_INTOUTPUT_LEAF) / tk->get_name() / output_leaf;
+
+        boost::filesystem::path output_path  = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / tk->get_name() / output_leaf;
         boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
         boost::filesystem::path log_path     = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
         boost::filesystem::path task_path    = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
@@ -1192,12 +1202,9 @@ namespace transport
 
 		    delete task_reader;
 
-		    return typename repository<number>::integration_writer(this->get_root_path()/output_path,
-		                                                              this->get_root_path()/sql_path,
-		                                                              this->get_root_path()/log_path,
-		                                                              this->get_root_path()/task_path,
-		                                                              this->get_root_path()/temp_path,
-		                                                              serial_number, worker);
+		    return typename repository<number>::integration_writer(this->get_root_path()/output_path, this->get_root_path()/sql_path,
+		                                                           this->get_root_path()/log_path, this->get_root_path()/task_path,
+		                                                           this->get_root_path()/temp_path, serial_number, worker);
       }
 
 
@@ -1234,7 +1241,7 @@ namespace transport
 
 		// Enumerate the output groups associated with some named task.
 		// The output group descriptors returned by this function can be used to set up
-		// integration_reader objects, which allow the corresponding integration output
+		// derived_content_writer objects, which allow the corresponding integration output
 		// to be extracted from the database
 		template <typename number>
 		std::list<typename repository<number>::output_group> repository_unqlite<number>::enumerate_task_output(const std::string& name)
@@ -1530,6 +1537,48 @@ namespace transport
 					}
 
 				return(rval);
+			}
+
+
+		template <typename number>
+		typename repository<number>::derived_content_writer
+		repository_unqlite<number>::new_derived_content(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
+			{
+				assert(tk != nullptr);
+
+				// open a new transaction if necessary. After this we can assume the database handles are live
+				this->begin_transaction();
+
+				// check this task name exists in the database
+				unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+				if(count == 0)
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
+						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
+
+				// close database handles
+				this->commit_transaction();
+
+				// get current time
+		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+				// construct paths for output
+		    std::string output_leaf = boost::posix_time::to_iso_string(now);
+
+		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / tk->get_name() / output_leaf;
+		    boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+		    boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+		    boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+
+				// create directories
+		    boost::filesystem::create_directories(this->get_root_path() / output_path);
+		    boost::filesystem::create_directories(this->get_root_path() / log_path);
+		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
+
+				return typename repository<number>::derived_content_writer(this->get_root_path()/output_path, this->get_root_path()/log_path,
+				                                                           this->get_root_path()/task_path, this->get_root_path()/temp_path, worker);
 			}
 
 

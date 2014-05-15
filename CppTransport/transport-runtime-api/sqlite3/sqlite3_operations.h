@@ -300,8 +300,8 @@ namespace transport
                       {
                         const WorkItem& this_item = this_list[item];
 
-                        check_stmt(taskfile, sqlite3_bind_int(stmt, 1, this_item.serial));  // unique id of this item of work
-                        check_stmt(taskfile, sqlite3_bind_int(stmt, 2, device));            // is assigned to this device
+                        check_stmt(taskfile, sqlite3_bind_int(stmt, 1, this_item.get_serial()));  // unique id of this item of work
+                        check_stmt(taskfile, sqlite3_bind_int(stmt, 2, device));                  // is assigned to this device
 
                         check_stmt(taskfile, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL, SQLITE_DONE);
 
