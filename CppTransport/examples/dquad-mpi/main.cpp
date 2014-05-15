@@ -49,8 +49,6 @@ int main(int argc, char* argv[])
 		        t->write(std::cout);
 		        std::cout << std::endl;
 			    }
-
-
 			}
 
 //    transport::python_plot_gadget<double>     py_plt(python);

@@ -111,29 +111,31 @@ namespace transport
             $$__MODEL_pool::backend = backend_string.str();
           }
 
-        // INTERFACE - EXTRACT MODEL INFORMATION
+        // EXTRACT MODEL INFORMATION -- implements a 'model' interface
 
       public:
-        const std::string& get_backend() const { return($$__MODEL_pool::backend); }
+
+        virtual const std::string& get_backend() const override { return($$__MODEL_pool::backend); }
 
         // BACKEND INTERFACE
 
       public:
+
         // Set up a context
-        context backend_get_context();
+        virtual context backend_get_context();
 
         // Integrate background and 2-point function on a CUDA device
-        void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                   typename data_manager<number>::twopf_batcher& batcher,
-                                   bool silent=false);
+        virtual void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           bool silent=false) override;
 
         // Integrate background, 2-point function and 3-point function on a CUDA device
-        void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+        virtual void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
                                      typename data_manager<number>::threepf_batcher& batcher,
-                                     bool silent=false);
+                                     bool silent=false) override;
 
-        unsigned int backend_twopf_state_size(void)   { return($$__MODEL_pool::twopf_state_size); }
-        unsigned int backend_threepf_state_size(void) { return($$__MODEL_pool::threepf_state_size); }
+        virtual unsigned int backend_twopf_state_size(void)   override { return($$__MODEL_pool::twopf_state_size); }
+        virtual unsigned int backend_threepf_state_size(void) override { return($$__MODEL_pool::threepf_state_size); }
 
         // INTERNAL API
 

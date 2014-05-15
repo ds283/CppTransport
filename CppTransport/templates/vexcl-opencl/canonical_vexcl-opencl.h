@@ -114,30 +114,33 @@ namespace transport
           // INTERFACE - EXTRACT MODEL INFORMATION
 
         public:
-          const std::string& get_backend() const { return($$__MODEL_pool::backend); }
+
+          virtual const std::string& get_backend() const override { return($$__MODEL_pool::backend); }
 
           // BACKEND INTERFACE
 
         public:
+
           // Set up a context
-          context backend_get_context();
+          virtual context backend_get_context() override ;
 
           // Integrate background and 2-point function on a OpenCL device
-          void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                     typename data_manager<number>::twopf_batcher& batcher,
-                                     bool silent=false);
+          virtual void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+                                             typename data_manager<number>::twopf_batcher& batcher,
+                                             bool silent=false) override;
 
           // Integrate background, 2-point function and 3-point function on a OpenCL device
-          void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                       typename data_manager<number>::threepf_batcher& batcher,
-                                       bool silent=false);
+          virtual void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                               typename data_manager<number>::threepf_batcher& batcher,
+                                               bool silent=false) override;
 
-          unsigned int backend_twopf_state_size(void)   { return($$__MODEL_pool::twopf_state_size); }
-          unsigned int backend_threepf_state_size(void) { return($$__MODEL_pool::threepf_state_size); }
+          virtual unsigned int backend_twopf_state_size(void)   override { return($$__MODEL_pool::twopf_state_size); }
+          virtual unsigned int backend_threepf_state_size(void) override { return($$__MODEL_pool::threepf_state_size); }
 
           // INTERNAL API
 
         protected:
+
           template <typename State, typename Config>
           void populate_twopf_ic(State& x, unsigned int start,
                                  const typename work_queue<Config>::device_work_list& list,
@@ -155,6 +158,7 @@ namespace transport
                                          double Ninit, const std::vector<number>& ic);
 
         private:
+
           vex::Context   ctx;
         };
 

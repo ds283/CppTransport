@@ -15,13 +15,13 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "dq_vexcl-cuda.h"
+#include "dq_vexcl-opencl.h"
 
 
 // ****************************************************************************
 
 
-static void output_info(transport::canonical_model<double>& model);
+static void output_info(transport::canonical_model<double>* model, transport::integration_task<double>* tk);
 
 
 // ****************************************************************************
@@ -40,6 +40,18 @@ int main(int argc, char* argv[])
 
     if(mgr->is_master()) mgr->execute_tasks();
     else                 mgr->wait_for_tasks();
+
+    if(mgr->is_master())
+      {
+        transport::repository<double>* repo = mgr->get_repository();
+        std::list<typename transport::repository<double>::output_group> output = repo->enumerate_task_output("dquad.threepf-1");
+
+        for(std::list<typename transport::repository<double>::output_group>::iterator t = output.begin(); t != output.end(); t++)
+          {
+            t->write(std::cout);
+            std::cout << std::endl;
+          }
+      }
 
 //    transport::python_plot_gadget<double>     py_plt(python);
 //    transport::asciitable_plot_gadget<double> text_plt;
@@ -212,7 +224,8 @@ int main(int argc, char* argv[])
 //    delete u2_selector;
 //    delete u3_selector;
 
-    delete mgr;
+    // models must all be destroyed before the corresponding manager
+    delete mgr;   // task manager adopts and destroys its repository, and any registered models
 
     return(EXIT_SUCCESS);
   }
@@ -222,7 +235,7 @@ int main(int argc, char* argv[])
 
 
 // interrogate an arbitrary canonical_model object and print information about it
-void output_info(transport::canonical_model<double>* model, transport::task<double>* tk)
+void output_info(transport::canonical_model<double>* model, transport::integration_task<double>* tk)
   {
     std::cout << "Model:   " << model->get_name() << "\n";
     std::cout << "Authors: " << model->get_author() << "\n";
