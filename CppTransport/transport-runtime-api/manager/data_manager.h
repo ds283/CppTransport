@@ -48,6 +48,8 @@ namespace transport
       public:
 
         // data structures for storing individual sample points from each integration
+
+		    //! Stores a background field configuration associated with single time-point
         class backg_item
           {
           public:
@@ -55,6 +57,7 @@ namespace transport
             std::vector<number> coords;
           };
 
+		    //! Stores a twopf configuration associated with a single time-point and k-configuration
         class twopf_item
           {
           public:
@@ -63,6 +66,7 @@ namespace transport
             std::vector<number> elements;
           };
 
+		    //! Stores a threepf configuration associated with a single time-point and k-configuration
         class threepf_item
           {
           public:
@@ -78,16 +82,16 @@ namespace transport
         class twopf_batcher;
         class threepf_batcher;
 
-        // background writer
+        //! Background writer function
         typedef std::function<void(generic_batcher*, const std::vector<backg_item>&)> backg_writer;
 
-        // twopf writer
+        //! Two-point function writer function
         typedef std::function<void(generic_batcher*, const std::vector<twopf_item>&)> twopf_writer;
 
-        // threepf writer requires: threepf writer
+        //! Three-point function writer function
         typedef std::function<void(generic_batcher*, const std::vector<threepf_item>&)> threepf_writer;
 
-        // group writers together in batches for twopf and threepf integrations
+				//! Aggregation of writers for a two-point function integration
         class twopf_writer_group
           {
           public:
@@ -95,6 +99,7 @@ namespace transport
             twopf_writer twopf;
           };
 
+		    //! Aggregation of writers for a three-point function integration
         class threepf_writer_group
           {
           public:
@@ -105,19 +110,26 @@ namespace transport
           };
 
 
+		    //! Internal flag indicating the action which should be taken by
+		    //! a batcher when its temporary container is replaced.
         typedef enum { action_replace, action_close } replacement_action;
 
-        // data_manager function to close the temporary container and replace it with another one
+		    //! data-manager callback to close a temporary container and replace it with another one
         typedef std::function<void(generic_batcher* batcher, replacement_action)> container_replacement_function;
-        // task_manager function to push a container to the master node
+
+		    //! task-manager callback to push a container to the master node
         typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
 
-        // Types needed for logging
+		    //! Logging severity level
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
         // Batcher objects, used by integration workers to push results into a container
 
+		    //! Abstract batcher object, from which the concrete two- and threepf-batchers are derived.
+		    //! The batcher has a log directory, used for logging all transaction written into it,
+		    //! and also has a container replacement mechanism which writes all cached data into
+		    //! a data_manager-managed temporary file, and then pushes it to the master process.
         class generic_batcher
           {
 
@@ -211,31 +223,32 @@ namespace transport
 
           protected:
 
-            const unsigned int             capacity;
+            const unsigned int                                       capacity;
 
-            const unsigned int             Nfields;
+            const unsigned int                                       Nfields;
 
-            unsigned int                   num_backg;
-            std::vector<backg_item>        backg_batch;
+            unsigned int                                             num_backg;
+            std::vector<backg_item>                                  backg_batch;
 
-            boost::filesystem::path        container_path;
-            boost::filesystem::path        logdir_path;
+            boost::filesystem::path                                  container_path;
+            boost::filesystem::path                                  logdir_path;
 
-            void*                          manager_handle;
-            container_dispatch_function    dispatcher;
-            container_replacement_function replacer;
+            void*                                                    manager_handle;
+            container_dispatch_function                              dispatcher;
+            container_replacement_function                           replacer;
 
-            unsigned int                   worker_number;
+            unsigned int                                             worker_number;
 
             //! Logger source
             boost::log::sources::severity_logger<log_severity_level> log_source;
 
             //! Logger sink
-            boost::shared_ptr< sink_t > log_sink;
+            boost::shared_ptr< sink_t >                              log_sink;
 
             //! Integration timer - should be stopped while batching
-            boost::timer::cpu_timer& integration_timer;
+            boost::timer::cpu_timer&                                 integration_timer;
           };
+
 
         class twopf_batcher: public generic_batcher
           {
@@ -408,6 +421,82 @@ namespace transport
           };
 
 
+		    // Data pipe objects
+
+		    //! Data pipe, used when generating derived content to extract data froman integration database.
+		    //! The datapipe has a log directory, used for logging all transactions on the pipe.
+		    class datapipe
+			    {
+
+		      public:
+
+				    datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm)
+					    : logdir_path(lp), worker_number(w), timer(tm)
+					    {
+				        std::ostringstream log_file;
+				        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+
+				        boost::filesystem::path log_path = logdir_path / log_file.str();
+
+				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+				        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+					                                                                  boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+				        // enable auto-flushing of log entries
+				        // this degrades performance, but we are not writing many entries and they
+				        // will not be lost in the event of a crash
+				        backend->auto_flush(true);
+
+				        // Wrap it into the frontend and register in the core.
+				        // The backend requires synchronization in the frontend.
+				        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+				        core->add_sink(this->log_sink);
+
+				        boost::log::add_common_attributes();
+					    }
+
+				    virtual ~datapipe()
+					    {
+				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+				        core->remove_sink(this->log_sink);
+					    }
+
+
+				    // INTERFACE
+
+		      public:
+
+				    //! Close this datapipe
+				    void close() { ; }
+
+				    //! Return logger
+				    boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
+
+				    // INTERNAL DATA
+
+		      private:
+
+				    //! Path to logging directory
+				    const boost::filesystem::path&                           logdir_path;
+
+						//! Unique serial number identifying the worker process which owns this datapipe
+				    const unsigned int                                       worker_number;
+
+		        //! Logger source
+		        boost::log::sources::severity_logger<log_severity_level> log_source;
+
+		        //! Logger sink
+		        boost::shared_ptr< sink_t >                              log_sink;
+
+				    //! Timer, used to track how long the datapipe is kept open
+				    boost::timer::cpu_timer&                                 timer;
+			    };
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -419,12 +508,10 @@ namespace transport
           }
 
         //! Destroy the data_manager instance. In practice this would always be delegated to an implementation class
-        virtual ~data_manager()
-          {
-          }
+        virtual ~data_manager() = default;
 
 
-        // INTERFACE -- WRITE CONTAINER HANDLING
+        // WRITER HANDLING
 
       public:
 
@@ -442,7 +529,7 @@ namespace transport
         virtual void close_writer(typename repository<number>::derived_content_writer& ctr) = 0;
 
 
-        // INTERFACE -- WRITE INDEX TABLES FOR A CONTAINER
+        // WRITE INDEX TABLES FOR A DATA CONTAINER
 
       public:
 
@@ -455,7 +542,7 @@ namespace transport
                                    unsigned int Nfields) = 0;
 
 
-        // INTERFACE -- TASK FILES
+        // TASK FILES
 
       public:
 
@@ -472,7 +559,7 @@ namespace transport
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;
 
 
-        // INTERFACE -- TEMPORARY CONTAINERS
+        // TEMPORARY CONTAINERS
 
       public:
 
@@ -495,6 +582,13 @@ namespace transport
         //! Aggregate a temporary threepf container into a principal container
         virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
                                              const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) = 0;
+
+
+		    // DATA PIPES
+
+      public:
+
+		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
 
         // INTERNAL DATA

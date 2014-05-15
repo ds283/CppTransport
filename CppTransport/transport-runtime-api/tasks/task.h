@@ -877,8 +877,8 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
 	    {
         out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << " " << obj.get_task_name() << ", "
-	        << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << "." << std::endl;
-        out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
+	          << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT       << " " << obj.get_product_name() << ";";
+        out << " " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
 
         unsigned int count = 0;
         const std::list<std::string>& tags = obj.get_tags();

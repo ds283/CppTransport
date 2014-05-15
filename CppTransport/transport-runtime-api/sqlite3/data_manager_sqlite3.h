@@ -58,7 +58,7 @@ namespace transport
         ~data_manager_sqlite3();
 
 
-        // INTERFACE -- CONTAINER HANDLING (implements a 'data_manager' interface)
+        // WRITER HANDLONG -- implements a 'data_manager' interface
 
       public:
 
@@ -82,7 +82,7 @@ namespace transport
 		    virtual void close_writer(typename repository<number>::derived_content_writer& ctr) override;
 
 
-        // INTERFACE -- WRITE INDEX TABLES (implements a 'data_manager' interface)
+        // WRITE INDEX TABLES -- implements a 'data_manager' interface
 
       public:
 
@@ -112,7 +112,7 @@ namespace transport
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) override;
 
 
-        // INTERFACE -- TEMPORARY CONTAINERS (implements a 'data_manager' interface)
+        // TEMPORARY CONTAINERS  -- implements a 'data_manager' interface
 
       public:
 
@@ -139,6 +139,13 @@ namespace transport
                                              const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
 
 
+        // DATA PIPES -- implements a 'data_manager' interface
+
+      public:
+
+        virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) override;
+
+
 		    // INTERNAL UTILITY FUNCTIONS
 
       protected:
@@ -155,6 +162,7 @@ namespace transport
 
         //! Generate the name for a temporary container
         boost::filesystem::path generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker);
+
 
         // INTERNAL DATA
 
@@ -581,6 +589,21 @@ namespace transport
         sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::imag_twopf);
         sqlite3_operations::aggregate_threepf<number>(db, ctr, temp_ctr);
       }
+
+
+		// DATAPIPES
+
+		template <typename number>
+		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, unsigned int worker,
+																																													boost::timer::cpu_timer& timer)
+			{
+				// set up datapipe
+				typename data_manager<number>::datapipe pipe(logdir, worker, timer);
+
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
+
+				return(pipe);
+			}
 
 
     // FACTORY FUNCTIONS TO BUILD A DATA_MANAGER

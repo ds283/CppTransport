@@ -542,7 +542,7 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << *tk;
 
         // set up a timer to keep track of the total wallclock time used in this integration
@@ -1029,7 +1029,7 @@ namespace transport
                                                        this->data_mgr->create_temp_twopf_container(payload.tempdir_path(), payload.logdir_path(),
                                                                                                    this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
         // perform the integration
@@ -1045,7 +1045,7 @@ namespace transport
         this->slave_clean_up(batcher);
 
         // notify master process that all work has been finished
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
       }
 
@@ -1078,7 +1078,7 @@ namespace transport
                                                          this->data_mgr->create_temp_threepf_container(payload.tempdir_path(), payload.logdir_path(),
                                                                                                        this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
         // perform the integration
@@ -1094,7 +1094,7 @@ namespace transport
         this->slave_clean_up(batcher);
 
         // notify master process that all work has been finished
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave sending FINISHED_TASK to master";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
       }
 
@@ -1102,7 +1102,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::slave_clean_up(typename data_manager<number>::generic_batcher& batcher)
       {
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave entering post-integration cleanup: waiting to delete containers";
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker entering post-integration cleanup: waiting to delete containers";
 
         while(this->temporary_container_queue.size() > 0)
           {
@@ -1124,7 +1124,7 @@ namespace transport
           {
             std::string payload;
             this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
-            BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Slave received delete instruction: " << payload;
+            BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Worker received delete instruction: " << payload;
 
             if(!boost::filesystem::remove(payload))
               {
@@ -1150,16 +1150,39 @@ namespace transport
 		    if(mlist.size() != 1)
 			    throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
-				// create a context and queue
+				// acquire a datapipe which we can use to stream content from the databse
+				typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.logdir_path(), this->get_rank(), timer);
+
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "'" << std::endl;
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
+
+		    // create a context and queue
 				context ctx = context();
 				ctx.add_device("CPU");
 				scheduler sch = scheduler(ctx);
 				work_queue< output_task_element<number> > work = sch.make_queue(*tk, filter);
 
-		    std::cerr << "Slave " << this->worker_number() << " queue:" << std::endl;
-		    std::cerr << work << std::endl;
+		    std::ostringstream work_msg;
+		    work_msg << work;
+		    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
+
+		    const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
+				assert(queues.size() == 1);
+
+				const typename work_queue< output_task_element<number> >::device_work_list list = queues[0];
+
+				for(unsigned int i = 0; i < list.size(); i++)
+					{
+					}
+
+				// close the datapipe
+				pipe.close();
+
+				// all work now done - stop the timer
+				timer.stop();
 
 				// notify master process that all work has been finished
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
 				this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
 			}
 
