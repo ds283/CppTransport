@@ -15,7 +15,7 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/messages.h"
-#include "exceptions.h"
+#include "transport-runtime-api/exceptions.h"
 
 
 #define __CPP_TRANSPORT_NODE_MIN          "min"

@@ -99,8 +99,7 @@ target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES}
 
 
 cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
-target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
-
+target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
 add_executable(dquad-opencl examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
 target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})
