@@ -10,5 +10,6 @@
 
 #include "transport-runtime-api/derived-products/time-plots/background.h"
 
+#include "transport-runtime-api/derived-products/derived_product_helper.h"
 
 #endif //__data_products_H_

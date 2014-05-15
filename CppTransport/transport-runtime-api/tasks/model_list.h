@@ -10,6 +10,9 @@
 
 #include <vector>
 
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
+
 
 namespace transport
 	{
@@ -61,6 +64,15 @@ namespace transport
 
 				    return(this->models.front());
 			    }
+
+        //! Get back model
+        model<number>* back() const
+	        {
+            if(this->models.size() == 0)
+	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_RANGE);
+
+            return(this->models.back());
+	        }
 
 		    // INTERNAL DATA
 

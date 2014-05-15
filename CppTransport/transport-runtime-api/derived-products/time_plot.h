@@ -40,20 +40,44 @@ namespace transport
 
 				    // CONSTRUCTOR, DESTRUCTOR
 
+				    //! Basic user-facing constructor.
 				    time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
 				              typename plot2d_product<number>::time_filter filter)
-					    : plot2d_product<number>(name, filename, tk, filter)
+					    : plot2d_product<number>(name, filename, tk)
 					    {
-				        this->apply_default_settings();
-				        this->apply_default_labels();
+				        apply_default_settings();
+				        apply_default_labels();
 
 								// set up a list of serial numbers corresponding to the sample times for this plot
 				        const std::vector<double>& sample_times = tk.get_sample_times();
 
 						    for(unsigned int i = 0; i < sample_times.size(); i++)
 							    {
-								    if(filter(sample_times[i])) this->time_sample_sns.push_back(i);
+								    if(filter(sample_times[i])) time_sample_sns.push_back(i);
 							    }
+					    }
+
+				    //! Deserialization constructor.
+				    time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
+					    : plot2d_product<number>(name, tk, reader)
+					    {
+						    // extract serial numbers from reader
+						    assert(reader != nullptr);
+
+						    unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
+
+						    for(unsigned int i = 0; i < sns; i++)
+							    {
+										reader->start_array_element();
+
+								    unsigned int sn;
+								    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, sn);
+								    time_sample_sns.push_back(sn);
+
+								    reader->end_array_element();
+							    }
+
+						    reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
 					    }
 
 				    ~time_plot() = default;

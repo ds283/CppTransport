@@ -24,8 +24,8 @@
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BL  "legend position bottom-left"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BR  "legend position bottom-right"
 
-#define __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION "Unknown legend position in 'plot2d_product' object"
-
+#define __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION "Internal error: Unknown legend position in 'plot2d_product' object"
+#define __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS  "Internal error: Unknown legend position"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_PLOT2D_PRODUCT_H

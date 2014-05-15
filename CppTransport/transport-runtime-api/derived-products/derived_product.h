@@ -13,6 +13,9 @@
 
 #include "transport-runtime-api/derived-products/data_view.h"
 
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
+
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_BACKGROUND_TIME_PLOT "background-time-plot"
@@ -27,6 +30,9 @@
 
 namespace transport
 	{
+
+		// forward-declare model class
+    template <typename number> class model;
 
 		// forward-declare class task.
 		// task.h includes this header, so we cannot include task.h otherwise we create
@@ -61,6 +67,16 @@ namespace transport
 				      : name(obj.name), filename(obj.filename), parent(obj.parent->clone())
 					    {
 						    assert(parent != nullptr);
+					    }
+
+				    //! Deserialization constructor
+				    derived_product(const std::string& nm, const task<number>* tk, serialization_reader* reader)
+				      : name(nm), parent(tk->clone()), wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH), cpos(0)
+					    {
+						    assert(reader != nullptr);
+						    assert(parent != nullptr);
+
+						    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, filename);
 					    }
 
 		        virtual ~derived_product()
@@ -132,7 +148,7 @@ namespace transport
 		        const std::string name;
 
 		        //! Standardized filename
-		        const std::string filename;
+		        std::string filename;
 
 		        //! Parent task which which this derived data-product is associated.
 				    //! We store our own copy.
@@ -188,20 +204,7 @@ namespace transport
 						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename);
 					}
 
-
-		    namespace
-			    {
-
-		        namespace derived_product_helper
-			        {
-
-			        }   // namespace derived_product_helper
-
-			    }   // unnamed namespace
-
-
-
-	}   // namespace derived_data
+			}   // namespace derived_data
 
 	}   // namespace transport
 

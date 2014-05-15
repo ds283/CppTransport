@@ -46,8 +46,7 @@
 #define __CPP_TRANSPORT_NODE_THREEPF_BRANGE   "beta-range"
 
 #define __CPP_TRANSPORT_NODE_OUTPUT_NAME      "name"
-#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "elements"
-#define __CPP_TRANSPORT_NODE_OUTPUT_ELEMENT   "element"
+#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "derived-data-tasks"
 #define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
 #define __CPP_TRANSPORT_NODE_OUTPUT_LABEL     "label"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS "tags"
@@ -833,10 +832,13 @@ namespace transport
         // INTERFACE - EXTRACT DETAILS
 
         //! Get name of task associated with this task element
-        const std::string& get_task() const { return(this->product->get_parent_task()->get_name()); }
+        const std::string& get_task_name() const { return(this->product->get_parent_task()->get_name()); }
 
         //! Get name of derived product associated with this task element
-        const std::string& get_label() const { return(this->product->get_name()); }
+        const std::string& get_product_name() const { return(this->product->get_name()); }
+
+		    //! Get derived product associated with this task element
+		    derived_data::derived_product<number>* get_product() const { return(this->product); }
 
         //! Get tags associated with this task element
         const std::list<std::string>& get_tags() const { return(this->tags); }
@@ -947,8 +949,8 @@ namespace transport
         out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
         for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
 	        {
-            out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << (*t).get_task() << ", "
-	            << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << (*t).get_label() << "." << std::endl;
+            out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << " " << (*t).get_task_name() << ", "
+	            << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << (*t).get_product_name() << "." << std::endl;
             out << "    " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS << ": ";
 
             unsigned int count = 0;
@@ -975,8 +977,8 @@ namespace transport
 	        {
             this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
 
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task());
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_label());
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task_name());
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_product_name());
 
             const std::list<std::string>& tags = (*t).get_tags();
 
@@ -997,18 +999,33 @@ namespace transport
     namespace output_task_helper
 	    {
 
+		    template <typename number>
+		    struct task_finder
+			    {
+		        typedef typename std::function< transport::task<number>*(const std::string&) > type;
+			    };
+
         template <typename number>
-        transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name)
+        struct derived_product_finder
+	        {
+            typedef typename std::function< transport::derived_data::derived_product<number>*(integration_task<number>*,const std::string&) > type;
+	        };
+
+        template <typename number>
+        transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name,
+                                                   typename task_finder<number>::type tfinder,
+                                                   typename derived_product_finder<number>::type pfinder)
 	        {
             unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
 
             typename std::vector< output_task_element<number> > elements;
+
             for(unsigned int i = 0; i < num_elements; i++)
 	            {
                 reader->start_array_element();
 
-                std::string task;
-                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task);
+                std::string task_name;
+                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task_name);
 
                 std::string label;
                 reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
@@ -1026,6 +1043,23 @@ namespace transport
                 reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
                 reader->end_array_element();
+
+		            // lookup task<> and derived_product<> objects from the repository-supplied finder functions
+								task<number>* tk = tfinder(task_name);
+
+                // ensure named task is of integration type
+                if(dynamic_cast< twopf_task<number>* >(tk) == nullptr && dynamic_cast< threepf_task<number>* >(tk) == nullptr)
+	                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
+
+                derived_data::derived_product<number>* dp = pfinder(dynamic_cast< integration_task<number>* >(tk), label);
+
+		            // construct a output_task_element<> object wrapping these elements, and push it to the list
+		            elements.push_back(output_task_element<number>(*dp, tags));
+
+		            // the repository-supplied objects can now be deleted; output_task_element performs a deep copy,
+		            // so there is no risk of dangling pointers or references
+		            delete tk;
+		            delete dp;
 	            }
 
             reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
@@ -1036,7 +1070,7 @@ namespace transport
 	    }   // namespace output_task_helper
 
 
-  }   // namespace transport
+	}   // namespace transport
 
 
 #endif //__task_H_

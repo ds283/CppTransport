@@ -66,11 +66,47 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
-
-		        plot2d_product(const std::string& name, const std::string& filename, const integration_task<number>& tk, time_filter tf)
-		          : filter(tf), derived_product<number>(name, filename, tk)
+						//! Basic user-facing constructor
+		        plot2d_product(const std::string& name, const std::string& filename, const integration_task<number>& tk)
+		          : derived_product<number>(name, filename, tk)
 			        {
 			        }
+
+				    //! Deserialization constructor
+				    plot2d_product(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
+				      : derived_product<number>(name, tk, reader)
+					    {
+						    // extract data from reader;
+						    assert(reader != nullptr);
+
+					      reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, log_x);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, log_y);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, abs_y);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, reverse_x);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, reverse_y);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, use_LaTeX);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, x_label);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, x_label_text);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, y_label);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, y_label_text);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, title);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, title_text);
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, legend);
+
+				        std::string leg_pos;
+						    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, leg_pos);
+
+						    if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL) position = top_left;
+						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR) position = top_right;
+						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL) position = bottom_left;
+						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR) position = bottom_right;
+						    else
+							    {
+						        std::ostringstream msg;
+								    msg << __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS << " '" << leg_pos << "'";
+								    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+							    }
+					    }
 
 		        virtual ~plot2d_product() = default;
 

@@ -517,7 +517,11 @@ namespace transport
 
       public:
 
+		    //! Enumerate the derived products available for a named task
         virtual std::list<typename repository<number>::derived_product> enumerate_task_derived_products(const std::string& name) = 0;
+
+        //! Query a derived product specification
+        virtual derived_data::derived_product<number>* query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m) = 0;
 
 
 				// PRIVATE DATA

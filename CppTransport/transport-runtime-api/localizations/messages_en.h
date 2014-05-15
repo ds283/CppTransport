@@ -39,6 +39,7 @@
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 
 // derived products
+#include "transport-runtime-api/localizations/messages_en/derived-products/derived_product.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/plot2d_product.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/time_plot.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/background.h"

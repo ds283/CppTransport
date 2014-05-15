@@ -30,6 +30,10 @@ namespace transport
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
+				    //! Basic user-facing constructor. Accepts a filename, integration task,
+				    //! filter function which determines which times are plotted,
+				    //! and an index_selector<1> which determines which fields are plotted.
+				    //! Also needs a model reference.
 		        background(const std::string& name, const std::string& filename, const integration_task<number>& tk,
 		                   typename plot2d_product<number>::time_filter filter,
 		                   index_selector<1>& sel, model<number>* m)
@@ -46,6 +50,25 @@ namespace transport
 				            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 					        }
 			        }
+
+				    //! Deserialization constructor.
+				    //! Accepts a serialization_reader and an index_selector, together with a model reference.
+				    //! The remaining items are extracted from the reader.
+				    background(const std::string& name, const integration_task<number>* tk, index_selector<1>* sel, model<number>* m,
+				               serialization_reader* reader)
+				      : active_indices(*sel), mdl(m), time_plot<number>(name, tk, reader)
+					    {
+				        assert(m != nullptr);
+
+				        if(active_indices.get_number_fields() != mdl->get_N_fields())
+					        {
+				            std::ostringstream msg;
+				            msg << __CPP_TRANSPORT_PRODUCT_BACKGROUND_INDEX_MISMATCH   << " ("
+					            << __CPP_TRANSPORT_PRODUCT_BACKGROUND_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+					            << __CPP_TRANSPORT_PRODUCT_BACKGROUND_INDEX_MISMATCH_B << " " << mdl->get_N_fields() << ")";
+				            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+					        }
+					    }
 
 		        ~background() = default;
 
@@ -111,6 +134,34 @@ namespace transport
 						// call next serialization
 						this->time_plot<number>::serialize(writer);
 					}
+
+
+				namespace
+					{
+
+						namespace background_helper
+							{
+
+								template <typename number>
+								derived_data::background<number>* deserialize(const std::string& name, serialization_reader* reader, integration_task<number>* tk, model<number>* m)
+									{
+										assert(reader != nullptr);
+										assert(m != nullptr);
+
+										reader->start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FIELD_INDICES);
+								    transport::index_selector<1>* bg_sel = transport::index_selector_helper::deserialize<1>(reader);
+										reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FIELD_INDICES);
+
+								    derived_data::background<number>* rval = new derived_data::background<number>(name, tk, bg_sel, m, reader);
+
+										delete bg_sel;
+
+										return(rval);
+									}
+
+							}   // namespace background_helper
+
+					}   // unnamed namespace
 
 
 				template <typename number>

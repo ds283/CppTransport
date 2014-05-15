@@ -393,7 +393,10 @@ namespace transport
               }
 	          else if(dynamic_cast< output_task<number>* >(tk) != nullptr)
 	            {
-                std::cerr << "Output tasks not implemented yet!" << std::endl;
+		            output_task<number>* out_task = dynamic_cast< output_task<number>* >(tk);
+
+                std::cerr << "Output task:" << std::endl;
+                std::cerr << static_cast<const output_task<number>&>(*out_task) << std::endl;
 	            }
             else
               {

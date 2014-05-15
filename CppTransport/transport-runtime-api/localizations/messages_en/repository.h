@@ -44,4 +44,9 @@
 #define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS      "Repository error: Attempt to insert duplicate derived-product specification"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived-product specifications for non integration task"
 
+#define __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT     "Repository error: Could not find specified derived-product"
+#define __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT_A   "expected in task"
+
+#define __CPP_TRANSPORT_REPO_MODEL_LIST_REBIND_MISMATCH  "Internal error: No models supplied in 'model_list' while building derived-product descriptor"
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

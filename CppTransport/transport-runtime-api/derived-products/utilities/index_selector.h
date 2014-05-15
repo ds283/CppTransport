@@ -16,8 +16,12 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
+
 
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE       "index-range"
+#define __CPP_TRANSPORT_NODE_INDEX_FIELDS      "num-fields"
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL   "all"
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD "field"
 #define __CPP_TRANSPORT_NODE_INDEX_TOGGLES     "enabled-indices"
@@ -34,15 +38,16 @@ namespace transport
 
       public:
 
-		    //! validator object.
-		    //! used to confirm that a particular index_selector is compatible with a particular model.
-		    typedef std::function<bool(const index_selector<indices>&)> validator;
-
 		    typedef enum { field_range, all_range } range_type;
 
       public:
 
+		    //! Build a default index_selector, with all indices enabled.
         index_selector(unsigned int N_f, range_type r=all_range);
+
+		    //! Build an index_selector, with index assignments taken from an array
+		    index_selector(unsigned int N_f, range_type r, const std::vector<bool>& presets);
+
 		    ~index_selector() = default;
 
 		    //! Disable all indices
@@ -115,6 +120,39 @@ namespace transport
 
 
     template <unsigned int indices>
+    index_selector<indices>::index_selector(unsigned int N_f, range_type r, const std::vector<bool>& presets)
+	    : N_fields(N_f), range(r)
+	    {
+        // work out how many components this object has
+        size = 1;
+        unsigned int scale_factor = (r == all_range ? 2 : 1);
+
+        for(int i = 0; i < indices; i++)
+	        {
+            size *= scale_factor * N_fields;
+	        }
+
+		    if(size != presets.size())
+			    {
+		        std::ostringstream msg;
+				    msg << __CPP_TRANSPORT_INDEX_PRESET_MISMATCH << size << ", "
+					      << __CPP_TRANSPORT_INDEX_PRESET_MISMATCH_A << presets.size();
+				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+			    }
+
+		    enabled = presets;
+
+        displacements.resize(indices);
+        unsigned int count = 1;
+        for(int i = 0; i < indices; i++)
+	        {
+            displacements[indices-i-1] = count;
+            count *= scale_factor * this->N_fields;
+	        }
+	    }
+
+
+    template <unsigned int indices>
     void index_selector<indices>::none()
       {
         this->enabled.assign(size, false);
@@ -183,7 +221,8 @@ namespace transport
 		void index_selector<indices>::serialize(serialization_writer& writer) const
 			{
 				this->write_value_node(writer, __CPP_TRANSPORT_NODE_INDEX_RANGE,
-				                       this->range == all_range ? __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL : __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD);
+				                       this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD));
+				this->write_value_node(writer, __CPP_TRANSPORT_NODE_INDEX_FIELDS, this->N_fields);
 
 				this->begin_array(writer, __CPP_TRANSPORT_NODE_INDEX_TOGGLES, this->size == 0);
 				for(unsigned int i = 0; i < this->size; i++)
@@ -226,6 +265,57 @@ namespace transport
 							}
 					}
 			}
+
+
+		namespace
+			{
+
+				namespace index_selector_helper
+					{
+
+						template <unsigned int indices>
+						index_selector<indices>* deserialize(serialization_reader* reader)
+							{
+						    std::string range_string;
+								reader->read_value(__CPP_TRANSPORT_NODE_INDEX_RANGE, range_string);
+
+								unsigned int N_f;
+								reader->read_value(__CPP_TRANSPORT_NODE_INDEX_FIELDS, N_f);
+
+								typename index_selector<indices>::range_type type = index_selector<indices>::all_range;
+								if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL)        type = index_selector<indices>::all_range;
+							  else if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD) type = index_selector<indices>::field_range;
+								else
+									{
+								    std::ostringstream msg;
+										msg << __CPP_TRANSPORT_INDEX_UNKNOWN_RANGE_TYPE << " '" << range_string << "'";
+								    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+									}
+
+								// read array of toggles
+						    std::vector<bool> toggles;
+
+								unsigned int serial_numbers = reader->start_array(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
+
+								for(unsigned int i = 0; i < serial_numbers; i++)
+									{
+										reader->start_array_element();
+
+								    bool toggle;
+										reader->read_value(__CPP_TRANSPORT_NODE_INDEX_TOGGLE, toggle);
+										toggles.push_back(toggle);
+
+										reader->end_array_element();
+									}
+
+								reader->end_element(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
+
+								return new index_selector<indices>(N_f, type, toggles);
+							}
+
+					}
+
+			}   // unnamed namespace
 
 
   }  // namespace transport

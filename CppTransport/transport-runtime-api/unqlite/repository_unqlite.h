@@ -20,6 +20,8 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
+#include "transport-runtime-api/derived-products/data_products.h"
+
 #include "transport-runtime-api/unqlite/unqlite_data.h"
 #include "transport-runtime-api/unqlite/unqlite_serializable.h"
 #include "transport-runtime-api/unqlite/unqlite_operations.h"
@@ -167,7 +169,12 @@ namespace transport
 
       public:
 
+		    //! Enumerate the derived products associated with a named task
 		    virtual std::list<typename repository<number>::derived_product> enumerate_task_derived_products(const std::string& name) override;
+
+        //! Query a derived product specification
+		    virtual derived_data::derived_product<number>* query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m) override;
+
 
       protected:
 
@@ -175,6 +182,15 @@ namespace transport
 		    //! The supplied unqlite_serialization_reader should point to an unread derived-product JSON object.
 		    typename repository<number>::derived_product extract_derived_product_data(const std::string& task, unqlite_serialization_reader* reader);
 
+        //! Version of query_derived_data for rebinding and use when deserializing an output_task.
+        //! Essentially the same as query_derived_data, but accepts a model_list<> as the last parameter and picks off the back component.
+				derived_data::derived_product<number>* rebind_query_derived_data(integration_task<number>* tk, const std::string& product, model_list<number>& mlist)
+	        {
+		        if(mlist.size() == 0)
+			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_MODEL_LIST_REBIND_MISMATCH);
+
+		        return(this->query_derived_data(tk, product, mlist.back()));
+	        }
 
         // PULL RECORDS FROM THE REPOSITORY DATABASE IN JSON FORMAT -- implements a 'json_extractible_repository' interface
         // FIXME: This interface isn't codified yet; need to add a 'json_extractible_repository' concept
@@ -606,12 +622,12 @@ namespace transport
 
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+
 		    // commit task block
 		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 		    t.serialize(writer);
 		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
-
-		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
 
         // insert this record in the task database
         unqlite_operations::store(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, writer.get_contents());
@@ -797,8 +813,6 @@ namespace transport
     task<number>* repository_unqlite<number>::query_task(const std::string& name, model_list<number>& mlist,
                                                          typename instance_manager<number>::model_finder finder)
 	    {
-        assert(mlist.size() == 0);
-
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
 
@@ -926,41 +940,26 @@ namespace transport
 			{
 				assert(reader != nullptr);
 
-				// move the task reader to the task description block, and use it to reconstruct a task<>
+		    // move the task reader to the task description block, and use it to reconstruct a task<>
 				reader->start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 				reader->push_bookmark();
 
-				output_task<number> tk = output_task_helper::deserialize<number>(reader, name);
+				// generate lookup functions for tasks and derived products
 
-				// work through the output task, finding models and pushing suitable references to the model list
-				for(unsigned int i = 0; i < tk.size(); i++)
-					{
-						const output_task_element<number>& element = tk.get(i);
+				//! query_task will automatically push the required models to mlist, so there is nothing to do
+				typename std::reference_wrapper< model_list<number> > mlist_wrapper = mlist;
 
-				    // get serialization_reader for the named package
-				    int package_id = 0;
-						task_type type;
-				    unqlite_serialization_reader* package_reader = this->deserialize_task(element.get_task(), package_id, type);
+		    typename output_task_helper::task_finder<number>::type tfinder = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1, mlist_wrapper, finder);
 
-						// ensure named task is of integration type
-						if(type != twopf_record || type != threepf_record)
-							throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
+		    typename output_task_helper::derived_product_finder<number>::type pfinder = std::bind(&repository_unqlite<number>::rebind_query_derived_data, this, std::placeholders::_1, std::placeholders::_2, mlist_wrapper);
 
-				    // extract UID for model
-				    std::string uid;
-				    package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
+				output_task<number> tk = output_task_helper::deserialize<number>(reader, name, tfinder, pfinder);
+		    task<number>* rval = new output_task<number>(tk);
 
-				    // use the supplied finder to recover a model object for this UID
-				    model<number>* m = finder(uid);
-				    mlist.push_back(m);
-					}
+		    reader->pop_bookmark();
+		    reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
 
-				task<number>* rval = new output_task<number>(tk);
-
-				reader->pop_bookmark();
-				reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
-
-				return(rval);
+		    return(rval);
 			}
 
 
@@ -1483,6 +1482,54 @@ namespace transport
 				reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, name);
 
 				return typename repository<number>::derived_product(task, name);
+			}
+
+
+		//! Query a derived product specification
+		template <typename number>
+		derived_data::derived_product<number>* repository_unqlite<number>::query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m)
+			{
+				// open a new transaction, if necessary. After this we can assume the dataabse handles are live
+				this->begin_transaction();
+
+				// get a serialization_reader for the task record
+				int task_id = 0;
+				task_type type;
+				unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
+
+				// move the serialization reader to the derived-product specification block
+				unsigned int num_products = task_reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+
+		    derived_data::derived_product<number>* rval = nullptr;
+
+				for(unsigned int i = 0; rval == nullptr && i < num_products; i++)
+					{
+						task_reader->start_array_element();
+
+				    std::string pname;
+						task_reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, pname);
+
+						if(pname == product) rval = derived_data::derived_product_helper::deserialize<number>(pname, task_reader, tk, m);
+
+						task_reader->end_array_element();
+					}
+
+				task_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+
+				// commit transaction
+				this->commit_transaction();
+
+		    delete task_reader;
+
+				if(rval == nullptr)
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT   << " '" << product << "', "
+								<< __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT_A << " '" << tk->get_name() << "'";
+						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
+
+				return(rval);
 			}
 
 
