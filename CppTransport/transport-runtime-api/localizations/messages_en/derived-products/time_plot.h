@@ -13,5 +13,7 @@
 
 #define __CPP_TRANSPORT_PRODUCT_TIMEPLOT_SN_LABEL        "time-plot: including serial numbers"
 
+#define __CPP_TRANSPORT_PRODUCT_TIMEPLOT_NULL_DATAPIPE   "Derived data error: Null datapipe in 'time_plot' object"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TIMEPLOT_PRODUCT_H

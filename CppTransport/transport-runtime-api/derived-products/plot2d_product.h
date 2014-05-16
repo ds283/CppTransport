@@ -47,6 +47,25 @@ namespace transport
 		    class plot2d_line
 			    {
 
+		      public:
+
+				    plot2d_line(const std::vector<double>& ax)
+					    : axis(ax)
+					    {
+						    line.clear();
+					    }
+
+				    ~plot2d_line() = default;
+
+
+				    // INTERNAL DATA
+
+				    //! axis data
+				    std::vector<double>& ax;
+
+				    //! line data
+				    std::vector<number>& line;
+
 			    };
 
 		    //! A plot2d-product is a specialization of a derived-product that
@@ -117,8 +136,12 @@ namespace transport
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
 		        virtual void apply_default_labels() = 0;
+
 		        //! (re-)set a default list of settings
 		        virtual void apply_default_settings() = 0;
+
+				    //! reset all plot data
+				    virtual void reset_plot() = 0;
 
 
 		        // GET AND SET BASIC PLOT LABELS

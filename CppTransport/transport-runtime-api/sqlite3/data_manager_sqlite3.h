@@ -143,7 +143,16 @@ namespace transport
 
       public:
 
-        virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) override;
+        //! Create a new datapipe
+        virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir,
+                                                                        unsigned int worker, boost::timer::cpu_timer& timer) override;
+
+        //! Pull a set of time sample-points from a datapipe
+        virtual void pull_time_sample(typename data_manager<number>::datapipe* pipe,
+                                      const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) override;
+
+        //! Pull a time sample of a background field from a datapipe
+        virtual void pull_background_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
 
       protected:
 
@@ -613,13 +622,50 @@ namespace transport
 		    typename data_manager<number>::datapipe_detach_function detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this,
 		                                                                               std::placeholders::_1);
 
+		    typename data_manager<number>::datapipe_time_sample_function tsample = std::bind(&data_manager_sqlite3<number>::pull_time_sample, this,
+		                                                                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+
+		    typename data_manager<number>::datapipe_background_time_sample_function bsample = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
+		                                                                                                std::placeholders::_1, std::placeholders::_2,
+		                                                                                                std::placeholders::_3, std::placeholders::_4);
+
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(logdir, worker, timer, attach, detach);
+		    typename data_manager<number>::datapipe pipe(logdir, worker, timer, attach, detach, tsample, bsample);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
 
 				return(pipe);
 			}
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_time_sample(typename data_manager<number>::datapipe* pipe,
+                                                        const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_time_sample(db, serial_numbers, sample);
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_background_time_sample(typename data_manager<number>::datapipe* pipe,
+                                                                   unsigned int id, const std::vector<unsigned int>& serial_numbers,
+                                                                   std::vector<number>& sample)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_background_time_sample(db, serial_numbers, sample);
+	    }
+
 
 
 		template <typename number>

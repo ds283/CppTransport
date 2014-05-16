@@ -23,25 +23,26 @@
 #include "transport-runtime-api/manager/data_manager.h"
 
 
-#define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE    "time_samples"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE   "twopf_samples"
-#define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE "threepf_samples"
-#define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE    "backg"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE    "twopf"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG       "re"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG  "im"
-#define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE  "threepf"
-#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_1_TABLE    "gauge_xfm_1"
-#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_2_TABLE    "gauge_xfm_2"
-#define __CPP_TRANSPORT_SQLITE_U2_TABLE             "u2"
-#define __CPP_TRANSPORT_SQLITE_U3_TABLE             "u3"
-#define __CPP_TRANSPORT_SQLITE_A_TABLE              "A"
-#define __CPP_TRANSPORT_SQLITE_B_TABLE              "B"
-#define __CPP_TRANSPORT_SQLITE_C_TABLE              "C"
+#define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE      "time_samples"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE     "twopf_samples"
+#define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE   "threepf_samples"
+#define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE      "backg"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE      "twopf"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG         "re"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG    "im"
+#define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE    "threepf"
+#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_1_TABLE      "gauge_xfm_1"
+#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_2_TABLE      "gauge_xfm_2"
+#define __CPP_TRANSPORT_SQLITE_U2_TABLE               "u2"
+#define __CPP_TRANSPORT_SQLITE_U3_TABLE               "u3"
+#define __CPP_TRANSPORT_SQLITE_A_TABLE                "A"
+#define __CPP_TRANSPORT_SQLITE_B_TABLE                "B"
+#define __CPP_TRANSPORT_SQLITE_C_TABLE                "C"
 
-#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE       "task_list"
+#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE         "task_list"
+#define __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE "time_serial_search"
 
-#define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME     "tempdb"
+#define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME       "tempdb"
 
 
 namespace transport
@@ -359,7 +360,7 @@ namespace transport
                     msg << __CPP_TRANSPORT_DATACTR_TASKLIST_READ_A << " '" << taskfile_name << "' " << __CPP_TRANSPORT_DATACTR_TASKLIST_READ_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
                     sqlite3_finalize(stmt);
                     sqlite3_close(taskfile);
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
                   }
               }
 
@@ -830,6 +831,108 @@ namespace transport
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
           }
+
+
+		    // set up a temporary table representing the time serial numbers we want to use
+		    void create_temporary_timeserial_table(sqlite3* db, const std::vector<unsigned int>& serial_numbers)
+			    {
+				    assert(db != nullptr);
+
+		        std::stringstream stmt_text;
+				    stmt_text << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE << "("
+					      << "serial INTEGER PRIMARY KEY"
+					    << ");";
+
+				    exec(db, stmt_text.str(), __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_CREATE_FAIL);
+
+		        std::stringstream insert_stmt;
+				    insert_stmt << "INSERT INTO temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE << " VALUES (@serial);";
+
+				    sqlite3_stmt* stmt;
+				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+				    exec(db, "BEGIN TRANSACTION;");
+
+				    for(unsigned int i = 0; i < serial_numbers.size(); i++)
+					    {
+						    check_stmt(db, sqlite3_bind_int(stmt, 1, serial_numbers[i]));
+
+						    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_INSERT_FAIL, SQLITE_DONE);
+
+						    check_stmt(db, sqlite3_clear_bindings(stmt));
+						    check_stmt(db, sqlite3_reset(stmt));
+					    }
+
+				    exec(db, "END TRANSACTION");
+				    check_stmt(db, sqlite3_finalize(stmt));
+			    }
+
+
+		    // drop a temporary table of time serial numbers
+		    void drop_temporary_timeserial_table(sqlite3* db)
+			    {
+		        assert(db != nullptr);
+
+		        std::stringstream stmt_text;
+		        stmt_text << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE << ";";
+
+			      exec(db, stmt_text.str(), __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_DROP_FAIL);
+			    }
+
+
+		    // Pull a set of time sample points, identified by their serial numbers
+		    void pull_time_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
+			    {
+				    assert(db != nullptr);
+
+						// set up a temporary table representing the serial numbers we want to use
+				    create_temporary_timeserial_table(db, serial_numbers);
+
+				    // pull out the set of rows matching serial numbers in the temporary table
+		        std::stringstream select_stmt;
+				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".time"
+		          << " FROM " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE
+					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE
+					    << " ON " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE << ".serial;";
+
+				    sqlite3_stmt* stmt;
+				    check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+				    sample.clear();
+
+				    int status;
+				    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+					    {
+						    if(status == SQLITE_ROW)
+							    {
+								    double time = sqlite3_column_double(stmt, 0);
+								    sample.push_back(time);
+							    }
+						    else
+							    {
+						        std::ostringstream msg;
+								    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+								    sqlite3_finalize(stmt);
+								    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+							    }
+					    }
+
+				    check_stmt(db, sqlite3_finalize(stmt));
+
+				    // drop temporary table of serial numbers
+				    drop_temporary_timeserial_table(db);
+
+				    // check that we have as many values as we expect
+				    if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+			    }
+
+
+		    // Pull a sample of the background field evolution, for a specific field, for a specific set of time serial numbers
+		    template <typename number>
+		    void pull_background_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& serial_numbers, std::vector<number>& sample)
+			    {
+
+			    }
 
 
       }   // namespace sqlite3_operations

@@ -12,6 +12,7 @@
 
 #include "transport-runtime-api/derived-products/plot2d_product.h"
 
+#include "boost/lexical_cast.hpp"
 
 // maximum number of serial numbers to output when writing ourselves to
 // a standard stream
@@ -28,6 +29,7 @@ namespace transport
 		namespace derived_data
 			{
 
+
 			  //! A time-plot is a specialization of a plot2d-product that produces
 		    //! an time-evolution plot of some components (or multiple components)
 		    //! of one or more correlation functions.
@@ -41,44 +43,11 @@ namespace transport
 				    // CONSTRUCTOR, DESTRUCTOR
 
 				    //! Basic user-facing constructor.
-				    time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
-				              typename plot2d_product<number>::time_filter filter)
-					    : plot2d_product<number>(name, filename, tk)
-					    {
-				        apply_default_settings();
-				        apply_default_labels();
-
-								// set up a list of serial numbers corresponding to the sample times for this plot
-				        const std::vector<double>& sample_times = tk.get_sample_times();
-
-						    for(unsigned int i = 0; i < sample_times.size(); i++)
-							    {
-								    if(filter(sample_times[i])) time_sample_sns.push_back(i);
-							    }
-					    }
+		        time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
+						                      typename plot2d_product<number>::time_filter filter);
 
 				    //! Deserialization constructor.
-				    time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
-					    : plot2d_product<number>(name, tk, reader)
-					    {
-						    // extract serial numbers from reader
-						    assert(reader != nullptr);
-
-						    unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
-
-						    for(unsigned int i = 0; i < sns; i++)
-							    {
-										reader->start_array_element();
-
-								    unsigned int sn;
-								    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, sn);
-								    time_sample_sns.push_back(sn);
-
-								    reader->end_array_element();
-							    }
-
-						    reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
-					    }
+		        time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader);
 
 				    ~time_plot() = default;
 
@@ -89,16 +58,22 @@ namespace transport
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
 		        virtual void apply_default_labels() override;
+
 		        //! (re-)set a default list of settings
 		        virtual void apply_default_settings() override;
 
+				    //! Reset all plot data
+				    virtual void reset_plot() override;
 
-				    // EXTRACT TIME SAMPLE
+				    // TIME SAMPLE
 
 		      public:
 
 				    //! get serial numbers of sample times
 				    const std::vector<unsigned int>& get_time_sample_sns() { return(this->time_sample_sns); }
+
+				    //! extract axis data from datapipe
+				    void set_time_axis(typename data_manager<number>::datapipe& pipe);
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -119,12 +94,61 @@ namespace transport
 
 		      protected:
 
-				    std::vector<unsigned int> time_sample_sns;
+				    //! List of time serial numbers to be used for plotting
+				    std::vector<unsigned int>         time_sample_sns;
+
+				    //! List of time values to be used for plotting. Extracted from a datapipe.
+				    std::vector<double> time_axis;
+
+				    //! List of time_2dline objects to be plotted on the graph.
+				    std::list< line2d_time<number>* > plot_lines;
 
 			    };
 
 
-				template <typename number>
+		    template <typename number>
+		    time_plot<number>::time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
+			    : plot2d_product<number>(name, tk, reader)
+			    {
+		        // extract serial numbers from reader
+		        assert(reader != nullptr);
+
+		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
+
+		        for(unsigned int i = 0; i < sns; i++)
+			        {
+		            reader->start_array_element();
+
+		            unsigned int sn;
+		            reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, sn);
+		            time_sample_sns.push_back(sn);
+
+		            reader->end_array_element();
+			        }
+
+		        reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
+			    }
+
+
+		    template <typename number>
+		    time_plot<number>::time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
+		                                 typename plot2d_product<number>::time_filter filter)
+			    : plot2d_product<number>(name, filename, tk)
+			    {
+		        apply_default_settings();
+		        apply_default_labels();
+
+		        // set up a list of serial numbers corresponding to the sample times for this plot
+		        const std::vector<double>& sample_times = tk.get_sample_times();
+
+		        for(unsigned int i = 0; i < sample_times.size(); i++)
+			        {
+		            if(filter(sample_times[i])) time_sample_sns.push_back(i);
+			        }
+			    }
+
+
+		    template <typename number>
 				void time_plot<number>::apply_default_settings()
 					{
 						// default settings are: logarithmic y axis, absolute y values, linear x axis, no reversals, x-axis label only, use LaTeX, legend
@@ -153,6 +177,26 @@ namespace transport
 
 						this->clear_y_label_text();
 						this->clear_title_text();
+					}
+
+
+		    template <typename number>
+		    void time_plot<number>::reset_plot()
+			    {
+				    this->time_axis.clear();
+				    this->plot_lines.clear();
+			    }
+
+
+				template <typename number>
+				void time_plot<number>::set_time_axis(typename data_manager<number>::datapipe& pipe)
+					{
+						if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_NULL_DATAPIPE);
+
+						// set-up time sample data
+						pipe.pull_time_sample(this->time_sample_sns, time_axis);
+
+
 					}
 
 

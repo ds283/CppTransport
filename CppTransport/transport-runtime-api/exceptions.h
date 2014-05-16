@@ -27,6 +27,7 @@ namespace transport
                        REPOSITORY_ERROR,                                  // generic repository error
                        REPOSITORY_BACKEND_ERROR,                          // error from repository database backend
                        DATA_CONTAINER_ERROR,                              // generic data-container error
+		                   DATA_MANAGER_BACKEND_ERROR,                        // error from data manager database backend
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
                        STORAGE_ERROR,                                     // error while storing the output of an integration
                        BACKEND_ERROR,                                     // problem encountered by a compute backend

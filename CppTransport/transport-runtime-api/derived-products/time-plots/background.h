@@ -116,9 +116,17 @@ namespace transport
 			    };
 
 
+				//! Build a background plot
 		    template <typename number>
 				void background<number>::derive(typename data_manager<number>::datapipe& pipe)
 			    {
+						// ensure that the supplied pipe is attached to a data container
+						if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_BACKGROUND_NULL_DATAPIPE);
+
+						this->reset_plot_data();
+
+						// set time axis data
+						this->set_time_axis(pipe);
 			    }
 
 

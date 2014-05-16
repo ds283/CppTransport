@@ -1202,7 +1202,7 @@ namespace transport
 						// has output already been generated for this derived product?
 						if(!group.output_exists(product->get_name()))
 							{
-						    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Generating new derived product '" << product->get_name()
+						    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Generating new derived product '" << product->get_name() << "'"
 								                                                            << " in output group " << boost::posix_time::to_simple_string(group.get_creation_time());
 
 						    // construct a callback for the derived-product provider to push new content to the master
