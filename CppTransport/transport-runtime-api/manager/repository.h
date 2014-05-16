@@ -12,11 +12,7 @@
 #include <string>
 
 #include "transport-runtime-api/manager/instance_manager.h"
-#include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/tasks/model_list.h"
-#include "transport-runtime-api/concepts/initial_conditions.h"
-#include "transport-runtime-api/concepts/parameters.h"
-#include "transport-runtime-api/derived-products/derived_product.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/log/core.hpp"
@@ -39,6 +35,22 @@ namespace transport
 
     // forward-declare model to avoid circular inclusion
     template <typename number> class model;
+
+		// forward-declare initial_conditions
+		template <typename number> class initial_conditions;
+
+		// forward-declare tasks
+		template <typename number> class task;
+		template <typename number> class integration_task;
+		template <typename number> class twopf_task;
+		template <typename number> class threepf_task;
+		template <typename number> class output_task;
+
+		// forward-declare derived_product object to avoid circular inclusion
+		namespace derived_data
+			{
+		    template <typename number> class derived_product;
+			}
 
     // forward-declare 'key' class used to create repositories
     // the complete declaration is in a separate file,
@@ -72,80 +84,31 @@ namespace transport
             //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
 		        //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
-                               const boost::filesystem::path& log, const boost::filesystem::path& task,
-                               const boost::filesystem::path& temp, unsigned int n, unsigned int w)
-              : path_to_directory(dir), path_to_data_container(data),
-                path_to_log_directory(log), path_to_taskfile(task),
-                path_to_temp_directory(temp),
-                serial_number(n), worker_number(w),
-                data_manager_handle(nullptr), data_manager_taskfile(nullptr)
-              {
-                std::ostringstream log_file;
-                log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-                boost::filesystem::path log_path = path_to_log_directory / log_file.str();
-
-                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-                std::ostringstream log_file_path;
-                boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
-                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
-
-		            // enable auto-flushing of log entries
-		            // this degrades performance, but we are not writing many entries and they
-		            // will not be lost in the event of a crash
-		            backend->auto_flush(true);
-
-                // Wrap it into the frontend and register in the core.
-                // The backend requires synchronization in the frontend.
-                this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
-
-                core->add_sink(this->log_sink);
-
-                boost::log::add_common_attributes();
-              }
+                                           const boost::filesystem::path& log, const boost::filesystem::path& task,
+                                           const boost::filesystem::path& temp, unsigned int n, unsigned int w);
 
             //! Destroy an integration container object
-            ~integration_writer()
-              {
-		            // remove logging objects
-                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-                core->remove_sink(this->log_sink);
-              }
+            ~integration_writer();
 
             //! Set data_manager handle for data container
-            template <typename data_manager_type>
-            void set_data_manager_handle(data_manager_type data)
-              {
-                this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
-              }
+						template <typename data_manager_type>
+            void set_data_manager_handle(data_manager_type data);
 
             //! Return data_manager handle for data container
 
             //! Throws a REPOSITORY_ERROR exception if the handle is unset
-            template <typename data_manager_type>
-            void get_data_manager_handle(data_manager_type* data)
-              {
-                if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
-                *data = static_cast<data_manager_type>(this->data_manager_handle);
-              }
+		        template <typename data_manager_type>
+            void get_data_manager_handle(data_manager_type* data);
 
             //! Set data_manager handle for taskfile
-            template <typename data_manager_type>
-            void set_data_manager_taskfile(data_manager_type data)
-              {
-                this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
-              }
+		        template <typename data_manager_type>
+            void set_data_manager_taskfile(data_manager_type data);
 
             //! Return data_manager handle for taskfile
 
             //! Throws a REPOSITORY_ERROR exception if the handle is unset
-            template <typename data_manager_type>
-            void get_data_manager_taskfile(data_manager_type* data)
-              {
-                if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
-                *data = static_cast<data_manager_type>(this->data_manager_taskfile);
-              }
+		        template <typename data_manager_type>
+            void get_data_manager_taskfile(data_manager_type* data);
 
             //! Return logger
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -198,18 +161,16 @@ namespace transport
 		      public:
 
 				    //! Create a data_product descriptor
-				    data_product(const std::string& nm, const std::string& pt, const std::string& ctime)
+				    data_product(const std::string& nm, const std::string& ctime, const std::string& pt)
 		          : name(nm), path(pt), created(boost::posix_time::time_from_string(ctime))
 					    {
 					    }
 
+				    //! Get dataproduct name
+				    const std::string& get_product_name() const { return(this->name); }
+
 				    //! Write self to output stream
-				    void write(std::ostream& out) const
-					    {
-								out << __CPP_TRANSPORT_DATAPRODUCT_NAME << " = " << this->name
-										<< __CPP_TRANSPORT_DATAPRODUCT_PATH << " = " << this->path
-										<< __CPP_TRANSPORT_DATAPRODUCT_CREATED << " " << created;
-					    }
+		        void write(std::ostream& out) const;
 
 
 				    // INTERNAL DATA
@@ -220,14 +181,14 @@ namespace transport
 				    const std::string name;
 
 				    //! Path to this product in the repository
-				    boost::filesystem::path path;
+				    const boost::filesystem::path path;
 
 				    //! Creation date
-				    boost::posix_time::ptime created;
+				    const boost::posix_time::ptime created;
 			    };
 
 
-		    //! Derived product descriptor. Used to enumerate the derived product types associated with a particular task
+        //! Derived product descriptor. Used to enumerate the derived product types associated with a particular task
 		    class derived_product
 			    {
 
@@ -269,58 +230,17 @@ namespace transport
 
             //! Create an output_group descriptor
             output_group(const std::string& tn,
-                         unsigned int sn, const std::string& be, const std::string& path, const std::string& ctr,
+                         unsigned int sn, const std::string& be,
+                         const boost::filesystem::path& root, const std::string& path, const std::string& ctr,
                          const std::string& dr, const std::string& ctime, bool lock,
                          const std::list<data_product> pd,
-                         const std::list<std::string>& nt, const std::list<std::string>& tg)
-	            : task(tn), serial(sn), backend(be), output_path(path), database_path(ctr), derived_path(dr),
-	              created(boost::posix_time::time_from_string(ctime)), locked(lock), data_products(pd),
-	              notes(nt), tags(tg)
-	            {
-	            }
+                         const std::list<std::string>& nt, const std::list<std::string>& tg);
 
             //! Destroy an output_group descriptor
             ~output_group() = default;
 
 		        //! Write self to output stream
-		        void write(std::ostream& out) const
-			        {
-		            out << __CPP_TRANSPORT_OUTPUT_GROUP_SERIAL << " = " << this->serial
-			            << " (" << __CPP_TRANSPORT_OUTPUT_GROUP_BACKEND << " '" << this->backend << "'";
-		            if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
-		            out << ")" << std::endl;
-		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_ROOT << " = " << this->output_path << std::endl;
-		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA << " = " << this->database_path << std::endl;
-				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DERIVED << " = " << this->derived_path << std::endl;
-		            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
-
-		            unsigned int count = 0;
-		            for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
-			            {
-		                out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
-		                out << "    " << *t << std::endl;
-		                count++;
-			            }
-
-		            count = 0;
-				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_TAGS << ": ";
-		            for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
-			            {
-				            if(count > 0) out << ", ";
-				            out << *t;
-		                count++;
-			            }
-				        out << std::endl;
-
-				        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_PRODUCTS << ": " << std::endl;
-				        for(typename std::list<data_product>::const_iterator t = this->data_products.begin(); t != this->data_products.end(); t++)
-			            {
-				            (*t).write(out);
-						        out << std::endl;
-			            }
-
-				        out << std::endl;
-			        }
+            void write(std::ostream& out) const;
 
             // INTERFACE
 
@@ -332,6 +252,18 @@ namespace transport
             //! Get creation time
             const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
+		        //! Get path to repository root
+		        const boost::filesystem::path& get_repo_root_path() const { return(this->repo_root_path); }
+
+		        //! Get path to output root
+		        const boost::filesystem::path& get_data_root_path() const { return(this->data_root_path); }
+
+		        //! Get path to data container
+		        const boost::filesystem::path& get_data_container_path() const { return(this->database_path); }
+
+		        //! Get path to derived products
+		        const boost::filesystem::path& get_derived_products_path() const { return(this->derived_path); }
+
             //! Get locked flag
             bool get_lock_status() const { return(this->locked); }
 
@@ -340,6 +272,12 @@ namespace transport
 
 		        //! Get tags
 		        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+		        //! Check whether content for a given derived data product already exists
+		        bool output_exists(const std::string& product_name) const;
+
+		        //! Check whether we match a set of atgs
+		        bool check_tags(std::list<std::string> match_tags) const;
 
             // PRIVATE DATA
 
@@ -354,8 +292,11 @@ namespace transport
             //! Name of integration backend used to generate this output group
             const std::string backend;
 
+		        //! Path to root of repository. Other paths are relative to this.
+		        const boost::filesystem::path repo_root_path;
+
             //! Path of parent directory containing the output, usually residing within the repository
-            const boost::filesystem::path output_path;
+            const boost::filesystem::path data_root_path;
 
             //! Path to output database
             const boost::filesystem::path database_path;
@@ -380,7 +321,7 @@ namespace transport
 	        };
 
 
-		    // DATA CONTAINER READ HANDLE
+        // DATA CONTAINER READ HANDLE
 
 		    //! Integration container reader: forms a handle for a data container when reading the an integration from the database
 
@@ -389,63 +330,23 @@ namespace transport
 
 		      public:
 
-				    //! Construct a derived-content-writer object.
-				    derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
-				                           const boost::filesystem::path& task, const boost::filesystem::path& temp,
-				                           unsigned int w)
-				      : path_to_directory(dir), path_to_log_directory(log),
-				        path_to_taskfile(task), path_to_temp_directory(temp),
-				        worker_number(w), data_manager_taskfile(nullptr)
-					    {
-				        std::ostringstream log_file;
-						    log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-				        boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+				    //! Construct a derived-content writer object
+		        derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
+						                                   const boost::filesystem::path& task, const boost::filesystem::path& temp,
+						                                   unsigned int w);
 
-				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-				        std::ostringstream log_file_path;
-				        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
-					                           boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
-
-				        // enable auto-flushing of log entries
-				        // this degrades performance, but we are not writing many entries and they
-				        // will not be lost in the event of a crash
-				        backend->auto_flush(true);
-
-				        // Wrap it into the frontend and register in the core.
-				        // The backend requires synchronization in the frontend.
-				        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
-
-				        core->add_sink(this->log_sink);
-
-				        boost::log::add_common_attributes();
-					    }
-
-				    //! Destroy a derived_content_writer object
-				    ~derived_content_writer()
-					    {
-						    // remove logging objects
-				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-						    core->remove_sink(this->log_sink);
-					    }
+				    //! Destroy a derived-content writer object
+		        ~derived_content_writer();
 
 		        //! Set data_manager handle for taskfile
-		        template <typename data_manager_type>
-		        void set_data_manager_taskfile(data_manager_type data)
-			        {
-		            this->data_manager_taskfile = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
-			        }
+				    template <typename data_manager_type>
+		        void set_data_manager_taskfile(data_manager_type data);
 
 		        //! Return data_manager handle for data container
 
 		        //! Throws a REPOSITORY_ERROR exception if the handle is unset
-		        template <typename data_manager_type>
-		        void get_data_manager_taskfile(data_manager_type* data)
-			        {
-		            if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK);
-		            *data = static_cast<data_manager_type>(this->data_manager_taskfile);
-			        }
+				    template <typename data_manager_type>
+		        void get_data_manager_taskfile(data_manager_type* data);
 
 				    //! Return logger
 				    boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -586,7 +487,10 @@ namespace transport
 
 		    //! Add derived content
 		    virtual derived_content_writer new_derived_content(output_task<number>* tk, const std::list<std::string>& tags,
-		                                                   unsigned int worker) = 0;
+		                                                       unsigned int worker) = 0;
+
+		    //! Lookup the output group for a task+derived-product, given a set of tags
+		    virtual output_group find_derived_product_output_group(const derived_data::derived_product<number>* product, const std::list<std::string>& tags) = 0;
 
 
 				// PRIVATE DATA
@@ -602,6 +506,88 @@ namespace transport
 	    };
 
 
+		// INTEGRATION_WRITER METHODS
+
+
+    template <typename number>
+    repository<number>::integration_writer::integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
+                                                               const boost::filesystem::path& log, const boost::filesystem::path& task,
+                                                               const boost::filesystem::path& temp, unsigned int n, unsigned int w)
+	    : path_to_directory(dir), path_to_data_container(data),
+	      path_to_log_directory(log), path_to_taskfile(task),
+	      path_to_temp_directory(temp),
+	      serial_number(n), worker_number(w),
+	      data_manager_handle(nullptr), data_manager_taskfile(nullptr)
+	    {
+        std::ostringstream log_file;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+
+        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+        std::ostringstream log_file_path;
+        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+	                           boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+        // enable auto-flushing of log entries
+        // this degrades performance, but we are not writing many entries and they
+        // will not be lost in the event of a crash
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
+        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+        core->add_sink(this->log_sink);
+
+        boost::log::add_common_attributes();
+	    }
+
+
+		template <typename number>
+    repository<number>::integration_writer::~integration_writer()
+	    {
+        // remove logging objects
+        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+        core->remove_sink(this->log_sink);
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::integration_writer::set_data_manager_handle(data_manager_type data)
+	    {
+        this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::integration_writer::get_data_manager_handle(data_manager_type* data)
+	    {
+        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
+        *data = static_cast<data_manager_type>(this->data_manager_handle);
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::integration_writer::set_data_manager_taskfile(data_manager_type data)
+	    {
+        this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::integration_writer::get_data_manager_taskfile(data_manager_type* data)
+	    {
+        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
+        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
+	    }
+
+
 		// output a data_product descriptor to a standard stream
 		template <typename number>
 		std::ostream& operator<<(std::ostream& out, const typename repository<number>::data_product& product)
@@ -609,6 +595,170 @@ namespace transport
 				product.write(out);
 				return(out);
 			}
+
+
+		// DATA_PRODUCT METHODS
+
+
+		template <typename number>
+    void repository<number>::data_product::write(std::ostream& out) const
+	    {
+        out << __CPP_TRANSPORT_DATAPRODUCT_NAME << " = " << this->name
+	        << __CPP_TRANSPORT_DATAPRODUCT_PATH << " = " << this->path
+	        << __CPP_TRANSPORT_DATAPRODUCT_CREATED << " " << this->created;
+	    }
+
+
+		// DERIVED_CONTENT_WRITER METHODS
+
+
+    template <typename number>
+    repository <number>::derived_content_writer::derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
+                                                                        const boost::filesystem::path& task, const boost::filesystem::path& temp,
+                                                                        unsigned int w)
+	    : path_to_directory(dir), path_to_log_directory(log),
+	      path_to_taskfile(task), path_to_temp_directory(temp),
+	      worker_number(w), data_manager_taskfile(nullptr)
+	    {
+        std::ostringstream log_file;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+
+        boost::shared_ptr <boost::log::core> core                        = boost::log::core::get();
+
+        std::ostringstream                                       log_file_path;
+        boost::shared_ptr <boost::log::sinks::text_file_backend> backend =
+	                                                                 boost::make_shared <boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+
+        // enable auto-flushing of log entries
+        // this degrades performance, but we are not writing many entries and they
+        // will not be lost in the event of a crash
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
+        this->log_sink = boost::shared_ptr <sink_t>(new sink_t(backend));
+
+        core->add_sink(this->log_sink);
+
+        boost::log::add_common_attributes();
+	    }
+
+
+		template <typename number>
+    repository<number>::derived_content_writer::~derived_content_writer()
+	    {
+        // remove logging objects
+        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+        core->remove_sink(this->log_sink);
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::derived_content_writer::set_data_manager_taskfile(data_manager_type data)
+	    {
+        this->data_manager_taskfile = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
+	    }
+
+
+		template <typename number>
+    template <typename data_manager_type>
+    void repository<number>::derived_content_writer::get_data_manager_taskfile(data_manager_type* data)
+	    {
+        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK);
+        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
+	    }
+
+
+		// OUTPUT_GROUP METHODS
+
+
+    template <typename number>
+    repository<number>::output_group::output_group(const std::string& tn,
+                                                   unsigned int sn, const std::string& be,
+                                                   const boost::filesystem::path& root, const std::string& path, const std::string& ctr,
+                                                   const std::string& dr, const std::string& ctime, bool lock,
+                                                   const std::list<data_product> pd,
+                                                   const std::list<std::string>& nt, const std::list<std::string>& tg)
+	    : task(tn), serial(sn), backend(be), repo_root_path(root), data_root_path(path), database_path(ctr), derived_path(dr),
+	      created(boost::posix_time::time_from_string(ctime)), locked(lock), data_products(pd),
+	      notes(nt), tags(tg)
+	    {
+	    }
+
+
+    template <typename number>
+    void repository<number>::output_group::write(std::ostream& out) const
+	    {
+        out << __CPP_TRANSPORT_OUTPUT_GROUP_SERIAL << " = " << this->serial
+	        << " (" << __CPP_TRANSPORT_OUTPUT_GROUP_BACKEND << " '" << this->backend << "'";
+        if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
+        out << ")" << std::endl;
+		    out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->repo_root_path << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->data_root_path << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA << " = " << this->database_path << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DERIVED << " = " << this->derived_path << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
+
+        unsigned int                               count = 0;
+        for(std::list<std::string>::const_iterator t     = this->notes.begin(); t != this->notes.end(); t++)
+	        {
+            out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_NOTE << " " << count << std::endl;
+            out << "    " << *t << std::endl;
+            count++;
+	        }
+
+        count = 0;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_TAGS << ": ";
+        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+	        {
+            if(count > 0) out << ", ";
+            out << *t;
+            count++;
+	        }
+        out << std::endl;
+
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_PRODUCTS << ": " << std::endl;
+        for(typename std::list<data_product>::const_iterator t = this->data_products.begin(); t != this->data_products.end(); t++)
+	        {
+            (*t).write(out);
+            out << std::endl;
+	        }
+
+        out << std::endl;
+	    }
+
+
+		template <typename number>
+    bool repository<number>::output_group::output_exists(const std::string& product_name) const
+	    {
+        // check whether output for the named derived-product exists
+
+        bool exists = false;
+        for(typename std::list<data_product>::const_iterator t = this->data_products.begin(); !exists && t != this->data_products.end(); t++)
+	        {
+            if((*t).get_product_name() == product_name) exists = true;
+	        }
+
+        return(exists);
+	    }
+
+
+		template <typename number>
+		bool repository<number>::output_group::check_tags(std::list<std::string> match_tags) const
+			{
+				// remove all this group's tags from the matching set.
+				// If any remain after this process, then the match set isn't a subset of the group's tags.
+				for(std::list<std::string>::const_iterator t = this->tags.begin(); t!= this->tags.end(); t++)
+					{
+						match_tags.remove(*t);
+					}
+
+				return(!match_tags.empty());
+			}
+
 
     // output an output_group descriptor to a standard stream
 		template <typename number>
@@ -632,7 +782,7 @@ namespace transport
 			}
 
 
-  }   // namespace transport
+	}   // namespace transport
 
 
 

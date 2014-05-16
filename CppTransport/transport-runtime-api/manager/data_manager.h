@@ -10,7 +10,6 @@
 
 #include <set>
 
-#include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/scheduler/work_queue.h"
 #include "transport-runtime-api/manager/repository.h"
 
@@ -40,6 +39,21 @@ namespace transport
 		// data_manager needs to know about model objects.
 		// The compromise is that data_manager.h should be included before model.h
     template <typename number> class model;
+
+		// forward-declare task types
+		template <typename number> class task;
+		template <typename number> class integration_task;
+		template <typename number> class twopf_task;
+		template <typename number> class threepf_task;
+		template <typename number> class output_task;
+
+		// forward-declare task elements
+		class twopf_kconfig;
+		class threepf_kconfig;
+		template <typename number> class output_task_element;
+
+//		// forward-declare work queue
+//		template <typename ItemType> class work_queue;
 
     template <typename number>
     class data_manager
@@ -91,6 +105,7 @@ namespace transport
         //! Three-point function writer function
         typedef std::function<void(generic_batcher*, const std::vector<threepf_item>&)> threepf_writer;
 
+
 				//! Aggregation of writers for a two-point function integration
         class twopf_writer_group
           {
@@ -98,6 +113,7 @@ namespace transport
             backg_writer backg;
             twopf_writer twopf;
           };
+
 
 		    //! Aggregation of writers for a three-point function integration
         class threepf_writer_group
@@ -110,6 +126,9 @@ namespace transport
           };
 
 
+		    // data pipe, used by derived content providers to extract content from an output group
+		    class datapipe;
+
 		    //! Internal flag indicating the action which should be taken by
 		    //! a batcher when its temporary container is replaced.
         typedef enum { action_replace, action_close } replacement_action;
@@ -119,6 +138,9 @@ namespace transport
 
 		    //! task-manager callback to push a container to the master node
         typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
+
+		    //! task-manager callback to push new derived content to the master node
+		    typedef std::function<void(datapipe* pipe)> derived_content_dispatch_function;
 
 		    //! Logging severity level
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
@@ -423,57 +445,56 @@ namespace transport
 
 		    // Data pipe objects
 
+		    //! Attach function for a datapipe
+		    typedef std::function<void(datapipe*,typename repository<number>::output_group&)> datapipe_attach_function;
+
+		    //! Detach function for a datapipe
+		    typedef std::function<void(datapipe*)> datapipe_detach_function;
+
 		    //! Data pipe, used when generating derived content to extract data froman integration database.
-		    //! The datapipe has a log directory, used for logging all transactions on the pipe.
+		    //! The datapipe has a log directory, used for logging transactions on the pipe.
 		    class datapipe
 			    {
 
 		      public:
 
-				    datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm)
-					    : logdir_path(lp), worker_number(w), timer(tm)
-					    {
-				        std::ostringstream log_file;
-				        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+				    //! Construct a datapipe
+		        datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm,
+		                 datapipe_attach_function& at, datapipe_detach_function& dt);
 
-				        boost::filesystem::path log_path = logdir_path / log_file.str();
-
-				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-				        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
-					                                                                  boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
-
-				        // enable auto-flushing of log entries
-				        // this degrades performance, but we are not writing many entries and they
-				        // will not be lost in the event of a crash
-				        backend->auto_flush(true);
-
-				        // Wrap it into the frontend and register in the core.
-				        // The backend requires synchronization in the frontend.
-				        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
-
-				        core->add_sink(this->log_sink);
-
-				        boost::log::add_common_attributes();
-					    }
-
-				    virtual ~datapipe()
-					    {
-				        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-				        core->remove_sink(this->log_sink);
-					    }
+				    //! Destroy a datapipe
+		        ~datapipe();
 
 
-				    // INTERFACE
+		        // MANAGEMENT
 
 		      public:
 
-				    //! Close this datapipe
-				    void close() { ; }
+		        //! Close this datapipe
+		        void close() { ; }
 
-				    //! Return logger
-				    boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+		        //! Set an implementation-dependent handle
+		        template <typename handle_type>
+		        void set_manager_handle(handle_type h)  { this->manager_handle = static_cast<void*>(h); }
+
+		        //! Return an implementation-dependent handle
+		        template <typename handle_type>
+		        void get_manager_handle(handle_type* h) { *h = static_cast<handle_type>(this->manager_handle); }
+
+		        //! Return logger
+		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
+
+				    // ATTACH, DETACH OUTPUT GROUPS
+
+		      public:
+
+				    //! Attach an output-group to the datapipe, ready for reading
+				    void attach(typename repository<number>::output_group& group,
+				                typename data_manager<number>::derived_content_dispatch_function& dispatcher);
+
+				    //! Detach an output-group from the datapipe
+				    void detach(void);
 
 
 				    // INTERNAL DATA
@@ -481,19 +502,36 @@ namespace transport
 		      private:
 
 				    //! Path to logging directory
-				    const boost::filesystem::path&                           logdir_path;
+				    const boost::filesystem::path&                                    logdir_path;
 
 						//! Unique serial number identifying the worker process which owns this datapipe
-				    const unsigned int                                       worker_number;
+				    const unsigned int                                                worker_number;
 
 		        //! Logger source
-		        boost::log::sources::severity_logger<log_severity_level> log_source;
+		        boost::log::sources::severity_logger<log_severity_level>          log_source;
 
 		        //! Logger sink
-		        boost::shared_ptr< sink_t >                              log_sink;
+		        boost::shared_ptr< sink_t >                                       log_sink;
 
 				    //! Timer, used to track how long the datapipe is kept open
-				    boost::timer::cpu_timer&                                 timer;
+				    boost::timer::cpu_timer&                                          timer;
+
+				    //! Currently-attached output group; null is no group is attached
+				    typename repository<number>::output_group*                        attached_group;
+
+				    //! Currently-attached dispatch function; null is no dispatcher
+				    typename data_manager<number>::derived_content_dispatch_function* attached_dispatcher;
+
+				    //! Implementation-dependent handle
+				    void*                                                             manager_handle;
+
+				    // CALLBACKS
+
+				    //! Callback: attach a datapipe
+				    datapipe_attach_function                                          attach_callback;
+
+				    //! Callback: detach a datapipe
+				    datapipe_detach_function                                          detach_callback;
 			    };
 
 
@@ -588,6 +626,7 @@ namespace transport
 
       public:
 
+		    //! Create a datapipe
 		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
 
@@ -598,6 +637,96 @@ namespace transport
         //! Maximum memory available to each worker process
         unsigned int capacity;
       };
+
+
+		// DATAPIPE METHODS
+
+
+
+    template <typename number>
+    data_manager<number>::datapipe::datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm,
+                                             datapipe_attach_function& at, datapipe_detach_function& dt)
+	    : logdir_path(lp), worker_number(w), timer(tm),
+	      attach_callback(at), detach_callback(dt),
+	      attached_group(nullptr), attached_dispatcher(nullptr)
+	    {
+        std::ostringstream log_file;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+
+        boost::filesystem::path log_path = logdir_path / log_file.str();
+
+        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
+
+        boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
+	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+
+        // enable auto-flushing of log entries
+        // this degrades performance, but we are not writing many entries and they
+        // will not be lost in the event of a crash
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
+        this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
+
+        core->add_sink(this->log_sink);
+
+        boost::log::add_common_attributes();
+	    }
+
+
+    template <typename number>
+    data_manager<number>::datapipe::~datapipe()
+	    {
+        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
+
+        core->remove_sink(this->log_sink);
+
+        // detach any attached output group, if necessary
+        if(this->attached_group != nullptr) this->detach();
+	    }
+
+
+    template <typename number>
+    void data_manager<number>::datapipe::attach(typename repository<number>::output_group& group,
+                                                typename data_manager<number>::derived_content_dispatch_function& dispatcher)
+	    {
+        assert(this->attached_group == nullptr);
+        if(this->attached_group != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_ALREADY_ATTACHED);
+
+        assert(this->attached_dispatcher == nullptr);
+        if(this->attached_dispatcher != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_ALREADY_ATTACHED);
+
+        // take copy of output group and dispatcher
+        this->attached_group      = new typename repository<number>::output_group(group);
+        this->attached_dispatcher = new typename data_manager<number>::derived_content_dispatch_function(dispatcher);
+
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH ouput group " << boost::posix_time::to_simple_string(group.get_creation_time());
+
+		    this->attach_callback(this, group);
+	    }
+
+
+		template <typename number>
+    void data_manager<number>::datapipe::detach()
+	    {
+		    assert(this->attached_group != nullptr);
+		    if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    assert(this->attached_dispatcher != nullptr);
+		    if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
+
+				this->detach_callback(this);
+
+		    delete this->attached_group;
+		    delete this->attached_dispatcher;
+
+		    this->attached_group = nullptr;
+		    this->attached_dispatcher = nullptr;
+	    }
+
 
   }   // namespace transport
 

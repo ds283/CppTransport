@@ -7,12 +7,20 @@
 #ifndef __derived_product_H_
 #define __derived_product_H_
 
-#include "transport-runtime-api/defaults.h"
 
 #include "transport-runtime-api/serialization/serializable.h"
 
+// need repository in order to get the details of a repository<number>::output_group
+// (can't forward-declare because it is a nested class)
+#include "transport-runtime-api/manager/repository.h"
+
+// need data_manager in order to get the details of a data_manager<number>>data_pipe
+// (can't forward-declare because it is a nested class)
+#include "transport-runtime-api/manager/data_manager.h"
+
 #include "transport-runtime-api/derived-products/data_view.h"
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
@@ -49,6 +57,10 @@ namespace transport
 		    template <typename number>
 		    class derived_product: public serializable
 			    {
+
+		      public:
+
+				    //! Finder function which obtains an output_group
 
 		      public:
 
@@ -101,7 +113,7 @@ namespace transport
 
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group
-		        virtual void derive() = 0;
+		        virtual void derive(typename data_manager<number>::datapipe& pipe) = 0;
 
 
 				    // WRAPPED OUTPUT

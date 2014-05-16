@@ -145,6 +145,14 @@ namespace transport
 
         virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) override;
 
+      protected:
+
+        //! Attach an output_group to a pipe
+        void datapipe_attach(typename data_manager<number>::datapipe* pipe, typename repository<number>::output_group& group);
+
+        //! Detach an output_group from a pipe
+        void datapipe_detach(typename data_manager<number>::datapipe* pipe);
+
 
 		    // INTERNAL UTILITY FUNCTIONS
 
@@ -339,7 +347,7 @@ namespace transport
 				sqlite3_close(taskfile);
 
 				// physically remove the taskfile from the disc; it isn't needed any more
-//		    boost::filesystem::remove(ctr.taskfile_path());
+//		    boost::filesystem::remove(ctr.get_taskfile_path());
 
 				// physically remove the tempfiles directory
 //		    boost::filesystem::remove(ctr.temporary_files_path());
@@ -593,16 +601,75 @@ namespace transport
 
 		// DATAPIPES
 
+
 		template <typename number>
 		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, unsigned int worker,
 																																													boost::timer::cpu_timer& timer)
 			{
-				// set up datapipe
-				typename data_manager<number>::datapipe pipe(logdir, worker, timer);
+		    // set up callback API
+		    typename data_manager<number>::datapipe_attach_function attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
+		                                                                               std::placeholders::_1, std::placeholders::_2);
+
+		    typename data_manager<number>::datapipe_detach_function detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this,
+		                                                                               std::placeholders::_1);
+
+		    // set up datapipe
+		    typename data_manager<number>::datapipe pipe(logdir, worker, timer, attach, detach);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
 
 				return(pipe);
+			}
+
+
+		template <typename number>
+		void data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe, typename repository<number>::output_group& group)
+			{
+				assert(pipe != nullptr);
+				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+				sqlite3* db = nullptr;
+
+				// get path to the output group data container
+		    boost::filesystem::path ctr_path = group.get_repo_root_path() / group.get_data_container_path();
+
+				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
+
+				if(status != SQLITE_OK)
+					{
+				    std::ostringstream msg;
+						if(db != nullptr)
+							{
+								msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
+								sqlite3_close(db);
+							}
+						else
+							{
+								msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
+							}
+						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+					}
+
+				// remember this connexion
+				this->open_containers.push_back(db);
+				pipe->set_manager_handle(db);
+
+				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "'";
+			}
+
+
+		template <typename number>
+		void data_manager_sqlite3<number>::datapipe_detach(typename data_manager<number>::datapipe* pipe)
+			{
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+				sqlite3* db = nullptr;
+				pipe->get_manager_handle(&db);
+				this->open_containers.remove(db);
+				sqlite3_close(db);
+
+				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Detached sqlite3 container";
 			}
 
 

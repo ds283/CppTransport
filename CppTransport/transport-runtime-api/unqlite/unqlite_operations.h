@@ -311,7 +311,7 @@ namespace transport
 
             jx9 << "if( !db_exists('" << collection << "') )" << std::endl
                 << "  {" << std::endl
-                << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_CLCTN << " '" << collection << "'\";" << std::endl
+                << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_COLLECTION << " '" << collection << "'\";" << std::endl
                 << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());

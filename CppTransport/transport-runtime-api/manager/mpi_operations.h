@@ -9,6 +9,7 @@
 
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
+#include "boost/serialization/list.hpp"
 #include "boost/timer/timer.hpp"
 
 
@@ -51,7 +52,8 @@ namespace transport
                   {
                   }
 
-                boost::filesystem::path repository_path() const { return(boost::filesystem::path(this->repository)); }
+		            //! Get path to repository
+                boost::filesystem::path get_repository_path() const { return(boost::filesystem::path(this->repository)); }
 
               private:
                 //! Pathname to repository
@@ -85,10 +87,17 @@ namespace transport
                   {
                   }
 
-                const std::string& task_name()          const { return(this->task); }
-                boost::filesystem::path taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
-                boost::filesystem::path tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
-                boost::filesystem::path logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+		            //! Get task name
+                const std::string&      get_task_name()     const { return(this->task); }
+
+		            //! Get path to taskfile, which specifies job allocations for the worker processes
+                boost::filesystem::path get_taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
+
+		            //! Get path to temporary directory
+                boost::filesystem::path get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+
+		            //! Get path to log directory
+                boost::filesystem::path get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
 
               private:
                 //! Name of task, to be looked up in repository database
@@ -171,15 +180,26 @@ namespace transport
                 new_derived_content_payload(const std::string& tk,
                                             const boost::filesystem::path& tk_f,
                                             const boost::filesystem::path& tmp_d,
-                                            const boost::filesystem::path& log_d)
-	                : task(tk), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string())
+                                            const boost::filesystem::path& log_d,
+                                            const std::list<std::string>& tg)
+	                : task(tk), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
 	                {
 	                }
 
-                const std::string& task_name()          const { return(this->task); }
-                boost::filesystem::path taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
-                boost::filesystem::path tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
-                boost::filesystem::path logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+		            //! Get task name
+                const std::string&            get_task_name()     const { return(this->task); }
+
+		            //! Get path to taskfile, which specifies job allocations for worker processes
+                boost::filesystem::path       get_taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
+
+		            //! Get path to the temporary directory
+                boost::filesystem::path       get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+
+		            //! Get path to the log directory
+                boost::filesystem::path       get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+
+		            //! Get tags specified on the command line, used to narrow-down the list of output groups
+		            const std::list<std::string>& get_tags()          const { return(this->tags); }
 
               private:
 
@@ -195,6 +215,9 @@ namespace transport
                 //! Pathname to directory for log files
                 std::string logdir;
 
+ 		            //! Search tags specified on the command line
+		            std::list<std::string> tags;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -205,6 +228,7 @@ namespace transport
                     ar & taskfile;
                     ar & tempdir;
                     ar & logdir;
+		                ar & tags;
 	                }
 	            };
 
@@ -227,13 +251,13 @@ namespace transport
 	                }
 
                 //! Get container path
-                const std::string& get_task_name() const { return(this->task); }
+                const std::string& get_task_name()    const { return(this->task); }
 
                 //! Get payload type
                 const std::string& get_product_name() const { return(this->product); }
 
 		            //! Get output group
-		            unsigned int get_output_group() const { return(this->group); }
+		            unsigned int       get_output_group() const { return(this->group); }
 
               private:
 

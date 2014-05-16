@@ -76,7 +76,7 @@ namespace transport
 				    // APPLY THIS DERIVATION TO PRODUCE OUTPUT -- implements a 'derived_product' interface
 
 						//! Apply this derivation to produce a background plot
-						virtual void derive() override;
+						virtual void derive(typename data_manager<number>::datapipe& pipe) override;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -117,7 +117,7 @@ namespace transport
 
 
 		    template <typename number>
-				void background<number>::derive()
+				void background<number>::derive(typename data_manager<number>::datapipe& pipe)
 			    {
 			    }
 

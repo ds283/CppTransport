@@ -50,5 +50,9 @@
 #define __CPP_TRANSPORT_DATACTR_THREEPFDETACH        "Data container error: Failed to detach temporary container following threepf transfer (backend code="
 #define __CPP_TRANSPORT_DATACTR_REMOVE_TEMP          "Data container error: Could not remove temporary container"
 
+#define __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE        "Data manager error: Null datapipe specifier"
+#define __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED    "Data manager error: Attempt to detach datapipe, but no output group is attached"
+#define __CPP_TRANSPORT_DATAMGR_PIPE_ALREADY_ATTACHED "Data manager error: Attempt to attach datapipe, but ouput group already attached"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DATA_MANAGER_H

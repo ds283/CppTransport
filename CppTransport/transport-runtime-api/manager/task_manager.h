@@ -139,10 +139,12 @@ namespace transport
         void master_push_repository(void);
 
         //! Master node: Pass new integration task to the workers
-        void master_integration_task_to_workers(typename repository<number>::integration_writer& ctr, integration_task<number>* task_name, model<number>* m);
+        void master_integration_task_to_workers(typename repository<number>::integration_writer& ctr,
+                                                integration_task<number>* task_name, model<number>* m);
 
 		    //! Master node: Pass new output task to the workers
-		    void master_output_task_to_workers(typename repository<number>::derived_content_writer& writer, output_task<number>* task_name);
+		    void master_output_task_to_workers(typename repository<number>::derived_content_writer& writer,
+		                                       output_task<number>* task_name, const std::list<std::string>& tags);
 
         //! Slave node: Process a new integration task instruction
         void slave_process_task(const MPI::new_integration_payload& payload);
@@ -151,13 +153,16 @@ namespace transport
 		    void slave_process_task(const MPI::new_derived_content_payload& payload);
 
         //! Slave node: Process a twopf task
-        void slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const MPI::new_integration_payload& payload, const work_item_filter<twopf_kconfig>& filter);
+        void slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist,
+                                       const MPI::new_integration_payload& payload, const work_item_filter<twopf_kconfig>& filter);
 
         //! Slave node: Process a threepf task
-        void slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const MPI::new_integration_payload& payload, const work_item_filter<threepf_kconfig>& filter);
+        void slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist,
+                                         const MPI::new_integration_payload& payload, const work_item_filter<threepf_kconfig>& filter);
 
 		    //! Slave node: Process an output task
-		    void slave_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist, const MPI::new_derived_content_payload& payload, const work_item_filter< output_task_element<number> >& filter);
+		    void slave_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist,
+		                                    const MPI::new_derived_content_payload& payload, const work_item_filter< output_task_element<number> >& filter);
 
         //! Slave node: set repository
         void slave_set_repository(const MPI::set_repository_payload& payload);
@@ -167,13 +172,16 @@ namespace transport
 
         //! Slave node: process queued DELETE_CONTAINER messages
 
-        //! Note that this function takes a pointed to a batcher, even though we use references elsewhere.
+        //! Note that this function takes a pointer to a batcher, even though we mostly use references elsewhere.
         //! This is because batchers will dispatch to this function, setting a pointer to themselves using 'this'.
         //! Therefore we have to take a pointer; there's no way for an object to get a reference to itself.
         void slave_process_delete_containers(typename data_manager<number>::generic_batcher* batcher);
 
         //! Push a temporary container to the master process
         void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
+
+		    //! Push new derived content to the master process
+        void slave_push_derived_content(typename data_manager<number>::datapipe* pipe);
 
         //! Make a 'device context' for the MPI worker processes
         context make_workers_context(void);
@@ -691,7 +699,7 @@ namespace transport
 		    this->data_mgr->create_taskfile(writer, queue);
 
 		    // instruct workers to carry out their tasks
-		    this->master_output_task_to_workers(writer, tk);
+		    this->master_output_task_to_workers(writer, tk, tags);
 
 		    // close the writer
 		    this->data_mgr->close_writer(writer);
@@ -699,7 +707,8 @@ namespace transport
 
 
 		template <typename number>
-		void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& ctr, output_task<number>* tk)
+		void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& ctr,
+		                                                         output_task<number>* tk, const std::list<std::string>& tags)
 			{
 				if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
@@ -720,7 +729,7 @@ namespace transport
 		    boost::filesystem::path tempdir_path  = ctr.temporary_files_path();
 		    boost::filesystem::path logdir_path   = ctr.log_directory_path();
 
-		    MPI::new_derived_content_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path);
+		    MPI::new_derived_content_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
 
 		    for(unsigned int i = 0; i < this->world.size()-1; i++)
 			    {
@@ -838,7 +847,7 @@ namespace transport
     template <typename number>
     void task_manager<number>::slave_set_repository(const MPI::set_repository_payload& payload)
       {
-        boost::filesystem::path repo_path = payload.repository_path();
+        boost::filesystem::path repo_path = payload.get_repository_path();
 
         try
           {
@@ -871,14 +880,14 @@ namespace transport
         try
 	        {
             model_list<number> mlist;
-            task<number>* tk = this->repo->query_task(payload.task_name(), mlist, this->model_finder_factory());
+            task<number>* tk = this->repo->query_task(payload.get_task_name(), mlist, this->model_finder_factory());
             assert(mlist.size() > 0);
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
             if(dynamic_cast< threepf_task<number>* >(tk))
 	            {
-                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.taskfile_path(), this->worker_number());
+                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
                 work_item_filter<threepf_kconfig> filter(work_items);
 
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
@@ -886,7 +895,7 @@ namespace transport
 	            }
             else if(dynamic_cast< twopf_task<number>* >(tk))
 	            {
-                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.taskfile_path(), this->worker_number());
+                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
                 work_item_filter<twopf_kconfig> filter(work_items);
 
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
@@ -911,19 +920,19 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
-	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else
@@ -946,14 +955,14 @@ namespace transport
         try
 	        {
             model_list<number> mlist;
-            task<number>* tk = this->repo->query_task(payload.task_name(), mlist, this->model_finder_factory());
+            task<number>* tk = this->repo->query_task(payload.get_task_name(), mlist, this->model_finder_factory());
             assert(mlist.size() > 0);
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
             if(dynamic_cast< output_task<number>* >(tk))
 	            {
-                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.taskfile_path(), this->worker_number());
+                std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
                 work_item_filter< output_task_element<number> > filter(work_items);
 
                 output_task<number>* out_task = dynamic_cast< output_task<number>* >(tk);
@@ -978,19 +987,19 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_MODEL_A << " '" << xe.what() << "' "
-	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
             else
@@ -1021,13 +1030,15 @@ namespace transport
         scheduler                 sch  = scheduler(ctx);
         work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), *tk, filter);
 
-        // make a temporary container object to hold the output of the integration
+        // construct a callback for the integrator to push new batches to the master
         typename data_manager<number>::container_dispatch_function dispatcher =
-                                                                     std::bind(&task_manager<number>::slave_push_temp_container,
-                                                                               this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
+	                                                                   std::bind(&task_manager<number>::slave_push_temp_container,
+	                                                                             this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
+
+        // construct a batcher to hold the output of the integration
         typename data_manager<number>::twopf_batcher batcher =
-                                                       this->data_mgr->create_temp_twopf_container(payload.tempdir_path(), payload.logdir_path(),
-                                                                                                   this->get_rank(), m->get_N_fields(), dispatcher, timer);
+	                                                     this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+	                                                                                                 this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1070,13 +1081,15 @@ namespace transport
         scheduler                   sch  = scheduler(ctx);
         work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), *tk, filter);
 
-        // make a temporary container object to hold the output of the integration
+        // construct a callback for the integrator to push new batches to the master
         typename data_manager<number>::container_dispatch_function dispatcher =
-                                                                     std::bind(&task_manager<number>::slave_push_temp_container,
-                                                                               this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
+	                                                                   std::bind(&task_manager<number>::slave_push_temp_container,
+	                                                                             this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
+
+        // construct a batcher to hold the output of the integration
         typename data_manager<number>::threepf_batcher batcher =
-                                                         this->data_mgr->create_temp_threepf_container(payload.tempdir_path(), payload.logdir_path(),
-                                                                                                       this->get_rank(), m->get_N_fields(), dispatcher, timer);
+	                                                       this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+	                                                                                                     this->get_rank(), m->get_N_fields(), dispatcher, timer);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1151,7 +1164,7 @@ namespace transport
 			    throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
 				// acquire a datapipe which we can use to stream content from the databse
-				typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.logdir_path(), this->get_rank(), timer);
+				typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), this->get_rank(), timer);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "'" << std::endl;
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
@@ -1173,6 +1186,44 @@ namespace transport
 
 				for(unsigned int i = 0; i < list.size(); i++)
 					{
+						// merge command-line supplied tags with tags specified in the task
+				    std::list<std::string> task_tags = list[i].get_tags();
+				    std::list<std::string> command_line_tags = payload.get_tags();
+
+				    task_tags.splice(task_tags.end(), command_line_tags);
+
+						typename derived_data::derived_product<number>* product = list[i].get_product();
+
+						assert(product != nullptr);
+						if(product == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT);
+
+						typename repository<number>::output_group group = this->repo->find_derived_product_output_group(product, task_tags);
+
+						// has output already been generated for this derived product?
+						if(!group.output_exists(product->get_name()))
+							{
+						    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Generating new derived product '" << product->get_name()
+								                                                            << " in output group " << boost::posix_time::to_simple_string(group.get_creation_time());
+
+						    // construct a callback for the derived-product provider to push new content to the master
+						    typename data_manager<number>::derived_content_dispatch_function dispatcher =
+							                                                                     std::bind(&task_manager<number>::slave_push_derived_content, this, std::placeholders::_1);
+
+						    // attach this output group to the datapipe
+						    pipe.attach(group, dispatcher);
+
+						    // ask the derived-product object to produce its output
+						    list[i].get_product()->derive(pipe);
+
+						    // detach this output group
+						    pipe.detach();
+							}
+						else
+							{
+								BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Output for derived product '" << product->get_name()
+																																						<< " already exists in output group " << boost::posix_time::to_simple_string(group.get_creation_time())
+																																						<< "; skipping this product";
+							}
 					}
 
 				// close the datapipe
@@ -1184,6 +1235,16 @@ namespace transport
 				// notify master process that all work has been finished
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
 				this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
+			}
+
+
+		template <typename number>
+		void task_manager<number>::slave_push_derived_content(typename data_manager<number>::datapipe* pipe)
+			{
+				assert(pipe != nullptr);
+
+				// FIXME: error message tag is possibly in the wrong namespace (but error message namespaces are totally confused anyway)
+				if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
 			}
 
 

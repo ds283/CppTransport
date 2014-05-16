@@ -201,6 +201,10 @@ namespace transport
         virtual typename repository<number>::derived_content_writer new_derived_content(output_task<number>* tk, const std::list<std::string>& tags,
                                                                                         unsigned int worker) override;
 
+        //! Lookup the output group for a task+derived-product, given a set of tags
+        virtual typename repository<number>::output_group find_derived_product_output_group(const derived_data::derived_product<number>* product,
+                                                                                            const std::list<std::string>& tags) override;
+
 
         // PULL RECORDS FROM THE REPOSITORY DATABASE IN JSON FORMAT -- implements a 'json_extractible_repository' interface
         // FIXME: This interface isn't codified yet; need to add a 'json_extractible_repository' concept
@@ -1327,7 +1331,7 @@ namespace transport
 				    std::string creation_time;
 						reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_CREATED, creation_time);
 
-						typename repository<number>::data_product pd = typename repository<number>::data_product(product, path, creation_time);
+						typename repository<number>::data_product pd = typename repository<number>::data_product(product, creation_time, path);
 						products.push_back(pd);
 
 						reader->end_array_element();
@@ -1362,7 +1366,7 @@ namespace transport
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-				return typename repository<number>::output_group(task, serial_number, backend, data_root,
+				return typename repository<number>::output_group(task, serial_number, backend, this->root_path, data_root,
 				                                                 data_container, derived_root, creation_time,
 				                                                 locked, products, notes, tags);
 			}
@@ -1545,6 +1549,7 @@ namespace transport
 		repository_unqlite<number>::new_derived_content(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
 			{
 				assert(tk != nullptr);
+				// tags not currently used in this implementation
 
 				// open a new transaction if necessary. After this we can assume the database handles are live
 				this->begin_transaction();
@@ -1582,6 +1587,33 @@ namespace transport
 			}
 
 
+    template <typename number>
+    typename repository<number>::output_group repository_unqlite<number>::find_derived_product_output_group(const derived_data::derived_product<number>* product,
+                                                                                                            const std::list<std::string>& tags)
+	    {
+		    assert(product != nullptr);
+
+		    if(product == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_DERIVED_PRODUCT);
+
+		    const task<number>* parent = product->get_parent_task();
+
+		    // search for output groups associated with this task
+        std::list< typename repository<number>::output_group> output = this->enumerate_task_output(parent->get_name());
+
+		    // remove items from the list which have mismatching tags
+        output.remove_if( [&] (const typename repository<number>::output_group group) { return(group.check_tags(tags)); } );
+
+		    if(output.empty())
+			    {
+		        std::ostringstream msg;
+				    msg << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   << " '" << product->get_name() << "', "
+					      << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS_A << "task '" << parent->get_name() << "'";
+				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+			    }
+
+		    return(output.front());
+	    }
+
 
     // FACTORY FUNCTIONS TO BUILD A REPOSITORY
 
@@ -1598,7 +1630,6 @@ namespace transport
       {
         return new repository_unqlite<number>(path, key);
       }
-
 
 	}   // namespace transport
 

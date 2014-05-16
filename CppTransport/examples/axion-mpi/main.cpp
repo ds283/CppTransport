@@ -58,7 +58,7 @@ int main(int argc, const char* argv[])
 
     // ensure output directory exists
     boost::filesystem::path output_path(output);
-//    boost::filesystem::create_directories(output_path);
+//    boost::filesystem::create_directories(root_path);
 
     transport::python_plot_gadget<double>     py_plt(python);
     transport::asciitable_plot_gadget<double> text_plt;

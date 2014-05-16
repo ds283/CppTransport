@@ -216,12 +216,12 @@ namespace transport
                                          const work_queue<twopf_kconfig>::device_work_list& c,
                                          unsigned int bg_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int tw_st,
-                                         double t_int=1.0, bool s=false, unsigned int p=3)
-          : timing_observer(t_int, s, p), batcher(b), work_list(c),
-            backg_size(bg_sz), twopf_size(tw_sz),
-            backg_start(bg_st), twopf_start(tw_st)
-          {
-          }
+                                         double t_int = 1.0, bool s = false, unsigned int p = 3)
+	        : timing_observer(t_int, s, p), batcher(b), work_list(c),
+	          backg_size(bg_sz), twopf_size(tw_sz),
+	          backg_start(bg_st), twopf_start(tw_st)
+	        {
+	        }
 
         //! Push the current state to the batcher
         template <typename State>
