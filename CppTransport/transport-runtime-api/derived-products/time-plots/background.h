@@ -123,10 +123,29 @@ namespace transport
 						// ensure that the supplied pipe is attached to a data container
 						if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_BACKGROUND_NULL_DATAPIPE);
 
-						this->reset_plot_data();
+						// reset the plot, then pull data from the datapipe to regenerate ourselves
+						this->reset_plot();
 
 						// set time axis data
 						this->set_time_axis(pipe);
+
+						// loop through all the fields, pulling data from the database
+						// for this which are enabled
+						for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+							{
+						    std::array<unsigned int, 1> index_set = { m };
+								if(this->active_indices.is_on(index_set))
+									{
+								    std::vector<number> line_data;
+
+										pipe.pull_background_time_sample(this->mdl->flatten(m), this->time_sample_sns, line_data);
+
+										plot2d_line<number> line = plot2d_line<number>(line_data, this->make_label(m, this->mdl));
+										this->add_line(line);
+									}
+							}
+
+						this->make_plot(pipe);
 			    }
 
 

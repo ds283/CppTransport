@@ -9,6 +9,10 @@
 
 
 #include <set>
+#include <vector>
+#include <list>
+
+#include <math.h>
 
 #include "transport-runtime-api/scheduler/work_queue.h"
 #include "transport-runtime-api/manager/repository.h"
@@ -465,7 +469,8 @@ namespace transport
 		      public:
 
 				    //! Construct a datapipe
-				    datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm,
+				    datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+				             unsigned int w, boost::timer::cpu_timer& tm,
 				             datapipe_attach_function& at, datapipe_detach_function& dt,
 				             datapipe_time_sample_function& tsf,
 				             datapipe_background_time_sample_function& btsf);
@@ -487,10 +492,13 @@ namespace transport
 
 		        //! Return an implementation-dependent handle
 		        template <typename handle_type>
-		        void get_manager_handle(handle_type* h) { *h = static_cast<handle_type>(this->manager_handle); }
+		        void get_manager_handle(handle_type* h) const { *h = static_cast<handle_type>(this->manager_handle); }
 
 				    //! Validate that the pipe is attached to a container
 				    bool validate(void);
+
+				    //! Return temporary files path
+				    const boost::filesystem::path& get_temporary_files_path() const { return(this->temporary_path); }
 
 		        //! Return logger
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -507,6 +515,9 @@ namespace transport
 				    //! Detach an output-group from the datapipe
 				    void detach(void);
 
+				    //! Get attached output group
+				    typename repository<number>::output_group* get_attached_output_group(void) const;
+
 
 				    // PULL DATA
 
@@ -515,13 +526,19 @@ namespace transport
 				    //! Pull a set of time serial numbers from the database
 				    void pull_time_sample(const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample);
 
+				    //! Pull a sample of a background field from the database
+				    void pull_background_time_sample(unsigned id, const std::vector<unsigned int>& serial_numbers, std::vector<number>& sample);
+
 
 				    // INTERNAL DATA
 
 		      private:
 
 				    //! Path to logging directory
-				    const boost::filesystem::path&                                    logdir_path;
+				    const boost::filesystem::path                                     logdir_path;
+
+				    //! Path to temporary files
+				    const boost::filesystem::path                                     temporary_path;
 
 						//! Unique serial number identifying the worker process which owns this datapipe
 				    const unsigned int                                                worker_number;
@@ -652,7 +669,8 @@ namespace transport
       public:
 
 		    //! Create a datapipe
-		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, unsigned int worker, boost::timer::cpu_timer& timer) = 0;
+		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+		                                     unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
 		    //! Pull a set of time sample-points from a datapipe
 		    virtual void pull_time_sample(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
@@ -674,11 +692,12 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>::datapipe::datapipe(const boost::filesystem::path& lp, unsigned int w, boost::timer::cpu_timer& tm,
+    data_manager<number>::datapipe::datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+                                             unsigned int w, boost::timer::cpu_timer& tm,
                                              datapipe_attach_function& at, datapipe_detach_function& dt,
                                              datapipe_time_sample_function& tsf,
                                              datapipe_background_time_sample_function& btsf)
-	    : logdir_path(lp), worker_number(w), timer(tm),
+	    : logdir_path(lp), temporary_path(tp), worker_number(w), timer(tm),
 	      attach_callback(at), detach_callback(dt), time_sample_callback(tsf),
 	      background_time_sample_callback(btsf),
 	      attached_group(nullptr), attached_dispatcher(nullptr)
@@ -762,6 +781,19 @@ namespace transport
 
 
     template <typename number>
+    typename repository<number>::output_group* data_manager<number>::datapipe::get_attached_output_group(void) const
+	    {
+        assert(this->attached_group != nullptr);
+        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        assert(this->attached_dispatcher != nullptr);
+        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    return(this->attached_group);
+	    }
+
+
+    template <typename number>
     void data_manager<number>::datapipe::pull_time_sample(const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
 	    {
 		    assert(this->attached_group != nullptr);
@@ -778,7 +810,7 @@ namespace transport
 
     template <typename number>
     void data_manager<number>::datapipe::pull_background_time_sample(unsigned int id, const std::vector<unsigned int>& serial_numbers,
-                                                                     std::vector<double>& sample)
+                                                                     std::vector<number>& sample)
 	    {
 				assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -788,7 +820,7 @@ namespace transport
 
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request";
 
-		    this->background_time_sample_callback(this, serial_numbers, sample);
+		    this->background_time_sample_callback(this, id, serial_numbers, sample);
 	    }
 
 

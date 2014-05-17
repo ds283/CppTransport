@@ -60,10 +60,6 @@ namespace transport
 
 		      public:
 
-				    //! Finder function which obtains an output_group
-
-		      public:
-
 		        // CONSTRUCTOR, DESTRUCTOR
 
 				    //! Construct a derived product object.

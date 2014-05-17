@@ -106,10 +106,13 @@ int main(int argc, char* argv[])
 	                                                transport::derived_data::background<double>("dquad.twopf-1.background", "background.pdf", tk2,
                                                                                               typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
                                                                                               bg_sel, model);
+		twopf_bg_plot.set_title_text("Background fields");
+
     transport::derived_data::background<double> threepf_bg_plot =
 	                                                transport::derived_data::background<double>("dquad.threepf-1.background", "background.pdf", tk3,
                                                                                               typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
 	                                                                                            bg_sel, model);
+		threepf_bg_plot.set_title_text("Background fields");
 
 //    std::cout << "2pf background plot:" << std::endl << twopf_bg_plot << std::endl;
 //    std::cout << "3pf background plot:" << std::endl << threepf_bg_plot << std::endl;

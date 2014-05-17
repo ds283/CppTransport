@@ -14,7 +14,7 @@
 
 #define __CPP_TRANSPORT_PRODUCT_BACKGROUND_LABEL_INDICES    "Plotting indices"
 
-#define __CPP_TRANSPORT_PRODUCT_BACKGROUND_NULL_DATAPIPE    "Derived data error: Null datapipe when attempting to build background plot"
+#define __CPP_TRANSPORT_PRODUCT_BACKGROUND_NULL_DATAPIPE    "Internal error: Null datapipe when attempting to build background plot"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_BACKGROUND_PRODUCT_H

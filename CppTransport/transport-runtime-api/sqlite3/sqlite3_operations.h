@@ -888,7 +888,7 @@ namespace transport
 						// set up a temporary table representing the serial numbers we want to use
 				    create_temporary_timeserial_table(db, serial_numbers);
 
-				    // pull out the set of rows matching serial numbers in the temporary table
+				    // pull out the set of time-sample points matching serial numbers in the temporary table
 		        std::stringstream select_stmt;
 				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".time"
 		          << " FROM " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE
@@ -931,7 +931,48 @@ namespace transport
 		    template <typename number>
 		    void pull_background_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& serial_numbers, std::vector<number>& sample)
 			    {
+						assert(db != nullptr);
 
+				    // set up a temporary table representing the serial numbers we want to use
+				    create_temporary_timeserial_table(db, serial_numbers);
+
+				    // pull out the set of background fields (labelled by 'id')
+				    // matching serial numbers in the temporary table
+		        std::stringstream select_stmt;
+				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << id
+					    << " FROM " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
+					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE
+					    << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_TIME_SERIAL_TABLE << ".serial";
+
+		        sqlite3_stmt* stmt;
+		        check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+		        sample.clear();
+
+		        int status;
+		        while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+			        {
+		            if(status == SQLITE_ROW)
+			            {
+		                double value = sqlite3_column_double(stmt, 0);
+		                sample.push_back(static_cast<number>(value));
+			            }
+		            else
+			            {
+		                std::ostringstream msg;
+		                msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+		                sqlite3_finalize(stmt);
+		                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+			            }
+			        }
+
+		        check_stmt(db, sqlite3_finalize(stmt));
+
+		        // drop temporary table of serial numbers
+		        drop_temporary_timeserial_table(db);
+
+		        // check that we have as many values as we expect
+		        if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
 			    }
 
 

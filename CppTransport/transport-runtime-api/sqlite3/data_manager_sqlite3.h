@@ -145,6 +145,7 @@ namespace transport
 
         //! Create a new datapipe
         virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir,
+                                                                        const boost::filesystem::path& tempdir,
                                                                         unsigned int worker, boost::timer::cpu_timer& timer) override;
 
         //! Pull a set of time sample-points from a datapipe
@@ -152,7 +153,8 @@ namespace transport
                                       const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) override;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
+        virtual void pull_background_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
+                                                 const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
 
       protected:
 
@@ -612,8 +614,9 @@ namespace transport
 
 
 		template <typename number>
-		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, unsigned int worker,
-																																													boost::timer::cpu_timer& timer)
+		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir,
+		                                                                                      const boost::filesystem::path& tempdir,
+		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer)
 			{
 		    // set up callback API
 		    typename data_manager<number>::datapipe_attach_function attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
@@ -630,7 +633,7 @@ namespace transport
 		                                                                                                std::placeholders::_3, std::placeholders::_4);
 
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(logdir, worker, timer, attach, detach, tsample, bsample);
+		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, attach, detach, tsample, bsample);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
 
@@ -663,7 +666,7 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_background_time_sample(db, serial_numbers, sample);
+        sqlite3_operations::pull_background_time_sample(db, id, serial_numbers, sample);
 	    }
 
 

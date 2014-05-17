@@ -62,17 +62,15 @@ namespace transport
 		        //! (re-)set a default list of settings
 		        virtual void apply_default_settings() override;
 
-				    //! Reset all plot data
-				    virtual void reset_plot() override;
 
-				    // TIME SAMPLE
+				    // TIME AXIS
 
 		      public:
 
 				    //! get serial numbers of sample times
 				    const std::vector<unsigned int>& get_time_sample_sns() { return(this->time_sample_sns); }
 
-				    //! extract axis data from datapipe
+				    //! extract axis data from datapipe and push to the underlying 2d plot
 				    void set_time_axis(typename data_manager<number>::datapipe& pipe);
 
 
@@ -95,13 +93,7 @@ namespace transport
 		      protected:
 
 				    //! List of time serial numbers to be used for plotting
-				    std::vector<unsigned int>         time_sample_sns;
-
-				    //! List of time values to be used for plotting. Extracted from a datapipe.
-				    std::vector<double> time_axis;
-
-				    //! List of time_2dline objects to be plotted on the graph.
-				    std::list< line2d_time<number>* > plot_lines;
+				    std::vector<unsigned int> time_sample_sns;
 
 			    };
 
@@ -180,23 +172,16 @@ namespace transport
 					}
 
 
-		    template <typename number>
-		    void time_plot<number>::reset_plot()
-			    {
-				    this->time_axis.clear();
-				    this->plot_lines.clear();
-			    }
-
-
 				template <typename number>
 				void time_plot<number>::set_time_axis(typename data_manager<number>::datapipe& pipe)
 					{
 						if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_NULL_DATAPIPE);
 
 						// set-up time sample data
+				    std::vector<double> time_axis;
 						pipe.pull_time_sample(this->time_sample_sns, time_axis);
 
-
+						this->set_axis(time_axis);
 					}
 
 

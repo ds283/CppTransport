@@ -331,9 +331,9 @@ namespace transport
 		      public:
 
 				    //! Construct a derived-content writer object
-		        derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
-						                                   const boost::filesystem::path& task, const boost::filesystem::path& temp,
-						                                   unsigned int w);
+				    derived_content_writer(const boost::filesystem::path& dir, const boost::filesystem::path& log,
+				                           const boost::filesystem::path& task, const boost::filesystem::path& temp,
+				                           unsigned int w);
 
 				    //! Destroy a derived-content writer object
 		        ~derived_content_writer();

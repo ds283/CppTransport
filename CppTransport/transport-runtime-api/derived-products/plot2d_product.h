@@ -14,29 +14,35 @@
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
+#include "boost/filesystem/convenience.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX        "log-x"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY        "log-y"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY        "abs-y"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX    "reverse-x"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY    "reverse-y"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX       "latex"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL      "x-label"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT "x-label-text"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL      "y-label"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT "y-label-text"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE       "title"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT  "title-text"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND      "legend"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS  "legend-position"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR   "top-right"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR   "bottom-right"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL   "bottom-left"
-#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL   "top-left"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX          "log-x"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY          "log-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY          "abs-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX      "reverse-x"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY      "reverse-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX         "latex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL        "x-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT   "x-label-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL        "y-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT   "y-label-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE         "title"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT    "title-text"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND        "legend"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS    "legend-position"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR     "top-right"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR     "bottom-right"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL     "bottom-left"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL     "top-left"
+#define __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX "typeset-with-latex"
+
 
 namespace transport
 	{
+
+		// forward-declare model
+		template <typename number> class model;
 
 		namespace derived_data
 			{
@@ -49,24 +55,36 @@ namespace transport
 
 		      public:
 
-				    plot2d_line(const std::vector<double>& ax)
-					    : axis(ax)
+				    plot2d_line(const std::vector<number> d, const std::string& l)
+					    : data(d), label(l)
 					    {
-						    line.clear();
 					    }
 
 				    ~plot2d_line() = default;
 
 
+				    // GET DATA
+
+				    //! Get number of sample points
+				    unsigned int get_sample_points() const { return(this->data.size()); }
+
+				    //! Get label
+				    const std::string& get_label() const { return(this->label); }
+
+				    //! Get data
+				    const std::vector<number>& get_data_points() const { return(this->data); }
+
+
 				    // INTERNAL DATA
 
-				    //! axis data
-				    std::vector<double>& ax;
-
 				    //! line data
-				    std::vector<number>& line;
+				    const std::vector<number> data;
+
+				    //! label
+				    const std::string label;
 
 			    };
+
 
 		    //! A plot2d-product is a specialization of a derived-product that
 		    //! produces a plot of something against time.
@@ -125,6 +143,8 @@ namespace transport
 								    msg << __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS << " '" << leg_pos << "'";
 								    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 							    }
+
+						    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX, typeset_with_LaTeX);
 					    }
 
 		        virtual ~plot2d_product() = default;
@@ -141,10 +161,39 @@ namespace transport
 		        virtual void apply_default_settings() = 0;
 
 				    //! reset all plot data
-				    virtual void reset_plot() = 0;
+				    void reset_plot()
+					    {
+						    this->axis.clear();
+						    this->lines.clear();
+					    }
 
 
-		        // GET AND SET BASIC PLOT LABELS
+				    // PLOT DATA
+
+		      public:
+
+				    //! Set the axis data
+				    void set_axis(const std::vector<double>& axis_points);
+
+				    //! Add a line to the plot
+				    void add_line(const plot2d_line<number>& line);
+
+
+				    // GENERATE PLOT
+
+		      public:
+
+				    //! Make plot
+				    void make_plot(typename data_manager<number>::datapipe& pipe) const;
+
+		        // LABEL GENERATION
+
+		      public:
+
+		        std::string make_label(unsigned int i, model<number>* m) const;
+
+
+		        // GET AND SET BASIC PLOT DATA
 
 		      public:
 
@@ -248,15 +297,19 @@ namespace transport
 				    void clear_title_text() { this->title_text.clear(); }
 
 				    //! get legend setting
-				    bool get_legend() { return(this->legend); }
+				    bool get_legend() const { return(this->legend); }
 				    //! set legend setting
 				    void set_legend(bool g) { this->legend = g; }
 
 				    //! get legend position
-				    legend_pos get_legend_position() { return(this->position); }
+				    legend_pos get_legend_position() const { return(this->position); }
 				    //! set legend position
 				    void set_legend_position(legend_pos pos) { this->position = pos; }
 
+				    //! get typeset with LaTeX setting
+				    bool get_typeset_with_LaTeX() const { return(this->typeset_with_LaTeX); }
+				    //! set typeset with LaTeX setting
+				    bool set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; }
 
 				    // SERIALIZATION -- implements a 'serializable' interface
 
@@ -275,6 +328,16 @@ namespace transport
 		        // INTERNAL DATA
 
 		      protected:
+
+				    // PLOT DATA
+
+		        //! List of axis values to be used for plotting.
+		        std::vector<double> axis;
+
+		        //! List of time_2dline objects to be plotted on the graph.
+		        std::list< plot2d_line<number> > lines;
+
+				    // STYLE ATTRIBUTES
 
 				    //! time filter function: used to decide which time serial numbers should be used
 				    //! when producing a plot
@@ -318,97 +381,276 @@ namespace transport
 				    //! location of legend
 				    legend_pos position;
 
+		        //! use LaTeX to typeset labels?
+		        bool typeset_with_LaTeX;
+
 			    };
 
 
 				template <typename number>
-				void plot2d_product<number>::serialize(serialization_writer& writer) const
+				void plot2d_product<number>::set_axis(const std::vector<double>& axis_points)
 					{
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, this->log_x);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, this->log_y);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, this->abs_y);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, this->reverse_x);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, this->reverse_y);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, this->use_LaTeX);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, this->x_label);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, this->x_label_text);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, this->y_label);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, this->y_label_text);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, this->title);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, this->title_text);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, this->legend);
-
-						switch(this->position)
+						// if there are already lines on the plot, ensure that the number of points is compatible
+						if(this->lines.size() > 0)
 							{
-						    case top_left:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL));
-									break;
-
-						    case top_right:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR));
-							    break;
-
-						    case bottom_left:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL));
-							    break;
-
-						    case bottom_right:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR));
-							    break;
-
-						    default:
-							    assert(false);
-							    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION);
+								// only need to check front object; they are all guaranteed to have the same size
+								if(this->lines.front().get_sample_points() != axis_points.size())
+									throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_INCOMPATIBLE_AXIS_SIZE);
 							}
 
-						this->derived_product<number>::serialize(writer);
+						// if we are logging the x-axis, check all points are strictly positive
+						bool ok = true;
+						if(this->log_x)
+							{
+								for(std::vector<double>::const_iterator t = axis_points.begin(); ok && t != axis_points.end(); t++)
+									{
+										if((*t) <= 0.0) ok = false;
+									}
+							}
+						if(!ok) throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NEGATIVE_AXIS_POINT);
+
+						this->axis = axis_points;
 					}
 
 
 				template <typename number>
-				void plot2d_product<number>::write(std::ostream& out)
+				void plot2d_product<number>::add_line(const plot2d_line<number>& line)
 					{
-						unsigned int count = 0;
+						// check that an axis has already been set
+						if(this->axis.size() == 0)
+							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_UNSET_AXIS);
 
-				    this->wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGX, count);
-				    this->wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGY, count);
-				    this->wrap_list_item(out, this->abs_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_ABSY, count);
-				    this->wrap_list_item(out, this->reverse_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEX, count);
-				    this->wrap_list_item(out, this->reverse_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEY, count);
-				    this->wrap_list_item(out, this->use_LaTeX, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LATEX, count);
-				    this->wrap_list_item(out, this->x_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_XLABEL, count);
-						if(this->x_label)
-							this->wrap_value(out, this->x_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_list_item(out, this->y_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_YLABEL, count);
-						if(this->y_label)
-							this->wrap_value(out, this->y_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_list_item(out, this->title, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_TITLE, count);
-						if(this->title)
-							this->wrap_value(out, this->title_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
-				    this->wrap_list_item(out, this->legend, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND, count);
+						// check that the number of points in this line is compatible with the axis
+						if(line.get_sample_points() != this->axis.size())
+							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_INCOMPATIBLE_SIZE);
+
+						this->lines.push_back(line);
+					}
+
+
+				template <typename number>
+				std::string plot2d_product<number>::make_label(unsigned int i, model<number>* m) const
+					{
+				    std::ostringstream label;
+
+						assert(m != nullptr);
+						if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_MODEL);
+
+						unsigned int N_fields = m->get_N_fields();
+
+						if(this->use_LaTeX)
+							{
+						    const std::vector<std::string>& field_names = m->get_f_latex_names();
+								label << "$" << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL " }" : "") << "$";
+							}
+						else
+							{
+						    const std::vector<std::string>& field_names = m->get_field_names();
+								label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+							}
+
+						return(label.str());
+					}
+
+
+				template <typename number>
+				void plot2d_product<number>::make_plot(typename data_manager<number>::datapipe& pipe) const
+					{
+				    // ensure that the supplied pipe is attached to a data container
+				    if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_DATAPIPE);
+
+						typename repository<number>::output_group* og = pipe.get_attached_output_group();
+
+						// extract paths from the datapipe and output group.
+						// note that paths from the datapipe are absolute.
+						// paths from the output group are relative, so we need to extract to repository root too:
+				    boost::filesystem::path derived_root = og->get_repo_root_path()/og->get_derived_products_path();
+				    boost::filesystem::path temp_root    = pipe.get_temporary_files_path();
+
+						// obtain path for Python script output
+				    boost::filesystem::path script_file = temp_root / this->filename;
+						script_file.replace_extension(".py");
+
+						// obtain path for plot output
+				    boost::filesystem::path plot_file = derived_root / this->filename;
+
+				    std::ofstream out;
+						out.open(script_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
+
+						out << "import matplotlib.pyplot as plt" << std::endl;
+
+						if(this->typeset_with_LaTeX) out << "plt.rc('text', usetex=True)" << std::endl;
+
+						out << "plt.figure()" << std::endl;
+
+						if(this->log_x) out << "plt.xscale('log')" << std::endl;
+						if(this->log_y) out << "plt.yscale('log')" << std::endl;
+
+						out << "x = [ ";
+						unsigned int written = 0;
+						for(std::vector<double>::const_iterator t = this->axis.begin(); t != this->axis.end(); t++)
+							{
+								out << (written > 0 ? ", " : "") << *t;
+								written++;
+							}
+						out << " ]" << std::endl;
+
+						unsigned int count = 0;
+						for(typename std::list< plot2d_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+							{
+						    const std::vector<number>& line_data = (*t).get_data_points();
+
+								bool need_abs_y = false;
+								if(this->log_y && !this->abs_y)
+									{
+										for(typename std::vector<number>::const_iterator u = line_data.begin(); !need_abs_y && u != line_data.end(); u++)
+											{
+												if((*u) <= 0.0) need_abs_y = true;
+											}
+										if(need_abs_y)
+											BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_label() << "' contains negative values; plotting absolute values instead because of logarithmic y-axis";
+									}
+
+								bool plot_abs_y = this->abs_y | need_abs_y;
+
+								out << "y" << count << " = [ ";
+
+								written = 0;
+								for(typename std::vector<number>::const_iterator u = line_data.begin(); u != line_data.end(); u++)
+									{
+										out << (written > 0 ? ", " : "") << (plot_abs_y ? fabs(static_cast<double>(*u)) : static_cast<double>(*u));
+										written++;
+									}
+								out << " ]" << std::endl;
+
+								out << "plt.errorbar(x, y" << count << ", label=r'" << (*t).get_label() << "')" << std::endl;
+
+								count++;
+							}
+
+						out << "ax = plt.gca()" << std::endl;
+
+						if(this->reverse_x) out << "ax.set_xlim(ax.get_xlim()[::-1])";
+						if(this->reverse_y) out << "ax.set_ylim(ax.get_ylim()[::-1])";
 
 						if(this->legend)
 							{
-								if(count > 0) out << ", ";
-								switch(this->position)
-									{
-								    case top_left:
-									    out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_TL;
-											break;
-								    case top_right:
-									    out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_TR;
-											break;
-								    case bottom_left:
-									    out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BL;
-											break;
-								    case bottom_right:
-									    out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BR;
-											break;
-								    default:
-									    assert(false);
-									}
+						    out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
+
+						    out << "y_labels = [ ";
+						    count = 0;
+						    for(typename std::list< plot2d_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+							    {
+						        out << (count > 0 ? ", " : "") << "r'" << (*t).get_label() << "'";
+						        count++;
+							    }
+						    out << " ]" << std::endl;
+
+						    out << "plt.legend(handles, y_labels, frameon=False)" << std::endl;
 							}
+
+				    if(this->x_label) out << "plt.xlabel(r'" << this->x_label_text << "')" << std::endl;
+				    if(this->y_label) out << "plt.ylabel(r'" << this->y_label_text << "')" << std::endl;
+						if(this->title)   out << "plt.title(r'"  << this->title_text   << "')" << std::endl;
+
+						out << "plt.savefig('" << plot_file.string() << "')" << std::endl;
+						out << "plt.close()" << std::endl;
+
+						out.close();
+						system(("source ~/.profile; /opt/local/bin/python2.7 " + script_file.string()).c_str());
 					}
+
+
+		    template <typename number>
+		    void plot2d_product<number>::serialize(serialization_writer& writer) const
+			    {
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, this->log_x);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, this->log_y);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, this->abs_y);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, this->reverse_x);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, this->reverse_y);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, this->use_LaTeX);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, this->x_label);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, this->x_label_text);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, this->y_label);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, this->y_label_text);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, this->title);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, this->title_text);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, this->legend);
+
+		        switch(this->position)
+			        {
+		            case top_left:
+			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL));
+		            break;
+
+		            case top_right:
+			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR));
+		            break;
+
+		            case bottom_left:
+			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL));
+		            break;
+
+		            case bottom_right:
+			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR));
+		            break;
+
+		            default:
+			            assert(false);
+		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION);
+			        }
+
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX, this->typeset_with_LaTeX);
+
+		        this->derived_product<number>::serialize(writer);
+			    }
+
+
+		    template <typename number>
+		    void plot2d_product<number>::write(std::ostream& out)
+			    {
+		        unsigned int count = 0;
+
+		        this->wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGX, count);
+		        this->wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LOGY, count);
+		        this->wrap_list_item(out, this->abs_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_ABSY, count);
+		        this->wrap_list_item(out, this->reverse_x, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEX, count);
+		        this->wrap_list_item(out, this->reverse_y, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_REVERSEY, count);
+		        this->wrap_list_item(out, this->use_LaTeX, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LATEX, count);
+		        this->wrap_list_item(out, this->x_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_XLABEL, count);
+		        if(this->x_label)
+			        this->wrap_value(out, this->x_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
+		        this->wrap_list_item(out, this->y_label, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_YLABEL, count);
+		        if(this->y_label)
+			        this->wrap_value(out, this->y_label_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
+		        this->wrap_list_item(out, this->title, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_TITLE, count);
+		        if(this->title)
+			        this->wrap_value(out, this->title_text, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LABEL, count);
+		        this->wrap_list_item(out, this->legend, __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND, count);
+
+		        if(this->legend)
+			        {
+		            if(count > 0) out << ", ";
+		            switch(this->position)
+			            {
+		                case top_left:
+			                out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_TL;
+		                break;
+		                case top_right:
+			                out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_TR;
+		                break;
+		                case bottom_left:
+			                out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BL;
+		                break;
+		                case bottom_right:
+			                out << __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BR;
+		                break;
+		                default:
+			                assert(false);
+			            }
+			        }
+			    }
 
 			}   // namespace derived_data
 

@@ -43,5 +43,8 @@
 #define __CPP_TRANSPORT_DATAPRODUCT_PATH       "path to product"
 #define __CPP_TRANSPORT_DATAPRODUCT_CREATED    "creation date"
 
+#define __CPP_TRANSPORT_LATEX_PRIME_SYMBOL     "\\prime"
+#define __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL  "'"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

@@ -707,15 +707,15 @@ namespace transport
 
 
 		template <typename number>
-		void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& ctr,
+		void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& writer,
 		                                                         output_task<number>* tk, const std::list<std::string>& tags)
 			{
 				if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
 		    std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-				BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "'";
-				BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << *tk;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "'";
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
 
 		    // set up a timer to keep track of the total wallclock time used in this task
 		    boost::timer::cpu_timer wallclock_timer;
@@ -725,9 +725,9 @@ namespace transport
 
 		    // get paths the workers will need
 		    assert(this->repo != nullptr);
-		    boost::filesystem::path taskfile_path = ctr.taskfile_path();
-		    boost::filesystem::path tempdir_path  = ctr.temporary_files_path();
-		    boost::filesystem::path logdir_path   = ctr.log_directory_path();
+		    boost::filesystem::path taskfile_path = writer.taskfile_path();
+		    boost::filesystem::path tempdir_path  = writer.temporary_files_path();
+		    boost::filesystem::path logdir_path   = writer.log_directory_path();
 
 		    MPI::new_derived_content_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
 
@@ -739,14 +739,14 @@ namespace transport
 		    // wait for all messages to be received
 		    boost::mpi::wait_all(requests.begin(), requests.end());
 
-		    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
 
 		    // poll workers, receiving data until workers are exhausted
 		    std::set<unsigned int> workers;
 		    for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
 		    while(workers.size() > 0)
 			    {
-		        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Master polling for CONTENT_READY messages";
+		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Master polling for CONTENT_READY messages";
 		        // wait until a message is available from a worker
 		        boost::mpi::status stat = this->world.probe();
 
@@ -756,7 +756,7 @@ namespace transport
 			            {
 		                MPI::content_ready_payload payload;
 		                this->world.recv(stat.source(), MPI::CONTENT_READY, payload);
-		                BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent content-ready notification";
+		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent content-ready notification";
 
 		                break;
 			            }
@@ -765,7 +765,7 @@ namespace transport
 			            {
 		                boost::timer::nanosecond_type work_time = 0;
 		                this->world.recv(stat.source(), MPI::FINISHED_TASK, work_time);
-		                BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
+		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
 
 		                total_work_time += work_time;
 		                workers.erase(this->worker_number(stat.source()));
@@ -774,17 +774,17 @@ namespace transport
 
 		            default:
 			            {
-		                BOOST_LOG_SEV(ctr.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+		                BOOST_LOG_SEV(writer.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
 		                break;
 			            }
 			        }
 			    }
 
         wallclock_timer.stop();
-		    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-		    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-		    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total work time required by worker processes = " << format_time(total_work_time);
-		    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total work time required by worker processes = " << format_time(total_work_time);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
 			}
 
 
@@ -1163,8 +1163,9 @@ namespace transport
 		    if(mlist.size() != 1)
 			    throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
-				// acquire a datapipe which we can use to stream content from the databse
-				typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), this->get_rank(), timer);
+		    // acquire a datapipe which we can use to stream content from the databse
+		    typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+		                                                                                   this->get_rank(), timer);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "'" << std::endl;
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;

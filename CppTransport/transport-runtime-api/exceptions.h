@@ -32,7 +32,8 @@ namespace transport
                        STORAGE_ERROR,                                     // error while storing the output of an integration
                        BACKEND_ERROR,                                     // problem encountered by a compute backend
 		                   SERIALIZATION_ERROR,                               // error encountered during serialization
-		                   DATAPIPE_ERROR                                     // generic datapipe error
+		                   DATAPIPE_ERROR,                                    // generic datapipe error
+		                   DERIVED_PRODUCT_ERROR                              // error encountered when generating a derived product
                      } exception_type;
 
         runtime_exception(exception_type t, const std::string msg)
