@@ -35,7 +35,7 @@ namespace transport
 		    //! of one or more correlation functions.
 
 		    template <typename number>
-		    class time_plot: public plot2d_product<number>
+		    class time_plot: public plot2d_product<number>, filter
 			    {
 
 		      public:
@@ -44,7 +44,7 @@ namespace transport
 
 				    //! Basic user-facing constructor.
 				    time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
-				              typename derived_product<number>::time_filter filter);
+				              typename filter::time_filter filter);
 
 				    //! Deserialization constructor.
 		        time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader);
@@ -100,21 +100,14 @@ namespace transport
 
 		    template <typename number>
 		    time_plot<number>::time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
-		                                 typename derived_product<number>::time_filter filter)
+		                                 typename filter::time_filter t_filter)
 			    : plot2d_product<number>(name, filename, tk)
 			    {
 		        apply_default_settings();
 		        apply_default_labels();
 
 		        // set up a list of serial numbers corresponding to the sample times for this plot
-		        const std::vector<double>& sample_times = tk.get_sample_times();
-
-				    unsigned int i = 0;
-		        for(std::vector<double>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
-			        {
-		            if(filter(*t)) time_sample_sns.push_back(i);
-				        i++;
-			        }
+				    this->filter_time_sample(t_filter, tk.get_sample_times(), time_sample_sns);
 			    }
 
 

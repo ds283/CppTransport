@@ -449,6 +449,8 @@ namespace transport
 
 		    // Data pipe objects
 
+		    typedef enum { twopf_real, twopf_imag } datapipe_twopf_type;
+
 		    //! Attach function for a datapipe
 		    typedef std::function<void(datapipe*,typename repository<number>::output_group&)> datapipe_attach_function;
 
@@ -460,6 +462,10 @@ namespace transport
 
 		    //! Extract a background field at a set of time sample-points
 		    typedef std::function<void(datapipe*,unsigned int,const std::vector<unsigned int>&,std::vector<number>&)> datapipe_background_time_sample_function;
+
+		    //! Extract a twopf component at fixed k-configuration for a set of time sample-points
+		    typedef std::function<void(datapipe*,unsigned int,const std::vector<unsigned int>&,unsigned int,
+		                               std::vector<number>&,datapipe_twopf_type)> datapipe_twopf_time_sample_function;
 
 		    //! Data pipe, used when generating derived content to extract data froman integration database.
 		    //! The datapipe has a log directory, used for logging transactions on the pipe.
@@ -473,7 +479,8 @@ namespace transport
 				             unsigned int w, boost::timer::cpu_timer& tm,
 				             datapipe_attach_function& at, datapipe_detach_function& dt,
 				             datapipe_time_sample_function& tsf,
-				             datapipe_background_time_sample_function& btsf);
+				             datapipe_background_time_sample_function& btsf,
+				             datapipe_twopf_time_sample_function& twopf_sf);
 
 				    //! Destroy a datapipe
 		        ~datapipe();
@@ -529,6 +536,9 @@ namespace transport
 				    //! Pull a sample of a background field from the database
 				    void pull_background_time_sample(unsigned id, const std::vector<unsigned int>& serial_numbers, std::vector<number>& sample);
 
+				    //! Pull a sample of the twopf at fixed k-configuration
+				    void pull_twopf_time_sample(unsigned id, const std::vector<unsigned int>& serial_numbers,
+				                                unsigned int kserial, std::vector<number>& sample, datapipe_twopf_type type);
 
 				    // INTERNAL DATA
 
@@ -574,6 +584,9 @@ namespace transport
 
 				    //! Callback: extract a time sample of a background field
 				    datapipe_background_time_sample_function                          background_time_sample_callback;
+
+				    //! Callback: extract a time sample of a component of a 2pf at fixed k-configuration
+				    datapipe_twopf_time_sample_function                               twopf_time_sample_callback;
 			    };
 
 
@@ -678,6 +691,10 @@ namespace transport
 		    //! Pull a time sample of a background field from a datapipe
 		    virtual void pull_background_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) = 0;
 
+		    //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
+		    virtual void pull_twopf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+		                                        unsigned int k_serial, std::vector<number>& sample, datapipe_twopf_type type) = 0;
+
         // INTERNAL DATA
 
       protected:
@@ -696,10 +713,12 @@ namespace transport
                                              unsigned int w, boost::timer::cpu_timer& tm,
                                              datapipe_attach_function& at, datapipe_detach_function& dt,
                                              datapipe_time_sample_function& tsf,
-                                             datapipe_background_time_sample_function& btsf)
+                                             datapipe_background_time_sample_function& btsf,
+                                             datapipe_twopf_time_sample_function& twopf_tsf)
 	    : logdir_path(lp), temporary_path(tp), worker_number(w), timer(tm),
 	      attach_callback(at), detach_callback(dt), time_sample_callback(tsf),
 	      background_time_sample_callback(btsf),
+	      twopf_time_sample_callback(twopf_tsf),
 	      attached_group(nullptr), attached_dispatcher(nullptr)
 	    {
         std::ostringstream log_file;
@@ -821,6 +840,22 @@ namespace transport
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request";
 
 		    this->background_time_sample_callback(this, id, serial_numbers, sample);
+	    }
+
+
+    template <typename number>
+    void data_manager<number>::datapipe::pull_twopf_time_sample(unsigned int id, const std::vector<unsigned int>& serial_numbers,
+                                                                unsigned int kserial, std::vector<number>& sample, datapipe_twopf_type type)
+	    {
+				assert(this->attached_group != nullptr);
+        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        assert(this->attached_dispatcher != nullptr);
+        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = " << (type == twopf_real ? "real" : "imaginary");
+
+		    this->twopf_time_sample_callback(this, id, serial_numbers, kserial, sample, type);
 	    }
 
 

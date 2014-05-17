@@ -156,6 +156,11 @@ namespace transport
         virtual void pull_background_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                                  const std::vector<unsigned int>& t_serials, std::vector<number>& sample) override;
 
+        //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
+        virtual void pull_twopf_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
+                                            const std::vector<unsigned int>& t_serials, unsigned int k_serial,
+                                            std::vector<number>& sample, typename data_manager<number>::datapipe_twopf_type type) override;
+
       protected:
 
         //! Attach an output_group to a pipe
@@ -632,8 +637,12 @@ namespace transport
 		                                                                                                std::placeholders::_1, std::placeholders::_2,
 		                                                                                                std::placeholders::_3, std::placeholders::_4);
 
+		    typename data_manager<number>::datapipe_twopf_time_sample_function twopf_tsample = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
+		                                                                                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+		                                                                                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, attach, detach, tsample, bsample);
+		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, attach, detach, tsample, bsample, twopf_tsample);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
 
@@ -657,7 +666,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_background_time_sample(typename data_manager<number>::datapipe* pipe,
-                                                                   unsigned int id, const std::vector<unsigned int>& serial_numbers,
+                                                                   unsigned int id, const std::vector<unsigned int>& t_serials,
                                                                    std::vector<number>& sample)
 	    {
         assert(pipe != nullptr);
@@ -666,9 +675,24 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_background_time_sample(db, id, serial_numbers, sample);
+        sqlite3_operations::pull_background_time_sample(db, id, t_serials, sample);
 	    }
 
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_twopf_time_sample(typename data_manager<number>::datapipe* pipe,
+                                                              unsigned int id, const std::vector<unsigned int>& t_serials,
+                                                              unsigned int k_serial, std::vector<number>& sample,
+                                                              typename data_manager<number>::datapipe_twopf_type type)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_twopf_time_sample(db, id, t_serials, k_serial, sample, (type==data_manager<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf));
+	    }
 
 
 		template <typename number>

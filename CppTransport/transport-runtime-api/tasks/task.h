@@ -23,13 +23,11 @@
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/concepts/range.h"
 #include "transport-runtime-api/derived-products/derived_product.h"
+#include "transport-runtime-api/tasks/task_k_configurations.h"
 
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/utilities/random_string.h"
-
-
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
 
 
 #define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE    "twopf-sample-times"
@@ -56,95 +54,6 @@
 
 namespace transport
   {
-
-    // K-CONFIGURATION DATA
-
-    class twopf_kconfig
-      {
-      public:
-
-        //! index of this k into serial list
-        //! (trivial in this case, and redundant with the k-value 'k' defined below)
-        unsigned int index;
-
-        //! comoving k-value
-        double       k;
-
-        //! flag which indicates to the integrator whether to store the background
-        bool         store_background;
-
-        //! serial number - guaranteed to be unique.
-        //! used to identify this k-configuration in the database
-        unsigned int serial;
-        unsigned int get_serial() const { return(this->serial); }
-
-		    //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
-      };
-
-
-    std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj)
-      {
-        std::ostringstream str;
-        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k;
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
-
-        return(out);
-      }
-
-
-    class threepf_kconfig
-      {
-      public:
-
-        //! index of k1, k2, k3 into serial list of k-modes
-        //! used to look up appropriate values of the power spectrum when constructing reduced 3pfs
-        std::array<unsigned int, 3> index;
-
-        //! comoving (k1,k2,k3) coordinates for this k-configuration
-        double                      k1;
-        double                      k2;
-        double                      k3;
-
-        //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double                      k_t;
-        double                      alpha;
-        double                      beta;
-        double                      k_t_conventional; // conventionally normalized k_t
-
-        //! flags which indicate to the integrator whether to
-        //! store the background and twopf results from this integration
-        bool                        store_background;
-        bool                        store_twopf;
-
-        //! serial number - guaranteed to be unique.
-        //! used to indentify this k-configuration in the database
-        unsigned int                serial;
-		    unsigned int                get_serial() const { return(this->serial); }
-
-		    //! Output to a standard stream
-        friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);
-      };
-
-
-    std::ostream& operator<<(std::ostream& out, const threepf_kconfig& obj)
-      {
-        std::ostringstream kt_str;
-        std::ostringstream alpha_str;
-        std::ostringstream beta_str;
-
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t;
-        alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
-        beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
-
-        out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KTEQUALS << " " << kt_str.str()
-          << ", " << __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS << " " << alpha_str.str()
-          << ", " << __CPP_TRANSPORT_KCONFIG_BETAEQUALS << " " << beta_str.str()
-          << std::endl;
-
-        return(out);
-      }
-
 
 		// TASK STRUCTURES -- GENERIC
 
@@ -907,9 +816,11 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
         //! Construct a named output task using a supplied list of elements
+
         output_task(const std::string& nm, typename std::vector< output_task_element<number> >& eles)
-	        : elements(eles), task<number>(nm)
+	        : serial(0), elements(eles), task<number>(nm)
 	        {
+		        serial = elements.size();
 	        }
 
         //! Construct a named output task using a supplied single derived_product<> object.
@@ -917,24 +828,24 @@ namespace transport
         //! (Would be nice to delegate to the constructor which accepts tags, but delegation
         //! has to happen in the initializer list -- as far as I know)
         output_task(const std::string& nm, const derived_data::derived_product<number>& prod)
-	        : task<number>(nm)
+	        : serial(0), task<number>(nm)
 	        {
             elements.clear();
 
             // set up empty list of tags
             std::list<std::string> tags;
 
-            elements.push_back(output_task_element<number>(prod, tags, 0));
+            elements.push_back(output_task_element<number>(prod, tags, serial++));
 	        }
 
         //! Construct a named output task using a supplied single derived_product<> object.
         //! Tags provided.
         output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
-	        : task<number>(nm)
+	        : serial(0), task<number>(nm)
 	        {
             elements.clear();
 
-            elements.push_back(output_task_element<number>(prod, tags, 0));
+            elements.push_back(output_task_element<number>(prod, tags, serial++));
 	        }
 
         //! Destroy an output task
@@ -964,6 +875,21 @@ namespace transport
             return(this->elements[i]);
 	        }
 
+		    //! Add an element, no tags provided
+		    void add_element(const derived_data::derived_product<number>& prod)
+			    {
+				    // set up empty list of tags
+		        std::list<std::string> tags;
+
+				    elements.push_back(output_task_element<number>(prod, tags, serial++));
+			    }
+
+		    //! Add an element, tags provided
+		    void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+			    {
+				    elements.push_back(output_task_element<number>(prod, tags, serial++));
+			    }
+
         // SERIALIZATION (implements a 'serializable' interface)
 
         //! Serialize this task to the repository
@@ -982,6 +908,9 @@ namespace transport
 
         //! List of output elements which make up this task
         typename std::vector< output_task_element<number> > elements;
+
+		    //! Serial number of added tasks
+		    unsigned int serial;
 	    };
 
 

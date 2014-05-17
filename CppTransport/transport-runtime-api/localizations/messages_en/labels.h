@@ -46,5 +46,13 @@
 #define __CPP_TRANSPORT_LATEX_PRIME_SYMBOL     "\\prime"
 #define __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL  "'"
 
+#define __CPP_TRANSPORT_LATEX_K_SYMBOL         "k"
+#define __CPP_TRANSPORT_NONLATEX_K_SYMBOL      "k"
+
+#define __CPP_TRANSPORT_LATEX_RE_SYMBOL        "\\mathrm{Re}\\,"
+#define __CPP_TRANSPORT_NONLATEX_RE_SYMBOL     "Re"
+#define __CPP_TRANSPORT_LATEX_IM_SYMBOL        "\\mathrm{Im}\\,"
+#define __CPP_TRANSPORT_NONLATEX_IM_SYMBOL     "Im"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

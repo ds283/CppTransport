@@ -871,7 +871,6 @@ namespace transport
 		                                                                 model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
 		                                                                 unqlite_serialization_reader* task_reader)
 			{
-				assert(mlist.size() == 0);
 				assert(task_reader != nullptr);
 
         // extract data:
@@ -1014,6 +1013,7 @@ namespace transport
     template <typename number>
     std::string repository_unqlite<number>::json_task_document(const std::string& name)
       {
+        std::cerr << "Getting JSON task document '" << name << "'" << std::endl;
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
 

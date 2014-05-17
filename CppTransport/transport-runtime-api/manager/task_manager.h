@@ -679,8 +679,9 @@ namespace transport
 		    // can't process a task if there are no workers
 		    if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
-		    // should have at least one model instance in mlist
-		    if(mlist.size() == 0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
+		    // should have as many models in mlist as output elements in the task
+		    assert(mlist.size() == tk->size());
+		    if(mlist.size() != tk->size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
 		    // set up a work queue representing our workers
 		    context ctx = this->make_workers_context();
@@ -1160,8 +1161,9 @@ namespace transport
 				// keep track of CPU time
 		    boost::timer::cpu_timer timer;
 
-		    if(mlist.size() != 1)
-			    throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
+				// should have as many models in mlist as elements in the task
+				assert(mlist.size() == tk->size());
+		    if(mlist.size() != tk->size()) throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
 		    // acquire a datapipe which we can use to stream content from the databse
 		    typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
