@@ -8,7 +8,7 @@
 #define __data_products_H_
 
 
-#include "transport-runtime-api/derived-products/time-plots/background.h"
+#include "transport-runtime-api/derived-products/time-plots/general_plot.h"
 
 #include "transport-runtime-api/derived-products/derived_product_helper.h"
 

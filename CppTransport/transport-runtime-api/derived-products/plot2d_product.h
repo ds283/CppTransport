@@ -97,8 +97,6 @@ namespace transport
 
 				    typedef enum { top_left, top_right, bottom_left, bottom_right } legend_pos;
 
-				    typedef std::function<bool(double)> time_filter;
-
 		      public:
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -152,7 +150,7 @@ namespace transport
 
 		        // SETTING DEFAULTS
 
-		      public:
+		      protected:
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
 		        virtual void apply_default_labels() = 0;
@@ -170,7 +168,7 @@ namespace transport
 
 				    // PLOT DATA
 
-		      public:
+		      protected:
 
 				    //! Set the axis data
 				    void set_axis(const std::vector<double>& axis_points);
@@ -181,16 +179,10 @@ namespace transport
 
 				    // GENERATE PLOT
 
-		      public:
+		      protected:
 
 				    //! Make plot
 				    void make_plot(typename data_manager<number>::datapipe& pipe) const;
-
-		        // LABEL GENERATION
-
-		      public:
-
-		        std::string make_label(unsigned int i, model<number>* m) const;
 
 
 		        // GET AND SET BASIC PLOT DATA
@@ -339,12 +331,6 @@ namespace transport
 
 				    // STYLE ATTRIBUTES
 
-				    //! time filter function: used to decide which time serial numbers should be used
-				    //! when producing a plot
-				    time_filter filter;
-
-				    // PLOT DETAILS
-
 		        //! logarithmic x-axis?
 		        bool log_x;
 
@@ -425,31 +411,6 @@ namespace transport
 							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_INCOMPATIBLE_SIZE);
 
 						this->lines.push_back(line);
-					}
-
-
-				template <typename number>
-				std::string plot2d_product<number>::make_label(unsigned int i, model<number>* m) const
-					{
-				    std::ostringstream label;
-
-						assert(m != nullptr);
-						if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_MODEL);
-
-						unsigned int N_fields = m->get_N_fields();
-
-						if(this->use_LaTeX)
-							{
-						    const std::vector<std::string>& field_names = m->get_f_latex_names();
-								label << "$" << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL " }" : "") << "$";
-							}
-						else
-							{
-						    const std::vector<std::string>& field_names = m->get_field_names();
-								label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-							}
-
-						return(label.str());
 					}
 
 

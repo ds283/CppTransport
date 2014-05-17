@@ -102,16 +102,21 @@ int main(int argc, char* argv[])
 
     transport::index_selector<1> bg_sel(model->get_N_fields());
 		bg_sel.all();
-    transport::derived_data::background<double> twopf_bg_plot =
-	                                                transport::derived_data::background<double>("dquad.twopf-1.background", "background.pdf", tk2,
-                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
-                                                                                              bg_sel, model);
-		twopf_bg_plot.set_title_text("Background fields");
 
-    transport::derived_data::background<double> threepf_bg_plot =
-	                                                transport::derived_data::background<double>("dquad.threepf-1.background", "background.pdf", tk3,
-                                                                                              typename transport::derived_data::plot2d_product<double>::time_filter(time_filter),
-	                                                                                            bg_sel, model);
+    transport::derived_data::background_time_data<double> bg_lines = transport::derived_data::background_time_data<double>(bg_sel, model);
+
+    transport::derived_data::general_time_plot<double> twopf_bg_plot =
+	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.background", "background.pdf", tk2,
+	                                                                                                          typename transport::derived_data::derived_product<double>::time_filter(time_filter),
+	                                                                                                          model);
+		twopf_bg_plot.add_line(bg_lines);
+    twopf_bg_plot.set_title_text("Background fields");
+
+    transport::derived_data::general_time_plot<double> threepf_bg_plot =
+	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.background", "background.pdf", tk3,
+	                                                                                                          typename transport::derived_data::derived_product<double>::time_filter(time_filter),
+	                                                                                                          model);
+		threepf_bg_plot.add_line(bg_lines);
 		threepf_bg_plot.set_title_text("Background fields");
 
 //    std::cout << "2pf background plot:" << std::endl << twopf_bg_plot << std::endl;

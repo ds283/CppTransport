@@ -26,10 +26,9 @@
 
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
+
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_BACKGROUND_TIME_PLOT "background-time-plot"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TWOPF_TIME_PLOT      "twopf-time-plot"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_THREEPF_TIME_PLOT    "threepf-time-plot"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TWOPF_SPECTRUM_PLOT  "twopf-spectrum-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT    "general-time-plot"
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FIELD_INDICES        "active-field-indices"
 
@@ -47,6 +46,7 @@ namespace transport
 		// a circular dependency.
 		template <typename number> class task;
 		template <typename number> class integration_task;
+		template <typename number> class twopf_list_task;
 
 		namespace derived_data
 			{
@@ -57,6 +57,14 @@ namespace transport
 		    template <typename number>
 		    class derived_product: public serializable
 			    {
+
+		      public:
+
+		        typedef std::function<bool(double)> time_filter;
+
+				    typedef std::function<bool(double)> twopf_kconfig_filter;
+
+				    typedef std::function<bool(double,double,double)> threepf_kconfig_filter;
 
 		      public:
 

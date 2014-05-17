@@ -20,7 +20,7 @@
 
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS "time-plot-serial-numbers"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN  "serial-number"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN  "sn"
 
 
 namespace transport
@@ -43,8 +43,8 @@ namespace transport
 				    // CONSTRUCTOR, DESTRUCTOR
 
 				    //! Basic user-facing constructor.
-		        time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
-						                      typename plot2d_product<number>::time_filter filter);
+				    time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
+				              typename derived_product<number>::time_filter filter);
 
 				    //! Deserialization constructor.
 		        time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader);
@@ -99,6 +99,26 @@ namespace transport
 
 
 		    template <typename number>
+		    time_plot<number>::time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
+		                                 typename derived_product<number>::time_filter filter)
+			    : plot2d_product<number>(name, filename, tk)
+			    {
+		        apply_default_settings();
+		        apply_default_labels();
+
+		        // set up a list of serial numbers corresponding to the sample times for this plot
+		        const std::vector<double>& sample_times = tk.get_sample_times();
+
+				    unsigned int i = 0;
+		        for(std::vector<double>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
+			        {
+		            if(filter(*t)) time_sample_sns.push_back(i);
+				        i++;
+			        }
+			    }
+
+
+		    template <typename number>
 		    time_plot<number>::time_plot(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
 			    : plot2d_product<number>(name, tk, reader)
 			    {
@@ -119,24 +139,6 @@ namespace transport
 			        }
 
 		        reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
-			    }
-
-
-		    template <typename number>
-		    time_plot<number>::time_plot(const std::string& name, const std::string& filename, const integration_task<number>& tk,
-		                                 typename plot2d_product<number>::time_filter filter)
-			    : plot2d_product<number>(name, filename, tk)
-			    {
-		        apply_default_settings();
-		        apply_default_labels();
-
-		        // set up a list of serial numbers corresponding to the sample times for this plot
-		        const std::vector<double>& sample_times = tk.get_sample_times();
-
-		        for(unsigned int i = 0; i < sample_times.size(); i++)
-			        {
-		            if(filter(sample_times[i])) time_sample_sns.push_back(i);
-			        }
 			    }
 
 
@@ -189,10 +191,10 @@ namespace transport
 				void time_plot<number>::serialize(serialization_writer& writer) const
 					{
 						this->begin_array(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS, this->time_sample_sns.size() == 0);
-				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
+				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
 					    {
 				        this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-				        this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, this->time_sample_sns[i]);
+				        this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, *t);
 				        this->end_element(writer, "arrayelt");
 					    }
 						this->end_element(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);

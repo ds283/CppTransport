@@ -8,7 +8,7 @@
 #define __derived_product_helper_H_
 
 
-#include "transport-runtime-api/derived-products/time-plots/background.h"
+#include "transport-runtime-api/derived-products/time-plots/general_plot.h"
 
 
 namespace transport
@@ -35,9 +35,8 @@ namespace transport
 
 		                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
-		                if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_BACKGROUND_TIME_PLOT) rval = derived_data::background_helper::deserialize<number>(name, reader, tk, m);
-
-		                if(rval == nullptr)
+		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT) rval = new general_time_plot<number>(name, tk, m, reader);
+				            else
 			                {
 		                    std::ostringstream msg;
 		                    msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
