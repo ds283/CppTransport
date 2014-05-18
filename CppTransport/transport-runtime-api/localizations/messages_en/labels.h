@@ -48,6 +48,8 @@
 
 #define __CPP_TRANSPORT_LATEX_K_SYMBOL         "k"
 #define __CPP_TRANSPORT_NONLATEX_K_SYMBOL      "k"
+#define __CPP_TRANSPORT_LATEX_KT_SYMBOL        "k_t"
+#define __CPP_TRANSPORT_NONLATEX_KT_SYMBOL     "k_t"
 
 #define __CPP_TRANSPORT_LATEX_RE_SYMBOL        "\\mathrm{Re}\\,"
 #define __CPP_TRANSPORT_NONLATEX_RE_SYMBOL     "Re"

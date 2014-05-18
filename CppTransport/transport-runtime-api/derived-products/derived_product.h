@@ -30,14 +30,11 @@
 #include "transport-runtime-api/exceptions.h"
 
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE                 "derived-product-type"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE              "derived-product-type"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_BACKGROUND_TIME_PLOT "background-time-plot"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT    "general-time-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT "general-time-plot"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FIELD_INDICES        "active-field-indices"
-
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME             "filename"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME          "filename"
 
 
 namespace transport
@@ -61,17 +58,6 @@ namespace transport
 					{
 
 				  public:
-
-						class threepf_kconfig_sample_value
-							{
-						  public:
-								double kt;
-								double alpha;
-								double beta;
-								double k1;
-								double k2;
-								double k3;
-							};
 
 				    class time_filter_data
 					    {
@@ -130,11 +116,11 @@ namespace transport
 
 						//! 2pf k-configuration filter
 						void filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<double>& k_samples,
-						                                 std::vector<unsigned int>& k_serials, std::vector<double>& k_values) const;
+						                                 std::vector<unsigned int>& k_serials) const;
 
 						//! 3pf k-configuration filter
 						void filter_threepf_kconfig_sample(threepf_kconfig_filter k_filter, const std::vector<threepf_kconfig>& k_samples,
-						                                   std::vector<unsigned int>& k_serials, std::vector<threepf_kconfig_sample_value>& k_values) const;
+						                                   std::vector<unsigned int>& k_serials) const;
 
 					};
 
@@ -169,7 +155,7 @@ namespace transport
 
 
 		    void filter::filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<double>& k_samples,
-		                                             std::vector<unsigned int>& k_serials, std::vector<double>& k_values) const
+		                                             std::vector<unsigned int>& k_serials) const
 			    {
 		        int min_pos = -1;
 		        double k_min = DBL_MAX;
@@ -185,7 +171,6 @@ namespace transport
 
 		        // ask filter to decide which values it wants
 		        k_serials.clear();
-				    k_values.clear();
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
 		            twopf_kconfig_filter_data data;
@@ -194,17 +179,13 @@ namespace transport
 		            data.min = (i == min_pos ? true : false);
 		            data.k = k_samples[i];
 
-		            if(k_filter(data))
-			            {
-		                k_serials.push_back(i);
-				            k_values.push_back(k_samples[i]);
-			            }
+		            if(k_filter(data)) k_serials.push_back(i);
 			        }
 			    }
 
 
 		    void filter::filter_threepf_kconfig_sample(threepf_kconfig_filter k_filter, const std::vector<threepf_kconfig>& k_samples,
-		                                               std::vector<unsigned int>& k_serials, std::vector<threepf_kconfig_sample_value>& k_values) const
+		                                               std::vector<unsigned int>& k_serials) const
 			    {
 		        int kt_min_pos = -1;
 		        double kt_min = DBL_MAX;
@@ -260,7 +241,6 @@ namespace transport
 
 		        // ask filter to decide which values it wants
 		        k_serials.clear();
-				    k_values.clear();
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
 		            threepf_kconfig_filter_data data;
@@ -289,19 +269,7 @@ namespace transport
 		            data.k3_min = (i == k3_min_pos ? true : false);
 		            data.k3 = k_samples[i].k3;
 
-		            if(k_filter(data))
-			            {
-		                k_serials.push_back(i);
-
-		                threepf_kconfig_sample_value value;
-				            value.kt    = k_samples[i].k_t_conventional;
-				            value.alpha = k_samples[i].alpha;
-				            value.beta  = k_samples[i].beta;
-				            value.k1    = k_samples[i].k1;
-				            value.k2    = k_samples[i].k2;
-				            value.k3    = k_samples[i].k3;
-				            k_values.push_back(value);
-			            }
+		            if(k_filter(data)) k_serials.push_back(i);
 			        }
 			    }
 

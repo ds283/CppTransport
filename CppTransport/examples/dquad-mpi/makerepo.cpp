@@ -176,7 +176,7 @@ int main(int argc, char* argv[])
 	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-imag", "twopf-imag.pdf", tk2,
 	                                                                                                          typename transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                          model);
-    tk2_twopf_imag_plot.add_line(tk2_twopf_real_group);
+    tk2_twopf_imag_plot.add_line(tk2_twopf_imag_group);
     tk2_twopf_imag_plot.set_title_text("Imaginary two-point function");
 
     transport::derived_data::general_time_plot<double> tk2_twopf_total_plot =
@@ -195,19 +195,48 @@ int main(int argc, char* argv[])
     tk3_twopf_real_plot.set_title_text("Real two-point function");
 
     transport::derived_data::general_time_plot<double> tk3_twopf_imag_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.threepf-imag", "twopf-imag.pdf", tk3,
+	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-imag", "twopf-imag.pdf", tk3,
 	                                                                                                          typename transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                          model);
-    tk3_twopf_imag_plot.add_line(tk3_twopf_real_group);
+    tk3_twopf_imag_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_imag_plot.set_title_text("Imaginary two-point function");
 
     transport::derived_data::general_time_plot<double> tk3_twopf_total_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.threepf-total", "twopf-total.pdf", tk3,
+	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-total", "twopf-total.pdf", tk3,
 	                                                                                                          typename transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                          model);
     tk3_twopf_total_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_total_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_total_plot.set_title_text("Two-point function");
+
+    // plots of some components of the threepf
+    transport::index_selector<3> threepf_fields(model->get_N_fields());
+    threepf_fields.none();
+
+    std::array<unsigned int, 3> sq_set_a    = { 0, 0, 0 };
+    std::array<unsigned int, 3> sq_set_b    = { 0, 1, 0 };
+    std::array<unsigned int, 3> sq_set_c    = { 1, 1, 0 };
+    std::array<unsigned int, 3> sq_set_d    = { 0, 0, 1 };
+    std::array<unsigned int, 3> sq_set_e    = { 0, 1, 1 };
+    std::array<unsigned int, 3> sq_set_f    = { 1, 1, 1 };
+    threepf_fields.set_on(sq_set_a);
+    threepf_fields.set_on(sq_set_b);
+    threepf_fields.set_on(sq_set_c);
+    threepf_fields.set_on(sq_set_d);
+    threepf_fields.set_on(sq_set_e);
+    threepf_fields.set_on(sq_set_f);
+
+    transport::derived_data::threepf_time_data<double> tk3_threepf_group =
+	                                                       transport::derived_data::threepf_time_data<double>(tk3, threepf_fields, transport::derived_data::threepf_time_data<double>::derivatives,
+	                                                                                                          typename transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter),
+	                                                                                                          model);
+
+    transport::derived_data::general_time_plot<double> tk3_threepf_plot =
+	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.threepf", "threepf.pdf", tk3,
+	                                                                                                          typename transport::derived_data::filter::time_filter(time_filter),
+	                                                                                                          model);
+    tk3_threepf_plot.add_line(tk3_threepf_group);
+    tk3_threepf_plot.set_title_text("Three-point function");
 
 //    std::cout << "2pf background plot:" << std::endl << tk2_bg_plot << std::endl;
 //    std::cout << "3pf background plot:" << std::endl << tk3_bg_plot << std::endl;
@@ -222,6 +251,7 @@ int main(int argc, char* argv[])
     repo->write_derived_data(tk3_twopf_real_plot);
     repo->write_derived_data(tk3_twopf_imag_plot);
     repo->write_derived_data(tk3_twopf_total_plot);
+		repo->write_derived_data(tk3_threepf_plot);
 
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
@@ -233,6 +263,7 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_twopf_real_plot);
     threepf_output.add_element(tk3_twopf_imag_plot);
     threepf_output.add_element(tk3_twopf_total_plot);
+		threepf_output.add_element(tk3_threepf_plot);
 
 		// write output tasks to the database
 		repo->write_task(twopf_output);

@@ -33,9 +33,6 @@
 
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS       "kconfig-serial-numbers"
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBER        "sn"
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_K             "k"
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_ALPHA         "alpha"
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_BETA          "beta"
 
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_LINE_ARRAY             "line-array"
 
@@ -271,7 +268,7 @@ namespace transport
 
 				  protected:
 
-				    std::string make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot, unsigned int kserial, model<number>* mdl) const;
+				    std::string make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot, double k_value, model<number>* mdl) const;
 
 
 				    // CLONE
@@ -297,9 +294,6 @@ namespace transport
 
 						//! record serial numbers of k-configurations we are using
 						std::vector<unsigned int> kconfig_sample_sns;
-
-						//! record k-number data for the k-congifurations we are using
-						std::vector<double> kconfig_sample_values;
 
 						//! record which type of 2pf we are plotting
 						twopf_type type;
@@ -331,7 +325,7 @@ namespace transport
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 
-				    this->filter_twopf_kconfig_sample(k_filter, tk.get_k_list(), kconfig_sample_sns, kconfig_sample_values);
+				    this->filter_twopf_kconfig_sample(k_filter, tk.get_k_list(), kconfig_sample_sns);
 			    }
 
 
@@ -367,11 +361,8 @@ namespace transport
 
 						    unsigned int sn;
 						    reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBER, sn);
-						    double k;
-						    reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_K, k);
 
 						    kconfig_sample_sns.push_back(sn);
-						    kconfig_sample_values.push_back(k);
 
 						    reader->end_array_element();
 					    }
@@ -384,11 +375,12 @@ namespace transport
 		    void twopf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe, const std::vector<unsigned int>& time_sample,
 		                                               plot2d_product<number>& plot, std::list<plot2d_line<number> >& lines) const
 			    {
+				    // pull k-configuration information from the database
+		        typename std::vector< typename data_manager<number>::twopf_configuration > k_values;
+				    pipe.pull_twopf_kconfig_sample(this->kconfig_sample_sns, k_values);
+
 				    // loop through all components of the twopf, for each k-configuration we use,
 				    // pulling data from the database
-
-				    assert(this->kconfig_sample_sns.size() == this->kconfig_sample_values.size());
-
 				    for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
 					    {
 						    for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
@@ -403,7 +395,7 @@ namespace transport
 												    pipe.pull_twopf_time_sample(this->mdl->flatten(m, n), time_sample, this->kconfig_sample_sns[i], line_data,
 												                                (this->type == real ? data_manager<number>::twopf_real : data_manager<number>::twopf_imag));
 
-												    plot2d_line<number> line = plot2d_line<number>(line_data, this->make_label(m, n, plot, i, this->mdl));
+												    plot2d_line<number> line = plot2d_line<number>(line_data, this->make_label(m, n, plot, k_values[i].k, this->mdl));
 
 												    lines.push_back(line);
 											    }
@@ -414,14 +406,13 @@ namespace transport
 
 
 				template <typename number>
-				std::string twopf_time_data<number>::make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot, unsigned int kserial, model<number>* mdl) const
+				std::string twopf_time_data<number>::make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot,
+				                                                double k_value, model<number>* mdl) const
 					{
 				    std::ostringstream label;
 
 				    assert(mdl != nullptr);
 				    if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_MODEL);
-
-						assert(kserial < this->kconfig_sample_values.size());
 
 				    unsigned int N_fields = mdl->get_N_fields();
 
@@ -436,7 +427,7 @@ namespace transport
 										  << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 
 						    label << "\\;"
-											<< __CPP_TRANSPORT_LATEX_K_SYMBOL << "=" << this->kconfig_sample_values[kserial];
+											<< __CPP_TRANSPORT_LATEX_K_SYMBOL << "=" << k_value;
 
 							  label << "$";
 							}
@@ -449,7 +440,7 @@ namespace transport
 											<< field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
 
 						    label << " "
-											<< __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=" << this->kconfig_sample_values[kserial];
+											<< __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=" << k_value;
 							}
 
 						return(label.str());
@@ -481,18 +472,14 @@ namespace transport
 							    }
 
 						    default:
-							    {
 						        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TWOPF_DATA_UNKNOWN);
-							    }
 							}
 
-						assert(this->kconfig_sample_sns.size() == this->kconfig_sample_values.size());
 						this->begin_array(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
-						for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+						for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
 							{
 								this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-								this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBER, this->kconfig_sample_sns[i]);
-								this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_K, this->kconfig_sample_values[i]);
+								this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBER, *t);
 								this->end_element(writer, "arrayelt");
 							}
 						this->end_element(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS);
@@ -531,6 +518,13 @@ namespace transport
 		        virtual void derive_lines(typename data_manager<number>::datapipe& pipe, const std::vector<unsigned int>& time_sample,
 		                                  plot2d_product<number>& plot, std::list< plot2d_line<number> >& lines) const override;
 
+		        // LABEL GENERATION
+
+		      protected:
+
+		        std::string make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
+		                               typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
+
 
 		        // CLONE
 
@@ -557,9 +551,6 @@ namespace transport
 
 				    //! record serial numbers of k-configurations we are using
 				    std::vector<unsigned int> kconfig_sample_sns;
-
-				    //! record values
-				    typename std::vector<filter::threepf_kconfig_sample_value> kconfig_sample_values;
 
 				    //! precision to use for labels
 				    unsigned int precision;
@@ -589,7 +580,7 @@ namespace transport
 			        }
 
 		        // set up a list of serial numbers corresponding to the sample kconfigs for this plot
-		        this->filter_twopf_kconfig_sample(k_filter, tk.get_sample(), kconfig_sample_sns, kconfig_sample_values);
+		        this->filter_threepf_kconfig_sample(k_filter, tk.get_sample(), kconfig_sample_sns);
 			    }
 
 
@@ -638,6 +629,102 @@ namespace transport
 		    void threepf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe, const std::vector<unsigned int>& time_sample,
 		                                                 plot2d_product<number>& plot, std::list<plot2d_line<number> >& lines) const
 			    {
+		        // pull k-configuration information from the database
+		        typename std::vector< typename data_manager<number>::threepf_configuration > k_values;
+		        std::vector<unsigned int> k1_serials;
+		        std::vector<unsigned int> k2_serials;
+		        std::vector<unsigned int> k3_serials;
+		        pipe.pull_threepf_kconfig_sample(this->kconfig_sample_sns, k_values, k1_serials, k2_serials, k3_serials);
+
+				    // loop through all components of the threepf, for each k-configuration we use,
+				    // pulling data from the database
+
+				    for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+					    {
+						    for(unsigned int l = 0; l < 2*this->mdl->get_N_fields(); l++)
+							    {
+								    for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+									    {
+										    for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+											    {
+										        std::array<unsigned int, 3> index_set = { l, m, n };
+												    if(this->active_indices.is_on(index_set))
+													    {
+												        std::vector<number> line_data;
+
+														    pipe.pull_threepf_time_sample(this->mdl->flatten(l, m, n), time_sample, this->kconfig_sample_sns[i], line_data);
+
+												        plot2d_line<number> line = plot2d_line<number>(line_data, this->make_label(l, m, n, plot, k_values[i], this->mdl));
+
+												        lines.push_back(line);
+													    }
+											    }
+									    }
+							    }
+					    }
+			    }
+
+
+		    template <typename number>
+		    std::string threepf_time_data<number>::make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
+		                                                      typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const
+			    {
+		        std::ostringstream label;
+
+				    assert(mdl != nullptr);
+				    if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_MODEL);
+
+		        unsigned int N_fields = mdl->get_N_fields();
+
+		        label << std::setprecision(this->precision);
+
+				    if(plot.get_use_LaTeX())
+					    {
+								const std::vector<std::string>& field_names = mdl->get_f_latex_names();
+
+				        label << "$";
+
+						    if(this->type == derivatives)
+							    {
+						        label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+							            << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+							            << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+							    }
+						    else
+							    {
+						        label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
+							            << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+							            << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+							    }
+
+						    // FIXME: allow alpha, beta, etc. in labels too?
+						    label << "\\;"
+							        << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=" << config.kt;
+
+						    label << "$";
+					    }
+				    else
+					    {
+						    const std::vector<std::string>& field_names = mdl->get_field_names();
+
+						    if(this->type == derivatives)
+							    {
+								    label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+									        << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+									        << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+							    }
+						    else
+							    {
+								    label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
+									        << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
+									        << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+							    }
+
+						    label << " " << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=" << config.kt;
+
+					    }
+
+				    return(label.str());
 			    }
 
 
@@ -650,6 +737,25 @@ namespace transport
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_DATA_PRECISION, this->precision);
 
 						this->active_indices.serialize(writer);
+
+						switch(this->type)
+							{
+						    case derivatives:
+							    {
+								    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_DERIVATIVE));
+						        break;
+							    }
+
+						    case momenta:
+							    {
+								    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_MOMENTA));
+								    break;
+							    }
+
+						    default:
+							    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN);
+							}
+
 
 				    this->begin_array(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
 				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)

@@ -55,10 +55,16 @@
 #define __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED        "Data manager error: Attempt to attach datapipe, but ouput group already attached"
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
 
-#define __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_CREATE_FAIL        "Data manager error: Failed to create temporary table of time-sample serial numbers"
-#define __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_INSERT_FAIL        "Data manager error: Failed to insert value in temporary table of time-sample serial numbers"
-#define __CPP_TRANSPORT_DATAMGR_TEMP_TIME_SERIAL_DROP_FAIL          "Data manager error: Failed to drop temporary table of time-sample serial numbers"
+#define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_CREATE_FAIL             "Data manager error: Failed to create temporary table of serial numbers (backend code="
+#define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL             "Data manager error: Failed to insert value in temporary table of serial numbers (backend code="
+#define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_DROP_FAIL               "Data manager error: Failed to drop temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW                 "Data manager error: Read fewer time samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW              "Data manager error: Read fewer k-configuration samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL            "Data manager error: Failed to create temporary table of threepf configurations (backend code="
+#define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL              "Data manager error: Failed to drop temporary table of threepf configurations (backend code="
+
+#define __CPP_TRANSPORT_DATAMGR_NEGATIVE_SERIAL_NUMBERS             "Data manager error: Received negative serial numbers from database backend"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DATA_MANAGER_H
