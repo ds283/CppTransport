@@ -315,7 +315,7 @@ namespace transport
 				    //! get typeset with LaTeX setting
 				    bool get_typeset_with_LaTeX() const { return(this->typeset_with_LaTeX); }
 				    //! set typeset with LaTeX setting
-				    bool set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; }
+				    void set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; }
 
 				    // SERIALIZATION -- implements a 'serializable' interface
 

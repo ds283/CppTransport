@@ -151,6 +151,7 @@ namespace transport
 						this->set_title(false);
 						this->set_legend(true);
 						this->set_legend_position(plot2d_product<number>::top_right);
+            this->set_typeset_with_LaTeX(false);
 					}
 
 

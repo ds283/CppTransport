@@ -336,7 +336,15 @@ namespace transport
 		        std::string  get_string()       const override { return(boost::lexical_cast<std::string>(this->value)); }
             unsigned int get_unsigned_int() const override { return(boost::lexical_cast<unsigned int>(this->value)); }
             double       get_double()       const override { return(boost::lexical_cast<double>(this->value)); }
-            bool         get_bool()         const override { return(boost::lexical_cast<bool>(this->value)); }
+            bool         get_bool()         const override
+              {
+                #ifdef __CPP_TRANSPORT_JSON_DEBUG
+                std::ostringstream test;
+                test << value;
+                assert(test.str() == "0" || test.str() == "1");
+                #endif
+                return(boost::lexical_cast<bool>(this->value));
+              }
 
           protected:
 
@@ -894,7 +902,10 @@ namespace transport
     template <typename T>
     std::string json_serialization_stack::value_element<T>::to_string(const bool& v) const
 	    {
-        return(boost::lexical_cast<std::string>(v));
+        std::string result = boost::lexical_cast<std::string>(v);
+        assert(result == "0" || result == "1");
+
+        return(result);
 	    }
 
 
@@ -1333,6 +1344,12 @@ namespace transport
     void json_serialization_stack::write_value(const std::string& name, bool value, bool is_insert)
 	    {
         value_element<bool>* ele = new value_element<bool>(name, value);
+
+        #ifdef __CPP_TRANSPORT_JSON_DEBUG
+        std::ostringstream test;
+        test << value;
+        assert(test.str() == "0" || test.str() == "1");
+        #endif
 
         if(this->node_stack.size() == 0)
 	        {
