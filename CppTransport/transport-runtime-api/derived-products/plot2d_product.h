@@ -480,7 +480,7 @@ namespace transport
 								bool nonzero_values = false;
 								if(this->log_y)
 									{
-										for(typename std::vector<number>::const_iterator u = line_data.begin(); !need_abs_y && u != line_data.end(); u++)
+										for(typename std::vector<number>::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
 											{
 												if((*u) <= 0.0) need_abs_y = true;
 												if((*u) > 0.0 || (*u) < 0.0) nonzero_values = true;
