@@ -73,6 +73,11 @@ namespace transport
 						virtual general_time_data<number>* clone() const = 0;
 
 
+						// WRITE TO A STREAM
+
+						//! write self-details to a stream
+						virtual void write(std::ostream& out, wrapped_output& wrapper) = 0;
+
 						// SERIALIZATION -- implements a 'serializable' interface
 
 				  public:
@@ -125,6 +130,12 @@ namespace transport
 				    virtual general_time_data<number>* clone() const override { return new background_time_data<number>(static_cast<const background_time_data<number>&>(*this)); }
 
 
+				    // WRITE TO A STREAM
+
+				    //! write self-details to a stream
+				    virtual void write(std::ostream& out, wrapped_output& wrapper) override;
+
+
 				    // SERIALIZATION -- implements a 'serializable' interface
 
 				  public:
@@ -170,6 +181,15 @@ namespace transport
 
 				    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
 				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+					}
+
+
+				template <typename number>
+				void background_time_data<number>::write(std::ostream& out, wrapped_output& wrapper)
+					{
+						out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_BACKGROUND << std::endl;
+						out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+						this->active_indices.write(out, mdl->get_state_names());
 					}
 
 
@@ -275,6 +295,12 @@ namespace transport
 
 				    //! self-replicate
 				    virtual general_time_data<number>* clone() const override { return new twopf_time_data<number>(static_cast<const twopf_time_data<number>&>(*this)); }
+
+
+				    // WRITE TO A STREAM
+
+				    //! write self-details to a stream
+				    virtual void write(std::ostream& out, wrapped_output& wrapper) override;
 
 
 						// SERIALIZATION -- implements a 'serializable' interface
@@ -447,6 +473,29 @@ namespace transport
 					}
 
 
+		    template <typename number>
+		    void twopf_time_data<number>::write(std::ostream& out, wrapped_output& wrapper)
+			    {
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TWOPF << std::endl;
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+		        this->active_indices.write(out, mdl->get_state_names());
+				    out << std::endl;
+
+		        wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+
+		        unsigned int count = 0;
+		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN; t++)
+			        {
+		            std::ostringstream msg;
+		            msg << (*t);
+
+		            wrapper.wrap_list_item(out, true, msg.str(), count);
+			        }
+		        if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) wrapper.wrap_list_item(out, true, "...", count);
+		        wrapper.wrap_newline(out);
+			    }
+
+
 				template <typename number>
 				void twopf_time_data<number>::serialize(serialization_writer& writer) const
 					{
@@ -530,6 +579,12 @@ namespace transport
 
 		        //! self-replicate
 		        virtual general_time_data<number>* clone() const override { return new threepf_time_data<number>(static_cast<const threepf_time_data<number>&>(*this)); }
+
+
+		        // WRITE TO A STREAM
+
+		        //! write self-details to a stream
+		        virtual void write(std::ostream& out, wrapped_output& wrapper) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -728,6 +783,29 @@ namespace transport
 			    }
 
 
+		    template <typename number>
+		    void threepf_time_data<number>::write(std::ostream& out, wrapped_output& wrapper)
+			    {
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF << std::endl;
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+		        this->active_indices.write(out, mdl->get_state_names());
+				    out << std::endl;
+
+		        wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+
+		        unsigned int count = 0;
+		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN; t++)
+			        {
+		            std::ostringstream msg;
+		            msg << (*t);
+
+		            wrapper.wrap_list_item(out, true, msg.str(), count);
+			        }
+		        if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) wrapper.wrap_list_item(out, true, "...", count);
+				    wrapper.wrap_newline(out);
+			    }
+
+
 				template <typename number>
 				void threepf_time_data<number>::serialize(serialization_writer& writer) const
 					{
@@ -838,6 +916,7 @@ namespace transport
 
 		      public:
 
+		        // FIXME: should check that the line uses a task which is compatible with the task used to set up this plot
 				    //! Add a group of general_time_data lines to the plot.
 				    //! Hides the underlying add_line provided by plot2d_product
 				    void add_line(const general_time_data<number>& line);
@@ -1004,9 +1083,31 @@ namespace transport
 					}
 
 
-			}
+				template <typename number>
+				void general_time_plot<number>::write(std::ostream& out)
+					{
+						out << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TITLE_B << std::endl;
 
-	}
+						for(typename std::list< general_time_data<number>* >::iterator t = this->data_lines.begin(); t != this->data_lines.end(); t++)
+							{
+						    (*t)->write(out, this->wrapper);
+						    this->wrapper.wrap_newline(out);
+							}
+					}
+
+
+				template <typename number>
+				std::ostream& operator<<(std::ostream& out, general_time_plot<number>& obj)
+					{
+						obj.write(out);
+						return(out);
+					}
+
+
+			}   // namespace derived_data
+
+
+	}   // namespace transport
 
 
 #endif //__general_time_plot_H_

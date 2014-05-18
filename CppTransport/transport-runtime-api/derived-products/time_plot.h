@@ -199,19 +199,19 @@ namespace transport
 				template <typename number>
 				void time_plot<number>::write(std::ostream& out)
 					{
-						this->wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_SN_LABEL " ");
+						this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_SN_LABEL " ");
 
 						unsigned int count = 0;
-						for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN; t++)
+						for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN; t++)
 							{
 						    std::ostringstream msg;
 								msg << (*t);
 
-						    this->wrap_list_item(out, true, msg.str(), count);
+						    this->wrapper.wrap_list_item(out, true, msg.str(), count);
 							}
-						if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) this->wrap_list_item(out, true, "...", count);
+						if(count == __CPP_TRANSPORT_PRODUCT_TIMEPLOT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
 
-						this->wrap_newline(out);
+						this->wrapper.wrap_newline(out);
 						this->plot2d_product<number>::write(out);
 					}
 

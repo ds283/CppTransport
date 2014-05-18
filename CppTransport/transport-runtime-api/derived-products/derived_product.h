@@ -23,8 +23,6 @@
 
 #include "transport-runtime-api/tasks/task_k_configurations.h"
 
-#include "transport-runtime-api/derived-products/data_view.h"
-
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -274,6 +272,85 @@ namespace transport
 			    }
 
 
+				//! A wrapped-output utility function
+				class wrapped_output
+					{
+
+				  public:
+
+						// CONSTRUCTOR, DESTRUCTOR
+
+						wrapped_output(unsigned int width=__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH)
+							: wrap_width(width), cpos(0)
+							{
+							}
+
+
+				    // WRAPPED OUTPUT
+
+				  public:
+
+				    //! Get wrap width
+				    unsigned int get_wrap_width() const { return(this->wrap_width); }
+
+				    //! Set wrap width
+				    void set_wrap_width(unsigned int w) { if(w > 0) this->wrap_width = w; }
+
+				    //! Output a string to a stream
+				    void wrap_out(std::ostream& out, const std::string& text);
+
+				    //! Output an option to a stream
+				    void wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count);
+
+				    //! Output a string value to a stream
+				    void wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count);
+
+				    //! Output a new line
+				    void wrap_newline(std::ostream& out) { this->cpos = 0; out << std::endl; }
+
+				    // INTERNAL DATA
+
+				  protected:
+
+				    //! Width at which to wrap output
+				    unsigned int wrap_width;
+
+				    //! Current line position
+				    unsigned int cpos;
+					};
+
+
+		    void wrapped_output::wrap_out(std::ostream& out, const std::string& text)
+			    {
+		        if(this->cpos + text.length() >= this->wrap_width) this->wrap_newline(out);
+		        out << text;
+		        this->cpos += text.length();
+			    }
+
+
+		    void wrapped_output::wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count)
+			    {
+		        if(value)
+			        {
+		            if(this->cpos + label.length() + 2 >= this->wrap_width) this->wrap_newline(out);
+		            if(count > 0) out << ", ";
+		            out << label;
+		            count++;
+		            this->cpos += label.length() + 2;
+			        }
+			    }
+
+
+		    void wrapped_output::wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count)
+			    {
+		        if(this->cpos + value.length() + label.length() + 5 >= this->wrap_width) this->wrap_newline(out);
+		        if(count > 0) out << ", ";
+		        out << label << " = \"" << value << "\"";
+		        count++;
+		        this->cpos += value.length() + label.length() + 5;
+			    }
+
+
 		    //! A derived product represents some particular post-processing
 		    //! of the integration data, perhaps to produce a plot,
 		    //! extract the data in some suitable format, etc.
@@ -287,8 +364,7 @@ namespace transport
 
 				    //! Construct a derived product object.
 		        derived_product(const std::string& nm, const std::string& fnam, const task<number>& tk)
-		          : name(nm), filename(fnam), parent(tk.clone()),
-		            wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH), cpos(0)
+		          : name(nm), filename(fnam), parent(tk.clone())
 			        {
 						    assert(parent != nullptr);
 			        }
@@ -302,7 +378,7 @@ namespace transport
 
 				    //! Deserialization constructor
 				    derived_product(const std::string& nm, const task<number>* tk, serialization_reader* reader)
-				      : name(nm), parent(tk->clone()), wrap_width(__CPP_TRANSPORT_DEFAULT_WRAP_WIDTH), cpos(0)
+				      : name(nm), parent(tk->clone())
 					    {
 						    assert(reader != nullptr);
 						    assert(parent != nullptr);
@@ -335,29 +411,6 @@ namespace transport
 		        virtual void derive(typename data_manager<number>::datapipe& pipe) = 0;
 
 
-				    // WRAPPED OUTPUT
-
-		      protected:
-
-				    //! Get wrap width
-				    unsigned int get_wrap_width() const { return(this->wrap_width); }
-
-				    //! Set wrap width
-				    void set_wrap_width(unsigned int w) { if(w > 0) this->wrap_width = w; }
-
-				    //! Output a string to a stream
-				    void wrap_out(std::ostream& out, const std::string& text);
-
-				    //! Output an option to a stream
-				    void wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count);
-
-				    //! Output a string value to a stream
-				    void wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count);
-
-				    //! Output a new line
-				    void wrap_newline(std::ostream& out) { this->cpos = 0; out << std::endl; }
-
-
 				    // SERIALIZATION -- implements a 'serializable' interface
 
 		      public:
@@ -385,48 +438,9 @@ namespace transport
 				    //! We store our own copy.
 		        task<number>* parent;
 
-				    // WRAPPED OUTPUT
-
-				    //! Width at which to wrap output
-				    unsigned int wrap_width;
-
-				    //! Current line position
-				    unsigned int cpos;
+				    //! Wrapped output utility
+				    wrapped_output wrapper;
 			    };
-
-
-				template <typename number>
-				void derived_product<number>::wrap_out(std::ostream& out, const std::string& text)
-					{
-						if(this->cpos + text.length() >= this->wrap_width) this->wrap_newline(out);
-						out << text;
-						this->cpos += text.length();
-					}
-
-
-				template <typename number>
-				void derived_product<number>::wrap_list_item(std::ostream& out, bool value, const std::string& label, unsigned int& count)
-					{
-						if(value)
-							{
-								if(this->cpos + label.length() + 2 >= this->wrap_width) this->wrap_newline(out);
-						    if(count > 0) out << ", ";
-						    out << label;
-						    count++;
-								this->cpos += label.length() + 2;
-							}
-					}
-
-
-				template <typename number>
-				void derived_product<number>::wrap_value(std::ostream& out, const std::string& value, const std::string& label, unsigned int& count)
-					{
-						if(this->cpos + value.length() + label.length() + 5 >= this->wrap_width) this->wrap_newline(out);
-						if(count > 0) out << ", ";
-						out << label << " = \"" << value << "\"";
-						count++;
-						this->cpos += value.length() + label.length() + 5;
-					}
 
 
 				template <typename number>

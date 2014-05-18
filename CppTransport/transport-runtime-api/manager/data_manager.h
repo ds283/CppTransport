@@ -943,7 +943,7 @@ namespace transport
         assert(this->attached_dispatcher != nullptr);
         if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request";
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << id;
 
 		    this->background_time_sample_callback(this, id, serial_numbers, sample);
 	    }
@@ -959,7 +959,7 @@ namespace transport
         assert(this->attached_dispatcher != nullptr);
         if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = " << (type == twopf_real ? "real" : "imaginary");
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = " << (type == twopf_real ? "real" : "imaginary") << ", for element " << id;
 
 		    this->twopf_time_sample_callback(this, id, t_serials, kserial, sample, type);
 	    }
@@ -975,7 +975,7 @@ namespace transport
         assert(this->attached_dispatcher != nullptr);
         if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request";
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << id;
 
 		    this->threepf_time_sample_callback(this, id, t_serials, kserial, sample);
 	    }

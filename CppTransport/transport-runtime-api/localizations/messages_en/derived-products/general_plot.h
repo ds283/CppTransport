@@ -16,7 +16,15 @@
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TWOPF_DATA_UNKNOWN  "Internal error: Unknown twopf type in 'general_time_plot'"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN "Internal error: Unknown threepf type in 'general_time_plot'"
 
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TITLE_A       "General time-line plot"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TITLE_B       "containing the following plot groups:"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES       "Plotting indices"
+
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_BACKGROUND    "background line group"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TWOPF         "twopf line group"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF       "threepf line group"
+
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL    "k-configurations: including serial numbers"
 
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_DATAPIPE       "Internal error: Null datapipe when attempting to build background plot"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL          "Internal error: Null model in 'general_time_plot'"

@@ -75,7 +75,7 @@ namespace transport
 
 
 		    //! Write self to standard output
-		    void write(std::ostream& out, const std::vector<std::string>& state_names);
+		    void write(std::ostream& out, const std::vector<std::string>& state_names) const;
 
 		    // INTERNAL DATA
 
@@ -267,10 +267,12 @@ namespace transport
 
 
 		template <unsigned int indices>
-		void index_selector<indices>::write(std::ostream& out, const std::vector<std::string>& state_names)
+		void index_selector<indices>::write(std::ostream& out, const std::vector<std::string>& state_names) const
 			{
 				// demap available indices, by working through all available toggles
 				// and printing the ones which are switched on
+
+				assert(state_names.size() == 2*this->N_fields);
 
 				unsigned int count = 0;
 
@@ -283,7 +285,10 @@ namespace transport
 
 								for(unsigned int j = 0; j < indices; j++)
 									{
-										unsigned int index = i / this->displacements[j];
+										unsigned int remainder = i;
+										for(unsigned int k = 0; k < j; k++) remainder = remainder % this->displacements[k];
+
+										unsigned int index = remainder / this->displacements[j];
 
 										assert((this->range == all_range && index < state_names.size()) || (this->range == field_range && index < state_names.size()/2));
 
