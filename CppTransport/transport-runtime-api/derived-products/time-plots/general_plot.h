@@ -27,9 +27,9 @@
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_REAL        "real"
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_IMAGINARY   "imaginary"
 
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE       "threepf-momenta"
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_DERIVATIVE "derivatives"
-#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_MOMENTA    "momenta"
+#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_TYPE       "threepf-momenta"
+#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_DERIVATIVE "derivatives"
+#define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_MOMENTA    "momenta"
 
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS       "kconfig-serial-numbers"
 #define __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBER        "sn"
@@ -47,17 +47,45 @@ namespace transport
 				class general_time_data: public serializable, public filter
 					{
 
+				  public:
+
+				    typedef enum { derivatives, momenta } dot_type;
+
 						// CONSTRUCTOR, DESTRUCTOR
 
 				  public:
 
-						general_time_data()
+						//! Basic user-facing constructor
+						general_time_data(dot_type dm=momenta)
+							: dot_meaning(dm)
 							{
 							}
 
+						//! Deserialization constructor
 						general_time_data(serialization_reader* reader)
 							{
+								assert(reader != nullptr);
+
+						    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+
+						    std::string dot_meaning_value;
+						    reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_TYPE, dot_meaning_value);
+
+						    if(dot_meaning_value == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_DERIVATIVE) dot_meaning = derivatives;
+						    else if(dot_meaning_value == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_MOMENTA) dot_meaning = momenta;
+						    else
+							    {
+						        std::ostringstream msg;
+						        msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN << " '" << dot_meaning_value << "'";
+						        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+							    }
 							}
+
+
+						// ADMIN
+
+						//! get dot meaning
+						dot_type get_dot_meaning() const { return(this->dot_meaning); }
 
 
 						// DERIVE LINES
@@ -82,18 +110,46 @@ namespace transport
 
 				  public:
 
-						virtual void serialize(serialization_writer& writer) const override
-							{
-							}
+						//! Serialize this object
+						virtual void serialize(serialization_writer& writer) const override;
 
 				  public:
 
 						virtual ~general_time_data() = default;
 
+
+						// INTERNAL DATA
+
+						//! recording meaning of momenta - do we interpret them as derivatives?
+						dot_type dot_meaning;
+
 					};
 
 
-				//! background time data line
+		    template <typename number>
+		    void general_time_data<number>::serialize(serialization_writer& writer) const
+			    {
+		        switch(this->dot_meaning)
+			        {
+		            case derivatives:
+			            {
+		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_DERIVATIVE));
+		                break;
+			            }
+
+		            case momenta:
+			            {
+		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_GENERAL_DOT_MOMENTA));
+		                break;
+			            }
+
+		            default:
+			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN);
+			        }
+			    }
+
+
+		    //! background time data line
 				template <typename number>
 				class background_time_data: public general_time_data<number>
 					{
@@ -103,7 +159,8 @@ namespace transport
 				  public:
 
 						//! construct a background time-data object
-						background_time_data(index_selector<1>& sel, model<number>* m);
+						background_time_data(index_selector<1>& sel, model<number>* m,
+																 typename general_time_data<number>::dot_type dm=general_time_data<number>::derivatives);
 
 						//! deserialization constructor.
 						background_time_data(serialization_reader* reader, model<number>* m);
@@ -157,8 +214,9 @@ namespace transport
 
 
 		    template <typename number>
-		    background_time_data<number>::background_time_data(index_selector<1>& sel, model<number>* m)
-			    : active_indices(sel), mdl(m), general_time_data<number>()
+		    background_time_data<number>::background_time_data(index_selector<1>& sel, model<number>* m,
+		                                                       typename general_time_data<number>::dot_type dm)
+			    : active_indices(sel), mdl(m), general_time_data<number>(dm)
 			    {
 		        assert(m != nullptr);
 
@@ -241,12 +299,30 @@ namespace transport
 		        if(plot.get_use_LaTeX())
 			        {
 		            const std::vector<std::string>& field_names = m->get_f_latex_names();
-		            label << "$" << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << "$";
+
+				        label << "$";
+				        if(this->get_dot_meaning() == general_time_data<number>::derivatives)
+					        {
+				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+					        }
+				        else
+					        {
+						        label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+					        }
+				        label << "$";
 			        }
 		        else
 			        {
 		            const std::vector<std::string>& field_names = m->get_field_names();
-		            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+
+				        if(this->get_dot_meaning() == general_time_data<number>::derivatives)
+					        {
+				            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+					        }
+				        else
+					        {
+						        label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+					        }
 			        }
 
 		        return(label.str());
@@ -268,7 +344,8 @@ namespace transport
 				  public:
 
 				    //! construct a twopf time-data object
-				    twopf_time_data(const twopf_list_task<number>& tk, index_selector<2>& sel, twopf_type tp,
+				    twopf_time_data(const twopf_list_task<number>& tk, index_selector<2>& sel,
+				                    twopf_type tm, typename general_time_data<number>::dot_type,
 				                    filter::twopf_kconfig_filter k_filter, model<number>* m,
 				                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -322,7 +399,7 @@ namespace transport
 						std::vector<unsigned int> kconfig_sample_sns;
 
 						//! record which type of 2pf we are plotting
-						twopf_type type;
+						twopf_type twopf_meaning;
 
 						//! record precision of labels
 						unsigned int precision;
@@ -333,10 +410,11 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_time_data<number>::twopf_time_data(const twopf_list_task<number>& tk, index_selector<2>& sel, twopf_type tp,
+		    twopf_time_data<number>::twopf_time_data(const twopf_list_task<number>& tk, index_selector<2>& sel,
+		                                             twopf_type tm, typename general_time_data<number>::dot_type dm,
 		                                             filter::twopf_kconfig_filter k_filter,
 		                                             model<number>* m, unsigned int prec)
-			    : active_indices(sel), mdl(m), type(tp), precision(prec), general_time_data<number>()
+			    : active_indices(sel), mdl(m), twopf_meaning(tm), precision(prec), general_time_data<number>(dm)
 			    {
 		        assert(m != nullptr);
 
@@ -370,8 +448,8 @@ namespace transport
 		        std::string tpf_type;
 						reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_TYPE, tpf_type);
 
-				    if(tpf_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_REAL) type = real;
-				    else if(tpf_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_IMAGINARY) type = imaginary;
+				    if(tpf_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_REAL) twopf_meaning = real;
+				    else if(tpf_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_TWOPF_DATA_IMAGINARY) twopf_meaning = imaginary;
 				    else
 					    {
 				        std::ostringstream msg;
@@ -419,7 +497,7 @@ namespace transport
 										        std::vector<number> line_data;
 
 												    pipe.pull_twopf_time_sample(this->mdl->flatten(m, n), time_sample, this->kconfig_sample_sns[i], line_data,
-												                                (this->type == real ? data_manager<number>::twopf_real : data_manager<number>::twopf_imag));
+												                                (this->twopf_meaning == real ? data_manager<number>::twopf_real : data_manager<number>::twopf_imag));
 
 												    plot2d_line<number> line = plot2d_line<number>(line_data, this->make_label(m, n, plot, k_values[i].k, this->mdl));
 
@@ -446,11 +524,20 @@ namespace transport
 
 						if(plot.get_use_LaTeX())
 							{
-								label << "$" << (this->type == real ? __CPP_TRANSPORT_LATEX_RE_SYMBOL : __CPP_TRANSPORT_LATEX_IM_SYMBOL) << " ";
+								label << "$" << (this->twopf_meaning == real ? __CPP_TRANSPORT_LATEX_RE_SYMBOL : __CPP_TRANSPORT_LATEX_IM_SYMBOL) << " ";
 
 								const std::vector<std::string>& field_names = mdl->get_f_latex_names();
-								label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-										  << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+
+								if(this->get_dot_meaning() == general_time_data<number>::derivatives)
+									{
+								    label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+									        << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+									}
+								else
+									{
+										label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+													<< (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+									}
 
 						    label << "\\;"
 											<< __CPP_TRANSPORT_LATEX_K_SYMBOL << "=" << k_value;
@@ -459,11 +546,20 @@ namespace transport
 							}
 						else
 							{
-						    label << (this->type == real ? __CPP_TRANSPORT_NONLATEX_RE_SYMBOL : __CPP_TRANSPORT_NONLATEX_IM_SYMBOL) << " ";
+						    label << (this->twopf_meaning == real ? __CPP_TRANSPORT_NONLATEX_RE_SYMBOL : __CPP_TRANSPORT_NONLATEX_IM_SYMBOL) << " ";
 
 								const std::vector<std::string>& field_names = mdl->get_field_names();
-								label << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-											<< field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+
+								if(this->get_dot_meaning() == general_time_data<number>::derivatives)
+									{
+								    label << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+									        << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+									}
+								else
+									{
+										label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+													<< (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+									}
 
 						    label << " "
 											<< __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=" << k_value;
@@ -506,7 +602,7 @@ namespace transport
 
 				    this->active_indices.serialize(writer);
 
-						switch(this->type)
+						switch(this->twopf_meaning)
 							{
 						    case real:
 									{
@@ -542,16 +638,13 @@ namespace transport
 		    class threepf_time_data: public general_time_data<number>
 			    {
 
-		      public:
-
-				    typedef enum { derivatives, momenta } dot_type;
-
 		        // CONSTRUCTOR, DESTRUCTOR
 
 		      public:
 
 		        //! construct a threepf time-data object
-		        threepf_time_data(const threepf_task<number>& tk, index_selector<3>& sel, dot_type tp,
+		        threepf_time_data(const threepf_task<number>& tk, index_selector<3>& sel,
+		                          typename general_time_data<number>::dot_type dm,
 		                          typename filter::threepf_kconfig_filter filter, model<number>* m,
 		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -601,9 +694,6 @@ namespace transport
 		        //! record which indices are active in this group
 		        index_selector<3> active_indices;
 
-				    //! record whether we're plotting derivatives or moments
-				    dot_type type;
-
 				    //! record serial numbers of k-configurations we are using
 				    std::vector<unsigned int> kconfig_sample_sns;
 
@@ -616,10 +706,11 @@ namespace transport
 
 
 		    template <typename number>
-		    threepf_time_data<number>::threepf_time_data(const threepf_task<number>& tk, index_selector<3>& sel, dot_type tp,
+		    threepf_time_data<number>::threepf_time_data(const threepf_task<number>& tk, index_selector<3>& sel,
+		                                                 typename general_time_data<number>::dot_type dm,
 		                                                 filter::threepf_kconfig_filter k_filter,
 		                                                 model<number>* m, unsigned int prec)
-			    : active_indices(sel), mdl(m), type(tp), precision(prec), general_time_data<number>()
+			    : active_indices(sel), mdl(m), precision(prec), general_time_data<number>(dm)
 			    {
 						assert(m != nullptr);
 
@@ -650,18 +741,6 @@ namespace transport
 				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
 
 				    reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_DATA_PRECISION, precision);
-
-				    std::string mom_type;
-				    reader->read_value(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE, mom_type);
-
-				    if(mom_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_DERIVATIVE) type = derivatives;
-				    else if(mom_type == __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_MOMENTA) type = momenta;
-				    else
-					    {
-				        std::ostringstream msg;
-				        msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN << " '" << mom_type << "'";
-				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-					    }
 
 				    unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS);
 
@@ -739,7 +818,7 @@ namespace transport
 
 				        label << "$";
 
-						    if(this->type == derivatives)
+						    if(this->get_dot_meaning() == general_time_data<number>::derivatives)
 							    {
 						        label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
 							            << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
@@ -762,7 +841,7 @@ namespace transport
 					    {
 						    const std::vector<std::string>& field_names = mdl->get_field_names();
 
-						    if(this->type == derivatives)
+						    if(this->get_dot_meaning() == general_time_data<number>::derivatives)
 							    {
 								    label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
 									        << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
@@ -815,25 +894,6 @@ namespace transport
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_DATA_PRECISION, this->precision);
 
 						this->active_indices.serialize(writer);
-
-						switch(this->type)
-							{
-						    case derivatives:
-							    {
-								    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_DERIVATIVE));
-						        break;
-							    }
-
-						    case momenta:
-							    {
-								    this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_GENERAL_TPLOT_THREEPF_DOT_MOMENTA));
-								    break;
-							    }
-
-						    default:
-							    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_THREEPF_DOT_UNKNOWN);
-							}
-
 
 				    this->begin_array(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
 				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)

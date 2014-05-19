@@ -161,22 +161,30 @@ int main(int argc, char* argv[])
     twopf_cross.set_on(index_set_g);
 
     transport::derived_data::twopf_time_data<double> tk2_twopf_real_group =
-	                                                     transport::derived_data::twopf_time_data<double>(tk2, twopf_fields, transport::derived_data::twopf_time_data<double>::real,
+	                                                     transport::derived_data::twopf_time_data<double>(tk2, twopf_fields,
+	                                                                                                      transport::derived_data::twopf_time_data<double>::real,
+	                                                                                                      transport::derived_data::general_time_data<double>::momenta,
 	                                                                                                      typename transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter),
 	                                                                                                      model);
 
     transport::derived_data::twopf_time_data<double> tk2_twopf_imag_group =
-	                                                     transport::derived_data::twopf_time_data<double>(tk2, twopf_cross, transport::derived_data::twopf_time_data<double>::imaginary,
+	                                                     transport::derived_data::twopf_time_data<double>(tk2, twopf_cross,
+	                                                                                                      transport::derived_data::twopf_time_data<double>::imaginary,
+	                                                                                                      transport::derived_data::general_time_data<double>::momenta,
 	                                                                                                      typename transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter),
 	                                                                                                      model);
 
     transport::derived_data::twopf_time_data<double> tk3_twopf_real_group =
-	                                                     transport::derived_data::twopf_time_data<double>(tk3, twopf_fields, transport::derived_data::twopf_time_data<double>::real,
+	                                                     transport::derived_data::twopf_time_data<double>(tk3, twopf_fields,
+	                                                                                                      transport::derived_data::twopf_time_data<double>::real,
+	                                                                                                      transport::derived_data::general_time_data<double>::momenta,
 	                                                                                                      typename transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter),
 	                                                                                                      model);
 
     transport::derived_data::twopf_time_data<double> tk3_twopf_imag_group =
-	                                                     transport::derived_data::twopf_time_data<double>(tk3, twopf_cross, transport::derived_data::twopf_time_data<double>::imaginary,
+	                                                     transport::derived_data::twopf_time_data<double>(tk3, twopf_cross,
+	                                                                                                      transport::derived_data::twopf_time_data<double>::imaginary,
+	                                                                                                      transport::derived_data::general_time_data<double>::momenta,
 	                                                                                                      typename transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter),
 	                                                                                                      model);
 
@@ -248,7 +256,8 @@ int main(int argc, char* argv[])
     threepf_fields.set_on(sq_set_f);
 
     transport::derived_data::threepf_time_data<double> tk3_threepf_group =
-	                                                       transport::derived_data::threepf_time_data<double>(tk3, threepf_fields, transport::derived_data::threepf_time_data<double>::derivatives,
+	                                                       transport::derived_data::threepf_time_data<double>(tk3, threepf_fields,
+	                                                                                                          transport::derived_data::threepf_time_data<double>::momenta,
 	                                                                                                          typename transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter),
 	                                                                                                          model);
 
