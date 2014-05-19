@@ -1396,9 +1396,6 @@ namespace transport
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
 
-		    // open a new transaction, if necessary. After this we can assume the database handles are live.
-		    this->begin_transaction();
-
 		    // get a serialization_reader for the named task record
 		    int task_id = 0;
 		    task_type type;
@@ -1430,6 +1427,9 @@ namespace transport
 		        msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << task_name << "'";
 		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
+
+        // open a new transaction, if necessary. After this we can assume the database handles are live.
+        this->begin_transaction();
 
         unqlite_operations::drop(this->task_db, collection, task_id);
         unqlite_operations::store(this->task_db, collection, task_reader->get_contents());
