@@ -262,7 +262,7 @@ namespace transport
 			        {
 		            std::ostringstream msg;
 			          msg << __CPP_TRANSPORT_UNQLITE_VM_OUPTUT << " " << output_buffer.str();
-		            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+		            throw runtime_exception(runtime_exception::REPOSITORY_JX9_ERROR, msg.str());
 			        }
 
             return(vm);
@@ -309,9 +309,11 @@ namespace transport
 
             std::ostringstream jx9;
 
-            jx9 << "if( !db_exists('" << collection << "') )" << std::endl
+            jx9 << "$zCol = '" << collection << "';" << std::endl
+                << "if( !db_exists($zCol) )" << std::endl
                 << "  {" << std::endl
                 << "    print \"" << __CPP_TRANSPORT_REPO_MISSING_COLLECTION << " '" << collection << "'\";" << std::endl
+	              << "    print db_errlog();" << std::endl
                 << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
@@ -320,7 +322,7 @@ namespace transport
 
         // store a record within a specified collection
         void store(unqlite* db, const std::string& collection, const std::string& record)
-          {
+	        {
             assert(db != nullptr);
 
             // first, ensure the named collection is present in the database
@@ -332,11 +334,11 @@ namespace transport
             // for batch insert, it would be preferable to wait until the end of the
             // batch before committing, but we don't expect the repository to be used that way
             jx9 << "$rec = [ " << record << " ];" << std::endl
-                << "$rc  = db_store('" << collection << "', $rec);" << std::endl
-                << "if ( !$rc )" << std::endl
-                << "  {" << std::endl
-                << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\", db_errlog();" << std::endl
-                << "  }" << std::endl;
+	            << "$rc  = db_store('" << collection << "', $rec);" << std::endl
+	            << "if ( !$rc )" << std::endl
+	            << "  {" << std::endl
+	            << "    print \"" << __CPP_TRANSPORT_REPO_INSERT_ERROR << "'$rc')\", db_errlog();" << std::endl
+	            << "  }" << std::endl;
 // FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
 //                << "$rc = db_commit();" << std::endl
 //                << "if ( !$rc )" << std::endl
@@ -345,21 +347,21 @@ namespace transport
 //                << "  }" << std::endl;
 
             exec_jx9(db, jx9.str());
-          }
+	        }
 
 
-		    // drop a record within a specified collection
-		    void drop(unqlite* db, const std::string& collection, unsigned int unqlite_id)
-			    {
-		        assert(db != nullptr);
+        // drop a record within a specified collection
+        void drop(unqlite* db, const std::string& collection, unsigned int unqlite_id)
+	        {
+            assert(db != nullptr);
 
-				    // first, ensure the named collection is present in this database
-				    ensure_collection(db, collection);
+            // first, ensure the named collection is present in this database
+            ensure_collection(db, collection);
 
-		        std::ostringstream jx9;
+            std::ostringstream jx9;
 
-						// drop the specified record from the database
-				    jx9 <<
+            // drop the specified record from the database
+            jx9 <<
 // FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
 //					         "$rc = db_commit();" << std::endl
 //					      << "if ( !$rc )" << std::endl
@@ -367,11 +369,11 @@ namespace transport
 //					      << "    print \"" << __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
 //					      << "  }" << std::endl
 //	              <<
-			             "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");" << std::endl
-					      << "if ( !$rc )" << std::endl
-					      << "  {" << std::endl
-					      << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
-		            << "  }" << std::endl;
+	            "$rc = db_drop_record('" << collection << "', " << unqlite_id << ");" << std::endl
+	            << "if ( !$rc )" << std::endl
+	            << "  {" << std::endl
+	            << "    print \"" << __CPP_TRANSPORT_REPO_DELETE_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
+	            << "  }" << std::endl;
 // FIXME: removed explicit commit statement which led to locking problems - might need to revert later, or remove this code if OK
 //			          << "$rc = db_commit();" << std::endl
 //			          << "if ( !$rc )" << std::endl
@@ -379,14 +381,14 @@ namespace transport
 //						    << "    print \"" << __CPP_TRANSPORT_REPO_COMMIT_ERROR << "'" << unqlite_id << "')\", db_errlog();" << std::endl
 //			          << "  }" << std::endl;
 
-				    exec_jx9(db, jx9.str());
-			    }
+            exec_jx9(db, jx9.str());
+	        }
 
 
         // extract a JSON representation of a record within a specified collection
         template <typename T, typename... fields>
         std::string extract_json(unqlite* db, const std::string& collection, const T& value, fields... field_names)
-          {
+	        {
             assert(db != nullptr);
 
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
@@ -394,21 +396,21 @@ namespace transport
             std::ostringstream jx9;
 
             jx9 << "$callback = function($rec)" << std::endl
-                << "  {" << std::endl
-                << "    if( $rec." + query + " )" << std::endl
-                << "      { return TRUE; }" << std::endl
-                << "    else" << std::endl
-                << "      { return FALSE; }" << std::endl
-                << "  };" << std::endl
-                << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
-	              << "$num_records = count($data);" << std::endl
-                << "if( $num_records != 1 )" << std::endl
-                << "  {" << std::endl
-                << "    print \"" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << "$num_records)\";" << std::endl
-                << "    return;" << std::endl
-                << "  }" << std::endl
-                << "$ele = reset($data);" << std::endl         // reset() moves array pointer back to the beginning, and returns the value of the first object
-                << "$json = json_encode($ele);" << std::endl;
+	            << "  {" << std::endl
+	            << "    if( $rec." + query + " )" << std::endl
+	            << "      { return TRUE; }" << std::endl
+	            << "    else" << std::endl
+	            << "      { return FALSE; }" << std::endl
+	            << "  };" << std::endl
+	            << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
+	            << "$num_records = count($data);" << std::endl
+	            << "if( $num_records != 1 )" << std::endl
+	            << "  {" << std::endl
+	            << "    print \"" << __CPP_TRANSPORT_UNQLITE_MULTIPLE_JSON << "$num_records)\";" << std::endl
+	            << "    return;" << std::endl
+	            << "  }" << std::endl
+	            << "$ele = reset($data);" << std::endl         // reset() moves array pointer back to the beginning, and returns the value of the first object
+	            << "$json = json_encode($ele);" << std::endl;
 
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
@@ -416,11 +418,11 @@ namespace transport
             unqlite_value* json = unqlite_vm_extract_variable(vm, "json");
 
             if(json == nullptr)
-              {
+	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_UNQLITE_UNDEFINED_VARIABLE << " '$json'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
-              }
+	            }
 
             std::string json_document = unqlite_value_to_string(json, nullptr);
 
@@ -428,13 +430,13 @@ namespace transport
             unqlite_vm_release(vm);
 
             return(json_document);
-          }
+	        }
 
 
         // count number of records matching specified criteria
         template <typename T, typename... fields>
         unsigned int query_count(unqlite* db, const std::string& collection, const T& value, fields... field_names)
-          {
+	        {
             assert(db != nullptr);
 
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
@@ -442,14 +444,14 @@ namespace transport
             std::ostringstream jx9;
 
             jx9 << "$callback = function($rec)" << std::endl
-                << "  {" << std::endl
-                << "    if( $rec." + query + " )" << std::endl
-                << "      { return TRUE; }" << std::endl
-                << "    else" << std::endl
-                << "      { return FALSE; }" << std::endl
-                << "    };" << std::endl
-                << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
-                << "$num_records = count($data);" << std::endl;
+	            << "  {" << std::endl
+	            << "    if( $rec." + query + " )" << std::endl
+	            << "      { return TRUE; }" << std::endl
+	            << "    else" << std::endl
+	            << "      { return FALSE; }" << std::endl
+	            << "    };" << std::endl
+	            << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl
+	            << "$num_records = count($data);" << std::endl;
 
             unqlite_vm *vm = exec_jx9_vm(db, jx9.str());
 
@@ -457,29 +459,29 @@ namespace transport
             unqlite_value* num_records = unqlite_vm_extract_variable(vm, "num_records");
 
             if(num_records == nullptr)
-              {
+	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_UNQLITE_UNDEFINED_VARIABLE << " '$num_records'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
-              }
+	            }
 
-		        int signed_num = unqlite_value_to_int(num_records);
-		        if(signed_num < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+            int signed_num = unqlite_value_to_int(num_records);
+            if(signed_num < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
             unsigned int num = static_cast<unsigned int>(signed_num);
 
             // release the virtual machine
             unqlite_vm_release(vm);
 
             return(num);
-          }
+	        }
 
 
         // extract array records matching specified criteria
         // also returns virtual machine for further processing; it should be released when processing is complete
         template <typename T, typename... fields>
         unqlite_value* query(unqlite* db, unqlite_vm*& vm, const std::string& collection, const T& value, fields... field_names)
-          {
-		        assert(db != nullptr);
+	        {
+            assert(db != nullptr);
             assert(vm == nullptr);
 
             std::string query = json_query::build_query(json_query::equals, value, field_names...);
@@ -487,13 +489,13 @@ namespace transport
             std::ostringstream jx9;
 
             jx9 << "$callback = function($rec)" << std::endl
-              << "  {" << std::endl
-              << "    if( $rec." + query + " )" << std::endl
-              << "      { return TRUE; }" << std::endl
-              << "    else" << std::endl
-              << "      { return FALSE; }" << std::endl
-              << "    };" << std::endl
-              << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl;
+	            << "  {" << std::endl
+	            << "    if( $rec." + query + " )" << std::endl
+	            << "      { return TRUE; }" << std::endl
+	            << "    else" << std::endl
+	            << "      { return FALSE; }" << std::endl
+	            << "    };" << std::endl
+	            << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl;
 
             vm = exec_jx9_vm(db, jx9.str());
 
@@ -501,18 +503,18 @@ namespace transport
             unqlite_value* data = unqlite_vm_extract_variable(vm, "data");
 
             if(data == nullptr)
-              {
+	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_UNQLITE_UNDEFINED_VARIABLE << " '$data'";
                 throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
-              }
+	            }
 
             return(data);
-          }
+	        }
 
 
-      }   // unqlite_operations
+	    }   // unqlite_operations
 
-  }   // transport
+	}   // transport
 
 #endif //__unqlite_operations_H_

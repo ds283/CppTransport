@@ -26,6 +26,7 @@ namespace transport
                        TASK_NOT_FOUND, MODEL_NOT_FOUND, REPO_NOT_FOUND,   // missing items in the repository
                        REPOSITORY_ERROR,                                  // generic repository error
                        REPOSITORY_BACKEND_ERROR,                          // error from repository database backend
+		                   REPOSITORY_JX9_ERROR,                              // error from Jx9 script (different from a repository backend error)
                        DATA_CONTAINER_ERROR,                              // generic data-container error
 		                   DATA_MANAGER_BACKEND_ERROR,                        // error from data manager database backend
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
