@@ -396,7 +396,7 @@ namespace transport
           {
 						// query a task with the name we're looking for from the database
 		        model_list<number> mlist;
-            task<number>* tk = this->repo->query_task(job.name, mlist, this->model_finder_factory());
+            task<number>* tk = this->repo->lookup_task(job.name, mlist, this->model_finder_factory());
 
 		        // check that a model instance was returned -- we'll need this
             assert(mlist.size() > 0);
@@ -481,7 +481,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer writer = this->repo->new_output_group(tk, tags, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m->get_backend(), this->get_rank());
 
         // create the data writer
         this->data_mgr->create_writer(writer);
@@ -521,7 +521,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer writer = this->repo->new_output_group(tk, tags, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m->get_backend(), this->get_rank());
 
         // create the data writer
         this->data_mgr->create_writer(writer);
@@ -690,7 +690,7 @@ namespace transport
 		    work_queue< output_task_element<number> > queue = sch.make_queue(*tk);
 
 		    // set up an derived_content_writer object to coordinate logging and commits into the repository
-		    typename repository<number>::derived_content_writer writer = this->repo->new_derived_content(tk, tags, this->get_rank());
+		    typename repository<number>::derived_content_writer writer = this->repo->new_output_task_output(tk, tags, this->get_rank());
 
 		    // set up the writer for us
 		    this->data_mgr->create_writer(writer);
@@ -881,7 +881,7 @@ namespace transport
         try
 	        {
             model_list<number> mlist;
-            task<number>* tk = this->repo->query_task(payload.get_task_name(), mlist, this->model_finder_factory());
+            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), mlist, this->model_finder_factory());
             assert(mlist.size() > 0);
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
@@ -956,7 +956,7 @@ namespace transport
         try
 	        {
             model_list<number> mlist;
-            task<number>* tk = this->repo->query_task(payload.get_task_name(), mlist, this->model_finder_factory());
+            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), mlist, this->model_finder_factory());
             assert(mlist.size() > 0);
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type

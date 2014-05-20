@@ -262,17 +262,17 @@ int main(int argc, char* argv[])
     std::cout << "3pf background plot:" << std::endl << tk3_mixed_plot << std::endl;
 
 		// write derived data products representing these background plots to the database
-		repo->write_derived_data(tk2_bg_plot);
-		repo->write_derived_data(tk2_twopf_real_plot);
-		repo->write_derived_data(tk2_twopf_imag_plot);
-		repo->write_derived_data(tk2_twopf_total_plot);
+    repo->write_derived_product(tk2_bg_plot);
+    repo->write_derived_product(tk2_twopf_real_plot);
+    repo->write_derived_product(tk2_twopf_imag_plot);
+    repo->write_derived_product(tk2_twopf_total_plot);
 
-		repo->write_derived_data(tk3_bg_plot);
-    repo->write_derived_data(tk3_twopf_real_plot);
-    repo->write_derived_data(tk3_twopf_imag_plot);
-    repo->write_derived_data(tk3_twopf_total_plot);
-		repo->write_derived_data(tk3_threepf_plot);
-		repo->write_derived_data(tk3_mixed_plot);
+    repo->write_derived_product(tk3_bg_plot);
+    repo->write_derived_product(tk3_twopf_real_plot);
+    repo->write_derived_product(tk3_twopf_imag_plot);
+    repo->write_derived_product(tk3_twopf_total_plot);
+    repo->write_derived_product(tk3_threepf_plot);
+    repo->write_derived_product(tk3_mixed_plot);
 
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);

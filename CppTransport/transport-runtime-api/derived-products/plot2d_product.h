@@ -78,48 +78,7 @@ namespace transport
 			        }
 
 				    //! Deserialization constructor
-				    plot2d_product(const std::string& name, serialization_reader* reader)
-				      : derived_product<number>(name, reader)
-					    {
-						    // extract data from reader;
-						    assert(reader != nullptr);
-
-					      reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, log_x);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, log_y);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, abs_y);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, reverse_x);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, reverse_y);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, use_LaTeX);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, x_label);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, x_label_text);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, y_label);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, y_label_text);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, title);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, title_text);
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, legend);
-
-				        std::string leg_pos;
-						    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, leg_pos);
-
-						    if     (leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL) position = top_left;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR) position = top_right;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL) position = bottom_left;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR) position = bottom_right;
-							  else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_R)  position = right;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_CR) position = centre_left;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_CL) position = centre_right;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_UC) position = lower_centre;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_LC) position = upper_centre;
-						    else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_C)  position = centre;
-						    else
-							    {
-						        std::ostringstream msg;
-								    msg << __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS << " '" << leg_pos << "'";
-								    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-							    }
-
-						    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX, typeset_with_LaTeX);
-					    }
+		        plot2d_product(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder);
 
 		        virtual ~plot2d_product() = default;
 
@@ -350,6 +309,51 @@ namespace transport
 
 
 				template <typename number>
+		    plot2d_product::plot2d_product(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
+			    : derived_product<number>(name, reader, finder)
+			    {
+		        // extract data from reader;
+		        assert(reader != nullptr);
+
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGX, log_x);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LOGY, log_y);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_ABSY, abs_y);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEX, reverse_x);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_REVERSEY, reverse_y);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LATEX, use_LaTeX);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL, x_label);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_XLABEL_TEXT, x_label_text);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL, y_label);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_YLABEL_TEXT, y_label_text);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE, title);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TITLE_TEXT, title_text);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND, legend);
+
+		        std::string leg_pos;
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_POS, leg_pos);
+
+		        if     (leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TL) position = top_left;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_TR) position = top_right;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BL) position = bottom_left;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_BR) position = bottom_right;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_R)  position = right;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_CR) position = centre_left;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_CL) position = centre_right;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_UC) position = lower_centre;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_LC) position = upper_centre;
+		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_LEGEND_C)  position = centre;
+		        else
+			        {
+		            std::ostringstream msg;
+		            msg << __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS << " '" << leg_pos << "'";
+		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+			        }
+
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX, typeset_with_LaTeX);
+			    }
+
+
+		    template <typename number>
 				void plot2d_product<number>::set_axis(const std::vector<double>& axis_points)
 					{
 						// if there are already lines on the plot, ensure that the number of points is compatible

@@ -33,12 +33,10 @@ namespace transport
 			        {
 
 		            template <typename number>
-		            general_time_data<number>* deserialize(serialization_reader* reader, model<number>* m)
+		            general_time_data<number>* deserialize(serialization_reader* reader, typename repository<number>::task_finder finder)
 			            {
-		                assert(m != nullptr);
 		                assert(reader != nullptr);
 
-		                if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
 		                if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
 
 		                general_time_data<number>* rval = nullptr;
@@ -46,9 +44,9 @@ namespace transport
 		                std::string type;
 		                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE, type);
 
-		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND) rval = new background_time_data<number>(reader, m);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)      rval = new twopf_time_data<number>(reader, m);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)    rval = new threepf_time_data<number>(reader, m);
+		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND) rval = new background_time_data<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)      rval = new twopf_time_data<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)    rval = new threepf_time_data<number>(reader, finder);
 		                else
 			                {
 		                    std::ostringstream msg;

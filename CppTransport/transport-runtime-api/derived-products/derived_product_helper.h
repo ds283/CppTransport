@@ -8,7 +8,7 @@
 #define __derived_product_helper_H_
 
 
-#include "transport-runtime-api/derived-products/time-plots/general_plot.h"
+#include "transport-runtime-api/derived-products/time-products/general_time_plot.h"
 
 
 namespace transport
@@ -24,10 +24,10 @@ namespace transport
 			        {
 
 		            template <typename number>
-		            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader, integration_task<number>* tk, model<number>* m)
+		            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader,
+		                                                               typename repository<number>::task_finder finder)
 			            {
 		                assert(reader != nullptr);
-		                assert(m != nullptr);
 
 		                std::string type;
 
@@ -35,7 +35,7 @@ namespace transport
 
 		                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
-		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT) rval = new general_time_plot<number>(name, tk, m, reader);
+		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT) rval = new general_time_plot<number>(name, reader, finder);
 				            else
 			                {
 		                    std::ostringstream msg;

@@ -46,7 +46,7 @@ namespace transport
 		        //! Deserialization constructor.
 		        //! Accepts a serialization_reader and a model reference.
 		        //! Remaining data is extracted from the reader.
-		        general_time_plot(const std::string& name, serialization_reader* reader);
+		        general_time_plot(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder);
 
 				    //! Copy constructor. Required to perform a deep copy on the general_time_data objects we own
 				    general_time_plot(const general_time_plot<number>& obj);
@@ -129,8 +129,8 @@ namespace transport
 
 
 		    template <typename number>
-		    general_time_plot<number>::general_time_plot(const std::string& name, serialization_reader* reader)
-			    : plot2d_product<number>(name, reader)
+		    general_time_plot<number>::general_time_plot(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
+			    : plot2d_product<number>(name, reader, finder)
 			    {
 		        assert(reader != nullptr);
 
@@ -143,7 +143,7 @@ namespace transport
 			        {
 		            reader->start_array_element();
 
-		            general_time_data<number>* data = general_time_data_helper::deserialize(reader, m);
+		            general_time_data<number>* data = general_time_data_helper::deserialize(reader, finder);
 		            data_lines.push_back(data);
 
 		            reader->end_array_element();

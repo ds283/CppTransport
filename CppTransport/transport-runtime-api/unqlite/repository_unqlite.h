@@ -104,20 +104,20 @@ namespace transport
 
         //! Query the database for a named task, and reconstruct it if present.
 		    //! Supports both integration_task<> and output_task<> items.
-        virtual task<number>* query_task(const std::string& name, model_list<number>& mlist,
-                                         typename instance_manager<number>::model_finder finder) override;
+		    //! Output tasks write nullptr to the model* handle.
+        virtual task<number>* lookup_task(const std::string& name, model<number>*& m,
+                                          typename instance_manager<number>::model_finder finder) override;
 
       protected:
 
         //! Extract an integration task from a serialization reader
-        task<number>* query_integration_task(const std::string& name, task_type type,
-                                             model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
-                                             unqlite_serialization_reader* reader);
+        task<number>* lookup_integration_task(const std::string& name, task_type type,
+                                              model<number>*& m, typename instance_manager<number>::model_finder finder,
+                                              unqlite_serialization_reader* reader);
 
         //! Extract an output task from a serialization reader
-        task<number>* query_output_task(const std::string& name,
-                                        model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
-                                        unqlite_serialization_reader* reader);
+        task<number>* lookup_output_task(const std::string& name, typename instance_manager<number>::model_finder finder,
+                                         unqlite_serialization_reader* reader);
 
 
         // ADD AN OUTPUT-GROUP TO A TASK -- implements a 'repository' interface
@@ -125,19 +125,20 @@ namespace transport
       public:
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
-        //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer new_output_group(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                 const std::string& backend, unsigned int worker) override;
+        //! Delegates insert_integration_output_group to do the work.
+        virtual typename repository<number>::integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                            const std::string& backend, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
-        //! Delegates insert_output to do the work.
-        virtual typename repository<number>::integration_writer new_output_group(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                 const std::string& backend, unsigned int worker) override;
+        //! Delegates insert_integration_output_group to do the work.
+        virtual typename repository<number>::integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                                                            const std::string& backend, unsigned int worker) override;
 
       protected:
 
         //! Insert an output record for a specified task, in a specified collection.
-        typename repository<number>::integration_writer insert_output(const std::string& collection, const std::string& backend, unsigned int worker, task <number>* tk, const std::list<std::string>& tags);
+        typename repository<number>::integration_writer insert_integration_output_group(const std::string& collection, const std::string& backend,
+                                                                                        unsigned int worker, task<number>* tk, const std::list<std::string>& tags);
 
         //! Allocate a new output-group serial number based on the list of used serial numbers from an output record
         unsigned int allocate_new_serial_number(unqlite_serialization_reader* reader);
@@ -148,7 +149,7 @@ namespace transport
       public:
 
 		    //! Enumerate the output available from a named task
-        virtual std::list<typename repository<number>::output_group> enumerate_task_output(const std::string& name) override;
+        virtual std::list<typename repository<number>::output_group> enumerate_integration_task_output(const std::string& name) override;
 
       protected:
 
@@ -162,48 +163,36 @@ namespace transport
       public:
 
         //! Write a derived product specification
-        virtual void write_derived_data(const derived_data::derived_product<number>& d) override;
+        virtual void write_derived_product(const derived_data::derived_product<number>& d) override;
 
 
 		    // PULL DERIVED-PRODUCT SPECIFICATIONS FROM THE DATABASE -- implements a 'repository' interface
 
       public:
 
-		    //! Enumerate the derived products associated with a named task
-		    virtual std::list<typename repository<number>::derived_product> enumerate_task_derived_products(const std::string& name) override;
-
         //! Query a derived product specification
-		    virtual derived_data::derived_product<number>* query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m) override;
+		    virtual derived_data::derived_product<number>* lookup_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder) override;
 
 
       protected:
 
-		    //! Extract a derived-product data block.
-		    //! The supplied unqlite_serialization_reader should point to an unread derived-product JSON object.
-		    typename repository<number>::derived_product extract_derived_product_data(const std::string& task, unqlite_serialization_reader* reader);
 
-        //! Version of query_derived_data for rebinding and use when deserializing an output_task.
-        //! Essentially the same as query_derived_data, but accepts a model_list<> as the last parameter and picks off the back component.
-				derived_data::derived_product<number>* rebind_query_derived_data(integration_task<number>* tk, const std::string& product, model_list<number>& mlist)
-	        {
-		        if(mlist.size() == 0)
-			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_MODEL_LIST_REBIND_MISMATCH);
-
-		        return(this->query_derived_data(tk, product, mlist.back()));
-	        }
-
-
-        // ADD DERIVED CONTENT FROM AN OUTPUT TASK -- implements a 'repository' interface
+        // ADD DERIVED CONTENT TO AN OUTPUT TASK -- implements a 'repository' interface
 
       public:
 
         //! Add derived content
-        virtual typename repository<number>::derived_content_writer new_derived_content(output_task<number>* tk, const std::list<std::string>& tags,
-                                                                                        unsigned int worker) override;
+        virtual typename repository<number>::derived_content_writer new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags,
+                                                                                           unsigned int worker) override;
 
         //! Lookup the output group for a task+derived-product, given a set of tags
         virtual typename repository<number>::output_group find_derived_product_output_group(const derived_data::derived_product<number>* product,
                                                                                             const std::list<std::string>& tags) override;
+
+      protected:
+
+		    //! Insert an output record for a named task
+		    typename repository<number>::derived_content_writer insert_derived_content_output_group(unsigned int worker, output_task<number>* tk, const std::list<std::string>& tags);
 
 
         // PULL RECORDS FROM THE REPOSITORY DATABASE IN JSON FORMAT -- implements a 'json_extractible_repository' interface
@@ -233,13 +222,17 @@ namespace transport
 		    //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
 		    void commit_transaction();
 
-		    //! Convert a named database task into a serialization reader, returned as a pointer.
+		    //! Convert a named database task record into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
-        unqlite_serialization_reader* deserialize_task(const std::string& name, int& unqlite_id, task_type& type);
+        unqlite_serialization_reader* get_task_serialization_reader(const std::string& name, int& unqlite_id, task_type& type);
 
-		    //! Convert a named database package into a serialization reader, returned as a pointer.
+		    //! Convert a named database package record into a serialization reader, returned as a pointer.
 		    //! It's up to the calling function to destroy the pointer which is returned.
-		    unqlite_serialization_reader* deserialize_package(const std::string& name, int& unqlite_id);
+		    unqlite_serialization_reader* get_package_serialization_reader(const std::string& name, int& unqlite_id);
+
+		    //! Convert a named database derived product record into a serialization reader, returned as a pointer.
+		    //! It's up to the calling function to destroy the pointer which is returned.
+		    unqlite_serialization_reader* get_derived_product_serialization_reader(const std::string& name, int& unqlite_id);
 
 
         // INTERNAL DATA
@@ -619,7 +612,7 @@ namespace transport
         // commit task name
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
 
-        // commit data block
+        // commit metadata block
         writer.start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE, t.get_ics().get_name());
@@ -694,9 +687,9 @@ namespace transport
         writer.end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
 		    // commit task block
-		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
+		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 		    t.serialize(writer);
-		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
+		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 
         // insert this record in the task database
         unqlite_operations::store(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, writer.get_contents());
@@ -759,7 +752,7 @@ namespace transport
 
     // Query the database for a named task, returned as a serialization_reader
     template <typename number>
-    unqlite_serialization_reader* repository_unqlite<number>::deserialize_task(const std::string& name, int& unqlite_id, task_type& type)
+    unqlite_serialization_reader* repository_unqlite<number>::get_task_serialization_reader(const std::string& name, int& unqlite_id, task_type& type)
 	    {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -828,7 +821,7 @@ namespace transport
 
     // Query the database for a named package, returned as a serialization_reader
     template <typename number>
-    unqlite_serialization_reader* repository_unqlite<number>::deserialize_package(const std::string& name, int& unqlite_id)
+    unqlite_serialization_reader* repository_unqlite<number>::get_package_serialization_reader(const std::string& name, int& unqlite_id)
 	    {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -877,10 +870,63 @@ namespace transport
 	    }
 
 
+		// Query the database for a named derived product, returned as a serialization_reader
+		template <typename number>
+		unqlite_serialization_reader* repository_unqlite<number>::get_derived_product_serialization_reader(const std::string& name, int& unqlite_id)
+			{
+				// open a new transaction if necessary. After this we can cassume the database handles are live
+				this->begin_transaction();
+
+				// check if a suitable record exists
+				unqlite_vm* vm = nullptr;
+
+		    unqlite_value* recs = unqlite_operations::query(this->derived_product_db, vm, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION,
+		                                                    name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+
+				if(recs == nullptr || !unqlite_value_is_json_array(recs))
+					throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+
+				unsigned int count = static_cast<unsigned int>(unqlite_array_count(recs));
+
+				if(count == 0)
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT << " '" << name << "'";
+						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
+				else if(count > 1)
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_REPO_DUPLICATE_DERIVED_PRODUCT << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
+						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
+
+				if(unqlite_array_count(recs) != 1)    // shouldn't happen
+					throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXTRACT_FAIL);
+
+				array_extraction_data data;
+		    data.cmp     = 0;
+		    data.str_cmp = boost::lexical_cast<std::string>(data.cmp);
+		    data.id      = -1;
+		    data.reader  = nullptr;
+
+				unqlite_array_walk(recs, &array_extract, &data);
+
+				unqlite_vm_release(vm);
+
+				// commit transaction
+				this->commit_transaction();
+
+				unqlite_id = data.id;
+				return(data.reader);
+			}
+
+
     // Query the database for a named task, which is reconstructed and returned as a task<> object
+		// DATABASE ENTRY POINT
     template <typename number>
-    task<number>* repository_unqlite<number>::query_task(const std::string& name, model_list<number>& mlist,
-                                                         typename instance_manager<number>::model_finder finder)
+    task<number>* repository_unqlite<number>::lookup_task(const std::string& name, model<number>*& m,
+                                                          typename instance_manager<number>::model_finder finder)
 	    {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -888,7 +934,7 @@ namespace transport
         // get serialization_reader for the named task record
         int task_id = 0;
         task_type type;
-        unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
+        unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(name, task_id, type);
 
         task<number>* rval = nullptr;
 
@@ -896,15 +942,16 @@ namespace transport
         switch(type)
 	        {
             case twopf_record:
-	            rval = this->query_integration_task(name, type, mlist, finder, task_reader);
+	            rval = this->lookup_integration_task(name, type, m, finder, task_reader);
             break;
 
             case threepf_record:
-	            rval = this->query_integration_task(name, type, mlist, finder, task_reader);
+	            rval = this->lookup_integration_task(name, type, m, finder, task_reader);
             break;
 
             case output_record:
-	            rval = this->query_output_task(name, mlist, finder, task_reader);
+	            rval = this->lookup_output_task(name, finder, task_reader);
+		          m = nullptr;  // outout tasks aren't associated with a unique model
             break;
 
             default:
@@ -922,9 +969,9 @@ namespace transport
 
 		// Extract integration task
 		template <typename number>
-		task<number>* repository_unqlite<number>::query_integration_task(const std::string& name, task_type type,
-		                                                                 model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
-		                                                                 unqlite_serialization_reader* task_reader)
+		task<number>* repository_unqlite<number>::lookup_integration_task(const std::string& name, task_type type,
+		                                                                  model<number>*& m, typename instance_manager<number>::model_finder finder,
+		                                                                  unqlite_serialization_reader* task_reader)
 			{
 				assert(task_reader != nullptr);
 
@@ -939,15 +986,14 @@ namespace transport
 
         // get serialization_reader for the named package
         int package_id = 0;
-        unqlite_serialization_reader* package_reader = this->deserialize_package(package_name, package_id);
+        unqlite_serialization_reader* package_reader = this->get_package_serialization_reader(package_name, package_id);
 
         // extract UID for model
         std::string uid;
         package_reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
 
         // use the supplied finder to recover a model object for this UID
-        model<number>* m = finder(uid);
-				mlist.push_back(m);
+        m = finder(uid);
 
         // obtain parameter and initial-conditions validators from this model
         typename parameters<number>::params_validator p_validator = m->params_validator_factory();
@@ -1002,36 +1048,32 @@ namespace transport
 
 		// Extract output task
 		template <typename number>
-		task<number>* repository_unqlite<number>::query_output_task(const std::string& name,
-		                                                            model_list<number>& mlist, typename instance_manager<number>::model_finder finder,
-		                                                            unqlite_serialization_reader* reader)
+		task<number>* repository_unqlite<number>::lookup_output_task(const std::string& name, typename instance_manager<number>::model_finder finder,
+		                                                             unqlite_serialization_reader* reader)
 			{
 				assert(reader != nullptr);
 
 		    // move the task reader to the task description block, and use it to reconstruct a task<>
-				reader->start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
+				reader->start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 				reader->push_bookmark();
 
 				// generate lookup functions for tasks and derived products
 
-				//! query_task will automatically push the required models to mlist, so there is nothing to do
-				typename std::reference_wrapper< model_list<number> > mlist_wrapper = mlist;
+		    typename output_task_helper::derived_product_finder<number>::type pfinder =
+			                                                                      std::bind(&repository_unqlite<number>::lookup_derived_product, this, std::placeholders::_1, finder);
 
-		    typename output_task_helper::task_finder<number>::type tfinder = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1, mlist_wrapper, finder);
-
-		    typename output_task_helper::derived_product_finder<number>::type pfinder = std::bind(&repository_unqlite<number>::rebind_query_derived_data, this, std::placeholders::_1, std::placeholders::_2, mlist_wrapper);
-
-				output_task<number> tk = output_task_helper::deserialize<number>(reader, name, tfinder, pfinder);
+				output_task<number> tk = output_task_helper::deserialize<number>(reader, name, pfinder);
 		    task<number>* rval = new output_task<number>(tk);
 
 		    reader->pop_bookmark();
-		    reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
+		    reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 
 		    return(rval);
 			}
 
 
     // Extract package database record as a JSON document
+    // DATABASE ENTRY POINT
     template <typename number>
     std::string repository_unqlite<number>::json_package_document(const std::string& name)
       {
@@ -1065,6 +1107,7 @@ namespace transport
 
 
     // Extract integration task database record as a JSON document
+		// DATABASE ENTRY POINT
     template <typename number>
     std::string repository_unqlite<number>::json_task_document(const std::string& name)
       {
@@ -1111,10 +1154,11 @@ namespace transport
 
 
     // Add output for a twopf task
+		// DATABASE ENTRY POINT
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::new_output_group(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                 const std::string& backend, unsigned int worker)
+    repository_unqlite<number>::new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                            const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -1133,20 +1177,21 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(__CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION, backend, worker, tk, tags);
 
 		    // close database handles
         this->commit_transaction();
 
-        return(ctr);
+        return(writer);
       }
 
 
     // Add output for a threepf task
+		// DATABASE ENTRY POINT
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::new_output_group(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                 const std::string& backend, unsigned int worker)
+    repository_unqlite<number>::new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
+                                                            const std::string& backend, unsigned int worker)
       {
         assert(tk != nullptr);
 
@@ -1165,12 +1210,12 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer ctr = this->insert_output(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(__CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION, backend, worker, tk, tags);
 
 		    // commit transaction
         this->commit_transaction();
 
-        return(ctr);
+        return(writer);
       }
 
 
@@ -1179,19 +1224,14 @@ namespace transport
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::insert_output(const std::string& collection, const std::string& backend,
-                                              unsigned int worker, task <number>* tk, const std::list<std::string>& tags)
+    repository_unqlite<number>::insert_integration_output_group(const std::string& collection, const std::string& backend,
+                                                                unsigned int worker, task<number>* tk, const std::list<std::string>& tags)
       {
         // get serialization_reader for the named task record
         int task_id = 0;
 		    task_type type;
-        unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
-
-        // allocate a new serial number
-		    // note that this will mark the __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS node as read
-		    task_reader->push_bookmark();
-		    unsigned int serial_number = this->allocate_new_serial_number(task_reader);
-		    task_reader->pop_bookmark();
+        unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
+		    assert(type == twopf_record || type == threepf_record);
 
 		    // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1206,10 +1246,6 @@ namespace transport
         boost::filesystem::path log_path     = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
         boost::filesystem::path task_path    = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
         boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
-        boost::filesystem::path derived_path = output_path / __CPP_TRANSPORT_REPO_DERIVED_DATA_LEAF;
-
-		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_METADATA becomes available for reading again
-		    task_reader->reset();
 
         // update task_reader with information about the new output group
 		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
@@ -1218,13 +1254,10 @@ namespace transport
 
 		    task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
-        std::string array_serial = boost::lexical_cast<std::string>(serial_number);
-		    task_reader->insert_node(array_serial);  // name of node doesn't matter; it is ignored in arrays, but should be unique
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, serial_number);
+		    task_reader->insert_node("arrayelt");  // name of node doesn't matter; it is ignored in arrays
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, output_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, sql_path.string());
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED, derived_path.string());
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(now));
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, false);
 
@@ -1240,10 +1273,7 @@ namespace transport
 			    }
 		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-		    task_reader->insert_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS, true);
-		    task_reader->insert_end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED_PRODUCTS);
-
-		    task_reader->insert_end_element(array_serial);
+		    task_reader->insert_end_element("arrayelt");
 
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
@@ -1257,7 +1287,6 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / output_path);
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
-        boost::filesystem::create_directories(this->get_root_path() / derived_path);
 
 		    delete task_reader;
 
@@ -1267,43 +1296,12 @@ namespace transport
       }
 
 
-		template <typename number>
-    unsigned int repository_unqlite<number>::allocate_new_serial_number(unqlite_serialization_reader* reader)
-	    {
-				// populate list of serial numbers
-        std::list<unsigned int> serial_numbers;
-
-		    // start reading from integration output block
-		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-		    for(unsigned int i = 0; i < entries; i++)
-			    {
-				    reader->start_array_element();
-				    unsigned int sn;
-				    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, sn);
-				    serial_numbers.push_back(sn);
-				    reader->end_array_element();
-			    }
-				reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-
-        unsigned int serial_number;
-
-        for(serial_number = 0;
-            serial_number < serial_numbers.size() && std::find(serial_numbers.begin(), serial_numbers.end(), serial_number) != serial_numbers.end();
-            serial_number++)
-	        ;
-
-        if(serial_number > serial_numbers.size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NO_SERIALNO);
-
-        return(serial_number);
-	    }
-
-
 		// Enumerate the output groups associated with some named task.
 		// The output group descriptors returned by this function can be used to set up
 		// derived_content_writer objects, which allow the corresponding integration output
 		// to be extracted from the database
 		template <typename number>
-		std::list<typename repository<number>::output_group> repository_unqlite<number>::enumerate_task_output(const std::string& name)
+		std::list<typename repository<number>::output_group> repository_unqlite<number>::enumerate_integration_task_output(const std::string& name)
 			{
 		    std::list<typename repository<number>::output_group> group_list;
 
@@ -1313,7 +1311,7 @@ namespace transport
 				// get a serialization_reader for the named task record
 				int task_id = 0;
 				task_type type;
-				unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
+				unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(name, task_id, type);
 
 				// move the serialization reader to the output-group block
 				unsigned int num_groups = task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
@@ -1349,8 +1347,6 @@ namespace transport
 				assert(reader != nullptr);
 
 				// extract data about the group
-				unsigned int serial_number;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_ID, serial_number);
 
 		    std::string backend;
 				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND, backend);
@@ -1360,9 +1356,6 @@ namespace transport
 
 		    std::string data_container;
 				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE, data_container);
-
-		    std::string derived_root;
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DERIVED, derived_root);
 
 		    std::string creation_time;
 				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, creation_time);
@@ -1421,177 +1414,83 @@ namespace transport
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-				return typename repository<number>::output_group(task, serial_number, backend, this->root_path, data_root,
-				                                                 data_container, derived_root, creation_time,
-				                                                 locked, products, notes, tags);
+				return typename repository<number>::output_group(task, backend, this->root_path, data_root,
+				                                                 data_container, creation_time, locked, notes, tags);
 			}
 
 
     // Write a derived product specification
 		template <typename number>
-    void repository_unqlite<number>::write_derived_data(const derived_data::derived_product<number>& d)
+    void repository_unqlite<number>::write_derived_product(const derived_data::derived_product<number>& d)
 	    {
-		    // get name of task associated with this derived product
-        const std::string& task_name = d.get_parent_task()->get_name();
-
-				// enumerate derived products associated with this task
-        std::list<typename repository<number>::derived_product> product_list = this->enumerate_task_derived_products(task_name);
+		    // open a new transaction, if necessary. After this we can assume the database handles are live
+		    this->begin_transaction();
 
 		    // check whether a derived product with this name already exists
-		    bool exists = false;
-		    for(typename std::list<typename repository<number>::derived_product>::const_iterator t = product_list.begin(); !exists && t != product_list.end(); t++)
-			    {
-				    if((*t).get_name() == d.get_name()) exists = true;
-			    }
+		    unsigned int count = unqlite_operations::query_count(this->derived_product_db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, d.get_name(), __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
 
-		    if(exists)
+		    if(count > 0)
 			    {
 		        std::ostringstream msg;
 				    msg << __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS << " '" << d.get_name() << "'";
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
 
-		    // get a serialization_reader for the named task record
-		    int task_id = 0;
-		    task_type type;
-		    unqlite_serialization_reader* task_reader = this->deserialize_task(task_name, task_id, type);
+		    // create a serialization writer, used to emit the serialized record to the database
+		    unqlite_serialization_writer writer;
 
-				// navigate to derived-product block
-		    task_reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+		    // commit derived product name
+		    writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, d.get_name());
 
-        // insert new derived product specification
-        task_reader->insert_node("arrayelt");  // node name doesn't matter for an array
-        task_reader->insert_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, d.get_name());
+		    // commit metadata block
+		    writer.start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA);
 
-        unqlite_serialization_writer writer;
-        d.serialize(writer);
-        task_reader->insert_writer_contents(writer);
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        task_reader->insert_end_element("arrayelt");
+		    writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_CREATED, boost::posix_time::to_simple_string(now));
+		    writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_EDITED, boost::posix_time::to_simple_string(now));
 
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+		    writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
-		    // update the task entry for this database
-		    // that means, first: drop the existing record; second: store a new copy of the updated one
-        std::string collection;
-		    if(type == twopf_record)        collection = __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION;
-		    else if(type == threepf_record) collection = __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION;
-		    else
-			    {
-		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << task_name << "'";
-		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-			    }
+		    writer.end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA);
 
-        // open a new transaction, if necessary. After this we can assume the database handles are live.
-        this->begin_transaction();
+		    // commit derived-product block
+		    writer.start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
+		    d.serialize(writer);
+		    writer.end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
 
-        unqlite_operations::drop(this->task_db, collection, task_id);
-        unqlite_operations::store(this->task_db, collection, task_reader->get_contents());
+		    // insert this record in the database
+        unqlite_operations::store(this->derived_product_db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, writer.get_contents());
 
 		    // commit transaction
 		    this->commit_transaction();
-
-		    delete task_reader;
 	    }
-
-
-		// Enumerate derived products associated with a task
-		template <typename number>
-		std::list<typename repository<number>::derived_product> repository_unqlite<number>::enumerate_task_derived_products(const std::string& name)
-			{
-		    std::list<typename repository<number>::derived_product> product_list;
-
-				// open a new transaction, if necessary. After this we can assume the database handles are live
-				this->begin_transaction();
-
-				// get a serialization_reader for the named task record
-				int task_id = 0;
-				task_type type;
-				unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
-
-				if(type != twopf_record && type != threepf_record)
-					{
-				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
-						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-					}
-
-				// move the serialization reader to the derived-product block
-				unsigned int num_products = task_reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
-
-				for(unsigned int i = 0; i < num_products; i++)
-					{
-						task_reader->start_array_element();
-						typename repository<number>::derived_product product_data = this->extract_derived_product_data(name, task_reader);
-						task_reader->end_array_element();
-					}
-
-				task_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
-
-				// commit transaction
-				this->commit_transaction();
-
-				delete task_reader;
-
-				return(product_list);
-			}
-
-
-		// Extract a derived-product data block from a task record.
-		template <typename number>
-		typename repository<number>::derived_product repository_unqlite<number>::extract_derived_product_data(const std::string& task, unqlite_serialization_reader* reader)
-			{
-				assert(reader != nullptr);
-
-		    std::string name;
-				reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, name);
-
-				return typename repository<number>::derived_product(task, name);
-			}
 
 
 		//! Query a derived product specification
 		template <typename number>
-		derived_data::derived_product<number>* repository_unqlite<number>::query_derived_data(integration_task<number>* tk, const std::string& product, model<number>* m)
+		derived_data::derived_product<number>* repository_unqlite<number>::lookup_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder)
 			{
-				// open a new transaction, if necessary. After this we can assume the dataabse handles are live
+				// open a new transaction, if necessary. After this we can assume the database handles are live
 				this->begin_transaction();
 
-				// get a serialization_reader for the task record
-				int task_id = 0;
-				task_type type;
-				unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
+				// get serialization_reader for the named product
+				int product_id = 0;
+				unqlite_serialization_reader* product_reader = this->get_derived_product_serialization_reader(product, product_id);
 
-				// move the serialization reader to the derived-product specification block
-				unsigned int num_products = task_reader->start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+				task_finder tfinder = std::bind(&repository_unqlite<number>::lookup_task, this, std::placeholders::_1, std::placeholders::_2, finder);
 
-		    derived_data::derived_product<number>* rval = nullptr;
-
-				for(unsigned int i = 0; rval == nullptr && i < num_products; i++)
-					{
-						task_reader->start_array_element();
-
-				    std::string pname;
-						task_reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME, pname);
-
-						if(pname == product) rval = derived_data::derived_product_helper::deserialize<number>(pname, task_reader, tk, m);
-
-						task_reader->end_array_element();
-					}
-
-				task_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+		    derived_data::derived_product<number>* rval = derived_data::derived_product_helper::deserialize<number>(product, product_reader, tfinder);
 
 				// commit transaction
 				this->commit_transaction();
 
-		    delete task_reader;
+		    delete product_reader;
 
 				if(rval == nullptr)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT   << " '" << product << "', "
-								<< __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT_A << " '" << tk->get_name() << "'";
+						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT   << " '" << product << "'";
 						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 
@@ -1601,30 +1500,49 @@ namespace transport
 
 		template <typename number>
 		typename repository<number>::derived_content_writer
-		repository_unqlite<number>::new_derived_content(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
+		repository_unqlite<number>::new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
 			{
-				assert(tk != nullptr);
-				// tags not currently used in this implementation
+		    assert(tk != nullptr);
+		    // FIXME: tags not currently enforced
 
-				// open a new transaction if necessary. After this we can assume the database handles are live
-				this->begin_transaction();
+		    // open a new transaction if necessary. After this we can assume the database handles are live
+		    this->begin_transaction();
 
-				// check this task name exists in the database
-				unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-				if(count == 0)
-					{
-				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
-						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-					}
+		    // check this task name exists in the database
+		    unsigned int count = unqlite_operations::query_count(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+		    if(count == 0)
+			    {
+		        std::ostringstream msg;
+		        msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
+		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+			    }
 
-				// close database handles
-				this->commit_transaction();
+		    // insert a new output record, and return the corresponding derived_content_writer handle
+		    typename repository<number>::derived_content_writer writer = this->insert_derived_content_output_group(worker, tk, tags);
+
+		    // close database handles
+		    this->commit_transaction();
+
+		    return(writer);
+			}
+
+
+		template <typename number>
+		typename repository<number>::derived_content_writer
+		repository_unqlite<number>::insert_derived_content_output_group(unsigned int worker, output_task<number>* tk, const std::list<std::string>& tags)
+			{
+				// get serialization_reader for the named output task record
+				int task_id = 0;
+				task_type type;
+				unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
+				assert(type == output_record);
 
 				// get current time
 		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-				// construct paths for output
+				// construct paths for output files and directories
+				// We use the ISO form of the current time to label the output group directory.
+				// This means the repository directory structure is human-readable if necessary.
 		    std::string output_leaf = boost::posix_time::to_iso_string(now);
 
 		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / tk->get_name() / output_leaf;
@@ -1653,7 +1571,7 @@ namespace transport
 		    const task<number>* parent = product->get_parent_task();
 
 		    // search for output groups associated with this task
-        std::list< typename repository<number>::output_group> output = this->enumerate_task_output(parent->get_name());
+        std::list< typename repository<number>::output_group> output = this->enumerate_integration_task_output(parent->get_name());
 
 		    // remove items from the list which have mismatching tags
         output.remove_if( [&] (const typename repository<number>::output_group group) { return(group.check_tags(tags)); } );

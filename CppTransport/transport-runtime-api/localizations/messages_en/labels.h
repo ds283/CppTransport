@@ -27,7 +27,7 @@
 #define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS    "alpha ="
 #define __CPP_TRANSPORT_KCONFIG_BETAEQUALS     "beta ="
 
-#define __CPP_TRANSPORT_OUTPUT_GROUP_SERIAL    "Output group, serial number"
+#define __CPP_TRANSPORT_OUTPUT_GROUP           "Output group"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_BACKEND   "created by backend"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED    "locked"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT "Output group root directory"

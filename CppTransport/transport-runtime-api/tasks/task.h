@@ -46,7 +46,7 @@
 #define __CPP_TRANSPORT_NODE_OUTPUT_NAME      "name"
 #define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "derived-data-tasks"
 #define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
-#define __CPP_TRANSPORT_NODE_OUTPUT_LABEL     "label"
+#define __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT     "label"
 #define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL    "serial"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS "tags"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG  "tag"
@@ -705,10 +705,9 @@ namespace transport
 
     // TASK STRUCTURES -- OUTPUT TASK
 
-    // An output task is a list of outputs to be generated.
-    // Each output is identified by an integration task, and output descriptor,
-    // and a list of tags identifying the output group to use. If no tags
-    // are given, the most recent output group is used.
+    // An output task is simply a list of derived products to be generated.
+		// We can optionally enforce a set of metadata tags for the whole set of
+		// content-providers which compose the product.
 
 		template <typename number> class output_task_element;
 
@@ -748,9 +747,6 @@ namespace transport
 
         // INTERFACE - EXTRACT DETAILS
 
-        //! Get name of task associated with this task element
-        const std::string& get_task_name() const { return(this->product->get_parent_task()->get_name()); }
-
         //! Get name of derived product associated with this task element
         const std::string& get_product_name() const { return(this->product->get_name()); }
 
@@ -774,7 +770,7 @@ namespace transport
         //! Pointer to derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
         derived_data::derived_product<number>* product;
 
-        //! List of tags to match against the output groups
+        //! Optional list of tags to enforce for each content provider in the product
         std::list<std::string> tags;
 
 		    //! Internal serial number
@@ -785,8 +781,7 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
 	    {
-        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK << " " << obj.get_task_name() << ", "
-	          << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT       << " " << obj.get_product_name() << ";";
+        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << ",";
         out << " " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
 
         unsigned int count = 0;
@@ -806,7 +801,7 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
-    //! An 'output_task' is a specialization of 'task' which generates a set of outputs.
+    //! An 'output_task' is a specialization of 'task' which generates a set of derived products.
 
     template <typename number>
     class output_task: public task<number>
@@ -938,8 +933,7 @@ namespace transport
 	        {
             this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
 
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_TASK, (*t).get_task_name());
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_LABEL, (*t).get_product_name());
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, (*t).get_product_name());
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_SERIAL, (*t).get_serial());
 
             const std::list<std::string>& tags = (*t).get_tags();
@@ -961,21 +955,16 @@ namespace transport
     namespace output_task_helper
 	    {
 
-		    template <typename number>
-		    struct task_finder
-			    {
-		        typedef typename std::function< transport::task<number>*(const std::string&) > type;
-			    };
 
         template <typename number>
         struct derived_product_finder
 	        {
-            typedef typename std::function< transport::derived_data::derived_product<number>*(integration_task<number>*,const std::string&) > type;
+            typedef typename std::function< transport::derived_data::derived_product<number>*(const std::string&) > type;
 	        };
+
 
         template <typename number>
         transport::output_task<number> deserialize(serialization_reader* reader, const std::string& name,
-                                                   typename task_finder<number>::type tfinder,
                                                    typename derived_product_finder<number>::type pfinder)
 	        {
             unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
@@ -986,11 +975,8 @@ namespace transport
 	            {
                 reader->start_array_element();
 
-                std::string task_name;
-                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_TASK, task_name);
-
-                std::string label;
-                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_LABEL, label);
+                std::string product_name;
+                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, product_name);
 
 		            unsigned int serial;
 		            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_SERIAL, serial);
@@ -1009,21 +995,13 @@ namespace transport
 
                 reader->end_array_element();
 
-		            // lookup task<> and derived_product<> objects from the repository-supplied finder functions
-								task<number>* tk = tfinder(task_name);
-
-                // ensure named task is of integration type
-                if(dynamic_cast< twopf_task<number>* >(tk) == nullptr && dynamic_cast< threepf_task<number>* >(tk) == nullptr)
-	                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
-
-                derived_data::derived_product<number>* dp = pfinder(dynamic_cast< integration_task<number>* >(tk), label);
+                derived_data::derived_product<number>* dp = pfinder(dynamic_cast< integration_task<number>* >(product_name);
 
 		            // construct a output_task_element<> object wrapping these elements, and push it to the list
 		            elements.push_back(output_task_element<number>(*dp, tags, serial));
 
 		            // the repository-supplied objects can now be deleted; output_task_element performs a deep copy,
 		            // so there is no risk of dangling pointers or references
-		            delete tk;
 		            delete dp;
 	            }
 
