@@ -41,7 +41,6 @@
 // derived products
 #include "transport-runtime-api/localizations/messages_en/derived-products/derived_product.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/plot2d_product.h"
-#include "transport-runtime-api/localizations/messages_en/derived-products/time_plot.h"
-#include "transport-runtime-api/localizations/messages_en/derived-products/general_plot.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/time_data.h"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

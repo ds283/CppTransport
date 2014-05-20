@@ -71,19 +71,26 @@ namespace transport
 		    class twopf_configuration
 			    {
 		      public:
-				    double k;
+				    unsigned serial;
+				    double k_conventional;
+				    double k_comoving;
 			    };
 
 		    //! Stores a threepf k-configuration
 		    class threepf_configuration
 			    {
 		      public:
-				    double kt;
+				    unsigned serial;
+				    double kt_conventional;
+				    double kt_comoving;
 				    double alpha;
 				    double beta;
-				    double k1;
-				    double k2;
-				    double k3;
+				    double k1_conventional;
+				    double k2_conventional;
+				    double k3_conventional;
+				    double k1_comoving;
+				    double k2_comoving;
+				    double k3_comoving;
 			    };
 
         // data structures for storing individual sample points from each integration

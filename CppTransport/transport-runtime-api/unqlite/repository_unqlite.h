@@ -252,6 +252,8 @@ namespace transport
         boost::filesystem::path packages_path;
         //! BOOST path to container for integrations
         boost::filesystem::path tasks_path;
+		    //! BOOST path to container for derived products
+		    boost::filesystem::path derived_products_path;
 
 
         // UNQLITE DATABASE HANDLES
@@ -260,6 +262,7 @@ namespace transport
 
         unqlite* package_db;
         unqlite* task_db;
+		    unqlite* derived_product_db;
 
 		    unsigned int open_clients;
 	    };
@@ -295,55 +298,77 @@ namespace transport
         if(!boost::filesystem::is_regular_file(packages_path))
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGES << " '" << path << "'";
+            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGES << " " << packages_path;
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        // integrations database should be present inside the container directory
+        // tasks database should be present inside the container directory
         tasks_path = containers_path / __CPP_TRANSPORT_CNTR_TASKS_LEAF;
         if(!boost::filesystem::is_regular_file(tasks_path))
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_INTGRTNS << " '" << path << "'";
+            msg << __CPP_TRANSPORT_REPO_MISSING_TASKS << " " << tasks_path;
             throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
           }
 
-        // open containers for reading (slave processes) or reading/writing (master process)
+		    // derived products database should be present inside the container directory
+		    derived_products_path = containers_path / __CPP_TRANSPORT_CNTR_DERIVED_PRODUCTS_LEAF;
+		    if(!boost::filesystem::is_regular_file(derived_products_path))
+			    {
+		        std::ostringstream msg;
+				    msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCTS << " " << derived_products_path;
+				    throw runtime_exception(runtime_exception::REPO_NOT_FOUND, msg.str());
+			    }
+
+        // open database connexions for reading (slave processes) or reading/writing (master process)
 		    unsigned int m = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
 		    unqlite* pkg_db;
 		    unqlite* tk_db;
+		    unqlite* dp_db;
 
         if(unqlite_open(&pkg_db, packages_path.c_str(), m) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << packages_path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << __CPP_TRANSPORT_REPO_FAIL_PKG_OPEN << " " << packages_path;
+            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
         if(unqlite_open(&tk_db, tasks_path.c_str(), m) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << tasks_path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << __CPP_TRANSPORT_REPO_FAIL_TASKS_OPEN << " '" << tasks_path;
+            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
           }
+
+		    if(unqlite_open(&dp_db, derived_products_path.c_str(), m) != UNQLITE_OK)
+			    {
+		        std::ostringstream msg;
+				    msg << __CPP_TRANSPORT_REPO_FAIL_DERIVED_PRODUCTS_OPEN << " " << derived_products_path;
+				    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+			    }
 
         // ensure default collections are present within each containers
         unqlite_operations::ensure_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+
         unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
         unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
         unqlite_operations::ensure_collection(tk_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
 
-		    // close repository until it is needed later
+        unqlite_operations::ensure_collection(dp_db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
+
+		    // close database connexions until they are needed later
 		    unqlite_close(pkg_db);
 		    unqlite_close(tk_db);
+		    unqlite_close(dp_db);
       }
 
 
     // Create a named repository
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, const repository_creation_key& key)
-      : package_db(nullptr), task_db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite)
+      : package_db(nullptr), task_db(nullptr), derived_product_db(nullptr),
+        open_clients(0), repository<number>(path, repository<number>::access_type::readwrite)
       {
         // check whether root directory for the repository already exists -- it shouldn't
         if(boost::filesystem::exists(path))
@@ -353,9 +378,10 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
-        containers_path = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
-        packages_path = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
-        tasks_path = containers_path / __CPP_TRANSPORT_CNTR_TASKS_LEAF;
+        containers_path       = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
+        packages_path         = containers_path / __CPP_TRANSPORT_CNTR_PACKAGES_LEAF;
+        tasks_path            = containers_path / __CPP_TRANSPORT_CNTR_TASKS_LEAF;
+        derived_products_path = containers_path / __CPP_TRANSPORT_CNTR_DERIVED_PRODUCTS_LEAF;
 
         // create directory structure
         boost::filesystem::create_directories(this->get_root_path());
@@ -364,30 +390,42 @@ namespace transport
         // create containers
         unqlite* pkg_db;
         unqlite* tk_db;
+		    unqlite* dp_db;
 
         if(unqlite_open(&pkg_db, packages_path.c_str(), UNQLITE_OPEN_CREATE) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << packages_path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << __CPP_TRANSPORT_REPO_FAIL_PKG_OPEN << " " << packages_path;
+            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
           }
 
         if(unqlite_open(&tk_db, tasks_path.c_str(), UNQLITE_OPEN_CREATE) != UNQLITE_OK)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << tasks_path << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+            msg << __CPP_TRANSPORT_REPO_FAIL_TASKS_OPEN << " " << tasks_path;
+            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
           }
+
+		    if(unqlite_open(&dp_db, derived_products_path.c_str(), UNQLITE_OPEN_CREATE) != UNQLITE_OK)
+			    {
+		        std::ostringstream msg;
+				    msg << __CPP_TRANSPORT_REPO_FAIL_DERIVED_PRODUCTS_OPEN << " " << derived_products_path;
+				    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+			    }
 
         // create default collection within each containers
         unqlite_operations::create_collection(pkg_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+
         unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
         unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
         unqlite_operations::create_collection(tk_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
 
+        unqlite_operations::create_collection(dp_db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
+
         // close repository until it is needed later
         unqlite_close(pkg_db);
         unqlite_close(tk_db);
+		    unqlite_close(dp_db);
       }
 
 
@@ -398,6 +436,7 @@ namespace transport
 		    // clean up open handles if they exist
         if(this->package_db != nullptr) unqlite_close(this->package_db);
         if(this->task_db != nullptr) unqlite_close(this->task_db);
+        if(this->derived_product_db != nullptr) unqlite_close(this->derived_product_db);
       }
 
 
@@ -406,40 +445,53 @@ namespace transport
 		void repository_unqlite<number>::begin_transaction()
 			{
 				// If open_clients > 0, then the handles should be open; otherwise, they should be closed
-				assert((this->open_clients > 0 && this->package_db != nullptr) || (this->open_clients == 0 && this->package_db == nullptr));
-				assert((this->open_clients > 0 && this->task_db != nullptr)    || (this->open_clients == 0 && this->task_db == nullptr));
+				assert((this->open_clients > 0 && this->package_db != nullptr)         || (this->open_clients == 0 && this->package_db == nullptr));
+				assert((this->open_clients > 0 && this->task_db != nullptr)            || (this->open_clients == 0 && this->task_db == nullptr));
+				assert((this->open_clients > 0 && this->derived_product_db != nullptr) || (this->open_clients == 0 && this->derived_product_db == nullptr));
 
 				if((this->open_clients == 0 && this->package_db != nullptr) ||
-					 (this->open_clients == 0 && this->task_db != nullptr))
+					 (this->open_clients == 0 && this->task_db != nullptr)    ||
+					 (this->open_clients == 0 && this->derived_product_db != nullptr))
 					throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_OPEN);
 
 				if((this->open_clients > 0 && this->package_db == nullptr) ||
-					 (this->open_clients > 0 && this->task_db == nullptr))
+					 (this->open_clients > 0 && this->task_db == nullptr)    ||
+					 (this->open_clients > 0 && this->derived_product_db == nullptr))
 					throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_CLOSED);
 
 				if(this->open_clients == 0)
 					{
 				    unsigned int m = (this->get_access_mode() == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
-				    if(unqlite_open(&(this->package_db), packages_path.c_str(), m) != UNQLITE_OK)
+				    if(unqlite_open(&(this->package_db), this->packages_path.c_str(), m) != UNQLITE_OK)
 					    {
 				        std::ostringstream msg;
-				        msg << __CPP_TRANSPORT_REPO_FAIL_PKG << " '" << this->packages_path << "'";
-				        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+				        msg << __CPP_TRANSPORT_REPO_FAIL_PKG_OPEN << " " << this->packages_path;
+				        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					    }
 
-				    if(unqlite_open(&(this->task_db), tasks_path.c_str(), m) != UNQLITE_OK)
+				    if(unqlite_open(&(this->task_db), this->tasks_path.c_str(), m) != UNQLITE_OK)
 					    {
 				        std::ostringstream msg;
-				        msg << __CPP_TRANSPORT_REPO_FAIL_INTGN << " '" << this->tasks_path << "'";
-				        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+				        msg << __CPP_TRANSPORT_REPO_FAIL_TASKS_OPEN << " " << this->tasks_path;
+				        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					    }
+
+						if(unqlite_open(&(this->derived_product_db), this->derived_products_path.c_str(), m) != UNQLITE_OK)
+							{
+						    std::ostringstream msg;
+								msg << __CPP_TRANSPORT_REPO_FAIL_DERIVED_PRODUCTS_OPEN << " " << this->derived_products_path;
+								throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+							}
 
 				    // ensure default collections are present within each containers
 				    unqlite_operations::ensure_collection(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
+
 				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_TWOPF_COLLECTION);
 				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_THREEPF_COLLECTION);
 				    unqlite_operations::ensure_collection(this->task_db, __CPP_TRANSPORT_UNQLITE_OUTPUT_COLLECTION);
+
+				    unqlite_operations::ensure_collection(this->derived_product_db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
 					}
 
 				this->open_clients++;
@@ -454,10 +506,11 @@ namespace transport
 		    assert(this->open_clients > 0);
         assert(this->package_db != nullptr);
         assert(this->task_db != nullptr);
+		    assert(this->derived_product_db != nullptr);
 
 		    if(this->open_clients <= 0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_NOT_OPEN);
 
-        if(this->package_db == nullptr || this->task_db == nullptr)
+        if(this->package_db == nullptr || this->task_db == nullptr || this->derived_product_db == nullptr)
 	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_CLOSED);
 
 		    this->open_clients--;
@@ -466,20 +519,22 @@ namespace transport
 			    {
 		        unqlite_close(this->package_db), this->package_db = nullptr;
 		        unqlite_close(this->task_db), this->task_db = nullptr;
+				    unqlite_close(this->derived_product_db), this->derived_product_db = nullptr;
 			    }
 	    }
 
 
     // Write a model/initial-conditions/parameters combination to the repository
+		// DATABASE ENTRY POINT
     template <typename number>
     void repository_unqlite<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
 	    {
         assert(m != nullptr);
 
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
+
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
-
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // check if a package with this name already exists
         unsigned int count = unqlite_operations::query_count(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, ics.get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
@@ -501,19 +556,19 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_MODELUID, uid);
 
         // commit data block
-        writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
+        writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_METADATA);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_NAME, m->get_name());
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_AUTHOR, m->get_author());
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_TAG, m->get_tag());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_NAME, m->get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_AUTHOR, m->get_author());
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_TAG, m->get_tag());
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_CREATED, boost::posix_time::to_simple_string(now));
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_EDITED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_PKG_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+        writer.write_value(__CPP_TRANSPORT_NODE_PKG_METADATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
-        writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_PACKAGE_METADATA);
 
         // commit initial conditions
         writer.start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
@@ -529,6 +584,7 @@ namespace transport
 
 
     // Write a task to the repository
+		// DATABASE ENTRY POINT
     template <typename number>
     void repository_unqlite<number>::write_integration_task(const integration_task<number>& t, const model<number>* m, const std::string& collection)
 	    {
@@ -555,10 +611,7 @@ namespace transport
 
         // check whether the specified initial_conditions object is already in the database; if not, insert it
         unsigned int count = unqlite_operations::query_count(this->package_db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, t.get_ics().get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
-        if(count == 0)
-	        {
-            this->write_package(t.get_ics(), m);
-	        }
+        if(count == 0) this->write_package(t.get_ics(), m);
 
         // create an unqlite_serialization_writer, used to emit the serialized record to the database
         unqlite_serialization_writer writer;
@@ -567,30 +620,26 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
 
         // commit data block
-        writer.start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
+        writer.start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_PACKAGE, t.get_ics().get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE, t.get_ics().get_name());
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_CREATED, boost::posix_time::to_simple_string(now));
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
-        writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
         // commit task block
-        writer.start_node(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
+        writer.start_node(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
         t.serialize(writer);
-        writer.end_element(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
 
         // write empty array of output blocks: will be populated when integrations are run
-        writer.start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT, true);
-        writer.end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
-
-		    // write empty array of derived data product specifications
-		    writer.start_array(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC, true);
-		    writer.end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_SPEC);
+        writer.start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS, true);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
         // insert this record in the task database
         unqlite_operations::store(this->task_db, collection, writer.get_contents());
@@ -601,6 +650,7 @@ namespace transport
 
 
     // Write an output task to the database
+		// DATABASE ENTRY POINT
 		template <typename number>
 		void repository_unqlite<number>::write_task(const output_task<number>& t)
 	    {
@@ -621,6 +671,11 @@ namespace transport
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
+		    // An output task consists of a number of derived product specifications.
+		    // Each derived product may utilize a number of content providers, each of which
+		    // may be associated with a different task.
+		    // At the top of the hierarchy, each derived product name should be unique.
+
 		    // create an unqlite_serialization_writer, used to emit the serialized record to the database
 		    unqlite_serialization_writer writer;
 
@@ -628,15 +683,15 @@ namespace transport
 		    writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
 
 		    // commit data block
-		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
+		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_CREATED, boost::posix_time::to_simple_string(now));
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_CREATED, boost::posix_time::to_simple_string(now));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_simple_string(now));
 
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_DATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_RUNTIMEAPI, static_cast<unsigned int>(__CPP_TRANSPORT_RUNTIME_API_VERSION));
 
-        writer.end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
 		    // commit task block
 		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT);
@@ -874,13 +929,13 @@ namespace transport
 				assert(task_reader != nullptr);
 
         // extract data:
-        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
+        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
         // extract the model/initial-conditions/parameters package corresponding to this task
         std::string package_name;
-        task_reader->read_value(__CPP_TRANSPORT_NODE_TASK_DATA_PACKAGE, package_name);
+        task_reader->read_value(__CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE, package_name);
 
-        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
         // get serialization_reader for the named package
         int package_id = 0;
@@ -912,7 +967,7 @@ namespace transport
         task_reader->reset();
 
         // move the task reader to the task description block, and use it to reconstruct a task<>
-        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
+        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
         task_reader->push_bookmark();
 
 				task<number>* rval = nullptr;
@@ -937,7 +992,7 @@ namespace transport
 			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 			    }
 		    task_reader->pop_bookmark();
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_INTGRTN);
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
 
 		    delete package_reader;
 
@@ -1133,7 +1188,7 @@ namespace transport
         unqlite_serialization_reader* task_reader = this->deserialize_task(tk->get_name(), task_id, type);
 
         // allocate a new serial number
-		    // note that this will mark the __CPP_TRANSPORT_NODE_INTGRTN_OUTPUT node as read
+		    // note that this will mark the __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS node as read
 		    task_reader->push_bookmark();
 		    unsigned int serial_number = this->allocate_new_serial_number(task_reader);
 		    task_reader->pop_bookmark();
@@ -1153,15 +1208,15 @@ namespace transport
         boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
         boost::filesystem::path derived_path = output_path / __CPP_TRANSPORT_REPO_DERIVED_DATA_LEAF;
 
-		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_DATA becomes available for reading again
+		    // reset reader to that __CPP_TRANSPORT_NODE_TASK_METADATA becomes available for reading again
 		    task_reader->reset();
 
         // update task_reader with information about the new output group
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_DATA);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_DATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_DATA);
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_simple_string(now));   // insert overwrites previous value
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
-		    task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
         std::string array_serial = boost::lexical_cast<std::string>(serial_number);
 		    task_reader->insert_node(array_serial);  // name of node doesn't matter; it is ignored in arrays, but should be unique
@@ -1190,7 +1245,7 @@ namespace transport
 
 		    task_reader->insert_end_element(array_serial);
 
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
 		    // update the task entry for this database
 		    // that means: first, drop this existing record; then, store a copy of the updated one
@@ -1219,7 +1274,7 @@ namespace transport
         std::list<unsigned int> serial_numbers;
 
 		    // start reading from integration output block
-		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+		    unsigned int entries = reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 		    for(unsigned int i = 0; i < entries; i++)
 			    {
 				    reader->start_array_element();
@@ -1228,7 +1283,7 @@ namespace transport
 				    serial_numbers.push_back(sn);
 				    reader->end_array_element();
 			    }
-				reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+				reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
         unsigned int serial_number;
 
@@ -1261,7 +1316,7 @@ namespace transport
 				unqlite_serialization_reader* task_reader = this->deserialize_task(name, task_id, type);
 
 				// move the serialization reader to the output-group block
-				unsigned int num_groups = task_reader->start_array(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+				unsigned int num_groups = task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
 				for(unsigned int i = 0; i < num_groups; i++)
 					{
@@ -1271,7 +1326,7 @@ namespace transport
 						task_reader->end_array_element();
 					}
 
-				task_reader->end_element(__CPP_TRANSPORT_NODE_INTGRTN_OUTPUT);
+				task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
 				// commit transaction
 				this->commit_transaction();

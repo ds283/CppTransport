@@ -22,7 +22,7 @@ namespace transport
 		    //! (or a group of components) as a function of a k-configuration.
 
 		    template <typename number>
-		    class general_plot : public plot2d_product<number>
+		    class general_kconfig_plot : public plot2d_product<number>
 			    {
 
 			    };

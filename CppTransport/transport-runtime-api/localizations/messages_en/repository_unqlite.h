@@ -8,8 +8,9 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H
 
 
-#define __CPP_TRANSPORT_REPO_FAIL_PKG                    "Repository error: failed to open package container"
-#define __CPP_TRANSPORT_REPO_FAIL_INTGN                  "Repository error: failed to open integration container"
+#define __CPP_TRANSPORT_REPO_FAIL_PKG_OPEN               "Repository error: failed to open packages container"
+#define __CPP_TRANSPORT_REPO_FAIL_TASKS_OPEN             "Repository error: failed to open tasks container"
+#define __CPP_TRANSPORT_REPO_FAIL_DERIVED_PRODUCTS_OPEN  "Repository error: failed to open derived products container"
 
 #define __CPP_TRANSPORT_REPO_DATABASES_OPEN              "Repository error: UnQLite database handles unexpectedly open"
 #define __CPP_TRANSPORT_REPO_DATABASES_CLOSED            "Repository error: UnQLite database handles unexpectedly closed"

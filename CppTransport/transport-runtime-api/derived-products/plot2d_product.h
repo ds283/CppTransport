@@ -11,6 +11,7 @@
 #include <functional>
 
 #include "transport-runtime-api/derived-products/derived_product.h"
+#include "transport-runtime-api/derived-products/time-data/general_time_data.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -53,45 +54,6 @@ namespace transport
 		namespace derived_data
 			{
 
-			  //! A plot2d-line is a data line suitable for inclusion in a plot2d-product
-
-		    template <typename number>
-		    class plot2d_line
-			    {
-
-		      public:
-
-				    plot2d_line(const std::vector<number> d, const std::string& l)
-					    : data(d), label(l)
-					    {
-					    }
-
-				    ~plot2d_line() = default;
-
-
-				    // GET DATA
-
-				    //! Get number of sample points
-				    unsigned int get_sample_points() const { return(this->data.size()); }
-
-				    //! Get label
-				    const std::string& get_label() const { return(this->label); }
-
-				    //! Get data
-				    const std::vector<number>& get_data_points() const { return(this->data); }
-
-
-				    // INTERNAL DATA
-
-				    //! line data
-				    const std::vector<number> data;
-
-				    //! label
-				    const std::string label;
-
-			    };
-
-
 		    //! A plot2d-product is a specialization of a derived-product that
 		    //! produces a plot of something against time.
 
@@ -110,14 +72,14 @@ namespace transport
 		        // CONSTRUCTOR, DESTRUCTOR
 
 						//! Basic user-facing constructor
-		        plot2d_product(const std::string& name, const std::string& filename, const integration_task<number>& tk)
-		          : derived_product<number>(name, filename, tk)
+		        plot2d_product(const std::string& name, const std::string& filename)
+		          : derived_product<number>(name, filename)
 			        {
 			        }
 
 				    //! Deserialization constructor
-				    plot2d_product(const std::string& name, const integration_task<number>* tk, serialization_reader* reader)
-				      : derived_product<number>(name, tk, reader)
+				    plot2d_product(const std::string& name, serialization_reader* reader)
+				      : derived_product<number>(name, reader)
 					    {
 						    // extract data from reader;
 						    assert(reader != nullptr);
@@ -188,7 +150,7 @@ namespace transport
 				    void set_axis(const std::vector<double>& axis_points);
 
 				    //! Add a line to the plot
-				    void add_line(const plot2d_line<number>& line);
+				    void add_line(const time_data_line<number>& line);
 
 
 				    // GENERATE PLOT
@@ -341,7 +303,7 @@ namespace transport
 		        std::vector<double> axis;
 
 		        //! List of time_2dline objects to be plotted on the graph.
-		        std::list< plot2d_line<number> > lines;
+		        std::list< time_data_line<number> > lines;
 
 				    // STYLE ATTRIBUTES
 
@@ -414,7 +376,7 @@ namespace transport
 
 
 				template <typename number>
-				void plot2d_product<number>::add_line(const plot2d_line<number>& line)
+				void plot2d_product<number>::add_line(const time_data_line<number>& line)
 					{
 						// check that an axis has already been set
 						if(this->axis.size() == 0)
@@ -470,8 +432,8 @@ namespace transport
 							}
 						out << " ]" << std::endl;
 
-				    typename std::list< typename std::list< plot2d_line<number> >::const_iterator > plotted_lines;
-						for(typename std::list< plot2d_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+				    typename std::list< typename std::list< time_data_line<number> >::const_iterator > plotted_lines;
+						for(typename std::list< time_data_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
 							{
 						    const std::vector<number>& line_data = (*t).get_data_points();
 								unsigned int this_line_id = plotted_lines.size();
@@ -524,7 +486,7 @@ namespace transport
 				        out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
 
 				        out << "y_labels = [ ";
-						    for(typename std::list< typename std::list< plot2d_line<number> >::const_iterator >::const_iterator t = plotted_lines.begin(); t != plotted_lines.end(); t++)
+						    for(typename std::list< typename std::list< time_data_line<number> >::const_iterator >::const_iterator t = plotted_lines.begin(); t != plotted_lines.end(); t++)
 					        {
 				            out << (t != plotted_lines.begin() ? ", " : "") << "r'" << (*(*t)).get_label() << "'";
 					        }

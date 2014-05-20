@@ -940,7 +940,8 @@ namespace transport
 
             // pull out the set of k-sample points matching serial numbers in the temporary table
             std::stringstream select_stmt;
-            select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".conventional"
+            select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".conventional AS conventional,"
+	            << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".comoving AS comoving"
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE
 	            << " ON " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << ".serial;";
@@ -950,15 +951,20 @@ namespace transport
 
             sample.clear();
 
+            std::vector<unsigned int>::const_iterator t = serial_numbers.begin();
             int status;
-            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE && t != serial_numbers.end())
 	            {
                 if(status == SQLITE_ROW)
 	                {
 		                typename data_manager<number>::twopf_configuration value;
-		                value.k = sqlite3_column_double(stmt, 0);
+
+		                value.serial         = *t;
+		                value.k_conventional = sqlite3_column_double(stmt, 0);
+		                value.k_comoving     = sqlite3_column_double(stmt, 1);
 
                     sample.push_back(value);
+		                t++;
 	                }
                 else
 	                {
@@ -996,11 +1002,15 @@ namespace transport
             std::stringstream create_stmt;
             create_stmt << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << " AS"
 	            << " SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_conventional AS kt_conventional,"
+	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_comoving AS kt_comoving,"
 	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".alpha AS alpha,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".beta AS beta,"
 	            << " " << "tpf1.conventional AS conventional_k1,"
+	            << " " << "tpf1.comoving AS comoving_k1,"
               << " " << "tpf2.conventional AS conventional_k2,"
+	            << " " << "tpf2.comoving AS comoving_k2,"
               << " " << "tpf3.conventional AS conventional_k3,"
+	            << " " << "tpf3.comoving AS comoving_k3,"
               << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber1,"
 							<< " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber2,"
 	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3"
@@ -1025,22 +1035,29 @@ namespace transport
 
             sample.clear();
 
+            std::vector<unsigned int>::const_iterator t = serial_numbers.begin();
             int status;
-            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE && t != serial_numbers.end()
 	            {
                 if(status == SQLITE_ROW)
 	                {
                     typename data_manager<number>::threepf_configuration value;
-                    value.kt    = sqlite3_column_double(stmt, 0);
-		                value.alpha = sqlite3_column_double(stmt, 1);
-		                value.beta  = sqlite3_column_double(stmt, 2);
-		                value.k1    = sqlite3_column_double(stmt, 3);
-			              value.k2    = sqlite3_column_double(stmt, 4);
-				            value.k3    = sqlite3_column_double(stmt, 5);
 
-                    int k1_sn = sqlite3_column_int(stmt, 6);
-                    int k2_sn = sqlite3_column_int(stmt, 7);
-                    int k3_sn = sqlite3_column_int(stmt, 8);
+		                value.serial          = *t;
+                    value.kt_conventional = sqlite3_column_double(stmt, 0);
+		                value.kt_comoving     = sqlite3_column_double(stmt, 1);
+		                value.alpha           = sqlite3_column_double(stmt, 2);
+		                value.beta            = sqlite3_column_double(stmt, 3);
+		                value.k1_conventional = sqlite3_column_double(stmt, 4);
+		                value.k1_comoving     = sqlite3_column_double(stmt, 5);
+			              value.k2_conventional = sqlite3_column_double(stmt, 6);
+				            value.k2_comoving     = sqlite3_column_double(stmt, 7);
+		                value.k3_conventional = sqlite3_column_double(stmt, 8);
+		                value.k3_comoving     = sqlite3_column_double(stmt, 9);
+
+                    int k1_sn = sqlite3_column_int(stmt, 10);
+                    int k2_sn = sqlite3_column_int(stmt, 11);
+                    int k3_sn = sqlite3_column_int(stmt, 12);
 
 		                if(k1_sn < 0 || k2_sn < 0 || k3_sn < 0)
 			                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_NEGATIVE_SERIAL_NUMBERS);
@@ -1049,6 +1066,7 @@ namespace transport
 		                k1_serials.push_back(k1_sn);
 		                k2_serials.push_back(k2_sn);
 		                k3_serials.push_back(k3_sn);
+		                t++;
 	                }
                 else
 	                {

@@ -8,8 +8,9 @@
 #define __data_products_H_
 
 
-#include "transport-runtime-api/derived-products/time-plots/general_plot.h"
+#include "transport-runtime-api/derived-products/time-products/general_time_plot.h"
 
 #include "transport-runtime-api/derived-products/derived_product_helper.h"
+
 
 #endif //__data_products_H_
