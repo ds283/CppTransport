@@ -11,6 +11,7 @@
 #include <set>
 #include <vector>
 #include <list>
+#include <functional>
 
 #include <math.h>
 
@@ -479,11 +480,17 @@ namespace transport
 
 		    typedef enum { twopf_real, twopf_imag } datapipe_twopf_type;
 
+        //! Output-group finder function -- serivce provided by a repository implementation
+        typedef std::function<typename repository<number>::output_group< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
+
         //! Attach function for a datapipe
-        typedef std::function<void(datapipe*, typename repository<number>::output_group&)>                              datapipe_attach_function;
+        typedef std::function<typename repository<number>::output_group< typename repository<number>::integration_payload >*(datapipe*, output_group_finder& integration_task<number>*, const std::list<std::string>&)> datapipe_attach_function;
 
         //! Detach function for a datapipe
         typedef std::function<void(datapipe*)>                                                                          datapipe_detach_function;
+
+        //! Push derived content
+        typedef std::function<void(datapipe*)>                                                                          datapipe_content_dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
         typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<double>&)>                  datapipe_time_sample_function;
@@ -516,6 +523,7 @@ namespace transport
 				    //! Construct a datapipe
 				    datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
 				             unsigned int w, boost::timer::cpu_timer& tm,
+                     output_group_finder &fd,
 				             datapipe_attach_function& at, datapipe_detach_function& dt,
 				             datapipe_time_sample_function& tsf,
 				             datapipe_twopf_kconfig_sample_function& twopf_kcfg_sf,
@@ -558,14 +566,19 @@ namespace transport
 		      public:
 
 				    //! Attach an output-group to the datapipe, ready for reading
-				    void attach(typename repository<number>::output_group& group,
-				                typename data_manager<number>::derived_content_dispatch_function& dispatcher);
+				    void attach(integration_task<number>* tk, const std::list<std::string>& tags);
 
 				    //! Detach an output-group from the datapipe
 				    void detach(void);
 
+            //! Is this datapipe attached to an output group?
+            bool is_attached() const { return(this->attached_group != nullptr); }
+
+            //!
+
 				    //! Get attached output group
-				    typename repository<number>::output_group* get_attached_output_group(void) const;
+				    typename repository<number>::output_group< typename repository<number>::integration_payload >*
+              get_attached_output_group(void) const;
 
 
 				    // PULL DATA
@@ -600,57 +613,61 @@ namespace transport
 		      private:
 
 				    //! Path to logging directory
-				    const boost::filesystem::path                                     logdir_path;
+				    const boost::filesystem::path                                                                  logdir_path;
 
 				    //! Path to temporary files
-				    const boost::filesystem::path                                     temporary_path;
+				    const boost::filesystem::path                                                                  temporary_path;
 
 						//! Unique serial number identifying the worker process which owns this datapipe
-				    const unsigned int                                                worker_number;
+				    const unsigned int                                                                             worker_number;
 
 		        //! Logger source
-		        boost::log::sources::severity_logger<log_severity_level>          log_source;
+		        boost::log::sources::severity_logger<log_severity_level>                                       log_source;
 
 		        //! Logger sink
-		        boost::shared_ptr< sink_t >                                       log_sink;
+		        boost::shared_ptr< sink_t >                                                                    log_sink;
 
 				    //! Timer, used to track how long the datapipe is kept open
-				    boost::timer::cpu_timer&                                          timer;
+				    boost::timer::cpu_timer&                                                                       timer;
 
 				    //! Currently-attached output group; null is no group is attached
-				    typename repository<number>::output_group*                        attached_group;
-
-				    //! Currently-attached dispatch function; null is no dispatcher
-				    typename data_manager<number>::derived_content_dispatch_function* attached_dispatcher;
+				    typename repository<number>::output_group< typename repository<number>::integration_payload >* attached_group;
 
 				    //! Implementation-dependent handle
-				    void*                                                             manager_handle;
+				    void*                                                                                          manager_handle;
+
 
 				    // CALLBACKS
 
+            //! Callback: find an output group for a task
+            output_group_finder                                                                            output_finder;
+
 				    //! Callback: attach a datapipe
-				    datapipe_attach_function                                          attach_callback;
+				    datapipe_attach_function                                                                       attach_callback;
 
 				    //! Callback: detach a datapipe
-				    datapipe_detach_function                                          detach_callback;
+				    datapipe_detach_function                                                                       detach_callback;
+
+            //! Callback: dispatch content to master process
+            datapipe_content_dispatch_function                                                             dispatch_callback;
 
 				    //! Callback: extract a time sample
-				    datapipe_time_sample_function                                     time_sample_callback;
+				    datapipe_time_sample_function                                                                  time_sample_callback;
 
 				    //! Callback: extract a 2pf k-configuration sample
-				    datapipe_twopf_kconfig_sample_function                            twopf_kconfig_sample_callback;
+				    datapipe_twopf_kconfig_sample_function                                                         twopf_kconfig_sample_callback;
 
 				    //! Callback: extract a 3pf k-configuration sample
-				    datapipe_threepf_kconfig_sample_function                          threepf_kconfig_sample_callback;
+				    datapipe_threepf_kconfig_sample_function                                                       threepf_kconfig_sample_callback;
 
 				    //! Callback: extract a time sample of a background field
-				    datapipe_background_time_sample_function                          background_time_sample_callback;
+				    datapipe_background_time_sample_function                                                       background_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 2pf at fixed k-configuration
-				    datapipe_twopf_time_sample_function                               twopf_time_sample_callback;
+				    datapipe_twopf_time_sample_function                                                            twopf_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 3pf at fixed k-configuration
-				    datapipe_threepf_time_sample_function                             threepf_time_sample_callback;
+				    datapipe_threepf_time_sample_function                                                          threepf_time_sample_callback;
 			    };
 
 
@@ -747,6 +764,7 @@ namespace transport
 
 		    //! Create a datapipe
 		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
+                                         output_group_finder finder, derived_content_dispatch_function dispatcher,
 		                                     unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
 		    //! Pull a set of time sample-points from a datapipe
@@ -788,6 +806,7 @@ namespace transport
     template <typename number>
     data_manager<number>::datapipe::datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
                                              unsigned int w, boost::timer::cpu_timer& tm,
+                                             output_group_finder& fd,
                                              datapipe_attach_function& at, datapipe_detach_function& dt,
                                              datapipe_time_sample_function& tsf,
                                              datapipe_twopf_kconfig_sample_function& twopf_kcfg_sf,
@@ -796,13 +815,16 @@ namespace transport
                                              datapipe_twopf_time_sample_function& twopf_tsf,
                                              datapipe_threepf_time_sample_function& threepf_tsf)
 	    : logdir_path(lp), temporary_path(tp), worker_number(w), timer(tm),
-	      attach_callback(at), detach_callback(dt), time_sample_callback(tsf),
+        output_finder(fd),
+	      attach_callback(at), detach_callback(dt),
+        dispatch_callback(df),
+        time_sample_callback(tsf),
 	      background_time_sample_callback(btsf),
 	      twopf_kconfig_sample_callback(twopf_kcfg_sf),
 	      threepf_kconfig_sample_callback(threepf_kcfg_sf),
 	      twopf_time_sample_callback(twopf_tsf),
 	      threepf_time_sample_callback(threepf_tsf),
-	      attached_group(nullptr), attached_dispatcher(nullptr)
+	      attached_group(nullptr)
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -842,22 +864,20 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::datapipe::attach(typename repository<number>::output_group& group,
-                                                typename data_manager<number>::derived_content_dispatch_function& dispatcher)
+    void data_manager<number>::datapipe::attach(integration_task<number>* tk, const std::list<std::string>& tags)
 	    {
+        assert(tk != nullptr);
+        if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
+
         assert(this->attached_group == nullptr);
         if(this->attached_group != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
-        assert(this->attached_dispatcher == nullptr);
-        if(this->attached_dispatcher != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
+        this->attached_group = this->attach_callback(this, this->output_finder, tk, tags);
 
-        // take copy of output group and dispatcher
-        this->attached_group      = new typename repository<number>::output_group(group);
-        this->attached_dispatcher = new typename data_manager<number>::derived_content_dispatch_function(dispatcher);
+        typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
-        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(group.get_creation_time());
-
-		    this->attach_callback(this, group);
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group.get_creation_time())
+          << " (generated using integration backend '" << payload.get_backend() << "')";
 	    }
 
 
@@ -867,18 +887,13 @@ namespace transport
 		    assert(this->attached_group != nullptr);
 		    if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
-		    assert(this->attached_dispatcher != nullptr);
-		    if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
-
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
 
 				this->detach_callback(this);
 
 		    delete this->attached_group;
-		    delete this->attached_dispatcher;
 
 		    this->attached_group = nullptr;
-		    this->attached_dispatcher = nullptr;
 	    }
 
 
@@ -887,9 +902,6 @@ namespace transport
 	    {
         assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    return(this->attached_group);
 	    }
@@ -900,9 +912,6 @@ namespace transport
 	    {
 		    assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull time sample request";
 
@@ -915,9 +924,6 @@ namespace transport
 	    {
 		    assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 2pf k-configuration sample request";
 
@@ -932,9 +938,6 @@ namespace transport
 		    assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 3pf k-configuration sample request";
 
 		    this->threepf_kconfig_sample_callback(this, serial_numbers, sample, k1_serials, k2_serials, k3_serials);
@@ -946,9 +949,6 @@ namespace transport
 	    {
 				assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << id;
 
@@ -963,9 +963,6 @@ namespace transport
 				assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = " << (type == twopf_real ? "real" : "imaginary") << ", for element " << id;
 
 		    this->twopf_time_sample_callback(this, id, t_serials, kserial, sample, type);
@@ -979,9 +976,6 @@ namespace transport
 				assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-        assert(this->attached_dispatcher != nullptr);
-        if(this->attached_dispatcher == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR,  __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << id;
 
 		    this->threepf_time_sample_callback(this, id, t_serials, kserial, sample);
@@ -991,7 +985,7 @@ namespace transport
 	  template <typename number>
 		bool data_manager<number>::datapipe::validate(void)
 		  {
-			  return(this->attached_group != nullptr && this->attached_dispatcher != nullptr);
+			  return(this->attached_group != nullptr);
 		  }
 
 

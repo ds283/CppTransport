@@ -8,7 +8,10 @@
 #define __data_manager_sqlite3_H_
 
 
+#include <sstream>
 #include <list>
+#include <string>
+#include <vector>
 
 #include "transport-runtime-api/manager/repository.h"
 #include "transport-runtime-api/manager/data_manager.h"
@@ -27,6 +30,7 @@
 
 #define __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM "worker"
 #define __CPP_TRANSPORT_TEMPORARY_CONTAINER_XTN  ".sqlite"
+
 
 namespace transport
   {
@@ -146,6 +150,8 @@ namespace transport
         //! Create a new datapipe
         virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir,
                                                                         const boost::filesystem::path& tempdir,
+                                                                        typename data_manager<number>::output_group_finder finder,
+                                                                        typename data_manager<number>::derived_content_dispatch_function dispatcher,
                                                                         unsigned int worker, boost::timer::cpu_timer& timer) override;
 
         //! Pull a set of time sample-points from a datapipe
@@ -180,7 +186,9 @@ namespace transport
       protected:
 
         //! Attach an output_group to a pipe
-        void datapipe_attach(typename data_manager<number>::datapipe* pipe, typename repository<number>::output_group& group);
+        void datapipe_attach(typename data_manager<number>::datapipe* pipe,
+                             typename data_manager<number>::output_group_finder& finder,
+                             integration_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach an output_group from a pipe
         void datapipe_detach(typename data_manager<number>::datapipe* pipe);
@@ -637,11 +645,13 @@ namespace transport
 		template <typename number>
 		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir,
 		                                                                                      const boost::filesystem::path& tempdir,
+                                                                                          typename data_manager<number>::output_group_finder finder,
+                                                                                          typename data_manager<number>::derived_content_dispatch_function dispatcher,
 		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer)
 			{
 		    // set up callback API
 		    typename data_manager<number>::datapipe_attach_function attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
-		                                                                               std::placeholders::_1, std::placeholders::_2);
+		                                                                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
 		    typename data_manager<number>::datapipe_detach_function detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this,
 		                                                                               std::placeholders::_1);
@@ -669,11 +679,11 @@ namespace transport
 		                                                                                                     std::placeholders::_4, std::placeholders::_5);
 
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, attach, detach,
+		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, finder, attach, detach, dispatcher,
 		                                                 tsample, twopf_kcfg_ksample, threepf_kcfg_ksample,
 		                                                 bsample, twopf_tsample, threepf_tsample);
 
-				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created datapipe";
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe";
 
 				return(pipe);
 			}
@@ -768,16 +778,33 @@ namespace transport
 	    }
 
 
-		template <typename number>
-		void data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe, typename repository<number>::output_group& group)
+    template <typename number>
+    void data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
+                                                       typename data_manager<number>::output_group_finder& finder,
+                                                       integration_task<number>* tk, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
 				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
 
+        assert(tk != nullptr);
+        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
+
 				sqlite3* db = nullptr;
 
+        // find a suitable output group for this task
+        typename repository<number>::output_group< typename repository<number>::integration_payload >* group = finder(tk, tags);
+        assert(group != nullptr);
+        if(group == nullptr)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP << " '" << tk->get_name() << "'";
+            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+          }
+
+        typename repository<number>::integration_payload& payload = group->get_payload();
+
 				// get path to the output group data container
-		    boost::filesystem::path ctr_path = group.get_repo_root_path() / group.get_data_container_path();
+		    boost::filesystem::path ctr_path = group->get_repo_root_path() / payload.get_container_path();
 
 				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
 
@@ -800,7 +827,7 @@ namespace transport
 				this->open_containers.push_back(db);
 				pipe->set_manager_handle(db);
 
-				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "'";
+				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "' to datapipe";
 			}
 
 
@@ -815,7 +842,7 @@ namespace transport
 				this->open_containers.remove(db);
 				sqlite3_close(db);
 
-				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Detached sqlite3 container";
+				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Detached sqlite3 container from datapipe";
 			}
 
 

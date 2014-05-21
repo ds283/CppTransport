@@ -92,7 +92,7 @@ namespace transport
 
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group
-		        virtual void derive(typename data_manager<number>::datapipe& pipe) = 0;
+		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -130,7 +130,7 @@ namespace transport
 					}
 
 
-			}   // namespace derived_data
+      }   // namespace derived_data
 
 	}   // namespace transport
 

@@ -11,7 +11,7 @@
 #include <functional>
 
 #include "transport-runtime-api/derived-products/derived_product.h"
-#include "transport-runtime-api/derived-products/time-data/general_time_data.h"
+#include "transport-runtime-api/derived-products/time-data/time_data_line.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
@@ -51,10 +51,11 @@ namespace transport
 		// forward-declare model
 		template <typename number> class model;
 
+
 		namespace derived_data
 			{
 
-		    //! A plot2d-product is a specialization of a derived-product that
+        //! A plot2d-product is a specialization of a derived-product that
 		    //! produces a plot of something against time.
 
 		    template <typename number>
@@ -66,6 +67,86 @@ namespace transport
 				    typedef enum { top_left, top_right, bottom_left, bottom_right,
 					                 right, centre_right, centre_left,
 					                 upper_centre, lower_centre, centre} legend_pos;
+
+
+            class output_value
+              {
+
+              public:
+
+                output_value(double v)
+                  : exists(true), value(v)
+                  {
+                  }
+
+                output_value()
+                  : exists(false)
+                  {
+                  }
+
+                ~output_value() = default;
+
+
+                // FORMAT VALUE
+
+              public:
+
+                void format_python(std::ostream& out) const;
+
+
+                // INTERNAL DATA
+
+              private:
+
+                //! does this value exist?
+                bool exists;
+
+                //! numerical value, if exists
+                double value;
+              };
+
+
+            class output_line
+              {
+
+              public:
+
+                output_line(const std::string& l)
+                  : label(l)
+                  {
+                  }
+
+                ~output_line() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! Add a value at the back
+                void push_back(const output_value& v) { this->values.push_back(v); }
+                //! Add a value at the front
+                void push_front(const output_value& v) { this->values.push_front(v); }
+                //! Get values
+                std::deque<output_value>& get_values() const { return(this->values); }
+
+                //! Get size
+                unsigned int size() const { return(this->values.size()); }
+
+                //! Get label
+                const std::string& get_label() const { return(this->label); }
+
+
+                // INTERNAL DATA
+
+              private:
+
+                //! this line's label
+                std::string label;
+
+                //! this line's data points
+                std::deque<output_value> values;
+              };
 
 		      public:
 
@@ -118,6 +199,11 @@ namespace transport
 
 				    //! Make plot
 				    void make_plot(typename data_manager<number>::datapipe& pipe) const;
+
+          protected:
+
+            //! Merge lines
+            void merge_lines(typename data_manager<number>::datapipe& pipe, std::deque<double>& axis, std::vector<output_line>& data);
 
 
 		        // GET AND SET BASIC PLOT DATA
@@ -382,14 +468,14 @@ namespace transport
 				template <typename number>
 				void plot2d_product<number>::add_line(const time_data_line<number>& line)
 					{
-						// check that an axis has already been set
-						if(this->axis.size() == 0)
-							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_UNSET_AXIS);
-
-						// check that the number of points in this line is compatible with the axis
-						if(line.get_sample_points() != this->axis.size())
-							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_INCOMPATIBLE_SIZE);
-
+//						// check that an axis has already been set
+//						if(this->axis.size() == 0)
+//							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_UNSET_AXIS);
+//
+//						// check that the number of points in this line is compatible with the axis
+//						if(line.get_sample_points() != this->axis.size())
+//							throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_INCOMPATIBLE_SIZE);
+//
 						this->lines.push_back(line);
 					}
 
@@ -400,20 +486,16 @@ namespace transport
 				    // ensure that the supplied pipe is attached to a data container
 				    if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_DATAPIPE);
 
-						typename repository<number>::output_group* og = pipe.get_attached_output_group();
-
 						// extract paths from the datapipe and output group.
 						// note that paths from the datapipe are absolute.
-						// paths from the output group are relative, so we need to extract to repository root too:
-				    boost::filesystem::path derived_root = og->get_repo_root_path()/og->get_derived_products_path();
-				    boost::filesystem::path temp_root    = pipe.get_temporary_files_path();
+            boost::filesystem::path temp_root = pipe.get_temporary_files_path();
 
 						// obtain path for Python script output
 				    boost::filesystem::path script_file = temp_root / this->filename;
 						script_file.replace_extension(".py");
 
 						// obtain path for plot output
-				    boost::filesystem::path plot_file = derived_root / this->filename;
+				    boost::filesystem::path plot_file = temp_root / this->filename;
 
 				    std::ofstream out;
 						out.open(script_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
@@ -427,58 +509,33 @@ namespace transport
 						if(this->log_x) out << "plt.xscale('log')" << std::endl;
 						if(this->log_y) out << "plt.yscale('log')" << std::endl;
 
-						out << "x = [ ";
-						unsigned int written = 0;
-						for(std::vector<double>::const_iterator t = this->axis.begin(); t != this->axis.end(); t++)
-							{
-								out << (written > 0 ? ", " : "") << *t;
-								written++;
-							}
-						out << " ]" << std::endl;
+            std::deque<double> axis;
+            std::vector<output_line> data;
+            this->merge_lines(pipe, axis, data);
 
-				    typename std::list< typename std::list< time_data_line<number> >::const_iterator > plotted_lines;
-						for(typename std::list< time_data_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
-							{
-						    const std::vector<number>& line_data = (*t).get_data_points();
-								unsigned int this_line_id = plotted_lines.size();
+            out << "x = [ ";
+            for(std::deque<std::vector>::const_iterator t = axis.begin(); t != axis.end(); t++)
+              {
+                out << (t != axis.begin() ? ", " : "") << *t;
+              }
+            out << " ]" << std::endl;
 
-								bool need_abs_y = false;
-								bool nonzero_values = false;
-								if(this->log_y)
-									{
-										for(typename std::vector<number>::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
-											{
-												if((*u) <= 0.0) need_abs_y = true;
-												if((*u) > 0.0 || (*u) < 0.0) nonzero_values = true;
-											}
+            for(unsigned int i = 0; i < data.size(); i++)
+              {
+                out << "y" << i << " = [ ";
 
-										// warn if absolute values are needed, but suppress warning if the line won't plot - would be confusing
-										if(need_abs_y && !this->abs_y && nonzero_values)
-											BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis.";
-									}
+                std::deque<output_value>& line_data = data[i].get_values();
+                assert(line_data.size() == axis.size());
 
-								// we can't plot the line if it is logarithmic but has no nonzero values, so check
-								if(!this->log_y || (this->log_y && nonzero_values))
-									{
-								    bool plot_abs_y = this->abs_y || need_abs_y;
+                for(unsigned int j = 0; j < line_data.size(); j++)
+                  {
+                    out << (j > 0 ? ", " : "");
+                    line_data[j].format_python(out);
+                  }
+                out << " ]" << std::endl;
 
-								    out << "y" << this_line_id << " = [ ";
-
-								    written = 0;
-								    for(typename std::vector<number>::const_iterator u = line_data.begin(); u != line_data.end(); u++)
-									    {
-								        out << (written > 0 ? ", " : "") << (plot_abs_y ? fabs(static_cast<double>(*u)) : static_cast<double>(*u));
-								        written++;
-									    }
-								    out << " ]" << std::endl;
-
-								    out << "plt.errorbar(x, y" << this_line_id << ", label=r'" << (*t).get_label() << "')" << std::endl;
-
-										plotted_lines.push_back(t);
-									}
-								else
-									BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_label() << "' contains no nonzero values and can't be plotted on a logarithmic axis. Skipping this line.";
-						}
+                out << "plt.errorbar(x, y" << i << ", label=r'" << data[i].get_label() << "')" << std::endl;
+              }
 
 				    out << "ax = plt.gca()" << std::endl;
 
@@ -490,10 +547,10 @@ namespace transport
 				        out << "handles, labels = ax.get_legend_handles_labels()" << std::endl;
 
 				        out << "y_labels = [ ";
-						    for(typename std::list< typename std::list< time_data_line<number> >::const_iterator >::const_iterator t = plotted_lines.begin(); t != plotted_lines.end(); t++)
-					        {
-				            out << (t != plotted_lines.begin() ? ", " : "") << "r'" << (*(*t)).get_label() << "'";
-					        }
+                for(unsigned int i = 0; i < data.size(); i++)
+                  {
+                    out << (i > 0 ? ", " : "") << "r'" << data[i].get_label() << "'";
+                  }
 				        out << " ]" << std::endl;
 
 				        out << "plt.legend(handles, y_labels, frameon=False, loc=";
@@ -511,7 +568,7 @@ namespace transport
 					          case centre:       out << "10"; break;
 					          default:
 						          assert(false);
-						          throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION);
+						          throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_INVALID_LEGEND_POSITION);
 						      }
 				        out << ")" << std::endl;
 					    }
@@ -524,8 +581,110 @@ namespace transport
 				    out << "plt.close()" << std::endl;
 
 				    out.close();
-				    system(("source ~/.profile; /opt/local/bin/python2.7 " + script_file.string()).c_str());
+//				    system(("source ~/.profile; /opt/local/bin/python2.7 " + script_file.string()).c_str());
 					}
+
+
+        template <typename number>
+        void plot2d_product<number>::merge_lines(typename data_manager<number>::datapipe& pipe, std::deque<double>& axis, std::vector<output_line>& data)
+          {
+            // step through our plot lines, merging axis data and excluding any lines which are unplottable
+
+            // FIRST, build a list of plottable lines in 'data' (and work out whether we need to take the absolute value)
+            data.clear();
+
+            std::vector< std::vector<double> > axis_data;
+            std::vector< std::vector<number> > plot_data;
+            std::vector< bool >                data_absy;
+
+            for(typename std::list< time_data_line<number> >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+              {
+                const std::vector<number>& line_data = (*t).get_data_points();
+
+                bool need_abs_y = false;
+                bool nonzero_values = false;
+
+                if(this->log_y)
+                  {
+                    for(typename std::vector<number>::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
+                      {
+                        if((*u) <= 0.0) need_abs_y = true;
+                        if((*u) > 0.0 || (*u) < 0.0) nonzero_values = true;
+                      }
+
+                    // warn if absolute values are needed, but suppress warning if the line won't plot - would be confusing
+                    if(need_abs_y && !this->abs_y && nonzero_values)
+                      BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+                  }
+
+                // we can't plot the line if it is logarithmic but has no nonzero values, so check
+                if(!this->log_y || (this->log_y && nonzero_values))   // can plot the line
+                  {
+                    data.push_back(output_line((*t).get_label()));
+                    data_absy.push_back(this->abs_y || need_abs_y);
+
+                    axis_data.push_back((*t).get_axis_points());
+                    plot_data.push_back((*t).get_data_points());
+                  }
+                else    // can't plot the line
+                  BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_label() << "' contains no nonzero values and can't be plotted on a logarithmic axis -- skipping this line";
+              }
+
+            // SECOND work through each axis, populating the single merged axis
+            axis.clear();
+            bool finished = false;
+
+            while(!finished)
+              {
+                finished = true;
+
+                // any work left to do?
+                for(unsigned int i = 0; finished && i < data.size(); i++)
+                  {
+                    if(axis_data[i].size() > 0) finished = false;
+                  }
+
+                if(!finished)
+                  {
+                    // find next point to add to merged x-axis (we work from the far right because std::vector can only pop from the end)
+                    double next_axis_point = DBL_MIN;
+                    for(unsigned int i = 0; i < data.size(); i++)
+                      {
+                        if(axis_data[i].size() > 0)
+                          {
+                            if(axis_data[i].back() > next_axis_point) next_axis_point = axis_data[i].back();
+                          }
+                      }
+
+                    // push point to merged axis
+                    axis.push_front(next_axis_point);
+
+                    // find data points on each line, if they exist, corresponding to this axis point
+                    for(unsigned int i = 0; i < data.size(); i++)
+                      {
+                        if(axis_data[i].size() > 0)
+                          {
+                            if(axis_data[i].back() == next_axis_point)   // yes, this line has a match
+                              {
+                                data[i].push_front(output_value(data_absy[i] ? fabs(plot_data[i].back()) : plot_data[i].back()));
+
+                                // remove point from this line
+                                axis_data[i].pop_back();
+                                plot_data[i].pop_back();
+                              }
+                            else
+                              {
+                                data[i].push_front(output_value());
+                              }
+                          }
+                        else  // no match, add an empty component
+                          {
+                            data[i].push_front(output_value());
+                          }
+                      }
+                  }
+              }
+          }
 
 
 		    template <typename number>
@@ -589,7 +748,7 @@ namespace transport
 
 		            default:
 			            assert(false);
-			            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION);
+			            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_PLOT2D_INVALID_LEGEND_POSITION);
 			        }
 
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_PLOT2D_TYPESET_LATEX, this->typeset_with_LaTeX);
@@ -660,6 +819,22 @@ namespace transport
 			            }
 			        }
 			    }
+
+
+        template <typename number>
+        void plot2d_product<number>::output_value::format_python(std::ostream& out) const
+          {
+            switch(this->exists)
+              {
+                case true:
+                  out << this->value;
+                  break;
+
+                case false:
+                  out << "np.nan";
+                  break;
+              }
+          }
 
 			}   // namespace derived_data
 

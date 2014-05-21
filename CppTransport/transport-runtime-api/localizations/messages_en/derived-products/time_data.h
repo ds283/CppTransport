@@ -34,5 +34,6 @@
 
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_NOT_INTEGRATION_TASK         "Internal error: 'general_time_data' built with non-integration task"
 
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_UNKNOWN_OPPOS          "Internal error: Unknown operator position for three-point function shift"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TIME_DATA_PRODUCT_H

@@ -19,6 +19,7 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 
 #include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/messages.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TPLOT_LINE_ARRAY "line-array"
@@ -79,7 +80,7 @@ namespace transport
 		      public:
 
 		        //! Apply this derivation to produce a plot
-		        virtual void derive(typename data_manager<number>::datapipe& pipe) override;
+		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) override;
 
 
 		        // SERIALIZATION -- implements a 'serializable' interface
@@ -184,23 +185,17 @@ namespace transport
 
 
 				template <typename number>
-				void general_time_plot<number>::derive(typename data_manager<number>::datapipe& pipe)
+				void general_time_plot<number>::derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags)
 					{
-				    // ensure that the supplied pipe is attached to a data container
-				    if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_DATAPIPE);
-
-				    // reset the plot, then pull data from the datapipe to regenerate ourselves
-				    this->reset_plot();
-
-				    // set time axis data
-				    this->set_time_axis(pipe);
+            // reset the plot, then pull data from the datapipe to regenerate ourselves
+            this->reset_plot();
 
 						// loop through all data lines, adding their components to the plot
 						for(typename std::list< general_time_data<number>* >::const_iterator t = this->data_lines.begin(); t != this->data_lines.end(); t++)
 							{
 						    std::list< time_data_line<number> > lines;
 
-						    (*t)->derive_lines(pipe, this->get_time_sample_sns(), *this, lines);
+						    (*t)->derive_lines(pipe, *this, lines, tags);
 
 								for(typename std::list< time_data_line<number> >::const_iterator u = lines.begin(); u != lines.end(); u++)
 									{
@@ -271,7 +266,7 @@ namespace transport
 
 						for(typename std::list< general_time_data<number>* >::iterator t = this->data_lines.begin(); t != this->data_lines.end(); t++)
 							{
-						    (*t)->write(out, this->wrapper);
+						    (*t)->write(out);
 						    this->wrapper.wrap_newline(out);
 							}
 					}

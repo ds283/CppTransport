@@ -1153,8 +1153,17 @@ namespace transport
 				// keep track of CPU time
 		    boost::timer::cpu_timer timer;
 
+        // set up output-group finder function
+        typename data_manager<number>::output_group_finder finder =
+                                                             std::bind(&repository<number>::find_integration_task_output_group, this->repo, std::placeholders::_1, std::placeholders::_2);
+
+        // set up content-dispatch function
+        typename data_manager<number>::derived_content_dispatch_function dispatcher =
+                                                                           std::bind(&task_manager<number>::slave_push_derived_content, this, std::placeholders::_1);
+
 		    // acquire a datapipe which we can use to stream content from the databse
 		    typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+                                                                                       finder, dispatcher,
 		                                                                                   this->get_rank(), timer);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "'" << std::endl;
@@ -1193,38 +1202,16 @@ namespace transport
 
             task_tags.splice(task_tags.end(), command_line_tags);
 
-            // FINISHED HERE 0105 21 MAY 2014
-            // NEXT JOB - CHANGE DATAPIPE SO IT ISN'T CONNECTED TO A DATABASE IMMEDIATELY
-            // PUSH TO DERIVED PRODUCT. CONTENT PRODUCERS ATTACH DATABASE TO OUTPUT GROUPS.
+            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
 
-						typename repository<number>::output_group< typename repository<number>::integration_payload > group =
-                                                                                                            this->repo->find_integration_task_output_group(product, task_tags);
+            product->derive(pipe, task_tags);
 
-						// has output already been generated for this derived product?
-						if(!group.output_exists(product->get_name()))
-							{
-						    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Generating new derived product '" << product->get_name() << "'"
-								                                                            << " in output group " << boost::posix_time::to_simple_string(group.get_creation_time());
-
-						    // construct a callback for the derived-product provider to push new content to the master
-						    typename data_manager<number>::derived_content_dispatch_function dispatcher =
-							                                                                     std::bind(&task_manager<number>::slave_push_derived_content, this, product->get_name(), std::placeholders::_1);
-
-						    // attach this output group to the datapipe
-						    pipe.attach(group, dispatcher);
-
-						    // ask the derived-product object to produce its output
-						    list[i].get_product()->derive(pipe);
-
-						    // detach this output group
-						    pipe.detach();
-							}
-						else
-							{
-								BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Output for derived product '" << product->get_name()
-																																						<< " already exists in output group " << boost::posix_time::to_simple_string(group.get_creation_time())
-																																						<< "; skipping this product";
-							}
+            // check that the datapipe was correctly detached
+            if(pipe.is_attached())
+              {
+                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "-- Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
+                pipe.detach();
+              }
 					}
 
 				// close the datapipe

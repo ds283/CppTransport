@@ -24,9 +24,8 @@
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BL            "legend position bottom-left"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_LABEL_LEGEND_BR            "legend position bottom-right"
 
-#define __CPP_TRANSPORT_PRODUCT_INVALID_LEGEND_POSITION           "Internal error: Unknown legend position in 'plot2d_product' object"
+#define __CPP_TRANSPORT_PRODUCT_PLOT2D_INVALID_LEGEND_POSITION    "Internal error: Unknown legend position in 'plot2d_product' object"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_UNKNOWN_LEG_POS            "Internal error: Unknown legend position"
-#define __CPP_TRANSPORT_PRODUCT_PLOT2D_NULL_MODEL                 "Internal error: Null model specifier passed to 'plot2d_product' object"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_INCOMPATIBLE_AXIS_SIZE     "Internal error: Attempt to set incompatible axis size in 'plot2d_product' object"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_INCOMPATIBLE_SIZE "Internal error: Attempt to add a line with incompatible size to 'plot2d_product' object"
 #define __CPP_TRANSPORT_PRODUCT_PLOT2D_ADD_LINE_UNSET_AXIS        "Internal error: Attempt to add a line to a 'plot2d_product', but the axis is still unset"
