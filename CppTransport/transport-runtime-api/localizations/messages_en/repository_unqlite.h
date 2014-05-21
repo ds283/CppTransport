@@ -8,9 +8,7 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H
 
 
-#define __CPP_TRANSPORT_REPO_FAIL_PKG_OPEN                "Repository error: failed to open packages container"
-#define __CPP_TRANSPORT_REPO_FAIL_TASKS_OPEN              "Repository error: failed to open tasks container"
-#define __CPP_TRANSPORT_REPO_FAIL_DERIVED_PRODUCTS_OPEN   "Repository error: failed to open derived products container"
+#define __CPP_TRANSPORT_REPO_FAIL_DATABASE_OPEN           "Repository error: failed to open repository database"
 
 #define __CPP_TRANSPORT_REPO_DATABASES_OPEN               "Repository error: UnQLite database handles unexpectedly open"
 #define __CPP_TRANSPORT_REPO_DATABASES_CLOSED             "Repository error: UnQLite database handles unexpectedly closed"
@@ -28,13 +26,6 @@
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS               "Repository error: badly formed JSON for 'parameters' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_ICS                  "Repository error: badly formed JSON for 'initial_conditions' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_TASK                 "Repository error: badly formed JSON for 'task' group"
-
-#define __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN      "Repository error: task named in output task is not of integration-type"
-
-#define __CPP_TRANSPORT_REPO_NULL_DERIVED_PRODUCT         "Repository error: null derived product specifier"
-
-#define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS    "Repository error: no matching output groups for derived product"
-#define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS_A  "task"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H

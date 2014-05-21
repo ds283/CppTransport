@@ -721,9 +721,7 @@ namespace transport
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        //! Construct an output task element, given a derived product and a list of tags to match.
-		    //! (Recall that the derived product knows which task it belongs to, so that information is
-		    //! also implicitly available.)
+        //! Construct an output task element: requires a derived product and a list of tags to match.
         output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs, unsigned int sn)
 	        : product(dp.clone()), tags(tgs), serial(sn)
 	        {

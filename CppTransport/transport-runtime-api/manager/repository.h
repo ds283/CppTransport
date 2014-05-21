@@ -11,8 +11,8 @@
 #include <iostream>
 #include <string>
 
+#include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/instance_manager.h"
-//#include "transport-runtime-api/tasks/model_list.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/log/core.hpp"
@@ -28,6 +28,71 @@
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
+
+
+// JSON node names
+
+#define __CPP_TRANSPORT_REPO_REPOSITORY_LEAF                     "database.unqlite"
+#define __CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF                     "output"
+#define __CPP_TRANSPORT_REPO_LOGDIR_LEAF                         "logs"
+#define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF                        "tempfiles"
+#define __CPP_TRANSPORT_REPO_TASKFILE_LEAF                       "tasks.sqlite"
+#define __CPP_TRANSPORT_REPO_DATABASE_LEAF                       "integration.sqlite"
+
+#define __CPP_TRANSPORT_NODE_PACKAGE_NAME                        "package-name"
+#define __CPP_TRANSPORT_NODE_PACKAGE_MODELUID                    "package-model-uid"
+#define __CPP_TRANSPORT_NODE_PACKAGE_METADATA                    "package-metadata"
+#define __CPP_TRANSPORT_NODE_PACKAGE_ICS                         "package-ics"
+
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_NAME                   "model-name"
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_AUTHOR                 "model-author"
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_TAG                    "model-tag"
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_CREATED                "creation-time"
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_EDITED                 "last-edit-time"
+#define __CPP_TRANSPORT_NODE_PKG_METADATA_RUNTIMEAPI             "runtime-api-version"
+
+#define __CPP_TRANSPORT_NODE_TASK_NAME                           "task-name"
+#define __CPP_TRANSPORT_NODE_TASK_METADATA                       "task-metadata"
+// used for integration tasks
+#define __CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS            "integration-details"
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                  "output-groups"
+// used for output tasks
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS                 "output-task"
+
+#define __CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE               "package-name"
+#define __CPP_TRANSPORT_NODE_TASK_METADATA_CREATED               "creation-time"
+#define __CPP_TRANSPORT_NODE_TASK_METADATA_EDITED                "last-edit-time"
+#define __CPP_TRANSPORT_NODE_TASK_METADATA_RUNTIMEAPI            "runtime-api-version"
+
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME                "product-name"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA            "product-metadata"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_CREATED    "creation-time"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_EDITED     "last-edit-time"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_RUNTIMEAPI "runtime-api-version"
+
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS             "product_details"
+
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND                 "backend"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH                    "output-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE                "database-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE                    "note"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                    "tags"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG                     "tag"
+
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND         "backend"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY               "output-array"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME        "parent-product"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME            "filename"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED             "creation-time"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES               "notes"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE                "note"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                "tags"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG                 "tag"
 
 
 namespace transport
@@ -113,7 +178,7 @@ namespace transport
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                               const boost::filesystem::path& temp, unsigned int n, unsigned int w);
+                               const boost::filesystem::path& temp, unsigned int w);
 
             //! Destroy an integration container object
             ~integration_writer();
@@ -185,7 +250,6 @@ namespace transport
             const boost::filesystem::path path_to_taskfile;
             const boost::filesystem::path path_to_temp_directory;
 
-            const unsigned int serial_number;
             const unsigned int worker_number;
 
             void* data_manager_handle;
@@ -202,57 +266,22 @@ namespace transport
         // OUTPUT GROUPS
 
 
-        //! Data product descriptor. Used to enumerate the data products associated with an output group.
-        class data_product
-	        {
-
-          public:
-
-            //! Create a data_product descriptor
-            data_product(const std::string& nm, const std::string& ctime, const std::string& pt)
-	            : name(nm), path(pt), created(boost::posix_time::time_from_string(ctime))
-	            {
-	            }
-
-
-            //! Get dataproduct name
-            const std::string& get_product_name() const
-	            {
-                return (this->name);
-	            }
-
-
-            //! Write self to output stream
-            void write(std::ostream& out) const;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! Name of this data product
-            const std::string name;
-
-            //! Path to this product in the repository
-            const boost::filesystem::path path;
-
-            //! Creation date
-            const boost::posix_time::ptime created;
-	        };
-
-
-        //! Derived product descriptor. Used to enumerate the derived product types associated with a particular task
-        class derived_product
+        //! Derived product descriptor. Used to enumerate the content associated with
+        //! a output task output group.
+        class derived_content: public serializable
 	        {
 
           public:
 
             //! Create a derived_product descriptor
-            derived_product(const std::string& tk, const std::string& pn)
-	            : parent_task(tk), name(pn)
+            derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
+            const std::list<std::string>& notes, const std::list<std::string>& tags)
+	            : parent_product(prod), filename(fnam), created(now)
 	            {
 	            }
 
+            //! Deserialization constructor
+            derived_content(serialization_reader* reader);
 
             //! Destroy a derived_product descriptor
             ~derived_product() = default;
@@ -261,37 +290,60 @@ namespace transport
             // INTERFACE
 
             //! Get product name
-            const std::string& get_name() const
-	            {
-                return (this->name);
-	            }
+            const std::string& get_parent_product() const { return (this->parent_product); }
 
+            //! Get product pathname
+            const boost::filesystem::path& get_filename() const { return(this->filename); }
+
+            //! Get notes
+            const std::list<std::string>& get_notes() const { return(this->notes); }
+
+            //! Add note
+            void add_note(const std::string& note) { this->notes.push_back(note); }
+
+            //! Get creation time
+            const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
 
             // INTERNAL DATA
 
           protected:
 
-            //! Name of parent task. Not ordinarily user-accessible.
-            const std::string& parent_task;
+            //! Name of parent derived product
+            std::string parent_product;
 
-            //! Name of this derived product specification
-            const std::string& name;
+            //! Path to output
+            boost::filesystem::path filename;
+
+            //! Creation time
+            boost::posix_time::ptime created;
+
+            //! Notes
+            std::list<std::string> notes;
+
+            //! Tags
+            std::list<std::string> tags;
 	        };
 
 
 		    // PAYLOADS FOR OUTPUT GROUPS
 
 		    //! Integration payload
-		    class integration_payload
+		    class integration_payload: public serializable
 			    {
 
 		      public:
 
 				    //! Create a payload
-				    integration_payload(const std::string& be, const std::string& ctr)
-		          : backend(be), container(ctr)
-					    {
-					    }
+				    integration_payload() = default;
+
+            //! Deserialization constructor
+            integration_payload(serialization_reader* reader);
 
 				    //! Destroy a payload
 				    ~integration_payload() = default;
@@ -303,16 +355,34 @@ namespace transport
 
 		        //! Get name of backend used to generate this output group
 		        const std::string& get_backend() const { return(this->backend); }
+            //! Set name of backend used to generate this output group
+            void set_backend(const std::string& be) { this->backend = be; }
 
 				    //! Get path of data container
 				    const boost::filesystem::path& get_container_path() const { return(this->container); }
+            //! Set path of data container
+            void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
+
+
+            // WRITE TO A STREAM
+
+          public:
+
+            void write(std::ostream& out) const;
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
 
 				    // INTERNAL DATA
 
 		      protected:
 
 				    //! Backend used to generate this payload
-				    const std::string& backend;
+				    std::string backend;
 
 				    //! Path to data container
 				    boost::filesystem::path container;
@@ -320,41 +390,64 @@ namespace transport
 
 
         //! Derived product payload
-        class derived_product_payload
+        class output_payload: public serializable
 	        {
 
           public:
 
 						//! Create a payload
-            derived_product_payload(const std::string& pname, const std::string& fnam)
-              : product_name(pname), filename(fnam)
-							{
-							}
+            output_payload() = default;
+
+            //! Deserialization constructor
+            output_payload(serialization_reader* reader);
 
 		        //! Destroy a payload
-		        ~derived_product_payload() = default;
+		        ~output_payload() = default;
 
 
 		        // ADMIN
 
           public:
 
-		        //! Get name of derived product
+            //! Add an output
+            void add_derived_content(const derived_content& prod) { this->content.push_back(prod); }
+
+
+            // WRITE TO A STREAM
+
+          public:
+
+            void write(std::ostream& out) const;
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! List of derived outputs
+            std::list<derived_content> content;
 	        };
 
 
         //! Output group descriptor. Used to enumerate the output groups available for a particular task
 		    template <typename Payload>
-        class output_group
+        class output_group: public serializable
 	        {
 
           public:
 
             //! Create an output_group descriptor
-            output_group(const std::string& tn, const std::string& be,
-                         const boost::filesystem::path& root, const std::string& path,
-                         const std::string& ctime, bool lock, const std::list<std::string>& nt,
-                         const std::list<std::string>& tg, Payload pld);
+            output_group(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+                         const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+
+            //! Deserialization constructor
+            output_group(serialization_reader* reader);
 
             //! Destroy an output_group descriptor
             ~output_group() = default;
@@ -394,35 +487,41 @@ namespace transport
             bool check_tags(std::list<std::string> match_tags) const;
 
 		        //! Get payload
-		        const Payload& get_payload() const { return(this->payload); }
+		        Payload& get_payload() { return(this->payload); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            void serialize(serialization_writer& writer) const;
 
             // PRIVATE DATA
 
           private:
 
             //! Parent task associated with this output. Not ordinarily user-visible.
-            const std::string task;
+            std::string task;
 
             //! Path to root of repository. Other paths are relative to this.
-            const boost::filesystem::path repo_root_path;
+            boost::filesystem::path repo_root_path;
 
             //! Path of parent directory containing the output, usually residing within the repository
-            const boost::filesystem::path data_root_path;
+            boost::filesystem::path data_root_path;
 
             //! Creation time
-            const boost::posix_time::ptime created;
+            boost::posix_time::ptime created;
 
             //! Flag indicating whether or not this output group is locked
-            const bool locked;
+            bool locked;
 
             //! Array of strings representing notes attached to this group
-            const std::list<std::string> notes;
+            std::list<std::string> notes;
 
             //! Array of strings representing metadata tags
-            const std::list<std::string> tags;
+            std::list<std::string> tags;
 
 		        //! Payload
-		        const Payload payload;
+		        Payload payload;
 	        };
 
 
@@ -505,9 +604,7 @@ namespace transport
 
 
         //! Close a repository, including the corresponding containers and environment. In practice this would always be delegated to the implementation class
-        virtual ~repository()
-	        {
-	        }
+        virtual ~repository() = default;
 
 
         // ADMIN DATA
@@ -547,7 +644,7 @@ namespace transport
         //! Query the database for a named task, and reconstruct it if present.
         //! Supports both integration_task<> and output_task<> items.
         //! Output tasks write nullptr to the model* handle.
-        virtual task<number>* lookup_task(const std::string& name, model<number>* m,
+        virtual task<number>* lookup_task(const std::string& name, model<number>*& m,
                                           typename instance_manager<number>::model_finder finder) = 0;
 
 
@@ -569,7 +666,7 @@ namespace transport
       public:
 
         //! Enumerate the output groups available from a named task
-        virtual std::list<output_group> enumerate_integration_task_output(const std::string& name) = 0;
+        virtual std::list< output_group<integration_payload> > enumerate_integration_task_output(const std::string& name) = 0;
 
 
         // PUSH DERIVED-PRODUCT SPECIFICATIONS TO THE DATABASE
@@ -585,7 +682,8 @@ namespace transport
       public:
 
         //! Query a derived product specification
-        virtual derived_data::derived_product<number>* lookup_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder) = 0;
+        virtual derived_data::derived_product<number>*
+          lookup_derived_product(const std::string &product, typename instance_manager<number>::model_finder finder) = 0;
 
 
         // ADD DERIVED CONTENT FROM AN OUTPUT TASK
@@ -593,11 +691,12 @@ namespace transport
       public:
 
         //! Add derived content
-        virtual derived_content_writer new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags,
-                                                              unsigned int worker) = 0;
+        virtual derived_content_writer
+          new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker) = 0;
 
-        //! Lookup the output group for a task+derived-product, given a set of tags
-        virtual output_group find_derived_product_output_group(const derived_data::derived_product<number>* product, const std::list<std::string>& tags) = 0;
+        //! Lookup an output group for a task, given a set of tags
+        virtual output_group<integration_payload>
+          find_integration_task_output_group(const integration_task<number>* tk, const std::list<std::string>& tags) = 0;
 
 
         // PRIVATE DATA
@@ -619,12 +718,11 @@ namespace transport
     template <typename number>
     repository<number>::integration_writer::integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                                               const boost::filesystem::path& temp, unsigned int n, unsigned int w)
+                                                               const boost::filesystem::path& temp, unsigned int w)
 	    : path_to_directory(dir), path_to_data_container(data),
 	      path_to_log_directory(log), path_to_taskfile(task),
 	      path_to_temp_directory(temp),
-	      serial_number(n), worker_number(w),
-	      data_manager_handle(nullptr), data_manager_taskfile(nullptr)
+	      worker_number(w), data_manager_handle(nullptr), data_manager_taskfile(nullptr)
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -704,18 +802,6 @@ namespace transport
 	    }
 
 
-    // DATA_PRODUCT METHODS
-
-
-    template <typename number>
-    void repository<number>::data_product::write(std::ostream& out) const
-	    {
-        out << __CPP_TRANSPORT_DATAPRODUCT_NAME << " = " << this->name
-	        << __CPP_TRANSPORT_DATAPRODUCT_PATH << " = " << this->path
-	        << __CPP_TRANSPORT_DATAPRODUCT_CREATED << " " << this->created;
-	    }
-
-
     // DERIVED_CONTENT_WRITER METHODS
 
 
@@ -731,11 +817,11 @@ namespace transport
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
         boost::filesystem::path log_path = path_to_log_directory / log_file.str();
 
-        boost::shared_ptr<boost::log::core> core                        = boost::log::core::get();
+        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
-        std::ostringstream                                      log_file_path;
+        std::ostringstream log_file_path;
         boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+                                                                  boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
 
         // enable auto-flushing of log entries
         // this degrades performance, but we are not writing many entries and they
@@ -782,27 +868,26 @@ namespace transport
     // OUTPUT_GROUP METHODS
 
 
-    template <typename number>
-    repository<number>::output_group::output_group(const std::string& tn, const std::string& be,
-                                                   const boost::filesystem::path& root, const std::string& path, const std::string& ctr,
-                                                   const std::string& ctime, bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
-	    : task(tn), backend(be), repo_root_path(root), data_root_path(path), database_path(ctr),
-	      created(boost::posix_time::time_from_string(ctime)), locked(lock),
-	      notes(nt), tags(tg)
-	    {
-	    }
+    template<typename number>
+    template<typename Payload>
+    repository<number>::output_group<Payload>::output_group(const std::string &tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+                                                            const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string> &nt, const std::list<std::string> &tg)
+      : task(tn), repo_root_path(root), data_root_path(path),
+        created(ctime), locked(lock), notes(nt), tags(tg),
+        payload()
+      {
+      }
 
 
     template <typename number>
-    void repository<number>::output_group::write(std::ostream& out) const
+    template <typename Payload>
+    void repository<number>::output_group<Payload>::write(std::ostream& out) const
 	    {
-        out << __CPP_TRANSPORT_OUTPUT_GROUP
-	        << " (" << __CPP_TRANSPORT_OUTPUT_GROUP_BACKEND << " '" << this->backend << "'";
+        out << __CPP_TRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
-        out << ")" << std::endl;
+        out << std::endl;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->repo_root_path << std::endl;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->data_root_path << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA << " = " << this->database_path << std::endl;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
 
         unsigned int count = 0;
@@ -824,12 +909,15 @@ namespace transport
 	        }
         out << std::endl;
 
+        this->payload.write();
+
         out << std::endl;
 	    }
 
 
     template <typename number>
-    bool repository<number>::output_group::check_tags(std::list<std::string> match_tags) const
+    template <typename Payload>
+    bool repository<number>::output_group<Payload>::check_tags(std::list<std::string> match_tags) const
 	    {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
@@ -842,26 +930,248 @@ namespace transport
 	    }
 
 
+    template <typename number>
+    template <typename Payload>
+    repository<number>::output_group<Payload>::output_group(serialization_reader* reader)
+      : payload(reader)
+      {
+        assert(reader != nullptr);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, task);
+
+        std::string data_root;
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, data_root);
+        data_root_path = data_root;
+
+        std::string ctime;
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, ctime);
+        this->created = boost::posix_time::time_from_string(ctime);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
+
+        unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
+        for(unsigned int i = 0; i < num_notes; i++)
+          {
+            reader->start_array_element();
+
+            std::string note;
+            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, note);
+            notes.push_back(note);
+
+            reader->end_array_element();
+          }
+        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
+
+        unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+        for(unsigned int i = 0; i < num_tags; i++)
+          {
+            reader->start_array_element();
+
+            std::string tag;
+            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
+            tags.push_back(tag);
+
+            reader->end_array_element();
+          }
+        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+      }
+
+
+    template <typename number>
+    template <typename Payload>
+    void repository<number>::output_group<Payload>::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, this->data_root_path.string());
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(this->created));
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
+
+        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, this->notes.size() == 0);
+        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+          {
+            writer.start_node("arrayelt");   // node name doesn't matter for an array
+            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, *t);
+            writer.end_element("arrayelt");
+          }
+        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
+
+        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);
+        for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); t++)
+          {
+            writer.start_node("arrayelt");   // node name doesn't matter for an array
+            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *t);
+            writer.end_element("arrayelt");
+          }
+        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+
+        this->payload.serialize(writer);
+      }
+
+
     // output an output_group descriptor to a standard stream
     template <typename number>
-    std::ostream& operator<<(std::ostream& out, const typename repository<number>::output_group& group)
-	    {
+    template <typename Payload>
+    std::ostream& operator<<(std::ostream& out, const typename repository<number>::output_group<Payload>& group)
+      {
         group.write(out);
         return (out);
-	    }
+      }
 
 
-    namespace output_group_helper
-	    {
+    namespace
+      {
 
-        // used for sorting a list of output_groups into decreasing chronological order
-        template <typename number>
-        bool comparator(const typename repository<number>::output_group& A, const typename repository<number>::output_group& B)
-	        {
-            return (A.get_creation_time() > B.get_creation_time());
-	        }
+        namespace output_group_helper
+          {
 
-	    }
+            // used for sorting a list of output_groups into decreasing chronological order
+            template <typename number>
+            template <typename Payload>
+            bool comparator(const typename repository<number>::output_group<Payload>& A, const typename repository<number>::output_group<Payload>& B)
+              {
+                return (A.get_creation_time() > B.get_creation_time());
+              }
+
+          }   // namespace output_group_helper
+
+      }   // unnamed namespace
+
+
+    template <typename number>
+    void repository<number>::integration_payload::integration_payload(serialization_reader* reader)
+      {
+        assert(reader != nullptr);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
+
+        std::string ctr_path;
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
+        this->container = ctr_path;
+      }
+
+    template <typename number>
+    void repository<number>::integration_payload::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+      }
+
+
+    template <typename number>
+    void repository<number>::integration_payload::write(std::ostream& out) const
+      {
+        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+      }
+
+
+    template <typename number>
+    void repository<number>::output_payload::output_payload(serialization_reader* reader)
+      {
+        assert(reader != nullptr);
+
+        unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
+        for(unsigned int i = 0; i < num_elements; i++)
+          {
+            this->content.push_back( typename repository<number>::derived_content(reader) );
+          }
+        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
+      }
+
+
+    template <typename number>
+    void repository<number>::output_payload::serialize(serialization_writer& writer) const
+      {
+        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY, this->content.size() == 0);
+        for(std::list< typename repository<number>::derived_content >::iterator t = this->content.begin(); t != this->content.end(); t++)
+          {
+            writer.start_node("arrayelt", false);    // node names are ignored in an array
+            (*t).serialize(writer);
+            writer.end_element("arrayelt");
+          }
+        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
+      }
+
+
+    template <typename number>
+    void repository<number>::output_payload::write(std::ostream& out) const
+      {
+        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
+          {
+            out << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
+                << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << std::endl;
+          }
+      }
+
+
+    template <typename number>
+    repository<number>::derived_content::derived_content(serialization_reader* reader)
+      {
+        assert(reader != nullptr);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME, parent_product);
+
+        std::string fnam_string;
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME, fnam_string);
+        filename = fnam_string;
+
+        std::string ctime_string;
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED, ctime_string);
+        created = boost::posix_time::time_from_string(ctime_string);
+
+        unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
+        for(unsigned int i = 0; i < num_notes; i++)
+          {
+            reader->start_array_element();
+
+            std::string note;
+            reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE, note);
+            notes.push_back(note);
+
+            reader->end_array_element();
+          }
+        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
+
+        unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
+        for(unsigned int i = 0; i < num_tags; i++)
+          {
+            reader->start_array_element();
+
+            std::string tag;
+            reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG, tag);
+            tags.push_back(tag);
+
+            reader->end_array_element();
+          }
+        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
+      }
+
+
+    template <typename number>
+    void repository<number>::derived_content::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME, this->parent_product);
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME, this->filename.string());
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED, boost::posix_time::to_iso_string(this->created));
+
+        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES, this->notes.size() == 0);
+        for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
+          {
+            writer.start_node("arrayelt", false);   // node name is ignored in array element
+            writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE, *t);
+            writer.end_element("arrayelt");
+          }
+        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
+
+        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS, this->tags.size() == 0);
+        for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
+          {
+            writer.start_node("arrayelt", false);   // node name is ignored in array element
+            writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG, *t);
+            writer.end_element("arrayelt");
+          }
+        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
+      }
 
 
 	}   // namespace transport

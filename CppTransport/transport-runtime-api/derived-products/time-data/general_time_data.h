@@ -34,6 +34,7 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF                "twopf-group"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF              "threepf-group"
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TASK_NAME            "task-name"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION      "precision"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_DOT_TYPE             "threepf-momenta"
@@ -132,7 +133,7 @@ namespace transport
 		        general_time_data(integration_task<number>& tk, model<number>* m, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
-		        general_time_data(serialization_reader* reader);
+		        general_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
 
 				    //! Override default copy constructor to perform a deep copy of the parent task
 				    general_time_data(const general_time_data<number>& obj);
@@ -182,7 +183,7 @@ namespace transport
 		        // WRITE TO A STREAM
 
 		        //! write self-details to a stream
-		        virtual void write(std::ostream& out, wrapped_output& wrapper) = 0;
+		        virtual void write(std::ostream& out) = 0;
 
 		        // SERIALIZATION -- implements a 'serializable' interface
 
@@ -221,9 +222,12 @@ namespace transport
 
 		    template <typename number>
 		    general_time_data<number>::general_time_data(integration_task<number>& tk, model<number>* m, filter::time_filter tfilter)
-			    : parent_task(tk.clone()), mdl(m), dot_meaning(momenta), klabel_meaning(conventional)
+			    : parent_task(dynamic_cast<integration_task<number>*>(tk.clone())), mdl(m), dot_meaning(momenta), klabel_meaning(conventional)
 			    {
 		        assert(parent_task != nullptr);
+
+            if(parent_task == nullptr)
+              throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_NOT_INTEGRATION_TASK);
 
 		        // set up a list of serial numbers corresponding to the sample times for this plot
 		        this->f.filter_time_sample(tfilter, tk.get_sample_times(), time_sample_sns);
@@ -231,11 +235,20 @@ namespace transport
 
 
 		    template <typename number>
-		    general_time_data<number>::general_time_data(serialization_reader* reader)
+		    general_time_data<number>::general_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
+          : parent_task(nullptr), mdl(nullptr)
 			    {
 		        assert(reader != nullptr);
 
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+
+            std::string parent_task_name;
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TASK_NAME, parent_task_name);
+
+            // extract parent task and model
+            task<number>* tk = finder(parent_task_name, &mdl);
+            if((parent_task = dynamic_cast< integration_task<number>* >(tk)) == nullptr)
+              throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
 
 		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS);
 
@@ -280,11 +293,14 @@ namespace transport
 
 				template <typename number>
 				general_time_data<number>::general_time_data(const general_time_data<number>& obj)
-					: parent_task(obj.parent_task->clone()), mdl(obj.mdl)   // OK to shallow-copy model; pointers to model instances are managed by the instance_manager
+					: parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone())), mdl(obj.mdl),   // OK to shallow-copy model; pointers to model instances are managed by the instance_manager
 					  dot_meaning(obj.dot_meaning), klabel_meaning(obj.klabel_meaning),
 						time_sample_sns(obj.time_sample_sns)
 					{
 				    assert(this->parent_task != nullptr);
+
+            if(this->parent_task == nullptr)
+              throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_NOT_INTEGRATION_TASK);
 					}
 
 
@@ -299,7 +315,7 @@ namespace transport
 		    template <typename number>
 		    void general_time_data<number>::set_time_axis(typename data_manager<number>::datapipe& pipe)
 			    {
-		        if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIMEPLOT_NULL_DATAPIPE);
+		        if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_DATAPIPE);
 
 		        // set-up time sample data
 		        std::vector<double> time_axis;
@@ -312,14 +328,16 @@ namespace transport
 		    template <typename number>
 		    void general_time_data<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->begin_array(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS, this->time_sample_sns.size() == 0);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TASK_NAME, this->parent_task->get_name());
+
+		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS, this->time_sample_sns.size() == 0);
 		        for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
 			        {
 		            this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SN, *t);
+		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SN, *t);
 		            this->end_element(writer, "arrayelt");
 			        }
-		        this->end_element(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TIMEPLOT_SNS);
+		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS);
 
 		        switch(this->dot_meaning)
 			        {
@@ -354,7 +372,7 @@ namespace transport
 		    template <typename number>
 		    void general_time_data<number>::write(std::ostream& out)
 			    {
-		        this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN " ");
+		        this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TSAMPLE_SN_LABEL " ");
 
 		        unsigned int count = 0;
 		        for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)

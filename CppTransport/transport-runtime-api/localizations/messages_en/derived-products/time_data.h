@@ -26,10 +26,13 @@
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF          "threepf line group"
 
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL       "k-configurations: including serial numbers"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TSAMPLE_SN_LABEL       "time sample: including serial numbers"
 
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_DATAPIPE          "Internal error: Null datapipe when attempting to build background plot"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL             "Internal error: Null model in 'general_time_plot'"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER            "Internal error: Null serialization reader in 'general_time_plot'"
+
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_NOT_INTEGRATION_TASK         "Internal error: 'general_time_data' built with non-integration task"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TIME_DATA_PRODUCT_H

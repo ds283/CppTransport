@@ -15,7 +15,6 @@
 #include "transport-runtime-api/models/model.h"
 #include "transport-runtime-api/manager/instance_manager.h"
 #include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/tasks/model_list.h"
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
@@ -124,13 +123,13 @@ namespace transport
         void master_process_task(const job_descriptor& job);
 
         //! Master node: Dispatch a twopf 'task' (ie., integration) to the worker processes
-        void master_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags);
+        void master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
 
         //! Master node: Dispatch a threepf 'task' (ie., integration) to the worker processes
-        void master_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags);
+        void master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch an output 'task' (ie., generation of derived data products) to the worker processes
-		    void master_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags);
+		    void master_dispatch_output_task(output_task<number>* tk, model<number>* m, const std::list<std::string>& tags);
 
         //! Master node: Terminate all worker processes
         void master_terminate_workers(void);
@@ -153,15 +152,15 @@ namespace transport
 		    void slave_process_task(const MPI::new_derived_content_payload& payload);
 
         //! Slave node: Process a twopf task
-        void slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist,
+        void slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m,
                                        const MPI::new_integration_payload& payload, const work_item_filter<twopf_kconfig>& filter);
 
         //! Slave node: Process a threepf task
-        void slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist,
+        void slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m,
                                          const MPI::new_integration_payload& payload, const work_item_filter<threepf_kconfig>& filter);
 
 		    //! Slave node: Process an output task
-		    void slave_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist,
+		    void slave_dispatch_output_task(output_task<number>* tk, model<number>* m,
 		                                    const MPI::new_derived_content_payload& payload, const work_item_filter< output_task_element<number> >& filter);
 
         //! Slave node: set repository
@@ -395,11 +394,8 @@ namespace transport
         try
           {
 						// query a task with the name we're looking for from the database
-		        model_list<number> mlist;
-            task<number>* tk = this->repo->lookup_task(job.name, mlist, this->model_finder_factory());
-
-		        // check that a model instance was returned -- we'll need this
-            assert(mlist.size() > 0);
+            model<number>* m = nullptr;
+            task<number>* tk = this->repo->lookup_task(job.name, m, this->model_finder_factory());
 
             // set up work queues for this task, and then distribute to worker processes
 
@@ -408,21 +404,23 @@ namespace transport
             if(dynamic_cast< threepf_task<number>* >(tk) != nullptr)
               {
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->master_dispatch_threepf_task(three_task, mlist, job.tags);
+                this->master_dispatch_threepf_task(three_task, m, job.tags);
               }
             else if(dynamic_cast< twopf_task<number>* >(tk) != nullptr)
               {
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->master_dispatch_twopf_task(two_task, mlist, job.tags);
+                this->master_dispatch_twopf_task(two_task, m, job.tags);
               }
 	          else if(dynamic_cast< output_task<number>* >(tk) != nullptr)
 	            {
 		            output_task<number>* out_task = dynamic_cast< output_task<number>* >(tk);
-		            this->master_dispatch_output_task(out_task, mlist, job.tags);
+		            this->master_dispatch_output_task(out_task, m, job.tags);
 	            }
             else
               {
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << job.name << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 
             delete tk;
@@ -463,19 +461,17 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags)
+    void task_manager<number>::master_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
       {
+        assert(m != nullptr);   // should be guaranteed
+        assert(tk != nullptr);
+
 		    // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
-
-		    // should have exactly one model instance
-		    if(mlist.size() != 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
         // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
-
-		    model<number>* m = mlist.front();
 
         work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tk);
 
@@ -503,19 +499,17 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags)
+    void task_manager<number>::master_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
       {
+        assert(m != nullptr);   // should be guaranteed
+        assert(tk != nullptr);  // should be guaranteed
+
         // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
-
-        // should have exactly one model instance
-        if(mlist.size() != 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
         // set up a work queue representing our workers
         context ctx = this->make_workers_context();
         scheduler sch = scheduler(ctx);
-
-        model<number>* m = mlist.front();
 
         work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tk);
 
@@ -674,14 +668,13 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist, const std::list<std::string>& tags)
+    void task_manager<number>::master_dispatch_output_task(output_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
 	    {
-		    // can't process a task if there are no workers
-		    if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        assert(tk != nullptr);  // should be guaranteed
+        assert(m == nullptr);   // should be guaranteed
 
-		    // should have as many models in mlist as output elements in the task
-		    assert(mlist.size() == tk->size());
-		    if(mlist.size() != tk->size()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
+		    // can't process a task if there are no workers
+		    if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
 		    // set up a work queue representing our workers
 		    context ctx = this->make_workers_context();
@@ -689,7 +682,7 @@ namespace transport
 
 		    work_queue< output_task_element<number> > queue = sch.make_queue(*tk);
 
-		    // set up an derived_content_writer object to coordinate logging and commits into the repository
+		    // set up an derived_content_writer object to coordinate logging, output destination and commits into the repository
 		    typename repository<number>::derived_content_writer writer = this->repo->new_output_task_output(tk, tags, this->get_rank());
 
 		    // set up the writer for us
@@ -880,9 +873,8 @@ namespace transport
         // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
         try
 	        {
-            model_list<number> mlist;
-            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), mlist, this->model_finder_factory());
-            assert(mlist.size() > 0);
+            model<number>* m = nullptr;
+            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), m, this->model_finder_factory());
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
@@ -892,7 +884,7 @@ namespace transport
                 work_item_filter<threepf_kconfig> filter(work_items);
 
                 threepf_task<number>* three_task = dynamic_cast< threepf_task<number>* >(tk);
-                this->slave_dispatch_threepf_task(three_task, mlist, payload, filter);
+                this->slave_dispatch_threepf_task(three_task, m, payload, filter);
 	            }
             else if(dynamic_cast< twopf_task<number>* >(tk))
 	            {
@@ -900,11 +892,13 @@ namespace transport
                 work_item_filter<twopf_kconfig> filter(work_items);
 
                 twopf_task<number>* two_task = dynamic_cast< twopf_task<number>* >(tk);
-                this->slave_dispatch_twopf_task(two_task, mlist, payload, filter);
+                this->slave_dispatch_twopf_task(two_task, m, payload, filter);
 	            }
             else
 	            {
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << payload.get_task_name() << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
 
             delete tk;
@@ -955,9 +949,8 @@ namespace transport
         // TODO: it would be nice to make this sharing more explicit, so the code isn't just duplicated
         try
 	        {
-            model_list<number> mlist;
-            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), mlist, this->model_finder_factory());
-            assert(mlist.size() > 0);
+            model<number>* m = nullptr;
+            task<number>* tk = this->repo->lookup_task(payload.get_task_name(), m, this->model_finder_factory());
 
             // dynamic_cast<> is a bit unsubtle, but we cannot predict in advance what type
             // of task will be returned
@@ -967,11 +960,13 @@ namespace transport
                 work_item_filter< output_task_element<number> > filter(work_items);
 
                 output_task<number>* out_task = dynamic_cast< output_task<number>* >(tk);
-                this->slave_dispatch_output_task(out_task, mlist, payload, filter);
+                this->slave_dispatch_output_task(out_task, m, payload, filter);
 	            }
             else
 	            {
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK);
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_UNKNOWN_DERIVED_TASK << " '" << payload.get_task_name() << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
 
             delete tk;
@@ -1012,19 +1007,16 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model_list<number>& mlist,
+    void task_manager<number>::slave_dispatch_twopf_task(twopf_task<number>* tk, model<number>* m,
                                                          const MPI::new_integration_payload& payload,
                                                          const work_item_filter<twopf_kconfig>& filter)
       {
         // dispatch integration to the underlying model
+        assert(tk != nullptr);  // should be guaranteed
+        assert(m != nullptr);   // should be guaranteed
 
         // keep track of CPU time
         boost::timer::cpu_timer timer;
-
-        if(mlist.size() != 1)
-	        throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
-
-        model<number>* m = mlist.front();
 
         // create queues based on whatever devices are relevant for the backend
         context                   ctx  = m->backend_get_context();
@@ -1063,19 +1055,16 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model_list<number>& mlist,
+    void task_manager<number>::slave_dispatch_threepf_task(threepf_task<number>* tk, model<number>* m,
                                                            const MPI::new_integration_payload& payload,
                                                            const work_item_filter<threepf_kconfig>& filter)
       {
         // dispatch integration to the underlying model
+        assert(tk != nullptr);  // should be guaranteed
+        assert(m != nullptr);   // should be guaranteed
 
         // keep track of CPU time
         boost::timer::cpu_timer timer;
-
-				if(mlist.size() != 1)
-					throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
-
-				model<number>* m = mlist.front();
 
         // create queues based on whatever devices are relevant for the backend
         context                     ctx  = m->backend_get_context();
@@ -1154,16 +1143,15 @@ namespace transport
 
 
 		template <typename number>
-		void task_manager<number>::slave_dispatch_output_task(output_task<number>* tk, model_list<number>& mlist,
+		void task_manager<number>::slave_dispatch_output_task(output_task<number>* tk, model<number>* m,
 																												  const MPI::new_derived_content_payload& payload,
 																												  const work_item_filter< output_task_element<number> >& filter)
 			{
+        assert(tk != nullptr);  // should be guaranteed
+        assert(m == nullptr);   // should be guaranteed
+
 				// keep track of CPU time
 		    boost::timer::cpu_timer timer;
-
-				// should have as many models in mlist as elements in the task
-				assert(mlist.size() == tk->size());
-		    if(mlist.size() != tk->size()) throw runtime_exception(runtime_exception::MISSING_MODEL_INSTANCE, __CPP_TRANSPORT_MODEL_LIST_MISMATCH);
 
 		    // acquire a datapipe which we can use to stream content from the databse
 		    typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
@@ -1189,18 +1177,28 @@ namespace transport
 
 				for(unsigned int i = 0; i < list.size(); i++)
 					{
-						// merge command-line supplied tags with tags specified in the task
-				    std::list<std::string> task_tags = list[i].get_tags();
-				    std::list<std::string> command_line_tags = payload.get_tags();
-
-				    task_tags.splice(task_tags.end(), command_line_tags);
-
 						typename derived_data::derived_product<number>* product = list[i].get_product();
 
 						assert(product != nullptr);
-						if(product == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT);
+						if(product == nullptr)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
 
-						typename repository<number>::output_group group = this->repo->find_derived_product_output_group(product, task_tags);
+            // merge command-line supplied tags with tags specified in the task
+            std::list<std::string> task_tags = list[i].get_tags();
+            std::list<std::string> command_line_tags = payload.get_tags();
+
+            task_tags.splice(task_tags.end(), command_line_tags);
+
+            // FINISHED HERE 0105 21 MAY 2014
+            // NEXT JOB - CHANGE DATAPIPE SO IT ISN'T CONNECTED TO A DATABASE IMMEDIATELY
+            // PUSH TO DERIVED PRODUCT. CONTENT PRODUCERS ATTACH DATABASE TO OUTPUT GROUPS.
+
+						typename repository<number>::output_group< typename repository<number>::integration_payload > group =
+                                                                                                            this->repo->find_integration_task_output_group(product, task_tags);
 
 						// has output already been generated for this derived product?
 						if(!group.output_exists(product->get_name()))
@@ -1210,7 +1208,7 @@ namespace transport
 
 						    // construct a callback for the derived-product provider to push new content to the master
 						    typename data_manager<number>::derived_content_dispatch_function dispatcher =
-							                                                                     std::bind(&task_manager<number>::slave_push_derived_content, this, std::placeholders::_1);
+							                                                                     std::bind(&task_manager<number>::slave_push_derived_content, this, product->get_name(), std::placeholders::_1);
 
 						    // attach this output group to the datapipe
 						    pipe.attach(group, dispatcher);

@@ -46,7 +46,7 @@ namespace transport
 		        background_time_data(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel, filter::time_filter tfilter);
 
 		        //! deserialization constructor.
-		        background_time_data(serialization_reader* reader);
+		        background_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
 
 		        virtual ~background_time_data() = default;
 
@@ -113,7 +113,7 @@ namespace transport
 
 
 		    template <typename number>
-		    background_time_data<number>::background_time_data(serialization_reader* reader)
+		    background_time_data<number>::background_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
 			    : active_indices(reader), general_time_data<number>(reader)
 			    {
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
@@ -228,7 +228,7 @@ namespace transport
 		                        unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
-		        twopf_time_data(serialization_reader* reader);
+		        twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
 
 		        virtual ~twopf_time_data() = default;
 
@@ -315,7 +315,7 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_time_data<number>::twopf_time_data(serialization_reader* reader)
+		    twopf_time_data<number>::twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
 			    : active_indices(reader), general_time_data<number>(reader)
 			    {
 		        assert(reader != nullptr);
@@ -536,7 +536,7 @@ namespace transport
 			        }
 
 		        //! deserialization constructor
-		        basic_threepf_time_data(serialization_reader* reader)
+		        basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
 			        : general_time_data<number>(reader)
 			        {
 			        }
@@ -685,7 +685,7 @@ namespace transport
 		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        threepf_time_data(serialization_reader* reader);
+		        threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
 
 		        virtual ~threepf_time_data() = default;
 
