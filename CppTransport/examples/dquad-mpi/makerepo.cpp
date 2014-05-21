@@ -259,6 +259,39 @@ int main(int argc, char* argv[])
 		tk3_mixed_plot.set_title_text("Two- and three-point functions");
 		tk3_mixed_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
 
+    // pick out the shift between derivative and moments 3pfs
+    transport::index_selector<3> threepf_mmta(model->get_N_fields());
+    threepf_mmta.none();
+    std::array<unsigned int, 3> sq_mmta_a = { 2, 0, 0 };
+    std::array<unsigned int, 3> sq_mmta_b = { 3, 0, 0 };
+    threepf_mmta.set_on(sq_mmta_a);
+    threepf_mmta.set_on(sq_mmta_b);
+
+    transport::derived_data::threepf_time_data<double> tk3_threepf_derivs =
+                                                         transport::derived_data::threepf_time_data<double>(tk3, model, threepf_mmta,
+                                                                                                            transport::derived_data::filter::time_filter(time_filter),
+                                                                                                            transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter));
+    tk3_threepf_derivs.set_klabel_meaning(transport::derived_data::general_time_data<double>::comoving);
+    tk3_threepf_derivs.set_dot_meaning(transport::derived_data::general_time_data<double>::derivatives);
+    tk3_threepf_derivs.set_use_alpha_label(true);
+    tk3_threepf_derivs.set_use_beta_label(true);
+
+    transport::derived_data::threepf_time_data<double> tk3_threepf_momenta =
+                                                         transport::derived_data::threepf_time_data<double>(tk3, model, threepf_mmta,
+                                                                                                            transport::derived_data::filter::time_filter(time_filter),
+                                                                                                            transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter));
+    tk3_threepf_momenta.set_klabel_meaning(transport::derived_data::general_time_data<double>::comoving);
+    tk3_threepf_momenta.set_dot_meaning(transport::derived_data::general_time_data<double>::momenta);
+    tk3_threepf_momenta.set_use_alpha_label(true);
+    tk3_threepf_momenta.set_use_beta_label(true);
+
+    transport::derived_data::general_time_plot<double> tk3_check_shift = transport::derived_data::general_time_plot<double>("dquad.threepf-1.checkshift", "checkshift.pdf");
+
+    tk3_check_shift.add_line(tk3_threepf_derivs);
+    tk3_check_shift.add_line(tk3_threepf_momenta);
+    tk3_check_shift.set_title_text("Comparison of derivative and momenta 3pf");
+    tk3_check_shift.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+
     std::cout << "3pf background plot:" << std::endl << tk3_mixed_plot << std::endl;
 
 		// write derived data products representing these background plots to the database
@@ -274,6 +307,8 @@ int main(int argc, char* argv[])
     repo->write_derived_product(tk3_threepf_plot);
     repo->write_derived_product(tk3_mixed_plot);
 
+    repo->write_derived_product(tk3_check_shift);
+
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
 		twopf_output.add_element(tk2_twopf_real_plot);
@@ -286,6 +321,7 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_twopf_total_plot);
 		threepf_output.add_element(tk3_threepf_plot);
 		threepf_output.add_element(tk3_mixed_plot);
+    threepf_output.add_element(tk3_check_shift);
 
 		// write output tasks to the database
 		repo->write_task(twopf_output);
