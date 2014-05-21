@@ -186,9 +186,10 @@ namespace transport
       protected:
 
         //! Attach an output_group to a pipe
-        void datapipe_attach(typename data_manager<number>::datapipe* pipe,
-                             typename data_manager<number>::output_group_finder& finder,
-                             integration_task<number>* tk, const std::list<std::string>& tags);
+        typename repository<number>::template output_group<typename repository<number>::integration_payload>
+          datapipe_attach(typename data_manager<number>::datapipe* pipe,
+                          typename data_manager<number>::output_group_finder& finder,
+                          integration_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach an output_group from a pipe
         void datapipe_detach(typename data_manager<number>::datapipe* pipe);
@@ -779,9 +780,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
-                                                       typename data_manager<number>::output_group_finder& finder,
-                                                       integration_task<number>* tk, const std::list<std::string>& tags)
+    typename repository<number>::template output_group<typename repository<number>::integration_payload>
+    data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
+                                                  typename data_manager<number>::output_group_finder& finder,
+                                                  integration_task<number>* tk, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
 				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -792,19 +794,19 @@ namespace transport
 				sqlite3* db = nullptr;
 
         // find a suitable output group for this task
-        typename repository<number>::output_group< typename repository<number>::integration_payload >* group = finder(tk, tags);
-        assert(group != nullptr);
-        if(group == nullptr)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-          }
+        typename repository<number>::template output_group< typename repository<number>::integration_payload > group = finder(tk, tags);
+//        assert(group != nullptr);
+//        if(group == nullptr)
+//          {
+//            std::ostringstream msg;
+//            msg << __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP << " '" << tk->get_name() << "'";
+//            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+//          }
 
-        typename repository<number>::integration_payload& payload = group->get_payload();
+        typename repository<number>::integration_payload& payload = group.get_payload();
 
 				// get path to the output group data container
-		    boost::filesystem::path ctr_path = group->get_repo_root_path() / payload.get_container_path();
+		    boost::filesystem::path ctr_path = group.get_repo_root_path() / payload.get_container_path();
 
 				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
 
@@ -828,6 +830,8 @@ namespace transport
 				pipe->set_manager_handle(db);
 
 				BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "' to datapipe";
+
+        return(group);
 			}
 
 

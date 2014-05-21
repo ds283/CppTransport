@@ -92,7 +92,7 @@ namespace transport
 		      public:
 
 		        //! Basic user-facing constructor
-		        general_time_data(integration_task<number>& tk, model<number>* m, filter::time_filter tfilter);
+		        general_time_data(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
 		        general_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
@@ -100,7 +100,7 @@ namespace transport
 				    //! Override default copy constructor to perform a deep copy of the parent task
 				    general_time_data(const general_time_data<number>& obj);
 
-		        virtual ~general_time_data() = default;
+		        virtual ~general_time_data();
 
 
 		        // ADMIN
@@ -190,7 +190,7 @@ namespace transport
 
 
 		    template <typename number>
-		    general_time_data<number>::general_time_data(integration_task<number>& tk, model<number>* m, filter::time_filter tfilter)
+		    general_time_data<number>::general_time_data(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter)
 			    : parent_task(dynamic_cast<integration_task<number>*>(tk.clone())), mdl(m), dot_meaning(momenta), klabel_meaning(conventional)
 			    {
 		        assert(parent_task != nullptr);
@@ -215,7 +215,7 @@ namespace transport
             reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TASK_NAME, parent_task_name);
 
             // extract parent task and model
-            task<number>* tk = finder(parent_task_name, &mdl);
+            task<number>* tk = finder(parent_task_name, mdl);
             if((parent_task = dynamic_cast< integration_task<number>* >(tk)) == nullptr)
               throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
 

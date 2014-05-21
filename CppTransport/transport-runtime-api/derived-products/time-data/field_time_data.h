@@ -103,12 +103,12 @@ namespace transport
 			    {
 		        assert(m != nullptr);
 
-		        if(active_indices.get_number_fields() != mdl->get_N_fields())
+		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
 			              << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << mdl->get_N_fields() << ")";
+			              << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 			    }
@@ -127,7 +127,7 @@ namespace transport
 			    {
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_BACKGROUND << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
-		        this->active_indices.write(out, mdl->get_state_names());
+		        this->active_indices.write(out, this->mdl->get_state_names());
 			    }
 
 
@@ -314,12 +314,12 @@ namespace transport
 
 		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
 
-		        if(active_indices.get_number_fields() != mdl->get_N_fields())
+		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
 			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << mdl->get_N_fields() << ")";
+			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 
@@ -480,10 +480,10 @@ namespace transport
 			    {
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TWOPF << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
-		        this->active_indices.write(out, mdl->get_state_names());
+		        this->active_indices.write(out, this->mdl->get_state_names());
 		        out << std::endl;
 
-		        wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
 
 		        unsigned int count = 0;
 		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -491,10 +491,10 @@ namespace transport
 		            std::ostringstream msg;
 		            msg << (*t);
 
-		            wrapper.wrap_list_item(out, true, msg.str(), count);
+		            this->wrapper.wrap_list_item(out, true, msg.str(), count);
 			        }
-		        if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) wrapper.wrap_list_item(out, true, "...", count);
-		        wrapper.wrap_newline(out);
+		        if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+		        this->wrapper.wrap_newline(out);
 			    }
 
 
@@ -565,7 +565,7 @@ namespace transport
 			        }
 
 		        //! destroy a basic threepf_time_data object
-		        virtual ~threepf_time_data() = default;
+		        virtual ~basic_threepf_time_data() = default;
 
 
 		        // DERIVE LINES
@@ -697,10 +697,10 @@ namespace transport
 
                 for(unsigned int j = 0; j < time_sample.size(); j++)
                   {
-                    sigma_q_re[j].push_back(q_line_re);
-                    sigma_q_im[j].push_back(q_line_im);
-                    sigma_r_re[j].push_back(r_line_re);
-                    sigma_r_im[j].push_back(r_line_im);
+                    (sigma_q_re[j]).push_back(q_line_re[j]);
+                    (sigma_q_im[j]).push_back(q_line_im[j]);
+                    (sigma_r_re[j]).push_back(r_line_re[j]);
+                    (sigma_r_im[j]).push_back(r_line_im[j]);
                   }
 			        }
 
@@ -836,19 +836,19 @@ namespace transport
 		    threepf_time_data<number>::threepf_time_data(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
 		                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                 unsigned int prec)
-			    : active_indices(sel), precision(prec), use_kt_label(true), use_alpha_label(false), use_alpha_label(false),
+			    : active_indices(sel), precision(prec), use_kt_label(true), use_alpha_label(false), use_beta_label(false),
 			      basic_threepf_time_data<number>(tk, m, tfilter)
 			    {
 		        assert(m != nullptr);
 
 		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
 
-		        if(active_indices.get_number_fields() != mdl->get_N_fields())
+		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
 			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << mdl->get_N_fields() << ")";
+			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 
@@ -880,11 +880,11 @@ namespace transport
 		            reader->end_array_element();
 			        }
 
+            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+
 		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
 		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
 		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
-
-		        reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 			    }
 
 
@@ -992,7 +992,7 @@ namespace transport
 			            }
 
 		            // FIXME: allow alpha, beta, etc. in labels too?
-		            label << "\\;"
+		            label << "\\;";
 		            unsigned int count=0;
 		            if(this->use_kt_label)
 			            {
@@ -1008,8 +1008,8 @@ namespace transport
 			            }
 		            if(this->use_beta_label)
 			            {
-		                label << (count > 0, ", " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << config.beta;
-		                count++
+		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << config.beta;
+		                count++;
 			            }
 
 		            label << "$";
@@ -1062,10 +1062,10 @@ namespace transport
 			    {
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
-		        this->active_indices.write(out, mdl->get_state_names());
+		        this->active_indices.write(out, this->mdl->get_state_names());
 		        out << std::endl;
 
-		        wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
 
 		        unsigned int count = 0;
 		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -1073,10 +1073,10 @@ namespace transport
 		            std::ostringstream msg;
 		            msg << (*t);
 
-		            wrapper.wrap_list_item(out, true, msg.str(), count);
+		            this->wrapper.wrap_list_item(out, true, msg.str(), count);
 			        }
-		        if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) wrapper.wrap_list_item(out, true, "...", count);
-		        wrapper.wrap_newline(out);
+		        if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+		        this->wrapper.wrap_newline(out);
 			    }
 
 
@@ -1099,9 +1099,9 @@ namespace transport
 			        }
 		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_LABEL_KT, this->use_kt_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_LABEL_ALPHA, this->use_alpha_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_GENERAL_TPLOT_LABEL_BETA, this->use_beta_label);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
 
 		        this->general_time_data<number>::serialize(writer);
 			    }

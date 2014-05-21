@@ -147,7 +147,7 @@ namespace transport
       public:
 
 		    //! Enumerate the output available from a named task
-        virtual std::list<typename repository<number>::output_group< typename repository<number>::integration_payload > >
+        virtual std::list<typename repository<number>::template output_group< typename repository<number>::integration_payload > >
           enumerate_integration_task_output(const std::string& name) override;
 
 
@@ -180,7 +180,7 @@ namespace transport
                                  unsigned int worker) override;
 
         //! Lookup an output group for a task, given a set of tags
-        virtual typename repository<number>::output_group<typename repository<number>::integration_payload>
+        virtual typename repository<number>::template output_group<typename repository<number>::integration_payload>
           find_integration_task_output_group(const integration_task<number> *tk,
                                              const std::list<std::string> &tags) override;
 
@@ -1149,8 +1149,8 @@ namespace transport
         boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
         // create and serialize an empty output group
-        typename repository<number>::output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(), output_path,
-                                                                                                          now, false, std::list<std::string>(), tags);
+        typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(), output_path,
+                                                                                                                   now, false, std::list<std::string>(), tags);
         group.get_payload().set_backend(backend);
         group.get_payload().set_container_path(sql_path);
         unqlite_serialization_writer writer;
@@ -1190,12 +1190,12 @@ namespace transport
             assert(value != nullptr);
             assert(handle != nullptr);
 
-            std::list< typename repository<number>::output_group< typename repository<number>::integration_payload > >* list =
-              static_cast< std::list< typename repository<number>::output_group< typename repository<number>::integration_payload > >* >(handle);
+            std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >* list =
+              static_cast< std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >* >(handle);
 
             unqlite_serialization_reader reader(value);
 
-            list->push_back( typename repository<number>::output_group< typename repository<number>::integration_payload >(&reader) );
+            list->push_back( typename repository<number>::template output_group< typename repository<number>::integration_payload >(&reader) );
 
             return(UNQLITE_OK);
           }
@@ -1208,10 +1208,10 @@ namespace transport
 		// derived_content_writer objects, which allow the corresponding integration output
 		// to be extracted from the database
 		template <typename number>
-		std::list< typename repository<number>::output_group< typename repository<number>::integration_payload > >
+		std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >
     repository_unqlite<number>::enumerate_integration_task_output(const std::string& name)
 			{
-		    std::list<typename repository<number>::output_group> group_list;
+		    std::list<typename repository<number>::template output_group< typename repository<number>::integration_payload > > group_list;
 
 				// open a new transaction, if necessary. After this we can assume the database handles are live
 				this->begin_transaction();
@@ -1229,7 +1229,7 @@ namespace transport
           }
 
         // enumerate all output groups associated with this task
-        unqlite_vm* vm;
+        unqlite_vm* vm = nullptr;
         unqlite_value* groups = unqlite_operations::query(this->db, vm, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
 
         if(groups == nullptr || !unqlite_value_is_json_array(groups))
@@ -1237,7 +1237,7 @@ namespace transport
 
         unsigned int num_groups = static_cast<unsigned int>(unqlite_array_count(groups));
 
-        std::list< typename repository<number>::output_group< typename repository<number>::integration_payload > > list;
+        std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > > list;
         unqlite_array_walk(groups, &array_extract_output_groups<number>, &list);
 
         unqlite_vm_release(vm);
@@ -1250,7 +1250,7 @@ namespace transport
 				// sort the output groups into descending order of creation date, so the first element in the
 				// list is the most recent data group.
 				// This is usually what would be required.
-				list.sort(&output_group_helper::comparator<number>);
+				list.sort(&output_group_helper::comparator<number, typename repository<number>::integration_payload>);
 
 				return(list);
 			}
@@ -1315,9 +1315,12 @@ namespace transport
 				int product_id = 0;
 				unqlite_serialization_reader* product_reader = this->get_derived_product_serialization_reader(product, product_id);
 
-				task_finder tfinder = std::bind(&repository_unqlite<number>::lookup_task, this, std::placeholders::_1, std::placeholders::_2, finder);
+				typename repository<number>::task_finder tfinder = std::bind(&repository_unqlite<number>::lookup_task, this, std::placeholders::_1, std::placeholders::_2, finder);
 
+        // move reader to details block
+        product_reader->start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
 		    derived_data::derived_product<number>* rval = derived_data::derived_product_helper::deserialize<number>(product, product_reader, tfinder);
+        product_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
 
 				// commit transaction
 				this->commit_transaction();
@@ -1395,8 +1398,8 @@ namespace transport
 		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
         // create and serialize an empty output group
-        typename repository<number>::output_group<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(), output_path,
-                                                                                                     now, false, std::list<std::string>(), tags);
+        typename repository<number>::template output_group<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(), output_path,
+                                                                                                              now, false, std::list<std::string>(), tags);
 
         unqlite_serialization_writer writer;
         group.serialize(writer);
@@ -1420,7 +1423,7 @@ namespace transport
 
 
     template<typename number>
-    typename repository<number>::output_group<typename repository<number>::integration_payload>
+    typename repository<number>::template output_group<typename repository<number>::integration_payload>
     repository_unqlite<number>::find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags)
 	    {
 		    assert(tk != nullptr);
@@ -1428,11 +1431,11 @@ namespace transport
 		    if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
 		    // search for output groups associated with this task
-        std::list< typename repository<number>::output_group< typename repository<number>::integration_payload > >
-          output = this->enumerate_integration_task_output(task);
+        std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >
+          output = this->enumerate_integration_task_output(tk->get_name());
 
 		    // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const typename repository<number>::output_group< typename repository<number>::integration_payload >& group) { return(group.check_tags(tags)); } );
+        output.remove_if( [&] (const typename repository<number>::template output_group< typename repository<number>::integration_payload >& group) { return(group.check_tags(tags)); } );
 
 		    if(output.empty())
 			    {

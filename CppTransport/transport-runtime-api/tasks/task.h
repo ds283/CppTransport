@@ -993,7 +993,7 @@ namespace transport
 
                 reader->end_array_element();
 
-                derived_data::derived_product<number>* dp = pfinder(dynamic_cast< integration_task<number>* >(product_name);
+                derived_data::derived_product<number>* dp = pfinder(product_name);
 
 		            // construct a output_task_element<> object wrapping these elements, and push it to the list
 		            elements.push_back(output_task_element<number>(*dp, tags, serial));

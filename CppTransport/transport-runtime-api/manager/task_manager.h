@@ -1192,7 +1192,7 @@ namespace transport
 						if(product == nullptr)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name << "'";
+                msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
               }
 

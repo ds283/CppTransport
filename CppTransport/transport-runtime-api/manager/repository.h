@@ -73,9 +73,8 @@
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS             "product_details"
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_BACKEND                 "backend"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH                    "output-path"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATABASE                "database-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT               "repo-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT             "output-path"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
@@ -284,7 +283,7 @@ namespace transport
             derived_content(serialization_reader* reader);
 
             //! Destroy a derived_product descriptor
-            ~derived_product() = default;
+            ~derived_content() = default;
 
 
             // INTERFACE
@@ -468,7 +467,7 @@ namespace transport
             const boost::filesystem::path& get_repo_root_path() const { return (this->repo_root_path); }
 
 
-            //! Get path to output root
+            //! Get path to output root (typically a subdir of the repository root)
             const boost::filesystem::path& get_data_root_path() const { return (this->data_root_path); }
 
 
@@ -909,7 +908,7 @@ namespace transport
 	        }
         out << std::endl;
 
-        this->payload.write();
+        this->payload.write(out);
 
         out << std::endl;
 	    }
@@ -939,8 +938,12 @@ namespace transport
 
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, task);
 
+        std::string repo_root;
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, repo_root);
+        repo_root_path = repo_root;
+
         std::string data_root;
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, data_root);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, data_root);
         data_root_path = data_root;
 
         std::string ctime;
@@ -982,7 +985,8 @@ namespace transport
     void repository<number>::output_group<Payload>::serialize(serialization_writer& writer) const
       {
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_PATH, this->data_root_path.string());
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, this->repo_root_path.string());
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->data_root_path.string());
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(this->created));
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
@@ -1009,9 +1013,9 @@ namespace transport
 
 
     // output an output_group descriptor to a standard stream
-    template <typename number>
-    template <typename Payload>
-    std::ostream& operator<<(std::ostream& out, const typename repository<number>::output_group<Payload>& group)
+    // notice obscure syntax to declare a templated member of an explicitly named namespace
+    template <typename number, typename Payload>
+    std::ostream& operator<<(std::ostream& out, const typename repository<number>::template output_group<Payload>& group)
       {
         group.write(out);
         return (out);
@@ -1025,9 +1029,8 @@ namespace transport
           {
 
             // used for sorting a list of output_groups into decreasing chronological order
-            template <typename number>
-            template <typename Payload>
-            bool comparator(const typename repository<number>::output_group<Payload>& A, const typename repository<number>::output_group<Payload>& B)
+            template <typename number, typename Payload>
+            bool comparator(const typename repository<number>::template output_group<Payload>& A, const typename repository<number>::template output_group<Payload>& B)
               {
                 return (A.get_creation_time() > B.get_creation_time());
               }
@@ -1038,7 +1041,7 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::integration_payload::integration_payload(serialization_reader* reader)
+    repository<number>::integration_payload::integration_payload(serialization_reader* reader)
       {
         assert(reader != nullptr);
 
@@ -1066,7 +1069,7 @@ namespace transport
 
 
     template <typename number>
-    void repository<number>::output_payload::output_payload(serialization_reader* reader)
+    repository<number>::output_payload::output_payload(serialization_reader* reader)
       {
         assert(reader != nullptr);
 
@@ -1083,7 +1086,7 @@ namespace transport
     void repository<number>::output_payload::serialize(serialization_writer& writer) const
       {
         writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY, this->content.size() == 0);
-        for(std::list< typename repository<number>::derived_content >::iterator t = this->content.begin(); t != this->content.end(); t++)
+        for(typename std::list< typename repository<number>::derived_content >::const_iterator t = this->content.begin(); t != this->content.end(); t++)
           {
             writer.start_node("arrayelt", false);    // node names are ignored in an array
             (*t).serialize(writer);
@@ -1096,7 +1099,7 @@ namespace transport
     template <typename number>
     void repository<number>::output_payload::write(std::ostream& out) const
       {
-        for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
+        for(typename std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
           {
             out << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT << " = " << (*t).get_parent_product() << ", "
                 << __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH    << " = " << (*t).get_filename() << std::endl;

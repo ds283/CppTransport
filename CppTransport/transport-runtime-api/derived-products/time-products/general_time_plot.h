@@ -144,7 +144,7 @@ namespace transport
 			        {
 		            reader->start_array_element();
 
-		            general_time_data<number>* data = general_time_data_helper::deserialize(reader, finder);
+		            general_time_data<number>* data = general_time_data_helper::deserialize<number>(reader, finder);
 		            data_lines.push_back(data);
 
 		            reader->end_array_element();

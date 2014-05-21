@@ -162,26 +162,26 @@ int main(int argc, char* argv[])
 	                                                     transport::derived_data::twopf_time_data<double>(tk2, model, twopf_fields,
 	                                                                                                      transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-		tk2_twopf_real_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::momenta);
+		tk2_twopf_real_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
 
     transport::derived_data::twopf_time_data<double> tk2_twopf_imag_group =
 	                                                     transport::derived_data::twopf_time_data<double>(tk2, model, twopf_cross,
 	                                                                                                      transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-    tk2_twopf_imag_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::momenta);
+    tk2_twopf_imag_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
     tk2_twopf_imag_group.set_type(transport::derived_data::twopf_time_data<double>::imaginary);
 
     transport::derived_data::twopf_time_data<double> tk3_twopf_real_group =
 	                                                     transport::derived_data::twopf_time_data<double>(tk3, model, twopf_fields,
 	                                                                                                      transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-    tk3_twopf_real_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::momenta);
+    tk3_twopf_real_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
 
     transport::derived_data::twopf_time_data<double> tk3_twopf_imag_group =
 	                                                     transport::derived_data::twopf_time_data<double>(tk3, model, twopf_cross,
 	                                                                                                      transport::derived_data::filter::time_filter(time_filter),
 	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-    tk3_twopf_imag_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::momenta);
+    tk3_twopf_imag_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
     tk3_twopf_imag_group.set_type(transport::derived_data::twopf_time_data<double>::imaginary);
 
     transport::derived_data::general_time_plot<double> tk2_twopf_real_plot =
@@ -210,13 +210,13 @@ int main(int argc, char* argv[])
     tk3_twopf_real_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
 
     transport::derived_data::general_time_plot<double> tk3_twopf_imag_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-imag", "twopf-imag.pdf");
+	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.twopf-imag", "twopf-imag.pdf");
     tk3_twopf_imag_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_imag_plot.set_title_text("Imaginary two-point function");
     tk3_twopf_imag_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
 
     transport::derived_data::general_time_plot<double> tk3_twopf_total_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-total", "twopf-total.pdf");
+	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.twopf-total", "twopf-total.pdf");
     tk3_twopf_total_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_total_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_total_plot.set_title_text("Two-point function");
@@ -241,9 +241,9 @@ int main(int argc, char* argv[])
 
     transport::derived_data::threepf_time_data<double> tk3_threepf_group =
 	                                                       transport::derived_data::threepf_time_data<double>(tk3, model, threepf_fields,
-	                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter),
-	                                                                                                          transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-		tk3_threepf_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::momenta);
+	                                                                                                          transport::derived_data::filter::time_filter(time_filter),
+	                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter));
+		tk3_threepf_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
 
     transport::derived_data::general_time_plot<double> tk3_threepf_plot =
 	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.threepf", "threepf.pdf");

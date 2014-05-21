@@ -481,10 +481,10 @@ namespace transport
 		    typedef enum { twopf_real, twopf_imag } datapipe_twopf_type;
 
         //! Output-group finder function -- serivce provided by a repository implementation
-        typedef std::function<typename repository<number>::output_group< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
+        typedef std::function<typename repository<number>::template output_group< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
 
         //! Attach function for a datapipe
-        typedef std::function<typename repository<number>::output_group< typename repository<number>::integration_payload >*(datapipe*, output_group_finder& integration_task<number>*, const std::list<std::string>&)> datapipe_attach_function;
+        typedef std::function<typename repository<number>::template output_group< typename repository<number>::integration_payload >(datapipe*, output_group_finder&, integration_task<number>*, const std::list<std::string>&)> datapipe_attach_function;
 
         //! Detach function for a datapipe
         typedef std::function<void(datapipe*)>                                                                          datapipe_detach_function;
@@ -520,17 +520,18 @@ namespace transport
 
 		      public:
 
-				    //! Construct a datapipe
-				    datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
-				             unsigned int w, boost::timer::cpu_timer& tm,
-                     output_group_finder &fd,
-				             datapipe_attach_function& at, datapipe_detach_function& dt,
-				             datapipe_time_sample_function& tsf,
-				             datapipe_twopf_kconfig_sample_function& twopf_kcfg_sf,
-				             datapipe_threepf_kconfig_sample_function& threepf_kcfg_sf,
-				             datapipe_background_time_sample_function& btsf,
-				             datapipe_twopf_time_sample_function& twopf_tsf,
-				             datapipe_threepf_time_sample_function& threepf_tsf);
+            //! Construct a datapipe
+            datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+                     unsigned int w, boost::timer::cpu_timer& tm,
+                     output_group_finder& fd,
+                     datapipe_attach_function& at, datapipe_detach_function& dt,
+                     datapipe_content_dispatch_function& df,
+                     datapipe_time_sample_function& tsf,
+                     datapipe_twopf_kconfig_sample_function& twopf_kcfg_sf,
+                     datapipe_threepf_kconfig_sample_function& threepf_kcfg_sf,
+                     datapipe_background_time_sample_function& btsf,
+                     datapipe_twopf_time_sample_function& twopf_tsf,
+                     datapipe_threepf_time_sample_function& threepf_tsf);
 
 				    //! Destroy a datapipe
 		        ~datapipe();
@@ -577,7 +578,7 @@ namespace transport
             //!
 
 				    //! Get attached output group
-				    typename repository<number>::output_group< typename repository<number>::integration_payload >*
+				    typename repository<number>::template output_group< typename repository<number>::integration_payload >*
               get_attached_output_group(void) const;
 
 
@@ -613,61 +614,61 @@ namespace transport
 		      private:
 
 				    //! Path to logging directory
-				    const boost::filesystem::path                                                                  logdir_path;
+				    const boost::filesystem::path                                                                           logdir_path;
 
 				    //! Path to temporary files
-				    const boost::filesystem::path                                                                  temporary_path;
+				    const boost::filesystem::path                                                                           temporary_path;
 
 						//! Unique serial number identifying the worker process which owns this datapipe
-				    const unsigned int                                                                             worker_number;
+				    const unsigned int                                                                                      worker_number;
 
 		        //! Logger source
-		        boost::log::sources::severity_logger<log_severity_level>                                       log_source;
+		        boost::log::sources::severity_logger<log_severity_level>                                                log_source;
 
 		        //! Logger sink
-		        boost::shared_ptr< sink_t >                                                                    log_sink;
+		        boost::shared_ptr< sink_t >                                                                             log_sink;
 
 				    //! Timer, used to track how long the datapipe is kept open
-				    boost::timer::cpu_timer&                                                                       timer;
+				    boost::timer::cpu_timer&                                                                                timer;
 
 				    //! Currently-attached output group; null is no group is attached
-				    typename repository<number>::output_group< typename repository<number>::integration_payload >* attached_group;
+				    typename repository<number>::template output_group< typename repository<number>::integration_payload >* attached_group;
 
 				    //! Implementation-dependent handle
-				    void*                                                                                          manager_handle;
+				    void*                                                                                                   manager_handle;
 
 
 				    // CALLBACKS
 
             //! Callback: find an output group for a task
-            output_group_finder                                                                            output_finder;
+            output_group_finder                                                                                     output_finder;
 
 				    //! Callback: attach a datapipe
-				    datapipe_attach_function                                                                       attach_callback;
+				    datapipe_attach_function                                                                                attach_callback;
 
 				    //! Callback: detach a datapipe
-				    datapipe_detach_function                                                                       detach_callback;
+				    datapipe_detach_function                                                                                detach_callback;
 
             //! Callback: dispatch content to master process
-            datapipe_content_dispatch_function                                                             dispatch_callback;
+            datapipe_content_dispatch_function                                                                      dispatch_callback;
 
 				    //! Callback: extract a time sample
-				    datapipe_time_sample_function                                                                  time_sample_callback;
+				    datapipe_time_sample_function                                                                           time_sample_callback;
 
 				    //! Callback: extract a 2pf k-configuration sample
-				    datapipe_twopf_kconfig_sample_function                                                         twopf_kconfig_sample_callback;
+				    datapipe_twopf_kconfig_sample_function                                                                  twopf_kconfig_sample_callback;
 
 				    //! Callback: extract a 3pf k-configuration sample
-				    datapipe_threepf_kconfig_sample_function                                                       threepf_kconfig_sample_callback;
+				    datapipe_threepf_kconfig_sample_function                                                                threepf_kconfig_sample_callback;
 
 				    //! Callback: extract a time sample of a background field
-				    datapipe_background_time_sample_function                                                       background_time_sample_callback;
+				    datapipe_background_time_sample_function                                                                background_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 2pf at fixed k-configuration
-				    datapipe_twopf_time_sample_function                                                            twopf_time_sample_callback;
+				    datapipe_twopf_time_sample_function                                                                     twopf_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 3pf at fixed k-configuration
-				    datapipe_threepf_time_sample_function                                                          threepf_time_sample_callback;
+				    datapipe_threepf_time_sample_function                                                                   threepf_time_sample_callback;
 			    };
 
 
@@ -808,6 +809,7 @@ namespace transport
                                              unsigned int w, boost::timer::cpu_timer& tm,
                                              output_group_finder& fd,
                                              datapipe_attach_function& at, datapipe_detach_function& dt,
+                                             datapipe_content_dispatch_function& df,
                                              datapipe_time_sample_function& tsf,
                                              datapipe_twopf_kconfig_sample_function& twopf_kcfg_sf,
                                              datapipe_threepf_kconfig_sample_function& threepf_kcfg_sf,
@@ -872,11 +874,11 @@ namespace transport
         assert(this->attached_group == nullptr);
         if(this->attached_group != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
-        this->attached_group = this->attach_callback(this, this->output_finder, tk, tags);
+        this->attached_group = new typename repository<number>::template output_group< typename repository<number>::integration_payload >(this->attach_callback(this, this->output_finder, tk, tags));
 
         typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
-        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group.get_creation_time())
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
           << " (generated using integration backend '" << payload.get_backend() << "')";
 	    }
 
@@ -898,7 +900,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::output_group* data_manager<number>::datapipe::get_attached_output_group(void) const
+    typename repository<number>::template output_group< typename repository<number>::integration_payload >* data_manager<number>::datapipe::get_attached_output_group(void) const
 	    {
         assert(this->attached_group != nullptr);
         if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);

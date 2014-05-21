@@ -1037,7 +1037,7 @@ namespace transport
 
             std::vector<unsigned int>::const_iterator t = serial_numbers.begin();
             int status;
-            while((status = sqlite3_step(stmt)) != SQLITE_DONE && t != serial_numbers.end()
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE && t != serial_numbers.end())
 	            {
                 if(status == SQLITE_ROW)
 	                {
