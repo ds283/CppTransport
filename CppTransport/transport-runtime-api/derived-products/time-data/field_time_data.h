@@ -616,7 +616,7 @@ namespace transport
             // ie., for each time step (outer vector) we have a group of field components (inner vector)
 		        std::vector< std::vector<number> > background(time_sample.size());
 
-		        for(unsigned int i = 0; i < N_fields; i++)
+		        for(unsigned int i = 0; i < 2*N_fields; i++)
 			        {
 		            std::vector<number> bg_line;
 		            pipe.pull_background_time_sample(i, time_sample, bg_line);    // DON'T flatten, because we want to give the background to the model instance in the order it expects
