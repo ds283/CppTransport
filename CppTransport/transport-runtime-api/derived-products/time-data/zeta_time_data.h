@@ -66,7 +66,7 @@ namespace transport
             // CLONE
 
             //! self-replicate
-            virtual general_time_data<number>* clone() const override { return new twopf_time_data<number>(static_cast<const twopf_time_data<number>&>(*this)); }
+            virtual general_time_data<number>* clone() const override { return new zeta_twopf_time_data<number>(static_cast<const zeta_twopf_time_data<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -159,12 +159,12 @@ namespace transport
             // and slice it up by time in an array 'background'
             std::vector< std::vector<number> > background(time_sample_sns.size());
 
-            for(unsigned int i = 0; i < N_fields; i++)
+            for(unsigned int i = 0; i < 2*N_fields; i++)
               {
                 std::vector<number> bg_line;
                 pipe.pull_background_time_sample(i, time_sample_sns, bg_line);
 
-                assert(bg_line.size() == background.size();
+                assert(bg_line.size() == background.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                   {
                     background[j].push_back(bg_line[j]);
@@ -204,6 +204,8 @@ namespace transport
                   }
 
                 time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(plot, k_values[i], this->mdl));
+
+                lines.push_back(line);
               }
 
             // detach pipe from output group
@@ -241,6 +243,8 @@ namespace transport
                 if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.k_conventional;
                 else                                                                      label << config.k_comoving;
               }
+
+            return(label.str());
           }
 
 
@@ -265,7 +269,7 @@ namespace transport
 
 
         template <typename number>
-        void twopf_time_data<number>::serialize(serialization_writer& writer) const
+        void zeta_twopf_time_data<number>::serialize(serialization_writer& writer) const
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF));

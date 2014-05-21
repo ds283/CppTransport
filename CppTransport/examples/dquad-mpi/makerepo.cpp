@@ -292,6 +292,18 @@ int main(int argc, char* argv[])
     tk3_check_shift.set_title_text("Comparison of derivative and momenta 3pf");
     tk3_check_shift.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
 
+    // check the zeta twopf
+    transport::derived_data::zeta_twopf_time_data<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_data<double>(tk3, model,
+                                                                                                                                       transport::derived_data::filter::time_filter(time_filter),
+                                                                                                                                       transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+
+    transport::derived_data::general_time_plot<double> tk3_zeta_twopf = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-twopf", "zeta-twopf.pdf");
+
+    tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
+    tk3_zeta_twopf.add_line(tk3_twopf_real_group);
+    tk3_zeta_twopf.set_title_text("Comparison of $\\zeta$ and field 2pfs");
+    tk3_zeta_twopf.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+
     std::cout << "3pf background plot:" << std::endl << tk3_mixed_plot << std::endl;
 
 		// write derived data products representing these background plots to the database
@@ -309,6 +321,8 @@ int main(int argc, char* argv[])
 
     repo->write_derived_product(tk3_check_shift);
 
+    repo->write_derived_product(tk3_zeta_twopf);
+
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
 		twopf_output.add_element(tk2_twopf_real_plot);
@@ -322,6 +336,7 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_threepf_plot);
 		threepf_output.add_element(tk3_mixed_plot);
     threepf_output.add_element(tk3_check_shift);
+    threepf_output.add_element(tk3_zeta_twopf);
 
 		// write output tasks to the database
 		repo->write_task(twopf_output);
