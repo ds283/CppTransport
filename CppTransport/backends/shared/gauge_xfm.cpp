@@ -56,7 +56,7 @@ namespace macro_packages
           };
 
         const std::vector<unsigned int> args =
-          { 0,                            0
+          { 2,                            6
           };
 
         const std::vector<unsigned int> indices =
@@ -97,8 +97,15 @@ namespace macro_packages
 
     void* gauge_xfm::pre_zeta_xfm_1(const std::vector<std::string>& args)
       {
+        assert(args.size() == 2);
+
+        GiNaC::symbol Hsq_symbol(args.size() >= 1 ? args[0] : this->default_Hsq);
+        GiNaC::symbol eps_symbol(args.size() >= 2 ? args[1] : this->default_eps);
+        GiNaC::ex     Hsq = Hsq_symbol;
+        GiNaC::ex     eps = eps_symbol;
+
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_1(*container, this->fl);
+        this->u_factory->compute_zeta_xfm_1(Hsq, eps, *container, this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 
@@ -108,8 +115,20 @@ namespace macro_packages
 
     void* gauge_xfm::pre_zeta_xfm_2(const std::vector<std::string>& args)
       {
+        assert(args.size() == 6);
+
+        GiNaC::symbol  k(args.size() >= 1 ? args[0] : this->default_k);
+        GiNaC::symbol k1(args.size() >= 2 ? args[1] : this->default_k1);
+        GiNaC::symbol k2(args.size() >= 3 ? args[2] : this->default_k2);
+        GiNaC::symbol  a(args.size() >= 4 ? args[3] : this->default_a);
+
+        GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
+        GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::ex     Hsq = Hsq_symbol;
+        GiNaC::ex     eps = eps_symbol;
+
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
-        this->u_factory->compute_zeta_xfm_2(*container, this->fl);
+        this->u_factory->compute_zeta_xfm_2(k, k1, k2, a, Hsq, eps, *container, this->fl);
 
         cse_map* map = this->cse_worker->map_factory(container);
 

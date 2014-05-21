@@ -163,10 +163,10 @@ namespace transport
 
       public:
 
-        // calculate gauge transformations; pure virtual, so must be overridden by derived class
+        // calculate gauge transformations; pure virtual, so must be implemented by derived class
         virtual void compute_gauge_xfm_1(const parameters<number>& __params, const std::vector<number>& __state, std::vector<number>& __dN) = 0;
 
-        virtual void compute_gauge_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) = 0;
+        virtual void compute_gauge_xfm_2(const parameters<number>& __params, const std::vector<number>& __state, double __k, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) = 0;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
         virtual void u2(const parameters<number>& __params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) = 0;

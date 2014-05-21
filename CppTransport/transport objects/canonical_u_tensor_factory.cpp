@@ -315,16 +315,13 @@ void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::
 // *****************************************************************************
 
 
-void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl)
   {
     fl->set_size(2*this->num_fields);
     v.clear();
     v.resize(fl->get_flattened_size(1));
 
-    GiNaC::ex Hsq  = this->compute_Hsq();
-    GiNaC::ex eps  = this->compute_eps();
-
-    GiNaC::ex dotH = -eps*Hsq;
+    // formulae from DS calculation '10 - UDG matrices summary', 19 April 2014
 
     for(int i = 0; i < 2*this->num_fields; i++)
       {
@@ -344,42 +341,199 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(std::vector<GiNaC::ex>& v, f
   }
 
 
-void canonical_u_tensor_factory::compute_zeta_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl)
+void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                    GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps,
+                                                    std::vector<GiNaC::ex>& v, flattener* fl)
   {
     fl->set_size(2*this->num_fields);
     v.clear();
     v.resize(fl->get_flattened_size(2));
 
-    GiNaC::ex Hsq  = this->compute_Hsq();
-    GiNaC::ex eps  = this->compute_eps();
-
-    GiNaC::ex dotH = -eps*Hsq;
-
-    // formulae from arXiv:1302.3842, Eqs. (6.4) and (6.5)
-
-    GiNaC::ex p_sum(0);
-    for(int i = 0; i < this->num_fields; i++)
-      {
-        p_sum += diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
-      }
-    for(int i = 0; i < this->num_fields; i++)
-      {
-        GiNaC::ex dXdN  = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
-        p_sum          += diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
-      }
-
     for(int i = 0; i < 2*this->num_fields; i++)
       {
         for(int j = 0; j < 2*this->num_fields; j++)
           {
-            v[fl->flatten(i,j)] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
-                                  - diff(1/(2*dotH), this->coordinate(i)) * diff(Hsq, this->coordinate(j))
-                                  - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
-                                  + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
+            GiNaC::ex c = 0;
+
+            if(this->is_field(i) && this->is_field(j))
+              {
+                c = this->compute_zeta_xfm_2_ff(i, j, k, k1, k2, a, Hsq, eps);
+              }
+            else if(this->is_field(i) && this->is_momentum(j))
+              {
+                c = this->compute_zeta_xfm_2_fp(i, this->species(j), k, k1, k2, a, Hsq, eps);
+              }
+            else if(this->is_momentum(i) && this->is_field(j))
+              {
+                c = this->compute_zeta_xfm_2_fp(j, this->species(i), k, k2, k1, a, Hsq, eps);
+              }
+            else if(this->is_momentum(i) && this->is_momentum(j))
+              {
+                c = this->compute_zeta_xfm_2_pp(this->species(i), this->species(j), k, k2, k1, a, Hsq, eps);
+              }
+            else
+              {
+                assert(false);
+              }
+
+            v[fl->flatten(i,j)] = c;
           }
       }
   }
 
+
+GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsigned int n,
+                                                            GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                            GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    assert(m < this->num_fields);
+    assert(n < this->num_fields);
+
+    // formulae from DS calculation '10 - UDG matrices summary', 19 April 2014
+
+    GiNaC::ex A3_m = GiNaC::diff(this->V, this->field_list[m])/Hsq + (3-eps)*this->deriv_list[m];
+    GiNaC::ex A3_n = GiNaC::diff(this->V, this->field_list[n])/Hsq + (3-eps)*this->deriv_list[n];
+
+    GiNaC::ex A_m = GiNaC::diff(this->V, this->field_list[m])/Hsq - eps*this->deriv_list[m];
+    GiNaC::ex A_n = GiNaC::diff(this->V, this->field_list[n])/Hsq - eps*this->deriv_list[n];
+
+    GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2)/2;
+
+    GiNaC::ex k12sq = k*k;
+
+    GiNaC::ex M1 = (m == n) ? -(k1*k1/(pow(a,2)*Hsq)) : 0;
+    GiNaC::ex M2 = (m == n) ? -(k2*k2/(pow(a,2)*Hsq)) : 0;
+    for(unsigned int i = 0; i < this->num_fields; i++)
+      {
+        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i];
+        M2 += -diff(diff(this->V, this->field_list[n]), this->field_list[i])*this->deriv_list[i];
+
+        M1 += -(3-eps)*this->deriv_list[m]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
+        M2 += -(3-eps)*this->deriv_list[n]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
+
+        M1 += -(this->deriv_list[m]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[m])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
+        M2 += -(this->deriv_list[n]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[n])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
+
+        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
+        M2 += diff(diff(this->V, this->field_list[i]), this->field_list[n])*this->deriv_list[i]/Hsq;
+      }
+
+    GiNaC::ex p = 0;
+    for(unsigned int i = 0; i < this->num_fields; i++)
+      {
+        p += diff(this->V, this->field_list[i])*this->deriv_list[i] / (pow(this->M_Planck,2)*Hsq);
+      }
+
+    GiNaC::ex c = (this->deriv_list[m]*A3_n*k1dotk2/(k2*k2) + this->deriv_list[n]*A3_m*k1dotk2/(k1*k1)) / (12*pow(this->M_Planck,4)*eps);
+
+    if(m == n) c += - k1dotk2/(6*pow(this->M_Planck,2)*eps*pow(a,2)*Hsq);
+
+    c -= diff(diff(this->V, this->field_list[m]), this->field_list[n])/(6*pow(this->M_Planck,2)*eps*Hsq);
+
+    c += this->deriv_list[m]*this->deriv_list[n]/(6*pow(this->M_Planck,4));
+
+    c += (this->deriv_list[m]*A3_n*(k1*k1-k1dotk2*k1dotk2/(k2*k2)) + this->deriv_list[n]*A3_m*(k2*k2-k1dotk2*k1dotk2/(k1*k1))) / (24*pow(this->M_Planck,4)*k12sq);
+
+    c += -(this->deriv_list[m]*A_n*k1dotk2/(pow(a,2)*Hsq) + this->deriv_list[n]*A_m*k1dotk2/(pow(a,2)*Hsq)) / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += -k1dotk2*A_m*A_n / (108*pow(this->M_Planck,4)*pow(eps,2)*pow(a,2)*Hsq);
+
+    c += -(A_m*A3_n*k1dotk2/(k2*k2) + A_n*A3_m*k1dotk2/(k1*k1)) / (36*pow(this->M_Planck,4)*eps);
+
+    c += (  A_m*(M2 + p*this->deriv_list[n] + eps*diff(this->V, this->field_list[n])/Hsq + eps*(9-eps)*this->deriv_list[n])
+          + A_n*(M1 + p*this->deriv_list[m] + eps*diff(this->V, this->field_list[m])/Hsq + eps*(9-eps)*this->deriv_list[m])) / (36*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += (3 + p/(2*eps))*A_m*A_n / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    return(c);
+  }
+
+
+// n is the momentum index
+GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsigned int n,
+                                                            GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                            GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    assert(m < this->num_fields);
+    assert(n < this->num_fields);
+
+    // formulae from DS calculation '10 - UDG matrices summary', 19 April 2014
+
+    GiNaC::ex A3_m = GiNaC::diff(this->V, this->field_list[m])/Hsq + (3-eps)*this->deriv_list[m];
+
+    GiNaC::ex A_m = GiNaC::diff(this->V, this->field_list[m])/Hsq - eps*this->deriv_list[m];
+
+    GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2)/2;
+
+    GiNaC::ex k12sq = k*k;
+
+    GiNaC::ex M1 = (m == n) ? -(k1*k1/(pow(a,2)*Hsq)) : 0;
+    for(unsigned int i = 0; i < this->num_fields; i++)
+      {
+        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i];
+
+        M1 += -(3-eps)*this->deriv_list[m]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
+
+        M1 += -(this->deriv_list[m]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[m])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
+
+        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
+      }
+
+    GiNaC::ex p = 0;
+    for(unsigned int i = 0; i < this->num_fields; i++)
+      {
+        p += diff(this->V, this->field_list[i])*this->deriv_list[i] / (pow(this->M_Planck,2)*Hsq);
+      }
+
+    GiNaC::ex c = this->deriv_list[m]*this->deriv_list[n]*(k1dotk2/(k2*k2)) / (12*pow(this->M_Planck,4)*eps);
+
+    c += ( (m == n ? (k1*k1 + k1dotk2) : 0) + this->deriv_list[m]*this->deriv_list[n]*(k1*k1 - k1dotk2*k1dotk2/(k2*k2))/(4*pow(this->M_Planck,2))) / (6*pow(this->M_Planck,2)*k12sq);
+
+    c += -this->deriv_list[m]*this->deriv_list[n] / (6*pow(this->M_Planck,4)*eps);
+
+    c += -this->deriv_list[m]*this->deriv_list[n]*(k1dotk2/(pow(a,2)*Hsq)) / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += -A_m*this->deriv_list[n]*(k1dotk2/(pow(a,2)*Hsq)) / (108*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += -(A_m*this->deriv_list[n]*k1dotk2/(k2*k2) + A3_m*this->deriv_list[n]*k1dotk2/(k1*k1)) / (36*pow(this->M_Planck,4)*eps);
+
+    c += (-(6+eps)*A_m*this->deriv_list[n] + (M1 + p*this->deriv_list[m] + eps*diff(this->V, this->field_list[m])/Hsq + eps*(9-eps)*this->deriv_list[m])*this->deriv_list[n]) / (36*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += (3 + p/(2*eps))*A_m*this->deriv_list[n] / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    return(c);
+  }
+
+
+GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_pp(unsigned int m, unsigned int n,
+                                                            GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2,
+                                                            GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
+  {
+    assert(m < this->num_fields);
+    assert(n < this->num_fields);
+
+    // formulae from DS calculation '10 - UDG matrices summary', 19 April 2014
+
+    GiNaC::ex k1dotk2 = (k*k - k1*k1 - k2*k2)/2;
+
+    GiNaC::ex p = 0;
+    for(unsigned int i = 0; i < this->num_fields; i++)
+      {
+        p += diff(this->V, this->field_list[i])*this->deriv_list[i] / (pow(this->M_Planck,2)*Hsq);
+      }
+
+    GiNaC::ex c = (m == n ? 1 : 0) / (6*pow(this->M_Planck,2)*eps);
+
+    c += -(k1dotk2/(pow(a,2)*Hsq))*this->deriv_list[m]*this->deriv_list[n] / (108*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += -this->deriv_list[m]*this->deriv_list[n]*k1dotk2*(1/(k1*k1) + 1/(k2*k2)) / (36*pow(this->M_Planck,4)*eps);
+
+    c += -(6+eps)*this->deriv_list[m]*this->deriv_list[n] / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    c += (3 + p/(2*eps))*this->deriv_list[m]*this->deriv_list[n] / (18*pow(this->M_Planck,4)*pow(eps,2));
+
+    return(c);
+  }
 
 // *****************************************************************************
 

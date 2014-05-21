@@ -169,7 +169,7 @@ namespace transport
 
         // calculate gauge transformations to zeta
         virtual void compute_gauge_xfm_1(const parameters<number>& params, const std::vector<number>& __state, std::vector<number>& __dN) override;
-        virtual void compute_gauge_xfm_2(const parameters<number>& params, const std::vector<number>& __state, std::vector< std::vector<number> >& __ddN) override;
+        virtual void compute_gauge_xfm_2(const parameters<number>& params, const std::vector<number>& __state, double __k1, double __k2, double __N, std::vector< std::vector<number> >& __ddN) override;
 
         // calculate tensor quantities, including the 'flow' tensors u2, u3 and the basic tensors A, B, C from which u3 is built
         virtual void u2(const parameters<number>& params, const std::vector<number>& __fields, double __k, double __N, std::vector< std::vector<number> >& __u2) override;
@@ -739,21 +739,29 @@ namespace transport
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __params.get_Mp();
 
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
-        __dN[$$__A] = $$__ZETA_XFM_1[A];
+        __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
 
 
     template <typename number>
     void $$__MODEL<number>::compute_gauge_xfm_2(const parameters<number>& __params,
                                                 const std::vector<number>& __state,
+                                                double __k, double __k1, double __k2, double __N,
                                                 std::vector< std::vector<number> >& __ddN)
       {
         const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
         const auto $$__COORDINATE[A] = __state[$$__A];
         const auto __Mp              = __params.get_Mp();
+
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+        const auto __a               = exp(__N);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -763,7 +771,7 @@ namespace transport
             __ddN[i].resize(2*$$__NUMBER_FIELDS);
           }
 
-        __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB];
+        __ddN[$$__A][$$__B] = $$__ZETA_XFM_2[AB]{__k, __k1, __k2, __a, __Hsq, __eps};
       }
 
 
