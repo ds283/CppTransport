@@ -18,6 +18,8 @@
 #include "transport-runtime-api/derived-products/time-data/time_data_line.h"
 #include "transport-runtime-api/derived-products/time-data/general_time_data.h"
 
+#include "transport-runtime-api/utilities/latex_output.h"
+
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_TYPE      "twopf-components"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_REAL      "real"
@@ -443,8 +445,8 @@ namespace transport
 
 		            label << "\\;"
 			            << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.k_conventional;
-		            else                                                                      label << config.k_comoving;
+		            if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
+		            else                                                                      label << output_latex_number(config.k_comoving, this->precision);
 
 		            label << "$";
 			        }
@@ -996,19 +998,19 @@ namespace transport
 		            unsigned int count=0;
 		            if(this->use_kt_label)
 			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
-		                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.kt_conventional;
-		                else label << config.kt_comoving;
+		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
+		                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
+		                else label << output_latex_number(config.kt_comoving, this->precision);
 		                count++;
 			            }
 		            if(this->use_alpha_label)
 			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << config.alpha;
+		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
 		                count++;
 			            }
 		            if(this->use_beta_label)
 			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << config.beta;
+		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
 		                count++;
 			            }
 
