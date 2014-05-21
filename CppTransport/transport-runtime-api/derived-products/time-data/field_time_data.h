@@ -254,12 +254,14 @@ namespace transport
 		        //! set twopf type setting
 		        void set_type(twopf_type m) { this->twopf_meaning = m; }
 
+
 		        // DERIVE LINES -- implements a 'general_time_data' interface
 
 		        //! generate data lines for plotting
             virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
                                       plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
+
 
 		        // LABEL GENERATION
 

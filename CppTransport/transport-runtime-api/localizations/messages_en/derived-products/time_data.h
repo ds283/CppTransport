@@ -24,6 +24,8 @@
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_BACKGROUND       "background line group"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TWOPF            "twopf line group"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF          "threepf line group"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_ZETA_TWOPF       "zeta twopf line group"
+#define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_ZETA_THREEPF     "zeta threepf line group"
 
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL       "k-configurations: including serial numbers"
 #define __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TSAMPLE_SN_LABEL       "time sample: including serial numbers"

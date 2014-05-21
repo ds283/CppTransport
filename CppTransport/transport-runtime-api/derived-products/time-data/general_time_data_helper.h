@@ -18,7 +18,7 @@
 
 #include "transport-runtime-api/derived-products/time-data/general_time_data.h"
 #include "transport-runtime-api/derived-products/time-data/field_time_data.h"
-
+#include "transport-runtime-api/derived-products/time-data/zeta_time_data.h"
 
 namespace transport
 	{
@@ -47,6 +47,7 @@ namespace transport
 		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND) rval = new background_time_data<number>(reader, finder);
 		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)      rval = new twopf_time_data<number>(reader, finder);
 		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)    rval = new threepf_time_data<number>(reader, finder);
+                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF) rval = new zeta_twopf_time_data<number>(reader, finder);
 		                else
 			                {
 		                    std::ostringstream msg;

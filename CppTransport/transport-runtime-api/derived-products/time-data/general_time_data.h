@@ -35,6 +35,8 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND           "background-group"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF                "twopf-group"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF              "threepf-group"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF           "zeta-twopf-group"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_THREEPF         "zeta-threepf-group"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TASK_NAME            "task-name"
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION      "precision"

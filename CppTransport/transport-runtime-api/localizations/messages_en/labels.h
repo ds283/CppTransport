@@ -61,5 +61,8 @@
 #define __CPP_TRANSPORT_LATEX_IM_SYMBOL                "\\mathrm{Im}\\,"
 #define __CPP_TRANSPORT_NONLATEX_IM_SYMBOL             "Im"
 
+#define __CPP_TRANSPORT_LATEX_ZETA_SYMBOL              "\\zeta"
+#define __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL           "zeta"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H
