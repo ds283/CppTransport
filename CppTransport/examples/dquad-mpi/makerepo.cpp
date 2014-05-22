@@ -36,18 +36,34 @@ bool time_filter(const transport::derived_data::filter::time_filter_data&)
 	}
 
 
-// filter to determine which time values are included on plots - we just use them all
+// filter to determine which 2pf kconfig values are included on plots.
+// to cut down the sample, here I use only the largest
 bool twopf_kconfig_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
 	{
     return(data.max); // plot only the largest k
 	}
 
 
-// filter to determine which time values are included on plots - we just use them all
+// filter to determine which 3pf kconfig values are included on plots.
+// to cut down the sample, here I use only the largest
 bool threepf_kconfig_filter(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     return(data.kt_max); // plot only the largest k_t
 	}
+
+
+// filter for near-equilateral 3pf k configurations - pick the largest and smallest kt
+bool threepf_kconfig_equilateral(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+  {
+    return(fabs(data.alpha) < 0.01 && fabs(data.beta-(1.0/3.0)) < 0.01 && (data.kt_max || data.kt_min));
+  }
+
+
+// filter for near-squeezed 3pf k-configurations
+bool threepf_kconfig_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+  {
+    return(fabs(data.beta) > 0.85);
+  }
 
 
 int main(int argc, char* argv[])
@@ -304,7 +320,29 @@ int main(int argc, char* argv[])
     tk3_zeta_twopf.set_title_text("Comparison of $\\zeta$ and field 2pfs");
     tk3_zeta_twopf.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
 
-    std::cout << "3pf background plot:" << std::endl << tk3_mixed_plot << std::endl;
+    // check the zeta threepf
+    transport::derived_data::zeta_threepf_time_data<double> tk3_zeta_equi_group = transport::derived_data::zeta_threepf_time_data<double>(tk3, model,
+                                                                                                                                          transport::derived_data::filter::time_filter(time_filter),
+                                                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_equilateral));
+    tk3_zeta_equi_group.set_use_alpha_label(true);
+    tk3_zeta_equi_group.set_use_beta_label(true);
+
+    transport::derived_data::general_time_plot<double> tk3_zeta_equi = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-equi", "zeta-equi.pdf");
+    tk3_zeta_equi.add_line(tk3_zeta_equi_group);
+    tk3_zeta_equi.set_title_text("3pf of $\\zeta$ near equilateral configurations");
+
+    transport::derived_data::zeta_threepf_time_data<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_data<double>(tk3, model,
+                                                                                                                                        transport::derived_data::filter::time_filter(time_filter),
+                                                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_squeezed));
+    tk3_zeta_sq_group.set_use_beta_label(true);
+
+    transport::derived_data::general_time_plot<double> tk3_zeta_sq = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-sq", "zeta-sq.pdf");
+    tk3_zeta_sq.add_line(tk3_zeta_sq_group);
+    tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near squeezed configurations");
+
+    std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
+
+    std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
 
 		// write derived data products representing these background plots to the database
     repo->write_derived_product(tk2_bg_plot);
@@ -322,6 +360,8 @@ int main(int argc, char* argv[])
     repo->write_derived_product(tk3_check_shift);
 
     repo->write_derived_product(tk3_zeta_twopf);
+    repo->write_derived_product(tk3_zeta_equi);
+    repo->write_derived_product(tk3_zeta_sq);
 
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
@@ -337,6 +377,8 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_mixed_plot);
     threepf_output.add_element(tk3_check_shift);
     threepf_output.add_element(tk3_zeta_twopf);
+    threepf_output.add_element(tk3_zeta_equi);
+    threepf_output.add_element(tk3_zeta_sq);
 
 		// write output tasks to the database
 		repo->write_task(twopf_output);

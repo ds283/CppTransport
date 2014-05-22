@@ -44,10 +44,11 @@ namespace transport
 		                std::string type;
 		                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE, type);
 
-		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND) rval = new background_time_data<number>(reader, finder);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)      rval = new twopf_time_data<number>(reader, finder);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)    rval = new threepf_time_data<number>(reader, finder);
-                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF) rval = new zeta_twopf_time_data<number>(reader, finder);
+		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND)   rval = new background_time_data<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)        rval = new twopf_time_data<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)      rval = new threepf_time_data<number>(reader, finder);
+                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF)   rval = new zeta_twopf_time_data<number>(reader, finder);
+                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_THREEPF) rval = new zeta_threepf_time_data<number>(reader, finder);
 		                else
 			                {
 		                    std::ostringstream msg;

@@ -556,20 +556,35 @@ namespace transport
 		      public:
 
 		        //! construct a basic_threepf_time_data object
-		        basic_threepf_time_data(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter)
-			        : general_time_data<number>(tk, m, tfilter)
-			        {
-				        assert(m != nullptr);
-			        }
+            basic_threepf_time_data(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter,
+                                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
+              : precision(prec), use_kt_label(true), use_alpha_label(false), use_beta_label(false),
+                general_time_data<number>(tk, m, tfilter)
+              {
+                assert(m != nullptr);
+              }
 
 		        //! deserialization constructor
-		        basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-			        : general_time_data<number>(reader, finder)
-			        {
-			        }
+		        basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
 
 		        //! destroy a basic threepf_time_data object
 		        virtual ~basic_threepf_time_data() = default;
+
+
+            // MANAGE LABELS
+
+            //! get k_t label setting
+            bool get_use_kt_label() const { return(this->use_kt_label); }
+            //! set k_t label setting
+            void set_use_kt_label(bool g) { this->use_kt_label = g; }
+            //! get alpha label setting
+            bool get_use_alpha_label() const { return(this->use_alpha_label); }
+            //! set alpha label setting
+            void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
+            //! get beta label setting
+            bool get_use_beta_label() const { return(this->use_beta_label); }
+            //! set beta label setting
+            void set_use_beta_label(bool g) { this->use_beta_label = g; }
 
 
 		        // DERIVE LINES
@@ -597,7 +612,46 @@ namespace transport
 		                                      unsigned int r, const typename data_manager<number>::twopf_configuration& r_config,
 		                                      operator_position pos) const;
 
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! precision to use for labels
+            unsigned int precision;
+
+            //! use k_t on line labels?
+            bool use_kt_label;
+
+            //! use alpha on line labels?
+            bool use_alpha_label;
+
+            //! use beta on line labels?
+            bool use_beta_label;
+
 			    };
+
+
+        template <typename number>
+        basic_threepf_time_data<number>::basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
+          : general_time_data<number>(reader, finder)
+          {
+            assert(reader != nullptr);
+
+            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, precision);
+
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
+          }
+
 
 
 		    template <typename number>
@@ -740,12 +794,23 @@ namespace transport
 			    }
 
 
+        template <typename number>
+        void basic_threepf_time_data<number>::serialize(serialization_writer& writer) const
+          {
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, this->precision);
+
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
+
+            this->general_time_data<number>::serialize(writer);
+          }
+
+
 		    //! threepf time data line
 		    template <typename number>
 		    class threepf_time_data: public basic_threepf_time_data<number>
 			    {
-
-		      public:
 
 		        // CONSTRUCTOR, DESTRUCTOR
 
@@ -762,21 +827,6 @@ namespace transport
 		        virtual ~threepf_time_data() = default;
 
 
-		        // MANAGE LABELS
-
-		        //! get k_t label setting
-		        bool get_use_kt_label() const { return(this->use_kt_label); }
-		        //! set k_t label setting
-		        void set_use_kt_label(bool g) { this->use_kt_label = g; }
-		        //! get alpha label setting
-		        bool get_use_alpha_label() const { return(this->use_alpha_label); }
-		        //! set alpha label setting
-		        void set_use_alpha_label(bool g) { this->use_alpha_label = g; }
-		        //! get beta label setting
-		        bool get_use_beta_label() const { return(this->use_beta_label); }
-		        //! set beta label setting
-		        void set_use_beta_label(bool g) { this->use_beta_label = g; }
-
 		        // DERIVE LINES -- implements a 'general_time_data' interface
 
 		        //! generate data lines for plotting
@@ -789,6 +839,7 @@ namespace transport
 
 		      protected:
 
+            //! Make a label for a plot line
 		        std::string make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
 		                               typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
 
@@ -822,17 +873,6 @@ namespace transport
 		        //! record serial numbers of k-configurations we are using
 		        std::vector<unsigned int> kconfig_sample_sns;
 
-		        //! precision to use for labels
-		        unsigned int precision;
-
-		        //! use k_t on line labels?
-		        bool use_kt_label;
-
-		        //! use alpha on line labels?
-		        bool use_alpha_label;
-
-		        //! use beta on line labels?
-		        bool use_beta_label;
 			    };
 
 
@@ -840,8 +880,8 @@ namespace transport
 		    threepf_time_data<number>::threepf_time_data(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
 		                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                 unsigned int prec)
-			    : active_indices(sel), precision(prec), use_kt_label(true), use_alpha_label(false), use_beta_label(false),
-			      basic_threepf_time_data<number>(tk, m, tfilter)
+			    : active_indices(sel),
+			      basic_threepf_time_data<number>(tk, m, tfilter, prec)
 			    {
 		        assert(m != nullptr);
 
@@ -869,8 +909,6 @@ namespace transport
 
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
 
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, precision);
-
 		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
 		        for(unsigned int i = 0; i < sns; i++)
@@ -885,10 +923,6 @@ namespace transport
 			        }
 
             reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
-
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
 			    }
 
 
@@ -995,7 +1029,6 @@ namespace transport
 			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			            }
 
-		            // FIXME: allow alpha, beta, etc. in labels too?
 		            label << "\\;";
 		            unsigned int count=0;
 		            if(this->use_kt_label)
@@ -1054,7 +1087,6 @@ namespace transport
 		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
 		                count++;
 			            }
-
 			        }
 
 		        return(label.str());
@@ -1090,8 +1122,6 @@ namespace transport
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF));
 
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, this->precision);
-
 		        this->active_indices.serialize(writer);
 
 		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
@@ -1103,11 +1133,7 @@ namespace transport
 			        }
 		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
-
-		        this->general_time_data<number>::serialize(writer);
+		        this->basic_threepf_time_data<number>::serialize(writer);
 			    }
 
 
