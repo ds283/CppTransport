@@ -405,8 +405,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
     GiNaC::ex M2 = (m == n) ? -(k2*k2/(pow(a,2)*Hsq)) : 0;
     for(unsigned int i = 0; i < this->num_fields; i++)
       {
-        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i];
-        M2 += -diff(diff(this->V, this->field_list[n]), this->field_list[i])*this->deriv_list[i];
+//        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i]/Hsq;
+//        M2 += -diff(diff(this->V, this->field_list[n]), this->field_list[i])*this->deriv_list[i]/Hsq;
 
         M1 += -(3-eps)*this->deriv_list[m]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
         M2 += -(3-eps)*this->deriv_list[n]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
@@ -414,8 +414,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
         M1 += -(this->deriv_list[m]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[m])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
         M2 += -(this->deriv_list[n]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[n])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
 
-        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
-        M2 += diff(diff(this->V, this->field_list[i]), this->field_list[n])*this->deriv_list[i]/Hsq;
+//        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
+//        M2 += diff(diff(this->V, this->field_list[i]), this->field_list[n])*this->deriv_list[i]/Hsq;
       }
 
     GiNaC::ex p = 0;
@@ -470,13 +470,14 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
     GiNaC::ex M1 = (m == n) ? -(k1*k1/(pow(a,2)*Hsq)) : 0;
     for(unsigned int i = 0; i < this->num_fields; i++)
       {
-        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i];
+// commented items cancel with each other?
+//        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i]/Hsq;
 
         M1 += -(3-eps)*this->deriv_list[m]*this->deriv_list[i]*this->deriv_list[i]/(pow(this->M_Planck,2));
 
         M1 += -(this->deriv_list[m]*diff(this->V, this->field_list[i])/Hsq + this->deriv_list[i]*diff(this->V, this->field_list[m])/Hsq)*this->deriv_list[i] / pow(this->M_Planck,2);
 
-        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
+//        M1 += diff(diff(this->V, this->field_list[i]), this->field_list[m])*this->deriv_list[i]/Hsq;
       }
 
     GiNaC::ex p = 0;
@@ -487,7 +488,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
 
     GiNaC::ex c = this->deriv_list[m]*this->deriv_list[n]*(k1dotk2/(k2*k2)) / (12*pow(this->M_Planck,4)*eps);
 
-    c += ( (m == n ? (k1*k1 + k1dotk2) : 0) + this->deriv_list[m]*this->deriv_list[n]*(k1*k1 - k1dotk2*k1dotk2/(k2*k2))/(4*pow(this->M_Planck,2))) / (6*pow(this->M_Planck,2)*k12sq);
+    c += ( (m == n ? -(k1*k1 + k1dotk2) : 0) + this->deriv_list[m]*this->deriv_list[n]*(k1*k1 - k1dotk2*k1dotk2/(k2*k2))/(4*pow(this->M_Planck,2))) / (6*pow(this->M_Planck,2)*k12sq);
 
     c += -this->deriv_list[m]*this->deriv_list[n] / (6*pow(this->M_Planck,4)*eps);
 
