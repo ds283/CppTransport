@@ -1212,6 +1212,8 @@ namespace transport
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "-- Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
                 pipe.detach();
               }
+
+            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl;
 					}
 
 				// close the datapipe
