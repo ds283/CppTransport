@@ -817,21 +817,6 @@ namespace transport
 	        }
 
         //! Construct a named output task using a supplied single derived_product<> object.
-        //! No tags provided.
-        //! (Would be nice to delegate to the constructor which accepts tags, but delegation
-        //! has to happen in the initializer list -- as far as I know)
-        output_task(const std::string& nm, const derived_data::derived_product<number>& prod)
-	        : serial(0), task<number>(nm)
-	        {
-            elements.clear();
-
-            // set up empty list of tags
-            std::list<std::string> tags;
-
-            elements.push_back(output_task_element<number>(prod, tags, serial++));
-	        }
-
-        //! Construct a named output task using a supplied single derived_product<> object.
         //! Tags provided.
         output_task(const std::string& nm, const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
 	        : serial(0), task<number>(nm)
@@ -839,6 +824,13 @@ namespace transport
             elements.clear();
 
             elements.push_back(output_task_element<number>(prod, tags, serial++));
+	        }
+
+        //! Construct a named output task using a supplied single derived_product<> object.
+        //! No tags provided.
+        output_task(const std::string& nm, const derived_data::derived_product<number>& prod)
+	        : output_task(nm, prod, std::list<std::string>())
+	        {
 	        }
 
         //! Destroy an output task
