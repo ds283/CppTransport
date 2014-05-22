@@ -456,6 +456,8 @@ namespace transport
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
+                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
+
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
                 std::vector< std::vector< std::vector<number> > > ddN1(time_sample_sns.size());
