@@ -309,10 +309,10 @@ namespace transport
 			            }
 
 		            //! Get database time
-		            const boost::timer::nanosecond_type& get_database_time()        const { return(this->database_time); }
+		            const boost::timer::nanosecond_type  get_database_time()        const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        const boost::timer::nanosecond_type& get_cpu_time()             const { return(this->cpu_time); }
+				        const boost::timer::nanosecond_type  get_cpu_time()             const { return(this->cpu_time); }
 
 				        //! Get time config hits
 				        unsigned int                         get_time_config_hits()     const { return(this->time_config_hits); }

@@ -899,7 +899,7 @@ namespace transport
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
 				    //! Get total time spent reading database
-				    const boost::timer::nanosecond_type& get_database_time() const { return(this->database_timer.elapsed().wall); }
+				    const boost::timer::nanosecond_type get_database_time() const { return(this->database_timer.elapsed().wall); }
 
 				    //! Get total time-config cache hits
 				    unsigned int get_time_config_cache_hits() const { return(this->time_config_cache.get_hits()); }

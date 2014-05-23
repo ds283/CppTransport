@@ -56,6 +56,17 @@ namespace transport
 			        {
 			        }
 
+				    //! Copy a cache object. After copying all of our contents we have to reset the
+				    //! point to ourselves which they contains
+				    cache(const cache<DataContainer, DataTag, SerialTag, HashSize>& obj)
+					    : capacity(obj.capacity), data_size(obj.data_size), hit_counter(obj.hit_counter), tables(obj.tables)
+					    {
+						    for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
+							    {
+						        (*t).reset_parent_cache(this);
+							    }
+					    }
+
 				    //! Destroy a cache object
 				    ~cache() = default;
 
@@ -132,6 +143,17 @@ namespace transport
 				    //! Check for equality with a given filename
 				    bool operator==(const std::string& fnam) const { return(this->filename == fnam); }
 
+				    //! Reset parent cache
+				    void reset_parent_cache(linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p)
+					    {
+						    assert(p != nullptr);
+						    this->parent_cache = p;
+						    for(typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->groups.begin(); t != this->groups.end(); t++)
+							    {
+						        (*t).reset_parent_cache(p);
+							    }
+					    }
+
 
 		        // SERIAL NUMBER GROUPS
 
@@ -180,7 +202,7 @@ namespace transport
 						  public:
 
 								//! construct a new data item
-								data_item(const DataContainer& d, DataTag& t, std::list<data_item>& p)
+								data_item(const DataContainer& d, DataTag& t, std::list<data_item>* p)
 						      : data(d), tag(t.clone()), parent_list(p), last_access(boost::posix_time::microsec_clock::universal_time()), locked(true)
 									{
 									}
@@ -205,6 +227,9 @@ namespace transport
 								//! Compare for equality of tags
 								bool operator==(const DataTag& t) const { return(*(this->tag) == t); }
 
+								//! Reset owning list
+								void reset_owner_list(std::list<data_item>* owner) { this->parent_list = owner; }
+
 
 								// ACCESS
 
@@ -218,7 +243,7 @@ namespace transport
 								unsigned int get_size() const { return(::transport::linecache::sizeof_container_element<DataContainer>() * ::transport::linecache::elementsof_container(this->data)); }
 
 								//! Return this item's parent list
-								std::list<data_item>& get_parent_list() const { return(this->parent_list); }
+								std::list<data_item>* get_parent_list() const { return(this->parent_list); }
 
 								//! Return this item's access time
 								const boost::posix_time::ptime& get_last_access_time() const { return(this->last_access); }
@@ -241,7 +266,7 @@ namespace transport
 								DataTag* tag;
 
 								//! parent list, used when evicting this item
-								std::list<data_item>& parent_list;
+								std::list<data_item>* parent_list;
 
 								//! Last access time for this item. Used when deciding which cache entries to drop
 								boost::posix_time::ptime last_access;
@@ -262,8 +287,26 @@ namespace transport
 						//! Create a serial_group object
 						serial_group(const std::vector<unsigned int>& sns, const SerialTag& t, typename linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p, unsigned int& hc);
 
+						//! Copy a serial_group object. We need to perform a deep copy, in the sense that
+						//! individual data_items contain references back to their owning std::list<> object.
+						//! Those references will be meaningless after the copy, and need to be reset.
+						serial_group(const serial_group<DataContainer, DataTag, SerialTag, HashSize>& obj)
+				      : parent_cache(obj.parent_cache), hit_counter(obj.hit_counter), serial_numbers(obj.serial_numbers), tag(obj.tag), cache(obj.cache)
+							{
+						    for(unsigned int i = 0; i < HashSize; i++)
+							    {
+								    for(typename std::list<data_item>::iterator t = cache[i].begin(); t != cache[i].end(); t++)
+									    {
+								        (*t).reset_owner_list(&(cache[i]));
+									    }
+							    }
+							}
+
 
 						// ADMIN
+
+						//! Reset parent cache
+						void reset_parent_cache(linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* c) { assert(c != nullptr); this->parent_cache = c; }
 
 						//! Gather all data_items belonging to this group
 						void gather_data_items(typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >& item_list);
@@ -299,7 +342,7 @@ namespace transport
 						//! are not invalidated by insertion or removal.
 						//! This is very important in order that cache evictions can be
 						//! carried out efficiently.
-						std::array< std::list<data_item>, HashSize > cache;
+						std::array< std::list< data_item >, HashSize > cache;
 					};
 
 
@@ -354,9 +397,9 @@ namespace transport
 									{
 								    if(!(*(*t)).get_locked())
 									    {
-								        std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >& list = (*(*t)).get_parent_list();
+								        std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >* list = (*(*t)).get_parent_list();
 										    this->data_size -= (*(*t)).get_size();
-										    list.erase(*t);
+										    list->erase(*t);
 									    }
 									}
 							}
@@ -430,7 +473,7 @@ namespace transport
 						    tag.pull(this->serial_numbers, data);
 								assert(::transport::linecache::elementsof_container(data) == this->serial_numbers.size());
 
-								this->cache[hash].push_front(data_item(data, tag, this->cache[hash]));
+								this->cache[hash].push_front(data_item(data, tag, &(this->cache[hash])));
 								t = this->cache[hash].begin();
 
 								// update size data - note that advising the cache of a size increase could lead to evictions,
