@@ -419,6 +419,8 @@ namespace transport
 					{
 						unsigned int hash = tag.hash();
 
+						assert(hash < HashSize);
+
 				    typename std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator t;
 						if((t = std::find(this->cache[hash].begin(), this->cache[hash].end(), tag)) == this->cache[hash].end())     // data item doesn't already exist
 							{

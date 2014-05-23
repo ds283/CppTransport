@@ -831,7 +831,7 @@ namespace transport
 				      public:
 
 				        //! hash
-				        virtual unsigned int hash() const override { return(kserial*15485863 + id % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+				        virtual unsigned int hash() const override { return((kserial*15485863 + id) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
 						    // INTERNAL DATA
