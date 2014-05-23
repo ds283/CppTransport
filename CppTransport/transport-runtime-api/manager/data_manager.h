@@ -19,6 +19,8 @@
 #include "transport-runtime-api/manager/repository.h"
 
 #include "transport-runtime-api/utilities/formatter.h"
+#include "transport-runtime-api/utilities/linecache.h"
+
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -34,6 +36,13 @@
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
+
+
+// default size of line cache hash table
+#define __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE (1024)
+
+// default size of the k-configuration caches - 1 Mb
+#define __CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE (1*1024*1024)
 
 
 namespace transport
@@ -57,8 +66,6 @@ namespace transport
 		class threepf_kconfig;
 		template <typename number> class output_task_element;
 
-//		// forward-declare work queue
-//		template <typename ItemType> class work_queue;
 
     template <typename number>
     class data_manager
@@ -92,6 +99,9 @@ namespace transport
 				    double k1_comoving;
 				    double k2_comoving;
 				    double k3_comoving;
+				    unsigned int k1_serial;
+				    unsigned int k2_serial;
+				    unsigned int k3_serial;
 			    };
 
         // data structures for storing individual sample points from each integration
@@ -476,7 +486,7 @@ namespace transport
           };
 
 
-		    // Data pipe objects
+		    // DATAPIPE OBJECTS
 
 		    typedef enum { twopf_real, twopf_imag } datapipe_twopf_type;
 
@@ -499,8 +509,7 @@ namespace transport
         typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&, unsigned int)>                                                                                                datapipe_twopf_kconfig_sample_function;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&,
-                                   std::vector<unsigned int>&, std::vector<unsigned int>&, std::vector<unsigned int>&, unsigned int)>                                                                                            datapipe_threepf_kconfig_sample_function;
+        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&, unsigned int)>                                                                                              datapipe_threepf_kconfig_sample_function;
 
         //! Extract a background field at a set of time sample-points
         typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&, unsigned int)>                                                                                               datapipe_background_time_sample_function;
@@ -513,15 +522,343 @@ namespace transport
         typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int,
                                    std::vector<number>&, unsigned int)>                                                                                                                                                          datapipe_threepf_time_sample_function;
 
-		    //! Data pipe, used when generating derived content to extract data froman integration database.
+
+		    //! Data pipe, used when generating derived content to extract data from an integration database.
 		    //! The datapipe has a log directory, used for logging transactions on the pipe.
 		    class datapipe
 			    {
 
 		      public:
 
+				    typedef enum { time_config_group, twopf_kconfig_group, threepf_kconfig_group, time_serial_group } serial_group_tag;
+
+				    typedef enum { cf_twopf_re, cf_twopf_im, cf_threepf } cf_time_data_type;
+
+
+				    //! time configuration data group tag
+						class time_config_tag
+							{
+
+								// CONSTRUCTOR, DESTRUCTOR
+
+						  public:
+
+								time_config_tag(datapipe* p)
+									: pipe(p)
+									{
+									}
+
+								~time_config_tag() = default;
+
+
+								// INTERFACE
+
+						  public:
+
+								//! check for tag equality
+								bool operator==(const time_config_tag& obj) const { return(true); }   // nothing to check
+
+								//! pull data corresponding to this tag
+								void pull(const std::vector<unsigned int>& sns, std::vector<double>& data);
+
+
+								// CLONE
+
+						  public:
+
+								//! copy this object
+								time_config_tag* clone() const { return new time_config_tag(static_cast<const time_config_tag&>(*this)); }
+
+
+								// HASH
+
+						  public:
+
+								//! hash
+								unsigned int hash() const { return(0); }
+
+
+								// INTERNAL DATA
+
+						  protected:
+
+								//! parent datapipe
+								datapipe* pipe;
+
+							};
+
+
+				    //! twopf k-configuration data group tag
+				    class twopf_kconfig_tag
+					    {
+
+					      // CONSTRUCTOR, DESTRUCTOR
+
+				      public:
+
+						    twopf_kconfig_tag(datapipe* p)
+							    : pipe(p)
+							    {
+							    }
+
+						    ~twopf_kconfig_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    bool operator==(const twopf_kconfig_tag& obj) const { return(true); }     // nothing to check
+
+						    //! pull data corresponding to this tag
+						    void pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data);
+
+
+				        // CLONE
+
+				      public:
+
+				        //! copy this object
+				        twopf_kconfig_tag* clone() const { return new twopf_kconfig_tag(static_cast<const twopf_kconfig_tag&>(*this)); }
+
+
+				        // HASH
+
+				      public:
+
+				        //! hash
+				        unsigned int hash() const { return(0); }
+
+
+						    // INTERNAL DATA
+
+				      protected:
+
+						    //! parent pipe
+						    datapipe* pipe;
+
+					    };
+
+
+				    //! threepf k-configuration data group tag
+				    class threepf_kconfig_tag
+					    {
+
+						    // CONTRUCTOR, DESTRUCTOR
+
+				      public:
+
+						    threepf_kconfig_tag(datapipe* p)
+							    : pipe(p)
+							    {
+							    }
+
+						    ~threepf_kconfig_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    bool operator==(const threepf_kconfig_tag& obj) const { return(true); }     // nothing to check
+
+						    //! pull data corresponding to this tag
+						    void pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data);
+
+
+				        // CLONE
+
+				      public:
+
+				        //! copy this object
+				        threepf_kconfig_tag* clone() const { return new threepf_kconfig_tag(static_cast<const threepf_kconfig_tag&>(*this)); }
+
+
+				        // HASH
+
+				      public:
+
+				        //! hash
+				        unsigned int hash() const { return(0); }
+
+
+						    // INTERNAL DATA
+
+				      protected:
+
+						    //! sampler function
+						    datapipe* pipe;
+
+					    };
+
+
+				    //! time data group tag -- abstract group used to derive background and field tags
+				    class time_data_tag
+					    {
+
+					      // CONSTRUCTOR, DESTRUCTOR
+
+				      public:
+
+						    time_data_tag() = default;
+
+						    virtual ~time_data_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    virtual bool operator==(const time_data_tag& obj) const = 0;
+
+						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) = 0;
+
+
+				        // CLONE
+
+				      public:
+
+				        //! copy this object
+				        virtual time_data_tag* clone() const = 0;
+
+
+				        // HASH
+
+				      public:
+
+				        //! hash
+				        virtual unsigned int hash() const = 0;
+
+					    };
+
+
+				    //! background time data group tag
+				    class background_time_data_tag: public time_data_tag
+					    {
+
+					      // CONSTRUCTOR, DESTRUCTOR
+
+				      public:
+
+				        background_time_data_tag(datapipe* p, unsigned int i)
+					        : pipe(p), id(i)
+					        {
+					        }
+
+						    virtual ~background_time_data_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    virtual bool operator==(const time_data_tag& obj) const override;
+
+						    //! pull data corresponding to this tag
+						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+
+				        // CLONE
+
+				      public:
+
+				        //! copy this object
+				        time_data_tag* clone() const { return new background_time_data_tag(static_cast<const background_time_data_tag&>(*this)); }
+
+
+				        // HASH
+
+				      public:
+
+				        //! hash
+				        virtual unsigned int hash() const override { return(id % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+						    // INTERNAL DATA
+
+				      protected:
+
+						    //! parent datapipe
+						    datapipe* pipe;
+
+						    //! data id - controls which background field is sampled
+						    const unsigned int id;
+
+					    };
+
+
+				    //! correlation-function time data group tag
+				    class cf_time_data_tag: public time_data_tag
+					    {
+
+					      // CONSTRUCTOR, DESTRUCTOR
+
+				      public:
+
+						    cf_time_data_tag(datapipe* p, cf_time_data_type t, unsigned int i, unsigned int k)
+						      : pipe(p), type(t), id(i), kserial(k)
+							    {
+							    }
+
+						    virtual ~cf_time_data_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    virtual bool operator==(const time_data_tag& obj) const override;
+
+						    //! pull data corresponding to this tag
+						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+
+				        // CLONE
+
+				      public:
+
+				        //! copy this object
+				        time_data_tag* clone() const { return new cf_time_data_tag(static_cast<const cf_time_data_tag&>(*this)); }
+
+
+				        // HASH
+
+				      public:
+
+				        //! hash
+				        virtual unsigned int hash() const override { return(kserial*15485863 + id % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+						    // INTERNAL DATA
+
+				      protected:
+
+						    //! parent datapipe
+						    datapipe* pipe;
+
+						    //! type
+						    const cf_time_data_type type;
+
+						    //! data id - controls which element id is sampled
+						    const unsigned int id;
+
+						    //! kserial - controls which k serial number is sampled
+						    const unsigned int kserial;
+					    };
+
+
+				    // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
             //! Construct a datapipe
-            datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+            datapipe(unsigned int cap,
+                     const boost::filesystem::path& lp, const boost::filesystem::path& tp,
                      unsigned int w, boost::timer::cpu_timer& tm,
                      output_group_finder& fd,
                      datapipe_attach_function& at, datapipe_detach_function& dt,
@@ -586,89 +923,132 @@ namespace transport
 
 		      public:
 
-				    //! Pull a set of time serial numbers from the database
-				    void pull_time_sample(const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample);
+				    typedef linecache::serial_group< std::vector<double>, time_config_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_config_handle;
+				    typedef linecache::serial_group< std::vector<twopf_configuration>, twopf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > twopf_kconfig_handle;
+				    typedef linecache::serial_group< std::vector<threepf_configuration>, threepf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
+				    typedef linecache::serial_group< std::vector<number>, time_data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
 
-				    //! Pull a set of 2pf k-configuration serial numbers from the database
-				    void pull_twopf_kconfig_sample(const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample);
+				    //! Generate a serial-group handle for a set of time-configuration serial numbers
+				    time_config_handle& new_time_config_handle(const std::vector<unsigned int>& sns) const;
 
-				    //! Pull a set of 3pf k-configuration serial numbers from the database.
-				    //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
-				    //! corresponding to k1, k2, k3
-				    void pull_threepf_kconfig_sample(const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample,
-				                                     std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials);
+				    //! Generate a serial-group handle for a set of twopf-kconfiguration serial numbers
+				    twopf_kconfig_handle& new_twopf_kconfig_handle(const std::vector<unsigned int>& sns) const;
 
-				    //! Pull a sample of a background field from the database
-				    void pull_background_time_sample(unsigned id, const std::vector<unsigned int>& serial_numbers, std::vector<number>& sample);
+				    //! Generate a serial-group handle for a set of threepf-kconfiguration serial numbers
+				    threepf_kconfig_handle& new_threepf_kconfig_handle(const std::vector<unsigned int>& sns) const;
 
-		        //! Pull a sample of a twopf at fixed k-configuration
-		        void pull_twopf_time_sample(unsigned id, const std::vector<unsigned int>& t_serials,
-		                                    unsigned int kserial, std::vector<number>& sample, datapipe_twopf_type type);
+				    //! Generate a serial-group handle for a set of time-data serial numbers
+				    time_data_handle& new_time_data_handle(const std::vector<unsigned int>& sns) const;
 
-		        //! Pull a sample of a threepf at fixed k-configuration
-		        void pull_threepf_time_sample(unsigned id, const std::vector<unsigned int>& t_serials,
-		                                      unsigned int kserial, std::vector<number>& sample);
+				    //! Generate a new time-configuration tag
+				    time_config_tag new_time_config_tag();
+
+				    //! Generate a new twopf-kconfiguration tag
+				    twopf_kconfig_tag new_twopf_kconfig_tag();
+
+				    //! Generate a new threepf-kconfiguration tag
+				    threepf_kconfig_tag new_threepf_kconfig_tag();
+
+				    //! Generate a new background tag
+				    background_time_data_tag new_background_time_data_tag(unsigned int id);
+
+				    //! Generate a new correlation-function tag
+				    cf_time_data_tag new_cf_time_data_tag(cf_time_data_type type, unsigned int id, unsigned int kserial);
+
+				    // friend sample tag classes, so they can use our data
+				    friend class time_config_tag;
+				    friend class twopf_kconfig_tag;
+				    friend class threepf_kconfig_tag;
+				    friend class background_time_data_tag;
+				    friend class cf_time_data_tag;
+
 
 				    // INTERNAL DATA
 
 		      private:
 
+				    //! time configuration cache
+				    linecache::cache< std::vector<double>, time_config_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >                     time_config_cache;
+
+				    //! twopf k-config cache
+				    linecache::cache< std::vector<twopf_configuration>, twopf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >      twopf_kconfig_cache;
+
+				    //! threepf k-config cache
+				    linecache::cache< std::vector<threepf_configuration>, threepf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >  threepf_kconfig_cache;
+
+				    //! time-line data cache
+				    linecache::cache< std::vector<number>, time_data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>                        time_data_cache;
+
+				    //! Maximum capacity to use (approximately--we don't try to do a detailed accounting of memory use)
+				    unsigned int                                                                                                                              capacity;
+
 				    //! Path to logging directory
-				    const boost::filesystem::path                                                                           logdir_path;
+				    const boost::filesystem::path                                                                                                             logdir_path;
 
 				    //! Path to temporary files
-				    const boost::filesystem::path                                                                           temporary_path;
+				    const boost::filesystem::path                                                                                                             temporary_path;
 
-						//! Unique serial number identifying the worker process which owns this datapipe
-				    const unsigned int                                                                                      worker_number;
+						//! Unique serial number identifying the worker process owning this datapipe
+				    const unsigned int                                                                                                                        worker_number;
 
 		        //! Logger source
-		        boost::log::sources::severity_logger<log_severity_level>                                                log_source;
+		        boost::log::sources::severity_logger<log_severity_level>                                                                                  log_source;
 
 		        //! Logger sink
-		        boost::shared_ptr< sink_t >                                                                             log_sink;
+		        boost::shared_ptr< sink_t >                                                                                                               log_sink;
 
 				    //! Timer, used to track how long the datapipe is kept open
-				    boost::timer::cpu_timer&                                                                                timer;
+				    boost::timer::cpu_timer&                                                                                                                  timer;
 
-				    //! Currently-attached output group; null is no group is attached
-				    typename repository<number>::template output_group< typename repository<number>::integration_payload >* attached_group;
+				    //! Currently-attached output group; null if no group is attached
+				    typename repository<number>::template output_group< typename repository<number>::integration_payload >*                                   attached_group;
+
+		        //! Time configuration cache table for currently-attached group; null if no group is attached
+				    linecache::table< std::vector<number>, time_config_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >*                    time_config_cache_table;
+
+				    //! twopf k-config cache table for currently-attached group; null if no group is attached
+				    linecache::table< std::vector<twopf_configuration>, twopf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >*     twopf_kconfig_cache_table;
+
+				    //! threepf k-config cache table for currently-attached group; null if no group is attached
+				    linecache::table< std::vector<threepf_configuration>, threepf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >* threepf_kconfig_cache_table;
+
+				    //! time data cache table for currently-attached group; null if no group is attached
+				    linecache::table< std::vector<number>, time_data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE >*                      time_data_cache_table;
 
 				    //! Implementation-dependent handle
-				    void*                                                                                                   manager_handle;
-
+				    void*                                                                                                                                     manager_handle;
 
 				    // CALLBACKS
 
             //! Callback: find an output group for a task
-            output_group_finder                                                                                     output_finder;
+            output_group_finder                                                                                                                       output_finder;
 
 				    //! Callback: attach a datapipe
-				    datapipe_attach_function                                                                                attach_callback;
+				    datapipe_attach_function                                                                                                                  attach_callback;
 
 				    //! Callback: detach a datapipe
-				    datapipe_detach_function                                                                                detach_callback;
+				    datapipe_detach_function                                                                                                                  detach_callback;
 
             //! Callback: dispatch content to master process
-            datapipe_content_dispatch_function                                                                      dispatch_callback;
+            datapipe_content_dispatch_function                                                                                                        dispatch_callback;
 
 				    //! Callback: extract a time sample
-				    datapipe_time_sample_function                                                                           time_sample_callback;
+				    datapipe_time_sample_function                                                                                                             time_sample_callback;
 
 				    //! Callback: extract a 2pf k-configuration sample
-				    datapipe_twopf_kconfig_sample_function                                                                  twopf_kconfig_sample_callback;
+				    datapipe_twopf_kconfig_sample_function                                                                                                    twopf_kconfig_sample_callback;
 
 				    //! Callback: extract a 3pf k-configuration sample
-				    datapipe_threepf_kconfig_sample_function                                                                threepf_kconfig_sample_callback;
+				    datapipe_threepf_kconfig_sample_function                                                                                                  threepf_kconfig_sample_callback;
 
 				    //! Callback: extract a time sample of a background field
-				    datapipe_background_time_sample_function                                                                background_time_sample_callback;
+				    datapipe_background_time_sample_function                                                                                                  background_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 2pf at fixed k-configuration
-				    datapipe_twopf_time_sample_function                                                                     twopf_time_sample_callback;
+				    datapipe_twopf_time_sample_function                                                                                                       twopf_time_sample_callback;
 
 				    //! Callback: extract a time sample of a component of a 3pf at fixed k-configuration
-				    datapipe_threepf_time_sample_function                                                                   threepf_time_sample_callback;
+				    datapipe_threepf_time_sample_function                                                                                                     threepf_time_sample_callback;
 			    };
 
 
@@ -780,7 +1160,6 @@ namespace transport
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
         virtual void pull_threepf_kconfig_sample(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample,
-                                                 std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials,
                                                  unsigned int worker) = 0;
 
         //! Pull a time sample of a background field from a datapipe
@@ -811,7 +1190,7 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>::datapipe::datapipe(const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+    data_manager<number>::datapipe::datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp,
                                              unsigned int w, boost::timer::cpu_timer& tm,
                                              output_group_finder& fd,
                                              datapipe_attach_function& at, datapipe_detach_function& dt,
@@ -832,7 +1211,15 @@ namespace transport
 	      threepf_kconfig_sample_callback(threepf_kcfg_sf),
 	      twopf_time_sample_callback(twopf_tsf),
 	      threepf_time_sample_callback(threepf_tsf),
-	      attached_group(nullptr)
+	      attached_group(nullptr),
+	      time_config_cache_table(nullptr),
+	      twopf_kconfig_cache_table(nullptr),
+				threepf_kconfig_cache_table(nullptr),
+				time_data_cache_table(nullptr),
+        time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+        twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+        threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
+        time_data_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE)
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -877,8 +1264,16 @@ namespace transport
         assert(tk != nullptr);
         if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
-        assert(this->attached_group == nullptr);
-        if(this->attached_group != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
+        assert(this->attached_group == nullptr
+	               &&this->time_config_cache_table == nullptr
+	               && this->twopf_kconfig_cache_table == nullptr
+	               && this->threepf_kconfig_cache_table == nullptr
+	               && this->time_data_cache_table == nullptr);
+        if(this->attached_group != nullptr ||
+	        this->time_config_cache_table != nullptr ||
+	        this->twopf_kconfig_cache_table != nullptr ||
+	        this->threepf_kconfig_cache_table != nullptr ||
+	        this->time_data_cache_table != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
         this->attached_group = new typename repository<number>::template output_group< typename repository<number>::integration_payload >(this->attach_callback(this, this->output_finder, tk, tags));
 
@@ -886,14 +1281,28 @@ namespace transport
 
         BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
           << " (generated using integration backend '" << payload.get_backend() << "')";
+
+		     // attach new cache tables
+		    this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
+		    this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+		    this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+		    this->time_data_cache_table = &(this->time_data_cache.get_table_handle(payload.get_container_path().string()));
 	    }
 
 
 		template <typename number>
     void data_manager<number>::datapipe::detach(void)
 	    {
-		    assert(this->attached_group != nullptr);
-		    if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
+		    assert(this->attached_group != nullptr
+		           &&this->time_config_cache_table != nullptr
+		           && this->twopf_kconfig_cache_table != nullptr
+		           && this->threepf_kconfig_cache_table != nullptr
+		           && this->time_data_cache_table != nullptr);
+		    if(this->attached_group == nullptr ||
+		       this->time_config_cache_table == nullptr ||
+		       this->twopf_kconfig_cache_table == nullptr ||
+		       this->threepf_kconfig_cache_table == nullptr ||
+		       this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
 		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
 
@@ -902,92 +1311,141 @@ namespace transport
 		    delete this->attached_group;
 
 		    this->attached_group = nullptr;
+		    this->time_config_cache_table = nullptr;
+		    this->twopf_kconfig_cache_table = nullptr;
+		    this->threepf_kconfig_cache_table = nullptr;
+		    this->time_data_cache_table = nullptr;
 	    }
 
 
     template <typename number>
     typename repository<number>::template output_group< typename repository<number>::integration_payload >* data_manager<number>::datapipe::get_attached_output_group(void) const
 	    {
-        assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->attached_group != nullptr
+	               &&this->time_config_cache_table != nullptr
+	               && this->twopf_kconfig_cache_table != nullptr
+	               && this->threepf_kconfig_cache_table != nullptr
+	               && this->time_data_cache_table != nullptr);
+        if(this->attached_group == nullptr ||
+	        this->time_config_cache_table == nullptr ||
+	        this->twopf_kconfig_cache_table == nullptr ||
+	        this->threepf_kconfig_cache_table == nullptr ||
+	        this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 		    return(this->attached_group);
 	    }
 
 
+		template <typename number>
+		typename data_manager<number>::datapipe::time_config_handle& data_manager<number>::datapipe::new_time_config_handle(const std::vector<unsigned int>& sns) const
+			{
+		    assert(this->attached_group != nullptr
+			           &&this->time_config_cache_table != nullptr
+			           && this->twopf_kconfig_cache_table != nullptr
+			           && this->threepf_kconfig_cache_table != nullptr
+			           && this->time_data_cache_table != nullptr);
+		    if(this->attached_group == nullptr ||
+			    this->time_config_cache_table == nullptr ||
+			    this->twopf_kconfig_cache_table == nullptr ||
+			    this->threepf_kconfig_cache_table == nullptr ||
+			    this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+				return(this->time_config_cache_table->get_serial_handle(sns, time_config_group));
+			}
+
+
     template <typename number>
-    void data_manager<number>::datapipe::pull_time_sample(const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample)
+    typename data_manager<number>::datapipe::twopf_kconfig_handle& data_manager<number>::datapipe::new_twopf_kconfig_handle(const std::vector<unsigned int>& sns) const
 	    {
-		    assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->attached_group != nullptr
+	               &&this->time_config_cache_table != nullptr
+	               && this->twopf_kconfig_cache_table != nullptr
+	               && this->threepf_kconfig_cache_table != nullptr
+	               && this->time_data_cache_table != nullptr);
+        if(this->attached_group == nullptr ||
+	        this->time_config_cache_table == nullptr ||
+	        this->twopf_kconfig_cache_table == nullptr ||
+	        this->threepf_kconfig_cache_table == nullptr ||
+	        this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull time sample request";
-
-		    this->time_sample_callback(this, serial_numbers, sample, this->worker_number);
+        return(this->twopf_kconfig_cache_table->get_serial_handle(sns, twopf_kconfig_group));
 	    }
 
 
     template <typename number>
-    void data_manager<number>::datapipe::pull_twopf_kconfig_sample(const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample)
+    typename data_manager<number>::datapipe::threepf_kconfig_handle& data_manager<number>::datapipe::new_threepf_kconfig_handle(const std::vector<unsigned int>& sns) const
 	    {
-		    assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->attached_group != nullptr
+	               &&this->time_config_cache_table != nullptr
+	               && this->twopf_kconfig_cache_table != nullptr
+	               && this->threepf_kconfig_cache_table != nullptr
+	               && this->time_data_cache_table != nullptr);
+        if(this->attached_group == nullptr ||
+	        this->time_config_cache_table == nullptr ||
+	        this->twopf_kconfig_cache_table == nullptr ||
+	        this->threepf_kconfig_cache_table == nullptr ||
+	        this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 2pf k-configuration sample request";
-
-		    this->twopf_kconfig_sample_callback(this, serial_numbers, sample, this->worker_number);
+        return(this->threepf_kconfig_cache_table->get_serial_handle(sns, threepf_kconfig_group));
 	    }
 
 
     template <typename number>
-    void data_manager<number>::datapipe::pull_threepf_kconfig_sample(const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample,
-                                                                     std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials)
+    typename data_manager<number>::datapipe::time_data_handle& data_manager<number>::datapipe::new_time_data_handle(const std::vector<unsigned int>& sns) const
 	    {
-		    assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->attached_group != nullptr
+	               &&this->time_config_cache_table != nullptr
+	               && this->twopf_kconfig_cache_table != nullptr
+	               && this->threepf_kconfig_cache_table != nullptr
+	               && this->time_data_cache_table != nullptr);
+        if(this->attached_group == nullptr ||
+	        this->time_config_cache_table == nullptr ||
+	        this->twopf_kconfig_cache_table == nullptr ||
+	        this->threepf_kconfig_cache_table == nullptr ||
+	        this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 3pf k-configuration sample request";
-
-		    this->threepf_kconfig_sample_callback(this, serial_numbers, sample, k1_serials, k2_serials, k3_serials, this->worker_number);
-	    }
-
-    template <typename number>
-    void data_manager<number>::datapipe::pull_background_time_sample(unsigned int id, const std::vector<unsigned int>& serial_numbers,
-                                                                     std::vector<number>& sample)
-	    {
-				assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << id;
-
-		    this->background_time_sample_callback(this, id, serial_numbers, sample, this->worker_number);
+        return(this->time_data_cache_table->get_serial_handle(sns, time_serial_group));
 	    }
 
 
+		template <typename number>
+		typename data_manager<number>::datapipe::time_config_tag data_manager<number>::datapipe::new_time_config_tag()
+			{
+				time_config_tag tag(this);
+				return(tag);
+			}
+
+
     template <typename number>
-    void data_manager<number>::datapipe::pull_twopf_time_sample(unsigned int id, const std::vector<unsigned int>& t_serials,
-                                                                unsigned int kserial, std::vector<number>& sample, datapipe_twopf_type type)
+    typename data_manager<number>::datapipe::twopf_kconfig_tag data_manager<number>::datapipe::new_twopf_kconfig_tag()
 	    {
-				assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = " << (type == twopf_real ? "real" : "imaginary") << ", for element " << id << ", k-configuration " << kserial;
-
-		    this->twopf_time_sample_callback(this, id, t_serials, kserial, sample, type, this->worker_number);
+		    twopf_kconfig_tag tag(this);
+        return(tag);
 	    }
 
 
     template <typename number>
-    void data_manager<number>::datapipe::pull_threepf_time_sample(unsigned int id, const std::vector<unsigned int>& t_serials,
-                                                                  unsigned int kserial, std::vector<number>& sample)
+    typename data_manager<number>::datapipe::threepf_kconfig_tag data_manager<number>::datapipe::new_threepf_kconfig_tag()
 	    {
-				assert(this->attached_group != nullptr);
-        if(this->attached_group == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << id << ", k-configuration " << kserial;
-
-		    this->threepf_time_sample_callback(this, id, t_serials, kserial, sample, this->worker_number);
+		    threepf_kconfig_tag tag(this);
+        return(tag);
 	    }
+
+
+		template <typename number>
+		typename data_manager<number>::datapipe::background_time_data_tag data_manager<number>::datapipe::new_background_time_data_tag(unsigned int id)
+			{
+				background_time_data_tag tag(this, id);
+				return(tag);
+			}
+
+
+		template <typename number>
+		typename data_manager<number>::datapipe::cf_time_data_tag data_manager<number>::datapipe::new_cf_time_data_tag(cf_time_data_type type, unsigned int id, unsigned int kserial)
+			{
+				cf_time_data_tag tag(this, type, id, kserial);
+				return(tag);
+			}
 
 
 	  template <typename number>
@@ -995,6 +1453,171 @@ namespace transport
 		  {
 			  return(this->attached_group != nullptr);
 		  }
+
+
+		template <typename number>
+		void data_manager<number>::datapipe::time_config_tag::pull(const std::vector<unsigned int>& sns, std::vector<double>& data)
+			{
+		    assert(this->pipe->attached_group != nullptr
+		           &&this->pipe->time_config_cache_table != nullptr
+		           && this->pipe->twopf_kconfig_cache_table != nullptr
+		           && this->pipe->threepf_kconfig_cache_table != nullptr
+		           && this->pipe->time_data_cache_table != nullptr);
+		    if(this->pipe->attached_group == nullptr ||
+		       this->pipe->time_config_cache_table == nullptr ||
+		       this->pipe->twopf_kconfig_cache_table == nullptr ||
+		       this->pipe->threepf_kconfig_cache_table == nullptr ||
+		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull time sample request";
+
+		    this->pipe->time_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+			}
+
+
+		template <typename number>
+		void data_manager<number>::datapipe::twopf_kconfig_tag::pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data)
+			{
+		    assert(this->pipe->attached_group != nullptr
+		           &&this->pipe->time_config_cache_table != nullptr
+		           && this->pipe->twopf_kconfig_cache_table != nullptr
+		           && this->pipe->threepf_kconfig_cache_table != nullptr
+		           && this->pipe->time_data_cache_table != nullptr);
+		    if(this->pipe->attached_group == nullptr ||
+		       this->pipe->time_config_cache_table == nullptr ||
+		       this->pipe->twopf_kconfig_cache_table == nullptr ||
+		       this->pipe->threepf_kconfig_cache_table == nullptr ||
+		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 2pf k-configuration sample request";
+
+		    this->pipe->twopf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+			}
+
+
+		template <typename number>
+		void data_manager<number>::datapipe::threepf_kconfig_tag::pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data)
+			{
+		    assert(this->pipe->attached_group != nullptr
+		           &&this->pipe->time_config_cache_table != nullptr
+		           && this->pipe->twopf_kconfig_cache_table != nullptr
+		           && this->pipe->threepf_kconfig_cache_table != nullptr
+		           && this->pipe->time_data_cache_table != nullptr);
+		    if(this->pipe->attached_group == nullptr ||
+		       this->pipe->time_config_cache_table == nullptr ||
+		       this->pipe->twopf_kconfig_cache_table == nullptr ||
+		       this->pipe->threepf_kconfig_cache_table == nullptr ||
+		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 3pf k-configuration sample request";
+
+		    this->pipe->threepf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+			}
+
+
+		template <typename number>
+		void data_manager<number>::datapipe::background_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
+			{
+		    assert(this->pipe->attached_group != nullptr
+		           &&this->pipe->time_config_cache_table != nullptr
+		           && this->pipe->twopf_kconfig_cache_table != nullptr
+		           && this->pipe->threepf_kconfig_cache_table != nullptr
+		           && this->pipe->time_data_cache_table != nullptr);
+		    if(this->pipe->attached_group == nullptr ||
+		       this->pipe->time_config_cache_table == nullptr ||
+		       this->pipe->twopf_kconfig_cache_table == nullptr ||
+		       this->pipe->threepf_kconfig_cache_table == nullptr ||
+		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << this->id;
+
+		    this->pipe->background_time_sample_callback(this->pipe, this->id, sns, sample, this->pipe->worker_number);
+			}
+
+
+		template <typename number>
+		void data_manager<number>::datapipe::cf_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
+			{
+		    assert(this->pipe->attached_group != nullptr
+			           &&this->pipe->time_config_cache_table != nullptr
+			           && this->pipe->twopf_kconfig_cache_table != nullptr
+			           && this->pipe->threepf_kconfig_cache_table != nullptr
+			           && this->pipe->time_data_cache_table != nullptr);
+		    if(this->pipe->attached_group == nullptr ||
+			    this->pipe->time_config_cache_table == nullptr ||
+			    this->pipe->twopf_kconfig_cache_table == nullptr ||
+			    this->pipe->threepf_kconfig_cache_table == nullptr ||
+			    this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+				if(this->type == cf_twopf_re)
+					{
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
+
+				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_real, this->pipe->worker_number);
+					}
+				else if(this->type == cf_twopf_im)
+					{
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
+
+				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_imag, this->pipe->worker_number);
+					}
+				else if (this->type == cf_threepf)
+					{
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+
+				    this->pipe->threepf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, this->pipe->worker_number);
+					}
+				else
+					{
+						assert(false);
+						throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
+					}
+			}
+
+
+		template <typename number>
+		bool data_manager<number>::datapipe::background_time_data_tag::operator==(const time_data_tag& obj) const
+			{
+				const background_time_data_tag* bg_tag = dynamic_cast<const background_time_data_tag*>(&obj);
+
+				if(bg_tag == nullptr) return(false);
+				return(this->id == bg_tag->id);
+			}
+
+
+		template <typename number>
+		bool data_manager<number>::datapipe::cf_time_data_tag::operator==(const time_data_tag& obj) const
+			{
+				const cf_time_data_tag* cf_tag = dynamic_cast<const cf_time_data_tag*>(&obj);
+
+				if(cf_tag == nullptr) return(false);
+				return(this->id == cf_tag->id && this->kserial == cf_tag->kserial);
+			}
+
+
+    // Provide specializations for the size methods used in linecache to compute the size of data elements
+    namespace linecache
+	    {
+
+		    template<>
+        unsigned int sizeof_container_element< typename std::vector< typename data_manager<double>::twopf_configuration > >() { return(sizeof(data_manager<double>::twopf_configuration)); }
+
+		    template<>
+		    unsigned int elementsof_container(const std::vector< typename data_manager<double>::twopf_configuration >& container) { return(container.size()); }
+
+		    template<>
+		    unsigned int sizeof_container_element< typename std::vector< typename data_manager<double>::threepf_configuration > >() { return(sizeof(data_manager<double>::threepf_configuration)); }
+
+		    template<>
+		    unsigned int elementsof_container(const std::vector< typename data_manager<double>::threepf_configuration >& container) { return(container.size()); }
+
+        template<>
+        unsigned int sizeof_container_element< std::vector<double> >() { return(sizeof(double)); }
+
+		    template<>
+        unsigned int elementsof_container(const std::vector<double>& container) { return(container.size()); }
+
+	    }   // namespace linecache -- specializaitons
 
 
   }   // namespace transport

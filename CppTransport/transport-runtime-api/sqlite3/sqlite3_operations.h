@@ -996,9 +996,7 @@ namespace transport
         // Pull a set of threepf k-configuration sample points, identified by their serial numbers
         template <typename number>
         void pull_threepf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers,
-                                         std::vector<typename data_manager<number>::threepf_configuration>& sample,
-                                         std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials,
-                                         unsigned int worker)
+                                         std::vector<typename data_manager<number>::threepf_configuration>& sample, unsigned int worker)
 	        {
             assert(db != nullptr);
 
@@ -1059,22 +1057,15 @@ namespace transport
 		                value.beta            = sqlite3_column_double(stmt, 3);
 		                value.k1_conventional = sqlite3_column_double(stmt, 4);
 		                value.k1_comoving     = sqlite3_column_double(stmt, 5);
+		                value.k1_serial       = static_cast<unsigned int>(sqlite3_column_int(stmt, 10));
 			              value.k2_conventional = sqlite3_column_double(stmt, 6);
 				            value.k2_comoving     = sqlite3_column_double(stmt, 7);
+		                value.k2_serial       = static_cast<unsigned int>(sqlite3_column_int(stmt, 11));
 		                value.k3_conventional = sqlite3_column_double(stmt, 8);
 		                value.k3_comoving     = sqlite3_column_double(stmt, 9);
-
-                    int k1_sn = sqlite3_column_int(stmt, 10);
-                    int k2_sn = sqlite3_column_int(stmt, 11);
-                    int k3_sn = sqlite3_column_int(stmt, 12);
-
-		                if(k1_sn < 0 || k2_sn < 0 || k3_sn < 0)
-			                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_NEGATIVE_SERIAL_NUMBERS);
+		                value.k3_serial       = static_cast<unsigned int>(sqlite3_column_int(stmt, 12));
 
                     sample.push_back(value);
-		                k1_serials.push_back(k1_sn);
-		                k2_serials.push_back(k2_sn);
-		                k3_serials.push_back(k3_sn);
 		                t++;
 	                }
                 else
@@ -1099,9 +1090,6 @@ namespace transport
 
             // check that we have as many values as we expect
             if(sample.size()     != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
-            if(k1_serials.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
-            if(k2_serials.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
-            if(k3_serials.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
 	        }
 
 

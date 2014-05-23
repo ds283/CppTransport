@@ -135,7 +135,7 @@ namespace transport
 		        const std::vector<unsigned int>& get_time_sample_sns() const { return(this->time_sample_sns); }
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
-		        void pull_time_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const;
+		        const std::vector<double>& pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
 
 
 		        // DERIVE LINES
@@ -298,12 +298,15 @@ namespace transport
 
 
 		    template <typename number>
-		    void general_time_data<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const
+		    const std::vector<double>& general_time_data<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe) const
 			    {
 		        if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_DATAPIPE);
 
 		        // set-up time sample data
-		        pipe.pull_time_sample(this->time_sample_sns, axis);
+				    typename data_manager<number>::datapipe::time_config_handle& handle = pipe.new_time_config_handle(this->time_sample_sns);
+				    typename data_manager<number>::datapipe::time_config_tag tag = pipe.new_time_config_tag();
+
+				    return handle.lookup_tag(tag);
 			    }
 
 

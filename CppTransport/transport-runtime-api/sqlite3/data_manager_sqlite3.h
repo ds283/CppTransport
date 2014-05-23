@@ -43,6 +43,7 @@ namespace transport
 
       }   // unnamed namespace
 
+
     // implements the data_manager interface using sqlite3
     template <typename number>
     class data_manager_sqlite3: public data_manager<number>
@@ -166,9 +167,7 @@ namespace transport
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
         void pull_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& serial_numbers,
-                                         typename std::vector<typename data_manager<number>::threepf_configuration>& sample,
-                                         std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials,
-                                         unsigned int worker) override;
+                                         typename std::vector<typename data_manager<number>::threepf_configuration>& sample, unsigned int worker) override;
 
         //! Pull a time sample of a background field from a datapipe
         virtual void pull_background_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
@@ -669,9 +668,8 @@ namespace transport
                                                                                                              std::placeholders::_3, std::placeholders::_4);
 
         typename data_manager<number>::datapipe_threepf_kconfig_sample_function threepf_kcfg_ksample = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
-                                                                                                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                                                                                                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
-                                                                                                                 std::placeholders::_7);
+                                                                                                                 std::placeholders::_1, std::placeholders::_2,
+                                                                                                                 std::placeholders::_3, std::placeholders::_4);
 
         typename data_manager<number>::datapipe_background_time_sample_function bsample = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
                                                                                                     std::placeholders::_1, std::placeholders::_2,
@@ -689,7 +687,7 @@ namespace transport
                                                                                                          std::placeholders::_6);
 
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(logdir, tempdir, worker, timer, finder, attach, detach, dispatcher,
+		    typename data_manager<number>::datapipe pipe(this->capacity, logdir, tempdir, worker, timer, finder, attach, detach, dispatcher,
 		                                                 tsample, twopf_kcfg_ksample, threepf_kcfg_ksample,
 		                                                 bsample, twopf_tsample, threepf_tsample);
 
@@ -729,9 +727,7 @@ namespace transport
 
     template <typename number>
     void data_manager_sqlite3<number>::pull_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& serial_numbers,
-                                                                   typename std::vector<typename data_manager<number>::threepf_configuration>& sample,
-                                                                   std::vector<unsigned int>& k1_serials, std::vector<unsigned int>& k2_serials, std::vector<unsigned int>& k3_serials,
-                                                                   unsigned int worker)
+                                                                   typename std::vector<typename data_manager<number>::threepf_configuration>& sample, unsigned int worker)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -739,7 +735,7 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, serial_numbers, sample, k1_serials, k2_serials, k3_serials, worker);
+        sqlite3_operations::pull_threepf_kconfig_sample<number>(db, serial_numbers, sample, worker);
 	    }
 
 

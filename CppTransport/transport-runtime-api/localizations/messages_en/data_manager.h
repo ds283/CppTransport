@@ -52,6 +52,7 @@
 #define __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED        "Data manager error: Attempt to attach datapipe, but output group already attached"
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED                   "Data manager error: Attempt to use datapipe when no output group is attached"
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
+#define __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE                     "Data manager error: Datapipe pull request for unknown correlation function type"
 #define __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP                     "Data manager error: Could not find a matching output group for task"
 
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_CREATE_FAIL             "Data manager error: Failed to create temporary table of serial numbers (backend code="

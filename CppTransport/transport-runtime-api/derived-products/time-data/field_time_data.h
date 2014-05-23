@@ -153,19 +153,20 @@ namespace transport
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            std::vector<double> time_axis;
-            this->pull_time_axis(pipe, time_axis);
+            const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
             // loop through all the fields, pulling data from the database for those which are enabled
+
+		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(this->get_time_sample_sns());
 
             for(unsigned int m = 0; m < 2 * this->mdl->get_N_fields(); m++)
               {
                 std::array<unsigned int, 1> index_set = {m};
                 if(this->active_indices.is_on(index_set))
                   {
-                    std::vector<number> line_data;
+										typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(this->mdl->flatten(m));
 
-                    pipe.pull_background_time_sample(this->mdl->flatten(m), this->get_time_sample_sns(), line_data);
+                    const std::vector<number>& line_data = handle.lookup_tag(tag);
 
                     time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(m, plot, this->mdl));
 
@@ -268,7 +269,7 @@ namespace transport
 		      protected:
 
 		        std::string make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                               typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const;
+		                               const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const;
 
 
 		        // CLONE
@@ -379,12 +380,17 @@ namespace transport
             // attach our datapipe to an output gorup
             this->attach(pipe, tags);
 
-            std::vector<double> time_axis;
-            this->pull_time_axis(pipe, time_axis);
+		        // pull time-axis data
+            const std::vector<double>& time_axis = this->pull_time_axis(pipe);
+
+		        // set up cache handles
+		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->get_time_sample_sns());
 
 		        // pull k-configuration information from the database
-		        typename std::vector< typename data_manager<number>::twopf_configuration > k_values;
-		        pipe.pull_twopf_kconfig_sample(this->kconfig_sample_sns, k_values);
+		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
+
+		        const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
@@ -397,10 +403,11 @@ namespace transport
 		                    std::array<unsigned int, 2> index_set = { m, n };
 		                    if(this->active_indices.is_on(index_set))
 			                    {
-		                        std::vector<number> line_data;
+				                    typename data_manager<number>::datapipe::cf_time_data_tag tag =
+					                                                                              pipe.new_cf_time_data_tag(this->twopf_meaning == real ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
+					                                                                                                        this->mdl->flatten(m,n), this->kconfig_sample_sns[i]);
 
-		                        pipe.pull_twopf_time_sample(this->mdl->flatten(m, n), this->get_time_sample_sns(), this->kconfig_sample_sns[i], line_data,
-		                                                    (this->twopf_meaning == real ? data_manager<number>::twopf_real : data_manager<number>::twopf_imag));
+		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
 		                        time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(m, n, plot, k_values[i], this->mdl));
 
@@ -417,7 +424,7 @@ namespace transport
 
 		    template <typename number>
 		    std::string twopf_time_data<number>::make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                                                    typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const
+		                                                    const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const
 			    {
 		        std::ostringstream label;
 
@@ -549,6 +556,60 @@ namespace transport
 		    class basic_threepf_time_data : public general_time_data<number>
 			    {
 
+		      protected:
+
+		        class extractor
+			        {
+
+		          public:
+
+		            extractor(unsigned int n, const typename data_manager<number>::threepf_configuration& c)
+			            : num(), config(c)
+			            {
+				            if(this->num < 1) this->num = 1;
+				            if(this->num > 3) this->num = 3;
+			            }
+
+				        ~extractor() = default;
+
+		            double comoving() const
+			            {
+		                if(this->num == 1) return(this->config.k1_comoving);
+		                if(this->num == 2) return(this->config.k2_comoving);
+		                if(this->num == 3) return(this->config.k3_comoving);
+
+		                assert(false);
+		                return(0.0);
+			            }
+
+		            double conventional() const
+			            {
+		                if(this->num == 1) return(this->config.k1_conventional);
+				            if(this->num == 2) return(this->config.k2_conventional);
+				            if(this->num == 3) return(this->config.k3_conventional);
+
+				            assert(false);
+				            return(0.0);
+			            }
+
+				        unsigned int serial() const
+					        {
+						        if(this->num == 1) return(this->config.k1_serial);
+						        if(this->num == 2) return(this->config.k2_serial);
+						        if(this->num == 3) return(this->config.k3_serial);
+
+						        assert(false);
+						        return(0);
+					        }
+
+		          private:
+
+		            unsigned int num;
+
+				        const typename data_manager<number>::threepf_configuration& config;
+			        };
+
+
 		        typedef enum { left, middle, right } operator_position;
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -597,9 +658,7 @@ namespace transport
                                    const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                    const std::vector<double>& time_axis,
                                    unsigned int l, unsigned int m, unsigned int n,
-		                               const typename data_manager<number>::twopf_configuration& l_config,
-		                               const typename data_manager<number>::twopf_configuration& m_config,
-		                               const typename data_manager<number>::twopf_configuration& n_config) const;
+                                   const typename data_manager<number>::threepf_configuration& config) const;
 
 		        //! apply the derivative shift to a threepf-timeline for a specific
 		        //! configuration
@@ -607,9 +666,9 @@ namespace transport
                                           const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                           const std::vector<double>& time_axis,
                                           const std::vector< typename std::vector<number> >& background,
-		                                      unsigned int p, const typename data_manager<number>::twopf_configuration& p_config,
-		                                      unsigned int q, const typename data_manager<number>::twopf_configuration& q_config,
-		                                      unsigned int r, const typename data_manager<number>::twopf_configuration& r_config,
+		                                      unsigned int p, const extractor& p_config,
+		                                      unsigned int q, const extractor& q_config,
+		                                      unsigned int r, const extractor& r_config,
 		                                      operator_position pos) const;
 
 
@@ -659,11 +718,11 @@ namespace transport
                                                                 const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                                 const std::vector<double>& time_axis,
                                                                 unsigned int l, unsigned int m, unsigned int n,
-		                                                            const typename data_manager<number>::twopf_configuration& l_config,
-		                                                            const typename data_manager<number>::twopf_configuration& m_config,
-		                                                            const typename data_manager<number>::twopf_configuration& n_config) const
+		                                                            const typename data_manager<number>::threepf_configuration& config) const
 			    {
 		        unsigned int N_fields = this->mdl->get_N_fields();
+
+				    typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(time_sample);
 
 		        // pull the background time evolution from the database for the time_sample we are using.
             // for future convenience we want this to be a vector of vectors-representing-field-components,
@@ -672,8 +731,8 @@ namespace transport
 
 		        for(unsigned int i = 0; i < 2*N_fields; i++)
 			        {
-		            std::vector<number> bg_line;
-		            pipe.pull_background_time_sample(i, time_sample, bg_line);    // DON'T flatten, because we want to give the background to the model instance in the order it expects
+				        typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
+		            const std::vector<number>& bg_line = handle.lookup_tag(tag);
 
                 assert(bg_line.size() == background.size());
                 for(unsigned int j = 0; j < time_sample.size(); j++)
@@ -682,9 +741,9 @@ namespace transport
                   }
 			        }
 
-		        if(l > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, l, l_config, m, m_config, n, n_config, left);
-		        if(m > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, m, m_config, l, l_config, n, n_config, middle);
-		        if(n > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, n, n_config, l, l_config, m, m_config, right);
+		        if(l > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
+		        if(m > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
+		        if(n > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
 			    }
 
 
@@ -692,9 +751,9 @@ namespace transport
 		    void basic_threepf_time_data<number>::compute_derivative_shift(typename data_manager<number>::datapipe& pipe,
                                                                        const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                                        const std::vector<double>& time_axis, const std::vector<typename std::vector<number> >& background,
-		                                                                   unsigned int p, const typename data_manager<number>::twopf_configuration& p_config,
-		                                                                   unsigned int q, const typename data_manager<number>::twopf_configuration& q_config,
-		                                                                   unsigned int r, const typename data_manager<number>::twopf_configuration& r_config,
+		                                                                   unsigned int p, const extractor& p_config,
+		                                                                   unsigned int q, const extractor& q_config,
+		                                                                   unsigned int r, const extractor& r_config,
 		                                                                   operator_position pos) const
 			    {
 		        assert(time_sample.size() == line_data.size());
@@ -736,22 +795,24 @@ namespace transport
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_UNKNOWN_OPPOS);
 			        }
 
+				    typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
+
 		        // pull out components of the two-pf that we need
 		        for(unsigned int i = 0; i < N_fields; i++)
 			        {
-		            std::vector<number> q_line_re;
-		            std::vector<number> q_line_im;
-		            std::vector<number> r_line_re;
-		            std::vector<number> r_line_im;
-
 		            unsigned int q_id = this->mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
 		            unsigned int r_id = this->mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
 
-		            pipe.pull_twopf_time_sample(q_id, time_sample, q_config.serial, q_line_re, data_manager<number>::twopf_real);
-		            pipe.pull_twopf_time_sample(q_id, time_sample, q_config.serial, q_line_im, data_manager<number>::twopf_imag);
+				        typename data_manager<number>::datapipe::cf_time_data_tag q_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id, q_config.serial());
+								typename data_manager<number>::datapipe::cf_time_data_tag q_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id, q_config.serial());
 
-		            pipe.pull_twopf_time_sample(r_id, time_sample, r_config.serial, r_line_re, data_manager<number>::twopf_real);
-		            pipe.pull_twopf_time_sample(r_id, time_sample, r_config.serial, r_line_im, data_manager<number>::twopf_imag);
+		            typename data_manager<number>::datapipe::cf_time_data_tag r_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, r_id, r_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag r_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, r_id, r_config.serial());
+
+		            const std::vector<number>& q_line_re = t_handle.lookup_tag(q_re_tag);
+		            const std::vector<number>& q_line_im = t_handle.lookup_tag(q_im_tag);
+		            const std::vector<number>& r_line_re = t_handle.lookup_tag(r_re_tag);
+		            const std::vector<number>& r_line_im = t_handle.lookup_tag(r_im_tag);
 
                 for(unsigned int j = 0; j < time_sample.size(); j++)
                   {
@@ -772,9 +833,9 @@ namespace transport
                 // evaluate B and C tensors for this time step
                 // B is symmetric on its first two indices, which are the ones we sum over, so we only need a single copy of that.
                 // C is symmetric on its first two indices but we sum over the last two. So we need to symmetrize the momenta.
-		            this->mdl->B(this->parent_task->get_params(), background[i], q_config.k_comoving, r_config.k_comoving, p_config.k_comoving, time_axis[i], B_qrp);
-                this->mdl->C(this->parent_task->get_params(), background[i], p_config.k_comoving, q_config.k_comoving, r_config.k_comoving, time_axis[i], C_pqr);
-                this->mdl->C(this->parent_task->get_params(), background[i], p_config.k_comoving, r_config.k_comoving, q_config.k_comoving, time_axis[i], C_prq);
+		            this->mdl->B(this->parent_task->get_params(), background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
+                this->mdl->C(this->parent_task->get_params(), background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
+                this->mdl->C(this->parent_task->get_params(), background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
 
                 number shift = 0.0;
 
@@ -841,7 +902,7 @@ namespace transport
 
             //! Make a label for a plot line
 		        std::string make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                               typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
+		                               const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
 
 
 		        // CLONE
@@ -934,31 +995,17 @@ namespace transport
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            std::vector<double> time_axis;
-            this->pull_time_axis(pipe, time_axis);
+		        // pull time-axis data
+            const std::vector<double>& time_axis = this->pull_time_axis(pipe);
+
+		        // set up cache handles
+		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->get_time_sample_sns());
 
 		        // pull k-configuration information from the database
-		        typename std::vector< typename data_manager<number>::threepf_configuration > k_values;
-		        std::vector<unsigned int> k1_serials;
-		        std::vector<unsigned int> k2_serials;
-		        std::vector<unsigned int> k3_serials;
-		        pipe.pull_threepf_kconfig_sample(this->kconfig_sample_sns, k_values, k1_serials, k2_serials, k3_serials);
+		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
 
-		        assert(k1_serials.size() == this->kconfig_sample_sns.size());
-		        assert(k2_serials.size() == this->kconfig_sample_sns.size());
-		        assert(k3_serials.size() == this->kconfig_sample_sns.size());
-		        assert(k_values.size()   == this->kconfig_sample_sns.size());
-
-		        typename std::vector< typename data_manager<number>::twopf_configuration > k1_values;
-		        typename std::vector< typename data_manager<number>::twopf_configuration > k2_values;
-		        typename std::vector< typename data_manager<number>::twopf_configuration > k3_values;
-		        pipe.pull_twopf_kconfig_sample(k1_serials, k1_values);
-		        pipe.pull_twopf_kconfig_sample(k2_serials, k2_values);
-		        pipe.pull_twopf_kconfig_sample(k3_serials, k3_values);
-
-		        assert(k1_values.size() == this->kconfig_sample_sns.size());
-		        assert(k2_values.size() == this->kconfig_sample_sns.size());
-		        assert(k3_values.size() == this->kconfig_sample_sns.size());
+		        const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
@@ -974,14 +1021,15 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-		                            std::vector<number> line_data;
+				                        typename data_manager<number>::datapipe::cf_time_data_tag tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
 
-		                            pipe.pull_threepf_time_sample(this->mdl->flatten(l, m, n), this->get_time_sample_sns(), this->kconfig_sample_sns[i], line_data);
+				                        // have to take a copy of the data, rather than use a reference, because we are going to modify it in-place
+		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			                            this->shift_derivatives(pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k1_values[i], k2_values[i], k3_values[i]);
+			                            this->shift_derivatives(pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k_values[i]);
 
 		                            time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(l, m, n, plot, k_values[i], this->mdl));
 
@@ -999,7 +1047,7 @@ namespace transport
 
 		    template <typename number>
 		    std::string threepf_time_data<number>::make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                                                      typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const
+		                                                      const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const
 			    {
 		        std::ostringstream label;
 
