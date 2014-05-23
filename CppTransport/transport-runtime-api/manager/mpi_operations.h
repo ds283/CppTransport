@@ -25,11 +25,12 @@ namespace transport
 
             // MPI message tags
             const unsigned int NEW_INTEGRATION = 0;
-            const unsigned int FINISHED_TASK = 1;
-            const unsigned int DATA_READY = 2;
+            const unsigned int FINISHED_INTEGRATION = 1;
+            const unsigned int INTEGRATION_DATA_READY = 2;
             const unsigned int DELETE_CONTAINER = 3;
 		        const unsigned int NEW_DERIVED_CONTENT = 4;
-		        const unsigned int CONTENT_READY = 5;
+		        const unsigned int DERIVED_CONTENT_READY = 5;
+		        const unsigned int FINISHED_DERIVED_CONTENT = 6;
             const unsigned int SET_REPOSITORY = 98;
             const unsigned int TERMINATE = 99;
 
@@ -281,6 +282,85 @@ namespace transport
 		                ar & group;
 	                }
 	            };
+
+
+		        class derived_finished_payload
+			        {
+
+		          public:
+
+		            //! Null constructor (used for receiving messages)
+		            derived_finished_payload()
+			            {
+			            }
+
+
+		            //! Value constructor (used for sending messages)
+		            derived_finished_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+		                                     const unsigned int tc, const unsigned int twopf_k,
+		                                     const unsigned int threepf_k, const unsigned int td)
+			            : database_time(db),
+			              cpu_time(cpu),
+			              time_config_hits(tc),
+			              twopf_kconfig_hits(twopf_k),
+			              threepf_kconfig_hits(threepf_k),
+			              time_data_hits(td)
+			            {
+			            }
+
+		            //! Get database time
+		            const boost::timer::nanosecond_type& get_database_time()        const { return(this->database_time); }
+
+				        //! Get total CPU time
+				        const boost::timer::nanosecond_type& get_cpu_time()             const { return(this->cpu_time); }
+
+				        //! Get time config hits
+				        unsigned int                         get_time_config_hits()     const { return(this->time_config_hits); }
+
+				        //! Get twopf kconfig hits
+				        unsigned int                         get_twopf_kconfig_hits()   const { return(this->twopf_kconfig_hits); }
+
+				        //! Get threepf kconfig hits
+				        unsigned int                         get_threepf_kconfig_hits() const { return(this->threepf_kconfig_hits); }
+
+				        //! Get time-data hits
+				        unsigned int                         get_time_data_hits()       const { return(this->time_data_hits); }
+
+
+		          private:
+
+		            //! Time spent reading database
+		            boost::timer::nanosecond_type database_time;
+
+				        //! Total CPU time
+				        boost::timer::nanosecond_type cpu_time;
+
+		            //! Number of time-config cache hits
+		            unsigned int time_config_hits;
+
+		            //! Number of twopf-kconfig cache hits
+		            unsigned int twopf_kconfig_hits;
+
+				        //! Number of threepf-kconfig cache hits
+				        unsigned int threepf_kconfig_hits;
+
+				        //! Number of time-data cache hits
+				        unsigned int time_data_hits;
+
+		            // enable boost::serialization support, and hence automated packing for transmission over MPI
+		            friend class boost::serialization::access;
+
+		            template <typename Archive>
+		            void serialize(Archive& ar, unsigned int version)
+			            {
+		                ar & database_time;
+				            ar & cpu_time;
+				            ar & time_config_hits;
+				            ar & twopf_kconfig_hits;
+				            ar & threepf_kconfig_hits;
+				            ar & time_data_hits;
+			            }
+			        };
 
 
           }   // unnamed namespace

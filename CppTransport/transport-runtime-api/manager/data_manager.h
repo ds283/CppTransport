@@ -898,6 +898,21 @@ namespace transport
 		        //! Return logger
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
+				    //! Get total time spent reading database
+				    const boost::timer::nanosecond_type& get_database_time() const { return(this->database_timer.elapsed().wall); }
+
+				    //! Get total time-config cache hits
+				    unsigned int get_time_config_cache_hits() const { return(this->time_config_cache.get_hits()); }
+
+				    //! Get total twopf k-config cache hits
+				    unsigned int get_twopf_kconfig_cache_hits() const { return(this->twopf_kconfig_cache.get_hits()); }
+
+				    //! Get total threepf k-config cache hits
+				    unsigned int get_threepf_kconfig_cache_hits() const { return(this->threepf_kconfig_cache.get_hits()); }
+
+				    //! Get total time-data cache hits
+				    unsigned int get_time_data_cache_hits() const { return(this->time_data_cache.get_hits()); }
+
 
 				    // ATTACH, DETACH OUTPUT GROUPS
 
@@ -1017,6 +1032,9 @@ namespace transport
 
 				    //! Implementation-dependent handle
 				    void*                                                                                                                                     manager_handle;
+
+				    //! Database access timer
+				    boost::timer::cpu_timer                                                                                                                   database_timer;
 
 				    // CALLBACKS
 
@@ -1221,6 +1239,8 @@ namespace transport
         threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
         time_data_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE)
 	    {
+		    this->database_timer.stop();
+
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
@@ -1249,6 +1269,16 @@ namespace transport
     template <typename number>
     data_manager<number>::datapipe::~datapipe()
 	    {
+		    assert(this->database_timer.is_stopped());
+
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing datapipe. Usage statistics:";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time spent reading database        = " << format_time(this->database_timer.elapsed().wall);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->time_data_cache.get_hits();
+
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
         core->remove_sink(this->log_sink);
@@ -1471,7 +1501,9 @@ namespace transport
 
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull time sample request";
 
+				this->pipe->database_timer.resume();
 		    this->pipe->time_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->database_timer.stop();
 			}
 
 
@@ -1491,7 +1523,9 @@ namespace transport
 
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 2pf k-configuration sample request";
 
+				this->pipe->database_timer.resume();
 		    this->pipe->twopf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->database_timer.stop();
 			}
 
 
@@ -1511,7 +1545,9 @@ namespace transport
 
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 3pf k-configuration sample request";
 
+				this->pipe->database_timer.resume();
 		    this->pipe->threepf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->database_timer.stop();
 			}
 
 
@@ -1531,7 +1567,9 @@ namespace transport
 
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << this->id;
 
+				this->pipe->database_timer.resume();
 		    this->pipe->background_time_sample_callback(this->pipe, this->id, sns, sample, this->pipe->worker_number);
+		    this->pipe->database_timer.stop();
 			}
 
 
@@ -1553,19 +1591,25 @@ namespace transport
 					{
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 
+						this->pipe->database_timer.resume();
 				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_real, this->pipe->worker_number);
+						this->pipe->database_timer.stop();
 					}
 				else if(this->type == cf_twopf_im)
 					{
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 
+						this->pipe->database_timer.resume();
 				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_imag, this->pipe->worker_number);
+						this->pipe->database_timer.stop();
 					}
 				else if (this->type == cf_threepf)
 					{
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 
+						this->pipe->database_timer.resume();
 				    this->pipe->threepf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, this->pipe->worker_number);
+						this->pipe->database_timer.stop();
 					}
 				else
 					{

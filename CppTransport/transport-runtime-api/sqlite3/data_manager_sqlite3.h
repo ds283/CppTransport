@@ -18,6 +18,8 @@
 
 #include "transport-runtime-api/models/model.h"
 
+#include "transport-runtime-api/utilities/formatter.h"
+
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
@@ -691,7 +693,7 @@ namespace transport
 		                                                 tsample, twopf_kcfg_ksample, threepf_kcfg_ksample,
 		                                                 bsample, twopf_tsample, threepf_tsample);
 
-				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe";
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, cache capacity " << format_memory(this->capacity);
 
 				return(pipe);
 			}

@@ -576,16 +576,16 @@ namespace transport
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
         while(workers.size() > 0)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) <<  "++ Master polling for DATA_READY messages";
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) <<  "++ Master polling for INTEGRATION_DATA_READY messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
             switch(stat.tag())
               {
-                case MPI::DATA_READY:
+                case MPI::INTEGRATION_DATA_READY:
                   {
                     MPI::data_ready_payload payload;
-                    this->world.recv(stat.source(), MPI::DATA_READY, payload);
+                    this->world.recv(stat.source(), MPI::INTEGRATION_DATA_READY, payload);
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
 
                     // set up a timer to measure how long we spend batching
@@ -620,10 +620,10 @@ namespace transport
                     break;
                   }
 
-                case MPI::FINISHED_TASK:
+                case MPI::FINISHED_INTEGRATION:
                   {
                     boost::timer::nanosecond_type work_time = 0;
-                    this->world.recv(stat.source(), MPI::FINISHED_TASK, work_time);
+                    this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, work_time);
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
 
                     total_work_time += work_time;
@@ -642,8 +642,9 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time required by worker processes = " << format_time(total_work_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process   = " << format_time(total_aggregation_time);
       }
 
 
@@ -713,9 +714,17 @@ namespace transport
 
 		    // set up a timer to keep track of the total wallclock time used in this task
 		    boost::timer::cpu_timer wallclock_timer;
+
 		    // aggregate work times reported by worker processes
 		    boost::timer::nanosecond_type total_work_time = 0;
+		    boost::timer::nanosecond_type total_db_time = 0;
 		    boost::timer::nanosecond_type total_aggregation_time = 0;
+
+				// aggregate cache information
+				unsigned int total_time_config_hits = 0;
+				unsigned int total_twopf_kconfig_hits = 0;
+				unsigned int total_threepf_kconfig_hits = 0;
+				unsigned int total_time_data_hits = 0;
 
 		    // get paths the workers will need
 		    assert(this->repo != nullptr);
@@ -740,28 +749,35 @@ namespace transport
 		    for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
 		    while(workers.size() > 0)
 			    {
-		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Master polling for CONTENT_READY messages";
+		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
 		        // wait until a message is available from a worker
 		        boost::mpi::status stat = this->world.probe();
 
 		        switch(stat.tag())
 			        {
-		            case MPI::CONTENT_READY:
+		            case MPI::DERIVED_CONTENT_READY:
 			            {
 		                MPI::content_ready_payload payload;
-		                this->world.recv(stat.source(), MPI::CONTENT_READY, payload);
+		                this->world.recv(stat.source(), MPI::DERIVED_CONTENT_READY, payload);
 		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent content-ready notification";
 
 		                break;
 			            }
 
-		            case MPI::FINISHED_TASK:
+		            case MPI::FINISHED_DERIVED_CONTENT:
 			            {
-		                boost::timer::nanosecond_type work_time = 0;
-		                this->world.recv(stat.source(), MPI::FINISHED_TASK, work_time);
-		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
+		                MPI::derived_finished_payload payload;
+		                this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
 
-		                total_work_time += work_time;
+		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(payload.get_cpu_time());
+
+		                total_work_time += payload.get_cpu_time();
+				            total_db_time += payload.get_database_time();
+				            total_time_config_hits += payload.get_time_config_hits();
+				            total_twopf_kconfig_hits += payload.get_twopf_kconfig_hits();
+				            total_threepf_kconfig_hits += payload.get_threepf_kconfig_hits();
+				            total_time_data_hits += payload.get_time_data_hits();
+
 		                workers.erase(this->worker_number(stat.source()));
 		                break;
 			            }
@@ -777,8 +793,14 @@ namespace transport
         wallclock_timer.stop();
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total work time required by worker processes = " << format_time(total_work_time);
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total work time required by worker processes      = " << format_time(total_work_time);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time spent reading database                 = " << format_time(total_db_time);
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-configuration cache hits               = " << total_time_config_hits;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total twopf k-config cache hits                   = " << total_twopf_kconfig_hits;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total threepf k-config cache hits                 = " << total_threepf_kconfig_hits;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-data cache hits                        = " << total_time_data_hits;
 			}
 
 
@@ -1049,8 +1071,8 @@ namespace transport
         this->slave_clean_up(batcher);
 
         // notify master process that all work has been finished
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, timer.elapsed().wall);
       }
 
 
@@ -1097,8 +1119,8 @@ namespace transport
         this->slave_clean_up(batcher);
 
         // notify master process that all work has been finished
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, timer.elapsed().wall);
       }
 
 
@@ -1213,7 +1235,7 @@ namespace transport
                 pipe.detach();
               }
 
-            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl;
+            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "";
 					}
 
 				// close the datapipe
@@ -1223,8 +1245,12 @@ namespace transport
 				timer.stop();
 
 				// notify master process that all work has been finished
-				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_TASK to master";
-				this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_TASK, timer.elapsed().wall);
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_DERIVED_CONTENT to master";
+
+		    MPI::derived_finished_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
+		                                                 pipe.get_time_config_cache_hits(), pipe.get_twopf_kconfig_cache_hits(),
+		                                                 pipe.get_threepf_kconfig_cache_hits(), pipe.get_time_data_cache_hits());
+		    this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_DERIVED_CONTENT, finish_payload);
 			}
 
 
@@ -1284,12 +1310,12 @@ namespace transport
     void task_manager<number>::slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher,
                                                          MPI::data_ready_payload::payload_type type)
       {
-        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Sending DATA_READY message for container " << batcher->get_container_path();
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Sending INTEGRATION_DATA_READY message for container " << batcher->get_container_path();
 
         MPI::data_ready_payload payload(batcher->get_container_path().string(), type);
 
         // advise master process that data is available in the named container
-        this->world.isend(MPI::RANK_MASTER, MPI::DATA_READY, payload);
+        this->world.isend(MPI::RANK_MASTER, MPI::INTEGRATION_DATA_READY, payload);
 
         // add this container to the list of containers which should be deleted
         this->temporary_container_queue.push_back(batcher->get_container_path().string());

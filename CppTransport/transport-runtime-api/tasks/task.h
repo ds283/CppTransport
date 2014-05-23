@@ -789,6 +789,7 @@ namespace transport
             if(count > 0) out << ", ";
             out << *u;
 	        }
+		    out << std::endl;
 
         return(out);
 	    }
@@ -905,8 +906,7 @@ namespace transport
         out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
         for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
 	        {
-		        out << *t << std::endl;
-            out << std::endl;
+		        out << *t;
 	        }
 
         return(out);

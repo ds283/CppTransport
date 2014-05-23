@@ -71,6 +71,8 @@ namespace transport
 				    //! are evicted until the cache size is smaller than the target capacity.
 		        void advise_size_increase(unsigned int bytes);
 
+				    //! Read total number of cache hits
+				    unsigned int get_hits() const { return(this->hit_counter); }
 
 		        // TABLE MANAGEMENT
 
@@ -86,7 +88,7 @@ namespace transport
 
 		      protected:
 
-		        //! Capacity of the cache. The cache evicts data when memory use exceeds the
+		        //! Capacity of the cache. The cache evicts cachelines when memory use exceeds the
 		        //! stated capacity
 		        unsigned int capacity;
 
