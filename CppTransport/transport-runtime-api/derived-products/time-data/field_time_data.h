@@ -1021,20 +1021,16 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-//		                            std::cerr << "SETTING UP TAG" << std::endl;
 				                        typename data_manager<number>::datapipe::cf_time_data_tag tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
 
 				                        // have to take a copy of the data, rather than use a reference, because we are going to modify it in-place
-//		                            std::cerr << "LOOKUP" << std::endl;
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
-//		                            std::cerr << "PRESHIFT" << std::endl;
 		                            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
 			                            this->shift_derivatives(pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k_values[i]);
 
-//		                            std::cerr << "SETTING UP TIME DATA LINE" << std::endl;
 		                            time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(l, m, n, plot, k_values[i], this->mdl));
 
 		                            lines.push_back(line);

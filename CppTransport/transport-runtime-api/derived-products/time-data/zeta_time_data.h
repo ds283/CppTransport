@@ -158,7 +158,7 @@ namespace transport
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
 
-            const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+            const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = k_handle.lookup_tag(k_tag);
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
@@ -168,7 +168,7 @@ namespace transport
               {
 		            typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
 
-                const std::vector<number> bg_line = t_handle.lookup_tag(tag);
+                const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
 
                 assert(bg_line.size() == background.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
@@ -200,7 +200,7 @@ namespace transport
 			                    pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), this->kconfig_sample_sns[i]);
 
                         // pull twopf data for this component
-                        const std::vector<number> sigma_line = t_handle.lookup_tag(tag);
+                        const std::vector<number>& sigma_line = t_handle.lookup_tag(tag);
 
                         for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                           {
@@ -419,7 +419,7 @@ namespace transport
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
 
-            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = k_handle.lookup_tag(k_tag);
+            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = k_handle.lookup_tag(k_tag);
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
@@ -429,7 +429,7 @@ namespace transport
               {
                 typename data_manager<number>::datapipe::background_time_data_tag bg_tag = pipe.new_background_time_data_tag(i);
 
-                const std::vector<number> bg_line = t_handle.lookup_tag(bg_tag);
+                const std::vector<number>& bg_line = t_handle.lookup_tag(bg_tag);
 
                 assert(bg_line.size() == background.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
@@ -439,6 +439,7 @@ namespace transport
               }
 
             // cache linear gauge transformation coefficients
+		        // we can cache these just once because they don't depend on the k-configuration
             std::vector< std::vector<number> > dN(time_sample_sns.size());
             for(unsigned int j = 0; j < time_sample_sns.size(); j++)
               {
@@ -455,14 +456,14 @@ namespace transport
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
-                std::vector< std::vector< std::vector<number> > > ddN1(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN2(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN3(time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN123(time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN213(time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN312(time_sample_sns.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                   {
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN1[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN2[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN3[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
                   }
 
                 // time-line for zeta will be stored in 'line_data'
@@ -528,9 +529,9 @@ namespace transport
 
                                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                                   {
-                                    line_data[j] += ddN1[j][l][m] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
-                                    line_data[j] += ddN2[j][l][m] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
-                                    line_data[j] += ddN3[j][l][m] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
+                                    line_data[j] += ddN123[j][l][m] * dN[j][p] * dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
+                                    line_data[j] += ddN213[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
+                                    line_data[j] += ddN312[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
                                   }
                               }
                           }
