@@ -775,6 +775,43 @@ namespace transport
       }
 
 
+    template <typename number>
+    void $$__MODEL<number>::compute_deltaN_xfm_1(const parameters<number>& __params,
+                                                 const std::vector<number>& __state,
+                                                 std::vector<number>& __dN)
+	    {
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__COORDINATE[A] = __state[$$__A];
+        const auto __Mp              = __params.get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
+        __dN[$$__A] = $$__DELTAN_XFM_1[A];
+	    }
+
+
+    template <typename number>
+    void $$__MODEL<number>::compute_deltaN_xfm_2(const parameters<number>& __params,
+                                                 const std::vector<number>& __state,
+                                                 std::vector< std::vector<number> >& __ddN)
+	    {
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__COORDINATE[A] = __state[$$__A];
+        const auto __Mp              = __params.get_Mp();
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        __ddN.resize(2*$$__NUMBER_FIELDS);
+        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+	        {
+            __ddN[i].resize(2*$$__NUMBER_FIELDS);
+	        }
+
+        __ddN[$$__A][$$__B] = $$__DELTAN_XFM_2[AB];
+	    }
+
+
     // CALCULATE TENSOR QUANTITIES
 
 

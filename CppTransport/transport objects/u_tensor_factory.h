@@ -46,6 +46,7 @@ class u_tensor_factory
     // scalar field fluctuations [see written notes]
     // actually, these compute A/H^2, B/H and C
     // all of these have mass dimension -1
+
     virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
@@ -59,14 +60,20 @@ class u_tensor_factory
     virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     // compute M tensor
+
     virtual void compute_M(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     //  CALCULATE GAUGE TRANSFORMATIONS
+
     virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+
+		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
+
+		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
     virtual GiNaC::ex compute_Hsq() = 0;
 
@@ -118,6 +125,7 @@ class canonical_u_tensor_factory : public u_tensor_factory
       }
 
     //  CALCULATE DERIVED QUANTITIES
+
     virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_u1(std::vector<GiNaC::ex>& v, flattener* fl) override;
@@ -149,14 +157,20 @@ class canonical_u_tensor_factory : public u_tensor_factory
     virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     // compute M tensor
+
     virtual void compute_M(std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     //  CALCULATE GAUGE TRANSFORMATIONS
+
     virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+
+		virtual void compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl) override;
+
+		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual GiNaC::ex compute_Hsq() override;
 

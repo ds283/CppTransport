@@ -536,6 +536,76 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_pp(unsigned int m, unsi
     return(c);
   }
 
+
+// *****************************************************************************
+
+
+void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v, flattener* fl)
+	{
+    fl->set_size(2*this->num_fields);
+    v.clear();
+    v.resize(fl->get_flattened_size(1));
+
+    GiNaC::ex Hsq  = this->compute_Hsq();
+    GiNaC::ex eps  = this->compute_eps();
+
+    GiNaC::ex dotH = -eps*Hsq;
+
+    for(int i = 0; i < 2*this->num_fields; i++)
+	    {
+        if(this->is_field(i))
+	        {
+            v[fl->flatten(i)] = diff(this->V, this->field_list[species(i)])/(6*Hsq*eps*GiNaC::pow(this->M_Planck,2)) - this->deriv_list[species(i)]/(6*GiNaC::pow(this->M_Planck,2));
+	        }
+        else if(this->is_momentum(i))
+	        {
+            v[fl->flatten(i)] = this->deriv_list[this->species(i)]/(6*eps*GiNaC::pow(this->M_Planck,2));
+	        }
+        else
+	        {
+            assert(false);
+	        }
+	    }
+	}
+
+
+void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl)
+	{
+    fl->set_size(2*this->num_fields);
+    v.clear();
+    v.resize(fl->get_flattened_size(2));
+
+    GiNaC::ex Hsq  = this->compute_Hsq();
+    GiNaC::ex eps  = this->compute_eps();
+
+    GiNaC::ex dotH = -eps*Hsq;
+
+    // formulae from arXiv:1302.3842, Eqs. (6.4) and (6.5)
+
+    GiNaC::ex p_sum(0);
+    for(int i = 0; i < this->num_fields; i++)
+	    {
+        p_sum += diff(1/(2*dotH), this->field_list[i]) * this->deriv_list[i];
+	    }
+    for(int i = 0; i < this->num_fields; i++)
+	    {
+        GiNaC::ex dXdN  = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
+        p_sum          += diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
+	    }
+
+    for(int i = 0; i < 2*this->num_fields; i++)
+	    {
+        for(int j = 0; j < 2*this->num_fields; j++)
+	        {
+            v[fl->flatten(i,j)] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
+	            - diff(1/(2*dotH), this->coordinate(i)) * diff(Hsq, this->coordinate(j))
+	            - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
+	            + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
+	        }
+	    }
+	}
+
+
 // *****************************************************************************
 
 

@@ -43,8 +43,10 @@ namespace macro_packages
         std::string default_k1;
         std::string default_k2;
 
-        void* pre_zeta_xfm_1(const std::vector<std::string>& args);
-        void* pre_zeta_xfm_2(const std::vector<std::string>& args);
+        void* pre_zeta_xfm_1  (const std::vector<std::string>& args);
+        void* pre_zeta_xfm_2  (const std::vector<std::string>& args);
+		    void* pre_deltaN_xfm_1(const std::vector<std::string>& args);
+		    void* pre_deltaN_xfm_2(const std::vector<std::string>& args);
 
       };
 

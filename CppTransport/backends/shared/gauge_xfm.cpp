@@ -40,31 +40,38 @@ namespace macro_packages
         std::vector<index_rule> package;
 
         const std::vector<replacement_rule_pre> pres =
-          { BIND1(pre_zeta_xfm_1),        BIND1(pre_zeta_xfm_2)
+          { BIND1(pre_zeta_xfm_1),        BIND1(pre_zeta_xfm_2),
+            BIND1(pre_deltaN_xfm_1),      BIND1(pre_deltaN_xfm_2)
           };
 
         const std::vector<replacement_rule_post> posts =
-          { BIND1(generic_post_hook),     BIND1(generic_post_hook)
+          { BIND1(generic_post_hook),     BIND1(generic_post_hook),
+            BIND1(generic_post_hook),     BIND1(generic_post_hook),
           };
 
         const std::vector<replacement_rule_index> rules =
-          { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
+          { BIND3(replace_1index_tensor), BIND3(replace_2index_tensor),
+            BIND3(replace_1index_tensor), BIND3(replace_2index_tensor)
           };
 
         const std::vector<std::string> names =
-          { "ZETA_XFM_1",                 "ZETA_XFM_2"
+          { "ZETA_XFM_1",                 "ZETA_XFM_2",
+            "DELTAN_XFM_1",               "DELTAN_XFM_2"
           };
 
         const std::vector<unsigned int> args =
-          { 2,                            6
+          { 2,                            6,
+            0,                            0
           };
 
         const std::vector<unsigned int> indices =
-          { 1,                            2
+          { 1,                            2,
+            1,                            2
           };
 
         const std::vector<unsigned int> ranges =
-          { 2,                            2
+          { 2,                            2,
+            2,                            2
           };
 
         assert(pres.size() == posts.size());
@@ -134,5 +141,28 @@ namespace macro_packages
 
         return(map);
       }
+
+
+    void* gauge_xfm::pre_deltaN_xfm_1(const std::vector<std::string>& args)
+	    {
+        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+        this->u_factory->compute_deltaN_xfm_1(*container, this->fl);
+
+        cse_map* map = this->cse_worker->map_factory(container);
+
+        return(map);
+	    }
+
+
+    void* gauge_xfm::pre_deltaN_xfm_2(const std::vector<std::string>& args)
+	    {
+        std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
+        this->u_factory->compute_deltaN_xfm_2(*container, this->fl);
+
+        cse_map* map = this->cse_worker->map_factory(container);
+
+        return(map);
+	    }
+
 
   } // namespace macro_packages
