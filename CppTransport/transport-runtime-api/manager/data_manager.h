@@ -775,7 +775,7 @@ namespace transport
 				      public:
 
 				        //! hash
-				        virtual unsigned int hash() const override { return(id % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+				        virtual unsigned int hash() const override { return((id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
 						    // INTERNAL DATA
@@ -831,7 +831,7 @@ namespace transport
 				      public:
 
 				        //! hash
-				        virtual unsigned int hash() const override { return((kserial*15485863 + id) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+				        virtual unsigned int hash() const override { return((kserial*8761 + id*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
 
 
 						    // INTERNAL DATA
@@ -1635,7 +1635,7 @@ namespace transport
 				const cf_time_data_tag* cf_tag = dynamic_cast<const cf_time_data_tag*>(&obj);
 
 				if(cf_tag == nullptr) return(false);
-				return(this->id == cf_tag->id && this->kserial == cf_tag->kserial);
+				return(this->type == cf_tag->type && this->id == cf_tag->id && this->kserial == cf_tag->kserial);
 			}
 
 
