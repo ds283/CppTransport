@@ -8,8 +8,6 @@
 #define __general_time_plot_H_
 
 
-#include "transport-runtime-api/serialization/serializable.h"
-
 #include "transport-runtime-api/derived-products/line_plot2d.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
@@ -43,7 +41,7 @@ namespace transport
 				    virtual ~time_series_plot() = default;
 
 
-		        // SETTING DEFAULTS -- implements a 'line_plot2d' interface
+		        // SETTING DEFAULTS
 
 		      public:
 
@@ -90,8 +88,8 @@ namespace transport
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
 
-		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIMEPLOT_X_LABEL_LATEX);
-		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIMEPLOT_X_LABEL_NOLATEX);
+		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
 
 		        this->clear_y_label_text();
 		        this->clear_title_text();

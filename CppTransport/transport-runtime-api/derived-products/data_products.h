@@ -9,7 +9,9 @@
 
 
 #include "transport-runtime-api/derived-products/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line_asciitable.h"
 #include "transport-runtime-api/derived-products/convenience/time_series_plot.h"
+#include "transport-runtime-api/derived-products/convenience/time_series_table.h"
 
 #include "transport-runtime-api/derived-products/derived_product_helper.h"
 

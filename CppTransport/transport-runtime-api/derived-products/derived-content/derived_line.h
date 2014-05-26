@@ -320,7 +320,6 @@ namespace transport
 
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION, this->precision);
 
-
 				    switch(this->x_type)
 							{
 						    case time_series:

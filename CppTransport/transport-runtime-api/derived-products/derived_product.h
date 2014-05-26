@@ -33,6 +33,7 @@
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE              "derived-product-type"
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D       "line-plot2d"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE   "line-asciitable"
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME          "filename"
 
@@ -92,7 +93,7 @@ namespace transport
 				    const std::string& get_name() const { return(this->name); }
 
 				    //! Get filename associated with this derived data product
-				    const std::string& get_filename() { return(this->name); }
+				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group

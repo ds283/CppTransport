@@ -8,8 +8,9 @@
 #define __defaults_H_
 
 
-#define __CPP_TRANSPORT_DEFAULT_WRAP_WIDTH     (135)
-#define __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION (3)
+#define __CPP_TRANSPORT_DEFAULT_WRAP_WIDTH      (135)
+#define __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION  (3)
+#define __CPP_TRANSPORT_DEFAULT_TABLE_PRECISION (170)
 
 
 #endif //__defaults_H_

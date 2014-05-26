@@ -11,6 +11,7 @@
 #include <iostream>
 #include <sstream>
 #include <string>
+#include <cmath>
 
 #include "transport-runtime-api/derived-products/derived_product.h"
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
@@ -23,6 +24,7 @@
 #include "boost/filesystem/operations.hpp"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT     "enforce-max-value-types"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES "max-value-types"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX            "log-x"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY            "log-y"
@@ -69,7 +71,11 @@ namespace transport
 
 				      public:
 
+						    //! Format for output to a Python script
 				        void format_python(std::ostream& out) const;
+
+						    //! Format as a number
+						    number format_number(void) const;
 
 
 				        // INTERNAL DATA
@@ -132,8 +138,8 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						line_collection(const std::string& name, const boost::filesystem::path& filename, unsigned int mvt)
-				      : max_value_types(mvt), derived_product<number>(name, filename)
+						line_collection(const std::string& name, const boost::filesystem::path& filename, bool enforce_mvt=false, unsigned int mvt=0)
+				      : enforce_max_value_types(enforce_mvt), max_value_types(mvt), derived_product<number>(name, filename)
 							{
 							}
 
@@ -211,6 +217,9 @@ namespace transport
 
 						// ADMIN
 
+						//! Enforce maximum number of value types?
+						bool enforce_max_value_types;
+
 				    //! Maximum number of different value-types to allow
 				    unsigned int max_value_types;
 
@@ -242,6 +251,7 @@ namespace transport
 						assert(reader != nullptr);
 
 						// read in line management attributes
+						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, enforce_max_value_types);
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, max_value_types);
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, log_x);
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, log_y);
@@ -268,7 +278,8 @@ namespace transport
 
 		    template <typename number>
 		    line_collection<number>::line_collection(const line_collection<number>& obj)
-			    : derived_product<number>(obj), max_value_types(obj.max_value_types),
+			    : derived_product<number>(obj),
+			      max_value_types(obj.max_value_types), enforce_max_value_types(obj.enforce_max_value_types),
 		        log_x(obj.log_x), log_y(obj.log_y),
 		        abs_y(obj.abs_y), use_LaTeX(obj.use_LaTeX)
 			    {
@@ -292,20 +303,23 @@ namespace transport
 					    }
 
 				    // check that adding this line won't introduce too many value types
-		        typename std::list< typename derived_line<number>::value_type > value_list;
-				    value_list.push_back(line.get_value_type());
-
-				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++)
+				    if(this->enforce_max_value_types)
 					    {
-						    typename derived_line<number>::value_type value = (*t)->get_value_type();
-						    if(std::find(value_list.begin(), value_list.end(), value) == value_list.end())
-							    {
-								    value_list.push_back(value);
-							    }
-					    }
+				        typename std::list< typename derived_line<number>::value_type > value_list;
+				        value_list.push_back(line.get_value_type());
 
-				    if(value_list.size() > this->max_value_types)
-					    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_TOO_MANY_VALUES);
+				        for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++)
+					        {
+				            typename derived_line<number>::value_type value = (*t)->get_value_type();
+				            if(std::find(value_list.begin(), value_list.end(), value) == value_list.end())
+					            {
+				                value_list.push_back(value);
+					            }
+					        }
+
+				        if(value_list.size() > this->max_value_types)
+					        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_TOO_MANY_VALUES);
+					    }
 
 		        this->lines.push_back(line.clone());
 			    }
@@ -321,14 +335,14 @@ namespace transport
 			    }
 
 
-				template <typename number>
-				void line_collection<number>::obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
-					{
-				    for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
-					    {
-				        (*t)->derive_lines(pipe, derived_lines, tags);
-					    }
-					}
+		    template <typename number>
+		    void line_collection<number>::obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
+			    {
+		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+			        {
+		            (*t)->derive_lines(pipe, derived_lines, tags);
+			        }
+			    }
 
 
 		    template <typename number>
@@ -453,41 +467,42 @@ namespace transport
 			    }
 
 
-				template <typename number>
-				void line_collection<number>::serialize(serialization_writer& writer) const
-					{
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, this->max_value_types);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, this->log_x);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, this->log_y);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, this->abs_y);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, this->use_LaTeX);
+		    template <typename number>
+		    void line_collection<number>::serialize(serialization_writer& writer) const
+			    {
+				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, this->enforce_max_value_types);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, this->max_value_types);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, this->log_x);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, this->log_y);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, this->abs_y);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, this->use_LaTeX);
 
-				    this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY, this->lines.size() == 0);
-				    for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
-					    {
-				        this->begin_node(writer, "arrayelt", false);    // node name ignored in array
-				        (*t)->serialize(writer);
-				        this->end_element(writer, "arrayelt");
-					    }
-				    this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
+		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY, this->lines.size() == 0);
+		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+			        {
+		            this->begin_node(writer, "arrayelt", false);    // node name ignored in array
+		            (*t)->serialize(writer);
+		            this->end_element(writer, "arrayelt");
+			        }
+		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
 
-				    // call next serialization
-				    this->derived_product<number>::serialize(writer);
-					}
+		        // call next serialization
+		        this->derived_product<number>::serialize(writer);
+			    }
 
 
-				template <typename number>
-				void line_collection<number>::write(std::ostream& out)
-					{
-						// call next writer
-						this->derived_product<number>::write(out);
+		    template <typename number>
+		    void line_collection<number>::write(std::ostream& out)
+			    {
+		        // call next writer
+		        this->derived_product<number>::write(out);
 
-				    unsigned int count = 0;
+		        unsigned int count = 0;
 
-				    out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl;
+		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl;
 
-				    this->wrapper.wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGX, count);
-				    this->wrapper.wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGY, count);
+		        this->wrapper.wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGX, count);
+		        this->wrapper.wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGY, count);
 				    this->wrapper.wrap_list_item(out, this->abs_y, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_ABSY, count);
 				    this->wrapper.wrap_list_item(out, this->use_LaTeX, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LATEX, count);
 
@@ -513,6 +528,20 @@ namespace transport
 		            out << "np.nan";
 			        }
 			    }
+
+
+				template <typename number>
+				number line_collection<number>::output_value::format_number(void) const
+					{
+						if(this->exists)
+							{
+								return(this->value);
+							}
+						else
+							{
+								return(std::nan(""));
+							}
+					}
 
 			}   // namespace derived_data
 

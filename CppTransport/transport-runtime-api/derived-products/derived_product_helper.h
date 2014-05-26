@@ -9,6 +9,7 @@
 
 
 #include "transport-runtime-api/derived-products/line_plot2d.h"
+#include "transport-runtime-api/derived-products/line_asciitable.h"
 
 
 namespace transport
@@ -36,6 +37,7 @@ namespace transport
 		                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
 		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
+			              else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) rval = new line_asciitable<number>(name, reader, finder);
 				            else
 			                {
 		                    std::ostringstream msg;
