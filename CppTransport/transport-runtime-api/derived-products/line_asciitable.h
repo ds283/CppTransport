@@ -47,6 +47,11 @@ namespace transport
 				    line_asciitable(const std::string& name, const boost::filesystem::path& filename, unsigned int prec=__CPP_TRANSPORT_DEFAULT_TABLE_PRECISION)
 		          : precision(prec), line_collection<number>(name, filename)
 					    {
+						    this->log_y     = false;
+						    this->log_x     = false;
+						    this->abs_y     = false;
+						    this->use_LaTeX = false;
+
 						    if(this->filename.extension().string() != ".txt" &&
 							     this->filename.extension().string() != ".dat" &&
 							     this->filename.extension().string() != ".data")
@@ -174,20 +179,25 @@ namespace transport
 						    std::vector<double> x;
 						    std::copy(axis.begin(), axis.end(), std::back_inserter(x));
 
-								// copy values
-						    std::vector< std::vector<number> > ys(data.size());
+								// copy values into array ys.
+								// the outer array runs over time
+								// the inner array runs over lines
+						    std::vector< std::vector<number> > ys(x.size());
+
+								for(unsigned int j = 0; j < ys.size(); j++)
+									{
+										ys[j].resize(data.size());
+									}
 
 								for(unsigned int i = 0; i < data.size(); i++)
 									{
-										ys[i].reserve(data[i].size());
-
 								    typename std::deque< typename line_collection<number>::output_value > values = data[i].get_values();
 
 										assert(values.size() == x.size());
 
 										for(unsigned int j = 0; j < values.size(); j++)
 											{
-												ys[i][j] = values[j].format_number();
+												ys[j][i] = values[j].format_number();
 											}
 									}
 
@@ -208,6 +218,9 @@ namespace transport
 
 						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION, this->precision);
 						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL, this->x_label);
+
+						// call next serializer
+						this->line_collection<number>::serialize(writer);
 					}
 
 

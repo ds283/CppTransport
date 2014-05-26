@@ -139,7 +139,9 @@ namespace transport
 
 						//! Basic user-facing constructor
 						line_collection(const std::string& name, const boost::filesystem::path& filename, bool enforce_mvt=false, unsigned int mvt=0)
-				      : enforce_max_value_types(enforce_mvt), max_value_types(mvt), derived_product<number>(name, filename)
+				      : enforce_max_value_types(enforce_mvt), max_value_types(mvt),
+				        log_x(false), log_y(false), abs_y(false), use_LaTeX(false),
+				        derived_product<number>(name, filename)
 							{
 							}
 
@@ -237,7 +239,7 @@ namespace transport
 				    //! take absolute value on y-axis? (mostly useful with log-y data)
 				    bool abs_y;
 
-				    //! use LaTeX default labels
+				    //! use LaTeX labels?
 				    bool use_LaTeX;
 
 					};

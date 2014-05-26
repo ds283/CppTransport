@@ -76,7 +76,7 @@ namespace transport
 
     template <typename number>
     void asciitable<number>::write(std::string x_name,
-                                   const std::vector<std::string>& columns, const std::vector<double>& xs, const std::vector<std::vector<number> >& ys,
+                                   const std::vector<std::string>& columns, const std::vector<double>& xs, const std::vector< std::vector<number> >& ys,
                                    const std::string tag)
 	    {
         // save current precision
