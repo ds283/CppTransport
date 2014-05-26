@@ -40,8 +40,11 @@
 
 // derived products
 #include "transport-runtime-api/localizations/messages_en/derived-products/derived_product.h"
-#include "transport-runtime-api/localizations/messages_en/derived-products/plot2d_product.h"
-#include "transport-runtime-api/localizations/messages_en/derived-products/time_data.h"
-#include "transport-runtime-api/localizations/messages_en/derived-products/time_plot.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/line_collection.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/line_plot2d.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/derived_line.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/time_series.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/time_series_plot.h"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_

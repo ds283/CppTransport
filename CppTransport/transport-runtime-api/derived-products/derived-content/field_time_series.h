@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __field_time_data_H_
-#define __field_time_data_H_
+#ifndef __field_time_series_H_
+#define __field_time_series_H_
 
 
 #include <iostream>
@@ -15,19 +15,19 @@
 #include <vector>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/time-data/time_data_line.h"
-#include "transport-runtime-api/derived-products/time-data/general_time_data.h"
+#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/derived-content/time_series.h"
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_TYPE      "twopf-components"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_REAL      "real"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_IMAGINARY "imaginary"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_TYPE      "twopf-components"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_REAL      "real"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_IMAGINARY "imaginary"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT     "use-kt-label"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA  "use-alpha-label"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA   "use-beta-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_KT     "use-kt-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_ALPHA  "use-alpha-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_BETA   "use-beta-label"
 
 
 namespace transport
@@ -38,7 +38,7 @@ namespace transport
 
 		    //! background time data line
 		    template <typename number>
-		    class background_time_data: public general_time_data<number>
+		    class background_time_series : public time_series<number>
 			    {
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -46,19 +46,19 @@ namespace transport
 		      public:
 
 		        //! construct a background time-data object
-		        background_time_data(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel, filter::time_filter tfilter);
+		        background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
+		                             filter::time_filter tfilter, unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        background_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+		        background_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-		        virtual ~background_time_data() = default;
+		        virtual ~background_time_series() = default;
 
 
-		        // DERIVE LINES -- implements a 'general_time_data' interface
+		        // DERIVE LINES -- implements a 'time_series' interface
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
-                                      plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -66,13 +66,17 @@ namespace transport
 
 		      protected:
 
-		        std::string make_label(unsigned int i, plot2d_product<number>& plot, model<number>* m) const;
+				    //! Make LaTeX label for this line
+		        std::string make_LaTeX_label(unsigned int i) const;
+
+				    //! Make non-LaTeX label for this line
+				    std::string make_non_LaTeX_label(unsigned int i) const;
 
 
 		        // CLONE
 
 		        //! self-replicate
-		        virtual general_time_data<number>* clone() const override { return new background_time_data<number>(static_cast<const background_time_data<number>&>(*this)); }
+		        virtual derived_line<number>* clone() const override { return new background_time_series<number>(static_cast<const background_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -99,55 +103,55 @@ namespace transport
 
 
 		    template <typename number>
-		    background_time_data<number>::background_time_data(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
-		                                                       filter::time_filter tfilter)
-			    : active_indices(sel), general_time_data<number>(tk, m, tfilter)
+		    background_time_series<number>::background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
+		                                                       filter::time_filter tfilter, unsigned int prec)
+			    : active_indices(sel), time_series<number>(tk, m, tfilter, derived_line<number>::background_field, prec)
 			    {
 		        assert(m != nullptr);
 
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
-			              << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
+		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 			    }
 
 
 		    template <typename number>
-		    background_time_data<number>::background_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-			    : active_indices(reader), general_time_data<number>(reader, finder)
+		    background_time_series<number>::background_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+			    : active_indices(reader), time_series<number>(reader, finder)
 			    {
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 			    }
 
 
 		    template <typename number>
-		    void background_time_data<number>::write(std::ostream& out)
+		    void background_time_series<number>::write(std::ostream& out)
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_BACKGROUND << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+				    this->time_series<number>::write(out);
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, this->mdl->get_state_names());
 			    }
 
 
 		    template <typename number>
-		    void background_time_data<number>::serialize(serialization_writer& writer) const
+		    void background_time_series<number>::serialize(serialization_writer& writer) const
 			    {
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND));
 
 		        this->active_indices.serialize(writer);
 
-		        this->general_time_data<number>::serialize(writer);
+		        this->time_series<number>::serialize(writer);
 			    }
 
 
         template <typename number>
-        void background_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe,
-                                                        plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+        void background_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                                         const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
@@ -168,7 +172,9 @@ namespace transport
 
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(m, plot, this->mdl));
+                    data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::background_field,
+                                                               time_axis, line_data,
+                                                               this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
                   }
@@ -180,43 +186,46 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string background_time_data<number>::make_label(unsigned int i, plot2d_product<number>& plot, model<number>* m) const
+		    std::string background_time_series<number>::make_LaTeX_label(unsigned int i) const
 			    {
 		        std::ostringstream label;
 
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+		        unsigned int N_fields = this->mdl->get_N_fields();
 
-		        unsigned int N_fields = m->get_N_fields();
+		        const std::vector<std::string>& field_names = this->mdl->get_f_latex_names();
 
-		        if(plot.get_use_LaTeX())
+		        label << "$";
+		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
-		            const std::vector<std::string>& field_names = m->get_f_latex_names();
-
-		            label << "$";
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			            }
-		            else
-			            {
-		                label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-			            }
-		            label << "$";
+		            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 			        }
 		        else
 			        {
-		            const std::vector<std::string>& field_names = m->get_field_names();
-
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			            }
-		            else
-			            {
-		                label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-			            }
+		            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
 			        }
+		        label << "$";
+
+				    return(label.str());
+			    }
+
+
+		    template <typename number>
+        std::string background_time_series<number>::make_non_LaTeX_label(unsigned int i) const
+	        {
+		        std::ostringstream label;
+
+		        unsigned int N_fields = this->mdl->get_N_fields();
+
+	          const std::vector<std::string>& field_names = this->mdl->get_field_names();
+
+	          if(this->get_dot_meaning() == derived_line<number>::derivatives)
+	            {
+	              label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+	            }
+	          else
+	            {
+	              label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+	            }
 
 		        return(label.str());
 			    }
@@ -224,7 +233,7 @@ namespace transport
 
 		    //! twopf time data line
 		    template <typename number>
-		    class twopf_time_data: public general_time_data<number>
+		    class twopf_time_series: public time_series<number>
 			    {
 
 		      public:
@@ -237,15 +246,15 @@ namespace transport
 		      public:
 
 		        //! construct a twopf time-data object
-		        twopf_time_data(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+		        twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
 		                        filter::time_filter tfilter,
 		                        filter::twopf_kconfig_filter kfilter,
-		                        unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                        unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
-		        twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+		        twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-		        virtual ~twopf_time_data() = default;
+		        virtual ~twopf_time_series() = default;
 
 
 		        // MANAGE SETTINGS
@@ -256,11 +265,10 @@ namespace transport
 		        void set_type(twopf_type m) { this->twopf_meaning = m; }
 
 
-		        // DERIVE LINES -- implements a 'general_time_data' interface
+		        // DERIVE LINES -- implements a 'time_series' interface
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
-                                      plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -268,14 +276,17 @@ namespace transport
 
 		      protected:
 
-		        std::string make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                               const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const;
+				    //! Make LaTeX label for this line
+		        std::string make_LaTeX_label(unsigned int m, unsigned int n, const typename data_manager<number>::twopf_configuration& config) const;
+
+				    //! Make non-LaTeX label for this line
+				    std::string make_non_LaTeX_label(unsigned int m, unsigned int n, const typename data_manager<number>::twopf_configuration& config) const;
 
 
 		        // CLONE
 
 		        //! self-replicate
-		        virtual general_time_data<number>* clone() const override { return new twopf_time_data<number>(static_cast<const twopf_time_data<number>&>(*this)); }
+		        virtual derived_line<number>* clone() const override { return new twopf_time_series<number>(static_cast<const twopf_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -304,27 +315,24 @@ namespace transport
 
 		        //! record which type of 2pf we are plotting
 		        twopf_type twopf_meaning;
-
-		        //! record precision of labels
-		        unsigned int precision;
 			    };
 
 
 		    template <typename number>
-		    twopf_time_data<number>::twopf_time_data(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
 		                                             filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : active_indices(sel), twopf_meaning(real), precision(prec), general_time_data<number>(tk, m, tfilter)
+			    : active_indices(sel), twopf_meaning(real), time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
 			    {
 		        assert(m != nullptr);
 
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
+		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+			            << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+			            << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 
@@ -333,24 +341,22 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_time_data<number>::twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-			    : active_indices(reader), general_time_data<number>(reader, finder)
+		    twopf_time_series<number>::twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+			    : active_indices(reader), time_series<number>(reader, finder)
 			    {
 		        assert(reader != nullptr);
 
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
-
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, precision);
+		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
 		        std::string tpf_type;
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_TYPE, tpf_type);
+		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_TYPE, tpf_type);
 
-		        if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_REAL) twopf_meaning = real;
-		        else if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_IMAGINARY) twopf_meaning = imaginary;
+		        if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_REAL) twopf_meaning = real;
+		        else if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_IMAGINARY) twopf_meaning = imaginary;
 		        else
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TWOPF_DATA_UNKNOWN << " '" << tpf_type << "'";
+		            msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN << " '" << tpf_type << "'";
 		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			        }
 
@@ -373,8 +379,7 @@ namespace transport
 
 
         template <typename number>
-        void twopf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe,
-                                                   plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+        void twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                                    const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output gorup
@@ -409,7 +414,9 @@ namespace transport
 
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
-		                        time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(m, n, plot, k_values[i], this->mdl));
+		                        data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
+		                                                                   time_axis, line_data,
+		                                                                   this->make_LaTeX_label(m, n, k_values[i]), this->make_non_LaTeX_label(m, n, k_values[i]));
 
 		                        lines.push_back(line);
 			                    }
@@ -423,78 +430,84 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string twopf_time_data<number>::make_label(unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                                                    const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const
+		    std::string twopf_time_series<number>::make_LaTeX_label(unsigned int m, unsigned int n, const typename data_manager<number>::twopf_configuration& config) const
 			    {
 		        std::ostringstream label;
 
-		        assert(mdl != nullptr);
-		        if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
-
-		        unsigned int N_fields = mdl->get_N_fields();
+		        unsigned int N_fields = this->mdl->get_N_fields();
 
 		        label << std::setprecision(this->precision);
 
-		        if(plot.get_use_LaTeX())
+		        label << "$" << (this->twopf_meaning == real ? __CPP_TRANSPORT_LATEX_RE_SYMBOL : __CPP_TRANSPORT_LATEX_IM_SYMBOL) << " ";
+
+		        const std::vector<std::string>& field_names = this->mdl->get_f_latex_names();
+
+		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
-		            label << "$" << (this->twopf_meaning == real ? __CPP_TRANSPORT_LATEX_RE_SYMBOL : __CPP_TRANSPORT_LATEX_IM_SYMBOL) << " ";
-
-		            const std::vector<std::string>& field_names = mdl->get_f_latex_names();
-
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			                    << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			            }
-		            else
-			            {
-		                label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			            }
-
-		            label << "\\;"
-			            << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
-		            else                                                                      label << output_latex_number(config.k_comoving, this->precision);
-
-		            label << "$";
+		            label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+			            << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 			        }
 		        else
 			        {
-		            label << (this->twopf_meaning == real ? __CPP_TRANSPORT_NONLATEX_RE_SYMBOL : __CPP_TRANSPORT_NONLATEX_IM_SYMBOL) << " ";
-
-		            const std::vector<std::string>& field_names = mdl->get_field_names();
-
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                    << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			            }
-		            else
-			            {
-		                label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                    << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			            }
-
-		            label << " "
-			            << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
-		            if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.k_conventional;
-		            else                                                                      label << config.k_comoving;
+		            label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+			            << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			        }
+
+		        label << "\\;"
+			        << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
+		        if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
+		        else label << output_latex_number(config.k_comoving, this->precision);
+
+		        label << "$";
+
+		        return (label.str());
+			    }
+
+
+				template <typename number>
+				std::string twopf_time_series<number>::make_non_LaTeX_label(unsigned int m, unsigned int n, const typename data_manager<number>::twopf_configuration& config) const
+					{
+				    std::ostringstream label;
+
+				    unsigned int N_fields = this->mdl->get_N_fields();
+
+				    label << std::setprecision(this->precision);
+
+				    label << (this->twopf_meaning == real ? __CPP_TRANSPORT_NONLATEX_RE_SYMBOL : __CPP_TRANSPORT_NONLATEX_IM_SYMBOL) << " ";
+
+				    const std::vector<std::string>& field_names = this->mdl->get_field_names();
+
+				    if(this->get_dot_meaning() == derived_line<number>::derivatives)
+					    {
+				        label << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+					        << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+					    }
+				    else
+					    {
+				        label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+					        << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+					    }
+
+				    label << " "
+					    << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
+				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.k_conventional;
+				    else label << config.k_comoving;
 
 		        return(label.str());
 			    }
 
 
 		    template <typename number>
-		    void twopf_time_data<number>::write(std::ostream& out)
+		    void twopf_time_series<number>::write(std::ostream& out)
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_TWOPF << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+		        this->time_series<number>::write(out);
+
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_TWOPF << std::endl;
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, this->mdl->get_state_names());
 		        out << std::endl;
 
-		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
 		        unsigned int count = 0;
 		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -510,12 +523,10 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_time_data<number>::serialize(serialization_writer& writer) const
+		    void twopf_time_series<number>::serialize(serialization_writer& writer) const
 			    {
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF));
-
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, this->precision);
 
 		        this->active_indices.serialize(writer);
 
@@ -523,18 +534,18 @@ namespace transport
 			        {
 		            case real:
 			            {
-		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_REAL));
+		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_REAL));
 		                break;
 			            }
 
 		            case imaginary:
 			            {
-		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF_DATA_IMAGINARY));
+		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_TWOPF_DATA_IMAGINARY));
 		                break;
 			            }
 
 		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_TWOPF_DATA_UNKNOWN);
+			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TWOPF_TYPE_UNKNOWN);
 			        }
 
 		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
@@ -546,14 +557,14 @@ namespace transport
 			        }
 		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-		        this->general_time_data<number>::serialize(writer);
+		        this->time_series<number>::serialize(writer);
 			    }
 
 
 		    //! Utility type for 3pf time lines -- provides shifting function to compute the switch
 		    //! from momenta to derivatives
 		    template <typename number>
-		    class basic_threepf_time_data : public general_time_data<number>
+		    class basic_threepf_time_series: public time_series<number>
 			    {
 
 		      protected:
@@ -616,20 +627,20 @@ namespace transport
 
 		      public:
 
-		        //! construct a basic_threepf_time_data object
-            basic_threepf_time_data(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter,
-                                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
-              : precision(prec), use_kt_label(true), use_alpha_label(false), use_beta_label(false),
-                general_time_data<number>(tk, m, tfilter)
+		        //! construct a basic_threepf_time_series object
+            basic_threepf_time_series(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter,
+                                    unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
+              : use_kt_label(true), use_alpha_label(false), use_beta_label(false),
+                time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
               {
                 assert(m != nullptr);
               }
 
 		        //! deserialization constructor
-		        basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+		        basic_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-		        //! destroy a basic threepf_time_data object
-		        virtual ~basic_threepf_time_data() = default;
+		        //! destroy a basic threepf_time_series object
+		        virtual ~basic_threepf_time_series() = default;
 
 
             // MANAGE LABELS
@@ -677,12 +688,15 @@ namespace transport
             //! Serialize this object
             virtual void serialize(serialization_writer& writer) const override;
 
+
+				    // WRITE SELF TO OUTPUT STREAM
+
+				    //! Write self to output stream
+				    void write(std::ostream& out);
+
             // INTERNAL DATA
 
           protected:
-
-            //! precision to use for labels
-            unsigned int precision;
 
             //! use k_t on line labels?
             bool use_kt_label;
@@ -697,24 +711,29 @@ namespace transport
 
 
         template <typename number>
-        basic_threepf_time_data<number>::basic_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-          : general_time_data<number>(reader, finder)
+        basic_threepf_time_series<number>::basic_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+          : time_series<number>(reader, finder)
           {
             assert(reader != nullptr);
 
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, precision);
-
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_KT, this->use_kt_label);
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_BETA, this->use_beta_label);
           }
 
 
+				template <typename number>
+				void basic_threepf_time_series<number>::write(std::ostream& out)
+					{
+						// FIXME: output label settings
+						this->time_series<number>::write(out);
+					}
+
 
 		    template <typename number>
-		    void basic_threepf_time_data<number>::shift_derivatives(typename data_manager<number>::datapipe& pipe,
+		    void basic_threepf_time_series<number>::shift_derivatives(typename data_manager<number>::datapipe& pipe,
                                                                 const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                                 const std::vector<double>& time_axis,
                                                                 unsigned int l, unsigned int m, unsigned int n,
@@ -748,7 +767,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void basic_threepf_time_data<number>::compute_derivative_shift(typename data_manager<number>::datapipe& pipe,
+		    void basic_threepf_time_series<number>::compute_derivative_shift(typename data_manager<number>::datapipe& pipe,
                                                                        const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                                        const std::vector<double>& time_axis, const std::vector<typename std::vector<number> >& background,
 		                                                                   unsigned int p, const extractor& p_config,
@@ -792,7 +811,7 @@ namespace transport
 		            break;
 
 		            default:
-			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_UNKNOWN_OPPOS);
+			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
 				    typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
@@ -856,21 +875,19 @@ namespace transport
 
 
         template <typename number>
-        void basic_threepf_time_data<number>::serialize(serialization_writer& writer) const
+        void basic_threepf_time_series<number>::serialize(serialization_writer& writer) const
           {
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, this->precision);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_KT, this->use_kt_label);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TSERIES_THREEPF_LABEL_BETA, this->use_beta_label);
 
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_KT, this->use_kt_label);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF_LABEL_BETA, this->use_beta_label);
-
-            this->general_time_data<number>::serialize(writer);
+            this->time_series<number>::serialize(writer);
           }
 
 
 		    //! threepf time data line
 		    template <typename number>
-		    class threepf_time_data: public basic_threepf_time_data<number>
+		    class threepf_time_series: public basic_threepf_time_series<number>
 			    {
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -878,21 +895,20 @@ namespace transport
 		      public:
 
 		        //! construct a threepf time-data object
-		        threepf_time_data(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+		        threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
 		                          filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
-		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                          unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+		        threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-		        virtual ~threepf_time_data() = default;
+		        virtual ~threepf_time_series() = default;
 
 
-		        // DERIVE LINES -- implements a 'general_time_data' interface
+		        // DERIVE LINES -- implements a 'time_series' interface
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
-                                      plot2d_product<number>& plot, std::list< time_data_line<number> >& lines,
+            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -900,15 +916,19 @@ namespace transport
 
 		      protected:
 
-            //! Make a label for a plot line
-		        std::string make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                               const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
+            //! Make a LaTeX label for a plot line
+		        std::string make_LaTeX_label(unsigned int l, unsigned int m, unsigned int n,
+		                                     const typename data_manager<number>::threepf_configuration& config) const;
+
+		        //! Make a non-LaTeX label for a plot line
+		        std::string make_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n,
+		                                         const typename data_manager<number>::threepf_configuration& config) const;
 
 
 		        // CLONE
 
 		        //! self-replicate
-		        virtual general_time_data<number>* clone() const override { return new threepf_time_data<number>(static_cast<const threepf_time_data<number>&>(*this)); }
+		        virtual derived_line<number>* clone() const override { return new threepf_time_series<number>(static_cast<const threepf_time_series<number>&>(*this)); }
 
 
 		        // WRITE TO A STREAM
@@ -938,22 +958,22 @@ namespace transport
 
 
 		    template <typename number>
-		    threepf_time_data<number>::threepf_time_data(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
 		                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                 unsigned int prec)
 			    : active_indices(sel),
-			      basic_threepf_time_data<number>(tk, m, tfilter, prec)
+			      basic_threepf_time_series<number>(tk, m, tfilter, prec)
 			    {
 		        assert(m != nullptr);
 
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH << " ("
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			            << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
+		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
+			            << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
+			            << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 
@@ -963,12 +983,12 @@ namespace transport
 
 
 		    template <typename number>
-		    threepf_time_data<number>::threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-			    : active_indices(reader), basic_threepf_time_data<number>(reader, finder)
+		    threepf_time_series<number>::threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+			    : active_indices(reader), basic_threepf_time_series<number>(reader, finder)
 			    {
 		        assert(reader != nullptr);
 
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
 		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
@@ -988,8 +1008,7 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe,
-                                                     plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+        void threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                                      const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output group
@@ -1028,10 +1047,12 @@ namespace transport
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
-		                            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
+		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			                            this->shift_derivatives(pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k_values[i]);
 
-		                            time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(l, m, n, plot, k_values[i], this->mdl));
+		                            data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
+		                                                                       time_axis, line_data,
+		                                                                       this->make_LaTeX_label(l, m, n, k_values[i]), this->make_non_LaTeX_label(l, m, n, k_values[i]));
 
 		                            lines.push_back(line);
 			                        }
@@ -1046,110 +1067,116 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string threepf_time_data<number>::make_label(unsigned int l, unsigned int m, unsigned int n, plot2d_product<number>& plot,
-		                                                      const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const
+		    std::string threepf_time_series<number>::make_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const typename data_manager<number>::threepf_configuration& config) const
 			    {
 		        std::ostringstream label;
 
-		        assert(mdl != nullptr);
-		        if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
-
-		        unsigned int N_fields = mdl->get_N_fields();
+		        unsigned int N_fields = this->mdl->get_N_fields();
 
 		        label << std::setprecision(this->precision);
 
-		        if(plot.get_use_LaTeX())
+		        const std::vector<std::string>& field_names = this->mdl->get_f_latex_names();
+
+		        label << "$";
+
+		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
-		            const std::vector<std::string>& field_names = mdl->get_f_latex_names();
-
-		            label << "$";
-
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
+		            label << field_names[l % N_fields] << (l >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
 			            << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
 			            << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			            }
-		            else
-			            {
-		                label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			            }
-
-		            label << "\\;";
-		            unsigned int count=0;
-		            if(this->use_kt_label)
-			            {
-		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
-		                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
-		                else label << output_latex_number(config.kt_comoving, this->precision);
-		                count++;
-			            }
-		            if(this->use_alpha_label)
-			            {
-		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
-		                count++;
-			            }
-		            if(this->use_beta_label)
-			            {
-		                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
-		                count++;
-			            }
-
-		            label << "$";
 			        }
 		        else
 			        {
-		            const std::vector<std::string>& field_names = mdl->get_field_names();
-
-		            if(this->get_dot_meaning() == general_time_data<number>::derivatives)
-			            {
-		                label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
-			                << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-			            }
-		            else
-			            {
-		                label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
-			                << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
-			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
-			            }
-
-		            label << " ";
-		            unsigned int count=0;
-		            if(this->use_kt_label)
-			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
-		                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.kt_conventional;
-		                else label << config.kt_comoving;
-		                count++;
-			            }
-		            if(this->use_alpha_label)
-			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
-		                count++;
-			            }
-		            if(this->use_beta_label)
-			            {
-		                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
-		                count++;
-			            }
+		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << " "
+			            << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
+			            << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			        }
 
-		        return(label.str());
+		        label << "\\;";
+		        unsigned int count = 0;
+		        if(this->use_kt_label)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
+		            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
+		            else label << output_latex_number(config.kt_comoving, this->precision);
+		            count++;
+			        }
+		        if(this->use_alpha_label)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
+		            count++;
+			        }
+		        if(this->use_beta_label)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
+		            count++;
+			        }
+
+		        label << "$";
+
+		        return (label.str());
 			    }
 
 
 		    template <typename number>
-		    void threepf_time_data<number>::write(std::ostream& out)
+		    std::string threepf_time_series<number>::make_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const typename data_manager<number>::threepf_configuration& config) const
 			    {
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_THREEPF << std::endl;
-		        out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_INDICES << " ";
+		        std::ostringstream label;
+
+		        unsigned int N_fields = this->mdl->get_N_fields();
+
+		        label << std::setprecision(this->precision);
+
+		        const std::vector<std::string>& field_names = this->mdl->get_field_names();
+
+		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+			        {
+		            label << field_names[l % N_fields] << (l >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+			            << field_names[m % N_fields] << (m >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "") << ", "
+			            << field_names[n % N_fields] << (n >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+			        }
+		        else
+			        {
+		            label << (l >= N_fields ? "p_{" : "") << field_names[l % N_fields] << (l >= N_fields ? "}" : "") << ", "
+			            << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << ", "
+			            << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+			        }
+
+		        label << " ";
+		        unsigned int count = 0;
+		        if(this->use_kt_label)
+			        {
+		            label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
+		            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.kt_conventional;
+		            else label << config.kt_comoving;
+		            count++;
+			        }
+		        if(this->use_alpha_label)
+			        {
+		            label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
+		            count++;
+			        }
+		        if(this->use_beta_label)
+			        {
+		            label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
+		            count++;
+			        }
+
+		        return (label.str());
+			    }
+
+
+		    template <typename number>
+		    void threepf_time_series<number>::write(std::ostream& out)
+			    {
+		        this->basic_threepf_time_series <number>::write(out);
+
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_THREEPF << std::endl;
+		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 		        this->active_indices.write(out, this->mdl->get_state_names());
 		        out << std::endl;
 
-		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+		        this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
 		        unsigned int count = 0;
 		        for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -1165,7 +1192,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void threepf_time_data<number>::serialize(serialization_writer& writer) const
+		    void threepf_time_series<number>::serialize(serialization_writer& writer) const
 			    {
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF));
@@ -1181,7 +1208,7 @@ namespace transport
 			        }
 		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-		        this->basic_threepf_time_data<number>::serialize(writer);
+		        this->basic_threepf_time_series <number>::serialize(writer);
 			    }
 
 
@@ -1190,4 +1217,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__field_time_data_H_
+#endif // __field_time_series_H_

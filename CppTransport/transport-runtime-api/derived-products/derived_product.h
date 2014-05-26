@@ -27,10 +27,12 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
+#include "boost/filesystem/operations.hpp"
+
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE              "derived-product-type"
 
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT "general-time-plot"
+#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D       "line-plot2d"
 
 #define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME          "filename"
 
@@ -63,7 +65,7 @@ namespace transport
 		        // CONSTRUCTOR, DESTRUCTOR
 
 				    //! Construct a derived product object.
-		        derived_product(const std::string& nm, const std::string& fnam)
+		        derived_product(const std::string& nm, const boost::filesystem::path& fnam)
 		          : name(nm), filename(fnam)
 			        {
 			        }
@@ -74,7 +76,9 @@ namespace transport
 					    {
 						    assert(reader != nullptr);
 
-						    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, filename);
+				        std::string fnam;
+						    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, fnam);
+						    filename = fnam;
 					    }
 
 		        virtual ~derived_product() = default;
@@ -108,6 +112,13 @@ namespace transport
 
 				    virtual derived_product<number>* clone() const = 0;
 
+
+				    // WRITE TO STANDARD OUTPUT
+
+		      public:
+
+				    void write(std::ostream& out);
+
 		        // INTERNAL DATA
 
 		      protected:
@@ -116,7 +127,7 @@ namespace transport
 		        const std::string name;
 
 		        //! Standardized filename
-		        std::string filename;
+		        boost::filesystem::path filename;
 
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
@@ -126,7 +137,14 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::serialize(serialization_writer& writer) const
 					{
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename);
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename.string());
+					}
+
+
+				template <typename number>
+				void derived_product<number>::write(std::ostream& out)
+					{
+						out << this->filename << std::endl;
 					}
 
 

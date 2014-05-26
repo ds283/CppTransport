@@ -8,7 +8,7 @@
 #define __derived_product_helper_H_
 
 
-#include "transport-runtime-api/derived-products/time-products/general_time_plot.h"
+#include "transport-runtime-api/derived-products/line_plot2d.h"
 
 
 namespace transport
@@ -35,7 +35,7 @@ namespace transport
 
 		                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
-		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_GENERAL_TIME_PLOT) rval = new general_time_plot<number>(name, reader, finder);
+		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
 				            else
 			                {
 		                    std::ostringstream msg;

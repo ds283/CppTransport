@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_time_data_H_
-#define __zeta_time_data_H_
+#ifndef __zeta_time_series_H_
+#define __zeta_time_series_H_
 
 
 #include <iostream>
@@ -15,9 +15,9 @@
 #include <vector>
 #include <stdexcept>
 
-#include "transport-runtime-api/derived-products/time-data/time_data_line.h"
-#include "transport-runtime-api/derived-products/time-data/general_time_data.h"
-#include "transport-runtime-api/derived-products/time-data/field_time_data.h"
+#include "transport-runtime-api/derived-products/data_line.h"
+#include "transport-runtime-api/derived-products/derived-content/time_series.h"
+#include "field_time_series.h"
 
 #include "transport-runtime-api/utilities/latex_output.h"
 
@@ -30,7 +30,7 @@ namespace transport
 
         //! zeta twopf time data line
         template <typename number>
-        class zeta_twopf_time_data: public general_time_data<number>
+        class zeta_twopf_time_series : public time_series<number>
           {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -38,22 +38,21 @@ namespace transport
           public:
 
             //! construct a zeta two-pf time data object
-            zeta_twopf_time_data(const twopf_list_task<number>& tk, model<number>* m,
+            zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
                                  filter::time_filter tfilter,
                                  filter::twopf_kconfig_filter kfilter,
-                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                 unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            zeta_twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+            zeta_twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-            virtual ~zeta_twopf_time_data() = default;
+            virtual ~zeta_twopf_time_series() = default;
 
 
-            // DERIVE LINES -- implements a 'general_time_data' interface
+            // DERIVE LINES -- implements a 'time_series' interface
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
-                                      plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -61,13 +60,17 @@ namespace transport
 
           protected:
 
-            std::string make_label(plot2d_product<number>& plot, const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const;
+		        //! Make a LaTeX label for this line
+            std::string make_LaTeX_label(const typename data_manager<number>::twopf_configuration& config) const;
+
+		        //! Make a non-LaTeX label for this line
+		        std::string make_non_LaTeX_label(const typename data_manager<number>::twopf_configuration& config) const;
 
 
             // CLONE
 
             //! self-replicate
-            virtual general_time_data<number>* clone() const override { return new zeta_twopf_time_data<number>(static_cast<const zeta_twopf_time_data<number>&>(*this)); }
+            virtual derived_line<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -91,33 +94,29 @@ namespace transport
             //! record serial numbers of k-configurations we are using
             std::vector<unsigned int> kconfig_sample_sns;
 
-            //! record precision of labels
-            unsigned int precision;
           };
 
 
         template <typename number>
-        zeta_twopf_time_data<number>::zeta_twopf_time_data(const twopf_list_task<number>& tk, model<number>* m,
+        zeta_twopf_time_series<number>::zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
                                                            filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-          : precision(prec), general_time_data<number>(tk, m, tfilter)
+          : time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
           {
             assert(m != nullptr);
 
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 
             this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), kconfig_sample_sns);
           }
 
 
         template <typename number>
-        zeta_twopf_time_data<number>::zeta_twopf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-          : general_time_data<number>(reader, finder)
+        zeta_twopf_time_series<number>::zeta_twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+          : time_series<number>(reader, finder)
           {
             assert(reader != nullptr);
 
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
-
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, precision);
+            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
             unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
@@ -138,8 +137,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_twopf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe,
-                                                        plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+        void zeta_twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                                         const std::list<std::string>& tags) const
           {
             unsigned int N_fields = this->mdl->get_N_fields();
@@ -209,7 +207,9 @@ namespace transport
                       }
                   }
 
-                time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(plot, k_values[i], this->mdl));
+                data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
+                                                           time_axis, line_data,
+                                                           this->make_LaTeX_label(k_values[i]), this->make_non_LaTeX_label(k_values[i]));
 
                 lines.push_back(line);
               }
@@ -220,46 +220,52 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_twopf_time_data<number>::make_label(plot2d_product<number>& plot, const typename data_manager<number>::twopf_configuration& config, model<number>* mdl) const
-          {
+        std::string zeta_twopf_time_series<number>::make_LaTeX_label(const typename data_manager<number>::twopf_configuration& config) const
+	        {
             std::ostringstream label;
 
-            assert(mdl != nullptr);
-            if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+            label << std::setprecision(this->precision);
 
-            if(plot.get_use_LaTeX())
-              {
-                label << "$";
+            label << "$";
 
-                label << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL;
+            label << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL;
 
-                label << "\\;"
-                  << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
-                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
-                else                                                                      label << output_latex_number(config.k_comoving, this->precision);
+            label << "\\;" << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
+            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
+            else label << output_latex_number(config.k_comoving, this->precision);
 
-                label << "$";
-              }
-            else
-              {
-                label << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL;
+            label << "$";
 
-                label << " "
-                  << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
-                if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.k_conventional;
-                else                                                                      label << config.k_comoving;
-              }
-
-            return(label.str());
-          }
+            return (label.str());
+	        }
 
 
         template <typename number>
-        void zeta_twopf_time_data<number>::write(std::ostream& out)
-          {
-            out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_ZETA_TWOPF << std::endl;
+        std::string zeta_twopf_time_series<number>::make_non_LaTeX_label(const typename data_manager<number>::twopf_configuration& config) const
+	        {
+            std::ostringstream label;
 
-            this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+            label << std::setprecision(this->precision);
+
+            label << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL;
+
+            label << " "
+	            << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
+            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.k_conventional;
+            else label << config.k_comoving;
+
+            return (label.str());
+	        }
+
+
+        template <typename number>
+        void zeta_twopf_time_series<number>::write(std::ostream& out)
+          {
+		        this->time_series<number>::write(out);
+
+            out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_ZETA_TWOPF << std::endl;
+
+            this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
             unsigned int count = 0;
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -275,12 +281,10 @@ namespace transport
 
 
         template <typename number>
-        void zeta_twopf_time_data<number>::serialize(serialization_writer& writer) const
+        void zeta_twopf_time_series<number>::serialize(serialization_writer& writer) const
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF));
-
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_LABEL_PRECISION, this->precision);
 
             this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
@@ -291,35 +295,34 @@ namespace transport
               }
             this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-            this->general_time_data<number>::serialize(writer);
+            this->time_series<number>::serialize(writer);
           }
 
 
         //! zeta threepf time data line
         template <typename number>
-        class zeta_threepf_time_data: public basic_threepf_time_data<number>
+        class zeta_threepf_time_series : public basic_threepf_time_series<number>
           {
 
             // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
-            //! construct a zeta_threepf_time_data object
-            zeta_threepf_time_data(const threepf_task<number>& tk, model<number>* m,
+            //! construct a zeta_threepf_time_series object
+            zeta_threepf_time_series(const threepf_task<number>& tk, model<number>* m,
                                    filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
-                                   unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            zeta_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder);
+            zeta_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
 
-            virtual ~zeta_threepf_time_data() = default;
+            virtual ~zeta_threepf_time_series() = default;
 
 
-            // DERIVE LINES -- implements a 'general_time_data' interface
+            // DERIVE LINES -- implements a 'time_series' interface
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe,
-                                      plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -327,13 +330,17 @@ namespace transport
 
           protected:
 
-            std::string make_label(plot2d_product<number>& plot, const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const;
+		        //! Make a LaTeX label for this line
+            std::string make_LaTeX_label(const typename data_manager<number>::threepf_configuration& config) const;
+
+		        //! Make a non-LaTeX label for this line
+		        std::string make_non_LaTeX_label(const typename data_manager<number>::threepf_configuration& config) const;
 
 
             // CLONE
 
             //! self-replicate
-            virtual general_time_data<number>* clone() const override { return new zeta_threepf_time_data<number>(static_cast<const zeta_threepf_time_data<number>&>(*this)); }
+            virtual derived_line<number>* clone() const override { return new zeta_threepf_time_series<number>(static_cast<const zeta_threepf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
@@ -361,25 +368,25 @@ namespace transport
 
 
         template <typename number>
-        zeta_threepf_time_data<number>::zeta_threepf_time_data(const threepf_task<number>& tk, model<number>* m,
+        zeta_threepf_time_series<number>::zeta_threepf_time_series(const threepf_task<number>& tk, model<number>* m,
                                                                filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-          : basic_threepf_time_data<number>(tk, m, tfilter, prec)
+          : basic_threepf_time_series<number>(tk, m, tfilter, prec)
           {
             assert(m != nullptr);
 
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 
             this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), kconfig_sample_sns);
           }
 
 
         template <typename number>
-        zeta_threepf_time_data<number>::zeta_threepf_time_data(serialization_reader* reader, typename repository<number>::task_finder finder)
-          : basic_threepf_time_data<number>(reader, finder)
+        zeta_threepf_time_series<number>::zeta_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
+          : basic_threepf_time_series<number>(reader, finder)
           {
             assert(reader != nullptr);
 
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_READER);
+            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
             unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
@@ -399,8 +406,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_threepf_time_data<number>::derive_lines(typename data_manager<number>::datapipe& pipe,
-                                                          plot2d_product<number>& plot, std::list<time_data_line<number> >& lines,
+        void zeta_threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                                           const std::list<std::string>& tags) const
           {
             unsigned int N_fields = this->mdl->get_N_fields();
@@ -443,16 +449,16 @@ namespace transport
             std::vector< std::vector<number> > dN(time_sample_sns.size());
             for(unsigned int j = 0; j < time_sample_sns.size(); j++)
               {
-                this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
+                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                typename basic_threepf_time_data<number>::extractor k1(1, k_values[i]);
-                typename basic_threepf_time_data<number>::extractor k2(2, k_values[i]);
-                typename basic_threepf_time_data<number>::extractor k3(3, k_values[i]);
+                typename basic_threepf_time_series<number>::extractor k1(1, k_values[i]);
+                typename basic_threepf_time_series<number>::extractor k2(2, k_values[i]);
+                typename basic_threepf_time_series<number>::extractor k3(3, k_values[i]);
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
@@ -461,9 +467,12 @@ namespace transport
                 std::vector< std::vector< std::vector<number> > > ddN312(time_sample_sns.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                   {
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
+//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
+//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
+//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
+		                this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN123[j]);
+                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN213[j]);
+                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN312[j]);
                   }
 
                 // time-line for zeta will be stored in 'line_data'
@@ -538,7 +547,9 @@ namespace transport
                       }
                   }
 
-                time_data_line<number> line = time_data_line<number>(time_axis, line_data, this->make_label(plot, k_values[i], this->mdl));
+                data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
+                                                           time_axis, line_data,
+                                                           this->make_LaTeX_label(k_values[i]), this->make_non_LaTeX_label(k_values[i]));
 
                 lines.push_back(line);
               }
@@ -549,76 +560,83 @@ namespace transport
 
 
         template <typename number>
-        std::string zeta_threepf_time_data<number>::make_label(plot2d_product<number>& plot, const typename data_manager<number>::threepf_configuration& config, model<number>* mdl) const
-          {
+        std::string zeta_threepf_time_series<number>::make_LaTeX_label(const typename data_manager<number>::threepf_configuration& config) const
+	        {
             std::ostringstream label;
 
-            assert(mdl != nullptr);
-            if(mdl == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_NULL_MODEL);
+            label << std::setprecision(this->precision);
 
-            if(plot.get_use_LaTeX())
-              {
-                label << "$";
+            label << "$";
 
-                label << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL;
+            label << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL;
 
-                label << "\\;";
-                unsigned int count=0;
-                if(this->use_kt_label)
-                  {
-                    label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
-                    if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
-                    else label << output_latex_number(config.kt_comoving, this->precision);
-                    count++;
-                  }
-                if(this->use_alpha_label)
-                  {
-                    label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
-                    count++;
-                  }
-                if(this->use_beta_label)
-                  {
-                    label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
-                    count++;
-                  }
+            label << "\\;";
+            unsigned int count = 0;
+            if(this->use_kt_label)
+	            {
+                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
+                if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
+                else label << output_latex_number(config.kt_comoving, this->precision);
+                count++;
+	            }
+            if(this->use_alpha_label)
+	            {
+                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
+                count++;
+	            }
+            if(this->use_beta_label)
+	            {
+                label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
+                count++;
+	            }
 
-                label << "$";
-              }
-            else
-              {
-                label << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL;
+            label << "$";
 
-                label << " ";
-                unsigned int count=0;
-                if(this->use_kt_label)
-                  {
-                    label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
-                    if(this->get_klabel_meaning() == general_time_data<number>::conventional) label << config.kt_conventional;
-                    else label << config.kt_comoving;
-                    count++;
-                  }
-                if(this->use_alpha_label)
-                  {
-                    label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
-                    count++;
-                  }
-                if(this->use_beta_label)
-                  {
-                    label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
-                    count++;
-                  }
-              }
-
-            return(label.str());
-          }
+            return (label.str());
+	        }
 
 
         template <typename number>
-        void zeta_threepf_time_data<number>::write(std::ostream& out)
-          {
-            out << "  " << __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_LABEL_ZETA_THREEPF << std::endl;
+        std::string zeta_threepf_time_series<number>::make_non_LaTeX_label(const typename data_manager<number>::threepf_configuration& config) const
+	        {
+            std::ostringstream label;
 
-            this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_GENERAL_TPLOT_KCONFIG_SN_LABEL " ");
+            label << std::setprecision(this->precision);
+
+            label << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL;
+
+            label << " ";
+            unsigned int count = 0;
+            if(this->use_kt_label)
+	            {
+                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
+                if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.kt_conventional;
+                else label << config.kt_comoving;
+                count++;
+	            }
+            if(this->use_alpha_label)
+	            {
+                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
+                count++;
+	            }
+            if(this->use_beta_label)
+	            {
+                label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
+                count++;
+	            }
+
+            return (label.str());
+	        }
+
+
+        template <typename number>
+        void zeta_threepf_time_series<number>::write(std::ostream& out)
+          {
+		        this->basic_threepf_time_series<number>::write(out);
+
+            out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_ZETA_THREEPF << std::endl;
+
+            this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
             unsigned int count = 0;
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
@@ -634,7 +652,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_threepf_time_data<number>::serialize(serialization_writer& writer) const
+        void zeta_threepf_time_series<number>::serialize(serialization_writer& writer) const
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_THREEPF));
@@ -648,7 +666,7 @@ namespace transport
               }
             this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
-            this->basic_threepf_time_data<number>::serialize(writer);
+            this->basic_threepf_time_series<number>::serialize(writer);
           }
 
 
@@ -657,4 +675,4 @@ namespace transport
   }   // namespace transport
 
 
-#endif //__zeta_time_data_H_
+#endif // __zeta_time_series_H_
