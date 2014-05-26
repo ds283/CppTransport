@@ -271,6 +271,10 @@ int main(int argc, char* argv[])
     tk3_threepf_plot.set_title_text("Three-point function");
     tk3_threepf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
+    transport::derived_data::time_series_table<double> tk3_threepf_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.threepf.table", "threepf-table.txt");
+
+		tk3_threepf_table.add_line(tk3_threepf_group);
+
     transport::derived_data::time_series_plot<double> tk3_mixed_plot =
 	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.mixed", "mixed.pdf");
 
@@ -312,6 +316,11 @@ int main(int argc, char* argv[])
     tk3_check_shift.set_title_text("Comparison of derivative and momenta 3pf");
     tk3_check_shift.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
+    transport::derived_data::time_series_table<double> tk3_check_shift_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.checkshift.table", "checkshift-table.txt");
+
+		tk3_check_shift_table.add_line(tk3_threepf_derivs);
+		tk3_check_shift_table.add_line(tk3_threepf_momenta);
+
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(tk3, model,
                                                                                                                                        transport::derived_data::filter::time_filter(time_filter),
@@ -334,6 +343,10 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> tk3_zeta_equi = transport::derived_data::time_series_plot<double>("dquad.threepf-1.zeta-equi", "zeta-equi.pdf");
     tk3_zeta_equi.add_line(tk3_zeta_equi_group);
     tk3_zeta_equi.set_title_text("3pf of $\\zeta$ near equilateral configurations");
+
+		// set up a table too
+    transport::derived_data::time_series_table<double> tk3_zeta_equi_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.zeta-equi.table", "zeta-equi-table.txt");
+		tk3_zeta_equi_table.add_line(tk3_zeta_equi_group);
 
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(tk3, model,
                                                                                                                                         transport::derived_data::filter::time_filter(time_filter),
@@ -378,10 +391,13 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_twopf_imag_plot);
     threepf_output.add_element(tk3_twopf_total_plot);
 		threepf_output.add_element(tk3_threepf_plot);
+		threepf_output.add_element(tk3_threepf_table);
 		threepf_output.add_element(tk3_mixed_plot);
     threepf_output.add_element(tk3_check_shift);
+		threepf_output.add_element(tk3_check_shift_table);
     threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_equi);
+		threepf_output.add_element(tk3_zeta_equi_table);
     threepf_output.add_element(tk3_zeta_sq);
 
     std::cout << "dquad.threepf-1 output task:" << std::endl << threepf_output << std::endl;
