@@ -864,15 +864,25 @@ namespace transport
 		    //! Add an element, no tags provided
 		    void add_element(const derived_data::derived_product<number>& prod)
 			    {
-				    // set up empty list of tags
-		        std::list<std::string> tags;
-
-				    elements.push_back(output_task_element<number>(prod, tags, serial++));
+				    this->add_element(prod, std::list<std::string>());
 			    }
 
 		    //! Add an element, tags provided
 		    void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
 			    {
+				    // check that this derived product has a distinct filename
+
+				    for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != this->elements.end(); t++)
+					    {
+						    if((*t).get_product()->get_filename() == prod.get_filename())
+							    {
+						        std::ostringstream msg;
+								    msg << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
+									      << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "',  ";
+								    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+							    }
+					    }
+
 				    elements.push_back(output_task_element<number>(prod, tags, serial++));
 			    }
 
