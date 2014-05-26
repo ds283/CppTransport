@@ -94,9 +94,9 @@ int main(int argc, char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 9.0;  // horizon-crossing occurs at 9 e-folds from init_values
-    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 59.0; // how many e-folds to integrate after horizon crossing
+    const double Ncross = 7.0;  // horizon-crossing occurs at 7 e-folds from init_values
+    const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
     transport::initial_conditions<double> ics =
@@ -113,13 +113,17 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(2.0);   // end with the mode which exits the horizon at N=N*+2
-    const unsigned int  k_samples = 10;         // number of k-points
+    const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
+    const unsigned int  k_samples = 4 ;         // number of k-points
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
+
+    std::cout << ks;
 
     // construct a threepf task
     transport::threepf_task<double> tk3 = transport::threepf_task<double>("dquad.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
+
+    std::cout << tk3;
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("dquad.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
@@ -137,13 +141,13 @@ int main(int argc, char* argv[])
 
     transport::derived_data::background_time_data<double> tk3_bg = transport::derived_data::background_time_data<double>(tk3, model, bg_sel, transport::derived_data::filter::time_filter(time_filter));
 
-    transport::derived_data::general_time_plot<double> tk2_bg_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.background", "background.pdf");
+    transport::derived_data::time_series_plot<double> tk2_bg_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.twopf-1.background", "background.pdf");
 		tk2_bg_plot.add_line(tk2_bg);
     tk2_bg_plot.set_title_text("Background fields");
 
-    transport::derived_data::general_time_plot<double> tk3_bg_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.background", "background.pdf");
+    transport::derived_data::time_series_plot<double> tk3_bg_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.background", "background.pdf");
 		tk3_bg_plot.add_line(tk3_bg);
 		tk3_bg_plot.set_title_text("Background fields");
 
@@ -200,43 +204,43 @@ int main(int argc, char* argv[])
     tk3_twopf_imag_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
     tk3_twopf_imag_group.set_type(transport::derived_data::twopf_time_data<double>::imaginary);
 
-    transport::derived_data::general_time_plot<double> tk2_twopf_real_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-real", "twopf-real.pdf");
+    transport::derived_data::time_series_plot<double> tk2_twopf_real_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.twopf-1.twopf-real", "twopf-real.pdf");
 		tk2_twopf_real_plot.add_line(tk2_twopf_real_group);
 		tk2_twopf_real_plot.set_title_text("Real two-point function");
-		tk2_twopf_real_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+		tk2_twopf_real_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk2_twopf_imag_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-imag", "twopf-imag.pdf");
+    transport::derived_data::time_series_plot<double> tk2_twopf_imag_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.twopf-1.twopf-imag", "twopf-imag.pdf");
     tk2_twopf_imag_plot.add_line(tk2_twopf_imag_group);
     tk2_twopf_imag_plot.set_title_text("Imaginary two-point function");
-    tk2_twopf_imag_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk2_twopf_imag_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk2_twopf_total_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.twopf-1.twopf-total", "twopf-total.pdf");
+    transport::derived_data::time_series_plot<double> tk2_twopf_total_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.twopf-1.twopf-total", "twopf-total.pdf");
     tk2_twopf_total_plot.add_line(tk2_twopf_real_group);
 		tk2_twopf_total_plot.add_line(tk2_twopf_imag_group);
     tk2_twopf_total_plot.set_title_text("Two-point function");
-    tk2_twopf_total_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk2_twopf_total_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk3_twopf_real_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.twopf-real", "twopf-real.pdf");
+    transport::derived_data::time_series_plot<double> tk3_twopf_real_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.twopf-real", "twopf-real.pdf");
     tk3_twopf_real_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_real_plot.set_title_text("Real two-point function");
-    tk3_twopf_real_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_twopf_real_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk3_twopf_imag_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.twopf-imag", "twopf-imag.pdf");
+    transport::derived_data::time_series_plot<double> tk3_twopf_imag_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.twopf-imag", "twopf-imag.pdf");
     tk3_twopf_imag_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_imag_plot.set_title_text("Imaginary two-point function");
-    tk3_twopf_imag_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_twopf_imag_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk3_twopf_total_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.twopf-total", "twopf-total.pdf");
+    transport::derived_data::time_series_plot<double> tk3_twopf_total_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.twopf-total", "twopf-total.pdf");
     tk3_twopf_total_plot.add_line(tk3_twopf_real_group);
     tk3_twopf_total_plot.add_line(tk3_twopf_imag_group);
     tk3_twopf_total_plot.set_title_text("Two-point function");
-    tk3_twopf_total_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_twopf_total_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
     // plots of some components of the threepf
     transport::index_selector<3> threepf_fields(model->get_N_fields());
@@ -261,19 +265,19 @@ int main(int argc, char* argv[])
 	                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_filter));
 		tk3_threepf_group.set_klabel_meaning(transport::derived_data::general_time_data<double>::conventional);
 
-    transport::derived_data::general_time_plot<double> tk3_threepf_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.threepf", "threepf.pdf");
+    transport::derived_data::time_series_plot<double> tk3_threepf_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.threepf", "threepf.pdf");
     tk3_threepf_plot.add_line(tk3_threepf_group);
     tk3_threepf_plot.set_title_text("Three-point function");
-    tk3_threepf_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_threepf_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
-    transport::derived_data::general_time_plot<double> tk3_mixed_plot =
-	                                                       transport::derived_data::general_time_plot<double>("dquad.threepf-1.mixed", "mixed.pdf");
+    transport::derived_data::time_series_plot<double> tk3_mixed_plot =
+	                                                       transport::derived_data::time_series_plot<double>("dquad.threepf-1.mixed", "mixed.pdf");
 
 		tk3_mixed_plot.add_line(tk3_threepf_group);
 		tk3_mixed_plot.add_line(tk3_twopf_real_group);
 		tk3_mixed_plot.set_title_text("Two- and three-point functions");
-		tk3_mixed_plot.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+		tk3_mixed_plot.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
     // pick out the shift between derivative and moments 3pfs
     transport::index_selector<3> threepf_mmta(model->get_N_fields());
@@ -301,24 +305,24 @@ int main(int argc, char* argv[])
     tk3_threepf_momenta.set_use_alpha_label(true);
     tk3_threepf_momenta.set_use_beta_label(true);
 
-    transport::derived_data::general_time_plot<double> tk3_check_shift = transport::derived_data::general_time_plot<double>("dquad.threepf-1.checkshift", "checkshift.pdf");
+    transport::derived_data::time_series_plot<double> tk3_check_shift = transport::derived_data::time_series_plot<double>("dquad.threepf-1.checkshift", "checkshift.pdf");
 
     tk3_check_shift.add_line(tk3_threepf_derivs);
     tk3_check_shift.add_line(tk3_threepf_momenta);
     tk3_check_shift.set_title_text("Comparison of derivative and momenta 3pf");
-    tk3_check_shift.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_check_shift.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_data<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_data<double>(tk3, model,
                                                                                                                                        transport::derived_data::filter::time_filter(time_filter),
                                                                                                                                        transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
 
-    transport::derived_data::general_time_plot<double> tk3_zeta_twopf = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-twopf", "zeta-twopf.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_twopf = transport::derived_data::time_series_plot<double>("dquad.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.add_line(tk3_twopf_real_group);
     tk3_zeta_twopf.set_title_text("Comparison of $\\zeta$ and field 2pfs");
-    tk3_zeta_twopf.set_legend_position(transport::derived_data::plot2d_product<double>::bottom_left);
+    tk3_zeta_twopf.set_legend_position(transport::derived_data::plot2d_productline_plot2d::bottom_left);
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_data<double> tk3_zeta_equi_group = transport::derived_data::zeta_threepf_time_data<double>(tk3, model,
@@ -327,7 +331,7 @@ int main(int argc, char* argv[])
     tk3_zeta_equi_group.set_use_alpha_label(true);
     tk3_zeta_equi_group.set_use_beta_label(true);
 
-    transport::derived_data::general_time_plot<double> tk3_zeta_equi = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-equi", "zeta-equi.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_equi = transport::derived_data::time_series_plot<double>("dquad.threepf-1.zeta-equi", "zeta-equi.pdf");
     tk3_zeta_equi.add_line(tk3_zeta_equi_group);
     tk3_zeta_equi.set_title_text("3pf of $\\zeta$ near equilateral configurations");
 
@@ -336,7 +340,7 @@ int main(int argc, char* argv[])
                                                                                                                                         transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_squeezed));
     tk3_zeta_sq_group.set_use_beta_label(true);
 
-    transport::derived_data::general_time_plot<double> tk3_zeta_sq = transport::derived_data::general_time_plot<double>("dquad.threepf-1.zeta-sq", "zeta-sq.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_sq = transport::derived_data::time_series_plot<double>("dquad.threepf-1.zeta-sq", "zeta-sq.pdf");
     tk3_zeta_sq.add_line(tk3_zeta_sq_group);
     tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near squeezed configurations");
 
