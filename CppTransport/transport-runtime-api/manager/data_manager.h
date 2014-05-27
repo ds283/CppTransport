@@ -1269,7 +1269,12 @@ namespace transport
     template <typename number>
     data_manager<number>::datapipe::~datapipe()
 	    {
-		    assert(this->database_timer.is_stopped());
+//		    assert(this->database_timer.is_stopped());
+
+		    if(!(this->database_timer.is_stopped()))
+			    {
+			      BOOST_LOG_SEV(this->log_source, data_manager<number>::error) << ":: Error: datapipe being destroyed, but database timer is still running";
+			    }
 
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing datapipe. Usage statistics:";
