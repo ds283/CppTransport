@@ -369,7 +369,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
               }
             else if(this->is_momentum(i) && this->is_momentum(j))
               {
-                c = this->compute_zeta_xfm_2_pp(this->species(i), this->species(j), k, k2, k1, a, Hsq, eps);
+                c = this->compute_zeta_xfm_2_pp(this->species(i), this->species(j), k, k1, k2, a, Hsq, eps);
               }
             else
               {
@@ -401,8 +401,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 
     GiNaC::ex k12sq = k*k;
 
-    GiNaC::ex M1 = (m == n) ? -(k1*k1/(pow(a,2)*Hsq)) : 0;
-    GiNaC::ex M2 = (m == n) ? -(k2*k2/(pow(a,2)*Hsq)) : 0;
+    GiNaC::ex M1 = -(k1*k1/(pow(a,2)*Hsq))*this->deriv_list[m];
+    GiNaC::ex M2 = -(k2*k2/(pow(a,2)*Hsq))*this->deriv_list[n];
     for(unsigned int i = 0; i < this->num_fields; i++)
       {
 //        M1 += -diff(diff(this->V, this->field_list[m]), this->field_list[i])*this->deriv_list[i]/Hsq;
@@ -428,7 +428,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 
     if(m == n) c += - k1dotk2/(6*pow(this->M_Planck,2)*eps*pow(a,2)*Hsq);
 
-    c -= diff(diff(this->V, this->field_list[m]), this->field_list[n])/(6*pow(this->M_Planck,2)*eps*Hsq);
+    c += -diff(diff(this->V, this->field_list[m]), this->field_list[n])/(6*pow(this->M_Planck,2)*eps*Hsq);
 
     c += this->deriv_list[m]*this->deriv_list[n]/(6*pow(this->M_Planck,4));
 
@@ -467,7 +467,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_fp(unsigned int m, unsi
 
     GiNaC::ex k12sq = k*k;
 
-    GiNaC::ex M1 = (m == n) ? -(k1*k1/(pow(a,2)*Hsq)) : 0;
+    GiNaC::ex M1 = -(k1*k1/(pow(a,2)*Hsq))*this->deriv_list[m];
     for(unsigned int i = 0; i < this->num_fields; i++)
       {
 // commented items cancel with each other?

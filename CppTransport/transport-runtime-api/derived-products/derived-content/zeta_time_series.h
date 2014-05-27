@@ -138,7 +138,7 @@ namespace transport
 
         template <typename number>
         void zeta_twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
-                                                        const std::list<std::string>& tags) const
+                                                          const std::list<std::string>& tags) const
           {
             unsigned int N_fields = this->mdl->get_N_fields();
 
@@ -406,8 +406,8 @@ namespace transport
 
 
         template <typename number>
-        void zeta_threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
-                                                          const std::list<std::string>& tags) const
+        void zeta_threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+                                                            const std::list<std::string>& tags) const
           {
             unsigned int N_fields = this->mdl->get_N_fields();
 
@@ -449,7 +449,7 @@ namespace transport
             std::vector< std::vector<number> > dN(time_sample_sns.size());
             for(unsigned int j = 0; j < time_sample_sns.size(); j++)
               {
-                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
+                this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
@@ -467,12 +467,12 @@ namespace transport
                 std::vector< std::vector< std::vector<number> > > ddN312(time_sample_sns.size());
                 for(unsigned int j = 0; j < time_sample_sns.size(); j++)
                   {
-//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
-//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
-//                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
-		                this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN123[j]);
-                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN213[j]);
-                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN312[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
+//		                this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN123[j]);
+//                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN213[j]);
+//                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN312[j]);
                   }
 
                 // time-line for zeta will be stored in 'line_data'
