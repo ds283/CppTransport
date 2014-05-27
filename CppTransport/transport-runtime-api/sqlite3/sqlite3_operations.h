@@ -839,40 +839,33 @@ namespace transport
 			    {
 				    assert(db != nullptr);
 
-            try
+            std::stringstream stmt_text;
+            stmt_text << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << "("
+              << "serial INTEGER"
+              << ");";
+
+            exec(db, stmt_text.str(), __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_CREATE_FAIL);
+
+            std::stringstream insert_stmt;
+            insert_stmt << "INSERT INTO temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << " VALUES (@serial);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(unsigned int i = 0; i < serial_numbers.size(); i++)
               {
-                std::stringstream stmt_text;
-                stmt_text << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << "("
-                  << "serial INTEGER"
-                  << ");";
+                check_stmt(db, sqlite3_bind_int(stmt, 1, serial_numbers[i]));
 
-                exec(db, stmt_text.str(), __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_CREATE_FAIL);
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL, SQLITE_DONE);
 
-                std::stringstream insert_stmt;
-                insert_stmt << "INSERT INTO temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << " VALUES (@serial);";
-
-                sqlite3_stmt* stmt;
-                check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
-
-                exec(db, "BEGIN TRANSACTION;");
-
-                for(unsigned int i = 0; i < serial_numbers.size(); i++)
-                  {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, serial_numbers[i]));
-
-                    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL, SQLITE_DONE);
-
-                    check_stmt(db, sqlite3_clear_bindings(stmt));
-                    check_stmt(db, sqlite3_reset(stmt));
-                  }
-
-                exec(db, "END TRANSACTION");
-                check_stmt(db, sqlite3_finalize(stmt));
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
-            catch (runtime_exception& xe)
-              {
-                assert(false);
-              }
+
+            exec(db, "END TRANSACTION");
+            check_stmt(db, sqlite3_finalize(stmt));
 			    }
 
 
