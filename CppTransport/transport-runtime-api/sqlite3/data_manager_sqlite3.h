@@ -285,6 +285,8 @@ namespace transport
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 	        }
 
+        sqlite3_extended_result_codes(db, 1);
+
         // enable foreign key constraints
         char* errmsg;
         sqlite3_exec(db, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
@@ -313,6 +315,8 @@ namespace transport
 	            }
             throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 	        }
+
+        sqlite3_extended_result_codes(taskfile, 1);
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
@@ -373,6 +377,8 @@ namespace transport
 							}
 						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 					}
+
+		    sqlite3_extended_result_codes(taskfile, 1);
 
 				// remember this connexion
 				this->open_containers.push_back(taskfile);
@@ -805,13 +811,6 @@ namespace transport
 
         // find a suitable output group for this task
         typename repository<number>::template output_group< typename repository<number>::integration_payload > group = finder(tk, tags);
-//        assert(group != nullptr);
-//        if(group == nullptr)
-//          {
-//            std::ostringstream msg;
-//            msg << __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP << " '" << tk->get_name() << "'";
-//            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-//          }
 
         typename repository<number>::integration_payload& payload = group.get_payload();
 
@@ -835,7 +834,16 @@ namespace transport
 						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 					}
 
-				// remember this connexion
+        sqlite3_extended_result_codes(db, 1);
+
+        // enable foreign key constraints
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+		    // force temporary databases to be stored in memory, for speed
+		    sqlite3_exec(db, "PRAGMA temp_store = 2;", nullptr, nullptr, &errmsg);
+
+        // remember this connexion
 				this->open_containers.push_back(db);
 				pipe->set_manager_handle(db);
 
