@@ -575,7 +575,7 @@ namespace transport
 		          public:
 
 		            extractor(unsigned int n, const typename data_manager<number>::threepf_configuration& c)
-			            : num(), config(c)
+			            : num(n), config(c)
 			            {
 				            if(this->num < 1) this->num = 1;
 				            if(this->num > 3) this->num = 3;
@@ -734,10 +734,10 @@ namespace transport
 
 		    template <typename number>
 		    void basic_threepf_time_series<number>::shift_derivatives(typename data_manager<number>::datapipe& pipe,
-                                                                const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                                                const std::vector<double>& time_axis,
-                                                                unsigned int l, unsigned int m, unsigned int n,
-		                                                            const typename data_manager<number>::threepf_configuration& config) const
+		                                                              const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+		                                                              const std::vector<double>& time_axis,
+		                                                              unsigned int l, unsigned int m, unsigned int n,
+		                                                              const typename data_manager<number>::threepf_configuration& config) const
 			    {
 		        unsigned int N_fields = this->mdl->get_N_fields();
 
@@ -760,20 +760,20 @@ namespace transport
                   }
 			        }
 
-		        if(l > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
-		        if(m > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
-		        if(n > N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
+		        if(l >= N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
+		        if(m >= N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
+		        if(n >= N_fields) this->compute_derivative_shift(pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
 			    }
 
 
 		    template <typename number>
 		    void basic_threepf_time_series<number>::compute_derivative_shift(typename data_manager<number>::datapipe& pipe,
-                                                                       const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                                                       const std::vector<double>& time_axis, const std::vector<typename std::vector<number> >& background,
-		                                                                   unsigned int p, const extractor& p_config,
-		                                                                   unsigned int q, const extractor& q_config,
-		                                                                   unsigned int r, const extractor& r_config,
-		                                                                   operator_position pos) const
+		                                                                     const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+		                                                                     const std::vector<double>& time_axis, const std::vector< std::vector<number> >& background,
+		                                                                     unsigned int p, const extractor& p_config,
+		                                                                     unsigned int q, const extractor& q_config,
+		                                                                     unsigned int r, const extractor& r_config,
+		                                                                     operator_position pos) const
 			    {
 		        assert(time_sample.size() == line_data.size());
 		        unsigned int N_fields = this->mdl->get_N_fields();
@@ -781,11 +781,15 @@ namespace transport
 		        // need multiple components of the 2pf at different k-configurations; allocate space to store them
 		        std::vector< std::vector<number> > sigma_q_re(time_sample.size());
 		        std::vector< std::vector<number> > sigma_r_re(time_sample.size());
+		        std::vector< std::vector<number> > mom_sigma_q_re(time_sample.size());
+		        std::vector< std::vector<number> > mom_sigma_r_re(time_sample.size());
             std::vector< std::vector<number> > sigma_q_im(time_sample.size());
             std::vector< std::vector<number> > sigma_r_im(time_sample.size());
+		        std::vector< std::vector<number> > mom_sigma_q_im(time_sample.size());
+		        std::vector< std::vector<number> > mom_sigma_r_im(time_sample.size());
 
 		        // p is guaranteed to be a momentum label, but we will want to know what field species it corresponds to
-		        unsigned int p_species = p % N_fields;
+		        unsigned int p_species = this->mdl->species(p);
 
 		        typedef enum { first_index, second_index } fixed_index;
 
@@ -798,17 +802,17 @@ namespace transport
 		            case left:    // our operator is on the far left-hand side, so is to the left of both the q and r operators
 			            q_fixed = second_index;
 		              r_fixed = second_index;
-		            break;
+		              break;
 
 		            case middle:  // our operator is in the middle, to the right of the q operator but to the left of the r operator
 			            q_fixed = first_index;
 		              r_fixed = second_index;
-		            break;
+		              break;
 
 		            case right:   // our operator is on the right, to the right of both the q and r operators
 			            q_fixed = first_index;
 		              r_fixed = first_index;
-		            break;
+		              break;
 
 		            default:
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
@@ -821,24 +825,38 @@ namespace transport
 			        {
 		            unsigned int q_id = this->mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
 		            unsigned int r_id = this->mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
+		            unsigned int mom_q_id = this->mdl->flatten((q_fixed == first_index ? q : this->mdl->momentum(i)), (q_fixed == second_index ? q : this->mdl->momentum(i)));
+		            unsigned int mom_r_id = this->mdl->flatten((r_fixed == first_index ? r : this->mdl->momentum(i)), (r_fixed == second_index ? r : this->mdl->momentum(i)));
 
-				        typename data_manager<number>::datapipe::cf_time_data_tag q_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id, q_config.serial());
-								typename data_manager<number>::datapipe::cf_time_data_tag q_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id, q_config.serial());
+				        typename data_manager<number>::datapipe::cf_time_data_tag q_re_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id,     q_config.serial());
+								typename data_manager<number>::datapipe::cf_time_data_tag q_im_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id,     q_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag mom_q_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_q_id, q_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag mom_q_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_q_id, q_config.serial());
 
-		            typename data_manager<number>::datapipe::cf_time_data_tag r_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, r_id, r_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag r_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, r_id, r_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag r_re_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, r_id,     r_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag r_im_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, r_id,     r_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_r_id, r_config.serial());
+		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_r_id, r_config.serial());
 
-		            const std::vector<number>& q_line_re = t_handle.lookup_tag(q_re_tag);
-		            const std::vector<number>& q_line_im = t_handle.lookup_tag(q_im_tag);
-		            const std::vector<number>& r_line_re = t_handle.lookup_tag(r_re_tag);
-		            const std::vector<number>& r_line_im = t_handle.lookup_tag(r_im_tag);
+		            const std::vector<number>& q_line_re     = t_handle.lookup_tag(q_re_tag);
+		            const std::vector<number>& q_line_im     = t_handle.lookup_tag(q_im_tag);
+		            const std::vector<number>& mom_q_line_re = t_handle.lookup_tag(mom_q_re_tag);
+		            const std::vector<number>& mom_q_line_im = t_handle.lookup_tag(mom_q_im_tag);
+		            const std::vector<number>& r_line_re     = t_handle.lookup_tag(r_re_tag);
+		            const std::vector<number>& r_line_im     = t_handle.lookup_tag(r_im_tag);
+		            const std::vector<number>& mom_r_line_re = t_handle.lookup_tag(mom_r_re_tag);
+		            const std::vector<number>& mom_r_line_im = t_handle.lookup_tag(mom_r_im_tag);
 
-                for(unsigned int j = 0; j < time_sample.size(); j++)
+                for(unsigned int j = 0; j < line_data.size(); j++)
                   {
                     (sigma_q_re[j]).push_back(q_line_re[j]);
                     (sigma_q_im[j]).push_back(q_line_im[j]);
+                    (mom_sigma_q_re[j]).push_back(mom_q_line_re[j]);
+                    (mom_sigma_q_im[j]).push_back(mom_q_line_im[j]);
                     (sigma_r_re[j]).push_back(r_line_re[j]);
                     (sigma_r_im[j]).push_back(r_line_im[j]);
+                    (mom_sigma_r_re[j]).push_back(mom_r_line_re[j]);
+                    (mom_sigma_r_im[j]).push_back(mom_r_line_im[j]);
                   }
 			        }
 
@@ -862,10 +880,10 @@ namespace transport
                   {
                     for(unsigned int n = 0; n < N_fields; n++)
                       {
-                        shift -= B_qrp[m][n][p_species] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_q_im[i][n] );
+                        shift -= B_qrp[m][n][p_species] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
 
-                        shift -= C_pqr[p_species][m][n] * ( sigma_q_re[i][m]*sigma_r_re[i][n] - sigma_q_im[i][m]*sigma_r_im[i][n] );
-                        shift -= C_prq[p_species][m][n] * ( sigma_q_re[i][n]*sigma_r_re[i][m] - sigma_q_im[i][n]*sigma_r_im[i][n] );
+                        shift -= C_pqr[p_species][m][n] * ( mom_sigma_q_re[i][m]*sigma_r_re[i][n] - mom_sigma_q_im[i][m]*sigma_r_im[i][n] );
+                        shift -= C_prq[p_species][m][n] * ( sigma_q_re[i][n]*mom_sigma_r_re[i][m] - sigma_q_im[i][n]*mom_sigma_r_im[i][m] );
                       }
                   }
 
