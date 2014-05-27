@@ -20,6 +20,8 @@
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
+#define __CPP_TRANPORT_LINECACHE_DEBUG
+
 namespace transport
 	{
 
@@ -53,14 +55,23 @@ namespace transport
 		        //! Create a cache object
 		        cache(unsigned int cap)
 		          : capacity(cap), data_size(0), hit_counter(0)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+			        , copied(0)
+#endif
 			        {
 			        }
 
 				    //! Copy a cache object. After copying all of our contents we have to reset the
-				    //! point to ourselves which they contains
+				    //! point to ourselves which they contain
 				    cache(const cache<DataContainer, DataTag, SerialTag, HashSize>& obj)
 					    : capacity(obj.capacity), data_size(obj.data_size), hit_counter(obj.hit_counter), tables(obj.tables)
-					    {
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+					    , copied(obj.copied+1)
+#endif
+						    {
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+				        std::cerr << "WARNING -- COPYING CACHE OBJECT, COUNT = " << copied << std::endl;
+#endif
 						    for(typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t = this->tables.begin(); t != this->tables.end(); t++)
 							    {
 						        (*t).reset_parent_cache(this);
@@ -81,6 +92,9 @@ namespace transport
 				    //! carry out a clean up operation in which least-recently-used cache lines
 				    //! are evicted until the cache size is smaller than the target capacity.
 		        void advise_size_increase(unsigned int bytes);
+
+				    //! Advise a new hit
+				    void hit() { this->hit_counter++; }
 
 				    //! Read total number of cache hits
 				    unsigned int get_hits() const { return(this->hit_counter); }
@@ -114,6 +128,11 @@ namespace transport
 				    //! are not invalidated by insertion or removal operations.
 		        std::list< table<DataContainer, DataTag, SerialTag, HashSize> > tables;
 
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+		        //! Copy counter
+		        unsigned int copied;
+#endif
+
 			    };
 
 
@@ -130,7 +149,19 @@ namespace transport
 		      public:
 
 		        //! Create a table object
-		        table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p, unsigned int& hc);
+		        table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p);
+
+				    //! Override default copy constructor
+				    table(const table<DataContainer, DataTag, SerialTag, HashSize>& obj)
+				      : filename(obj.filename), parent_cache(obj.parent_cache), groups(obj.groups)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+					    , copied(obj.copied+1)
+#endif
+					    {
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+						    if(copied >= 2) std::cerr << "WARNING -- COPYING TABLE OBJECT, COUNT = " << copied << std::endl;
+#endif
+					    }
 
 				    ~table() = default;
 
@@ -175,13 +206,15 @@ namespace transport
 				    //! Parent 'cache' object
 				    cache<DataContainer, DataTag, SerialTag, HashSize>* parent_cache;
 
-		        //! Hit counter -- reference to that owned by the parent cache
-		        unsigned int& hit_counter;
-
 		        //! List of serial-group handles.
 				    //! Held in a std::list so that iterators pointing to serial groups
 				    //! remain valid after insertion or removal of elements
 		        std::list< serial_group<DataContainer, DataTag, SerialTag, HashSize> > groups;
+
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+				    //! Copy counter
+				    unsigned int copied;
+#endif
 
 			    };
 
@@ -204,13 +237,22 @@ namespace transport
 								//! construct a new data item
 								data_item(const DataContainer& d, DataTag& t, std::list<data_item>* p)
 						      : data(d), tag(t.clone()), parent_list(p), last_access(boost::posix_time::microsec_clock::universal_time()), locked(true)
-									{
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+									, copied(0)
+#endif
+							    {
 									}
 
 								//! perform deep copy
 								data_item(const data_item& obj)
 									: data(obj.data), tag(obj.tag->clone()), parent_list(obj.parent_list), last_access(obj.last_access), locked(obj.locked)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+									, copied(obj.copied+1)
+#endif
 									{
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+										if(copied >= 2) std::cerr << "WARNING - COPYING DATA_ITEM OBJECT, COUNT = " << copied << std::endl;
+#endif
 									}
 
 								~data_item()
@@ -277,6 +319,11 @@ namespace transport
 								//! 'Locked' flag marks this data item as not-evictable. Prevents eviction before the client has even seen the data!
 								bool locked;
 
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+								//! Copy count
+								unsigned int copied;
+#endif
+
 							};
 
 
@@ -285,14 +332,20 @@ namespace transport
 				  public:
 
 						//! Create a serial_group object
-						serial_group(const std::vector<unsigned int>& sns, const SerialTag& t, typename linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p, unsigned int& hc);
+						serial_group(const std::vector<unsigned int>& sns, const SerialTag& t, typename linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p);
 
 						//! Copy a serial_group object. We need to perform a deep copy, in the sense that
 						//! individual data_items contain references back to their owning std::list<> object.
 						//! Those references will be meaningless after the copy, and need to be reset.
 						serial_group(const serial_group<DataContainer, DataTag, SerialTag, HashSize>& obj)
-				      : parent_cache(obj.parent_cache), hit_counter(obj.hit_counter), serial_numbers(obj.serial_numbers), tag(obj.tag), cache(obj.cache)
+				      : parent_cache(obj.parent_cache), serial_numbers(obj.serial_numbers), tag(obj.tag), cache(obj.cache)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+							, copied(obj.copied+1)
+#endif
 							{
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+								if(copied >= 2) std::cerr << "WARNING - COPYING SERIAL_GROUP OBJECT, COUNT = " << copied << std::endl;
+#endif
 						    for(unsigned int i = 0; i < HashSize; i++)
 							    {
 								    for(typename std::list<data_item>::iterator t = cache[i].begin(); t != cache[i].end(); t++)
@@ -327,9 +380,6 @@ namespace transport
 						//! Parent 'cache' object
 						linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* parent_cache;
 
-						//! Hit counter -- reference to counter owned by cache object
-						unsigned int& hit_counter;
-
 						//! Serial numbers identifying this group
 						const std::vector<unsigned int> serial_numbers;
 
@@ -343,6 +393,12 @@ namespace transport
 						//! This is very important in order that cache evictions can be
 						//! carried out efficiently.
 						std::array< std::list< data_item >, HashSize > cache;
+
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+						//! Copy count
+						unsigned int copied;
+#endif
+
 					};
 
 
@@ -355,7 +411,7 @@ namespace transport
 		        typename std::list< table<DataContainer, DataTag, SerialTag, HashSize> >::iterator t;
 		        if((t = std::find(this->tables.begin(), this->tables.end(), name)) == this->tables.end())   // table doesn't already exist
 			        {
-		            this->tables.push_front( table<DataContainer, DataTag, SerialTag, HashSize>(name, this, this->hit_counter) );
+		            this->tables.push_front( table<DataContainer, DataTag, SerialTag, HashSize>(name, this) );
 		            t = this->tables.begin();
 			        }
 
@@ -410,8 +466,11 @@ namespace transport
 
 
 		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
-		    table<DataContainer, DataTag, SerialTag, HashSize>::table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p, unsigned int& hc)
-			    : filename(fnam), parent_cache(p), hit_counter(hc)
+		    table<DataContainer, DataTag, SerialTag, HashSize>::table(const std::string& fnam, cache<DataContainer, DataTag, SerialTag, HashSize>* p)
+			    : filename(fnam), parent_cache(p)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+			    , copied(0)
+#endif
 			    {
 				    assert(p != nullptr);
 			    }
@@ -428,7 +487,7 @@ namespace transport
 
 				    if(t == this->groups.end())
 					    {
-						    this->groups.push_front(serial_group<DataContainer, DataTag, SerialTag, HashSize>(serials, tag, this->parent_cache, this->hit_counter));
+						    this->groups.push_front( serial_group<DataContainer, DataTag, SerialTag, HashSize>(serials, tag, this->parent_cache) );
 						    t = this->groups.begin();
 					    }
 
@@ -452,8 +511,11 @@ namespace transport
 
 		    template <typename DataContainer, typename DataTag, typename SerialTag, unsigned int HashSize>
 		    serial_group<DataContainer, DataTag, SerialTag, HashSize>::serial_group(const std::vector<unsigned int>& sns, const SerialTag& t,
-		                                                                            linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p, unsigned int& hc)
-			    : serial_numbers(sns), tag(t), parent_cache(p), hit_counter(hc)
+		                                                                            linecache::cache<DataContainer, DataTag, SerialTag, HashSize>* p)
+			    : serial_numbers(sns), tag(t), parent_cache(p)
+#ifdef __CPP_TRANSPORT_LINECACHE_DEBUG
+			    , copied(0)
+#endif
 			    {
 		        assert(p != nullptr);
 			    }
@@ -484,7 +546,7 @@ namespace transport
 						else
 							{
 						    (*t).update_access_time();
-						    this->hit_counter++;
+								this->parent_cache->hit();
 							}
 
 						// unlock this data item
