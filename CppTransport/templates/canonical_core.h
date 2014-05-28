@@ -747,6 +747,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __dN.clear();
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
         __dN[$$__A] = $$__ZETA_XFM_1[A]{__Hsq, __eps};
       }
@@ -768,6 +769,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __ddN.clear();
         __ddN.resize(2*$$__NUMBER_FIELDS);
         for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
           {
@@ -789,6 +791,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __dN.clear();
         __dN.resize(2*$$__NUMBER_FIELDS); // ensure enough space
         __dN[$$__A] = $$__DELTAN_XFM_1[A];
 	    }
@@ -805,6 +808,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __ddN.clear();
         __ddN.resize(2*$$__NUMBER_FIELDS);
         for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
 	        {
@@ -833,6 +837,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __u2.clear();
         __u2.resize(2*$$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
@@ -859,6 +864,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __u3.clear();
         __u3.resize(2*$$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
@@ -889,6 +895,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __A.clear();
         __A.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
@@ -919,6 +926,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __B.clear();
         __B.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
@@ -949,6 +957,7 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
+	      __C.clear();
         __C.resize($$__NUMBER_FIELDS);
 
         for(int __i = 0; __i < $$__NUMBER_FIELDS; __i++)
