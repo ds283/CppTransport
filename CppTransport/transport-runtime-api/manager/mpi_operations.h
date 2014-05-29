@@ -297,34 +297,48 @@ namespace transport
 
 		            //! Value constructor (used for sending messages)
 		            derived_finished_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
-		                                     const unsigned int tc, const unsigned int twopf_k,
-		                                     const unsigned int threepf_k, const unsigned int td)
+		                                     const unsigned int tc, const unsigned int tc_u,
+		                                     const unsigned int twopf_k, const unsigned int twopf_k_u,
+		                                     const unsigned int threepf_k, const unsigned int threepf_k_u,
+		                                     const unsigned int td, const unsigned int td_u)
 			            : database_time(db),
 			              cpu_time(cpu),
-			              time_config_hits(tc),
-			              twopf_kconfig_hits(twopf_k),
-			              threepf_kconfig_hits(threepf_k),
-			              time_data_hits(td)
+			              time_config_hits(tc), time_config_unloads(tc_u),
+			              twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
+			              threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
+			              time_data_hits(td), time_data_unloads(td_u)
 			            {
 			            }
 
 		            //! Get database time
-		            const boost::timer::nanosecond_type  get_database_time()        const { return(this->database_time); }
+		            const boost::timer::nanosecond_type  get_database_time()           const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        const boost::timer::nanosecond_type  get_cpu_time()             const { return(this->cpu_time); }
+				        const boost::timer::nanosecond_type  get_cpu_time()                const { return(this->cpu_time); }
 
 				        //! Get time config hits
-				        unsigned int                         get_time_config_hits()     const { return(this->time_config_hits); }
+				        unsigned int                         get_time_config_hits()        const { return(this->time_config_hits); }
 
 				        //! Get twopf kconfig hits
-				        unsigned int                         get_twopf_kconfig_hits()   const { return(this->twopf_kconfig_hits); }
+				        unsigned int                         get_twopf_kconfig_hits()      const { return(this->twopf_kconfig_hits); }
 
 				        //! Get threepf kconfig hits
-				        unsigned int                         get_threepf_kconfig_hits() const { return(this->threepf_kconfig_hits); }
+				        unsigned int                         get_threepf_kconfig_hits()    const { return(this->threepf_kconfig_hits); }
 
 				        //! Get time-data hits
-				        unsigned int                         get_time_data_hits()       const { return(this->time_data_hits); }
+				        unsigned int                         get_time_data_hits()          const { return(this->time_data_hits); }
+
+		            //! Get time config unloads
+		            unsigned int                         get_time_config_unloads()     const { return(this->time_config_unloads); }
+
+		            //! Get twopf kconfig unloads
+		            unsigned int                         get_twopf_kconfig_unloads()   const { return(this->twopf_kconfig_unloads); }
+
+		            //! Get threepf kconfig unloads
+		            unsigned int                         get_threepf_kconfig_unloads() const { return(this->threepf_kconfig_unloads); }
+
+		            //! Get time-data unloads
+		            unsigned int                         get_time_data_unloads()       const { return(this->time_data_unloads); }
 
 
 		          private:
@@ -338,14 +352,26 @@ namespace transport
 		            //! Number of time-config cache hits
 		            unsigned int time_config_hits;
 
+				        //! Number of time-config cache unloads
+				        unsigned int time_config_unloads;
+
 		            //! Number of twopf-kconfig cache hits
 		            unsigned int twopf_kconfig_hits;
+
+				        //! Number of twopf-kconfig cache unloads
+				        unsigned int twopf_kconfig_unloads;
 
 				        //! Number of threepf-kconfig cache hits
 				        unsigned int threepf_kconfig_hits;
 
+				        //! Number of threepf-kconfig cache unloads
+				        unsigned int threepf_kconfig_unloads;
+
 				        //! Number of time-data cache hits
 				        unsigned int time_data_hits;
+
+				        //! Number of time-data cache unloads
+				        unsigned int time_data_unloads;
 
 		            // enable boost::serialization support, and hence automated packing for transmission over MPI
 		            friend class boost::serialization::access;
@@ -356,9 +382,13 @@ namespace transport
 		                ar & database_time;
 				            ar & cpu_time;
 				            ar & time_config_hits;
+				            ar & time_config_unloads;
 				            ar & twopf_kconfig_hits;
+				            ar & twopf_kconfig_unloads;
 				            ar & threepf_kconfig_hits;
+				            ar & threepf_kconfig_unloads;
 				            ar & time_data_hits;
+				            ar & time_data_unloads;
 			            }
 			        };
 

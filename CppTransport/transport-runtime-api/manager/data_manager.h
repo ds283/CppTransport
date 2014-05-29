@@ -561,6 +561,12 @@ namespace transport
 								//! pull data corresponding to this tag
 								void pull(const std::vector<unsigned int>& sns, std::vector<double>& data);
 
+								//! emit a log item for this tag
+								void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << log_item; }
+
+								//! identify this tag
+								std::string name() const { return(std::string("time config")); }
+
 
 								// CLONE
 
@@ -613,6 +619,12 @@ namespace transport
 
 						    //! pull data corresponding to this tag
 						    void pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data);
+
+				        //! emit a log item for this tag
+				        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << log_item; }
+
+				        //! identify this tag
+				        std::string name() const { return(std::string("twopf k-config")); }
 
 
 				        // CLONE
@@ -667,6 +679,12 @@ namespace transport
 						    //! pull data corresponding to this tag
 						    void pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data);
 
+				        //! emit a log item for this tag
+				        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << log_item; }
+
+				        //! identify this tag
+				        std::string name() const { return(std::string("threepf k-config")); }
+
 
 				        // CLONE
 
@@ -702,7 +720,11 @@ namespace transport
 
 				      public:
 
-						    time_data_tag() = default;
+						    time_data_tag(datapipe* p)
+							    : pipe(p)
+							    {
+								    assert(pipe != nullptr);
+							    }
 
 						    virtual ~time_data_tag() = default;
 
@@ -714,8 +736,14 @@ namespace transport
 						    //! check for tag equality
 						    virtual bool operator==(const time_data_tag& obj) const = 0;
 
+								//! virtual function to pull a cache line
 						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) = 0;
 
+				        //! emit a log item for this tag
+				        void log(const std::string& log_item) const { BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << log_item; }
+
+						    //! virtual function to identify this tag
+						    virtual std::string name() const = 0;
 
 				        // CLONE
 
@@ -732,6 +760,14 @@ namespace transport
 				        //! hash
 				        virtual unsigned int hash() const = 0;
 
+
+				        // INTERNAL DATA
+
+				      protected:
+
+				        //! parent datapipe
+				        datapipe* pipe;
+
 					    };
 
 
@@ -744,7 +780,7 @@ namespace transport
 				      public:
 
 				        background_time_data_tag(datapipe* p, unsigned int i)
-					        : pipe(p), id(i)
+					        : id(i), time_data_tag(p)
 					        {
 					        }
 
@@ -760,6 +796,9 @@ namespace transport
 
 						    //! pull data corresponding to this tag
 						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+				        //! identify this tag
+				        virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
 
 
 				        // CLONE
@@ -782,9 +821,6 @@ namespace transport
 
 				      protected:
 
-						    //! parent datapipe
-						    datapipe* pipe;
-
 						    //! data id - controls which background field is sampled
 						    const unsigned int id;
 
@@ -800,7 +836,7 @@ namespace transport
 				      public:
 
 						    cf_time_data_tag(datapipe* p, cf_time_data_type t, unsigned int i, unsigned int k)
-						      : pipe(p), type(t), id(i), kserial(k)
+						      : type(t), id(i), kserial(k), time_data_tag(p)
 							    {
 							    }
 
@@ -816,6 +852,9 @@ namespace transport
 
 						    //! pull data corresponding to this tag
 						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+				        //! identify this tag
+				        virtual std::string name() const override;
 
 
 				        // CLONE
@@ -837,9 +876,6 @@ namespace transport
 						    // INTERNAL DATA
 
 				      protected:
-
-						    //! parent datapipe
-						    datapipe* pipe;
 
 						    //! type
 						    const cf_time_data_type type;
@@ -898,6 +934,9 @@ namespace transport
 		        //! Return logger
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
+
+				    // CACHE STATISTICS
+
 				    //! Get total time spent reading database
 				    const boost::timer::nanosecond_type get_database_time() const { return(this->database_timer.elapsed().wall); }
 
@@ -914,7 +953,20 @@ namespace transport
 				    unsigned int get_time_data_cache_hits() const { return(this->time_data_cache.get_hits()); }
 
 
-				    // ATTACH, DETACH OUTPUT GROUPS
+		        //! Get total time-config cache unloads
+		        unsigned int get_time_config_cache_unloads() const { return(this->time_config_cache.get_unloads()); }
+
+		        //! Get total twopf k-config cache unloads
+		        unsigned int get_twopf_kconfig_cache_unloads() const { return(this->twopf_kconfig_cache.get_unloads()); }
+
+		        //! Get total threepf k-config cache unloads
+		        unsigned int get_threepf_kconfig_cache_unloads() const { return(this->threepf_kconfig_cache.get_unloads()); }
+
+		        //! Get total time-data cache unloads
+		        unsigned int get_time_data_cache_unloads() const { return(this->time_data_cache.get_unloads()); }
+
+
+		        // ATTACH, DETACH OUTPUT GROUPS
 
 		      public:
 
@@ -1237,7 +1289,7 @@ namespace transport
         time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
         twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
         threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-        time_data_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE)
+        time_data_cache(cap)
 	    {
 		    this->database_timer.stop();
 
@@ -1279,10 +1331,10 @@ namespace transport
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing datapipe. Usage statistics:";
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time spent reading database        = " << format_time(this->database_timer.elapsed().wall);
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->time_data_cache.get_hits();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << ", unloads = " << this->time_config_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << ", unloads = " << this->twopf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << ", unloads = " << this->threepf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->time_data_cache.get_hits() << ", unloads = " << this->time_data_cache.get_unloads();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
@@ -1315,13 +1367,19 @@ namespace transport
         typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
         BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
-          << " (generated using integration backend '" << payload.get_backend() << "')";
+          << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
 
 		     // attach new cache tables
+
+//        std::cerr << "Worker " << this->worker_number << " getting table for time-config cache" << std::endl;
 		    this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
+//        std::cerr << "Worker " << this->worker_number << " getting table for twopf-kconfig cache" << std::endl;
 		    this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+//        std::cerr << "Worker " << this->worker_number << " getting table for threepf-kconfig cache" << std::endl;
 		    this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
+//        std::cerr << "Worker " << this->worker_number << " getting table for time-data cache" << std::endl;
 		    this->time_data_cache_table = &(this->time_data_cache.get_table_handle(payload.get_container_path().string()));
+//        std::cerr << "Worker " << this->worker_number << " set up all cache tables" << std::endl;
 	    }
 
 
@@ -1621,6 +1679,34 @@ namespace transport
 						assert(false);
 						throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE);
 					}
+			}
+
+
+		template <typename number>
+		std::string data_manager<number>::datapipe::cf_time_data_tag::name() const
+			{
+		    std::ostringstream msg;
+
+				switch(this->type)
+					{
+				    case cf_twopf_re:
+					    msg << "real twopf";
+			        break;
+
+				    case cf_twopf_im:
+					    msg << "imaginary twopf";
+					    break;
+
+				    case cf_threepf:
+					    msg << "threepf";
+					    break;
+
+				    default:
+					    msg << "unknown";
+					}
+
+		    msg << ", element = " << this->id << ", kserial = " << this->kserial;
+				return(msg.str());
 			}
 
 

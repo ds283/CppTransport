@@ -640,9 +640,10 @@ namespace transport
           }
 
         wallclock_timer.stop();
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time required by worker processes = " << format_time(total_work_time);
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process   = " << format_time(total_aggregation_time);
       }
@@ -721,10 +722,14 @@ namespace transport
 		    boost::timer::nanosecond_type total_aggregation_time = 0;
 
 				// aggregate cache information
-				unsigned int total_time_config_hits = 0;
-				unsigned int total_twopf_kconfig_hits = 0;
-				unsigned int total_threepf_kconfig_hits = 0;
-				unsigned int total_time_data_hits = 0;
+				unsigned int total_time_config_hits        = 0;
+				unsigned int total_twopf_kconfig_hits      = 0;
+				unsigned int total_threepf_kconfig_hits    = 0;
+				unsigned int total_time_data_hits          = 0;
+		    unsigned int total_time_config_unloads     = 0;
+		    unsigned int total_twopf_kconfig_unloads   = 0;
+		    unsigned int total_threepf_kconfig_unloads = 0;
+		    unsigned int total_time_data_unloads       = 0;
 
 		    // get paths the workers will need
 		    assert(this->repo != nullptr);
@@ -771,12 +776,16 @@ namespace transport
 
 		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(payload.get_cpu_time());
 
-		                total_work_time += payload.get_cpu_time();
-				            total_db_time += payload.get_database_time();
-				            total_time_config_hits += payload.get_time_config_hits();
-				            total_twopf_kconfig_hits += payload.get_twopf_kconfig_hits();
-				            total_threepf_kconfig_hits += payload.get_threepf_kconfig_hits();
-				            total_time_data_hits += payload.get_time_data_hits();
+		                total_work_time               += payload.get_cpu_time();
+				            total_db_time                 += payload.get_database_time();
+				            total_time_config_hits        += payload.get_time_config_hits();
+				            total_time_config_unloads     += payload.get_time_config_unloads();
+				            total_twopf_kconfig_hits      += payload.get_twopf_kconfig_hits();
+				            total_twopf_kconfig_unloads   += payload.get_twopf_kconfig_unloads();
+				            total_threepf_kconfig_hits    += payload.get_threepf_kconfig_hits();
+				            total_threepf_kconfig_unloads += payload.get_threepf_kconfig_unloads();
+				            total_time_data_hits          += payload.get_time_data_hits();
+				            total_time_data_unloads       += payload.get_time_data_unloads();
 
 		                workers.erase(this->worker_number(stat.source()));
 		                break;
@@ -791,16 +800,18 @@ namespace transport
 			    }
 
         wallclock_timer.stop();
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total work time required by worker processes      = " << format_time(total_work_time);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
 				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time spent reading database                 = " << format_time(total_db_time);
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-configuration cache hits               = " << total_time_config_hits;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total twopf k-config cache hits                   = " << total_twopf_kconfig_hits;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total threepf k-config cache hits                 = " << total_threepf_kconfig_hits;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-data cache hits                        = " << total_time_data_hits;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-configuration cache hits               = " << total_time_config_hits << ", unloads = " << total_time_config_unloads;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total twopf k-config cache hits                   = " << total_twopf_kconfig_hits << ", unloads = " << total_twopf_kconfig_unloads;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total threepf k-config cache hits                 = " << total_threepf_kconfig_hits << ", unloads = " << total_threepf_kconfig_unloads;
+				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total time-data cache hits                        = " << total_time_data_hits << ", unloads = " << total_time_data_unloads;
 			}
 
 
@@ -1248,8 +1259,10 @@ namespace transport
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_DERIVED_CONTENT to master";
 
 		    MPI::derived_finished_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
-		                                                 pipe.get_time_config_cache_hits(), pipe.get_twopf_kconfig_cache_hits(),
-		                                                 pipe.get_threepf_kconfig_cache_hits(), pipe.get_time_data_cache_hits());
+		                                                 pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
+		                                                 pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
+		                                                 pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+		                                                 pipe.get_time_data_cache_hits(), pipe.get_time_data_cache_unloads());
 		    this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_DERIVED_CONTENT, finish_payload);
 			}
 
