@@ -184,9 +184,6 @@ class canonical_u_tensor_factory : public u_tensor_factory
     //! Compute field-momentum part of the 2nd-order gauge xfm
     GiNaC::ex compute_zeta_xfm_2_fp(unsigned int m, unsigned int n, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
-    //! Compute momentum-momentum part of the 2nd-order gauge xfm
-    GiNaC::ex compute_zeta_xfm_2_pp(unsigned int m, unsigned int n, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
-
     // compute A/H^2 [in the notation of the written notes]
     GiNaC::ex compute_A_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
