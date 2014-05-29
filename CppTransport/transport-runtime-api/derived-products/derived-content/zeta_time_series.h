@@ -450,6 +450,7 @@ namespace transport
             for(unsigned int j = 0; j < time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
+//                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
