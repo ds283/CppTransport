@@ -434,6 +434,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(tk3, model,
                                                                                                                                             transport::derived_data::filter::time_filter(time_filter),
                                                                                                                                             transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+		tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_sq = transport::derived_data::time_series_plot<double>("quadratic.threepf-1.zeta-sq", "zeta-sq.pdf");
