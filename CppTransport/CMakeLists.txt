@@ -98,6 +98,14 @@ add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp unqlite/unqlite.c)
 target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
+add_executable(quadratic-mpi examples/quadratic/main.cpp unqlite/unqlite.c)
+target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+
+add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp unqlite/unqlite.c)
+target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+
 cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
 target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
