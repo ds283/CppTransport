@@ -1366,7 +1366,7 @@ namespace transport
 
         typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
-        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
           << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
 
 		     // attach new cache tables
@@ -1397,7 +1397,7 @@ namespace transport
 		       this->threepf_kconfig_cache_table == nullptr ||
 		       this->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DATAPIPE DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
 
 				this->detach_callback(this);
 
@@ -1562,7 +1562,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull time sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL time sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->time_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
@@ -1584,7 +1584,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 2pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 2pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->twopf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
@@ -1606,7 +1606,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull 3pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 3pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->threepf_kconfig_sample_callback(this->pipe, sns, data, this->pipe->worker_number);
@@ -1628,7 +1628,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->time_data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull background time sample request for element " << this->id;
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL background time sample request for element " << this->id;
 
 				this->pipe->database_timer.resume();
 		    this->pipe->background_time_sample_callback(this->pipe, this->id, sns, sample, this->pipe->worker_number);
@@ -1652,7 +1652,7 @@ namespace transport
 
 				if(this->type == cf_twopf_re)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_real, this->pipe->worker_number);
@@ -1660,7 +1660,7 @@ namespace transport
 					}
 				else if(this->type == cf_twopf_im)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->twopf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, twopf_imag, this->pipe->worker_number);
@@ -1668,7 +1668,7 @@ namespace transport
 					}
 				else if (this->type == cf_threepf)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** DATAPIPE pull threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->threepf_time_sample_callback(this->pipe, this->id, sns, this->kserial, sample, this->pipe->worker_number);
