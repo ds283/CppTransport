@@ -398,7 +398,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_zeta_xfm_2_ff(unsigned int m, unsi
 			}
 		p = p / (Hsq*pow(this->M_Planck,2));
 
-    GiNaC::ex c = (-1/2 + 3/(2*eps) + p/(4*pow(eps,2)))*this->deriv_list[m]*this->deriv_list[n] / (pow(this->M_Planck,4)*eps);
+    GiNaC::ex c = (-GiNaC::ex(1)/2 + 3/(2*eps) + p/(4*pow(eps,2)))*this->deriv_list[m]*this->deriv_list[n] / (pow(this->M_Planck,4)*eps);
 
     return(c);
   }
