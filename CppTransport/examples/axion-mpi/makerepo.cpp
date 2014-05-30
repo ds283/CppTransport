@@ -17,11 +17,11 @@
 // we could choose something different
 
 const double M_Planck = 1.0;
-const double g        = 1e-10;
-const double Lambda   = pow(g*pow(25.0/(2*M_PI),2.0),1.0/4.0);
+const double m        = 1e-5;
 const double f        = M_Planck;
+const double Lambda   = pow(5*m*f/(2*M_PI),1.0/2.0);
 
-const double phi_init = 23.5 * M_Planck;
+const double phi_init = 16.0 * M_Planck;
 const double chi_init = f/2.0 - 0.001*M_Planck;
 
 
@@ -99,7 +99,7 @@ int main(int argc, char* argv[])
     transport::axion_basic<double>* model = new transport::axion_basic<double>(mgr);
 
     // set up parameter choices
-    const std::vector<double>     init_params = { g, Lambda, f, M_PI };
+    const std::vector<double>     init_params = { m, Lambda, f, M_PI };
     transport::parameters<double> params      =
                                     transport::parameters<double>(M_Planck, init_params, model->get_param_names(),
                                                                   model->params_validator_factory());
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 7.0;  // horizon-crossing occurs at 7 e-folds from init_values
-    const double Npre   = 7.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Ncross = 5.0;  // horizon-crossing occurs at 7 e-folds from init_values
+    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
     const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
@@ -127,7 +127,7 @@ int main(int argc, char* argv[])
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
     const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
-    const unsigned int  k_samples = 4 ;         // number of k-points
+    const unsigned int  k_samples = 4;          // number of k-points
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
@@ -488,6 +488,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::time_series_plot<double> tk3_redbsp = transport::derived_data::time_series_plot<double>("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
     tk3_redbsp.set_log_y(false);
+    tk3_redbsp.set_abs_y(false);
     tk3_redbsp.add_line(tk3_zeta_redbsp);
     tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
 
