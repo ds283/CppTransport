@@ -491,6 +491,7 @@ int main(int argc, char* argv[])
     tk3_redbsp.set_log_y(false);
     tk3_redbsp.set_abs_y(false);
     tk3_redbsp.add_line(tk3_zeta_redbsp);
+    tk3_redbsp.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
     tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
 
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
