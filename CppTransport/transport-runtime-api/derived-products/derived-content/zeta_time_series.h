@@ -283,8 +283,8 @@ namespace transport
         template <typename number>
         void zeta_twopf_time_series<number>::serialize(serialization_writer& writer) const
           {
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF));
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES));
 
             this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
@@ -655,8 +655,8 @@ namespace transport
         template <typename number>
         void zeta_threepf_time_series<number>::serialize(serialization_writer& writer) const
           {
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_THREEPF));
+            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES));
 
             this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)

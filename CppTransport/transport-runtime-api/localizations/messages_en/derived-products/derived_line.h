@@ -18,7 +18,7 @@
 
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_XTYPE                "axis data represent"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TIME_SERIES_LABEL    "time series"
-#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KCONFIG_SERIES_LABEL "k configuration series"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_K_SERIES_LABEL "k configuration series"
 
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_YTYPE                "values represent"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CF_LABEL             "correlation functions"

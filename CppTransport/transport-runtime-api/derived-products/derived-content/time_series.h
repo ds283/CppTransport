@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __general_time_data_H_
-#define __general_time_data_H_
+#ifndef __time_series_H_
+#define __time_series_H_
 
 
 #include <iostream>
@@ -31,15 +31,15 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS     "kconfig-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER      "sn"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS "kconfig-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER  "sn"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS             "time-plot-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SN              "sn"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS "time-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER  "sn"
 
 // maximum number of serial numbers to output when writing ourselves to
 // a standard stream
-#define __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN                    (15)
+#define __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN (15)
 
 
 
@@ -49,7 +49,7 @@ namespace transport
     // forward-declare model class
     template <typename number> class model;
 
-    // forward-declare class task.
+    // forward-declare task classes.
     // task.h includes this header, so we cannot include task.h otherwise we create
     // a circular dependency.
     template <typename number> class task;
@@ -60,8 +60,8 @@ namespace transport
 		namespace derived_data
 			{
 
-		    //! general time data content producer, suitable for
-		    //! producing content usable in eg. a general time plot
+		    //! general time-series content producer, suitable for
+		    //! producing content usable in eg. a 2d plot or table
 		    template <typename number>
 		    class time_series : public derived_line<number>
 			    {
@@ -136,20 +136,20 @@ namespace transport
 
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
-		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS);
+		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
 
 		        for(unsigned int i = 0; i < sns; i++)
 			        {
 		            reader->start_array_element();
 
 		            unsigned int sn;
-		            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SN, sn);
+		            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER, sn);
 		            time_sample_sns.push_back(sn);
 
 		            reader->end_array_element();
 			        }
 
-		        reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS);
+		        reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
 			    }
 
 
@@ -169,14 +169,14 @@ namespace transport
 		    template <typename number>
 		    void time_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS, this->time_sample_sns.size() == 0);
+		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS, this->time_sample_sns.size() == 0);
 		        for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
 			        {
 		            this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SN, *t);
+		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER, *t);
 		            this->end_element(writer, "arrayelt");
 			        }
-		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TIME_SNS);
+		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
 
 				    this->derived_line<number>::serialize(writer);
 			    }
@@ -208,4 +208,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__general_time_data_H_
+#endif //__time_series_H_

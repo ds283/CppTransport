@@ -42,13 +42,13 @@ namespace transport
 		                derived_line<number>* rval = nullptr;
 
 		                std::string type;
-		                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_TYPE, type);
+		                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE, type);
 
-		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_BACKGROUND)   rval = new background_time_series<number>(reader, finder);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_TWOPF)        rval = new twopf_time_series<number>(reader, finder);
-		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_THREEPF)      rval = new threepf_time_series<number>(reader, finder);
-                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_TWOPF)   rval = new zeta_twopf_time_series<number>(reader, finder);
-                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_TDATA_ZETA_THREEPF) rval = new zeta_threepf_time_series<number>(reader, finder);
+		                if      (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND)               rval = new background_time_series<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)        rval = new twopf_time_series<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES)      rval = new threepf_time_series<number>(reader, finder);
+                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES)   rval = new zeta_twopf_time_series<number>(reader, finder);
+                    else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES) rval = new zeta_threepf_time_series<number>(reader, finder);
 		                else
 			                {
 		                    std::ostringstream msg;
