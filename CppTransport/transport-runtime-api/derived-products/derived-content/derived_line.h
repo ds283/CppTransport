@@ -238,7 +238,7 @@ namespace transport
 				    std::string xtype;
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, xtype);
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KCONFIG_SERIES) x_type = kconfig_series;
+						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = kconfig_series;
 						else
 							{
 						    std::ostringstream msg;
@@ -333,7 +333,7 @@ namespace transport
 									break;
 
 						    case kconfig_series:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KCONFIG_SERIES));
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES));
 									break;
 
 						    default:
@@ -408,7 +408,7 @@ namespace transport
 									break;
 
 						    case kconfig_series:
-									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KCONFIG_SERIES_LABEL << std::endl;
+									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_K_SERIES_LABEL << std::endl;
 									break;
 
 						    default:
