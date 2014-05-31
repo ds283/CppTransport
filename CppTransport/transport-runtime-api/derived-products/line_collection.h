@@ -170,7 +170,9 @@ namespace transport
 				    void obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const;
 
 
-						// GET AND SET BASIC LINE-HANDLING DATA
+						// GET AND SET BASIC LINE PROPERTIES
+
+          public:
 
 				    //! get logarithmic x-axis setting
 				    bool get_log_x() const { return(this->log_x); }

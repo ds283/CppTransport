@@ -480,6 +480,23 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_table<double> tk3_zeta_sq_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
 
+    // compute the reduced bispectrum in a few squeezed configurations
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(tk3, model,
+                                                                                                                                                                transport::derived_data::filter::time_filter(time_filter),
+                                                                                                                                                                transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
+    tk3_zeta_redbsp.set_use_beta_label(true);
+
+    transport::derived_data::time_series_plot<double> tk3_redbsp = transport::derived_data::time_series_plot<double>("dquad.threepf-1.redbsp-sq", "redbsp-sq.pdf");
+    tk3_redbsp.set_log_y(false);
+    tk3_redbsp.set_abs_y(false);
+    tk3_redbsp.add_line(tk3_zeta_redbsp);
+    tk3_redbsp.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
+    tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
+
+    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp);
+
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
@@ -508,6 +525,8 @@ int main(int argc, char* argv[])
     repo->write_derived_product(tk3_zeta_equi);
     repo->write_derived_product(tk3_zeta_sq);
 
+    repo->write_derived_product(tk3_redbsp);
+
 		repo->write_derived_product(tk3_threepf_field_equi_table);
     repo->write_derived_product(tk3_threepf_deriv_equi_table);
 		repo->write_derived_product(tk3_threepf_mma_equi_table);
@@ -517,6 +536,7 @@ int main(int argc, char* argv[])
 		repo->write_derived_product(tk3_check_shift_table);
 		repo->write_derived_product(tk3_zeta_equi_table);
 		repo->write_derived_product(tk3_zeta_sq_table);
+    repo->write_derived_product(tk3_redbsp_table);
 
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
@@ -548,6 +568,8 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_zeta_equi_table);
     threepf_output.add_element(tk3_zeta_sq);
 		threepf_output.add_element(tk3_zeta_sq_table);
+    threepf_output.add_element(tk3_redbsp);
+    threepf_output.add_element(tk3_redbsp_table);
 
     std::cout << "dquad.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

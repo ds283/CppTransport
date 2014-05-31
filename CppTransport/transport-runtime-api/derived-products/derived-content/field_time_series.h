@@ -627,11 +627,12 @@ namespace transport
 
 		      public:
 
-		        //! construct a basic_threepf_time_series object
+            //! construct a basic_threepf_time_series object
             basic_threepf_time_series(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter,
-                                    unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION)
+                                      unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION,
+                                      typename derived_line<number>::value_type type = derived_line<number>::correlation_function)
               : use_kt_label(true), use_alpha_label(false), use_beta_label(false),
-                time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
+                time_series<number>(tk, m, tfilter, type, prec)
               {
                 assert(m != nullptr);
               }

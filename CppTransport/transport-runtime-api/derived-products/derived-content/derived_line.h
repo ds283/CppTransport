@@ -31,39 +31,40 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                "task-name"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                           "task-name"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE                 "threepf-momenta"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE           "derivatives"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA              "momenta"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE                            "threepf-momenta"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE                      "derivatives"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA                         "momenta"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE              "k-label-type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL      "conventional"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING          "comoving"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE                         "k-label-type"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                 "conventional"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                     "comoving"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                "precision"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                           "precision"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE                    "axis-type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES              "time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES                 "k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES             "angle-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE                    "value-type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF                       "correlation-function"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD                  "background-field"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL                      "fNL"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE                               "axis-type"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES                         "time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES                            "k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES                        "angle-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE                               "value-type"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF                                  "correlation-function"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD                             "background-field"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL                                 "fNL"
 
 
 // derived content types
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE                     "derived-line-type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND               "background"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES        "twopf-time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES      "threepf-time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES   "zeta-twopf-time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES "zeta-threepf-time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_K_SERIES           "twopf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_K_SERIES         "threepf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_K_SERIES      "zeta-twopf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_K_SERIES    "zeta-threepf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE                                "derived-line-type"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND                          "background"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES                   "twopf-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES                 "threepf-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES              "zeta-twopf-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES            "zeta-threepf-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES "zeta-reduced-bispectrum-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_K_SERIES                      "twopf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_K_SERIES                    "threepf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_K_SERIES                 "zeta-twopf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_K_SERIES               "zeta-threepf-k-series"
 
 
 namespace transport
@@ -93,7 +94,7 @@ namespace transport
 				    typedef enum { derivatives, momenta } dot_type;
 				    typedef enum { conventional, comoving } klabel_type;
 
-						typedef enum { time_series, k_series, angle_series } axis_type;
+						typedef enum { time_series, kconfig_series} axis_type;
 
 				    typedef enum { background_field, correlation_function, fNL } value_type;
 
@@ -237,8 +238,7 @@ namespace transport
 				    std::string xtype;
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, xtype);
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = k_series;
-            else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES) x_type = angle_series;
+						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KCONFIG_SERIES) x_type = kconfig_series;
 						else
 							{
 						    std::ostringstream msg;
@@ -332,13 +332,9 @@ namespace transport
 							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES));
 									break;
 
-						    case k_series:
-							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES));
+						    case kconfig_series:
+							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KCONFIG_SERIES));
 									break;
-
-                case angle_series:
-                  this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES));
-                  break;
 
 						    default:
 							    assert(false);
@@ -411,12 +407,9 @@ namespace transport
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TIME_SERIES_LABEL << std::endl;
 									break;
 
-						    case k_series:
-									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_K_SERIES_LABEL << std::endl;
+						    case kconfig_series:
+									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KCONFIG_SERIES_LABEL << std::endl;
 									break;
-
-                case angle_series:
-                  out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_ANGLE_SERIES_LABEL << std::endl;
 
 						    default:
 							    assert(false);
