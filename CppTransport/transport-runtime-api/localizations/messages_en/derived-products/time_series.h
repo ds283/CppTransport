@@ -20,7 +20,7 @@
 
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE            "Internal error: Null datapipe in time_series or derived class"
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL               "Internal error: Null model in time_series or derived class"
-#define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER              "Internal error: Null serialization reader in in time_series or derived class"
+#define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER              "Internal error: Null serialization reader in time_series or derived class"
 
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS            "Internal error: Unknown operator position for three-point function shift"
 

@@ -94,9 +94,10 @@ namespace transport
 				    typedef enum { derivatives, momenta } dot_type;
 				    typedef enum { conventional, comoving } klabel_type;
 
-						typedef enum { time_series, kconfig_series} axis_type;
+						typedef enum { time_series, wavenumber_series, angle_series } axis_type;
 
 				    typedef enum { background_field, correlation_function, fNL } value_type;
+
 
 						// CONSTRUCTOR, DESTRUCTOR
 
@@ -238,7 +239,8 @@ namespace transport
 				    std::string xtype;
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, xtype);
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = kconfig_series;
+						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = wavenumber_series;
+						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES) x_type = angle_series;
 						else
 							{
 						    std::ostringstream msg;
@@ -332,9 +334,13 @@ namespace transport
 							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES));
 									break;
 
-						    case kconfig_series:
+						    case wavenumber_series:
 							    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES));
 									break;
+
+				        case angle_series:
+					        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES));
+						      break;
 
 						    default:
 							    assert(false);
@@ -407,8 +413,12 @@ namespace transport
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TIME_SERIES_LABEL << std::endl;
 									break;
 
-						    case kconfig_series:
+						    case wavenumber_series:
 									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_K_SERIES_LABEL << std::endl;
+									break;
+
+						    case angle_series:
+							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_ANGLE_SERIES_LABEL << std::endl;
 									break;
 
 						    default:

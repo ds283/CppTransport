@@ -32,10 +32,10 @@
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS "kconfig-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER  "sn"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER  "n"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS "time-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER  "sn"
+#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER  "n"
 
 // maximum number of serial numbers to output when writing ourselves to
 // a standard stream
@@ -61,7 +61,7 @@ namespace transport
 			{
 
 		    //! general time-series content producer, suitable for
-		    //! producing content usable in eg. a 2d plot or table
+		    //! producing content usable in eg. a 2d plot or table.
 		    template <typename number>
 		    class time_series : public derived_line<number>
 			    {
@@ -80,7 +80,7 @@ namespace transport
 		        virtual ~time_series() = default;
 
 
-		        // DATAPIPE HANDLING
+		        // DATAPIPE SERVICES
 
 		      public:
 
@@ -92,6 +92,8 @@ namespace transport
 
 
 		        // WRITE TO A STREAM
+
+		      public:
 
 		        //! write self-details to a stream
 		        virtual void write(std::ostream& out);
@@ -112,8 +114,9 @@ namespace transport
 		        //! gadget for performing t- or k-sample filtration
 		        filter f;
 
-		        //! List of time serial numbers to be used for plotting
+		        //! List of time configuration serial numbers to be used for plotting
 		        std::vector<unsigned int> time_sample_sns;
+
 			    };
 
 

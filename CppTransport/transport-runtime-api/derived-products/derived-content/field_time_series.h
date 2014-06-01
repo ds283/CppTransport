@@ -245,11 +245,11 @@ namespace transport
 
 		      public:
 
-		        //! construct a twopf time-data object
+		        //! construct a twopf time-series object
 		        twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
-		                        filter::time_filter tfilter,
-		                        filter::twopf_kconfig_filter kfilter,
-		                        unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		                          filter::time_filter tfilter,
+		                          filter::twopf_kconfig_filter kfilter,
+		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
 		        twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
@@ -315,13 +315,16 @@ namespace transport
 
 		        //! record which type of 2pf we are plotting
 		        twopf_type twopf_meaning;
+
 			    };
 
 
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
-		                                             filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : active_indices(sel), twopf_meaning(real), time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
+		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
+			    : active_indices(sel),
+			      twopf_meaning(real),
+			      time_series<number>(tk, m, tfilter, derived_line<number>::correlation_function, prec)
 			    {
 		        assert(m != nullptr);
 
@@ -378,11 +381,11 @@ namespace transport
 			    }
 
 
-        template <typename number>
-        void twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
-                                                   const std::list<std::string>& tags) const
+		    template <typename number>
+		    void twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
+		                                                 const std::list<std::string>& tags) const
 			    {
-            // attach our datapipe to an output gorup
+            // attach our datapipe to an output group
             this->attach(pipe, tags);
 
 		        // pull time-axis data
@@ -445,12 +448,12 @@ namespace transport
 		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
 		            label << field_names[m % N_fields] << (m >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "") << " "
-			            << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+			                << field_names[n % N_fields] << (n >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
 			        }
 		        else
 			        {
 		            label << (m >= N_fields ? "p_{" : "") << field_names[m % N_fields] << (m >= N_fields ? "}" : "") << " "
-			            << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
+			                << (n >= N_fields ? "p_{" : "") << field_names[n % N_fields] << (n >= N_fields ? "}" : "");
 			        }
 
 		        label << "\\;"
