@@ -1187,7 +1187,7 @@ namespace transport
 			    }
 
 
-        // Pull a sample of a twopf component evolution, for a specific k-configuration and a specific set of time serial numbers
+        // Pull a sample of a threepf component evolution, for a specific k-configuration and a specific set of time serial numbers
         template <typename number>
         void pull_threepf_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& t_serials,
                                       unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
@@ -1235,6 +1235,108 @@ namespace transport
 
             // check that we have as many values as we expect
             if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a twopf component, for a specific time sample point and a specific set of k-configuration serial numbers
+        template <typename number>
+        void pull_twopf_kconfig_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& k_serials,
+                                       unsigned int t_serial, std::vector<number>& sample, twopf_value_type type, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+		        // set up a temporary table representing the serial numbers we want to use
+		        create_temporary_serial_table(db, k_serials, worker);
+
+		        // pull out the twopf component (labelled by 'id') matching serial numbers
+		        // in the temporary table
+            std::stringstream select_stmt;
+		        select_stmt << "SELECT " << twopf_table_name(type) << ".ele" << id << ", " << twopf_table_name(type) << ".tserial"
+			        << " FROM " << twopf_table_name(type)
+			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+			        << " ON " << twopf_table_name(type) << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+			        << " WHERE tserial LIKE " << t_serial << ";";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a threepf component, for a specific time sample point and a specific set of k-configuration serial numbers
+        template <typename number>
+        void pull_threepf_kconfig_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& k_serials,
+                                         unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+		        // set up a temporary table representing the serial numbers we want to use
+		        create_temporary_serial_table(db, k_serials, worker);
+
+		        // pull out the threepf component (labelled by 'id') matching serial numbers
+		        // in the temporary table
+            std::stringstream select_stmt;
+		        select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".ele" << id << ", " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial"
+			        << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
+			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+			        << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+			        << " WHERE tserial LIKE " << t_serial << ";";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
 	        }
 
 
