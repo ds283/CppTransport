@@ -41,6 +41,7 @@
 
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_INTEGRATION_TASK "derived_line error: cannot derive data from a non-integration task"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_READER          "derived_line error: null serialization reader"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL           "derived_line error: null model"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DERIVED_LINE_H

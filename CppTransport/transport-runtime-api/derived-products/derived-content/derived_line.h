@@ -67,6 +67,22 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_K_SERIES               "zeta-threepf-k-series"
 
 
+// common serialization groups used by derived products
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS                    "kconfig-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER                     "n"
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS                    "time-serial-numbers"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER                     "n"
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT                    "use-kt-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA                 "use-alpha-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA                  "use-beta-label"
+
+// maximum number of serial numbers to output when writing ourselves to
+// a standard stream
+#define __CPP_TRANSPORT_PRODUCT_MAX_SN                                                (15)
+
+
 namespace transport
 	{
 
@@ -108,9 +124,9 @@ namespace transport
 						             unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! Deserialization constructor
-						derived_line(serialization_reader* reader, typename repository<number>::task_finder finder);
+						derived_line(serialization_reader* reader, typename repository<number>::task_finder& finder);
 
-						// Override default copy constructor to perofrm a deep copy of the parent task
+						// Override default copy constructor to perform a deep copy of the parent task
 						derived_line(const derived_line<number>& obj);
 
 						virtual ~derived_line();
@@ -202,6 +218,15 @@ namespace transport
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
 
+				    //! gadget for performing t- or k-sample filtration
+				    filter f;
+
+				    //! List of time configuration serial numbers associated with this derived product
+				    std::vector<unsigned int> time_sample_sns;
+
+						//! List of k-configuration serial numbers associated with this derived product
+						std::vector<unsigned int> kconfig_sample_sns;
+
 					};
 
 
@@ -219,7 +244,7 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(serialization_reader* reader, typename repository<number>::task_finder finder)
+				derived_line<number>::derived_line(serialization_reader* reader, typename repository<number>::task_finder& finder)
 					: parent_task(nullptr), mdl(nullptr)
 					{
 						assert(reader != nullptr);
@@ -236,6 +261,7 @@ namespace transport
 				    if((parent_task = dynamic_cast< integration_task<number>* >(tk)) == nullptr)
 					    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
 
+						// Deserialize: axis type for this derived line
 				    std::string xtype;
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, xtype);
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
@@ -248,6 +274,7 @@ namespace transport
 								throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 							}
 
+						// Deserialize: value type for this derived line
 				    std::string ytype;
 						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, ytype);
 						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF) y_type = correlation_function;
@@ -260,6 +287,7 @@ namespace transport
 								throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 							}
 
+						// Deserialize: meaning of 'dot' for this derived line
 				    std::string dot_meaning_value;
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE, dot_meaning_value);
 
@@ -272,6 +300,7 @@ namespace transport
 				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					    }
 
+						// Deserialize: meaning of k-labels for this derived line
 				    std::string label_meaning_value;
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE, label_meaning_value);
 
@@ -283,6 +312,36 @@ namespace transport
 				        msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN << " '" << label_meaning_value << "'";
 				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					    }
+
+						// Deserialize: list of time configuration sample points
+				    unsigned int time_sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
+
+				    for(unsigned int i = 0; i < time_sns; i++)
+					    {
+				        reader->start_array_element();
+
+				        unsigned int sn;
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER, sn);
+				        time_sample_sns.push_back(sn);
+
+				        reader->end_array_element();
+					    }
+				    reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
+
+						// Deserialize: list of k-configuration sample points
+				    unsigned int kconfig_sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
+
+				    for(unsigned int i = 0; i < kconfig_sns; i++)
+					    {
+				        reader->start_array_element();
+
+				        unsigned int sn;
+				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, sn);
+				        kconfig_sample_sns.push_back(sn);
+
+				        reader->end_array_element();
+					    }
+				    reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 					}
 
 
@@ -328,6 +387,7 @@ namespace transport
 
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION, this->precision);
 
+						// Serialize: axis type of this derived line
 				    switch(this->x_type)
 							{
 						    case time_series:
@@ -347,6 +407,7 @@ namespace transport
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE);
 							}
 
+						// Serialize: value type of this derived line
 						switch(this->y_type)
 							{
 						    case correlation_function:
@@ -366,6 +427,7 @@ namespace transport
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_YTYPE);
 							}
 
+						// Serialize: meaning of 'dot' for this derived line
 				    switch(this->dot_meaning)
 					    {
 				        case derivatives:
@@ -381,6 +443,7 @@ namespace transport
 					        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_DOT_TYPE_UNKNOWN);
 					    }
 
+						// Serialize: meaning of k-labels for this derived line
 				    switch(this->klabel_meaning)
 					    {
 				        case conventional:
@@ -395,6 +458,27 @@ namespace transport
 					        assert(false);
 					        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 					    }
+
+						// Serialize: list of time-configuration sample points
+				    this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS, this->time_sample_sns.size() == 0);
+				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
+					    {
+				        this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
+				        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER, *t);
+				        this->end_element(writer, "arrayelt");
+					    }
+				    this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
+
+						// Serialize: list of k-configuration sample points
+				    this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
+				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
+					    {
+				        this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
+				        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, *t);
+				        this->end_element(writer, "arrayelt");
+					    }
+				    this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
+
 					}
 
 
@@ -478,6 +562,31 @@ namespace transport
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
 							}
+
+				    unsigned int count = 0;
+
+				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
+				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
+					    {
+				        std::ostringstream msg;
+				        msg << (*t);
+
+				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
+					    }
+				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+				    this->wrapper.wrap_newline(out);
+
+				    count = 0;
+				    this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
+				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
+					    {
+				        std::ostringstream msg;
+				        msg << (*t);
+
+				        this->wrapper.wrap_list_item(out, true, msg.str(), count);
+					    }
+				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+				    this->wrapper.wrap_newline(out);
 					}
 
 

@@ -86,14 +86,6 @@ namespace transport
             //! serialize this object
             virtual void serialize(serialization_writer& writer) const override;
 
-
-            // INTERNAL DATA
-
-          private:
-
-            //! record serial numbers of k-configurations we are using
-            std::vector<unsigned int> kconfig_sample_sns;
-
           };
 
 
@@ -118,21 +110,21 @@ namespace transport
 
             if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
-            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 
             for(unsigned int i = 0; i < sns; i++)
               {
                 reader->start_array_element();
 
                 unsigned int sn;
-                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, sn);
+                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, sn);
 
                 kconfig_sample_sns.push_back(sn);
 
                 reader->end_array_element();
               }
 
-            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
           }
 
 
@@ -222,13 +214,10 @@ namespace transport
         template <typename number>
         std::string zeta_twopf_time_series<number>::make_LaTeX_label(const typename data_manager<number>::twopf_configuration& config) const
 	        {
-            std::ostringstream label;
 
             label << std::setprecision(this->precision);
 
             label << "$";
-
-            label << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL << " " << __CPP_TRANSPORT_LATEX_ZETA_SYMBOL;
 
             label << "\\;" << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
             if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
@@ -263,19 +252,19 @@ namespace transport
           {
 		        this->time_series<number>::write(out);
 
-            out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_ZETA_TWOPF << std::endl;
+
 
             this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
             unsigned int count = 0;
-            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
+            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
               {
                 std::ostringstream msg;
                 msg << (*t);
 
                 this->wrapper.wrap_list_item(out, true, msg.str(), count);
               }
-            if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+            if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
             this->wrapper.wrap_newline(out);
           }
 
@@ -286,14 +275,14 @@ namespace transport
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES));
 
-            this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
+            this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
               {
                 this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, *t);
+                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, *t);
                 this->end_element(writer, "arrayelt");
               }
-            this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 
             this->time_series<number>::serialize(writer);
           }
@@ -388,20 +377,20 @@ namespace transport
 
             if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
-            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 
             for(unsigned int i = 0; i < sns; i++)
               {
                 reader->start_array_element();
 
                 unsigned int sn;
-                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, sn);
+                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, sn);
                 kconfig_sample_sns.push_back(sn);
 
                 reader->end_array_element();
               }
 
-            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
           }
 
 
@@ -640,14 +629,14 @@ namespace transport
             this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 
             unsigned int count = 0;
-            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
+            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
               {
                 std::ostringstream msg;
                 msg << (*t);
 
                 this->wrapper.wrap_list_item(out, true, msg.str(), count);
               }
-            if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
+            if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
             this->wrapper.wrap_newline(out);
           }
 
@@ -658,14 +647,14 @@ namespace transport
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES));
 
-            this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
+            this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
             for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
               {
                 this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, *t);
+                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, *t);
                 this->end_element(writer, "arrayelt");
               }
-            this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 
             this->basic_threepf_time_series<number>::serialize(writer);
           }
@@ -758,20 +747,20 @@ namespace transport
 
             if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 
-            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 
             for(unsigned int i = 0; i < sns; i++)
               {
                 reader->start_array_element();
 
                 unsigned int sn;
-                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, sn);
+                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, sn);
                 kconfig_sample_sns.push_back(sn);
 
                 reader->end_array_element();
               }
 
-            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
+            reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
           }
 
 
@@ -1043,20 +1032,7 @@ namespace transport
           {
             this->basic_threepf_time_series<number>::write(out);
 
-            out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_REDUCED_BISPECTRUM << std::endl;
 
-            this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
-
-            unsigned int count = 0;
-            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
-              {
-                std::ostringstream msg;
-                msg << (*t);
-
-                this->wrapper.wrap_list_item(out, true, msg.str(), count);
-              }
-            if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
-            this->wrapper.wrap_newline(out);
           }
 
 
@@ -1065,15 +1041,6 @@ namespace transport
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
                                    std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES));
-
-            this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
-            for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
-              {
-                this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER, *t);
-                this->end_element(writer, "arrayelt");
-              }
-            this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS);
 
             this->basic_threepf_time_series<number>::serialize(writer);
           }

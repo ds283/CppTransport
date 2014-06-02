@@ -25,21 +25,13 @@
 #include "transport-runtime-api/manager/data_manager.h"
 
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/threepf_time_shift.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
-
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBERS "kconfig-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_K_SERIAL_NUMBER  "n"
-
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS "time-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER  "n"
-
-// maximum number of serial numbers to output when writing ourselves to
-// a standard stream
-#define __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN (15)
+#include "transport-runtime-api/utilities/latex_output.h"
 
 
 
@@ -54,7 +46,6 @@ namespace transport
     // a circular dependency.
     template <typename number> class task;
     template <typename number> class integration_task;
-    template <typename number> class twopf_list_task;
 
 
 		namespace derived_data
@@ -62,8 +53,11 @@ namespace transport
 
 		    //! general time-series content producer, suitable for
 		    //! producing content usable in eg. a 2d plot or table.
+				//! Note we derive virtually from derived_line<> to solve the diamond
+				//! problem -- concrete classes may inherit several derived_line<>attributes,
+				//! eg. time_series<> and twopf_line<>
 		    template <typename number>
-		    class time_series : public derived_line<number>
+		    class time_series: public virtual derived_line<number>
 			    {
 
 		        // CONSTRUCTOR, DESTRUCTOR
@@ -71,11 +65,10 @@ namespace transport
 		      public:
 
 		        //! Basic user-facing constructor
-		        time_series(const integration_task<number>& tk, model<number>* m, filter::time_filter tfilter,
-		                    typename derived_line<number>::value_type vt, unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+		        time_series(const integration_task<number>& tk, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
-		        time_series(serialization_reader* reader, typename repository<number>::task_finder finder);
+		        time_series(serialization_reader* reader);
 
 		        virtual ~time_series() = default;
 
@@ -89,6 +82,25 @@ namespace transport
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
 		        const std::vector<double>& pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
+
+
+				    // LABELLING SERVICES
+
+		      public:
+
+				    //! make a LaTeX label tag for a twopf k-configuration
+				    std::string make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const;
+
+				    //! make a non-LaTeX label tag for a twopf k-configuration
+				    std::string make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const;
+
+		        //! make a LaTeX label tag for a threepf k-configuration
+		        std::string make_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+		                                   bool use_kt, bool use_alpha, bool use_beta) const;
+
+				    //! make a non-LaTeX label tag for a threepf k-configuration
+				    std::string make_non_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+				                                   bool use_kt, bool use_alpha, bool use_beta) const;
 
 
 		        // WRITE TO A STREAM
@@ -107,52 +119,29 @@ namespace transport
 		        virtual void serialize(serialization_writer& writer) const override;
 
 
-		        // INTERNAL DATA
+				    // INTERNAL DATA
 
 		      protected:
 
-		        //! gadget for performing t- or k-sample filtration
-		        filter f;
-
-		        //! List of time configuration serial numbers to be used for plotting
-		        std::vector<unsigned int> time_sample_sns;
-
+				    threepf_time_shift<number> shifter;
 			    };
 
 
 		    template <typename number>
-		    time_series<number>::time_series(const integration_task<number>& tk, model<number>* m,
-		                                     filter::time_filter tfilter, typename derived_line<number>::value_type vt,
-		                                     unsigned int prec)
-			    : derived_line<number>(tk, m, derived_line<number>::time_series, vt, prec)
+		    time_series<number>::time_series(const integration_task<number>& tk, filter::time_filter tfilter)
 			    {
-		        // set up a list of serial numbers corresponding to the sample times for this plot
+		        // set up a list of serial numbers corresponding to the sample times for this derived line
 		        this->f.filter_time_sample(tfilter, tk.get_sample_times(), time_sample_sns);
 			    }
 
 
+				// Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
+				// because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
-		    time_series<number>::time_series(serialization_reader* reader, typename repository<number>::task_finder finder)
-          : derived_line<number>(reader, finder)
+		    time_series<number>::time_series(serialization_reader* reader)
 			    {
 		        assert(reader != nullptr);
-
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
-
-		        unsigned int sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
-
-		        for(unsigned int i = 0; i < sns; i++)
-			        {
-		            reader->start_array_element();
-
-		            unsigned int sn;
-		            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER, sn);
-		            time_sample_sns.push_back(sn);
-
-		            reader->end_array_element();
-			        }
-
-		        reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
 			    }
 
 
@@ -169,40 +158,99 @@ namespace transport
 			    }
 
 
+				template <typename number>
+				std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+					{
+				    std::ostringstream label;
+
+				    label << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
+				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.k_conventional;
+				    else label << config.k_comoving;
+
+				    return(label.str());
+					}
+
+
+				template <typename number>
+				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+					{
+				    std::ostringstream label;
+
+				    label << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
+				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
+				    else label << output_latex_number(config.k_comoving, this->precision);
+					}
+
+
+		    template <typename number>
+		    std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+		                                                    bool use_kt, bool use_alpha, bool use_beta) const
+			    {
+		        std::ostringstream label;
+
+		        unsigned int count = 0;
+		        if(use_kt)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_KT_SYMBOL << "=";
+		            if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.kt_conventional, this->precision);
+		            else label << output_latex_number(config.kt_comoving, this->precision);
+		            count++;
+			        }
+		        if(use_alpha)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL << "=" << output_latex_number(config.alpha, this->precision);
+		            count++;
+			        }
+		        if(use_beta)
+			        {
+		            label << (count > 0 ? ",\\, " : "") << __CPP_TRANSPORT_LATEX_BETA_SYMBOL << "=" << output_latex_number(config.beta, this->precision);
+		            count++;
+			        }
+
+		        return (label.str());
+			    }
+
+
+				template <typename number>
+				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+				                                                    bool use_kt, bool use_alpha, bool use_beta) const
+					{
+				    std::ostringstream label;
+
+				    unsigned int count = 0;
+				    if(use_kt)
+					    {
+				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_KT_SYMBOL << "=";
+				        if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.kt_conventional;
+				        else label << config.kt_comoving;
+				        count++;
+					    }
+				    if(use_alpha)
+					    {
+				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_ALPHA_SYMBOL << "=" << config.alpha;
+				        count++;
+					    }
+				    if(use_beta)
+					    {
+				        label << (count > 0 ? ", " : "") << __CPP_TRANSPORT_NONLATEX_BETA_SYMBOL << "=" << config.beta;
+				        count++;
+					    }
+
+				    return (label.str());
+					}
+
+
 		    template <typename number>
 		    void time_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS, this->time_sample_sns.size() == 0);
-		        for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
-			        {
-		            this->begin_node(writer, "arrayelt", false);    // node name ignored for arrays
-		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBER, *t);
-		            this->end_element(writer, "arrayelt");
-			        }
-		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_TDATA_T_SERIAL_NUMBERS);
-
-				    this->derived_line<number>::serialize(writer);
+				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
+				    // concrete classes must call it themselves
 			    }
 
 
 		    template <typename number>
 		    void time_series<number>::write(std::ostream& out)
 			    {
-				    this->derived_line<number>::write(out);
-
-		        this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
-
-		        unsigned int count = 0;
-		        for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN; t++)
-			        {
-		            std::ostringstream msg;
-		            msg << (*t);
-
-		            this->wrapper.wrap_list_item(out, true, msg.str(), count);
-			        }
-		        if(count == __CPP_TRANSPORT_PRODUCT_TDATA_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
-
-		        this->wrapper.wrap_newline(out);
 			    }
 
 
