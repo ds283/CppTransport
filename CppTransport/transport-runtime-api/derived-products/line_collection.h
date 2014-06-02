@@ -355,58 +355,63 @@ namespace transport
 			    {
 		        // step through our plot lines, merging axis data and excluding any lines which are unplottable
 
-		        // FIRST, build a list of plottable lines in 'data' (and work out whether we need to take the absolute value)
+		        // FIRST, build a list of plottable lines container in 'input',
+		        // and work out whether we need to take the absolute value
 		        output.clear();
 
-		        std::vector< std::vector<double> > axis_data;
-		        std::vector< std::vector<number> > plot_data;
-		        std::vector< bool >                data_absy;
+		        std::vector< std::vector< std::pair<double, number> > > data;
+		        std::vector< bool >                                     data_absy;
 
 		        for(typename std::list< data_line<number> >::const_iterator t = input.begin(); t != input.end(); t++)
 			        {
-		            const std::vector<number>& line_data = (*t).get_data_points();
+		            const std::vector< std::pair<double, number> >& line_data = (*t).get_data_points();
 
 		            bool need_abs_y = false;
 		            bool nonzero_values = false;
 
 		            if(this->log_y)
 			            {
-		                for(typename std::vector<number>::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
+		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
 			                {
-		                    if((*u) <= 0.0) need_abs_y = true;
-		                    if((*u) > 0.0 || (*u) < 0.0) nonzero_values = true;
+		                    if((*u).second <= 0.0) need_abs_y = true;
+		                    if((*u).second > 0.0 || (*u).second < 0.0) nonzero_values = true;
 			                }
 
-		                // warn if absolute values are needed, but suppress warning if the line won't plot - would be confusing
-		                if(need_abs_y && !this->abs_y && nonzero_values)
+		                // issue warnings if required
+		                if(need_abs_y && !this->abs_y && nonzero_values)        // can plot the line, but have to abs() it
 			                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+		                else if(need_abs_y && !this->abs_y && !nonzero_values)  // can't plot the line
+			                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
 			            }
 
-		            // we can't plot the line if it is logarithmic but has no nonzero values, so check
-		            if(!this->log_y || (this->log_y && nonzero_values))   // can plot the line
+				        bool nonzero_axis = true;
+				        if(this->log_x)
+					        {
+				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); u++)
+					            {
+						            if((*u).first <= 0.0) nonzero_axis = false;
+					            }
+
+						        // warn if line can't be plotted
+						        if(!nonzero_axis)
+							        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
+					        }
+
+		            // if we can plot the line, push it onto the queue to be processed.
+		            // The line isn't plottable is:
+		            //    ** the y-axis is logarithmic but the data has no nonzero values
+				        //    ** the x-axis is logarithmic but there are some nonpositive points
+		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
 		                output.push_back(output_line(this->use_LaTeX ? (*t).get_LaTeX_label() : (*t).get_non_LaTeX_label()));
 		                data_absy.push_back(this->abs_y || need_abs_y);
 
-		                axis_data.push_back((*t).get_axis_points());
-		                plot_data.push_back((*t).get_data_points());
-
-		                // if we are logging the x-axis, check all points are strictly positive
-		                bool ok = true;
-		                if(this->log_x)
-			                {
-		                    for(std::vector<double>::const_iterator t = axis_data.back().begin(); ok && t != axis_data.back().end(); t++)
-			                    {
-		                        if((*t) <= 0.0) ok = false;
-			                    }
-			                }
-		                if(!ok) throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_NEGATIVE_AXIS_POINT);
+				            data.push_back((*t).get_data_points());
 			            }
-		            else    // can't plot the line
-			            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains no nonzero values and can't be plotted on a logarithmic axis -- skipping this line";
 			        }
 
 		        // SECOND work through each axis, populating the single merged axis
+				    // the data lines are all guaranteed to be sorted into ascending order, so we can rely on that
 		        axis.clear();
 		        bool finished = false;
 
@@ -417,7 +422,7 @@ namespace transport
 		            // any work left to do?
 		            for(unsigned int i = 0; finished && i < output.size(); i++)
 			            {
-		                if(axis_data[i].size() > 0) finished = false;
+		                if(data[i].size() > 0) finished = false;
 			            }
 
 		            if(!finished)
@@ -426,9 +431,10 @@ namespace transport
 		                double next_axis_point = -DBL_MAX;
 		                for(unsigned int i = 0; i < output.size(); i++)
 			                {
-		                    if(axis_data[i].size() > 0)
+		                    if(data[i].size() > 0)
 			                    {
-		                        if(axis_data[i].back() > next_axis_point) next_axis_point = axis_data[i].back();
+				                    const std::pair<double, number>& point = data[i].back();
+		                        if(point.first > next_axis_point) next_axis_point = point.first;
 			                    }
 			                }
 
@@ -440,15 +446,15 @@ namespace transport
 		                    // find data points on each line, if they exist, corresponding to this axis point
 		                    for(unsigned int i = 0; i < output.size(); i++)
 			                    {
-		                        if(axis_data[i].size() > 0)
+		                        if(data[i].size() > 0)
 			                        {
-		                            if(axis_data[i].back() == next_axis_point)   // yes, this line has a match
+				                        const std::pair<double, number>& point = data[i].back();
+		                            if(point.first == next_axis_point)   // yes, this line has a match
 			                            {
-		                                output[i].push_front(output_value(data_absy[i] ? fabs(plot_data[i].back()) : plot_data[i].back()));
+		                                output[i].push_front(output_value(data_absy[i] ? fabs(point.second) : point.second));
 
 		                                // remove point from this line
-		                                axis_data[i].pop_back();
-		                                plot_data[i].pop_back();
+		                                data[i].pop_back();
 			                            }
 		                            else
 			                            {

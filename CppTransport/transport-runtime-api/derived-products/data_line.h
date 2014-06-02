@@ -36,12 +36,8 @@ namespace transport
 
           public:
 
-            data_line(axis_type at, value_type vt, const std::vector<double> a, const std::vector<number> d, const std::string& Ll, const std::string& nLl)
-              : x_type(at), y_type(vt), axis(a), data(d), LaTeX_label(Ll), non_LaTeX_label(nLl)
-              {
-                if(axis.size() != data.size())
-                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
-              }
+		        //! Construct a dataline object from a sequence of axis and data points
+            data_line(axis_type at, value_type vt, const std::vector<double> a, const std::vector<number> d, const std::string& Ll, const std::string& nLl);
 
             ~data_line() = default;
 
@@ -57,17 +53,14 @@ namespace transport
 		        //! Get non-LaTeX label
 		        const std::string& get_non_LaTeX_label() const { return(this->non_LaTeX_label); }
 
+		        //! Get data points
+		        const std::vector< std::pair<double, number> >& get_data_points() const { return(this->data); }
+
 		        //! Get axis type
 		        axis_type get_axis_type() const { return(this->x_type); }
 
 		        //! Get value type
 		        value_type get_value_type() const { return(this->y_type); }
-
-            //! Get data
-            const std::vector<number>& get_data_points() const { return(this->data); }
-
-            //! Get axis
-            const std::vector<double>& get_axis_points() const { return(this->axis); }
 
 
             // INTERNAL DATA
@@ -78,11 +71,7 @@ namespace transport
 		        //! value type
 		        const value_type y_type;
 
-            //! axis data points
-            const std::vector<double> axis;
-
-            //! line data
-            const std::vector<number> data;
+		        std::vector< std::pair<double, number> > data;
 
             //! non-LaTeX label
             const std::string LaTeX_label;
@@ -92,7 +81,37 @@ namespace transport
           };
 
 
-      }   // namespace derived_data
+        template <typename number>
+        data_line<number>::data_line(typename data_line<number>::axis_type at, typename data_line<number>::value_type vt,
+                                     const std::vector<double> a, const std::vector<number> d,
+                                     const std::string& Ll, const std::string& nLl)
+	        : x_type(at), y_type(vt), LaTeX_label(Ll), non_LaTeX_label(nLl)
+	        {
+            if(a.size() != d.size())
+	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DATALINE_AXIS_MISMATCH);
+
+            data.reserve(a.size());
+
+            // push data points onto the axis
+            for(unsigned int i = 0; i < a.size(); i++)
+	            {
+                data.push_back(std::make_pair(a[i], d[i]));
+	            }
+
+            // now sort axis into ascending order
+            struct AxisSorter
+	            {
+                bool operator()(const std::pair<double, number>& a, const std::pair<double, number>& b)
+	                {
+                    return (a.first < b.first);
+	                }
+	            };
+
+            sort(data.begin(), data.end(), AxisSorter());
+	        }
+
+
+	    }   // namespace derived_data
 
   }   // namespace transport
 
