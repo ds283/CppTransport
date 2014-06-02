@@ -147,7 +147,7 @@ namespace transport
 	            }
 
             // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
-            this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), kconfig_sample_sns);
+            this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), this->kconfig_sample_sns);
 	        }
 
 

@@ -193,6 +193,7 @@ namespace transport
 
 				    // INTERNAL DATA
 
+          protected:
 
 						//! Axis type
 						axis_type x_type;
@@ -347,8 +348,12 @@ namespace transport
 
 				template <typename number>
 				derived_line<number>::derived_line(const derived_line<number>& obj)
-					: dot_meaning(obj.dot_meaning), klabel_meaning(obj.klabel_meaning), mdl(obj.mdl),   // it's OK to shallow copy 'mdl'. Pointers to model instances are managed by the instance_manager
-					  x_type(obj.x_type), y_type(obj.y_type), precision(obj.precision),
+					: x_type(obj.x_type), y_type(obj.y_type),
+            dot_meaning(obj.dot_meaning), klabel_meaning(obj.klabel_meaning),
+            precision(obj.precision),
+            time_sample_sns(obj.time_sample_sns),
+            kconfig_sample_sns(obj.kconfig_sample_sns),
+            mdl(obj.mdl),   // it's OK to shallow copy 'mdl'. Pointers to model instances are managed by the instance_manager
 		        parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone()))
 					{
 						assert(this->parent_task != nullptr);

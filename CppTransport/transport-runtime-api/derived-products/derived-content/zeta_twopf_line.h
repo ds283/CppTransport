@@ -58,6 +58,8 @@ namespace transport
 
 			      // CONSTRUCTOR, DESTRUCTOR
 
+          public:
+
 				    //! Basic user-facing constructor
 				    zeta_twopf_line(const twopf_list_task<number>& tk, model<number>* m, filter::twopf_kconfig_filter& kfilter);
 
@@ -72,10 +74,10 @@ namespace transport
 		      public:
 
 				    //! make a LaTeX label
-				    std::string make_LaTeX_label() const;
+				    std::string make_LaTeX_label(void) const;
 
 				    //! make a non-LaTeX label
-				    std::string make_non_LaTeX_label() const;
+				    std::string make_non_LaTeX_label(void) const;
 
 
 				    // WRITE TO A STREAM
@@ -103,7 +105,7 @@ namespace transport
 				    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
 
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
-				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), kconfig_sample_sns);
+				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), this->kconfig_sample_sns);
 					}
 
 
@@ -118,14 +120,14 @@ namespace transport
 
 
 				template <typename number>
-				std::string zeta_twopf_line<number>::make_LaTeX_label(unsigned int m, unsigned int n) const
+				std::string zeta_twopf_line<number>::make_LaTeX_label(void) const
 					{
 				    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
 					}
 
 
 				template <typename number>
-				std::string zeta_twopf_line<number>::make_non_LaTeX_label(unsigned int m, unsigned int n) const
+				std::string zeta_twopf_line<number>::make_non_LaTeX_label(void) const
 					{
 				    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
 					}

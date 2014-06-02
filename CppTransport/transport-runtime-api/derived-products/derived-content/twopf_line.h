@@ -87,6 +87,11 @@ namespace transport
             //! set twopf type setting
             void set_type(twopf_type m) { this->twopf_meaning = m; }
 
+            //! query type of twopf - is it real?
+            bool is_real_twopf() const { return(this->twopf_meaning == real); }
+            //! query type of twopf - is it imaginary?
+            bool is_imag_twopf() const { return(this->twopf_meaning == imaginary); }
+
 
 		        // LABELLING SERVICES
 
@@ -146,7 +151,7 @@ namespace transport
 			        }
 
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
-				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), kconfig_sample_sns);
+				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), this->kconfig_sample_sns);
 			    }
 
 

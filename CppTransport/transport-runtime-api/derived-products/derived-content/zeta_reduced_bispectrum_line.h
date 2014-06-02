@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __zeta_threepf_line_H_
-#define __zeta_threepf_line_H_
+#ifndef __zeta_reduced_bispectrum_line_H_
+#define __zeta_reduced_bispectrum_line_H_
 
 
 #include <iostream>
@@ -53,7 +53,7 @@ namespace transport
 				//! problem -- concrete classes may inherit several derived_line<> attributes,
 				//! eg. wavenumber_series<> and zeta_threepf_line<>
 				template <typename number>
-		    class zeta_threepf_line: public virtual derived_line<number>
+		    class zeta_reduced_bispectrum_line: public virtual derived_line<number>
 			    {
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -61,12 +61,12 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_threepf_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter);
+				    zeta_reduced_bispectrum_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
-				    zeta_threepf_line(serialization_reader* reader);
+				    zeta_reduced_bispectrum_line(serialization_reader* reader);
 
-				    virtual ~zeta_threepf_line() = default;
+				    virtual ~zeta_reduced_bispectrum_line() = default;
 
 
 		        // MANAGE LABEL OPTIONS
@@ -130,25 +130,22 @@ namespace transport
 			    };
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the constructor for
-        // derived_line<> is *not* called from time_series<>.
-        // Concrete classes must call it themselves
-		    template <typename number>
-		    zeta_threepf_line<number>::zeta_threepf_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter)
-		      : use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+        template <typename number>
+        zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter)
+          : use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 			    {
 		        assert(m != nullptr);
 		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
 
-            this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), this->kconfig_sample_sns);
+		        // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
+		        this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), this->kconfig_sample_sns);
 			    }
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the constructor for
-        // derived_line<> is *not* called from time_series<>.
-        // Concrete classes must call it themselves
+				// Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
+				// because of virtual inheritance; concrete classes must call it themselves
 				template <typename number>
-				zeta_threepf_line<number>::zeta_threepf_line(serialization_reader* reader)
+				zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(serialization_reader* reader)
 					{
 				    assert(reader != nullptr);
 				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
@@ -160,21 +157,21 @@ namespace transport
 
 
 				template <typename number>
-				std::string zeta_threepf_line<number>::make_LaTeX_label(void) const
+				std::string zeta_reduced_bispectrum_line<number>::make_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+				    return( std::string(__CPP_TRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL) );
 					}
 
 
 				template <typename number>
-				std::string zeta_threepf_line<number>::make_non_LaTeX_label(void) const
+				std::string zeta_reduced_bispectrum_line<number>::make_non_LaTeX_label(void) const
 					{
-						return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL)) );
+						return( std::string(__CPP_TRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL) );
 					}
 
 
 				template <typename number>
-				void zeta_threepf_line<number>::serialize(serialization_writer& writer) const
+				void zeta_reduced_bispectrum_line<number>::serialize(serialization_writer& writer) const
 					{
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT, this->use_kt_label);
 				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA, this->use_alpha_label);
@@ -183,9 +180,9 @@ namespace transport
 
 
 				template <typename number>
-				void zeta_threepf_line<number>::write(std::ostream& out)
+				void zeta_reduced_bispectrum_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_ZETA_THREEPF << std::endl;
+				    out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_REDUCED_BISPECTRUM << std::endl;
 					}
 
 			}   // namespace derived_data
@@ -193,4 +190,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__zeta_threepf_line_H_
+#endif //__zeta_reduced_bispectrum_line_H_

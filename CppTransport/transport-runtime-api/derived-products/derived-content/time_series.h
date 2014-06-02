@@ -124,6 +124,7 @@ namespace transport
 		      protected:
 
 				    threepf_time_shift<number> shifter;
+
 			    };
 
 
@@ -131,7 +132,7 @@ namespace transport
 		    time_series<number>::time_series(const integration_task<number>& tk, filter::time_filter tfilter)
 			    {
 		        // set up a list of serial numbers corresponding to the sample times for this derived line
-		        this->f.filter_time_sample(tfilter, tk.get_sample_times(), time_sample_sns);
+		        this->f.filter_time_sample(tfilter, tk.get_sample_times(), this->time_sample_sns);
 			    }
 
 
@@ -179,6 +180,8 @@ namespace transport
 				    label << __CPP_TRANSPORT_LATEX_K_SYMBOL << "=";
 				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << output_latex_number(config.k_conventional, this->precision);
 				    else label << output_latex_number(config.k_comoving, this->precision);
+
+            return(label.str());
 					}
 
 

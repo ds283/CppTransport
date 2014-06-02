@@ -13,6 +13,7 @@
 #include <string>
 #include <list>
 #include <vector>
+#include <array>
 #include <stdexcept>
 
 #include "transport-runtime-api/derived-products/data_line.h"
@@ -38,9 +39,9 @@ namespace transport
 
 		      public:
 
-		        //! construct a background time-data object
-		        background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
-		                             filter::time_filter tfilter, unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+            //! construct a background time-data object
+            background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
+                                   filter::time_filter tfilter, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        background_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -345,7 +346,7 @@ namespace transport
 		                    if(this->active_indices.is_on(index_set))
 			                    {
 				                    typename data_manager<number>::datapipe::cf_time_data_tag tag =
-					                                                                              pipe.new_cf_time_data_tag(this->twopf_meaning == real ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
+					                                                                              pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
 					                                                                                                        this->mdl->flatten(m,n), this->kconfig_sample_sns[i]);
 
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
@@ -399,10 +400,10 @@ namespace transport
 
 		      public:
 
-		        //! construct a threepf time-data object
-		        threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
-		                          filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
-		                          unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+            //! construct a threepf time-data object
+            threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+                                filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
+                                unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
 		        threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -516,8 +517,8 @@ namespace transport
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k_values[i]);
 
-		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
-		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
+		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
+		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
 		                            data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
 		                                                                       time_axis, line_data, latex_label, nonlatex_label);
@@ -553,9 +554,9 @@ namespace transport
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES));
 
-		        this->derived_line<number>::write(writer);
-				    this->threepf_line<number>::write(writer);
-				    this->time_series<number>::write(writer);
+		        this->derived_line<number>::serialize(writer);
+				    this->threepf_line<number>::serialize(writer);
+				    this->time_series<number>::serialize(writer);
 			    }
 
 

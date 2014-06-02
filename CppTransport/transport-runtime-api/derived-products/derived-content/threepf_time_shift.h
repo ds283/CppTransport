@@ -44,7 +44,7 @@ namespace transport
         class threepf_time_shift
 	        {
 
-          protected:
+          public:
 
             class extractor
 	            {
@@ -121,7 +121,7 @@ namespace transport
 
             //! shift a three-pf timeline for coordinate labels (l,m,n)
             //! and supplied 2pf k-configuration serial numbers
-            void shift_derivatives(integration_task<number>* tk, model<number>* m,
+            void shift_derivatives(integration_task<number>* tk, model<number>* mdl,
                                    typename data_manager<number>::datapipe& pipe,
                                    const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                    const std::vector<double>& time_axis,
@@ -132,7 +132,7 @@ namespace transport
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
-            void compute_derivative_shift(integration_task<number>* tk, model<number>* m,
+            void compute_derivative_shift(integration_task<number>* tk, model<number>* mdl,
                                           typename data_manager<number>::datapipe& pipe,
                                           const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                           const std::vector<double>& time_axis,
@@ -153,17 +153,17 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::shift_derivatives(integration_task<number>* tk, model<number>* m,
+        void threepf_time_shift<number>::shift_derivatives(integration_task<number>* tk, model<number>* mdl,
                                                            typename data_manager<number>::datapipe& pipe,
                                                            const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                            const std::vector<double>& time_axis,
                                                            unsigned int l, unsigned int m, unsigned int n,
                                                            const typename data_manager<number>::threepf_configuration& config) const
 			    {
-						assert(m != nullptr);
+						assert(mdl != nullptr);
 		        assert(tk != nullptr);
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = mdl->get_N_fields();
 
 		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(time_sample);
 
@@ -184,14 +184,14 @@ namespace transport
 			            }
 			        }
 
-		        if(l >= N_fields) this->compute_derivative_shift(tk, m, pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
-		        if(m >= N_fields) this->compute_derivative_shift(tk, m, pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
-		        if(n >= N_fields) this->compute_derivative_shift(tk, m, pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
+		        if(l >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
+		        if(m >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
+		        if(n >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
 			    }
 
 
         template <typename number>
-        void threepf_time_shift<number>::compute_derivative_shift(integration_task<number>* tk, model<number>* m,
+        void threepf_time_shift<number>::compute_derivative_shift(integration_task<number>* tk, model<number>* mdl,
                                                                   typename data_manager<number>::datapipe& pipe,
                                                                   const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                                   const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
@@ -201,10 +201,10 @@ namespace transport
                                                                   operator_position pos) const
 			    {
 		        assert(time_sample.size() == line_data.size());
-		        assert(m != nullptr);
+		        assert(mdl != nullptr);
 		        assert(tk != nullptr);
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = mdl->get_N_fields();
 
 		        // need multiple components of the 2pf at different k-configurations; allocate space to store them
 		        std::vector< std::vector<number> > sigma_q_re(time_sample.size());
@@ -217,7 +217,7 @@ namespace transport
 		        std::vector< std::vector<number> > mom_sigma_r_im(time_sample.size());
 
 		        // p is guaranteed to be a momentum label, but we will want to know what field species it corresponds to
-		        unsigned int p_species = m->species(p);
+		        unsigned int p_species = mdl->species(p);
 
 		        typedef enum { first_index, second_index } fixed_index;
 
@@ -251,10 +251,10 @@ namespace transport
 		        // pull out components of the two-pf that we need
 		        for(unsigned int i = 0; i < N_fields; i++)
 			        {
-		            unsigned int q_id = m->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
-		            unsigned int r_id = m->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
-		            unsigned int mom_q_id = m->flatten((q_fixed == first_index ? q : m->momentum(i)), (q_fixed == second_index ? q : m->momentum(i)));
-		            unsigned int mom_r_id = m->flatten((r_fixed == first_index ? r : m->momentum(i)), (r_fixed == second_index ? r : m->momentum(i)));
+		            unsigned int q_id = mdl->flatten((q_fixed == first_index ? q : i), (q_fixed == second_index ? q : i));
+		            unsigned int r_id = mdl->flatten((r_fixed == first_index ? r : i), (r_fixed == second_index ? r : i));
+		            unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
+		            unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
 
 		            typename data_manager<number>::datapipe::cf_time_data_tag q_re_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id,     q_config.serial());
 		            typename data_manager<number>::datapipe::cf_time_data_tag q_im_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id,     q_config.serial());
@@ -298,9 +298,9 @@ namespace transport
 		            // evaluate B and C tensors for this time step
 		            // B is symmetric on its first two indices, which are the ones we sum over, so we only need a single copy of that.
 		            // C is symmetric on its first two indices but we sum over the last two. So we need to symmetrize the momenta.
-		            m->B(tk->get_params(), background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
-		            m->C(tk->get_params(), background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
-		            m->C(tk->get_params(), background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
+		            mdl->B(tk->get_params(), background[i], q_config.comoving(), r_config.comoving(), p_config.comoving(), time_axis[i], B_qrp);
+		            mdl->C(tk->get_params(), background[i], p_config.comoving(), q_config.comoving(), r_config.comoving(), time_axis[i], C_pqr);
+		            mdl->C(tk->get_params(), background[i], p_config.comoving(), r_config.comoving(), q_config.comoving(), time_axis[i], C_prq);
 
 		            number shift = 0.0;
 
