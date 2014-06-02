@@ -398,7 +398,7 @@ namespace transport
 					        }
 
 		            // if we can plot the line, push it onto the queue to be processed.
-		            // The line isn't plottable is:
+		            // The line isn't plottable if:
 		            //    ** the y-axis is logarithmic but the data has no nonzero values
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
