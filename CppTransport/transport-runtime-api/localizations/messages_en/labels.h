@@ -49,6 +49,8 @@
 
 #define __CPP_TRANSPORT_LATEX_K_SYMBOL                     "k"
 #define __CPP_TRANSPORT_NONLATEX_K_SYMBOL                  "k"
+#define __CPP_TRANSPORT_LATEX_T_SYMBOL                     "N"
+#define __CPP_TRANSPORT_NONLATEX_T_SYMBOL                  "N"
 #define __CPP_TRANSPORT_LATEX_KT_SYMBOL                    "k_t"
 #define __CPP_TRANSPORT_NONLATEX_KT_SYMBOL                 "k_t"
 #define __CPP_TRANSPORT_LATEX_ALPHA_SYMBOL                 "\\alpha"

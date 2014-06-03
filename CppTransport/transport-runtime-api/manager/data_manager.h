@@ -1472,15 +1472,10 @@ namespace transport
 
 		     // attach new cache tables
 
-//        std::cerr << "Worker " << this->worker_number << " getting table for time-config cache" << std::endl;
 		    this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
-//        std::cerr << "Worker " << this->worker_number << " getting table for twopf-kconfig cache" << std::endl;
 		    this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
-//        std::cerr << "Worker " << this->worker_number << " getting table for threepf-kconfig cache" << std::endl;
 		    this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
-//        std::cerr << "Worker " << this->worker_number << " getting table for time-data cache" << std::endl;
 		    this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
-//        std::cerr << "Worker " << this->worker_number << " set up all cache tables" << std::endl;
 	    }
 
 
@@ -1856,7 +1851,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_real, this->pipe->worker_number);
+            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_real, this->pipe->worker_number);
             this->pipe->database_timer.stop();
 	        }
         else if(this->type == cf_twopf_im)
@@ -1864,7 +1859,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_imag, this->pipe->worker_number);
+            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_imag, this->pipe->worker_number);
             this->pipe->database_timer.stop();
 	        }
         else if (this->type == cf_threepf)
@@ -1872,7 +1867,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->threepf_kconfig_sampler(this->pipe, this->id, sns, this->kserial, sample, this->pipe->worker_number);
+            this->pipe->threepf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, this->pipe->worker_number);
             this->pipe->database_timer.stop();
 	        }
         else

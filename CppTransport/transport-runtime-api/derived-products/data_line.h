@@ -30,7 +30,7 @@ namespace transport
 
           public:
 
-		        typedef enum { time_series, kconfig_series } axis_type;
+		        typedef enum { time_series, wavenumber_series, angle_series } axis_type;
 
 		        typedef enum { background_field, correlation_function, fNL } value_type;
 

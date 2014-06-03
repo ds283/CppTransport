@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __time_series_plot_H_
-#define __time_series_plot_H_
+#ifndef __wavenumber_series_plot_H_
+#define __wavenumber_series_plot_H_
 
 
 #include "transport-runtime-api/derived-products/line_plot2d.h"
@@ -24,11 +24,11 @@ namespace transport
 		namespace derived_data
 			{
 
-				//! time-series-plot is a convenience class which defines a line-plot2d with
-				//! sensible defaults for a time series plot
+				//! wavenumber-series-plot is a convenience class which defines a line-plot2d with
+				//! sensible defaults for a wavenumber series plot
 
 		    template <typename number>
-		    class time_series_plot : public line_plot2d<number>
+		    class wavenumber_series_plot : public line_plot2d<number>
 			    {
 
 		      public:
@@ -36,9 +36,9 @@ namespace transport
 		        // CONSTRUCTOR, DESTRUCTOR
 
 		        //! Basic user-facing constructor. Accepts a filename.
-		        time_series_plot(const std::string& name, const boost::filesystem::path& filename);
+		        wavenumber_series_plot(const std::string& name, const boost::filesystem::path& filename);
 
-				    virtual ~time_series_plot() = default;
+				    virtual ~wavenumber_series_plot() = default;
 
 
 		        // SETTING DEFAULTS
@@ -55,7 +55,7 @@ namespace transport
 
 
 		    template <typename number>
-		    time_series_plot<number>::time_series_plot(const std::string& name, const boost::filesystem::path& filename)
+		    wavenumber_series_plot<number>::wavenumber_series_plot(const std::string& name, const boost::filesystem::path& filename)
 			    : line_plot2d<number>(name, filename)
 			    {
 		        apply_default_settings();
@@ -64,7 +64,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void time_series_plot<number>::apply_default_settings()
+		    void wavenumber_series_plot<number>::apply_default_settings()
 			    {
 		        // default settings are: logarithmic y axis, absolute y values, linear x axis, no reversals, x-axis label only, use LaTeX, legend
 
@@ -84,12 +84,12 @@ namespace transport
 
 
 		    template <typename number>
-		    void time_series_plot<number>::apply_default_labels()
+		    void wavenumber_series_plot<number>::apply_default_labels()
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
 
-		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_LATEX);
+		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_NOLATEX);
 
 		        this->clear_y_label_text();
 		        this->clear_title_text();
@@ -97,7 +97,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::ostream& operator<<(std::ostream& out, time_series_plot<number>& obj)
+		    std::ostream& operator<<(std::ostream& out, wavenumber_series_plot<number>& obj)
 			    {
 		        obj.write(out);
 		        return(out);
@@ -110,4 +110,4 @@ namespace transport
 	}   // namespace transport
 
 
-#endif //__time_series_plot_H_
+#endif //__wavenumber_series_plot_H_

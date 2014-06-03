@@ -98,6 +98,14 @@ namespace transport
 		        std::string make_non_LaTeX_label(void) const;
 
 
+		        // K-CONFIGURATION SERVICES
+
+		      public:
+
+		        //! handle cross-delegation from wavenumber_series class to lookup wavenumber axis data
+		        void pull_wavenumber_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const;
+
+
 		        // WRITE TO A STREAM
 
 		      public:
@@ -171,6 +179,28 @@ namespace transport
 					{
 						return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL)) );
 					}
+
+
+		    template <typename number>
+		    void zeta_threepf_line<number>::pull_wavenumber_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const
+			    {
+		        typename data_manager<number>::datapipe::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::threepf_kconfig_tag tag = pipe.new_threepf_kconfig_tag();
+
+		        const std::vector< typename data_manager<number>::threepf_configuration >& configs = handle.lookup_tag(tag);
+
+		        axis.clear();
+		        for(typename std::vector< typename data_manager<number>::threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			        {
+		            if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).kt_comoving);
+		            else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).kt_conventional);
+		            else
+			            {
+		                assert(false);
+		                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+			            }
+			        }
+			    }
 
 
 				template <typename number>

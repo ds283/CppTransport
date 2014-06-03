@@ -119,11 +119,9 @@ namespace transport
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
-            const std::vector<unsigned int>& time_sample_sns = this->get_time_sample_sns();
-
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
@@ -132,7 +130,7 @@ namespace transport
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
-            std::vector< std::vector<number> > background(time_sample_sns.size());
+            std::vector< std::vector<number> > background(this->time_sample_sns.size());
 
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
@@ -141,7 +139,7 @@ namespace transport
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
 
                 assert(bg_line.size() == background.size());
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     background[j].push_back(bg_line[j]);
                   }
@@ -150,8 +148,8 @@ namespace transport
             // cache gauge transformation coefficients
             // maybe expensive on memory, but the alternative would be to cache all the components of
             // the twopf, which is worse ... !
-            std::vector< std::vector<number> > dN(time_sample_sns.size());
-            for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+            std::vector< std::vector<number> > dN(this->time_sample_sns.size());
+            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
@@ -160,7 +158,7 @@ namespace transport
               {
                 // time-line for zeta will be stored in 'line_data'
                 std::vector<number> line_data;
-                line_data.assign(time_sample_sns.size(), 0.0);
+                line_data.assign(this->time_sample_sns.size(), 0.0);
 
                 for(unsigned int m = 0; m < 2*N_fields; m++)
                   {
@@ -172,7 +170,7 @@ namespace transport
                         // pull twopf data for this component
                         const std::vector<number>& sigma_line = t_handle.lookup_tag(tag);
 
-                        for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                        for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                           {
                             line_data[j] += dN[j][m]*dN[j][n]*sigma_line[j];
                           }
@@ -305,11 +303,9 @@ namespace transport
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
-            const std::vector<unsigned int>& time_sample_sns = this->get_time_sample_sns();
-
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
@@ -318,7 +314,7 @@ namespace transport
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
-            std::vector< std::vector<number> > background(time_sample_sns.size());
+            std::vector< std::vector<number> > background(this->time_sample_sns.size());
 
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
@@ -327,7 +323,7 @@ namespace transport
                 const std::vector<number>& bg_line = t_handle.lookup_tag(bg_tag);
 
                 assert(bg_line.size() == background.size());
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     background[j].push_back(bg_line[j]);
                   }
@@ -335,8 +331,8 @@ namespace transport
 
             // cache linear gauge transformation coefficients
 		        // we can cache these just once because they don't depend on the k-configuration
-            std::vector< std::vector<number> > dN(time_sample_sns.size());
-            for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+            std::vector< std::vector<number> > dN(this->time_sample_sns.size());
+            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
 //                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
@@ -352,10 +348,10 @@ namespace transport
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
-                std::vector< std::vector< std::vector<number> > > ddN123(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN213(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN312(time_sample_sns.size());
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                std::vector< std::vector< std::vector<number> > > ddN123(this->time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN213(this->time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN312(this->time_sample_sns.size());
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
@@ -367,7 +363,7 @@ namespace transport
 
                 // time-line for zeta will be stored in 'line_data'
                 std::vector<number> line_data;
-                line_data.assign(time_sample_sns.size(), 0.0);
+                line_data.assign(this->time_sample_sns.size(), 0.0);
 
                 // linear component of the gauge transformation
                 for(unsigned int l = 0; l < 2*N_fields; l++)
@@ -383,9 +379,9 @@ namespace transport
                             std::vector<number> threepf_line = t_handle.lookup_tag(tag);
 
                             // shift field so it represents a derivative correlation function, not a momentum one
-                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
+                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
 
-                            for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                               {
                                 line_data[j] += dN[j][l]*dN[j][m]*dN[j][n]*threepf_line[j];
                               }
@@ -426,7 +422,7 @@ namespace transport
                                 const std::vector<number>& k3_re_mq = t_handle.lookup_tag(k3_re_mq_tag);
                                 const std::vector<number>& k3_im_mq = t_handle.lookup_tag(k3_im_mq_tag);
 
-                                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                                   {
                                     line_data[j] += ddN123[j][l][m] * dN[j][p] * dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
                                     line_data[j] += ddN213[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
@@ -563,11 +559,9 @@ namespace transport
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
-            const std::vector<unsigned int>& time_sample_sns = this->get_time_sample_sns();
-
             // set up cache handles
             typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-            typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample_sns);
+            typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
@@ -576,7 +570,7 @@ namespace transport
 
             // pull background data for the time_sample we are using,
             // and slice it up by time in an array 'background'
-            std::vector< std::vector<number> > background(time_sample_sns.size());
+            std::vector< std::vector<number> > background(this->time_sample_sns.size());
 
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
@@ -585,7 +579,7 @@ namespace transport
                 const std::vector<number>& bg_line = t_handle.lookup_tag(bg_tag);
 
                 assert(bg_line.size() == background.size());
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     background[j].push_back(bg_line[j]);
                   }
@@ -593,8 +587,8 @@ namespace transport
 
             // cache linear gauge transformation coefficients
             // we can cache these just once because they don't depend on the k-configuration
-            std::vector< std::vector<number> > dN(time_sample_sns.size());
-            for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+            std::vector< std::vector<number> > dN(this->time_sample_sns.size());
+            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
@@ -609,10 +603,10 @@ namespace transport
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
-                std::vector< std::vector< std::vector<number> > > ddN123(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN213(time_sample_sns.size());
-                std::vector< std::vector< std::vector<number> > > ddN312(time_sample_sns.size());
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                std::vector< std::vector< std::vector<number> > > ddN123(this->time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN213(this->time_sample_sns.size());
+                std::vector< std::vector< std::vector<number> > > ddN312(this->time_sample_sns.size());
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
@@ -621,7 +615,7 @@ namespace transport
 
                 // time-line for the reduced bispectrum will be stored in 'line_data'
                 std::vector<number> line_data;
-                line_data.assign(time_sample_sns.size(), 0.0);
+                line_data.assign(this->time_sample_sns.size(), 0.0);
 
                 // FIRST, BUILD THE BISPECTRUM ITSELF
 
@@ -639,9 +633,9 @@ namespace transport
                             std::vector<number> threepf_line = t_handle.lookup_tag(tag);
 
                             // shift field so it represents a derivative correlation function, not a momentum one
-                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
+                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
 
-                            for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                               {
                                 line_data[j] += dN[j][l]*dN[j][m]*dN[j][n]*threepf_line[j];
                               }
@@ -682,7 +676,7 @@ namespace transport
                                 const std::vector<number>& k3_re_mq = t_handle.lookup_tag(k3_re_mq_tag);
                                 const std::vector<number>& k3_im_mq = t_handle.lookup_tag(k3_im_mq_tag);
 
-                                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                                   {
                                     line_data[j] += ddN123[j][l][m] * dN[j][p] * dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
                                     line_data[j] += ddN213[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
@@ -698,9 +692,9 @@ namespace transport
                 std::vector<number> twopf_k1_data;
                 std::vector<number> twopf_k2_data;
                 std::vector<number> twopf_k3_data;
-                twopf_k1_data.assign(time_sample_sns.size(), 0.0);
-                twopf_k2_data.assign(time_sample_sns.size(), 0.0);
-                twopf_k3_data.assign(time_sample_sns.size(), 0.0);
+                twopf_k1_data.assign(this->time_sample_sns.size(), 0.0);
+                twopf_k2_data.assign(this->time_sample_sns.size(), 0.0);
+                twopf_k3_data.assign(this->time_sample_sns.size(), 0.0);
 
                 for(unsigned int m = 0; m < 2*N_fields; m++)
                   {
@@ -715,7 +709,7 @@ namespace transport
                         const std::vector<number>& k2_line = t_handle.lookup_tag(k2_tag);
                         const std::vector<number>& k3_line = t_handle.lookup_tag(k3_tag);
 
-                        for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                        for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                           {
                             twopf_k1_data[j] += dN[j][m]*dN[j][n]*k1_line[j];
                             twopf_k2_data[j] += dN[j][m]*dN[j][n]*k2_line[j];
@@ -726,7 +720,7 @@ namespace transport
 
                 // THIRD, CONSTRUCT THE REDUCED BISPECTRUM
 
-                for(unsigned int j = 0; j < time_sample_sns.size(); j++)
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
                     number form_factor = (6.0/5.0) * ( twopf_k1_data[j]*twopf_k2_data[j] + twopf_k1_data[j]*twopf_k3_data[j] + twopf_k2_data[j]*twopf_k3_data[j] );
 

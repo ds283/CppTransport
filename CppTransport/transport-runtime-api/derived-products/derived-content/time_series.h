@@ -77,9 +77,6 @@ namespace transport
 
 		      public:
 
-		        //! get serial numbers of sample times
-		        const std::vector<unsigned int>& get_time_sample_sns() const { return(this->time_sample_sns); }
-
 		        //! extract axis data, corresponding to our sample times, from datapipe
 		        const std::vector<double>& pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
 
@@ -160,9 +157,11 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
 					{
 				    std::ostringstream label;
+
+				    label << std::setprecision(this->precision);
 
 				    label << __CPP_TRANSPORT_NONLATEX_K_SYMBOL << "=";
 				    if(this->get_klabel_meaning() == derived_line<number>::conventional) label << config.k_conventional;
@@ -173,7 +172,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+				std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
 					{
 				    std::ostringstream label;
 

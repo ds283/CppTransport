@@ -61,10 +61,10 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES              "zeta-twopf-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES            "zeta-threepf-time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES "zeta-reduced-bispectrum-time-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_K_SERIES                      "twopf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_K_SERIES                    "threepf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_K_SERIES                 "zeta-twopf-k-series"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_K_SERIES               "zeta-threepf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES             "twopf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES           "threepf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES        "zeta-twopf-k-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES      "zeta-threepf-k-series"
 
 
 // common serialization groups used by derived products

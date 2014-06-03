@@ -826,9 +826,9 @@ namespace transport
 		    sqlite3* db = nullptr;
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_twopf_time_sample(db, id, k_serials, t_serial, sample,
-                                                  (type == data_manager<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
-                                                  worker);
+        sqlite3_operations::pull_twopf_kconfig_sample(db, id, k_serials, t_serial, sample,
+                                                      (type == data_manager<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
+                                                      worker);
 	    }
 
 
@@ -843,7 +843,7 @@ namespace transport
         sqlite3* db = nullptr;
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
-        sqlite3_operations::pull_threepf_time_sample(db, id, k_serials, t_serial, sample, worker);
+        sqlite3_operations::pull_threepf_kconfig_sample(db, id, k_serials, t_serial, sample, worker);
 	    }
 
 

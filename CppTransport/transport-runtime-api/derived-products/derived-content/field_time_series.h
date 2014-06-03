@@ -21,8 +21,6 @@
 #include "transport-runtime-api/derived-products/derived-content/twopf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/threepf_line.h"
 
-#include "transport-runtime-api/utilities/latex_output.h"
-
 
 namespace transport
 	{
@@ -168,7 +166,7 @@ namespace transport
 
             // loop through all the fields, pulling data from the database for those which are enabled
 
-		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(this->get_time_sample_sns());
+		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             for(unsigned int m = 0; m < 2 * this->mdl->get_N_fields(); m++)
               {
@@ -327,7 +325,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->get_time_sample_sns());
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
 		        // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
@@ -486,7 +484,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->get_time_sample_sns());
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
 		        // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
@@ -515,7 +513,7 @@ namespace transport
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
-			                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->get_time_sample_sns(), line_data, time_axis, l, m, n, k_values[i]);
+			                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, time_axis, l, m, n, k_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
