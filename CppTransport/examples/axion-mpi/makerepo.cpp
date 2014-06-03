@@ -573,15 +573,41 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
     tk3_redbsp_table.add_line(tk3_zeta_redbsp);
 
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk3, model,
+                                                                                                                                                 transport::derived_data::filter::time_filter(time_config_filter),
+                                                                                                                                                 transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_filter));
+    tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2pec", "zeta-2spec.pdf");
+    tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
+    tk3_zeta_2spec_plot.set_log_x(true);
+    tk3_zeta_2spec_plot.set_title("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
+
+    transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
+    tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
+
+    transport::derived_data::zeta_threepf_wavenumber_series<double> tk3_zeta_3equspec = transport::derived_data::zeta_threepf_wavenumber_series<double>(tk3, model,
+                                                                                                                                                        transport::derived_data::filter::time_filter(time_config_filter),
+                                                                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(all_equilateral));
+    tk3_zeta_3equspec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_zeta_3equspec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-3equspec", "zeta-3equspec.pdf");
+    tk3_zeta_3equspec_plot.add_line(tk3_zeta_3equspec);
+    tk3_zeta_3equspec_plot.set_log_x(true);
+    tk3_zeta_3equspec_plot.set_title("$\\langle \\zeta \\zeta \\zeta \\rangle$ equilateral configuration");
+
+    transport::derived_data::wavenumber_series_table<double> tk3_zeta_3equspec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-3equspec.table", "zeta-3equspec-table.txt");
+    tk3_zeta_3equspec_table.add_line(tk3_zeta_3equspec);
+
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
 
 		// write derived data products representing these background plots to the database
-    repo->write_derived_product(tk2_bg_plot);
-    repo->write_derived_product(tk2_twopf_real_plot);
-    repo->write_derived_product(tk2_twopf_imag_plot);
-    repo->write_derived_product(tk2_twopf_total_plot);
+//    repo->write_derived_product(tk2_bg_plot);
+//    repo->write_derived_product(tk2_twopf_real_plot);
+//    repo->write_derived_product(tk2_twopf_imag_plot);
+//    repo->write_derived_product(tk2_twopf_total_plot);
 
     repo->write_derived_product(tk3_bg_plot);
     repo->write_derived_product(tk3_twopf_real_plot);
@@ -589,18 +615,18 @@ int main(int argc, char* argv[])
     repo->write_derived_product(tk3_twopf_total_plot);
     repo->write_derived_product(tk3_threepf_field_equi_plot);
 		repo->write_derived_product(tk3_threepf_deriv_equi_plot);
-		repo->write_derived_product(tk3_threepf_mma_equi_plot);
+//		repo->write_derived_product(tk3_threepf_mma_equi_plot);
     repo->write_derived_product(tk3_threepf_field_sq_plot);
     repo->write_derived_product(tk3_threepf_deriv_sq_plot);
-    repo->write_derived_product(tk3_threepf_mma_sq_plot);
-    repo->write_derived_product(tk3_mixed_plot);
+//    repo->write_derived_product(tk3_threepf_mma_sq_plot);
+//    repo->write_derived_product(tk3_mixed_plot);
 
 		repo->write_derived_product(tk3_twopf_real_spec);
-		repo->write_derived_product(tk3_twopf_imag_spec);
-		repo->write_derived_product(tk3_twopf_total_spec);
-		repo->write_derived_product(tk3_twopf_total_tab);
+//		repo->write_derived_product(tk3_twopf_imag_spec);
+//		repo->write_derived_product(tk3_twopf_total_spec);
+//		repo->write_derived_product(tk3_twopf_total_tab);
 
-    repo->write_derived_product(tk3_check_shift);
+//    repo->write_derived_product(tk3_check_shift);
 
     repo->write_derived_product(tk3_zeta_twopf);
     repo->write_derived_product(tk3_zeta_equi);
@@ -610,11 +636,11 @@ int main(int argc, char* argv[])
 
 		repo->write_derived_product(tk3_threepf_field_equi_table);
     repo->write_derived_product(tk3_threepf_deriv_equi_table);
-		repo->write_derived_product(tk3_threepf_mma_equi_table);
+//		repo->write_derived_product(tk3_threepf_mma_equi_table);
     repo->write_derived_product(tk3_threepf_field_sq_table);
     repo->write_derived_product(tk3_threepf_deriv_sq_table);
-    repo->write_derived_product(tk3_threepf_mma_sq_table);
-		repo->write_derived_product(tk3_check_shift_table);
+//    repo->write_derived_product(tk3_threepf_mma_sq_table);
+//		repo->write_derived_product(tk3_check_shift_table);
 		repo->write_derived_product(tk3_zeta_equi_table);
 		repo->write_derived_product(tk3_zeta_sq_table);
     repo->write_derived_product(tk3_redbsp_table);
@@ -622,11 +648,16 @@ int main(int argc, char* argv[])
 		repo->write_derived_product(tk3_threepf_equi_spec);
 		repo->write_derived_product(tk3_threepf_equi_spec_tab);
 
+    repo->write_derived_product(tk3_zeta_2spec_plot);
+    repo->write_derived_product(tk3_zeta_2spec_table);
+    repo->write_derived_product(tk3_zeta_3equspec_plot);
+    repo->write_derived_product(tk3_zeta_3equspec_table);
+
 		// construct output tasks
-    transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
-		twopf_output.add_element(tk2_twopf_real_plot);
-		twopf_output.add_element(tk2_twopf_imag_plot);
-		twopf_output.add_element(tk2_twopf_total_plot);
+//    transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
+//		twopf_output.add_element(tk2_twopf_real_plot);
+//		twopf_output.add_element(tk2_twopf_imag_plot);
+//		twopf_output.add_element(tk2_twopf_total_plot);
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_bg_plot);
 		threepf_output.add_element(tk3_twopf_real_plot);
@@ -634,19 +665,19 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_twopf_total_plot);
 		threepf_output.add_element(tk3_threepf_field_equi_plot);
 		threepf_output.add_element(tk3_threepf_field_equi_table);
-		threepf_output.add_element(tk3_threepf_mma_equi_plot);
-		threepf_output.add_element(tk3_threepf_mma_equi_table);
+//		threepf_output.add_element(tk3_threepf_mma_equi_plot);
+//		threepf_output.add_element(tk3_threepf_mma_equi_table);
 		threepf_output.add_element(tk3_threepf_deriv_equi_plot);
 		threepf_output.add_element(tk3_threepf_deriv_equi_table);
     threepf_output.add_element(tk3_threepf_field_sq_plot);
     threepf_output.add_element(tk3_threepf_field_sq_table);
-    threepf_output.add_element(tk3_threepf_mma_sq_plot);
-    threepf_output.add_element(tk3_threepf_mma_sq_table);
+//    threepf_output.add_element(tk3_threepf_mma_sq_plot);
+//    threepf_output.add_element(tk3_threepf_mma_sq_table);
     threepf_output.add_element(tk3_threepf_deriv_sq_plot);
     threepf_output.add_element(tk3_threepf_deriv_sq_table);
-		threepf_output.add_element(tk3_mixed_plot);
-    threepf_output.add_element(tk3_check_shift);
-		threepf_output.add_element(tk3_check_shift_table);
+//		threepf_output.add_element(tk3_mixed_plot);
+//    threepf_output.add_element(tk3_check_shift);
+//		threepf_output.add_element(tk3_check_shift_table);
     threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_equi);
 		threepf_output.add_element(tk3_zeta_equi_table);
@@ -655,16 +686,20 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_redbsp);
     threepf_output.add_element(tk3_redbsp_table);
 		threepf_output.add_element(tk3_twopf_real_spec);
-    threepf_output.add_element(tk3_twopf_imag_spec);
-    threepf_output.add_element(tk3_twopf_total_spec);
-    threepf_output.add_element(tk3_twopf_total_tab);
+//    threepf_output.add_element(tk3_twopf_imag_spec);
+//    threepf_output.add_element(tk3_twopf_total_spec);
+//    threepf_output.add_element(tk3_twopf_total_tab);
 		threepf_output.add_element(tk3_threepf_equi_spec);
 		threepf_output.add_element(tk3_threepf_equi_spec_tab);
+    threepf_output.add_element(tk3_zeta_2spec_plot);
+    threepf_output.add_element(tk3_zeta_2spec_table);
+    threepf_output.add_element(tk3_zeta_3equspec_plot);
+    threepf_output.add_element(tk3_zeta_3equspec_table);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
 		// write output tasks to the database
-		repo->write_task(twopf_output);
+//		repo->write_task(twopf_output);
 		repo->write_task(threepf_output);
 
     std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_package_document(ics.get_name());
