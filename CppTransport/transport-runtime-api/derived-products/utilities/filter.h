@@ -29,6 +29,7 @@ namespace transport
 		        class time_filter_data
 			        {
 		          public:
+				        unsigned int serial;
 		            bool max;
 		            bool min;
 		            double time;
@@ -37,6 +38,7 @@ namespace transport
 		        class twopf_kconfig_filter_data
 			        {
 		          public:
+				        unsigned int serial;
 		            bool max;
 		            bool min;
 		            double k;
@@ -45,6 +47,7 @@ namespace transport
 		        class threepf_kconfig_filter_data
 			        {
 		          public:
+				        unsigned int serial;
 		            double kt;
 		            double alpha;
 		            double beta;
@@ -97,13 +100,13 @@ namespace transport
 		        int min_pos = -1;
 		        double t_min = DBL_MAX;
 		        int max_pos = -1;
-		        double t_max = DBL_MIN;
+		        double t_max = -DBL_MAX;
 
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < t_samples.size(); i++)
 			        {
-		            if(t_samples[i] > t_min) { t_min = t_samples[i]; min_pos = i; }
-		            if(t_samples[i] < t_max) { t_max = t_samples[i]; max_pos = i; }
+		            if(t_samples[i] < t_min) { t_min = t_samples[i]; min_pos = i; }
+		            if(t_samples[i] > t_max) { t_max = t_samples[i]; max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -112,8 +115,11 @@ namespace transport
 			        {
 		            time_filter_data data;
 
+				        data.serial = i;
+
 		            data.max = (i == max_pos ? true : false);
 		            data.min = (i == min_pos ? true : false);
+
 		            data.time = t_samples[i];
 
 		            if(t_filter(data)) t_serials.push_back(i);
@@ -127,7 +133,7 @@ namespace transport
 		        int min_pos = -1;
 		        double k_min = DBL_MAX;
 		        int max_pos = -1;
-		        double k_max = DBL_MIN;
+		        double k_max = -DBL_MAX;
 
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
@@ -141,6 +147,8 @@ namespace transport
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
 		            twopf_kconfig_filter_data data;
+
+				        data.serial = i;
 
 		            data.max = (i == max_pos ? true : false);
 		            data.min = (i == min_pos ? true : false);
@@ -157,32 +165,32 @@ namespace transport
 		        int kt_min_pos = -1;
 		        double kt_min = DBL_MAX;
 		        int kt_max_pos = -1;
-		        double kt_max = DBL_MIN;
+		        double kt_max = -DBL_MAX;
 
 		        int alpha_min_pos = -1;
 		        double alpha_min = DBL_MAX;
 		        int alpha_max_pos = -1;
-		        double alpha_max = DBL_MIN;
+		        double alpha_max = -DBL_MAX;
 
 		        int beta_min_pos = -1;
 		        double beta_min = DBL_MAX;
 		        int beta_max_pos = -1;
-		        double beta_max = DBL_MIN;
+		        double beta_max = -DBL_MAX;
 
 		        int k1_min_pos = -1;
 		        double k1_min = DBL_MAX;
 		        int k1_max_pos = -1;
-		        double k1_max = DBL_MIN;
+		        double k1_max = -DBL_MAX;
 
 		        int k2_min_pos = -1;
 		        double k2_min = DBL_MAX;
 		        int k2_max_pos = -1;
-		        double k2_max = DBL_MIN;
+		        double k2_max = -DBL_MAX;
 
 		        int k3_min_pos = -1;
 		        double k3_min = DBL_MAX;
 		        int k3_max_pos = -1;
-		        double k3_max = DBL_MIN;
+		        double k3_max = -DBL_MAX;
 
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
@@ -211,6 +219,8 @@ namespace transport
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
 		            threepf_kconfig_filter_data data;
+
+				        data.serial = i;
 
 		            data.kt_max = (i == kt_max_pos ? true : false);
 		            data.kt_min = (i == kt_min_pos ? true : false);
