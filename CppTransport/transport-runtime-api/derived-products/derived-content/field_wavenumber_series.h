@@ -340,7 +340,7 @@ namespace transport
         void threepf_wavenumber_series<number>::serialize(serialization_writer& writer) const
 	        {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES));
+                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES));
 
             this->derived_line<number>::serialize(writer);
             this->threepf_line<number>::serialize(writer);
