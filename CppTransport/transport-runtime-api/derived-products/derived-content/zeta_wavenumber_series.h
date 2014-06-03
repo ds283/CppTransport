@@ -463,7 +463,7 @@ namespace transport
 		    void zeta_threepf_wavenumber_series<number>::serialize(serialization_writer& writer) const
 			    {
 		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_TIME_SERIES));
+		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES));
 
 		        this->derived_line<number>::serialize(writer);
 		        this->zeta_threepf_line<number>::serialize(writer);
