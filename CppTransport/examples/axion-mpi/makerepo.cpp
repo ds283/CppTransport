@@ -90,6 +90,13 @@ bool threepf_kconfig_most_equilateral(const transport::derived_data::filter::thr
 	}
 
 
+// filter for all equilateral configurations
+bool all_equilateral(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+	{
+		return(fabs(data.alpha) < 0.01 & fabs(data.beta-(1.0/3.0)) < 0.01);
+	}
+
+
 // filter for time configurations
 bool time_config_filter(const transport::derived_data::filter::time_filter_data& data)
 	{
@@ -447,7 +454,6 @@ int main(int argc, char* argv[])
     tk3_threepf_mma_sq_table.add_line(tk3_threepf_mma_sq);
 
 
-
     transport::derived_data::time_series_plot<double> tk3_mixed_plot =
 	                                                       transport::derived_data::time_series_plot<double>("axion.threepf-1.mixed", "mixed.pdf");
 
@@ -493,6 +499,20 @@ int main(int argc, char* argv[])
 
 		tk3_check_shift_table.add_line(tk3_threepf_derivs);
 		tk3_check_shift_table.add_line(tk3_threepf_momenta);
+
+    transport::derived_data::threepf_wavenumber_series<double> tk3_threepf_equi_kgp =
+	                                                               transport::derived_data::threepf_wavenumber_series<double>(tk3, model, threepf_fields,
+	                                                                                                                          transport::derived_data::filter::time_filter(time_config_filter),
+	                                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(all_equilateral));
+		tk3_threepf_equi_kgp.set_dot_meaning(transport::derived_data::derived_line<double>::derivatives);
+		tk3_threepf_equi_kgp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_threepf_equi_spec = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.threepf-equi-spec", "threepf-equi-spec.pdf");
+		tk3_threepf_equi_spec.add_line(tk3_threepf_equi_kgp);
+		tk3_threepf_equi_spec.set_title_text("Spectrum of 3pf in equilateral configurations");
+
+    transport::derived_data::wavenumber_series_table<double> tk3_threepf_equi_spec_tab = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.threepf-equi-spec-tab", "threepf-equi-spec-tab.txt");
+		tk3_threepf_equi_spec_tab.add_line(tk3_threepf_equi_kgp);
 
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(tk3, model,
@@ -598,6 +618,9 @@ int main(int argc, char* argv[])
 		repo->write_derived_product(tk3_zeta_sq_table);
     repo->write_derived_product(tk3_redbsp_table);
 
+		repo->write_derived_product(tk3_threepf_equi_spec);
+		repo->write_derived_product(tk3_threepf_equi_spec_tab);
+
 		// construct output tasks
     transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
 		twopf_output.add_element(tk2_twopf_real_plot);
@@ -634,6 +657,8 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_twopf_imag_spec);
     threepf_output.add_element(tk3_twopf_total_spec);
     threepf_output.add_element(tk3_twopf_total_tab);
+		threepf_output.add_element(tk3_threepf_equi_spec);
+		threepf_output.add_element(tk3_threepf_equi_spec_tab);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 

@@ -513,7 +513,7 @@ namespace transport
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
-			                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, time_axis, l, m, n, k_values[i]);
+			                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, time_axis, l, m, n, k_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);

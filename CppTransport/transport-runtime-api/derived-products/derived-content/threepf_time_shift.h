@@ -29,7 +29,7 @@
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
-
+#include "transport-runtime-api/derived-products/utilities/extractor.h"
 
 namespace transport
 	{
@@ -45,63 +45,6 @@ namespace transport
 	        {
 
           public:
-
-            class extractor
-	            {
-
-              public:
-
-                extractor(unsigned int n, const typename data_manager<number>::threepf_configuration& c)
-	                : num(n), config(c)
-	                {
-                    if(this->num < 1) this->num = 1;
-                    if(this->num > 3) this->num = 3;
-	                }
-
-
-                ~extractor() = default;
-
-
-                double comoving() const
-	                {
-                    if(this->num == 1) return (this->config.k1_comoving);
-                    if(this->num == 2) return (this->config.k2_comoving);
-                    if(this->num == 3) return (this->config.k3_comoving);
-
-                    assert(false);
-                    return (0.0);
-	                }
-
-
-                double conventional() const
-	                {
-                    if(this->num == 1) return (this->config.k1_conventional);
-                    if(this->num == 2) return (this->config.k2_conventional);
-                    if(this->num == 3) return (this->config.k3_conventional);
-
-                    assert(false);
-                    return (0.0);
-	                }
-
-
-                unsigned int serial() const
-	                {
-                    if(this->num == 1) return (this->config.k1_serial);
-                    if(this->num == 2) return (this->config.k2_serial);
-                    if(this->num == 3) return (this->config.k3_serial);
-
-                    assert(false);
-                    return (0);
-	                }
-
-
-              private:
-
-                unsigned int num;
-
-                const typename data_manager<number>::threepf_configuration& config;
-	            };
-
 
             typedef enum { left, middle, right } operator_position;
 
@@ -119,28 +62,28 @@ namespace transport
 
           public:
 
-            //! shift a three-pf timeline for coordinate labels (l,m,n)
+            //! shift a threepf timeline for coordinate labels (l,m,n)
             //! and supplied 2pf k-configuration serial numbers
-            void shift_derivatives(integration_task<number>* tk, model<number>* mdl,
-                                   typename data_manager<number>::datapipe& pipe,
-                                   const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                   const std::vector<double>& time_axis,
-                                   unsigned int l, unsigned int m, unsigned int n,
-                                   const typename data_manager<number>::threepf_configuration& config) const;
+            void shift(integration_task<number>* tk, model<number>* mdl,
+                       typename data_manager<number>::datapipe& pipe,
+                       const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+                       const std::vector<double>& time_axis,
+                       unsigned int l, unsigned int m, unsigned int n,
+                       const typename data_manager<number>::threepf_configuration& config) const;
 
           protected:
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
-            void compute_derivative_shift(integration_task<number>* tk, model<number>* mdl,
-                                          typename data_manager<number>::datapipe& pipe,
-                                          const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                          const std::vector<double>& time_axis,
-                                          const std::vector< typename std::vector<number> >& background,
-                                          unsigned int p, const extractor& p_config,
-                                          unsigned int q, const extractor& q_config,
-                                          unsigned int r, const extractor& r_config,
-                                          operator_position pos) const;
+            void make_shift(integration_task<number>* tk, model<number>* mdl,
+                            typename data_manager<number>::datapipe& pipe,
+                            const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+                            const std::vector<double>& time_axis,
+                            const std::vector<typename std::vector<number> >& background,
+                            unsigned int p, const extractor<number>& p_config,
+                            unsigned int q, const extractor<number>& q_config,
+                            unsigned int r, const extractor<number>& r_config,
+                            operator_position pos) const;
 
 
 		        // INTERNAL DATA
@@ -153,12 +96,12 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_shift<number>::shift_derivatives(integration_task<number>* tk, model<number>* mdl,
-                                                           typename data_manager<number>::datapipe& pipe,
-                                                           const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                                           const std::vector<double>& time_axis,
-                                                           unsigned int l, unsigned int m, unsigned int n,
-                                                           const typename data_manager<number>::threepf_configuration& config) const
+        void threepf_time_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
+                                               typename data_manager<number>::datapipe& pipe,
+                                               const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+                                               const std::vector<double>& time_axis,
+                                               unsigned int l, unsigned int m, unsigned int n,
+                                               const typename data_manager<number>::threepf_configuration& config) const
 			    {
 						assert(mdl != nullptr);
 		        assert(tk != nullptr);
@@ -184,21 +127,21 @@ namespace transport
 			            }
 			        }
 
-		        if(l >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, l, extractor(1, config), m, extractor(2, config), n, extractor(3, config), left);
-		        if(m >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, m, extractor(2, config), l, extractor(1, config), n, extractor(3, config), middle);
-		        if(n >= N_fields) this->compute_derivative_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, n, extractor(3, config), l, extractor(1, config), m, extractor(2, config), right);
+		        if(l >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, l, extractor<number>(1, config), m, extractor<number>(2, config), n, extractor<number>(3, config), left);
+		        if(m >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, m, extractor<number>(2, config), l, extractor<number>(1, config), n, extractor<number>(3, config), middle);
+		        if(n >= N_fields) this->make_shift(tk, mdl, pipe, time_sample, line_data, time_axis, background, n, extractor<number>(3, config), l, extractor<number>(1, config), m, extractor<number>(2, config), right);
 			    }
 
 
         template <typename number>
-        void threepf_time_shift<number>::compute_derivative_shift(integration_task<number>* tk, model<number>* mdl,
-                                                                  typename data_manager<number>::datapipe& pipe,
-                                                                  const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
-                                                                  const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
-                                                                  unsigned int p, const extractor& p_config,
-                                                                  unsigned int q, const extractor& q_config,
-                                                                  unsigned int r, const extractor& r_config,
-                                                                  operator_position pos) const
+        void threepf_time_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
+                                                    typename data_manager<number>::datapipe& pipe,
+                                                    const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
+                                                    const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
+                                                    unsigned int p, const extractor<number>& p_config,
+                                                    unsigned int q, const extractor<number>& q_config,
+                                                    unsigned int r, const extractor<number>& r_config,
+                                                    operator_position pos) const
 			    {
 		        assert(time_sample.size() == line_data.size());
 		        assert(mdl != nullptr);

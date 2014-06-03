@@ -342,9 +342,9 @@ namespace transport
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                typename threepf_time_shift<number>::extractor k1(1, k_values[i]);
-                typename threepf_time_shift<number>::extractor k2(2, k_values[i]);
-                typename threepf_time_shift<number>::extractor k3(3, k_values[i]);
+                extractor<number> k1(1, k_values[i]);
+                extractor<number> k2(2, k_values[i]);
+                extractor<number> k3(3, k_values[i]);
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
@@ -379,7 +379,7 @@ namespace transport
                             std::vector<number> threepf_line = t_handle.lookup_tag(tag);
 
                             // shift field so it represents a derivative correlation function, not a momentum one
-                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
+                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
 
                             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                               {
@@ -597,9 +597,9 @@ namespace transport
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                typename threepf_time_shift<number>::extractor k1(1, k_values[i]);
-                typename threepf_time_shift<number>::extractor k2(2, k_values[i]);
-                typename threepf_time_shift<number>::extractor k3(3, k_values[i]);
+                extractor<number> k1(1, k_values[i]);
+                extractor<number> k2(2, k_values[i]);
+                extractor<number> k3(3, k_values[i]);
 
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
@@ -633,7 +633,7 @@ namespace transport
                             std::vector<number> threepf_line = t_handle.lookup_tag(tag);
 
                             // shift field so it represents a derivative correlation function, not a momentum one
-                            this->shifter.shift_derivatives(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
+                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, threepf_line, time_axis, l, m, n, k_values[i]);
 
                             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                               {

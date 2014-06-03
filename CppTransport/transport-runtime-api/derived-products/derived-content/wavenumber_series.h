@@ -25,6 +25,7 @@
 #include "transport-runtime-api/manager/data_manager.h"
 
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
@@ -98,9 +99,11 @@ namespace transport
 		        virtual void serialize(serialization_writer& writer) const override;
 
 
-		        // INTERNAL DATA
+            // INTERNAL DATA
 
           protected:
+
+            threepf_kconfig_shift<number> shifter;
 
 	        };
 
