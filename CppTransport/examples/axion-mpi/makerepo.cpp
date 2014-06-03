@@ -505,10 +505,11 @@ int main(int argc, char* argv[])
 	                                                                                                                          transport::derived_data::filter::time_filter(time_config_filter),
 	                                                                                                                          transport::derived_data::filter::threepf_kconfig_filter(all_equilateral));
 		tk3_threepf_equi_kgp.set_dot_meaning(transport::derived_data::derived_line<double>::derivatives);
-		tk3_threepf_equi_kgp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
+		tk3_threepf_equi_kgp.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_threepf_equi_spec = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.threepf-equi-spec", "threepf-equi-spec.pdf");
 		tk3_threepf_equi_spec.add_line(tk3_threepf_equi_kgp);
+		tk3_threepf_equi_spec.set_log_x(true);
 		tk3_threepf_equi_spec.set_title_text("Spectrum of 3pf in equilateral configurations");
 
     transport::derived_data::wavenumber_series_table<double> tk3_threepf_equi_spec_tab = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.threepf-equi-spec-tab", "threepf-equi-spec-tab.txt");
