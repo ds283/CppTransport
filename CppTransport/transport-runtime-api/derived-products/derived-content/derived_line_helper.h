@@ -20,6 +20,7 @@
 #include "transport-runtime-api/derived-products/derived-content/field_time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/zeta_time_series.h"
 #include "transport-runtime-api/derived-products/derived-content/field_wavenumber_series.h"
+#include "transport-runtime-api/derived-products/derived-content/zeta_wavenumber_series.h"
 
 
 namespace transport
@@ -54,6 +55,8 @@ namespace transport
                     else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_TIME_SERIES) rval = new zeta_reduced_bispectrum_time_series<number>(reader, finder);
 			              else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES)             rval = new twopf_wavenumber_series<number>(reader, finder);
 		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES)           rval = new threepf_wavenumber_series<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES)        rval = new zeta_twopf_wavenumber_series<number>(reader, finder);
+		                else if (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES)      rval = new zeta_threepf_wavenumber_series<number>(reader, finder);
 		                else
 			                {
 		                    std::ostringstream msg;

@@ -111,18 +111,17 @@ namespace transport
 		        // attach our datapipe to an output group
 		        this->attach(pipe, tags);
 
-		        // pull time-axis data
+		        // pull wavenumber-axis data
 		        std::vector<double> wavenumber_axis;
 		        this->pull_wavenumber_axis(pipe, wavenumber_axis);
 
 				    // set up cache handles
-				    typename data_manager<number>::datapipe::time_config_handle& t_handle = pipe.new_time_config_handle(this->time_sample_sns);
+				    typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
 				    typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
 
 				    // pull time-configuration information from the database
 				    typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-
-				    const std::vector<double>& t_values = t_handle.lookup_tag(t_tag);
+				    const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
 
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -134,9 +133,8 @@ namespace transport
 								        std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            typename data_manager<number>::datapipe::cf_kconfig_data_tag tag =
-									                                                                      pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
-									                                                                                                this->mdl->flatten(m,n), this->time_sample_sns[i]);
+								            typename data_manager<number>::datapipe::cf_kconfig_data_tag tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
+								                                                                                                            this->mdl->flatten(m, n), this->time_sample_sns[i]);
 
 								            const std::vector<number>& line_data = k_handle.lookup_tag(tag);
 
@@ -264,33 +262,54 @@ namespace transport
 
 
         template <typename number>
-        void threepf_wavenumber_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void threepf_wavenumber_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
                                                              const std::list<std::string>& tags) const
 	        {
+		        unsigned int N_fields = this->mdl->get_N_fields();
+
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            // pull time-axis data
+            // pull wavenumber-axis data
             std::vector<double> wavenumber_axis;
             this->pull_wavenumber_axis(pipe, wavenumber_axis);
 
             // set up cache handles
-            typename data_manager<number>::datapipe::time_config_handle& t_handle = pipe.new_time_config_handle(this->time_sample_sns);
+            typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
+            typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
             typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
 
             // pull time-configuration information from the database
             typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
+            const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
 
-            const std::vector<double>& t_values = t_handle.lookup_tag(t_tag);
+            // pull the background field configuration for each time sample point
+            std::vector< std::vector<number> > background(this->time_sample_sns.size());
+            for(unsigned int i = 0; i < 2*N_fields; i++)
+	            {
+                typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
+                const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
+                assert(bg_line.size() == this->time_sample_sns.size());
+
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
+	                {
+                    background[j].push_back(bg_line[j]);
+	                }
+	            }
+
+            // extract k-configuration data
+            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
+            std::vector< typename data_manager<number>::threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
 
             // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
             for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 	            {
-                for(unsigned int l = 0; l < 2*this->mdl->get_N_fields(); l++)
+                for(unsigned int l = 0; l < 2*N_fields; l++)
 	                {
-                    for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+                    for(unsigned int m = 0; m < 2*N_fields; m++)
 	                    {
-		                    for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+		                    for(unsigned int n = 0; n < 2*N_fields; n++)
 			                    {
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
@@ -303,7 +322,7 @@ namespace transport
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
 				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
-					                        this->shifter.shift(this->parent_task, this->mdl, pipe, this->kconfig_sample_sns, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
+					                        this->shifter.shift(this->parent_task, this->mdl, pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);

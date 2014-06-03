@@ -1487,6 +1487,7 @@ namespace transport
 		           && this->twopf_kconfig_cache_table != nullptr
 		           && this->threepf_kconfig_cache_table != nullptr
 		           && this->data_cache_table != nullptr);
+
 		    if(this->attached_group == nullptr ||
 		       this->time_config_cache_table == nullptr ||
 		       this->twopf_kconfig_cache_table == nullptr ||
@@ -1515,6 +1516,7 @@ namespace transport
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
+
         if(this->attached_group == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
@@ -1533,6 +1535,8 @@ namespace transport
 			           && this->twopf_kconfig_cache_table != nullptr
 			           && this->threepf_kconfig_cache_table != nullptr
 			           && this->data_cache_table != nullptr);
+		    assert(sns.size() > 0);
+
 		    if(this->attached_group == nullptr ||
 			    this->time_config_cache_table == nullptr ||
 			    this->twopf_kconfig_cache_table == nullptr ||
@@ -1551,6 +1555,8 @@ namespace transport
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
+        assert(sns.size() > 0);
+
         if(this->attached_group == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
@@ -1569,6 +1575,8 @@ namespace transport
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
+        assert(sns.size() > 0);
+
         if(this->attached_group == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
@@ -1587,6 +1595,8 @@ namespace transport
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
+		    assert(sns.size() > 0);
+
         if(this->attached_group == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
@@ -1605,6 +1615,8 @@ namespace transport
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
+        assert(sns.size() > 0);
+
         if(this->attached_group == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||

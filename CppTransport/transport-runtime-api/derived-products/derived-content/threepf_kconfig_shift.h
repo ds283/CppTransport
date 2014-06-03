@@ -67,7 +67,8 @@ namespace transport
 		        //! and supplied time configuration
 		        void shift(integration_task<number>* tk, model<number>* mdl,
 		                   typename data_manager<number>::datapipe& pipe,
-		                   const std::vector<unsigned int>& kconfig_sample, std::vector<number>& line_data,
+		                   const std::vector<number>& background, std::vector< typename data_manager<number>::threepf_configuration>& configs,
+		                   std::vector<number>& line_data,
 		                   unsigned int l, unsigned int m, unsigned int n,
 		                   unsigned int t_serial, double t_value) const;
 
@@ -89,7 +90,8 @@ namespace transport
 				template <typename number>
 				void threepf_kconfig_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
 				                                          typename data_manager<number>::datapipe& pipe,
-				                                          const std::vector<unsigned int>& kconfig_sample, std::vector<number>& line_data,
+				                                          const std::vector<number>& background, std::vector< typename data_manager<number>::threepf_configuration>& configs,
+				                                          std::vector<number>& line_data,
 				                                          unsigned int l, unsigned int m, unsigned int n,
 				                                          unsigned int t_serial, double t_value) const
 					{
@@ -97,27 +99,6 @@ namespace transport
 						assert(tk != nullptr);
 
 						unsigned int N_fields = mdl->get_N_fields();
-
-						// pull the background field configuration for the t-configuration we are working with
-				    std::vector<unsigned int> tsample = { t_serial };
-						typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(tsample);
-				    std::vector<number> bg_config(2*N_fields);
-
-						for(unsigned int i = 0; i < 2*N_fields; i++)
-							{
-								typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);  // DON'T flatten i, because we want to give the background to the model instance in the order it expects
-								const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
-								assert(bg_line.size() == 1);
-
-								bg_config[i] = bg_line[0];
-							}
-
-						// pull the threepf k-configuration data corresponding to kconfig_sample
-						typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(kconfig_sample);
-						typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-
-						// FIXME: would be nicer to take a const reference, but couldn't immediately to get extractor<> logic below to work with this
-						std::vector< typename data_manager<number>::threepf_configuration > configs = k_handle.lookup_tag(k_tag);
 
 						if(l >= N_fields)
 							{
@@ -130,7 +111,7 @@ namespace transport
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, bg_config, l, m, n, left);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, l, m, n, left);
 							}
 
 						if(m >= N_fields)
@@ -144,7 +125,7 @@ namespace transport
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, bg_config, m, l, n, middle);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, m, l, n, middle);
 							}
 
 						if(n >= N_fields)
@@ -158,7 +139,7 @@ namespace transport
 						        extractors.push_back(elt);
 							    }
 
-						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, bg_config, n, l, m, right);
+						    this->make_shift(tk, mdl, pipe, configs, extractors, line_data, t_serial, t_value, background, n, l, m, right);
 							}
 					}
 

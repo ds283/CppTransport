@@ -22,8 +22,6 @@
 #include "transport-runtime-api/derived-products/derived-content/zeta_threepf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/zeta_reduced_bispectrum_line.h"
 
-#include "transport-runtime-api/utilities/latex_output.h"
-
 
 namespace transport
   {
@@ -42,9 +40,9 @@ namespace transport
 
             //! construct a zeta two-pf time data object
             zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
-                                 filter::time_filter tfilter,
-                                 filter::twopf_kconfig_filter kfilter,
-                                 unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
+                                   filter::time_filter tfilter,
+                                   filter::twopf_kconfig_filter kfilter,
+                                   unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
             zeta_twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -85,10 +83,10 @@ namespace transport
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
-                                                           filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-          : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
-            zeta_twopf_line<number>(tk, m, kfilter),
-            time_series<number>(tk, tfilter)
+                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
+	        : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+	          zeta_twopf_line<number>(tk, m, kfilter),
+	          time_series<number>(tk, tfilter)
           {
             assert(m != nullptr);
             if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
@@ -342,20 +340,16 @@ namespace transport
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                extractor<number> k1(1, k_values[i]);
-                extractor<number> k2(2, k_values[i]);
-                extractor<number> k3(3, k_values[i]);
-
                 // cache gauge transformation coefficients
-                // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
+                // these have to be recomputed for each k-configuration, because they are time and shape-dependent
                 std::vector< std::vector< std::vector<number> > > ddN123(this->time_sample_sns.size());
                 std::vector< std::vector< std::vector<number> > > ddN213(this->time_sample_sns.size());
                 std::vector< std::vector< std::vector<number> > > ddN312(this->time_sample_sns.size());
                 for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k1_comoving, k_values[i].k2_comoving, k_values[i].k3_comoving, time_axis[j], ddN123[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k2_comoving, k_values[i].k1_comoving, k_values[i].k3_comoving, time_axis[j], ddN213[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k3_comoving, k_values[i].k1_comoving, k_values[i].k2_comoving, time_axis[j], ddN312[j]);
 //		                this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN123[j]);
 //                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN213[j]);
 //                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN312[j]);
@@ -401,17 +395,17 @@ namespace transport
                                 // the indices are N_lm, N_p, N_q, so the 2pfs we sum over are
                                 // sigma_lp(k2)*sigma_mq(k3) etc.
 
-		                            typename data_manager<number>::datapipe::cf_time_data_tag k1_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k1.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k1_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k1.serial());
+		                            typename data_manager<number>::datapipe::cf_time_data_tag k1_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k_values[i].k1_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k1_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k_values[i].k1_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k2.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k2.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k_values[i].k2_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k_values[i].k2_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k2.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k2.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k_values[i].k2_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k_values[i].k2_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k3_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k3.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k3_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k3.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k3_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k_values[i].k3_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k3_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k_values[i].k3_serial);
 
                                 const std::vector<number>& k1_re_lp = t_handle.lookup_tag(k1_re_lp_tag);
                                 const std::vector<number>& k1_im_lp = t_handle.lookup_tag(k1_im_lp_tag);
@@ -597,10 +591,6 @@ namespace transport
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                extractor<number> k1(1, k_values[i]);
-                extractor<number> k2(2, k_values[i]);
-                extractor<number> k3(3, k_values[i]);
-
                 // cache gauge transformation coefficients
                 // these have to be recomputed for each k-configuration, because they are scale- and shape-dependent
                 std::vector< std::vector< std::vector<number> > > ddN123(this->time_sample_sns.size());
@@ -608,9 +598,9 @@ namespace transport
                 std::vector< std::vector< std::vector<number> > > ddN312(this->time_sample_sns.size());
                 for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k1.comoving(), k2.comoving(), k3.comoving(), time_axis[j], ddN123[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k2.comoving(), k1.comoving(), k3.comoving(), time_axis[j], ddN213[j]);
-                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k3.comoving(), k1.comoving(), k2.comoving(), time_axis[j], ddN312[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k1_comoving, k_values[i].k2_comoving, k_values[i].k3_comoving, time_axis[j], ddN123[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k2_comoving, k_values[i].k1_comoving, k_values[i].k3_comoving, time_axis[j], ddN213[j]);
+                    this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k3_comoving, k_values[i].k1_comoving, k_values[i].k2_comoving, time_axis[j], ddN312[j]);
                   }
 
                 // time-line for the reduced bispectrum will be stored in 'line_data'
@@ -655,17 +645,17 @@ namespace transport
                                 // the indices are N_lm, N_p, N_q, so the 2pfs we sum over are
                                 // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k1_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k1.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k1_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k1.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k1_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k_values[i].k1_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k1_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k_values[i].k1_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k2.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k2.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(l,p), k_values[i].k2_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_lp_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(l,p), k_values[i].k2_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k2.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k2.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k_values[i].k2_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k2_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k_values[i].k2_serial);
 
-                                typename data_manager<number>::datapipe::cf_time_data_tag k3_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k3.serial());
-                                typename data_manager<number>::datapipe::cf_time_data_tag k3_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k3.serial());
+                                typename data_manager<number>::datapipe::cf_time_data_tag k3_re_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,q), k_values[i].k3_serial);
+                                typename data_manager<number>::datapipe::cf_time_data_tag k3_im_mq_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, this->mdl->flatten(m,q), k_values[i].k3_serial);
 
                                 const std::vector<number>& k1_re_lp = t_handle.lookup_tag(k1_re_lp_tag);
                                 const std::vector<number>& k1_im_lp = t_handle.lookup_tag(k1_im_lp_tag);
@@ -700,9 +690,9 @@ namespace transport
                   {
                     for(unsigned int n = 0; n < 2*N_fields; n++)
                       {
-                        typename data_manager<number>::datapipe::cf_time_data_tag k1_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k1.serial());
-                        typename data_manager<number>::datapipe::cf_time_data_tag k2_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k2.serial());
-                        typename data_manager<number>::datapipe::cf_time_data_tag k3_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k3.serial());
+                        typename data_manager<number>::datapipe::cf_time_data_tag k1_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k_values[i].k1_serial);
+                        typename data_manager<number>::datapipe::cf_time_data_tag k2_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k_values[i].k2_serial);
+                        typename data_manager<number>::datapipe::cf_time_data_tag k3_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), k_values[i].k3_serial);
 
                         // pull twopf data for each k-number
                         const std::vector<number>& k1_line = t_handle.lookup_tag(k1_tag);
