@@ -35,22 +35,18 @@ bool timeseries_filter(const transport::derived_data::filter::time_filter_data& 
 	}
 
 
-// filter to determine which twopf-kconfig values are included on plots - we just use them al
-
-
 // filter to determine which 2pf kconfig values are included on wavenumber-series plots.
-// to cut down the sample, here I use only the largest
 bool twopf_kseries_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
 	{
     return(true); // plot all values of k
 	}
 
 
-// filter to determine which 2pf kconfig values are included on wavenumber-series plots.
+// filter to determine which 2pf kconfig values are included on time-series plots.
 // to cut down the sample, here I use only the largest
 bool twopf_kconfig_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
 	{
-    return(data.max); // plot onkly the largest k
+    return(data.max); // plot only the largest k
 	}
 
 
