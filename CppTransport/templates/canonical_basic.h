@@ -191,7 +191,7 @@ namespace transport
             << "** MPI compute backend processing twopf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-        std::cout << work_msg.str();
+//        std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be the only device in this backend)
@@ -273,7 +273,7 @@ namespace transport
           << "** MPI compute backend processing threepf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-        std::cout << work_msg.str();
+//        std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be only one device with this backend)
