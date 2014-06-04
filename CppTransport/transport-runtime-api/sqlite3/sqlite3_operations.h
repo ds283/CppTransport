@@ -1161,7 +1161,7 @@ namespace transport
 					    << " FROM " << twopf_table_name(type)
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 					    << " ON " << twopf_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-					    << " WHERE kserial LIKE " << k_serial
+					    << " WHERE kserial=" << k_serial
 					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 		        sqlite3_stmt* stmt;
@@ -1214,7 +1214,7 @@ namespace transport
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-	            << " WHERE kserial LIKE " << k_serial
+	            << " WHERE kserial=" << k_serial
 	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
@@ -1267,7 +1267,7 @@ namespace transport
 			        << " FROM " << twopf_table_name(type)
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << twopf_table_name(type) << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial LIKE " << t_serial
+			        << " WHERE tserial=" << t_serial
 			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
@@ -1320,7 +1320,7 @@ namespace transport
 			        << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial LIKE " << t_serial
+			        << " WHERE tserial=" << t_serial
 			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
