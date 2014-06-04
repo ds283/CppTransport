@@ -94,10 +94,17 @@ bool all_equilateral(const transport::derived_data::filter::threepf_kconfig_filt
 	}
 
 
+// filter for near-squeezed 3pf k-configurations
+bool all_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+	{
+    return(fabs(data.beta) > 0.85);
+	}
+
+
 // filter for time configurations
 bool time_config_filter(const transport::derived_data::filter::time_filter_data& data)
 	{
-		return(data.max);
+		return(data.serial == 100 | data.serial == 2000 || data.max);
 	}
 
 
@@ -597,6 +604,19 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk3_zeta_3equspec_table = transport::derived_data::wavenumber_series_table<double>("dquad.threepf-1.zeta-3equspec.table", "zeta-3equspec-table.txt");
     tk3_zeta_3equspec_table.add_line(tk3_zeta_3equspec);
 
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec = transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double>(tk3, model,
+                                                                                                                                                                                 transport::derived_data::filter::time_filter(time_config_filter),
+                                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(all_squeezed));
+		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot = transport::derived_data::wavenumber_series_plot<double>("dquad.threepf-1.redbsp-spec", "redbsp-spec.pdf");
+		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
+		tk3_redbsp_spec_plot.set_log_x(true);
+		tk3_redbsp_spec_plot.set_title("Reduced bispectrum in the squeezed limit");
+
+    transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table = transport::derived_data::wavenumber_series_table<double>("dquad.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
+		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
+
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
@@ -651,6 +671,9 @@ int main(int argc, char* argv[])
     repo->write_derived_product(tk3_zeta_3equspec_plot);
     repo->write_derived_product(tk3_zeta_3equspec_table);
 
+		repo->write_derived_product(tk3_redbsp_spec_plot);
+		repo->write_derived_product(tk3_redbsp_spec_table);
+
 		// construct output tasks
 //    transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
 //		twopf_output.add_element(tk2_twopf_real_plot);
@@ -693,6 +716,8 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_zeta_2spec_table);
     threepf_output.add_element(tk3_zeta_3equspec_plot);
     threepf_output.add_element(tk3_zeta_3equspec_table);
+		threepf_output.add_element(tk3_redbsp_spec_plot);
+		threepf_output.add_element(tk3_redbsp_spec_table);
 
     std::cout << "dquad.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
