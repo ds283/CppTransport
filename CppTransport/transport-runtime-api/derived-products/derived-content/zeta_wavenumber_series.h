@@ -152,12 +152,12 @@ namespace transport
 		            std::vector<number> line_data;
 				        line_data.assign(this->kconfig_sample_sns.size(), 0.0);
 
-		            for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+		            for(unsigned int m = 0; m < 2*N_fields; m++)
 			            {
-		                for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+		                for(unsigned int n = 0; n < 2*N_fields; n++)
 			                {
 	                      typename data_manager<number>::datapipe::cf_kconfig_data_tag tag =
-	                        pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m, n), this->time_sample_sns[i]);
+	                        pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, this->mdl->flatten(m,n), this->time_sample_sns[i]);
 
 	                      const std::vector<number>& sigma_line = k_handle.lookup_tag(tag);
 

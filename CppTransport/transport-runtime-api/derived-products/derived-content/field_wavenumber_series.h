@@ -108,6 +108,8 @@ namespace transport
 		    void twopf_wavenumber_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
 		                                                       const std::list<std::string>& tags) const
 			    {
+		        unsigned int N_fields = this->mdl->get_N_fields();
+
 		        // attach our datapipe to an output group
 		        this->attach(pipe, tags);
 
@@ -126,15 +128,15 @@ namespace transport
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 					    {
-						    for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+						    for(unsigned int m = 0; m < 2*N_fields; m++)
 							    {
-								    for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+								    for(unsigned int n = 0; n < 2*N_fields; n++)
 									    {
 								        std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
 								            typename data_manager<number>::datapipe::cf_kconfig_data_tag tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
-								                                                                                                            this->mdl->flatten(m, n), this->time_sample_sns[i]);
+								                                                                                                            this->mdl->flatten(m,n), this->time_sample_sns[i]);
 
 								            const std::vector<number>& line_data = k_handle.lookup_tag(tag);
 
