@@ -894,12 +894,14 @@ namespace transport
 				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".time"
 		          << " FROM " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
-					    << " ON " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial;";
+					    << " ON " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
 				    sample.clear();
+		        sample.reserve(serial_numbers.size());
 
 				    int status;
 				    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -945,12 +947,14 @@ namespace transport
 	            << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".comoving AS comoving"
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
-	            << " ON " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial;";
+	            << " ON " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             sample.clear();
+            sample.reserve(serial_numbers.size());
 
             std::vector<unsigned int>::const_iterator t = serial_numbers.begin();
             int status;
@@ -1022,7 +1026,8 @@ namespace transport
 	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf2"
 	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber2=tpf2.serial"
 	            << " INNER JOIN " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << " AS tpf3"
-	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3=tpf3.serial;";
+	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".wavenumber3=tpf3.serial"
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             exec(db, create_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL);
 
@@ -1034,6 +1039,7 @@ namespace transport
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             sample.clear();
+            sample.reserve(serial_numbers.size());
 
             std::vector<unsigned int>::const_iterator t = serial_numbers.begin();
             int status;
@@ -1102,12 +1108,14 @@ namespace transport
 				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << id
 					    << " FROM " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
-					    << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial;";
+					    << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
 		        sample.clear();
+		        sample.reserve(t_serials.size());
 
 		        int status;
 		        while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -1153,12 +1161,14 @@ namespace transport
 					    << " FROM " << twopf_table_name(type)
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 					    << " ON " << twopf_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-					    << " WHERE kserial LIKE " << k_serial << ";";
+					    << " WHERE kserial LIKE " << k_serial
+					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
 		        sample.clear();
+		        sample.reserve(t_serials.size());
 
 		        int status;
 		        while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -1204,12 +1214,14 @@ namespace transport
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-	            << " WHERE kserial LIKE " << k_serial << ";";
+	            << " WHERE kserial LIKE " << k_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             sample.clear();
+            sample.reserve(t_serials.size());
 
             int status;
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -1255,12 +1267,14 @@ namespace transport
 			        << " FROM " << twopf_table_name(type)
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << twopf_table_name(type) << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial LIKE " << t_serial << ";";
+			        << " WHERE tserial LIKE " << t_serial
+			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             sample.clear();
+		        sample.reserve(k_serials.size());
 
             int status;
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -1306,12 +1320,14 @@ namespace transport
 			        << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial LIKE " << t_serial << ";";
+			        << " WHERE tserial LIKE " << t_serial
+			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
             sample.clear();
+            sample.reserve(k_serials.size());
 
             int status;
             while((status = sqlite3_step(stmt)) != SQLITE_DONE)
