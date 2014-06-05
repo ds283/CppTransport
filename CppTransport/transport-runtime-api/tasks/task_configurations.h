@@ -54,19 +54,17 @@ namespace transport
 	    {
       public:
 
-        //! index of this k-configuration in the serial list
-        unsigned int index;
-
-        //! comoving k-value
-        double       k;
-
-        //! flag which indicates to the integrator whether to store the background
-        bool         store_background;
-
         //! serial number - guaranteed to be unique.
         //! used to identify this k-configuration in the database
         unsigned int serial;
         unsigned int get_serial() const { return(this->serial); }
+
+        //! comoving k-value
+        double       k;
+        double       k_conventional;
+
+        //! flag which indicates to the integrator whether to store the background
+        bool         store_background;
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, twopf_kconfig& obj);
@@ -87,8 +85,12 @@ namespace transport
 	    {
       public:
 
-        //! index of k1, k2, k3 into serial list of k-modes
-        //! used to look up appropriate values of the power spectrum when constructing reduced 3pfs
+        //! serial number of this k-configuration
+        unsigned int                serial;
+        unsigned int                get_serial() const { return(this->serial); }
+
+        //! serial numbers of k1, k2, k3 into list of twopf-kconfigurations
+        //! eg. used to look up appropriate values of the power spectrum when constructing reduced 3pfs
         std::array<unsigned int, 3> index;
 
         //! comoving (k1,k2,k3) coordinates for this k-configuration
@@ -106,10 +108,6 @@ namespace transport
         //! store the background and twopf results from this integration
         bool                        store_background;
         bool                        store_twopf;
-
-        //! serial number of this k-configuration
-        unsigned int                serial;
-        unsigned int                get_serial() const { return(this->serial); }
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);

@@ -158,7 +158,7 @@ namespace transport
 			        }
 
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
-				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_k_list(), this->kconfig_sample_sns);
+				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
 			    }
 
 

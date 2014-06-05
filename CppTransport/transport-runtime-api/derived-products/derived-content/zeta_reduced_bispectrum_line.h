@@ -146,7 +146,7 @@ namespace transport
 		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
 
 		        // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
-		        this->f.filter_threepf_kconfig_sample(kfilter, tk.get_sample(), this->kconfig_sample_sns);
+		        this->f.filter_threepf_kconfig_sample(kfilter, tk.get_threepf_kconfig_list(), this->kconfig_sample_sns);
 			    }
 
 

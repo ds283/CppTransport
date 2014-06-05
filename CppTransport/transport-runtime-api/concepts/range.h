@@ -38,24 +38,43 @@ namespace transport
     class range: public serializable
       {
       public:
+
         typedef enum { linear, logarithmic, INTERNAL__null_range_object } spacing_type;
+
 
         // CONSTRUCTOR
 
       public:
         //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
         range(value mn, value mx, unsigned int st, spacing_type sp=linear);
+
+        //! Deserialization constructor
+        range(serialization_reader* reader);
+
         //! Construct a null range object. Used in 'task' objects as placeholders when storing the original wavenumber grid.
         range();
+
 
         // BASIC INTERROGATION
 
       public:
+
+        //! Get minimum entry
         value get_min()                       const { return(this->min); }
+
+        //! Get maximum entry
         value get_max()                       const { return(this->max); }
+
+        //! Get number of steps
         unsigned int get_steps()              const { return(this->steps); }
+
+        //! Get number of entries
         unsigned int size()                   const { return(this->grid.size()); }
+
+        //! Get spacing type
         spacing_type get_spacing()            const { return(this->spacing); }
+
+        //! Get grid of entries
         const std::vector<value>& get_grid()  const { return(this->grid); }
 
         value operator[](unsigned int d) const
@@ -141,6 +160,31 @@ namespace transport
 
 
     template <typename value>
+    range<value>::range(serialization_reader* reader)
+      {
+        assert(reader != nullptr);
+        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_NULL_SERIALIZATION_READER);
+
+        double m;
+
+        reader->read_value(__CPP_TRANSPORT_NODE_MIN, m);
+        min = static_cast<value>(m);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_MAX, m);
+        max = static_cast<value>(m);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
+
+        std::string spc_string;
+        reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spc_string);
+
+        if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
+        else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
+        else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+      }
+
+
+    template <typename value>
     void range<value>::serialize(serialization_writer& writer) const
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
@@ -164,38 +208,6 @@ namespace transport
 		          throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
 			    }
       }
-
-
-		namespace
-			{
-
-				namespace range
-					{
-
-						template <typename value>
-						transport::range<value> deserialize(serialization_reader* reader)
-							{
-								double min, max;
-								unsigned int steps;
-						    std::string spacing;
-
-								reader->read_value(__CPP_TRANSPORT_NODE_MIN, min);
-								reader->read_value(__CPP_TRANSPORT_NODE_MAX, max);
-								reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
-								reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spacing);
-
-						    typename transport::range<value>::spacing_type type = transport::range<value>::linear;
-
-								if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) type = transport::range<value>::linear;
-								else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) type = transport::range<value>::logarithmic;
-								else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
-
-							  return(transport::range<value>(static_cast<value>(min), static_cast<value>(max), steps, type));
-							}
-
-					}   // namespace range
-
-			}   // unnamed namespace
 
 
     template <typename value>

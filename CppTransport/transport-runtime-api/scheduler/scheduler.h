@@ -140,7 +140,7 @@ namespace transport
         // set up an empty queue
         work_queue<twopf_kconfig> work(this->ctx, size);
 
-        const std::vector<twopf_kconfig>& config_list = task.get_sample();
+        const std::vector<twopf_kconfig>& config_list = task.get_twopf_kconfig_list();
         for(std::vector<twopf_kconfig>::const_iterator t = config_list.begin(); t != config_list.end(); t++)
           {
             if(F.filter(*t)) work.enqueue_work_item(*t);
@@ -155,7 +155,7 @@ namespace transport
       {
         work_queue<threepf_kconfig> work(this->ctx, size);
 
-        const std::vector<threepf_kconfig>& config_list = task.get_sample();
+        const std::vector<threepf_kconfig>& config_list = task.get_threepf_kconfig_list();
         for(std::vector<threepf_kconfig>::const_iterator t = config_list.begin(); t != config_list.end(); t++)
           {
             if(F.filter(*t)) work.enqueue_work_item(*t);

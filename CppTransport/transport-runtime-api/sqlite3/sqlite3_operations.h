@@ -173,8 +173,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<double> conventional_list = tk->get_k_list();
-            std::vector<double> comoving_list = tk->get_k_list_comoving();
+            std::vector<twopf_kconfig> kconfig_list = tk->get_twopf_kconfig_list();
 
             // set up a table
             std::stringstream stmt_text;
@@ -194,11 +193,11 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(unsigned int i = 0; i < conventional_list.size(); i++)
+            for(std::vector<twopf_kconfig>::const_iterator t = kconfig_list.begin(); t != kconfig_list.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, conventional_list[i]));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, comoving_list[i]));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).k_conventional));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).k));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
@@ -218,7 +217,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<threepf_kconfig> threepf_sample = tk->get_sample();
+            std::vector<threepf_kconfig> threepf_sample = tk->get_threepf_kconfig_list();
 
             // set up a table
             std::stringstream stmt_text;

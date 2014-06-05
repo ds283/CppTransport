@@ -20,6 +20,7 @@
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
