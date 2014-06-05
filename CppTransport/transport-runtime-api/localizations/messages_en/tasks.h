@@ -19,7 +19,7 @@
 
 #define __CPP_TRANSPORT_TASK_TIMES                       "Sampling times: "
 #define __CPP_TRANSPORT_TASK_THREEPF_TYPE                "Unknown wavenumber grid type when attempting to write threepf task to repository"
-#define __CPP_TRANSPORT_SERIALIZE_BASE_TASK              "Internal Error: attempt to serialize base 'task' object"
+#define __CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal Error: attempt to serialize base 'task' object"
 
 #define __CPP_TRANSPORT_OUTPUT_ELEMENTS                  "Derived data tasks: "
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK              "task"

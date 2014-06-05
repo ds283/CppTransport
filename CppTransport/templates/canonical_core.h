@@ -187,7 +187,7 @@ namespace transport
 
       public:
 
-        virtual void backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
+        virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
 
         // CALCULTAE CONDITIONS FOR N-POINT FUNCTIONS
@@ -974,7 +974,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::backend_process_backg(const integration_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
+    void $$__MODEL<number>::backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent)
       {
         assert(tk != nullptr);
 

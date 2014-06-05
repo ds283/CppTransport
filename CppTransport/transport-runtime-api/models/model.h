@@ -200,7 +200,7 @@ namespace transport
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void         backend_process_backg(const integration_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
+        virtual void         backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
@@ -299,7 +299,7 @@ namespace transport
             initial_conditions<double> ics(params, input, this->get_state_names(), temp_Nstar, this->ics_validator_factory());
 
             // set up a new task object for this integration
-            integration_task<double> tk(ics, times);
+            background_task<double> tk(ics, times);
 
             this->backend_process_backg(&tk, history, true);
 
@@ -346,7 +346,7 @@ namespace transport
         initial_conditions<double> new_ics(tk->get_params(), tk->get_ics().get_vector(), this->get_state_names(),
                                            new_Npre, this->ics_validator_factory());
 
-        integration_task<double> new_task(new_ics, times);
+        background_task<double> new_task(new_ics, times);
 
         this->backend_process_backg(&new_task, history, true);
 

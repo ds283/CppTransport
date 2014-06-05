@@ -30,26 +30,26 @@
 #include "transport-runtime-api/utilities/random_string.h"
 
 
-#define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE    "twopf-sample-times"
-#define __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE    "twopf-sample-wavenumbers"
+#define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE          "twopf-sample-times"
+#define __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE          "twopf-sample-wavenumbers"
 
-#define __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE  "threepf-sample-times"
-#define __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE  "threepf-sample-wavenumbers"
-#define __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE  "wavenumber-grid"
-#define __CPP_TRANSPORT_VAL_THREEPF_CUBIC     "cubic-lattice"
-#define __CPP_TRANSPORT_VAL_THREEPF_FLS       "fergusson-liguori-shellard"
-#define __CPP_TRANSPORT_NODE_THREEPF_KRANGE   "k-range"
-#define __CPP_TRANSPORT_NODE_THREEPF_KTRANGE  "kt-range"
-#define __CPP_TRANSPORT_NODE_THREEPF_ARANGE   "alpha-range"
-#define __CPP_TRANSPORT_NODE_THREEPF_BRANGE   "beta-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_TSAMPLE        "threepf-sample-times"
+#define __CPP_TRANSPORT_NODE_THREEPF_KSAMPLE        "threepf-sample-wavenumbers"
+#define __CPP_TRANSPORT_ATTR_THREEPF_KSAMPLE        "wavenumber-grid"
+#define __CPP_TRANSPORT_VAL_THREEPF_CUBIC           "cubic-lattice"
+#define __CPP_TRANSPORT_VAL_THREEPF_FLS             "fergusson-liguori-shellard"
+#define __CPP_TRANSPORT_NODE_THREEPF_KRANGE         "k-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_KTRANGE        "kt-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_ARANGE         "alpha-range"
+#define __CPP_TRANSPORT_NODE_THREEPF_BRANGE         "beta-range"
 
-#define __CPP_TRANSPORT_NODE_OUTPUT_NAME      "name"
-#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY     "derived-data-tasks"
-#define __CPP_TRANSPORT_NODE_OUTPUT_TASK      "task"
-#define __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT     "label"
-#define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL    "serial"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS "tags"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG  "tag"
+#define __CPP_TRANSPORT_NODE_OUTPUT_NAME            "name"
+#define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
+#define __CPP_TRANSPORT_NODE_OUTPUT_TASK            "task"
+#define __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
+#define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL          "serial"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG        "tag"
 
 
 namespace transport
@@ -62,6 +62,7 @@ namespace transport
 		template <typename number>
 		class task: public serializable
 			{
+
 		  public:
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -89,12 +90,14 @@ namespace transport
 				//! to perform a deepy copy. This method avoids that problem.
 				virtual task<number>* clone() const = 0;
 
+
 				// INTERNAL DATA
 
 		  protected:
 
 		    //! Name of this task
 		    const std::string name;
+
 			};
 
 
@@ -114,11 +117,34 @@ namespace transport
     template <typename number>
     class integration_task: public task<number>
 	    {
+
       public:
 
+        //! defines a 'time-configuration storage policy' data object, passed to a policy specification
+		    //! for the purpose of deciding whether a time configuration will be kept
+        class time_config_storage_policy_data
+	        {
+          public:
+		        time_config_storage_policy_data(unsigned int s, double t)
+			        : serial(s), time(t)
+			        {
+			        }
+
+          public:
+		        unsigned int serial;
+		        double       time;
+	        };
+
+        //! defines a 'time-configuration storage policy' object which determines which time steps are retained in the database
+        typedef std::function<bool(time_config_storage_policy_data&)> time_config_storage_policy;
+
+		    //! defines an object which computes kstar for a given integration task
         typedef std::function<double(integration_task<number>*)> kconfig_kstar;
 
+
         // CONSTRUCTOR, DESTRUCTOR
+
+      public:
 
         //! Construct a named integration task with supplied initial conditions
         integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
@@ -135,7 +161,10 @@ namespace transport
         //! Destroy an integration task
         virtual ~integration_task() = default;
 
-        // EXTRACT INFORMATION ABOUT THE TASK
+
+        // INTERFACE - EXTRACT INFORMATION ABOUT THE TASK
+
+      public:
 
         //! Get 'initial conditions' object associated with this task
         const initial_conditions<number>& get_ics() const { return(this->ics); }
@@ -162,28 +191,24 @@ namespace transport
         unsigned int get_N_sample_times() const { return(this->times.size()); }
 
 
-        // DISABLE SERIALIZATION
+		    // WRITE TO STREAM
 
-		    //! Throw an exception if any attempt is made to serialize an integration_task.
-		    //! Only twopf and threepf integration tasks can be serialized.
-        virtual void serialize(serialization_writer& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BASE_TASK); }
-
-
-        // CLONE
-
-        //! Virtual copy
-        virtual task<number>* clone() const override { return new integration_task<number>(static_cast<const integration_task<number>&>(*this)); }
-
+      public:
 
         //! Write to a standard output stream
         friend std::ostream& operator<< <>(std::ostream& out, const integration_task<number>& obj);
+
+
+		    // INTERNAL DATA
 
       protected:
 
         //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
+
         //! Range of times at which to sample for this task
         const range<double>              times;
+
       };
 
 
@@ -228,6 +253,47 @@ namespace transport
       }
 
 
+		//! A background task is a specialization of an integration task which is concrete.
+		//! (The integration task class itself is abstract, because it delegates cloning and serialization
+		//! to a concrete derived class.)
+		//! It is used for integrating the background only, eg. when finding k* = H*
+		//! or processing initial conditions
+		template <typename number>
+		class background_task: public integration_task<number>
+			{
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+				//! construct a background task
+				background_task(const initial_conditions<number>& i, const range<double>& t)
+		      : integration_task<number>(i, t)
+					{
+					}
+
+				virtual ~background_task() = default;
+
+
+		    // DISABLE SERIALIZATION
+
+		  public:
+
+		    //! Throw an exception if any attempt is made to serialize a background_task.
+		    //! Only twopf and threepf integration tasks can be serialized.
+        virtual void serialize(serialization_writer& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+
+
+		    // CLONE
+
+		  public:
+
+		    //! Virtual copy
+        virtual task<number>* clone() const override { return new background_task<number>(static_cast<const background_task<number>&>(*this)); }
+
+			};
+
+
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
     //! Ultimately, all n-point-function integrations are of this type because they all solve for the two-point function
     //! even if the goal is to compute a higher n-point function.
@@ -236,6 +302,9 @@ namespace transport
     template <typename number>
     class twopf_list_task: public integration_task<number>
       {
+
+	      // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
