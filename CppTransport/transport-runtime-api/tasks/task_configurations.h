@@ -4,8 +4,8 @@
 //
 
 
-#ifndef __task_k_configurations_H_
-#define __task_k_configurations_H_
+#ifndef __task_configurations_H_
+#define __task_configurations_H_
 
 
 #include <iostream>
@@ -14,10 +14,38 @@
 
 
 #define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
+#define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
 
 
 namespace transport
 	{
+
+		// TIME CONFIGURATION DATA
+
+		class time_config
+			{
+		  public:
+
+				//! time value
+				double t;
+
+				//! serial number
+				unsigned int serial;
+				unsigned int get_serial() const { return(this->serial); }
+
+				//! Output to a standard stream
+				friend std::ostream& operator<<(std::ostream& out, time_config& obj);
+			};
+
+
+		std::ostream& operator<<(std::ostream& out, const time_config& obj)
+			{
+		    std::ostringstream str;
+				str << std::setprecision(__CPP_TRANSPORT_DEFAULT_T_PRECISION) << obj.t;
+				out << __CPP_TRANSPORT_TIME_CONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_TIME_CONFIG_TEQUALS << " " << str.str() << std::endl;
+
+				return(out);
+			}
 
 
     // K-CONFIGURATION DATA
@@ -26,8 +54,7 @@ namespace transport
 	    {
       public:
 
-        //! index of this k into serial list
-        //! (trivial in this case, and redundant with the k-value 'k' defined below)
+        //! index of this k-configuration in the serial list
         unsigned int index;
 
         //! comoving k-value
@@ -80,8 +107,7 @@ namespace transport
         bool                        store_background;
         bool                        store_twopf;
 
-        //! serial number - guaranteed to be unique.
-        //! used to indentify this k-configuration in the database
+        //! serial number of this k-configuration
         unsigned int                serial;
         unsigned int                get_serial() const { return(this->serial); }
 
@@ -111,4 +137,4 @@ namespace transport
 	}
 
 
-#endif //__task_k_configurations_H_
+#endif //__task_configurations_H_

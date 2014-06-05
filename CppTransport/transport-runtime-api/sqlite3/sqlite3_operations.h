@@ -131,7 +131,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<double> sample_times = tk->get_sample_times();
+            std::vector<double> sample_times = tk->get_time_config_sample();
 
             // set up a table
             std::stringstream create_stmt;

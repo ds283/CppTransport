@@ -8,6 +8,9 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_TASKS_H
 
 
+#define __CPP_TRANSPORT_NULL_SERIALIZATION_READER        "Internal error: null serialization reader passed to 'task' object or derived class"
+#define __CPP_TRANSPORT_TIME_CONFIG_SN_TOO_BIG           "Internal error: time configuration serial number out of range when deserializing 'integration_task' object"
+
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_RANGE            "Internal error: Out of range when accessing 'twopf_list_task' object"
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_NORM             "Internal error: Attempt to reset comoving normalization in 'twopf_task_list' object"
 #define __CPP_TRANSPORT_TWOPF_TASK_LIST_UNSET            "Internal error: Attempt to push to 'twopf_task_list' before comoving normalization has been set"

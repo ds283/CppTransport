@@ -107,14 +107,14 @@ namespace transport
           std::vector< std::vector<number> > data = this->construct_fields_time_history(selector);
 
           gadget->set_format(format);
-          gadget->plot(output, title, this->tk->get_sample_times(), data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
+          gadget->plot(output, title, this->tk->get_time_config_sample(), data, labels, PICK_N_LABEL, FIELDS_LABEL, false, logy);
         }
 
 
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_fields_time_history(index_selector<1>* selector)
         {
-          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_points = this->tk->get_time_config_sample();
 
           std::vector< std::vector<number> > data(sample_points.size());
 
@@ -137,7 +137,7 @@ namespace transport
       template <typename number>
       const std::vector<number>& background<number>::get_value(unsigned int n)
         {
-          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_points = this->tk->get_time_config_sample();
           assert(n < sample_points.size());
 
           return(this->samples[n]);
@@ -152,7 +152,7 @@ namespace transport
           index_selector<1>* selector = obj.manufacture_selector();
           std::vector<std::string> labels = obj.labels.make_labels(selector, false);
 
-          writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.tk->get_sample_times(), obj.samples);
+          writer.write(__CPP_TRANSPORT_EFOLDS, labels, obj.tk->get_time_config_sample(), obj.samples);
 
           delete selector;
 
@@ -242,7 +242,7 @@ namespace transport
 
           gadget->set_format(format);
           gadget->plot(output, title != "" ? title : this->make_title(k, gadget->latex_labels()),
-                       this->tk->get_sample_times(), data, labels, PICK_N_LABEL, PICK_U2_LABEL, false, logy);
+                       this->tk->get_time_config_sample(), data, labels, PICK_N_LABEL, PICK_U2_LABEL, false, logy);
         }
 
 
@@ -256,14 +256,14 @@ namespace transport
 
           gadget->set_format(format);
           gadget->plot(output, title != "" ? title : this->make_title(k1, k2, k3, gadget->latex_labels()),
-                       this->tk->get_sample_times(), data, labels, PICK_N_LABEL, PICK_U3_LABEL, false, logy);
+                       this->tk->get_time_config_sample(), data, labels, PICK_N_LABEL, PICK_U3_LABEL, false, logy);
         }
 
 
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_u2_time_history(index_selector<2>* selector, double k)
         {
-          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_points = this->tk->get_time_config_sample();
 
           std::vector< std::vector<number> > data(sample_points.size());
 
@@ -293,7 +293,7 @@ namespace transport
       template <typename number>
       std::vector< std::vector<number> > background<number>::construct_u3_time_history(index_selector<3>* selector, double k1, double k2, double k3)
         {
-          std::vector<double> sample_points = this->tk->get_sample_times();
+          std::vector<double> sample_points = this->tk->get_time_config_sample();
 
           std::vector< std::vector<number> > data(sample_points.size());
 

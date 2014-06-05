@@ -23,12 +23,15 @@
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/concepts/range.h"
 #include "transport-runtime-api/derived-products/derived_product.h"
-#include "transport-runtime-api/tasks/task_k_configurations.h"
+#include "task_configurations.h"
 
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/utilities/random_string.h"
 
+
+#define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE    "time-config-storage-policy"
+#define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN "n"
 
 #define __CPP_TRANSPORT_NODE_TWOPF_TSAMPLE          "twopf-sample-times"
 #define __CPP_TRANSPORT_NODE_TWOPF_KSAMPLE          "twopf-sample-wavenumbers"
@@ -58,7 +61,6 @@ namespace transport
 		// TASK STRUCTURES -- GENERIC
 
 		//! A 'task' is the basic, abstract task from which all other types of task are derived.
-
 		template <typename number>
 		class task: public serializable
 			{
@@ -68,10 +70,10 @@ namespace transport
 				// CONSTRUCTOR, DESTRUCTOR
 
 				//! Construct a named task
-				task(const std::string& nm)
-					: name(nm)
-					{
-					}
+				task(const std::string& nm);
+
+				//! Deserialization constructor
+				task(const std::string& nm, serialization_reader* reader);
 
 				//! Destroy a task
 				virtual ~task() = default;
@@ -79,16 +81,28 @@ namespace transport
 
 				// INTERFACE
 
+		  public:
+
 		    //! Get name
 		    const std::string& get_name() const { return(this->name); }
 
 
 				// CLONE
 
+		  public:
+
 				//! Clone this task object using a virtual copy idiom.
 				//! Given a pointer just to the base class task<>, it isn't possible
 				//! to perform a deepy copy. This method avoids that problem.
 				virtual task<number>* clone() const = 0;
+
+
+				// SERIALIZE -- implements a 'serializable' interface
+
+		  public:
+
+		    //! serialize this object
+				virtual void serialize(serialization_writer& writer) const override;
 
 
 				// INTERNAL DATA
@@ -101,6 +115,30 @@ namespace transport
 			};
 
 
+		template <typename number>
+		task<number>::task(const std::string& nm)
+			: name(nm)
+			{
+			}
+
+
+		template <typename number>
+		task<number>::task(const std::string& nm, serialization_reader* reader)
+			: name(nm)
+			{
+				assert(reader != nullptr);
+				if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_NULL_SERIALIZATION_READER);
+				// Currently no deserialization requires
+			}
+
+
+		template <typename number>
+		void task<number>::serialize(serialization_writer& writer) const
+			{
+				// Currently no serialization required
+			}
+
+
     // TASK STRUCTURES -- INTEGRATION TASKS
 
     template <typename number> class integration_task;
@@ -110,13 +148,16 @@ namespace transport
 
 		//! An 'integration_task' is a specialization of 'task'. It contains the basic information
 		//! needed to carry out an integration. The more specialized two- and three-pf integration
-		//! tasks are derived from it.
+		//! tasks are derived from it, as is a concrete 'background' task object which is used
+		//! internally for integrating the background only.
 
 		//! An 'integration_task' contains information on the initial conditions, horizon-crossing
-		//! time and sampling times. It is enough to integrate the background.
+		//! time and sampling times.
     template <typename number>
     class integration_task: public task<number>
 	    {
+
+	      // TIME CONFIGURATION STORAGE POLICIES
 
       public:
 
@@ -142,12 +183,29 @@ namespace transport
         typedef std::function<double(integration_task<number>*)> kconfig_kstar;
 
 
+      protected:
+
+		    //! default time configuration storage policy - store everything
+		    class default_time_config_storage_policy
+			    {
+		      public:
+				    bool operator() (time_config_storage_policy_data&) { return(true); }
+			    };
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
-        //! Construct a named integration task with supplied initial conditions
-        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t);
+		    //! Construct a named integration task with supplied initial conditions and time-configuration storage policy
+		    integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, time_config_storage_policy p);
+
+        //! Construct a named integration task with supplied initial conditions, but no storage policy; delegate to constructor
+		    //! with specified storage policy, substituting the default storage policy
+        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
+          : integration_task(nm, i, t, default_time_config_storage_policy())
+	        {
+	        }
 
         //! Construct an anonymized integration task with supplied initial conditions.
 		    //! Anonymized tasks are used for things like constructing initial conditions,
@@ -157,6 +215,9 @@ namespace transport
           : integration_task(random_string(), i, t)
           {
           }
+
+		    //! deserialization constructor
+		    integration_task(const std::string& nm, serialization_reader* reader);
 
         //! Destroy an integration task
         virtual ~integration_task() = default;
@@ -172,8 +233,8 @@ namespace transport
         //! Get 'parameters' object associated with this task
         const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
-        //! Get 'range' object representing sample times
-        const range<double>& get_times() const { return(this->times); }
+//        //! Get 'range' object representing sample times
+//        const range<double>& get_times() const { return(this->times); }
 
         //! Get initial times
         double get_Ninit() const { return(this->times.get_min()); }
@@ -182,13 +243,22 @@ namespace transport
         double get_Nstar() const { return(this->ics.get_Nstar()); }
 
         //! Get std::vector of sample times
-        const std::vector<double>& get_sample_times() const { return(this->times.get_grid()); }
+        const std::vector<double>& get_time_config_sample() const { return(this->times.get_grid()); }
 
         //! Get std::vector of initial conditions
-        const std::vector<number>& get_initial_conditions() const { return(this->ics.get_vector()); }
+        const std::vector<number>& get_ics_vector() const { return(this->ics.get_vector()); }
 
         //! Get number of samples
-        unsigned int get_N_sample_times() const { return(this->times.size()); }
+        unsigned int get_num_time_config_samples() const { return(this->times.size()); }
+
+
+				// SERIALIZE - implements a 'serializable' interface
+
+		  public:
+
+				//! serialize this object
+				virtual void serialize(serialization_writer& writer) const override;
+
 
 
 		    // WRITE TO STREAM
@@ -206,15 +276,28 @@ namespace transport
         //! Initial conditions for this task (including parameter choices)
         const initial_conditions<number> ics;
 
-        //! Range of times at which to sample for this task
+        //! Range of times at which to sample for this task;
+				//! really kept only for serialization purposes
         const range<double>              times;
 
+		    //! Time configuration storage policy for this task
+		    const time_config_storage_policy time_storage_policy;
+
+				//! Unfiltered list of time-vales
+				std::vector<double>              raw_time_list;
+
+				//! Filtered list of time-values (corresponding to values stored in the database)
+				std::vector<double>              filtered_time_list;
+
+				//! Filtered list of time-configurations (corresponding to values stored in the database)
+				std::vector<time_config>         time_config_list;
       };
 
 
     template <typename number>
-    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-      : ics(i), times(t), task<number>(nm)
+    integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i,
+                                               const range<double>& t, time_config_storage_policy p)
+      : ics(i), times(t), task<number>(nm), time_storage_policy(p)
       {
         // validate relation between Nstar and the sampling time
         assert(times.get_steps() > 0);
@@ -241,7 +324,73 @@ namespace transport
             msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times.get_max() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
           }
+
+		    // get raw grid of sampling times
+        raw_time_list = times.get_grid();
+
+		    // filter sampling times according to our storage policy
+		    for(unsigned int i = 0; i < raw_time_list.size(); i++)
+			    {
+				    time_config tc;
+				    tc.t = raw_time_list[i];
+				    tc.serial = i;
+
+				    time_config_storage_policy_data data(tc.t, tc.serial);
+				    if(time_storage_policy(data))
+					    {
+						    filtered_time_list.push_back(tc.t);
+						    time_config_list.push_back(tc);
+					    }
+			    }
       }
+
+
+		template <typename number>
+		integration_task<number>::integration_task(const std::string& nm, serialization_reader* reader)
+			: time_storage_policy(integration_task<number>::default_time_config_storage_policy()), task<number>(nm, reader), times(reader)
+			{
+				assert(reader != nullptr);
+		    if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_NULL_SERIALIZATION_READER);
+
+				// raw grid of sampling times can be reconstructed from the range object
+				raw_time_list = times.get_grid();
+
+				// filtered times have to be reconstructed from the database
+				unsigned int sample_times = reader->start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+				for(unsigned int i = 0; i < sample_times; i++)
+					{
+						reader->start_array_element();
+
+						unsigned int sn;
+						reader->read_value(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, sn);
+						if(sn >= raw_time_list.size()) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TIME_CONFIG_SN_TOO_BIG);
+
+						time_config tc;
+						tc.t = raw_time_list[sn];
+						tc.serial = sn;
+						filtered_time_list.push_back(tc.t);
+						time_config_list.push_back(tc);
+					}
+				reader->end_element(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+			}
+
+
+		template <typename number>
+		void integration_task<number>::serialize(serialization_writer& writer) const
+			{
+				this->begin_array(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE, this->time_config_list.size() == 0);
+				for(std::vector<time_config>::const_iterator t = this->time_config_list.begin(); t != this->time_config_list.end(); t++)
+					{
+						this->begin_node(writer, "arrayelt", false);    // node name ignored in arrays
+						this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, (*t).serial);
+						this->end_element(writer, "arrayelt");
+					}
+				this->end_element(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+
+				// call next serializers in the queue
+				this->times.serialize(writer);
+				this->task<number>::serialize(writer);
+			}
 
 
     template <typename number>
@@ -381,7 +530,7 @@ namespace transport
         //! Normalization constant for comoving ks
         double comoving_normalization;
 
-        //! Has the normalization constant been set? This is a precondition for adding any wavenumbers of the list.
+        //! Has the normalization constant been set? This is a precondition for adding any wavenumbers to the list.
         //! It would be cleaner to pass the normalizaiton constant to the constructor,
         //! but to compute the normalization itself requires a properly-formed task object.
         //! Therefore we cannot do so until the base constructor has completed.
@@ -393,6 +542,7 @@ namespace transport
 
         //! Flattened list of comoving-normalized ks
         std::vector<double> comoving_k;
+
       };
 
 
@@ -577,19 +727,25 @@ namespace transport
 		    // INTERNAL DATA
 
       protected:
+
         //! List of k-configurations associated with this task
         std::vector<threepf_kconfig> config_list;
 
         //! Wavenumber lattice used to construct this task, retained for serialization
         const wavenumber_grid_type original_lattice;
+
         //! Original cubic lattice, if used, retained for serialization
         const range<double> original_ks;
+
         //! Original kt-grid, if used, retained for serialization
         const range<double> original_kts;
+
         //! Original alpha-grid, if used, retained for serialization
         const range<double> original_alphas;
+
         //! Original beta-grid, if used, retained for serialization
         const range<double> original_betas;
+
       };
 
 
@@ -702,6 +858,7 @@ namespace transport
             break;
 
             default:
+	            assert(false);
               throw std::runtime_error(__CPP_TRANSPORT_TASK_THREEPF_TYPE);
           }
       }
@@ -764,6 +921,7 @@ namespace transport
 										return(transport::threepf_task<number>(name, ics, times, kt, alpha, beta, kstar));
 									}
 
+		            assert(false);
 								throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
 	            }
 
@@ -870,7 +1028,6 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const output_task<number>& obj);
 
     //! An 'output_task' is a specialization of 'task' which generates a set of derived products.
-
     template <typename number>
     class output_task: public task<number>
 	    {

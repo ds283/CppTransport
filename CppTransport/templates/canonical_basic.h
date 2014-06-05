@@ -229,11 +229,11 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_initial_conditions();
+        const std::vector<number>& ics = tk->get_ics_vector();
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
-        const std::vector<double>& times = tk->get_sample_times();
+        const std::vector<double>& times = tk->get_time_config_sample();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
@@ -312,11 +312,11 @@ namespace transport
         x.resize($$__MODEL_pool::threepf_state_size);
 
         // fix initial conditions - background (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_initial_conditions();
+        const std::vector<number>& ics = tk->get_ics_vector();
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs
-        const std::vector<double>& times = tk->get_sample_times();
+        const std::vector<double>& times = tk->get_time_config_sample();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);

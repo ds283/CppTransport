@@ -27,6 +27,9 @@
 #define __CPP_TRANSPORT_KCONFIG_ALPHAEQUALS                "alpha ="
 #define __CPP_TRANSPORT_KCONFIG_BETAEQUALS                 "beta ="
 
+#define __CPP_TRANSPORT_TIME_CONFIG_SERIAL                 "Serial ="
+#define __CPP_TRANSPORT_TIME_CONFIG_TEQUALS                "t ="
+
 #define __CPP_TRANSPORT_OUTPUT_GROUP                       "Output group"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED                "locked"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT             "Output group root directory"
