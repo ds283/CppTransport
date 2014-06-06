@@ -245,16 +245,16 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(unsigned int i = 0; i < threepf_sample.size(); i++)
+            for(std::vector<threepf_kconfig>::const_iterator t = threepf_sample.begin(); t != threepf_sample.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, threepf_sample[i].index[0]));
-                check_stmt(db, sqlite3_bind_int(stmt, 3, threepf_sample[i].index[1]));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, threepf_sample[i].index[2]));
-                check_stmt(db, sqlite3_bind_double(stmt, 5, threepf_sample[i].k_t));
-                check_stmt(db, sqlite3_bind_double(stmt, 6, threepf_sample[i].k_t_conventional));
-                check_stmt(db, sqlite3_bind_double(stmt, 7, threepf_sample[i].alpha));
-                check_stmt(db, sqlite3_bind_double(stmt, 8, threepf_sample[i].beta));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).index[0]));
+                check_stmt(db, sqlite3_bind_int(stmt, 3, (*t).index[1]));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, (*t).index[2]));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, (*t).k_t));
+                check_stmt(db, sqlite3_bind_double(stmt, 6, (*t).k_t_conventional));
+                check_stmt(db, sqlite3_bind_double(stmt, 7, (*t).alpha));
+                check_stmt(db, sqlite3_bind_double(stmt, 8, (*t).beta));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 
