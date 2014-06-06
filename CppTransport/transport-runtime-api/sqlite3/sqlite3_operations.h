@@ -150,7 +150,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.begin(); t++)
+            for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).t));
