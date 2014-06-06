@@ -965,28 +965,31 @@ namespace transport
 
                         kconfig.k_t_conventional = ks[j] + ks[k] + ks[l];
 
-                        // check whether any of these k-wavenumbers have been stored before
-                        bool stored;
-                        unsigned int sn;
-
-                        stored = this->find_comoving_k(ks[j], sn);
-                        if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
-                        else { kconfig.index[0] = this->push_twopf_klist(ks[j]); kconfig.store_twopf_k1 = true; }
-
-                        stored = this->find_comoving_k(ks[k], sn);
-                        if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2 = false; }
-                        else { kconfig.index[1] = this->push_twopf_klist(ks[k]); kconfig.store_twopf_k2 = true; }
-
-                        stored = this->find_comoving_k(ks[l], sn);
-                        if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
-                        else { kconfig.index[2] = this->push_twopf_klist(ks[l]); kconfig.store_twopf_k3 = true; }
-
-                        kconfig.store_background = stored_background ? false : (stored_background=true);
-
                         kconfig.serial = this->serial++;
 
 		                    typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
-		                    if(kp(data)) this->threepf_config_list.push_back(kconfig);
+		                    if(kp(data))
+			                    {
+		                        // check whether any of these k-wavenumbers have been stored before
+		                        bool stored;
+		                        unsigned int sn;
+
+		                        stored = this->find_comoving_k(ks[j], sn);
+		                        if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
+		                        else { kconfig.index[0] = this->push_twopf_klist(ks[j]); kconfig.store_twopf_k1 = true; }
+
+		                        stored = this->find_comoving_k(ks[k], sn);
+		                        if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2 = false; }
+		                        else { kconfig.index[1] = this->push_twopf_klist(ks[k]); kconfig.store_twopf_k2 = true; }
+
+		                        stored = this->find_comoving_k(ks[l], sn);
+		                        if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
+		                        else { kconfig.index[2] = this->push_twopf_klist(ks[l]); kconfig.store_twopf_k3 = true; }
+
+		                        kconfig.store_background = stored_background ? false : (stored_background=true);
+
+		                        this->threepf_config_list.push_back(kconfig);
+			                    }
 		                    else this->integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                       }
                   }
@@ -1123,28 +1126,31 @@ namespace transport
                         kconfig.k2 = this->comoving_normalize(k2);
                         kconfig.k3 = this->comoving_normalize(k3);
 
-                        // check whether any of these k-wavenumbers have been stored before
-                        bool stored;
-                        unsigned int sn;
-
-                        stored = this->find_comoving_k(k1, sn);
-                        if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
-                        else { kconfig.index[0] = this->push_twopf_klist(k1); kconfig.store_twopf_k1 = true; }
-
-                        stored = this->find_comoving_k(k2, sn);
-                        if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2= false; }
-                        else { kconfig.index[1] = this->push_twopf_klist(k2); kconfig.store_twopf_k2 = true; }
-
-                        stored = this->find_comoving_k(k3, sn);
-                        if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
-                        else { kconfig.index[2] = this->push_twopf_klist(k3); kconfig.store_twopf_k3 = true; }
-
-                        kconfig.store_background = stored_background ? false : (stored_background=true);
-
                         kconfig.serial = this->serial++;
 
                         typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
-                        if(kp(data)) this->threepf_config_list.push_back(kconfig);
+                        if(kp(data))
+	                        {
+                            // check whether any of these k-wavenumbers have been stored before
+                            bool stored;
+                            unsigned int sn;
+
+                            stored = this->find_comoving_k(k1, sn);
+                            if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
+                            else { kconfig.index[0] = this->push_twopf_klist(k1); kconfig.store_twopf_k1 = true; }
+
+                            stored = this->find_comoving_k(k2, sn);
+                            if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2= false; }
+                            else { kconfig.index[1] = this->push_twopf_klist(k2); kconfig.store_twopf_k2 = true; }
+
+                            stored = this->find_comoving_k(k3, sn);
+                            if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
+                            else { kconfig.index[2] = this->push_twopf_klist(k3); kconfig.store_twopf_k3 = true; }
+
+                            kconfig.store_background = stored_background ? false : (stored_background=true);
+
+                            this->threepf_config_list.push_back(kconfig);
+	                        }
                         else this->integrable = false;    // can't integrate any task which has dropped configurations, because the points may be scattered over the integration region
                       }
                   }
