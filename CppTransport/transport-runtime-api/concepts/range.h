@@ -90,6 +90,15 @@ namespace transport
               }
           }
 
+
+        // POPULATE GRID
+
+      protected:
+
+        //! fill out the grid entries
+        void populate_grid(void);
+
+
         // SERIALIZATION INTERFACE
 
       public:
@@ -127,40 +136,7 @@ namespace transport
       {
         assert(sp != INTERNAL__null_range_object);
 
-        switch(sp)
-          {
-            case linear:
-            case INTERNAL__null_range_object:
-              {
-                for(unsigned int i = 0; i <= steps; i++)
-                  {
-                    grid.push_back(min + (static_cast<double>(i)/steps)*(max-min));
-                  }
-                break;
-              }
-
-            // the logarithmically-spaced interval isn't translation-invariant
-            // (logarithmic spacing between 10 and 20 doesn't isn't the same as logarithmic
-            // spacing between 110 and 120)
-            // to standardize, and also to allow log-spacing for ranges that contain 0,
-            // we shift the range to begin at 1, perform the log-spacing, and then
-            // reverse the shift
-            case logarithmic:
-              {
-                double shifted_max = max - (min-1.0);
-                for(unsigned int i = 0; i <= steps; i++)
-                  {
-                    grid.push_back(min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/steps)));
-                  }
-                break;
-              }
-
-            default:
-              {
-                assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
-              }
-          }
+        this->populate_grid();
       }
 
 
@@ -193,8 +169,52 @@ namespace transport
         if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
         else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
         else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
+
+        this->populate_grid();
       }
 
+
+    template <typename value>
+    void range<value>::populate_grid(void)
+      {
+        this->grid.clear();
+        this->grid.reserve(this->steps+1);
+
+        switch(this->spacing)
+          {
+            case linear:
+            case INTERNAL__null_range_object:
+              {
+                for(unsigned int i = 0; i <= this->steps; i++)
+                  {
+                    this->grid.push_back(min + (static_cast<double>(i)/this->steps)*(this->max-this->min));
+                  }
+                break;
+              }
+
+            // the logarithmically-spaced interval isn't translation-invariant
+            // (logarithmic spacing between 10 and 20 doesn't isn't the same as logarithmic
+            // spacing between 110 and 120)
+            // to standardize, and also to allow log-spacing for ranges that contain 0,
+            // we shift the range to begin at 1, perform the log-spacing, and then
+            // reverse the shift
+            case logarithmic:
+              {
+                double shifted_max = this->max - (this->min-1.0);
+                for(unsigned int i = 0; i <= this->steps; i++)
+                  {
+                    grid.push_back(this->min-1.0 + static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
+                  }
+                break;
+              }
+
+            default:
+              {
+                assert(false);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
+              }
+          }
+      }
 
     template <typename value>
     void range<value>::serialize(serialization_writer& writer) const

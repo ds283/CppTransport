@@ -10,6 +10,7 @@
 
 #define __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER   "Internal error: null serialization reader passed to 'task' object or derived class"
 #define __CPP_TRANSPORT_TASK_TIME_CONFIG_SN_TOO_BIG      "Internal error: time configuration serial number out of range when deserializing 'integration_task' object"
+#define __CPP_TRANSPORT_TASK_TWOPF_CONFIG_SN_TOO_BIG     "Internal error: twopf k-configuration serial number out of range when deserializing 'integration_task' object"
 #define __CPP_TRANSPORT_TASK_TYPE_UNKNOWN                "Internal error: unknown task type"
 
 #define __CPP_TRANSPORT_OUTPUT_TASK_RANGE                "Internal error: Out of range when accessing 'output_task' object"

@@ -297,6 +297,8 @@ namespace transport
 						tc.t = raw_time_list[sn];
 						tc.serial = sn;
 						time_config_list.push_back(tc);
+
+            reader->end_array_element();
 					}
 				reader->end_element(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
 
@@ -426,6 +428,9 @@ namespace transport
         //! Search for a twopf kconfiguration by conventionally-normalized wavenumber.
         bool find_comoving_k(double k, unsigned int& serial) const;
 
+        //! Look up a twopf k-configuration by serial number
+        const twopf_kconfig& lookup_twopf_kconfig(unsigned int serial);
+
 
         // SERIALIZATION -- implements a 'serializable' interface
 
@@ -476,6 +481,9 @@ namespace transport
 
         // deserialize list of twopf k-configurations
         unsigned int configs = reader->start_array(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
+        twopf_config_list.clear();
+        twopf_config_list.reserve(configs);
+
         for(unsigned int i = 0; i < configs; i++)
           {
             reader->start_array_element();
@@ -567,6 +575,21 @@ namespace transport
           }
 
         return(rval);
+      }
+
+
+    template <typename number>
+    const twopf_kconfig& twopf_list_task<number>::lookup_twopf_kconfig(unsigned int serial)
+      {
+        std::vector<twopf_kconfig>::const_iterator t;
+        for(t = this->twopf_config_list.begin(); t != this->twopf_config_list.end(); t++)
+          {
+            if((*t).serial == serial) break;
+          }
+
+        if(t == this->twopf_config_list.end()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_TWOPF_CONFIG_SN_TOO_BIG);
+
+        return(*t);
       }
 
 
@@ -732,6 +755,9 @@ namespace transport
 
         //! deserialize array of k-configurations
         unsigned int configs = reader->start_array(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
+        threepf_config_list.clear();
+        threepf_config_list.reserve(configs);
+
         for(unsigned int i = 0; i < configs; i++)
           {
             reader->start_array_element();
@@ -745,6 +771,20 @@ namespace transport
             reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1, c.store_twopf_k1);
             reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2, c.store_twopf_k2);
             reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3, c.store_twopf_k3);
+
+            const twopf_kconfig& k1 = this->lookup_twopf_kconfig(c.index[0]);
+            const twopf_kconfig& k2 = this->lookup_twopf_kconfig(c.index[1]);
+            const twopf_kconfig& k3 = this->lookup_twopf_kconfig(c.index[2]);
+
+            c.k1 = k1.k;
+            c.k2 = k2.k;
+            c.k3 = k3.k;
+
+            c.k_t   = k1.k + k2.k + k3.k;
+            c.beta  = 1.0 - 2.0 * k3.k/(c.k_t);
+            c.alpha = 4.0*k2.k/(c.k_t) - 1.0 - c.beta;
+
+            c.k_t_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
 
             threepf_config_list.push_back(c);
             serial++;
@@ -874,23 +914,23 @@ namespace transport
 
                         // check whether any of these k-wavenumbers have been stored before
                         bool stored;
-                        unsigned int serial;
+                        unsigned int sn;
 
-                        stored = this->find_comoving_k(ks[j], serial);
-                        if(stored) { kconfig.index[0] = serial; kconfig.store_twopf_k1 = false; }
+                        stored = this->find_comoving_k(ks[j], sn);
+                        if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
                         else { kconfig.index[0] = this->push_twopf_klist(ks[j]); kconfig.store_twopf_k1 = true; }
 
-                        stored = this->find_comoving_k(ks[k], serial);
-                        if(stored) { kconfig.index[1] = serial; kconfig.store_twopf_k2 = false; }
+                        stored = this->find_comoving_k(ks[k], sn);
+                        if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2 = false; }
                         else { kconfig.index[1] = this->push_twopf_klist(ks[k]); kconfig.store_twopf_k2 = true; }
 
-                        stored = this->find_comoving_k(ks[l], serial);
-                        if(stored) { kconfig.index[2] = serial; kconfig.store_twopf_k3 = false; }
+                        stored = this->find_comoving_k(ks[l], sn);
+                        if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
                         else { kconfig.index[2] = this->push_twopf_klist(ks[l]); kconfig.store_twopf_k3 = true; }
 
                         kconfig.store_background = stored_background ? false : (stored_background=true);
 
-                        kconfig.serial = serial++;
+                        kconfig.serial = this->serial++;
                         this->threepf_config_list.push_back(kconfig);
                       }
                   }
@@ -1018,23 +1058,23 @@ namespace transport
 
                         // check whether any of these k-wavenumbers have been stored before
                         bool stored;
-                        unsigned int serial;
+                        unsigned int sn;
 
-                        stored = this->find_comoving_k(k1, serial);
-                        if(stored) { kconfig.index[0] = serial; kconfig.store_twopf_k1 = false; }
+                        stored = this->find_comoving_k(k1, sn);
+                        if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
                         else { kconfig.index[0] = this->push_twopf_klist(k1); kconfig.store_twopf_k1 = true; }
 
-                        stored = this->find_comoving_k(k2, serial);
-                        if(stored) { kconfig.index[1] = serial; kconfig.store_twopf_k2= false; }
+                        stored = this->find_comoving_k(k2, sn);
+                        if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2= false; }
                         else { kconfig.index[1] = this->push_twopf_klist(k2); kconfig.store_twopf_k2 = true; }
 
-                        stored = this->find_comoving_k(k3, serial);
-                        if(stored) { kconfig.index[2] = serial; kconfig.store_twopf_k3 = false; }
+                        stored = this->find_comoving_k(k3, sn);
+                        if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
                         else { kconfig.index[2] = this->push_twopf_klist(k3); kconfig.store_twopf_k3 = true; }
 
                         kconfig.store_background = stored_background ? false : (stored_background=true);
 
-                        kconfig.serial = serial++;
+                        kconfig.serial = this->serial++;
                         this->threepf_config_list.push_back(kconfig);
                       }
                   }

@@ -212,7 +212,8 @@ namespace transport
         named_list::comparator<number> cmp(order_map);
         std::sort(temp.begin(), temp.end(), cmp);
 
-        std::vector<number> i(field_ordering.size());
+        std::vector<number> i;
+        i.reserve(field_ordering.size());
         for(unsigned int j = 0; j < temp.size(); j++)
           {
             i.push_back((temp[j]).get_value());
