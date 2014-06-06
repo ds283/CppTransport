@@ -115,6 +115,10 @@ add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp unqlite/unqlite.c)
 target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
+add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp unqlite/unqlite.c)
+target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+
 cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
 target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
