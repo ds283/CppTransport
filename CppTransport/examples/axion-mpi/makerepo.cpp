@@ -31,7 +31,7 @@ const double chi_init = f/2.0 - 0.001*M_Planck;
 // filter to determine which time values are included on time-series plots - we just use them all
 bool timeseries_filter(const transport::derived_data::filter::time_filter_data& data)
 	{
-    return(data.serial % 10 == 0); // plot every tenth point
+    return(true); // plot all points
 	}
 
 
@@ -148,6 +148,12 @@ int main(int argc, char* argv[])
 
     const unsigned int t_samples = 10000;       // record 5000 samples - enough to find a good stepsize
 
+    struct TimeStoragePolicy
+      {
+      public:
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+      };
+
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
 
     // the conventions for k-numbers are as follows:
@@ -159,10 +165,8 @@ int main(int argc, char* argv[])
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
-    std::cout << ks;
-
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
 
     std::cout << tk3;
 
@@ -722,18 +726,6 @@ int main(int argc, char* argv[])
 		// write output tasks to the database
 //		repo->write_task(twopf_output);
 		repo->write_task(threepf_output);
-
-    std::string package_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_package_document(ics.get_name());
-    std::cout << "Package JSON document:" << std::endl << package_json << std::endl << std::endl;
-
-    std::string task2_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_task_document(tk2.get_name());
-    std::cout << "2pf integration JSON document:" << std::endl << task2_json << std::endl << std::endl;
-
-    std::string task3_json = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_task_document(tk3.get_name());
-    std::cout << "3pf integration JSON document:" << std::endl << task3_json << std::endl << std::endl;
-
-    std::string out3_json  = dynamic_cast<transport::repository_unqlite<double>*>(repo)->json_task_document(threepf_output.get_name());
-    std::cout << "3pf output task document:" << std::endl << out3_json << std::endl << std::endl;
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 

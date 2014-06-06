@@ -29,7 +29,7 @@ const double phi_init = 16;
 // filter to determine which time values are included on time-series plots - we just use them all
 bool timeseries_filter(const transport::derived_data::filter::time_filter_data& data)
 	{
-    return(data.serial % 10 == 0); // plot every tenth point
+    return(true); // plot all points
 	}
 
 
@@ -146,6 +146,12 @@ int main(int argc, char* argv[])
 
     const unsigned int t_samples = 10000;       // record 5000 samples - enough to find a good stepsize
 
+    struct TimeStoragePolicy
+      {
+      public:
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+      };
+
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
 
     // the conventions for k-numbers are as follows:
@@ -160,7 +166,7 @@ int main(int argc, char* argv[])
     std::cout << ks;
 
     // construct a threepf task
-    transport::threepf_task<double> tk3 = transport::threepf_task<double>("quadratic.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("quadratic.threepf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
 
     std::cout << tk3;
 
