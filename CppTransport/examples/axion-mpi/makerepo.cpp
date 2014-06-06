@@ -163,10 +163,17 @@ int main(int argc, char* argv[])
     const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
     const unsigned int  k_samples = 20;          // number of k-points
 
+		struct ThreepfStoragePolicy
+			{
+		  public:
+				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(data.beta > 0.8); }
+			};
+
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks,
+                                                                                      model->kconfig_kstar_factory(), TimeStoragePolicy(), ThreepfStoragePolicy());
 
     std::cout << tk3;
 
