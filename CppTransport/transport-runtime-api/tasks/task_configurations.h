@@ -107,7 +107,9 @@ namespace transport
         //! flags which indicate to the integrator whether to
         //! store the background and twopf results from this integration
         bool                        store_background;
-        bool                        store_twopf;
+        bool                        store_twopf_k1;
+        bool                        store_twopf_k2;
+        bool                        store_twopf_k3;
 
         //! Output to a standard stream
         friend std::ostream& operator<<(std::ostream& out, threepf_kconfig& obj);

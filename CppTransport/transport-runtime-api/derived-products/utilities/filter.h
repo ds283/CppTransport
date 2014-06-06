@@ -11,7 +11,7 @@
 
 #include <vector>
 
-#include "task_configurations.h"
+#include "transport-runtime-api/tasks/task_configurations.h"
 
 
 namespace transport
@@ -82,10 +82,11 @@ namespace transport
 		      public:
 
 		        //! time filter: filter out the serial numbers we want from a list
-		        void filter_time_sample(time_filter t_filter, const std::vector<double>& t_samples, std::vector<unsigned int>& t_serials) const;
+		        void filter_time_sample(time_filter t_filter, const std::vector<time_config>& t_samples,
+                                    std::vector<unsigned int>& t_serials) const;
 
 		        //! 2pf k-configuration filter
-		        void filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<double>& k_samples,
+		        void filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<twopf_kconfig>& k_samples,
 		                                         std::vector<unsigned int>& k_serials) const;
 
 		        //! 3pf k-configuration filter
@@ -95,7 +96,7 @@ namespace transport
 			    };
 
 
-		    void filter::filter_time_sample(time_filter t_filter, const std::vector<double>& t_samples, std::vector<unsigned int>& t_serials) const
+		    void filter::filter_time_sample(time_filter t_filter, const std::vector<time_config>& t_samples, std::vector<unsigned int>& t_serials) const
 			    {
 		        int min_pos = -1;
 		        double t_min = DBL_MAX;
@@ -103,10 +104,10 @@ namespace transport
 		        double t_max = -DBL_MAX;
 
 		        // scan through to find min and max values of time
-		        for(unsigned int i = 0; i < t_samples.size(); i++)
-			        {
-		            if(t_samples[i] < t_min) { t_min = t_samples[i]; min_pos = i; }
-		            if(t_samples[i] > t_max) { t_max = t_samples[i]; max_pos = i; }
+            for(unsigned int i = 0; i < t_samples.size(); i++)
+              {
+		            if(t_samples[i].t < t_min) { t_min = t_samples[i].t; min_pos = i; }
+		            if(t_samples[i].t > t_max) { t_max = t_samples[i].t; max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -115,19 +116,19 @@ namespace transport
 			        {
 		            time_filter_data data;
 
-				        data.serial = i;
+				        data.serial = t_samples[i].serial;
 
 		            data.max = (i == max_pos ? true : false);
 		            data.min = (i == min_pos ? true : false);
 
-		            data.time = t_samples[i];
+		            data.time = t_samples[i].t;
 
-		            if(t_filter(data)) t_serials.push_back(i);
+		            if(t_filter(data)) t_serials.push_back(t_samples[i].serial);
 			        }
 			    }
 
 
-		    void filter::filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<double>& k_samples,
+		    void filter::filter_twopf_kconfig_sample(twopf_kconfig_filter k_filter, const std::vector<twopf_kconfig>& k_samples,
 		                                             std::vector<unsigned int>& k_serials) const
 			    {
 		        int min_pos = -1;
@@ -138,8 +139,8 @@ namespace transport
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
-		            if(k_samples[i] < k_min) { k_min = k_samples[i]; min_pos = i; }
-		            if(k_samples[i] > k_max) { k_max = k_samples[i]; max_pos = i; }
+		            if(k_samples[i].k_conventional < k_min) { k_min = k_samples[i].k_conventional; min_pos = i; }
+		            if(k_samples[i].k_conventional > k_max) { k_max = k_samples[i].k_conventional; max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -152,9 +153,9 @@ namespace transport
 
 		            data.max = (i == max_pos ? true : false);
 		            data.min = (i == min_pos ? true : false);
-		            data.k = k_samples[i];
+		            data.k = k_samples[i].k_conventional;
 
-		            if(k_filter(data)) k_serials.push_back(i);
+		            if(k_filter(data)) k_serials.push_back(k_samples[i].serial);
 			        }
 			    }
 
@@ -246,7 +247,7 @@ namespace transport
 		            data.k3_min = (i == k3_min_pos ? true : false);
 		            data.k3 = k_samples[i].k3;
 
-		            if(k_filter(data)) k_serials.push_back(i);
+		            if(k_filter(data)) k_serials.push_back(k_samples[i].serial);
 			        }
 			    }
 

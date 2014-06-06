@@ -16,6 +16,8 @@
 #include "transport-runtime-api/models/observers.h"
 #include "transport-runtime-api/models/canonical_model.h"
 
+#include "transport-runtime-api/tasks/task_helper.h"
+
 // current implementation uses unqlite as the repository database
 #include "transport-runtime-api/unqlite/repository_unqlite.h"
 

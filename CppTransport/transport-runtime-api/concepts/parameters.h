@@ -157,8 +157,7 @@ namespace transport
           }
 
         // validate supplied parameters
-        if(p.size() == n.size()) v(p, params);
-        else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PARAMS_MISMATCH);
+        v(p, params);
       }
 
 

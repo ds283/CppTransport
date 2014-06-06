@@ -25,7 +25,7 @@
 #define __CPP_TRANSPORT_NODE_TASK_TYPE               "task-type"
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF         "twopf-task"
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC "threepf-cubic-task"
-#define __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-cubic-fls"
+#define __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-fls-task"
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT        "output-task"
 
 

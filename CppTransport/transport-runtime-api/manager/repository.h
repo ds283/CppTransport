@@ -74,7 +74,7 @@
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT               "repo-path"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT             "output-path"
+#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT               "output-path"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
@@ -626,11 +626,8 @@ namespace transport
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
 
-        //! Write a threepf integration task to the database.
-        virtual void write_task(const twopf_task<number>& t, const model<number>* m) = 0;
-
-        //! Write a twopf integration task to the database
-        virtual void write_task(const threepf_task<number>& t, const model<number>* m) = 0;
+        //! Write an integration task to the database.
+        virtual void write_task(const integration_task<number>& t, const model<number>* m) = 0;
 
         //! Write an output task to the database
         virtual void write_task(const output_task<number>& t) = 0;

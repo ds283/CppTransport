@@ -207,7 +207,9 @@ namespace transport
     template <typename number>
     class $$__MODEL_background_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
+
       public:
+
         $$__MODEL_background_functor(const parameters<number>& p)
           : params(p)
           {
@@ -216,6 +218,7 @@ namespace transport
         void operator ()(const backg_state<number>& __x, backg_state<number>& __dxdt, double __t);
 
         const parameters<number> params;
+
       };
 
 
@@ -223,16 +226,27 @@ namespace transport
     template <typename number>
     class $$__MODEL_background_observer
       {
+
       public:
-        $$__MODEL_background_observer(typename model<number>::backg_history& h)
-          : history(h)
+
+        $$__MODEL_background_observer(typename model<number>::backg_history& h, const std::vector<time_config>& l)
+          : history(h), storage_list(l), serial(0)
           {
+            current_config = storage_list.begin();
           }
 
         void operator ()(const backg_state<number>& x, double t);
 
       private:
+
         typename model<number>::backg_history& history;
+
+        const std::vector<time_config>& storage_list;
+
+        std::vector<time_config>::const_iterator current_config;
+
+        unsigned int serial;
+
       };
 
 
@@ -984,7 +998,7 @@ namespace transport
         solution.reserve(tk->get_num_time_config_samples());
 
         // set up an observer which writes to this history vector
-        $$__MODEL_background_observer<number> obs(solution);
+        $$__MODEL_background_observer<number> obs(solution, tk->get_time_config_list());
 
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
@@ -994,7 +1008,7 @@ namespace transport
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        auto times = tk->get_time_config_sample();
+        auto times = tk->get_integration_step_times();
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);
@@ -1026,7 +1040,12 @@ namespace transport
     template <typename number>
     void $$__MODEL_background_observer<number>::operator()(const backg_state<number>& x, double t)
       {
-        this->history.push_back(x);
+        if(this->current_config != this->storage_list.end() && (*(this->current_config)).serial == this->serial)
+          {
+            this->history.push_back(x);
+            this->current_config++;
+          }
+        this->serial++;
       }
 
 

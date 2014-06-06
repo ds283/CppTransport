@@ -167,7 +167,9 @@ namespace transport
     template <typename number>
     class $$__MODEL_vexcl_twopf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
+
         public:
+
           $$__MODEL_vexcl_twopf_functor(vex::Context& c, const parameters<number>& p, const vex::vector<double>& ks)
             : ctx(c), params(p), k_list(ks)
             {
@@ -176,10 +178,12 @@ namespace transport
           void operator()(const twopf_state& __x, twopf_state& __dxdt, double __t);
 
         private:
+
           vex::Context&              ctx;
           const parameters<number>   params;
 
           const vex::vector<double>& k_list;
+
       };
 
 
@@ -187,17 +191,22 @@ namespace transport
     template <typename number>
     class $$__MODEL_vexcl_twopf_observer: public twopf_groupconfig_batch_observer<number>
       {
+
         public:
+
           $$__MODEL_vexcl_twopf_observer(typename data_manager<number>::twopf_batcher& b,
                                          const work_queue<twopf_kconfig>::device_work_list& c,
+                                         const std::vector<time_config>& l,
                                          double t_int=1.0, bool s=false, unsigned int p=3)
-            : twopf_groupconfig_batch_observer<number>(b, c, $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
+            : twopf_groupconfig_batch_observer<number>(b, c, l,
+                                                       $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
                                                        $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_start,
                                                        t_int, s, p)
             {
             }
 
           void operator()(const twopf_state& x, double t);
+
       };
 
 
@@ -205,7 +214,9 @@ namespace transport
     template <typename number>
     class $$__MODEL_vexcl_threepf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
+
       public:
+
         $$__MODEL_vexcl_threepf_functor(vex::Context& c, const parameters<number>& p,
                                         const vex::vector<double>& k1s, const vex::vector<double>& k2s, const vex::vector<double>& k3s)
           : ctx(c), params(p), k1_list(k1s), k2_list(k2s), k3_list(k3s)
@@ -215,12 +226,14 @@ namespace transport
         void operator()(const threepf_state& __x, threepf_state& __dxdt, double __t);
 
       private:
+
         vex::Context&              ctx;
         const parameters<number>   params;
 
         const vex::vector<double>& k1_list;
         const vex::vector<double>& k2_list;
         const vex::vector<double>& k3_list;
+
       };
 
 
@@ -228,18 +241,26 @@ namespace transport
     template <typename number>
     class $$__MODEL_vexcl_threepf_observer: public threepf_groupconfig_batch_observer<number>
       {
+
       public:
+
         $$__MODEL_vexcl_threepf_observer(typename data_manager<number>::threepf_batcher& b,
                                          const work_queue<threepf_kconfig>::device_work_list& c,
+                                         const std::vector<time_config>& l,
                                          double t_int=1.0, bool s=false, unsigned int p=3)
-          : threepf_groupconfig_batch_observer<number>(b, c,
+          : threepf_groupconfig_batch_observer<number>(b, c, l
                                                        $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
-                                                       $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start, $$__MODEL_pool::threepf_start,
+                                                       $$__MODEL_pool::backg_start,
+                                                       $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start,
+                                                       $$__MODEL_pool::twopf_re_k2_start, $$__MODEL_pool::twopf_im_k2_start,
+                                                       $$__MODEL_pool::twopf_re_k3_start, $$__MODEL_pool::twopf_im_k3_start,
+                                                       $$__MODEL_pool::threepf_start,
                                                        t_int, s, p)
           {
           }
 
         void operator()(const threepf_state& x, double t);
+
       };
 
 
@@ -311,7 +332,7 @@ namespace transport
             $$__MODEL_vexcl_twopf_functor<number> rhs(this->ctx, tk->get_params(), dev_ks);
 
             // set up a functor to observe this system
-            $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list);
+            $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, tk->get_time_config_list());
 
             // fix initial conditions - background
             const std::vector<number>& ics = tk->get_ics_vector();
@@ -321,7 +342,7 @@ namespace transport
               }
 
             // fix initial conditions - 2pf
-            const std::vector<double>& times = tk->get_time_config_sample();
+            const std::vector<double>& times = tk->get_integration_step_times();
             std::function<double(const twopf_kconfig&)> v = [](const twopf_kconfig& c) -> double { return(c.k); };
             this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_start,
                                     list, v, times.front(), tk->get_params(), ics);
@@ -413,7 +434,7 @@ namespace transport
               $$__MODEL_vexcl_threepf_functor<number> rhs(this->ctx, tk->get_params(), dev_k1s, dev_k2s, dev_k3s);
 
               // set up a functor to observe this system
-              $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list);
+              $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
 
               // set up a state vector
               threepf_state dev_x(this->ctx.queue(), $$__MODEL_pool::threepf_state_size*list.size());
@@ -431,7 +452,7 @@ namespace transport
                 }
 
               // fix initial conditions - real 2pfs
-              const std::vector<double>& times = tk->get_time_config_sample();
+              const std::vector<double>& times = tk->get_integration_step_times();
 
               std::function<double(const threepf_kconfig&)> v1 = [](const threepf_kconfig& c) -> double { return(c.k1); };
               std::function<double(const threepf_kconfig&)> v2 = [](const threepf_kconfig& c) -> double { return(c.k2); };

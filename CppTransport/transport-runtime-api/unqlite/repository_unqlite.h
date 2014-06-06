@@ -54,7 +54,7 @@ namespace transport
       protected:
 
 		    //! Internal record-type flag
-        typedef enum { twopf_record, threepf_record, output_record } task_type;
+        typedef enum { integration_record, output_record } task_type;
 
 
         // CONSTRUCTOR, DESTRUCTOR
@@ -79,23 +79,12 @@ namespace transport
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) override;
 
-        //! Write a threepf integration task to the database.
+        //! Write an integration task to the database.
         //! Delegates write_integration_task() to do the work.
-        virtual void write_task(const threepf_task<number>& t, const model<number>* m) override
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION); }
-
-        //! Write a twopf integration task to the database.
-        //! Delegates write_integration_task() to do the work.
-        virtual void write_task(const twopf_task<number>& t, const model<number>* m) override
-          { this->write_integration_task(t, m, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION); }
+        virtual void write_task(const integration_task<number>& t, const model<number>* m) override;
 
         //! Write an output task to the database
         virtual void write_task(const output_task<number>& t) override;
-
-      protected:
-
-        //! Write a generic integration task to the database, using a supplied node tag
-        void write_integration_task(const integration_task<number>& t, const model<number>* m, const std::string& collection);
 
 
         // PULL TASKS FROM THE REPOSITORY DATABASE -- implements a 'repository' interface
@@ -137,7 +126,7 @@ namespace transport
       protected:
 
         //! Insert an output record for a specified task, in a specified collection.
-        typename repository<number>::integration_writer insert_integration_output_group(const std::string& collection, const std::string& backend,
+        typename repository<number>::integration_writer insert_integration_output_group(const std::string& backend,
                                                                                         unsigned int worker, integration_task<number>* tk,
                                                                                         const std::list<std::string>& tags);
 
@@ -290,8 +279,7 @@ namespace transport
         // ensure default collections are present
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
 
-        unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION);
-        unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION);
+        unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION);
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION);
 
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
@@ -333,8 +321,7 @@ namespace transport
         // create default collection within each containers
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
 
-        unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION);
-        unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION);
+        unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION);
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION);
 
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
@@ -383,8 +370,7 @@ namespace transport
 				    // ensure default collections are present within each containers
 //				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION);
 //
-//				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION);
-//				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION);
+//				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION);
 //				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION);
 //
 //				    unqlite_operations::ensure_collection(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
@@ -478,7 +464,7 @@ namespace transport
     // Write a task to the repository
 		// DATABASE ENTRY POINT
     template <typename number>
-    void repository_unqlite<number>::write_integration_task(const integration_task<number>& t, const model<number>* m, const std::string& collection)
+    void repository_unqlite<number>::write_task(const integration_task<number>& t, const model<number>* m)
 	    {
         assert(m != nullptr);
 
@@ -488,11 +474,10 @@ namespace transport
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // check if a task with this name already exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-		    unsigned int output_count  = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_OUTPUT_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
 
-		    unsigned int total = twopf_count + threepf_count + output_count;
+		    unsigned int total = integration_count + output_count;
 
         if(total > 0)
 	        {
@@ -534,7 +519,7 @@ namespace transport
         writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
         // insert this record in the task database
-        unqlite_operations::store(this->db, collection, writer.get_contents());
+        unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, writer.get_contents());
 
         // commit transaction
         this->commit_transaction();
@@ -550,11 +535,10 @@ namespace transport
 		    this->begin_transaction();
 
         // check if a task with this name already exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int output_count  = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
 
-        unsigned int total = twopf_count + threepf_count + output_count;
+        unsigned int total = integration_count + output_count;
 
         if(total > 0)
 	        {
@@ -657,23 +641,20 @@ namespace transport
         this->begin_transaction();
 
         // check if a suitable record exists
-        unqlite_vm* vm_twopf   = nullptr;
-        unqlite_vm* vm_threepf = nullptr;
+        unqlite_vm* vm_int     = nullptr;
 		    unqlite_vm* vm_output  = nullptr;
 
-        unqlite_value* twopf_recs   = unqlite_operations::query(this->db, vm_twopf, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-        unqlite_value* threepf_recs = unqlite_operations::query(this->db, vm_threepf, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unqlite_value* int_recs   = unqlite_operations::query(this->db, vm_int, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
 		    unqlite_value* output_recs  = unqlite_operations::query(this->db, vm_output, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
 
-        if(twopf_recs == nullptr || threepf_recs == nullptr || output_recs == nullptr ||
-	         !unqlite_value_is_json_array(twopf_recs) || !unqlite_value_is_json_array(threepf_recs) || !unqlite_value_is_json_array(output_recs))
+        if(int_recs == nullptr || output_recs == nullptr ||
+	         !unqlite_value_is_json_array(int_recs) || !unqlite_value_is_json_array(output_recs))
 	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
-        unsigned int twopf_count   = static_cast<unsigned int>(unqlite_array_count(twopf_recs));
-        unsigned int threepf_count = static_cast<unsigned int>(unqlite_array_count(threepf_recs));
+        unsigned int int_count     = static_cast<unsigned int>(unqlite_array_count(int_recs));
 		    unsigned int output_count  = static_cast<unsigned int>(unqlite_array_count(output_recs));
 
-		    unsigned int total = twopf_count + threepf_count + output_count;
+		    unsigned int total = int_count + output_count;
 
         if(total == 0)
 	        {
@@ -691,9 +672,8 @@ namespace transport
         unqlite_value* recs = nullptr;
         unqlite_vm*    vm   = nullptr;
 
-        if(twopf_count == 1)        { recs = twopf_recs;   vm = vm_twopf;   type = twopf_record;   }
-        else if(threepf_count == 1) { recs = threepf_recs; vm = vm_threepf; type = threepf_record; }
-		    else                        { recs = output_recs;  vm = vm_output;  type = output_record;  }
+        if(int_count == 1) { recs = int_recs;     vm = vm_int;     type = integration_record; }
+		    else               { recs = output_recs;  vm = vm_output;  type = output_record;      }
 
         if(unqlite_array_count(recs) != 1)   // shouldn't happen because checked for above
 	        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL);
@@ -706,8 +686,7 @@ namespace transport
 
         unqlite_array_walk(recs, &array_extract, &data);
 
-        unqlite_vm_release(vm_twopf);
-        unqlite_vm_release(vm_threepf);
+        unqlite_vm_release(vm_int);
 		    unqlite_vm_release(vm_output);
 
         // commit transaction
@@ -840,18 +819,14 @@ namespace transport
 		    // work out how to build an appropriate task based on the record type
         switch(type)
 	        {
-            case twopf_record:
+            case integration_record:
 	            rval = this->lookup_integration_task(name, type, m, finder, task_reader);
-            break;
-
-            case threepf_record:
-	            rval = this->lookup_integration_task(name, type, m, finder, task_reader);
-            break;
+              break;
 
             case output_record:
 	            rval = this->lookup_output_task(name, finder, task_reader);
-		          m = nullptr;  // outout tasks aren't associated with a unique model
-            break;
+		          m = nullptr;  // output tasks aren't associated with a unique model
+              break;
 
             default:
 	            assert(false);
@@ -902,9 +877,9 @@ namespace transport
         // reconstruct a initial_conditions<> object
         package_reader->start_node(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
         package_reader->push_bookmark();
-        initial_conditions<number> ics = initial_conditions_helper::deserialize<number>(package_reader, package_name,
-                                                                                        m->get_param_names(), m->get_state_names(),
-                                                                                        p_validator, ics_validator);
+        initial_conditions<number> ics = initial_conditions<number>(package_name, package_reader,
+                                                                    m->get_param_names(), m->get_state_names(),
+                                                                    p_validator, ics_validator);
         package_reader->pop_bookmark();
         package_reader->end_element(__CPP_TRANSPORT_NODE_PACKAGE_ICS);
 
@@ -914,28 +889,7 @@ namespace transport
         // move the task reader to the task description block, and use it to reconstruct a task<>
         task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
         task_reader->push_bookmark();
-
-				task<number>* rval = nullptr;
-
-        switch(type)
-	        {
-            case twopf_record:
-	            {
-                twopf_task<number> tk = twopf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
-                rval = new twopf_task<number>(tk);
-		            break;
-			        }
-
-		        case threepf_record:
-			        {
-		            threepf_task<number> tk = threepf_task_helper::deserialize(task_reader, name, ics, m->kconfig_kstar_factory());
-				        rval = new threepf_task<number>(tk);
-		            break;
-			        }
-
-		        default:
-			        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_TASK);
-			    }
+				task<number>* rval = integration_task_helper::deserialize<number>(name, task_reader, ics);
 		    task_reader->pop_bookmark();
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
 
@@ -958,11 +912,9 @@ namespace transport
 
 				// generate lookup functions for tasks and derived products
 
-		    typename output_task_helper::derived_product_finder<number>::type pfinder =
-			                                                                      std::bind(&repository_unqlite<number>::lookup_derived_product, this, std::placeholders::_1, finder);
+		    typename output_task<number>::derived_product_finder pfinder = std::bind(&repository_unqlite<number>::lookup_derived_product, this, std::placeholders::_1, finder);
 
-				output_task<number> tk = output_task_helper::deserialize<number>(reader, name, pfinder);
-		    task<number>* rval = new output_task<number>(tk);
+		    task<number>* rval = output_task_helper::deserialize<number>(name, reader, pfinder);
 
 		    reader->pop_bookmark();
 		    reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
@@ -1015,11 +967,10 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int twopf_count   = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int threepf_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-		    unsigned int output_count  = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
 
-		    unsigned int total = twopf_count + threepf_count + output_count;
+		    unsigned int total = integration_count + output_count;
 
         std::string rval;
 
@@ -1038,9 +989,8 @@ namespace transport
         else
           {
             std::string collection;
-            if(twopf_count == 1)        collection = __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION;
-            else if(threepf_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION;
-		        else                        collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
+            if(integration_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
+		        else                       collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
 
             rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_TASK_NAME);
           }
@@ -1067,7 +1017,7 @@ namespace transport
         this->begin_transaction();
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -1076,7 +1026,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(__CPP_TRANSPORT_UNQLITE_TASKS_TWOPF_COLLECTION, backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(backend, worker, tk, tags);
 
 		    // close database handles
         this->commit_transaction();
@@ -1100,7 +1050,7 @@ namespace transport
         this->begin_transaction();
 
         // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
         if(count == 0)
           {
             std::ostringstream msg;
@@ -1109,7 +1059,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(__CPP_TRANSPORT_UNQLITE_TASKS_THREEPF_COLLECTION, backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(backend, worker, tk, tags);
 
 		    // commit transaction
         this->commit_transaction();
@@ -1123,14 +1073,14 @@ namespace transport
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::insert_integration_output_group(const std::string& collection, const std::string& backend,
+    repository_unqlite<number>::insert_integration_output_group(const std::string& backend,
                                                                 unsigned int worker, integration_task<number>* tk, const std::list<std::string>& tags)
       {
         // get serialization_reader for the named task record
         int task_id = 0;
 		    task_type type;
         unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
-		    assert(type == twopf_record || type == threepf_record);
+		    assert(type == integration_record);
 
 		    // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1164,8 +1114,8 @@ namespace transport
         task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
         task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
         task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
-        unqlite_operations::drop(this->db, collection, task_id);
-        unqlite_operations::store(this->db, collection, task_reader->get_contents());
+        unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_id);
+        unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_reader->get_contents());
 
 		    // create directories
         boost::filesystem::create_directories(this->get_root_path() / output_path);
@@ -1221,7 +1171,7 @@ namespace transport
         task_type type;
         unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(name, task_id, type);
 
-        if(type != twopf_record && type != threepf_record)
+        if(type != integration_record)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";

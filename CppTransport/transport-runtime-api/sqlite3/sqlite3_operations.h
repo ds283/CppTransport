@@ -131,7 +131,7 @@ namespace transport
             assert(db != nullptr);
             assert(tk != nullptr);
 
-            std::vector<double> sample_times = tk->get_time_config_sample();
+            std::vector<time_config> sample_times = tk->get_time_config_list();
 
             // set up a table
             std::stringstream create_stmt;
@@ -150,10 +150,10 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(unsigned int i = 0; i < sample_times.size(); i++)
+            for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.begin(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, i));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, sample_times[i]));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).t));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL, SQLITE_DONE);
 

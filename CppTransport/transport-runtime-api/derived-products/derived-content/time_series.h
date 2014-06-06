@@ -129,7 +129,7 @@ namespace transport
 		    time_series<number>::time_series(const integration_task<number>& tk, filter::time_filter tfilter)
 			    {
 		        // set up a list of serial numbers corresponding to the sample times for this derived line
-		        this->f.filter_time_sample(tfilter, tk.get_time_config_sample(), this->time_sample_sns);
+		        this->f.filter_time_sample(tfilter, tk.get_time_config_list(), this->time_sample_sns);
 			    }
 
 

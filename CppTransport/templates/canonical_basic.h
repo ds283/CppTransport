@@ -99,7 +99,9 @@ namespace transport
     template <typename number>
     class $$__MODEL_basic_twopf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
+
       public:
+
         $$__MODEL_basic_twopf_functor(const parameters<number>& p, double k)
           : params(p), k_mode(k)
           {
@@ -108,9 +110,11 @@ namespace transport
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
 
       private:
+
         const parameters<number>& params;
 
         const double k_mode;
+
       };
 
 
@@ -118,14 +122,19 @@ namespace transport
     template <typename number>
     class $$__MODEL_basic_twopf_observer: public twopf_singleconfig_batch_observer<number>
       {
+
       public:
-        $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c)
-          : twopf_singleconfig_batch_observer<number>(b, c, $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
+
+        $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
+                                       const std::vector<time_config>& l)
+          : twopf_singleconfig_batch_observer<number>(b, c, l,
+                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
                                                       $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_start)
           {
           }
 
         void operator ()(const twopf_state<number>& x, double t);
+
       };
 
 
@@ -133,6 +142,7 @@ namespace transport
     template <typename number>
     class $$__MODEL_basic_threepf_functor: public constexpr_flattener<$$__NUMBER_FIELDS>
       {
+
       public:
         $$__MODEL_basic_threepf_functor(const parameters<number>& p, double k1, double k2, double k3)
           : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
@@ -142,11 +152,13 @@ namespace transport
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
 
       private:
+
         const parameters<number>& params;
 
         const double kmode_1;
         const double kmode_2;
         const double kmode_3;
+
       };
 
 
@@ -154,14 +166,22 @@ namespace transport
     template <typename number>
     class $$__MODEL_basic_threepf_observer: public threepf_singleconfig_batch_observer<number>
       {
+
       public:
-        $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c)
-          : threepf_singleconfig_batch_observer<number>(b, c, $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
-                                                        $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start, $$__MODEL_pool::threepf_start)
+        $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
+                                         const std::vector<time_config>& l)
+          : threepf_singleconfig_batch_observer<number>(b, c, l,
+                                                        $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
+                                                        $$__MODEL_pool::backg_start,
+                                                        $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start,
+                                                        $$__MODEL_pool::twopf_re_k2_start, $$__MODEL_pool::twopf_im_k2_start,
+                                                        $$__MODEL_pool::twopf_re_k3_start, $$__MODEL_pool::twopf_im_k3_start,
+                                                        $$__MODEL_pool::threepf_start)
           {
           }
 
         void operator ()(const threepf_state<number>& x, double t);
+
       };
 
     
@@ -222,7 +242,7 @@ namespace transport
         $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
 
         // set up a functor to observe the integration
-        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig);
+        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
 
         // set up a state vector
         twopf_state<number> x;
@@ -233,7 +253,7 @@ namespace transport
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
-        const std::vector<double>& times = tk->get_time_config_sample();
+        const std::vector<double>& times = tk->get_integration_step_times();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
@@ -305,7 +325,7 @@ namespace transport
         $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
 
         // set up a functor to observe the integration
-        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig);
+        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
 
         // set up a state vector
         threepf_state<number> x;
@@ -316,7 +336,7 @@ namespace transport
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs
-        const std::vector<double>& times = tk->get_time_config_sample();
+        const std::vector<double>& times = tk->get_integration_step_times();
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);

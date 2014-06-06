@@ -162,7 +162,7 @@ int main(int argc, char* argv[])
     std::cout << ks;
 
     // construct a threepf task
-    transport::threepf_task<double> tk3 = transport::threepf_task<double>("axion.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, model->kconfig_kstar_factory());
 
     std::cout << tk3;
 

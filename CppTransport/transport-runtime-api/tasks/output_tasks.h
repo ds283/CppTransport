@@ -25,9 +25,7 @@
 
 
 
-#define __CPP_TRANSPORT_NODE_OUTPUT_NAME            "name"
 #define __CPP_TRANSPORT_NODE_OUTPUT_ARRAY           "derived-data-tasks"
-#define __CPP_TRANSPORT_NODE_OUTPUT_TASK            "task"
 #define __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT "label"
 #define __CPP_TRANSPORT_NODE_OUTPUT_SERIAL          "serial"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS       "tags"
@@ -174,7 +172,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_task(const std::string& nm, serialization_reader* reader, derived_product_finder pfinder);
+        output_task(const std::string& nm, serialization_reader* reader, derived_product_finder& pfinder);
 
 
         //! Destroy an output task
@@ -268,9 +266,10 @@ namespace transport
 
 
     template <typename number>
-    output_task<number>::output_task<number>(const std::string& nm, serialization_reader* reader,
-                                             typename output_task<number>::derived_product_finder pfinder)
-      : serial(0), task<number>(nm, reader)
+    output_task<number>::output_task(const std::string& nm, serialization_reader* reader,
+                                     typename output_task<number>::derived_product_finder& pfinder)
+      : task<number>(nm, reader),
+        serial(0)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
@@ -344,6 +343,8 @@ namespace transport
             this->end_element(writer, "arrayelt");
 	        }
         this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+
+        this->task<number>::serialize(writer);
 	    }
 
 

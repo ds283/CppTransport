@@ -93,18 +93,30 @@ namespace transport
         // SERIALIZATION INTERFACE
 
       public:
+
+        //! Serialize this object
         virtual void serialize(serialization_writer& writer) const override;
 
         friend std::ostream& operator<< <>(std::ostream& out, const range<value>& obj);
 
+
         // INTERNAL DATA
 
       protected:
+
+        //! Minimium value
         value min;
+
+        //! Maximum value
         value max;
+
+        //! Numnber of steps
         unsigned int steps;
+
+        //! Spacing type
         spacing_type spacing;
 
+        //! Grid of values
         std::vector<value> grid;
       };
 
@@ -178,8 +190,8 @@ namespace transport
         std::string spc_string;
         reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spc_string);
 
-        if(spacing == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
-        else if(spacing == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
+        if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
+        else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
         else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
       }
 
