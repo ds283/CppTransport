@@ -89,7 +89,7 @@ namespace transport
         class time_config_storage_policy_data
 	        {
           public:
-		        time_config_storage_policy_data(unsigned int s, double t)
+		        time_config_storage_policy_data(double t, unsigned int s)
 			        : serial(s), time(t)
 			        {
 			        }
@@ -123,19 +123,12 @@ namespace transport
 		    //! Construct a named integration task with supplied initial conditions and time-configuration storage policy
 		    integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, time_config_storage_policy p);
 
-        //! Construct a named integration task with supplied initial conditions, but no storage policy; delegate to constructor
-		    //! with specified storage policy, substituting the default storage policy
-        integration_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t)
-          : integration_task(nm, i, t, default_time_config_storage_policy())
-	        {
-	        }
-
         //! Construct an anonymized integration task with supplied initial conditions.
 		    //! Anonymized tasks are used for things like constructing initial conditions,
 		    //! integrating the background only, finding H at horizon-crossing etc.
 		    //! Science output is expected to be generated using named tasks.
         integration_task(const initial_conditions<number>& i, const range<double>& t)
-          : integration_task(random_string(), i, t)
+          : integration_task(random_string(), i, t, default_time_config_storage_policy())
           {
           }
 
@@ -284,8 +277,11 @@ namespace transport
 				raw_time_list = times.get_grid();
 
 				// filtered times have to be reconstructed from the database
-				unsigned int sample_times = reader->start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
-				for(unsigned int i = 0; i < sample_times; i++)
+				unsigned int num_configs = reader->start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+        time_config_list.clear();
+        time_config_list.reserve(num_configs);
+
+				for(unsigned int i = 0; i < num_configs; i++)
 					{
 						reader->start_array_element();
 
@@ -403,7 +399,9 @@ namespace transport
       public:
 
         //! construct a twopf-list-task object
-        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, typename integration_task<number>::kconfig_kstar kstar);
+        twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                        typename integration_task<number>::kconfig_kstar kstar,
+                        typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
         twopf_list_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
@@ -458,8 +456,9 @@ namespace transport
 
     template <typename number>
     twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                             typename integration_task<number>::kconfig_kstar kstar)
-      : integration_task<number>(nm, i, t),
+                                             typename integration_task<number>::kconfig_kstar kstar,
+                                             typename integration_task<number>::time_config_storage_policy p)
+      : integration_task<number>(nm, i, t, p),
         serial(0)
       {
         // we can use 'this' here, because the integration-task components are guaranteed to be initialized
@@ -603,16 +602,24 @@ namespace transport
 
         // CONSTRUCTOR, DESTRUCTOR
 
-        //! Construct a named two-point function task
+        //! Construct a named two-point function task with specified time-configuration storage policy
         twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar);
+                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
+                   typename integration_task<number>::time_config_storage_policy p);
 
-        //! Construct an anonymized two-point function task
-        twopf_task(const initial_conditions<number>& i, const range<double>& t,
+        //! Construct a named two-point function task with default storage policies
+        twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                    const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-          : twopf_task(random_string(), i, t, ks, kstar)
+          : twopf_task(nm, i, t, ks, kstar, typename integration_task<number>::default_time_config_storage_policy())
           {
           }
+
+//        //! Construct an anonymized two-point function task
+//        twopf_task(const initial_conditions<number>& i, const range<double>& t,
+//                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
+//          : twopf_task(random_string(), i, t, ks, kstar, integration_task<number>::default_time_config_storage_policy())
+//          {
+//          }
 
         //! deserialization constructor
         twopf_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
@@ -653,8 +660,9 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(nm, i, t, kstar)
+                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
+                                   typename integration_task<number>::time_config_storage_policy p)
+      : twopf_list_task<number>(nm, i, t, kstar, p)
       {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); j++)
@@ -692,7 +700,8 @@ namespace transport
 
         //! Construct a threepf-task
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                     typename integration_task<number>::kconfig_kstar kstar);
+                     typename integration_task<number>::kconfig_kstar kstar,
+                     typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
         threepf_task(const std::string& n, serialization_reader* reader, const initial_conditions<number>& i);
@@ -735,8 +744,9 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                       typename integration_task<number>::kconfig_kstar kstar)
-      : twopf_list_task<number>(nm, i, t, kstar),
+                                       typename integration_task<number>::kconfig_kstar kstar,
+                                       typename integration_task<number>::time_config_storage_policy p)
+      : twopf_list_task<number>(nm, i, t, kstar, p),
         serial(0), integrable(true)
       {
       }
@@ -839,16 +849,26 @@ namespace transport
 
       public:
 
-        //! Construct a named three-point function task based on sampling from a cubic lattice of ks
+        //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
+        //! with specified policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                           const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar);
+                           const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
+                           typename integration_task<number>::time_config_storage_policy p);
 
-        //! Construct an anonymized three-point function task based on sampling from a cubic lattice of ks
-        threepf_cubic_task(const initial_conditions<number>& i, const range<double>& t,
-                     const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-          : threepf_cubic_task(random_string(), i, t, ks, kstar)
+        //! Construct a named three-point function task based on sampling from a cubix lattice of ks,
+        //! with default policies
+        threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                           const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
+          : threepf_cubic_task(nm, i, t, ks, kstar, typename integration_task<number>::default_time_config_storage_policy())
           {
           }
+
+//        //! Construct an anonymized three-point function task based on sampling from a cubic lattice of ks
+//        threepf_cubic_task(const initial_conditions<number>& i, const range<double>& t,
+//                     const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
+//          : threepf_cubic_task(random_string(), i, t, ks, kstar)
+//          {
+//          }
 
         //! Deserialization constructor
         threepf_cubic_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
@@ -882,8 +902,9 @@ namespace transport
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-      : threepf_task<number>(nm, i, t, kstar)
+                                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
+                                                   typename integration_task<number>::time_config_storage_policy p)
+      : threepf_task<number>(nm, i, t, kstar, p)
       {
         bool stored_background = false;
 
@@ -976,18 +997,30 @@ namespace transport
       public:
 
         //! Construct a named three-point function task based on sampling at specified values of
-        //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta
+        //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
+        //! with specified storage policies
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         typename integration_task<number>::kconfig_kstar kstar);
+                         typename integration_task<number>::kconfig_kstar kstar,
+                         typename integration_task<number>::time_config_storage_policy p);
 
-        //! Construct an anonymized three-point function task based on sampling in FLS parameters
-        threepf_fls_task(const initial_conditions<number>& i, const range<double>& t,
-                     const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                     typename integration_task<number>::kconfig_kstar kstar)
-          : threepf_fls_task(random_string(), i, t, kts, alphas, betas, kstar)
+        //! Construct a named three-point function task based on sampling at specified values of
+        //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
+        //! with default storage policies
+        threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                         const range<double>& kts, const range<double>& alphas, const range<double>& betas,
+                         typename integration_task<number>::kconfig_kstar kstar)
+          : threepf_fls_task(nm, i, t, kts, alphas, betas, kstar, typename integration_task<number>::default_time_config_storage_policy())
           {
           }
+
+//        //! Construct an anonymized three-point function task based on sampling in FLS parameters
+//        threepf_fls_task(const initial_conditions<number>& i, const range<double>& t,
+//                     const range<double>& kts, const range<double>& alphas, const range<double>& betas,
+//                     typename integration_task<number>::kconfig_kstar kstar)
+//          : threepf_fls_task(random_string(), i, t, kts, alphas, betas, kstar)
+//          {
+//          }
 
         //! Deserialization construcitr
         threepf_fls_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
@@ -1026,8 +1059,11 @@ namespace transport
 
     // build a threepf task from sampling at specific values of the Fergusson-Shellard-Liguori parameters k_t, alpha, beta
     template <typename number>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t, const range<double>& kts, const range<double>& alphas, const range<double>& betas, typename integration_task<number>::kconfig_kstar kstar)
-      : threepf_task<number>(nm, i, t, kstar)
+    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+                                               const range<double>& kts, const range<double>& alphas, const range<double>& betas,
+                                               typename integration_task<number>::kconfig_kstar kstar,
+                                               typename integration_task<number>::time_config_storage_policy p)
+      : threepf_task<number>(nm, i, t, kstar, p)
       {
         bool stored_background = false;
 
