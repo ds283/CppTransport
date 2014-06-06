@@ -515,7 +515,6 @@ namespace transport
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
         this->push(x);
-
       }
 
 
