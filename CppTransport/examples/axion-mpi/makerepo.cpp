@@ -166,7 +166,7 @@ int main(int argc, char* argv[])
 		struct ThreepfStoragePolicy
 			{
 		  public:
-				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(data.beta > 0.8); }
+				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 			};
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
