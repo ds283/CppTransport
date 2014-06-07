@@ -43,7 +43,7 @@ bool timeseries_twopf_kconfig_filter(const transport::derived_data::filter::twop
 // filter for near-squeezed 3pf k-configurations
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
-    return(fabs(data.beta - 0.0) < 0.01); // use beta = 0.9 only
+    return(fabs(data.beta - 0.95) < 0.01); // use beta = 0.9 only
 	}
 
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
@@ -86,9 +86,9 @@ int main(int argc, char* argv[])
     const std::vector<double> init_values = { phi_init, chi_init };
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
-    const double Ncross = 5.0;  // horizon-crossing occurs at 7 e-folds from init_values
-    const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
+    const double Ncross = 4.0;  // horizon-crossing occurs at 4 e-folds from init_values
+    const double Npre   = 4.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
+    const double Nmax   = 61.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
     transport::initial_conditions<double> ics =
@@ -97,12 +97,13 @@ int main(int argc, char* argv[])
                                                                                   model->ics_validator_factory(),
                                                                                   model->ics_finder_factory());
 
-    const unsigned int t_samples = 50000;       // record 5000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 100000;       // record 5000 samples - enough to find a good stepsize
 
+    // time storage policy is to store only 500 samples
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 100) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 200) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
@@ -138,9 +139,6 @@ int main(int argc, char* argv[])
 
     std::cout << tk3;
 
-    // write each initial conditions/parameter specification and integration specification into the model repository
-    repo->write_task(tk3, model);
-
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(tk3, model,
                                                                                                                                            transport::derived_data::filter::time_filter(timeseries_axis_filter),
@@ -154,8 +152,8 @@ int main(int argc, char* argv[])
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(tk3, model,
-                                                                                                                                        transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+                                                                                                                                            transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                                                                                            transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
     tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
@@ -204,24 +202,11 @@ int main(int argc, char* argv[])
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
 		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
-		tk3_redbsp_spec_plot.set_log_x(true);
 		tk3_redbsp_spec_plot.set_title("Reduced bispectrum in the squeezed limit");
 
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
-		// write derived data products representing these background plots to the database
-    repo->write_derived_product(tk3_zeta_twopf);
-    repo->write_derived_product(tk3_zeta_sq);
-    repo->write_derived_product(tk3_redbsp);
-		repo->write_derived_product(tk3_zeta_sq_table);
-    repo->write_derived_product(tk3_redbsp_table);
-
-    repo->write_derived_product(tk3_zeta_2spec_plot);
-    repo->write_derived_product(tk3_zeta_2spec_table);
-
-		repo->write_derived_product(tk3_redbsp_spec_plot);
-		repo->write_derived_product(tk3_redbsp_spec_table);
 
 		// construct output tasks
 

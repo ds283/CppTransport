@@ -180,9 +180,6 @@ int main(int argc, char* argv[])
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
 
-    // write each initial conditions/parameter specification and integration specification into the model repository
-    repo->write_task(tk2, model);
-    repo->write_task(tk3, model);
 
 		// construct some derived data products; first, simply plots of the background
 
@@ -630,58 +627,6 @@ int main(int argc, char* argv[])
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
 
-		// write derived data products representing these background plots to the database
-//    repo->write_derived_product(tk2_bg_plot);
-//    repo->write_derived_product(tk2_twopf_real_plot);
-//    repo->write_derived_product(tk2_twopf_imag_plot);
-//    repo->write_derived_product(tk2_twopf_total_plot);
-
-    repo->write_derived_product(tk3_bg_plot);
-    repo->write_derived_product(tk3_twopf_real_plot);
-    repo->write_derived_product(tk3_twopf_imag_plot);
-    repo->write_derived_product(tk3_twopf_total_plot);
-    repo->write_derived_product(tk3_threepf_field_equi_plot);
-		repo->write_derived_product(tk3_threepf_deriv_equi_plot);
-//		repo->write_derived_product(tk3_threepf_mma_equi_plot);
-    repo->write_derived_product(tk3_threepf_field_sq_plot);
-    repo->write_derived_product(tk3_threepf_deriv_sq_plot);
-//    repo->write_derived_product(tk3_threepf_mma_sq_plot);
-//    repo->write_derived_product(tk3_mixed_plot);
-
-		repo->write_derived_product(tk3_twopf_real_spec);
-//		repo->write_derived_product(tk3_twopf_imag_spec);
-//		repo->write_derived_product(tk3_twopf_total_spec);
-//		repo->write_derived_product(tk3_twopf_total_tab);
-
-//    repo->write_derived_product(tk3_check_shift);
-
-    repo->write_derived_product(tk3_zeta_twopf);
-    repo->write_derived_product(tk3_zeta_equi);
-    repo->write_derived_product(tk3_zeta_sq);
-
-    repo->write_derived_product(tk3_redbsp);
-
-		repo->write_derived_product(tk3_threepf_field_equi_table);
-    repo->write_derived_product(tk3_threepf_deriv_equi_table);
-//		repo->write_derived_product(tk3_threepf_mma_equi_table);
-    repo->write_derived_product(tk3_threepf_field_sq_table);
-    repo->write_derived_product(tk3_threepf_deriv_sq_table);
-//    repo->write_derived_product(tk3_threepf_mma_sq_table);
-//		repo->write_derived_product(tk3_check_shift_table);
-		repo->write_derived_product(tk3_zeta_equi_table);
-		repo->write_derived_product(tk3_zeta_sq_table);
-    repo->write_derived_product(tk3_redbsp_table);
-
-		repo->write_derived_product(tk3_threepf_equi_spec);
-		repo->write_derived_product(tk3_threepf_equi_spec_tab);
-
-    repo->write_derived_product(tk3_zeta_2spec_plot);
-    repo->write_derived_product(tk3_zeta_2spec_table);
-    repo->write_derived_product(tk3_zeta_3equspec_plot);
-    repo->write_derived_product(tk3_zeta_3equspec_table);
-
-		repo->write_derived_product(tk3_redbsp_spec_plot);
-		repo->write_derived_product(tk3_redbsp_spec_table);
 
 		// construct output tasks
 //    transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
