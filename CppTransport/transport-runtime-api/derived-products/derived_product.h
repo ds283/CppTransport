@@ -85,7 +85,7 @@ namespace transport
 		        virtual ~derived_product() = default;
 
 
-		        // DERIVED PRODUCT INTERFACE
+		        // DERIVED PRODUCTS -- QUERY BASIC DATA
 
 		      public:
 
@@ -98,6 +98,15 @@ namespace transport
 		        //! Apply the analysis represented by this derived product to a given
 		        //! output group
 		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) = 0;
+
+
+            // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS
+
+          public:
+
+            //! Collect a list of tasks which this derived product depends on;
+            //! used by the repository to autocommit any necessary integration tasks
+            virtual void get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface

@@ -627,10 +627,10 @@ namespace transport
         virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
 
         //! Write an integration task to the database.
-        virtual void write_task(const integration_task<number>& t, const model<number>* m) = 0;
+        virtual void write_task(const integration_task<number>& tk, const model<number>* m) = 0;
 
         //! Write an output task to the database
-        virtual void write_task(const output_task<number>& t) = 0;
+        virtual void write_task(const output_task<number>& tk) = 0;
 
 
         // PULL TASKS FROM THE REPOSITORY DATABASE

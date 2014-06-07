@@ -136,7 +136,10 @@ namespace transport
 				    // ADMIN
 
 				    //! Get parent task
-				    const task<number>* get_parent_task() const { return(this->parent_task); }
+				    integration_task<number>* get_parent_task() const { return(this->parent_task); }
+
+            //! Get parent model
+            model<number>* get_parent_model() const { return(this->mdl); }
 
 						//! Get axis type
 						axis_type get_axis_type() const { return(this->x_type); }

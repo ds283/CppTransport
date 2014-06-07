@@ -266,7 +266,9 @@ namespace transport
                         std::string repo_path = static_cast<std::string>(argv[i]);
                         try
                           {
-                            repo = repository_factory<number>(repo_path);
+                            repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
+                                                              std::bind(&task_manager<number>::error, this, std::placeholders::_1),
+                                                              std::bind(&task_manager<number>::warn, this, std::placeholders::_1));
                           }
                         catch (runtime_exception& xe)
                           {
@@ -920,7 +922,9 @@ namespace transport
 
         try
           {
-            this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly);
+            this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly,
+                                                    std::bind(&task_manager<number>::error, this, std::placeholders::_1),
+                                                    std::bind(&task_manager<number>::warn, this, std::placeholders::_1));
           }
         catch (runtime_exception& xe)
           {

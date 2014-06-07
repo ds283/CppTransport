@@ -18,6 +18,13 @@
 #define __CPP_TRANSPORT_REPO_COMMIT_ERROR                "Repository error: Error while committing changes to repository (backend id="
 #define __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR             "Repository error: Error while preparing to commit changes to repository (backend id="
 
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A    "Autocommit: integration task"
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B    "requires package"
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A        "Autocommit: derived product"
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B        "requires task"
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A         "Autocommit: output task"
+#define __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B         "requires derived product"
+
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"

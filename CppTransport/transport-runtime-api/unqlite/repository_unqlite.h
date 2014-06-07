@@ -44,6 +44,12 @@ namespace transport
     // which must be included to allow creation of repositories
     class repository_creation_key;
 
+    //! Error-reporting callback object
+    typedef std::function<void(const std::string&)> repository_unqlite_error_callback;
+
+    //! Warning callback object
+    typedef std::function<void(const std::string&)> repository_unqlite_warning_callback;
+
     // class 'repository_unqlite' implements the 'repository' interface using
     // UnQLite as the database backend.
     // It replaces the earlier DbXml-based repository implementation
@@ -56,13 +62,31 @@ namespace transport
 		    //! Internal record-type flag
         typedef enum { integration_record, output_record } task_type;
 
+      private:
+
+        class default_error_handler
+          {
+          public:
+            void operator() (const std::string& msg) { std::cerr << msg << std::endl; }
+          };
+
+        class default_warning_handler
+          {
+          public:
+            void operator() (const std::string& msg) {std::cout << msg << std::endl; }
+          };
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Open a repository with a specific pathname
-        repository_unqlite(const std::string& path, typename repository<number>::access_type mode=repository<number>::access_type::readwrite);
+        //! and specified warning and error handlers
+        repository_unqlite(const std::string& path,
+                           typename repository<number>::access_type mode = repository<number>::access_type::readwrite,
+                           repository_unqlite_error_callback e=default_error_handler(),
+                           repository_unqlite_warning_callback w=default_warning_handler());
 
         //! Create a repository with a specific pathname
         repository_unqlite(const std::string& path, const repository_creation_key& key);
@@ -81,10 +105,10 @@ namespace transport
 
         //! Write an integration task to the database.
         //! Delegates write_integration_task() to do the work.
-        virtual void write_task(const integration_task<number>& t, const model<number>* m) override;
+        virtual void write_task(const integration_task<number>& tk, const model<number>* m) override;
 
         //! Write an output task to the database
-        virtual void write_task(const output_task<number>& t) override;
+        virtual void write_task(const output_task<number>& tk) override;
 
 
         // PULL TASKS FROM THE REPOSITORY DATABASE -- implements a 'repository' interface
@@ -224,6 +248,12 @@ namespace transport
 
       private:
 
+        //! Error handler
+        repository_unqlite_error_callback error;
+
+        //! Warning handler
+        repository_unqlite_warning_callback warning;
+
         //! BOOST path to database
         boost::filesystem::path db_path;
 
@@ -238,6 +268,7 @@ namespace transport
         //! Number of open clients on the database, used for keep track of when the
         //! database connexion can be closed
 		    unsigned int open_clients;
+
 	    };
 
 
@@ -246,8 +277,9 @@ namespace transport
 
     // Create a repository object associated with a pathname
     template <typename number>
-    repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode)
-      : db(nullptr), open_clients(0), repository<number>(path, mode)
+    repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode,
+                                                   repository_unqlite_error_callback e, repository_unqlite_warning_callback w)
+      : db(nullptr), open_clients(0), repository<number>(path, mode), error(e), warning(w)
       {
         // supplied path should be a directory which exists
         if(!boost::filesystem::is_directory(path))
@@ -295,7 +327,9 @@ namespace transport
     // Create a named repository
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, const repository_creation_key& key)
-      : db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite)
+      : db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite),
+        error(typename repository_unqlite<number>::default_error_handler()),
+        warning(typename repository_unqlite<number>::default_warning_handler())
       {
         // check whether root directory for the repository already exists -- it shouldn't
         if(boost::filesystem::exists(path))
@@ -464,7 +498,7 @@ namespace transport
     // Write a task to the repository
 		// DATABASE ENTRY POINT
     template <typename number>
-    void repository_unqlite<number>::write_task(const integration_task<number>& t, const model<number>* m)
+    void repository_unqlite<number>::write_task(const integration_task<number>& tk, const model<number>* m)
 	    {
         assert(m != nullptr);
 
@@ -474,32 +508,39 @@ namespace transport
         if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // check if a task with this name already exists
-        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-		    unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+		    unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, tk.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
 
 		    unsigned int total = integration_count + output_count;
 
         if(total > 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << t.get_name() << "'";
+            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << tk.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
-        // check whether the specified initial_conditions object is already in the database; if not, insert it
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, t.get_ics().get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
-        if(count == 0) this->write_package(t.get_ics(), m);
+        // check whether the specified model+initial conditions package is already in the database; if not, insert it
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, tk.get_ics().get_name(), __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+        if(count == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
+                << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
+            this->warning(msg.str());
+            this->write_package(tk.get_ics(), m);
+          }
 
         // create an unqlite_serialization_writer, used to emit the serialized record to the database
         unqlite_serialization_writer writer;
 
         // commit task name
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, tk.get_name());
 
         // commit metadata block
         writer.start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE, t.get_ics().get_name());
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE, tk.get_ics().get_name());
 
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         writer.write_value(__CPP_TRANSPORT_NODE_TASK_METADATA_CREATED, boost::posix_time::to_iso_string(now));
@@ -511,7 +552,7 @@ namespace transport
 
         // commit task block
         writer.start_node(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
-        t.serialize(writer);
+        tk.serialize(writer);
         writer.end_element(__CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS);
 
         // write empty array of output blocks: will be populated when integrations are run
@@ -529,21 +570,21 @@ namespace transport
     // Write an output task to the database
 		// DATABASE ENTRY POINT
 		template <typename number>
-		void repository_unqlite<number>::write_task(const output_task<number>& t)
+		void repository_unqlite<number>::write_task(const output_task<number>& tk)
 	    {
 		    // open a new transaction, if necessary. After this we can assume the database handles are live
 		    this->begin_transaction();
 
         // check if a task with this name already exists
-        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, t.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, tk.get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
 
         unsigned int total = integration_count + output_count;
 
         if(total > 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << t.get_name() << "'";
+            msg << __CPP_TRANSPORT_REPO_TASK_EXISTS << " '" << tk.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
@@ -552,11 +593,27 @@ namespace transport
 		    // may be associated with a different task.
 		    // At the top of the hierarchy, each derived product name should be unique.
 
+        // check whether derived products on which this task depends have already been committed to the database
+        const typename std::vector< output_task_element<number> > elements = tk.get_elements();
+        for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != elements.end(); t++)
+          {
+            derived_data::derived_product<number>* product = (*t).get_product();
+            unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, product->get_name(), __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+            if(count == 0)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
+                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
+                this->warning(msg.str());
+                this->write_derived_product(*product);
+              }
+          }
+
 		    // create an unqlite_serialization_writer, used to emit the serialized record to the database
 		    unqlite_serialization_writer writer;
 
 		    // commit task name
-		    writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, t.get_name());
+		    writer.write_value(__CPP_TRANSPORT_NODE_TASK_NAME, tk.get_name());
 
 		    // commit data block
 		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
@@ -571,7 +628,7 @@ namespace transport
 
 		    // commit task block
 		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
-		    t.serialize(writer);
+		    tk.serialize(writer);
 		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 
         // insert this record in the task database
@@ -1185,8 +1242,6 @@ namespace transport
         if(groups == nullptr || !unqlite_value_is_json_array(groups))
           throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
-        unsigned int num_groups = static_cast<unsigned int>(unqlite_array_count(groups));
-
         std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > > list;
         unqlite_array_walk(groups, &array_extract_output_groups<number>, &list);
 
@@ -1222,6 +1277,22 @@ namespace transport
 				    msg << __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS << " '" << d.get_name() << "'";
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
+
+        // check whether all tasks on which this derived product depends are already in the database
+        typename std::vector< typename std::pair< integration_task<number>*, model<number>* > > task_list;
+        d.get_task_list(task_list);
+        for(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >::iterator t = task_list.begin(); t != task_list.end(); t++)
+          {
+            unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, (*t).first->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
+            if(count == 0)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
+                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << (*t).first->get_name() << "'";
+                this->warning(msg.str());
+                this->write_task(*((*t).first), (*t).second);
+              }
+          }
 
 		    // create a serialization writer, used to emit the serialized record to the database
 		    unqlite_serialization_writer writer;
@@ -1402,9 +1473,20 @@ namespace transport
 
 
     template <typename number>
-    repository <number>* repository_factory(const std::string& path, typename repository<number>::access_type mode=repository<number>::access_type::readwrite)
+    repository <number>* repository_factory(const std::string& path,
+                                            typename repository<number>::access_type mode=repository<number>::access_type::readwrite)
       {
         return new repository_unqlite<number>(path, mode);
+      }
+
+
+    template <typename number>
+    repository<number>* repository_factory(const std::string& path,
+                                           typename repository<number>::access_type mode,
+                                           repository_unqlite_error_callback e,
+                                           repository_unqlite_warning_callback w)
+      {
+        return new repository_unqlite<number>(path, mode, e, w);
       }
 
 

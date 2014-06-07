@@ -130,6 +130,7 @@ namespace transport
 
 				        //! this line's data points
 				        std::deque<output_value> values;
+
 					    };
 
 
@@ -168,6 +169,15 @@ namespace transport
 
 						//! Obtain output from our lines
 				    void obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const;
+
+
+            // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS -- implements a 'derived_product' interface
+
+          public:
+
+            //! Collect a list of tasks which this derived product depends on;
+            //! used by the repository to autocommit any necessary integration tasks
+            virtual void get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const override;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -477,6 +487,19 @@ namespace transport
 			    }
 
 
+        template <typename number>
+        void line_collection<number>::get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const
+          {
+            list.clear();
+
+            // collect data from each derived_line
+            for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
+              {
+                list.push_back(std::make_pair((*t)->get_parent_task(), (*t)->get_parent_model()));
+              }
+          }
+
+
 		    template <typename number>
 		    void line_collection<number>::serialize(serialization_writer& writer) const
 			    {
@@ -552,6 +575,7 @@ namespace transport
 								return(std::nan(""));
 							}
 					}
+
 
 			}   // namespace derived_data
 
