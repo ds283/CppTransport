@@ -65,13 +65,13 @@ namespace transport
 
         // Integrate background and 2-point function on the CPU
         virtual void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                   typename data_manager<number>::twopf_batcher& batcher,
-                                   bool silent=false) override;
+                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           bool silent = false) override;
 
         // Integrate background, 2-point function and 3-point function on the CPU
         virtual void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                     typename data_manager<number>::threepf_batcher& batcher,
-                                     bool silent=false) override;
+                                             typename data_manager<number>::threepf_batcher& batcher,
+                                             bool silent = false) override;
 
         virtual unsigned int backend_twopf_state_size(void)   override { return($$__MODEL_pool::twopf_state_size); }
         virtual unsigned int backend_threepf_state_size(void) override { return($$__MODEL_pool::threepf_state_size); }
@@ -81,10 +81,12 @@ namespace transport
       protected:
 
         void twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
-                         typename data_manager<number>::twopf_batcher& batcher);
+                         typename data_manager<number>::twopf_batcher& batcher,
+                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time);
 
         void threepf_kmode(const threepf_kconfig&, const integration_task<number>* tk,
-                           typename data_manager<number>::threepf_batcher& batcher);
+                           typename data_manager<number>::threepf_batcher& batcher,
+                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
@@ -224,19 +226,25 @@ namespace transport
 
         for(unsigned int i = 0; i < list.size(); i++)
           {
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
-                << " " __CPP_TRANSPORT_OF << " " << list.size() << ")";
+            boost::timer::nanosecond_type int_time;
+            boost::timer::nanosecond_type batch_time;
 
             // write the time history for this k-configuration
-            this->twopf_kmode(list[i], tk, batcher);
+            this->twopf_kmode(list[i], tk, batcher, int_time, batch_time);
+
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+                << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
+                << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
           }
       }
 
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
-                                              typename data_manager<number>::twopf_batcher& batcher)
+                                              typename data_manager<number>::twopf_batcher& batcher,
+                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -262,6 +270,8 @@ namespace transport
 
         obs.stop_timers();
         batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
+        int_time = obs.get_integration_time();
+        batch_time = obs.get_batching_time();
       }
 
 
@@ -311,19 +321,25 @@ namespace transport
         // step through the queue, solving for the three-point functions in each case
         for(unsigned int i = 0; i < list.size(); i++)
           {
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-              << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
-              << " " __CPP_TRANSPORT_OF << " " << list.size() << ")";
+            boost::timer::nanosecond_type int_time;
+            boost::timer::nanosecond_type batch_time;
 
             // write the time history for this k-configuration
-            this->threepf_kmode(list[i], tk, batcher);
+            this->threepf_kmode(list[i], tk, batcher, int_time, batch_time);
+
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+                  << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
+                  << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
           }
       }
 
 
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
-                                                typename data_manager<number>::threepf_batcher& batcher)
+                                                typename data_manager<number>::threepf_batcher& batcher,
+                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -359,6 +375,8 @@ namespace transport
 
         obs.stop_timers();
         batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
+        int_time = obs.get_integration_time();
+        batch_time = obs.get_batching_time();
       }
 
 

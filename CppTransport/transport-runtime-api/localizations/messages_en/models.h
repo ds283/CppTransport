@@ -31,6 +31,8 @@
 
 #define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
 #define __CPP_TRANSPORT_OF                    "of"
+#define __CPP_TRANSPORT_INTEGRATION_TIME      "integration time"
+#define __CPP_TRANSPORT_BATCHING_TIME         "batching time"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_MODELS_H
