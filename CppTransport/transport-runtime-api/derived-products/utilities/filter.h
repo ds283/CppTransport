@@ -7,7 +7,6 @@
 #ifndef __filter_H_
 #define __filter_H_
 
-#include <float.h>
 
 #include <vector>
 
@@ -99,15 +98,15 @@ namespace transport
 		    void filter::filter_time_sample(time_filter t_filter, const std::vector<time_config>& t_samples, std::vector<unsigned int>& t_serials) const
 			    {
 		        int min_pos = -1;
-		        double t_min = DBL_MAX;
+		        double t_min = 0.0;
 		        int max_pos = -1;
-		        double t_max = -DBL_MAX;
+		        double t_max = 0.0;
 
 		        // scan through to find min and max values of time
             for(unsigned int i = 0; i < t_samples.size(); i++)
               {
-		            if(t_samples[i].t < t_min) { t_min = t_samples[i].t; min_pos = i; }
-		            if(t_samples[i].t > t_max) { t_max = t_samples[i].t; max_pos = i; }
+		            if(min_pos == -1 || t_samples[i].t < t_min) { t_min = t_samples[i].t; min_pos = i; }
+		            if(max_pos == -1 || t_samples[i].t > t_max) { t_max = t_samples[i].t; max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -134,15 +133,15 @@ namespace transport
 		                                             std::vector<unsigned int>& k_serials) const
 			    {
 		        int min_pos = -1;
-		        double k_min = DBL_MAX;
+		        double k_min = 0.0;
 		        int max_pos = -1;
-		        double k_max = -DBL_MAX;
+		        double k_max = 0.0;
 
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
-		            if(k_samples[i].k_conventional < k_min) { k_min = k_samples[i].k_conventional; min_pos = i; }
-		            if(k_samples[i].k_conventional > k_max) { k_max = k_samples[i].k_conventional; max_pos = i; }
+		            if(min_pos == -1 || k_samples[i].k_conventional < k_min) { k_min = k_samples[i].k_conventional; min_pos = i; }
+		            if(max_pos == -1 || k_samples[i].k_conventional > k_max) { k_max = k_samples[i].k_conventional; max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -168,55 +167,55 @@ namespace transport
 		                                               std::vector<unsigned int>& k_serials) const
 			    {
 		        int kt_min_pos = -1;
-		        double kt_min = DBL_MAX;
+		        double kt_min = 0.0;
 		        int kt_max_pos = -1;
-		        double kt_max = -DBL_MAX;
+		        double kt_max = 0.0;
 
 		        int alpha_min_pos = -1;
-		        double alpha_min = DBL_MAX;
+		        double alpha_min = 0.0;
 		        int alpha_max_pos = -1;
-		        double alpha_max = -DBL_MAX;
+		        double alpha_max = 0.0;
 
 		        int beta_min_pos = -1;
-		        double beta_min = DBL_MAX;
+		        double beta_min = 0.0;
 		        int beta_max_pos = -1;
-		        double beta_max = -DBL_MAX;
+		        double beta_max = 0.0;
 
 		        int k1_min_pos = -1;
-		        double k1_min = DBL_MAX;
+		        double k1_min = 0.0;
 		        int k1_max_pos = -1;
-		        double k1_max = -DBL_MAX;
+		        double k1_max = 0.0;
 
 		        int k2_min_pos = -1;
-		        double k2_min = DBL_MAX;
+		        double k2_min = 0.0;
 		        int k2_max_pos = -1;
-		        double k2_max = -DBL_MAX;
+		        double k2_max = 0.0;
 
 		        int k3_min_pos = -1;
-		        double k3_min = DBL_MAX;
+		        double k3_min = 0.0;
 		        int k3_max_pos = -1;
-		        double k3_max = -DBL_MAX;
+		        double k3_max = 0.0;
 
 		        // scan through to find min and max values of time
 		        for(unsigned int i = 0; i < k_samples.size(); i++)
 			        {
-		            if(k_samples[i].k_t_conventional < kt_min) { kt_min = k_samples[i].k_t_conventional; kt_min_pos = i; }
-		            if(k_samples[i].k_t_conventional > kt_max) { kt_max = k_samples[i].k_t_conventional; kt_max_pos = i; }
+		            if(kt_min_pos == -1 || k_samples[i].k_t_conventional < kt_min) { kt_min = k_samples[i].k_t_conventional; kt_min_pos = i; }
+		            if(kt_max_pos == -1 || k_samples[i].k_t_conventional > kt_max) { kt_max = k_samples[i].k_t_conventional; kt_max_pos = i; }
 
-		            if(k_samples[i].alpha < alpha_min) { alpha_min = k_samples[i].alpha; alpha_min_pos = i; }
-		            if(k_samples[i].alpha > alpha_max) { alpha_max = k_samples[i].alpha; alpha_max_pos = i; }
+		            if(alpha_min_pos == -1 || k_samples[i].alpha < alpha_min) { alpha_min = k_samples[i].alpha; alpha_min_pos = i; }
+		            if(alpha_max_pos == -1 || k_samples[i].alpha > alpha_max) { alpha_max = k_samples[i].alpha; alpha_max_pos = i; }
 
-		            if(k_samples[i].beta < beta_min) { beta_min = k_samples[i].beta; beta_min_pos = i; }
-		            if(k_samples[i].beta > beta_max) { beta_max = k_samples[i].beta; beta_max_pos = i; }
+		            if(beta_min_pos == -1 || k_samples[i].beta < beta_min) { beta_min = k_samples[i].beta; beta_min_pos = i; }
+		            if(beta_max_pos == -1 || k_samples[i].beta > beta_max) { beta_max = k_samples[i].beta; beta_max_pos = i; }
 
-		            if(k_samples[i].k1 < k1_min) { k1_min = k_samples[i].k1; k1_min_pos = i; }
-		            if(k_samples[i].k1 > k1_max) { k1_max = k_samples[i].k1; k1_max_pos = i; }
+		            if(k1_min_pos == -1 || k_samples[i].k1 < k1_min) { k1_min = k_samples[i].k1; k1_min_pos = i; }
+		            if(k1_max_pos == -1 || k_samples[i].k1 > k1_max) { k1_max = k_samples[i].k1; k1_max_pos = i; }
 
-		            if(k_samples[i].k2 < k2_min) { k2_min = k_samples[i].k2; k2_min_pos = i; }
-		            if(k_samples[i].k2 > k2_max) { k2_max = k_samples[i].k2; k2_max_pos = i; }
+		            if(k2_min_pos == -1 || k_samples[i].k2 < k2_min) { k2_min = k_samples[i].k2; k2_min_pos = i; }
+		            if(k2_max_pos == -1 || k_samples[i].k2 > k2_max) { k2_max = k_samples[i].k2; k2_max_pos = i; }
 
-		            if(k_samples[i].k3 < k3_min) { k3_min = k_samples[i].k3; k3_min_pos = i; }
-		            if(k_samples[i].k3 > k3_max) { k3_max = k_samples[i].k3; k3_max_pos = i; }
+		            if(k3_min_pos == -1 || k_samples[i].k3 < k3_min) { k3_min = k_samples[i].k3; k3_min_pos = i; }
+		            if(k3_max_pos == -1 || k_samples[i].k3 > k3_max) { k3_max = k_samples[i].k3; k3_max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
