@@ -127,15 +127,13 @@ namespace transport
         virtual typename data_manager<number>::twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir,
                                                                                          const boost::filesystem::path& logdir,
                                                                                          unsigned int worker, unsigned int Nfields,
-                                                                                         typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                         boost::timer::cpu_timer& integration_timer) override;
+                                                                                         typename data_manager<number>::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual typename data_manager<number>::threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir,
                                                                                              const boost::filesystem::path& logdir,
                                                                                              unsigned int worker, unsigned int Nfields,
-                                                                                             typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                             boost::timer::cpu_timer& integration_timer) override;
+                                                                                             typename data_manager<number>::container_dispatch_function dispatcher) override;
 
         //! Aggregate a temporary twopf container into a principal container
         virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
@@ -499,8 +497,7 @@ namespace transport
                                                                                                            const boost::filesystem::path& logdir,
                                                                                                            unsigned int worker,
                                                                                                            unsigned int Nfields,
-                                                                                                           typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                                           boost::timer::cpu_timer& integration_timer)
+                                                                                                           typename data_manager<number>::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -518,7 +515,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker, integration_timer);
+        typename data_manager<number>::twopf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary twopf container " << container;
 
@@ -533,8 +530,7 @@ namespace transport
                                                                                                                const boost::filesystem::path& logdir,
                                                                                                                unsigned int worker,
                                                                                                                unsigned int Nfields,
-                                                                                                               typename data_manager<number>::container_dispatch_function dispatcher,
-                                                                                                               boost::timer::cpu_timer& integration_timer)
+                                                                                                               typename data_manager<number>::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -554,7 +550,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker, integration_timer);
+        typename data_manager<number>::threepf_batcher batcher(this->capacity, Nfields, container, logdir, writers, dispatcher, replacer, db, worker);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary threepf container " << container;
 

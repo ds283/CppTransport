@@ -169,9 +169,102 @@ namespace transport
               };
 
 
+            class finished_integration_payload
+              {
+              public:
+
+                //! Null constructor (used for receiving messages)
+                finished_integration_payload()
+                  {
+                  }
+
+                //! Value constructor (used for constructing messages to send)
+                finished_integration_payload(const boost::timer::nanosecond_type& i,
+                                             const boost::timer::nanosecond_type& max_i, const boost::timer::nanosecond_type& min_i,
+                                             const boost::timer::nanosecond_type& b,
+                                             const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
+                                             const boost::timer::nanosecond_type& w,
+                                             const unsigned int& n)
+                  : integration_time(i), max_integration_time(max_i), min_integration_time(min_i),
+                    batching_time(b), max_batching_time(max_b), min_batching_time(min_b),
+                    wallclock_time(w),
+                    num_integrations(n)
+                  {
+                  }
+
+                //! Get total integration time
+                boost::timer::nanosecond_type get_integration_time() const { return(this->integration_time); }
+
+                //! Get longest integration time
+                boost::timer::nanosecond_type get_max_integration_time() const { return(this->max_integration_time); }
+
+                //! Get shortest integration time
+                boost::timer::nanosecond_type get_min_integration_time() const { return(this->min_integration_time); }
+
+                //! Get total batching time
+                boost::timer::nanosecond_type get_batching_time() const { return(this->batching_time); }
+
+                //! Get longest batching time
+                boost::timer::nanosecond_type get_max_batching_time() const { return(this->max_batching_time); }
+
+                //! Get shortest batching time
+                boost::timer::nanosecond_type get_min_batching_time() const { return(this->min_batching_time); }
+
+                //! Get total wallclock time
+                boost::timer::nanosecond_type get_wallclock_time() const { return(this->wallclock_time); }
+
+                //! Get total number of reported integrations
+                unsigned int get_num_integrations() const { return(this->num_integrations); }
+
+              private:
+
+                //! Total integration time
+                boost::timer::nanosecond_type integration_time;
+
+                //! Longest integration time
+                boost::timer::nanosecond_type max_integration_time;
+
+                //! Shortest integration time
+                boost::timer::nanosecond_type min_integration_time;
+
+                //! Total batching time
+                boost::timer::nanosecond_type batching_time;
+
+                //! Longest integration time
+                boost::timer::nanosecond_type max_batching_time;
+
+                //! Shortest integration time
+                boost::timer::nanosecond_type min_batching_time;
+
+                //! Total number of reported integrations
+                unsigned int num_integrations;
+
+                //! Total elapsed wallclock time
+                boost::timer::nanosecond_type wallclock_time;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & integration_time;
+                    ar & max_integration_time;
+                    ar & min_integration_time;
+                    ar & batching_time;
+                    ar & max_batching_time;
+                    ar & min_batching_time;
+                    ar & wallclock_time;
+                    ar & num_integrations;
+                  }
+
+              };
+
+
             class new_derived_content_payload
 	            {
               public:
+
                 //! Null constructor (used for receiving messages)
                 new_derived_content_payload()
 	                {
@@ -311,34 +404,34 @@ namespace transport
 			            }
 
 		            //! Get database time
-		            const boost::timer::nanosecond_type  get_database_time()           const { return(this->database_time); }
+		            boost::timer::nanosecond_type  get_database_time()           const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        const boost::timer::nanosecond_type  get_cpu_time()                const { return(this->cpu_time); }
+				        boost::timer::nanosecond_type  get_cpu_time()                const { return(this->cpu_time); }
 
 				        //! Get time config hits
-				        unsigned int                         get_time_config_hits()        const { return(this->time_config_hits); }
+				        unsigned int                   get_time_config_hits()        const { return(this->time_config_hits); }
 
 				        //! Get twopf kconfig hits
-				        unsigned int                         get_twopf_kconfig_hits()      const { return(this->twopf_kconfig_hits); }
+				        unsigned int                   get_twopf_kconfig_hits()      const { return(this->twopf_kconfig_hits); }
 
 				        //! Get threepf kconfig hits
-				        unsigned int                         get_threepf_kconfig_hits()    const { return(this->threepf_kconfig_hits); }
+				        unsigned int                   get_threepf_kconfig_hits()    const { return(this->threepf_kconfig_hits); }
 
 				        //! Get time-data hits
-				        unsigned int                         get_time_data_hits()          const { return(this->time_data_hits); }
+				        unsigned int                   get_time_data_hits()          const { return(this->time_data_hits); }
 
 		            //! Get time config unloads
-		            unsigned int                         get_time_config_unloads()     const { return(this->time_config_unloads); }
+		            unsigned int                   get_time_config_unloads()     const { return(this->time_config_unloads); }
 
 		            //! Get twopf kconfig unloads
-		            unsigned int                         get_twopf_kconfig_unloads()   const { return(this->twopf_kconfig_unloads); }
+		            unsigned int                   get_twopf_kconfig_unloads()   const { return(this->twopf_kconfig_unloads); }
 
 		            //! Get threepf kconfig unloads
-		            unsigned int                         get_threepf_kconfig_unloads() const { return(this->threepf_kconfig_unloads); }
+		            unsigned int                   get_threepf_kconfig_unloads() const { return(this->threepf_kconfig_unloads); }
 
 		            //! Get time-data unloads
-		            unsigned int                         get_time_data_unloads()       const { return(this->time_data_unloads); }
+		            unsigned int                   get_time_data_unloads()       const { return(this->time_data_unloads); }
 
 
 		          private:

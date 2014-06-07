@@ -551,9 +551,23 @@ namespace transport
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
+
         // aggregate integration times reported by worker processes
-        boost::timer::nanosecond_type total_work_time = 0;
+        boost::timer::nanosecond_type total_wallclock_time = 0;
         boost::timer::nanosecond_type total_aggregation_time = 0;
+
+        boost::timer::nanosecond_type total_integration_time = 0;
+        boost::timer::nanosecond_type min_mean_integration_time = 0;
+        boost::timer::nanosecond_type max_mean_integration_time = 0;
+        boost::timer::nanosecond_type global_min_integration_time = 0;
+        boost::timer::nanosecond_type global_max_integration_time = 0;
+        boost::timer::nanosecond_type total_batching_time = 0;
+        boost::timer::nanosecond_type min_mean_batching_time = 0;
+        boost::timer::nanosecond_type max_mean_batching_time = 0;
+        boost::timer::nanosecond_type global_min_batching_time = 0;
+        boost::timer::nanosecond_type global_max_batching_time = 0;
+
+        unsigned int num_integrations = 0;
 
         // get paths the workers will need
         assert(this->repo != nullptr);
@@ -624,11 +638,30 @@ namespace transport
 
                 case MPI::FINISHED_INTEGRATION:
                   {
-                    boost::timer::nanosecond_type work_time = 0;
-                    this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, work_time);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(work_time);
+                    MPI::finished_integration_payload payload;
+                    this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
+                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in wallclock time " << format_time(payload.get_wallclock_time());
 
-                    total_work_time += work_time;
+                    total_wallclock_time += payload.get_wallclock_time();
+
+                    total_integration_time += payload.get_integration_time();
+                    boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / payload.get_num_integrations();
+                    if(max_mean_integration_time == 0 || mean_integration_time > max_mean_integration_time) max_mean_integration_time = mean_integration_time;
+                    if(min_mean_integration_time == 0 || mean_integration_time < min_mean_integration_time) min_mean_integration_time = mean_integration_time;
+
+                    if(global_max_integration_time == 0 || payload.get_max_integration_time() > global_max_integration_time) global_max_integration_time = payload.get_max_integration_time();
+                    if(global_min_integration_time == 0 || payload.get_min_integration_time() < global_min_integration_time) global_min_integration_time = payload.get_min_integration_time();
+
+                    total_batching_time += payload.get_batching_time();
+                    boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / payload.get_num_integrations();
+                    if(max_mean_batching_time == 0 || mean_batching_time > max_mean_batching_time) max_mean_batching_time = mean_batching_time;
+                    if(min_mean_batching_time == 0 || mean_batching_time < min_mean_batching_time) min_mean_batching_time = mean_batching_time;
+
+                    if(global_max_batching_time == 0 || payload.get_max_batching_time() > global_max_batching_time) global_max_batching_time = payload.get_max_batching_time();
+                    if(global_min_batching_time == 0 || payload.get_min_batching_time() < global_min_batching_time) global_min_batching_time = payload.get_min_batching_time();
+
+                    num_integrations += payload.get_num_integrations();
+
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
@@ -643,11 +676,18 @@ namespace transport
 
         wallclock_timer.stop();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++   " << wallclock_timer.format();
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time required by worker processes = " << format_time(total_work_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process   = " << format_time(total_aggregation_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time required by worker processes = " << format_time(total_wallclock_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Workers processed " << num_integrations << " individual integrations";
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time    = " << format_time(total_integration_time) << " | global mean integration time = " << format_time(total_integration_time/num_integrations);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Min mean integration time = " << format_time(min_mean_integration_time) << " | global min integration time = " << format_time(global_min_integration_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Max mean integration time = " << format_time(max_mean_integration_time) << " | global max integration time = " << format_time(global_max_integration_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total batching time       = " << format_time(total_batching_time) << " | global mean batching time = " << format_time(total_batching_time/num_integrations);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Min mean batching time    = " << format_time(min_mean_batching_time) << " | global min batching time = " << format_time(global_min_batching_time);
+        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Max mean batching time    = " << format_time(max_mean_batching_time) << " | global max bathcing time = " << format_time(global_max_batching_time);
       }
 
 
@@ -1050,7 +1090,7 @@ namespace transport
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
 
-        // keep track of CPU time
+        // keep track of wallclock time
         boost::timer::cpu_timer timer;
 
         // create queues based on whatever devices are relevant for the backend
@@ -1066,7 +1106,7 @@ namespace transport
         // construct a batcher to hold the output of the integration
         typename data_manager<number>::twopf_batcher batcher =
 	                                                     this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                 this->get_rank(), m->get_N_fields(), dispatcher, timer);
+	                                                                                                 this->get_rank(), m->get_N_fields(), dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1077,7 +1117,7 @@ namespace transport
         // close the batcher
         batcher.close();
 
-        // all work is now done - stop the timer
+        // all work is now done - stop the wallclock timer
         timer.stop();
 
         // wait until all temporary containers have been deleted, and then return
@@ -1085,7 +1125,13 @@ namespace transport
 
         // notify master process that all work has been finished
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, timer.elapsed().wall);
+        MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
+                                                           batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+                                                           batcher.get_batching_time(),
+                                                           batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                                           timer.elapsed().wall,
+                                                           batcher.get_reported_integrations());
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
       }
 
 
@@ -1098,7 +1144,7 @@ namespace transport
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
 
-        // keep track of CPU time
+        // keep track of wallclock time
         boost::timer::cpu_timer timer;
 
         // create queues based on whatever devices are relevant for the backend
@@ -1114,7 +1160,7 @@ namespace transport
         // construct a batcher to hold the output of the integration
         typename data_manager<number>::threepf_batcher batcher =
 	                                                       this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                     this->get_rank(), m->get_N_fields(), dispatcher, timer);
+	                                                                                                     this->get_rank(), m->get_N_fields(), dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1125,15 +1171,21 @@ namespace transport
         // close the batcher
         batcher.close();
 
-        // all work is now done - stop the timer
+        // all work is now done - stop the wallclock timer
         timer.stop();
 
         // wait until all temporary containers have been deleted, and then return
         this->slave_clean_up(batcher);
 
         // notify master process that all work has been finished
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, timer.elapsed().wall);
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master";
+        MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
+                                                           batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+                                                           batcher.get_batching_time(),
+                                                           batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                                           timer.elapsed().wall,
+                                                           batcher.get_reported_integrations());
+        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
       }
 
 

@@ -313,6 +313,10 @@ namespace transport
           {
             const work_queue<twopf_kconfig>::device_work_list list = queues[i];
 
+            // set up a functor to observe this system
+            // this starts the timers running, so we do it as early as possible
+            $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, tk->get_time_config_list());
+
             // integrate all the items on this work list
             BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                 << "** VexCL/OpenCL compute backend: integrating triangles from work list " << i;
@@ -340,9 +344,6 @@ namespace transport
             // set up a functor to evolve this system
             $$__MODEL_vexcl_twopf_functor<number> rhs(this->ctx, tk->get_params(), dev_ks);
 
-            // set up a functor to observe this system
-            $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, tk->get_time_config_list());
-
             // fix initial conditions - background
             const std::vector<number>& ics = tk->get_ics_vector();
             for(unsigned int j = 0; j < list.size(); j++)
@@ -361,6 +362,9 @@ namespace transport
 
             using namespace boost::numeric::odeint;
             integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+            obs.stop_timers();
+            batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
           }
       }
 
@@ -415,6 +419,10 @@ namespace transport
           {
             const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
+            // set up a functor to observe this system
+            // this starts the timers running, so we do it as early as possible
+            $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
+
             // integrate all items on this work list
 
             // initialize the device's copy of the k-modes
@@ -437,9 +445,6 @@ namespace transport
 
             // set up a functor to evolve this system
             $$__MODEL_vexcl_threepf_functor<number> rhs(this->ctx, tk->get_params(), dev_k1s, dev_k2s, dev_k3s);
-
-            // set up a functor to observe this system
-            $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
 
             // set up a state vector
             threepf_state dev_x(this->ctx.queue(), $$__MODEL_pool::threepf_state_size*list.size());
@@ -486,6 +491,9 @@ namespace transport
 
             using namespace boost::numeric::odeint;
             integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+            obs.stop_timers();
+            batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
           }
       }
 
@@ -554,7 +562,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
       {
-        this->start(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), data_manager<number>::normal);
 
         // allocate storage for state, then copy device vector
         std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
@@ -563,7 +571,7 @@ namespace transport
         // push to batcher
         this->push(hst_x);
 
-        this->stop();
+        this->stop_batching();
       }
 
 
@@ -617,7 +625,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_observer<number>::operator()(const threepf_state& x, double t)
       {
-        this->start(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), data_manager<number>::normal);
 
         // allocate storage, then copy device vector to host in one shot
         std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*this->group_size());
@@ -626,7 +634,7 @@ namespace transport
         // push to the batcher
         this->push(hst_x);
 
-        this->stop();
+        this->stop_batching();
       }
 
 

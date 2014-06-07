@@ -204,41 +204,14 @@ namespace transport
             generic_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w, boost::timer::cpu_timer& tm)
-              : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
-                dispatcher(d), replacer(r), worker_number(w),
-                manager_handle(static_cast<void*>(h)), integration_timer(tm)
-              {
-                std::ostringstream log_file;
-                log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+                            handle_type h, unsigned int w);
 
-                boost::filesystem::path log_path = logdir_path / log_file.str();
+            virtual ~generic_batcher();
 
-                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
-                boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
-                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+            // ADMINISTRATION
 
-		            // enable auto-flushing of log entries
-		            // this degrades performance, but we are not writing many entries and they
-		            // will not be lost in the event of a crash
-		            backend->auto_flush(true);
-
-                // Wrap it into the frontend and register in the core.
-                // The backend requires synchronization in the frontend.
-                this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
-
-                core->add_sink(this->log_sink);
-
-                boost::log::add_common_attributes();
-              }
-
-            virtual ~generic_batcher()
-              {
-                boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
-                core->remove_sink(this->log_sink);
-              }
+          public:
 
             //! Return the maximum memory available to this worker
             size_t get_capacity() const { return(this->capacity); }
@@ -261,19 +234,44 @@ namespace transport
             unsigned int get_number_fields() { return(this->Nfields); }
 
             //! Close this batcher -- called at the end of an integration
-            void close() { this->flush(action_close); }
+            void close();
+
+
+            // STATISTICS
+
+          public:
+
+            //! Add integration details
+            void report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
+
+            //! Get aggregate integration time
+            boost::timer::nanosecond_type get_integration_time() const { return(this->integration_time); }
+
+            //! Get longest integration time
+            boost::timer::nanosecond_type get_max_integration_time() const { return(this->max_integration_time); }
+
+            //! Get shortest integration time
+            boost::timer::nanosecond_type get_min_integration_time() const { return(this->min_integration_time); }
+
+            //! Get aggegrate batching time
+            boost::timer::nanosecond_type get_batching_time() const { return(this->batching_time); }
+
+            //! Get longest batching time
+            boost::timer::nanosecond_type get_max_batching_time() const { return(this->max_batching_time); }
+
+            //! Get shortest batching time
+            boost::timer::nanosecond_type get_min_batching_time() const { return(this->min_batching_time); }
+
+            //! Get total number of reported integrations
+            unsigned int get_reported_integrations() const { return(this->num_integrations); }
+
+
+            // PUSH BACKGROUND
+
+          public:
 
             //! Push a background sample
-            void push_backg(unsigned int time_serial, const std::vector<number>& values)
-              {
-                if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
-                backg_item item;
-                item.time_serial = time_serial;
-                item.coords      = values;
-
-                this->backg_batch.push_back(item), num_backg++;
-                if(this->storage() > this->capacity) this->flush(action_replace);
-              }
+            void push_backg(unsigned int time_serial, const std::vector<number>& values);
 
             //! Return logger
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -288,21 +286,58 @@ namespace transport
 
           protected:
 
+            //! Capacity of this batcher; when the capacity is exceeded, the batcher
+            //! flushes its data to a temporary database and pushes it to the
+            //! master process for aggregation
             const unsigned int                                       capacity;
 
+            //! Number of fields associated with this integration
             const unsigned int                                       Nfields;
 
+            //! Number of background pushes
             unsigned int                                             num_backg;
+
+            //! Cache of background pushes
             std::vector<backg_item>                                  backg_batch;
 
+            //! Container path
             boost::filesystem::path                                  container_path;
+
+            //! Log directory path
             boost::filesystem::path                                  logdir_path;
 
+            //! Data manager handle
             void*                                                    manager_handle;
+
+            //! Callback for dispatching a container
             container_dispatch_function                              dispatcher;
+
+            //! Callback for obtaining a replacement container
             container_replacement_function                           replacer;
 
+            //! Worker number associated with this batcher
             unsigned int                                             worker_number;
+
+            //! Number of integrations handled by this batcher
+            unsigned int                                             num_integrations;
+
+            //! Aggregate integration time
+            boost::timer::nanosecond_type                            integration_time;
+
+            //! Aggregate batching time
+            boost::timer::nanosecond_type                            batching_time;
+
+            //! Longest integration time
+            boost::timer::nanosecond_type                            max_integration_time;
+
+            //! Shortest integration time
+            boost::timer::nanosecond_type                            min_integration_time;
+
+            //! Longest batching time
+            boost::timer::nanosecond_type                            max_batching_time;
+
+            //! Shortest batching time
+            boost::timer::nanosecond_type                            min_batching_time;
 
             //! Logger source
             boost::log::sources::severity_logger<log_severity_level> log_source;
@@ -310,8 +345,6 @@ namespace transport
             //! Logger sink
             boost::shared_ptr< sink_t >                              log_sink;
 
-            //! Integration timer - should be stopped while batching
-            boost::timer::cpu_timer&                                 integration_timer;
           };
 
 
@@ -323,8 +356,8 @@ namespace transport
                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                           const twopf_writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
-                          handle_type h, unsigned int wn, boost::timer::cpu_timer& tm)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, tm), writers(w), num_twopf(0)
+                          handle_type h, unsigned int wn)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf(0)
               {
               }
 
@@ -346,9 +379,6 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                // pause integration timer
-                this->integration_timer.stop();
-
                 BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
                 // set up a timer to measure how long it takes to flush
@@ -372,9 +402,6 @@ namespace transport
 
                 // close current container, and replace with a new one if required
                 this->replacer(this, action);
-
-                // restart integration timer
-                this->integration_timer.resume();
               }
 
           protected:
@@ -397,8 +424,8 @@ namespace transport
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             const threepf_writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int wn, boost::timer::cpu_timer& tm)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, tm), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
+                            handle_type h, unsigned int wn)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
               {
               }
 
@@ -436,9 +463,6 @@ namespace transport
 
             void flush(replacement_action action)
               {
-                // pause integration timer
-                this->integration_timer.stop();
-
                 BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
 
                 // set up a timer to measure how long it takes to flush
@@ -466,9 +490,6 @@ namespace transport
 
                 // close current container, and replace with a new one if required
                 this->replacer(this, action);
-
-                // restart integration timer
-                this->integration_timer.resume();
               }
 
           protected:
@@ -1278,14 +1299,12 @@ namespace transport
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                           unsigned int worker, unsigned int Nfields,
-                                                          container_dispatch_function dispatcher,
-                                                          boost::timer::cpu_timer& integration_timer) = 0;
+                                                          container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, unsigned int Nfields,
-                                                              container_dispatch_function dispatcher,
-                                                              boost::timer::cpu_timer& integration_timer) = 0;
+                                                              container_dispatch_function dispatcher) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
         virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
@@ -1352,7 +1371,108 @@ namespace transport
       };
 
 
-		// DATAPIPE METHODS
+    // GENERIC BATCHER METHODS
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::generic_batcher::generic_batcher(unsigned int cap, unsigned int Nf,
+                                                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                           typename data_manager<number>::container_dispatch_function d,
+                                                           typename data_manager<number>::container_replacement_function r,
+                                                           handle_type h, unsigned int w)
+      : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
+        dispatcher(d), replacer(r), worker_number(w),
+        manager_handle(static_cast<void*>(h)),
+        num_integrations(0),
+        integration_time(0),
+        max_integration_time(0), min_integration_time(0),
+        batching_time(0),
+        max_batching_time(0), min_batching_time(0)
+      {
+        std::ostringstream log_file;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+
+        boost::filesystem::path log_path = logdir_path / log_file.str();
+
+        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+        boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
+                                                                    boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
+
+        // enable auto-flushing of log entries
+        // this degrades performance, but we are not writing many entries and they
+        // will not be lost in the event of a crash
+        backend->auto_flush(true);
+
+        // Wrap it into the frontend and register in the core.
+        // The backend requires synchronization in the frontend.
+        this->log_sink = boost::shared_ptr< sink_t >(new sink_t(backend));
+
+        core->add_sink(this->log_sink);
+
+        boost::log::add_common_attributes();
+      }
+
+
+    template <typename number>
+    data_manager<number>::generic_batcher::~generic_batcher()
+      {
+        boost::shared_ptr< boost::log::core > core = boost::log::core::get();
+
+        core->remove_sink(this->log_sink);
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
+      {
+        this->integration_time += integration;
+        this->batching_time += batching;
+
+        this->num_integrations++;
+
+        if(this->max_integration_time == 0 || integration > this->max_integration_time) this->max_integration_time = integration;
+        if(this->min_integration_time == 0 || integration < this->min_integration_time) this->min_integration_time = integration;
+
+        if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
+        if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::push_backg(unsigned int time_serial, const std::vector<number>& values)
+      {
+        if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
+        backg_item item;
+        item.time_serial = time_serial;
+        item.coords      = values;
+
+        this->backg_batch.push_back(item), num_backg++;
+        if(this->storage() > this->capacity) this->flush(action_replace);
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::close()
+      {
+        this->flush(action_close);
+
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing batcher: final integration statistics";
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->num_integrations << " individual integrations";
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total integration time          = " << format_time(this->integration_time);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean integration time           = " << format_time(this->integration_time/this->num_integrations);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total batching time             = " << format_time(this->batching_time);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean batching time              = " << format_time(this->batching_time/this->num_integrations);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
+      }
+
+
+
+    // DATAPIPE METHODS
 
 
 
@@ -1430,12 +1550,12 @@ namespace transport
 			    }
 
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing datapipe. Usage statistics:";
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time spent reading database        = " << format_time(this->database_timer.elapsed().wall);
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << ", unloads = " << this->time_config_cache.get_unloads();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << ", unloads = " << this->twopf_kconfig_cache.get_unloads();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << ", unloads = " << this->threepf_kconfig_cache.get_unloads();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->data_cache.get_hits() << ", unloads = " << this->data_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing datapipe: final usage statistics:";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time spent querying database       = " << format_time(this->database_timer.elapsed().wall);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << " | unloads = " << this->time_config_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 

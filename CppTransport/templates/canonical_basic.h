@@ -238,11 +238,12 @@ namespace transport
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
                                               typename data_manager<number>::twopf_batcher& batcher)
       {
+        // set up a functor to observe the integration
+        // this also starts the timers running, so we do it as early as possible
+        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
+
         // set up a functor to evolve this system
         $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
-
-        // set up a functor to observe the integration
-        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
 
         // set up a state vector
         twopf_state<number> x;
@@ -258,6 +259,9 @@ namespace transport
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+        obs.stop_timers();
+        batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
       }
 
 
@@ -321,11 +325,12 @@ namespace transport
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
                                                 typename data_manager<number>::threepf_batcher& batcher)
       {
+        // set up a functor to observe the integration
+        // this also starts the timers running, so we do it as early as possible
+        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
+
         // set up a functor to evolve this system
         $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
-
-        // set up a functor to observe the integration
-        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
 
         // set up a state vector
         threepf_state<number> x;
@@ -351,6 +356,9 @@ namespace transport
 
         using namespace boost::numeric::odeint;
         integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+
+        obs.stop_timers();
+        batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
       }
 
 
@@ -409,7 +417,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
+        this->start_batching(t, this->get_log(), data_manager<number>::normal);
         this->push(x);
+        this->stop_batching();
       }
 
 
@@ -514,7 +524,9 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
+        this->start_batching(t, this->get_log(), data_manager<number>::normal);
         this->push(x);
+        this->stop_batching();
       }
 
 
