@@ -487,7 +487,10 @@ namespace transport
             twopf_kconfig c;
             reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN, c.serial);
             reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, c.k_conventional);
+
+            assert(c.k_conventional > 0.0);
             c.k = c.k_conventional*comoving_normalization;
+
             reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, c.store_background);
 
             twopf_config_list.push_back(c);
@@ -536,6 +539,8 @@ namespace transport
     template <typename number>
     unsigned int twopf_list_task<number>::push_twopf_klist(double k, bool store)
       {
+        assert(k > 0.0);
+
         twopf_kconfig c;
 
         c.serial = this->serial++;
@@ -1129,7 +1134,7 @@ namespace transport
                         kconfig.serial = this->serial++;
 
                         typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
-                        if(kp(data))
+                        if(k1 > 0.0 && k2 > 0.0 && k3 > 0.0 && kp(data))
 	                        {
                             // check whether any of these k-wavenumbers have been stored before
                             bool stored;
