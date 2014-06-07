@@ -45,6 +45,7 @@
 #include "transport-runtime-api/localizations/messages_en/derived-products/line_asciitable.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/derived_line.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/time_series.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/time_series_convenience.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series_convenience.h"
 

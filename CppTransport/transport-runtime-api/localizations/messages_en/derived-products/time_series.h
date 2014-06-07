@@ -22,6 +22,8 @@
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL               "Internal error: Null model in time_series or derived class"
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER              "Internal error: Null serialization reader in time_series or derived class"
 
+#define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_EMPTY_FILTER             "Time series filtering produced no results when constructing derived line from task"
+
 #define __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS            "Internal error: Unknown operator position for three-point function shift"
 
 

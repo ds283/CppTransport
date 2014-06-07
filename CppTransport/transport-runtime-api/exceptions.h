@@ -34,7 +34,8 @@ namespace transport
                        BACKEND_ERROR,                                     // problem encountered by a compute backend
 		                   SERIALIZATION_ERROR,                               // error encountered during serialization
 		                   DATAPIPE_ERROR,                                    // generic datapipe error
-		                   DERIVED_PRODUCT_ERROR                              // error encountered when generating a derived product
+		                   DERIVED_PRODUCT_ERROR,                             // error encountered when generating a derived product
+                       FILTER_EMPTY                                       // filtering produced no values
                      } exception_type;
 
         runtime_exception(exception_type t, const std::string msg)

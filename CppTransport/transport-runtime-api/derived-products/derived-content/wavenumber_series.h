@@ -112,15 +112,28 @@ namespace transport
 		    wavenumber_series<number>::wavenumber_series(const integration_task<number>& tk, filter::time_filter tfilter)
 			    {
 				    // set up list of serial numbers corresponding to the sample times for this derived line
-				    this->f.filter_time_sample(tfilter, tk.get_time_config_list(), this->time_sample_sns);
-			    }
+            try
+              {
+                this->f.filter_time_sample(tfilter, tk.get_time_config_list(), this->time_sample_sns);
+              }
+            catch(runtime_exception& xe)
+              {
+                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
+                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+                  }
+                else throw xe;
+              }
+          }
 
 
 		    template <typename number>
 		    wavenumber_series<number>::wavenumber_series(serialization_reader* reader)
 			    {
 				    assert(reader != nullptr);
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
+		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
 			    }
 
 

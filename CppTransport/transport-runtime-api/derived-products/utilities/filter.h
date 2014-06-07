@@ -125,6 +125,8 @@ namespace transport
 
 		            if(t_filter(data)) t_serials.push_back(t_samples[i].serial);
 			        }
+
+            if(t_serials.size() == 0) throw runtime_exception(runtime_exception::FILTER_EMPTY, "");
 			    }
 
 
@@ -157,6 +159,8 @@ namespace transport
 
 		            if(k_filter(data)) k_serials.push_back(k_samples[i].serial);
 			        }
+
+            if(k_serials.size() == 0) throw runtime_exception(runtime_exception::FILTER_EMPTY, "");
 			    }
 
 
@@ -249,6 +253,8 @@ namespace transport
 
 		            if(k_filter(data)) k_serials.push_back(k_samples[i].serial);
 			        }
+
+            if(k_serials.size() == 0) throw runtime_exception(runtime_exception::FILTER_EMPTY, "");
 			    }
 
 			}   // namespace derived_data

@@ -84,7 +84,7 @@ namespace transport
 
 		      public:
 
-		        //! handle cross-delegation from wavenumber_series class to lookup wavenumber axis data
+		        //! lookup wavenumber axis data
 		        void pull_wavenumber_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const;
 
 
@@ -113,7 +113,20 @@ namespace transport
 				    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
 
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
-				    this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+            try
+              {
+                this->f.filter_twopf_kconfig_sample(kfilter, tk.get_twopf_kconfig_list(), this->kconfig_sample_sns);
+              }
+            catch(runtime_exception& xe)
+              {
+                if(xe.get_exception_code() == runtime_exception::FILTER_EMPTY)
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_EMPTY_FILTER << " '" << this->get_parent_task()->get_name() << "'";
+                    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+                  }
+                else throw xe;
+              }
 					}
 
 
@@ -123,7 +136,7 @@ namespace transport
 				zeta_twopf_line<number>::zeta_twopf_line(serialization_reader* reader)
 					{
 				    assert(reader != nullptr);
-				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
+				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
 					}
 
 
@@ -172,7 +185,7 @@ namespace transport
 				template <typename number>
 				void zeta_twopf_line<number>::write(std::ostream& out)
 					{
-				    out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_ZETA_TWOPF << std::endl;
+				    out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF << std::endl;
 					}
 
 			}   // namespace derived_data
