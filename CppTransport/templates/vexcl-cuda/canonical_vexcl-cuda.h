@@ -134,8 +134,11 @@ namespace transport
                                      typename data_manager<number>::threepf_batcher& batcher,
                                      bool silent=false) override;
 
-        virtual unsigned int backend_twopf_state_size(void)   override { return($$__MODEL_pool::twopf_state_size); }
-        virtual unsigned int backend_threepf_state_size(void) override { return($$__MODEL_pool::threepf_state_size); }
+        virtual unsigned int backend_twopf_state_size(void)   const override { return($$__MODEL_pool::twopf_state_size); }
+        virtual unsigned int backend_threepf_state_size(void) const override { return($$__MODEL_pool::threepf_state_size); }
+
+        virtual bool supports_per_configuration_statistics(void) const override { return(false); }
+
 
         // INTERNAL API
 
@@ -355,7 +358,6 @@ namespace transport
             integrate_times($$__MAKE_PERT_STEPPER{twopf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
             obs.stop_timers();
-            batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
           }
       }
 
@@ -488,7 +490,6 @@ namespace transport
               integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
               obs.stop_timers();
-              batcher.report_integration_timings(obs.get_integration_time(), obs.get_batching_time());
             }
         }
 

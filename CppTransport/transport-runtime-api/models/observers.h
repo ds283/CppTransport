@@ -73,52 +73,17 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const std::vector<time_config>& l, double t_int=1.0, bool s=false, unsigned int p=3)
-          : stepping_observer(l), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
-          {
-            batching_timer.stop();
-            // leave the integration timer running, so it also records start-up time associated with the integration,
-            // eg. setting up initial conditions or copying data to an offload device such as a GPU
-          }
+        timing_observer(const std::vector<time_config>& l, double t_int=1.0, bool s=false, unsigned int p=3);
 
         //! Prepare for a batching step
         template <typename Level>
-        void start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
-          {
-            std::string rval = "";
-
-            this->integration_timer.stop();
-            this->batching_timer.start();
-
-            // should we emit output?
-            // only do so if: not silent, and: either, first step, or enough time has elapsed
-            if(!this->silent && (this->first_step || t > this->t_last + this->t_interval))
-              {
-                this->t_last = t;
-
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
-                if(first_step) msg << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->integration_timer.format();
-
-                BOOST_LOG_SEV(logger, lev) << msg.str();
-
-                first_step = false;
-              }
-          }
+        void start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev);
 
         //! Conclude a batching step
-        void stop_batching()
-          {
-            this->batching_timer.stop();
-            this->integration_timer.start();
-          }
+        void stop_batching();
 
         //! Stop the running timers - should only be called at the end of an integration
-        void stop_timers()
-          {
-            this->batching_timer.stop();
-            this->integration_timer.stop();
-          }
+        virtual void stop_timers();
 
         //! Get the total elapsed integration time
         boost::timer::nanosecond_type get_integration_time() const { return(this->integration_timer.elapsed().wall); }
@@ -156,6 +121,54 @@ namespace transport
       };
 
 
+    timing_observer::timing_observer(const std::vector<time_config>& l, double t_int, bool s, unsigned int p)
+      : stepping_observer(l), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
+      {
+        batching_timer.stop();
+        // leave the integration timer running, so it also records start-up time associated with the integration,
+        // eg. setting up initial conditions or copying data to an offload device such as a GPU
+      }
+
+
+    template <typename Level>
+    void timing_observer::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
+    {
+      std::string rval = "";
+
+      this->integration_timer.stop();
+      this->batching_timer.start();
+
+      // should we emit output?
+      // only do so if: not silent, and: either, first step, or enough time has elapsed
+      if(!this->silent && (this->first_step || t > this->t_last + this->t_interval))
+        {
+          this->t_last = t;
+
+          std::ostringstream msg;
+          msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
+          if(first_step){ msg << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->integration_timer.format();
+
+          }BOOST_LOG_SEV(logger, lev) << msg.str();
+
+          first_step = false;
+        }
+    }
+
+
+    void timing_observer::stop_batching()
+      {
+        this->batching_timer.stop();
+        this->integration_timer.start();
+      }
+
+
+    void timing_observer::stop_timers()
+      {
+        this->batching_timer.stop();
+        this->integration_timer.stop();
+      }
+
+
     // Observer: records results from a single twopf k-configuration
     // this is suitable for an OpenMP or MPI type integrator
 
@@ -169,40 +182,25 @@ namespace transport
                                           const std::vector<time_config>& l,
                                           unsigned int bg_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int tw_st,
-                                          double t_int=1.0, bool s=true, unsigned int p=3)
-          : timing_observer(l, t_int, s, p), batcher(b), k_config(c),
-            backg_size(bg_sz), twopf_size(tw_sz),
-            backg_start(bg_st), twopf_start(tw_st)
-          {
-          }
+                                          double t_int = 1.0, bool s = true, unsigned int p = 3);
 
         //! Push the current state to the batcher
         template <typename State>
-        void push(const State& x)
-          {
-            if(this->store_time_step())
-              {
-                if(this->k_config.store_background)
-                  {
-                    std::vector<number> bg_x(this->backg_size);
-
-                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
-                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
-                  }
-
-                std::vector<number> tpf_x(this->twopf_size);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.serial, tpf_x);
-
-                this->advance_storage_list();
-              }
-
-            this->step();
-          }
+        void push(const State& x);
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+
+
+        // STOP TIMERS - OVERRIDES A 'timing observer' interface
+
+      public:
+
+        //! Stop timers and report timing details to the batcher
+        virtual void stop_timers() override;
+
+
+        // INTERNAL DATA
 
       private:
 
@@ -214,7 +212,55 @@ namespace transport
 
         unsigned int                                  backg_start;
         unsigned int                                  twopf_start;
+
       };
+
+
+    template <typename number>
+    twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
+                                                                                 const std::vector<time_config>& l,
+                                                                                 unsigned int bg_sz, unsigned int tw_sz,
+                                                                                 unsigned int bg_st, unsigned int tw_st,
+                                                                                 double t_int, bool s, unsigned int p)
+      : timing_observer(l, t_int, s, p), batcher(b), k_config(c),
+        backg_size(bg_sz), twopf_size(tw_sz),
+        backg_start(bg_st), twopf_start(tw_st)
+      {
+      }
+
+
+    template <typename number>
+    template <typename State>
+    void twopf_singleconfig_batch_observer<number>::push(const State& x)
+      {
+        if(this->store_time_step())
+          {
+            if(this->k_config.store_background)
+              {
+                std::vector<number> bg_x(this->backg_size);
+
+                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
+                this->batcher.push_backg(this->get_current_time_step(), bg_x);
+              }
+
+            std::vector<number> tpf_x(this->twopf_size);
+
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_start + i];
+            this->batcher.push_twopf(this->get_current_time_step(), this->k_config.serial, tpf_x);
+
+            this->advance_storage_list();
+          }
+
+        this->step();
+      }
+
+
+    template <typename number>
+    void twopf_singleconfig_batch_observer<number>::stop_timers()
+      {
+        this->timing_observer::stop_timers();
+        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+      }
 
 
     // Observer: records results from a single threepf k-configuration
@@ -234,76 +280,26 @@ namespace transport
                                             unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
                                             unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                             unsigned int th_st,
-                                            double t_int=1.0, bool s=true, unsigned int p=3)
-          : timing_observer(l, t_int, s, p), batcher(b), k_config(c),
-            backg_size(bg_sz), twopf_size(tw_sz), threepf_size(th_sz),
-            backg_start(bg_st),
-            twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
-            twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
-            twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
-            threepf_start(th_st)
-          {
-          }
+                                            double t_int = 1.0, bool s = true, unsigned int p = 3);
 
         //! Push the current state to the batcher
         template <typename State>
-        void push(const State& x)
-          {
-            if(this->store_time_step())
-              {
-                if(this->k_config.store_background)
-                  {
-                    std::vector<number> bg_x(this->backg_size);
-
-                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
-                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
-                  }
-
-                if(this->k_config.store_twopf_k1)
-                  {
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k1_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k1_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                  }
-
-                if(this->k_config.store_twopf_k2)
-                  {
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k2_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k2_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                  }
-
-                if(this->k_config.store_twopf_k3)
-                  {
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k3_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k3_start + i];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                  }
-
-                std::vector<number> thpf_x(this->threepf_size);
-                for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
-                this->batcher.push_threepf(this->get_current_time_step(), this->k_config.serial, thpf_x);
-
-                this->advance_storage_list();
-              }
-
-            this->step();
-          }
+        void push(const State& x);
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+
+
+        // STOP TIMERS - OVERRIDES A 'timing observer' interface
+
+      public:
+
+        //! Stop timers and report timing details to the batcher
+        virtual void stop_timers() override;
+
+
+        // INTERNAL DATA
+
 
       private:
 
@@ -322,7 +318,95 @@ namespace transport
         unsigned int                                    twopf_re_k3_start;
         unsigned int                                    twopf_im_k3_start;
         unsigned int                                    threepf_start;
+
       };
+
+
+    template <typename number>
+    threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
+                                                                                     const std::vector<time_config>& l,
+                                                                                     unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
+                                                                                     unsigned int bg_st,
+                                                                                     unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+                                                                                     unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+                                                                                     unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+                                                                                     unsigned int th_st,
+                                                                                     double t_int, bool s, unsigned int p)
+      : timing_observer(l, t_int, s, p), batcher(b), k_config(c),
+        backg_size(bg_sz), twopf_size(tw_sz), threepf_size(th_sz),
+        backg_start(bg_st),
+        twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
+        twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
+        twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
+        threepf_start(th_st)
+      {
+      }
+
+
+    template <typename number>
+    template <typename State>
+    void threepf_singleconfig_batch_observer<number>::push(const State& x)
+      {
+        if(this->store_time_step())
+          {
+            if(this->k_config.store_background)
+              {
+                std::vector<number> bg_x(this->backg_size);
+
+                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
+                this->batcher.push_backg(this->get_current_time_step(), bg_x);
+              }
+
+            if(this->k_config.store_twopf_k1)
+              {
+                std::vector<number> tpf_x(this->twopf_size);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k1_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k1_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+              }
+
+            if(this->k_config.store_twopf_k2)
+              {
+                std::vector<number> tpf_x(this->twopf_size);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k2_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k2_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+              }
+
+            if(this->k_config.store_twopf_k3)
+              {
+                std::vector<number> tpf_x(this->twopf_size);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k3_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k3_start + i];
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+              }
+
+            std::vector<number> thpf_x(this->threepf_size);
+            for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
+            this->batcher.push_threepf(this->get_current_time_step(), this->k_config.serial, thpf_x);
+
+            this->advance_storage_list();
+          }
+
+        this->step();
+      }
+
+
+    template <typename number>
+    void threepf_singleconfig_batch_observer<number>::stop_timers()
+      {
+        this->timing_observer::stop_timers();
+        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+      }
 
 
     // Observer: records results from a batch of twopf k-configurations
@@ -339,49 +423,28 @@ namespace transport
                                          const std::vector<time_config>& l,
                                          unsigned int bg_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int tw_st,
-                                         double t_int=1.0, bool s=false, unsigned int p=3)
-          : timing_observer(l, t_int, s, p), batcher(b), work_list(c),
-            backg_size(bg_sz), twopf_size(tw_sz),
-            backg_start(bg_st), twopf_start(tw_st)
-          {
-          }
+                                         double t_int = 1.0, bool s = false, unsigned int p = 3);
 
         //! Push the current state to the batcher
         template <typename State>
-        void push(const State& x)
-          {
-            if(this->store_time_step())
-              {
-                unsigned int n = work_list.size();
-
-                // loop through all k-configurations
-                for(unsigned int c = 0; c < n; c++)
-                  {
-                    if(this->work_list[c].store_background)
-                      {
-                        std::vector<number> bg_x(this->backg_size);
-
-                        for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
-                        this->batcher.push_backg(this->get_current_time_step(), bg_x);
-                      }
-
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].serial, tpf_x);
-                  }
-
-                this->advance_storage_list();
-              }
-
-            this->step();
-          }
+        void push(const State& x);
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }
+
+
+        // STOP TIMERS - OVERRIDES A 'timing observer' interface
+
+      public:
+
+        //! Stop timers and report timing details to the batcher
+        virtual void stop_timers() override;
+
+
+        // INTERNAL DATA
 
       private:
 
@@ -393,7 +456,62 @@ namespace transport
 
         unsigned int                                       backg_start;
         unsigned int                                       twopf_start;
+
       };
+
+
+    template <typename number>
+    twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(typename data_manager<number>::twopf_batcher& b,
+                                                                               const work_queue<twopf_kconfig>::device_work_list& c,
+                                                                               const std::vector<time_config>& l,
+                                                                               unsigned int bg_sz, unsigned int tw_sz,
+                                                                               unsigned int bg_st, unsigned int tw_st,
+                                                                               double t_int, bool s, unsigned int p)
+      : timing_observer(l, t_int, s, p), batcher(b), work_list(c),
+        backg_size(bg_sz), twopf_size(tw_sz),
+        backg_start(bg_st), twopf_start(tw_st)
+      {
+      }
+
+
+    template <typename number>
+    template <typename State>
+    void twopf_groupconfig_batch_observer<number>::push(const State& x)
+      {
+        if(this->store_time_step())
+          {
+            unsigned int n = work_list.size();
+
+            // loop through all k-configurations
+            for(unsigned int c = 0; c < n; c++)
+              {
+                if(this->work_list[c].store_background)
+                  {
+                    std::vector<number> bg_x(this->backg_size);
+
+                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
+                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                  }
+
+                std::vector<number> tpf_x(this->twopf_size);
+
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_start + i)*n + c];
+                this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].serial, tpf_x);
+              }
+
+            this->advance_storage_list();
+          }
+
+        this->step();
+      }
+
+
+    template <typename number>
+    void twopf_groupconfig_batch_observer<number>::stop_timers()
+      {
+        this->timing_observer::stop_timers();
+        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time());
+      }
 
 
     // Observer: records results from a batch of threepf k-configurations
@@ -406,93 +524,36 @@ namespace transport
       public:
 
         threepf_groupconfig_batch_observer(typename data_manager<number>::threepf_batcher& b,
-                                           const work_queue<threepf_kconfig>::device_work_list& c,
-                                           const std::vector<time_config>& l,
-                                           unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
-                                           unsigned int bg_st,
-                                           unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
-                                           unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
-                                           unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
-                                           unsigned int th_st,
-                                           double t_int=1.0, bool s=false, unsigned int p=3)
-          : timing_observer(l, t_int, s, p), batcher(b), work_list(c),
-            backg_size(bg_sz), twopf_size(tw_sz), threepf_size(th_sz),
-            backg_start(bg_st),
-            twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
-            twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
-            twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
-            threepf_start(th_st)
-          {
-          }
+                                                   const work_queue<threepf_kconfig>::device_work_list& c,
+                                                   const std::vector<time_config>& l,
+                                                   unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
+                                                   unsigned int bg_st,
+                                                   unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+                                                   unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+                                                   unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+                                                   unsigned int th_st,
+                                                   double t_int=1.0, bool s=false, unsigned int p=3);
 
         //! Push the current state to the batcher
         template <typename State>
-        void push(const State& x)
-          {
-            if(this->store_time_step())
-              {
-                unsigned int n = this->work_list.size();
-
-                // loop through all k-configurations
-                for(unsigned int c = 0; c < n; c++)
-                  {
-                    if(this->work_list[c].store_background)
-                      {
-                        std::vector<number> bg_x(this->backg_size);
-
-                        for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
-                        this->batcher.push_backg(this->get_current_time_step(), bg_x);
-                      }
-
-                    if(this->work_list[c].store_twopf_k1)
-                      {
-                        std::vector<number> tpf_x(this->twopf_size);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k1_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k1_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                      }
-
-                    if(this->work_list[c].store_twopf_k2)
-                      {
-                        std::vector<number> tpf_x(this->twopf_size);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k2_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k2_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                      }
-
-                    if(this->work_list[c].store_twopf_k3)
-                      {
-                        std::vector<number> tpf_x(this->twopf_size);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k3_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
-
-                        for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k3_start + i)*n + c];
-                        this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
-                      }
-
-                    std::vector<number> thpf_x(this->threepf_size);
-                    for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
-                    this->batcher.push_threepf(this->get_current_time_step(), this->work_list[c].serial, thpf_x);
-                  }
-
-                this->advance_storage_list();
-              }
-
-            this->step();
-          }
+        void push(const State& x);
 
         //! Return logger
         boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }
+
+
+        // STOP TIMERS - OVERRIDES A 'timing observer' interface
+
+      public:
+
+        //! Stop timers and report timing details to the batcher
+        virtual void stop_timers() override;
+
+
+        // INTERAL DATA
 
       private:
 
@@ -513,6 +574,101 @@ namespace transport
         unsigned int                                         threepf_start;
 
       };
+
+
+    template <typename number>
+    threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(typename data_manager<number>::threepf_batcher& b,
+                                                                                   const work_queue<threepf_kconfig>::device_work_list& c,
+                                                                                   const std::vector<time_config>& l,
+                                                                                   unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
+                                                                                   unsigned int bg_st,
+                                                                                   unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
+                                                                                   unsigned int tw_re_k2_st, unsigned int tw_im_k2_st,
+                                                                                   unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
+                                                                                   unsigned int th_st,
+                                                                                   double t_int, bool s, unsigned int p)
+      : timing_observer(l, t_int, s, p), batcher(b), work_list(c),
+        backg_size(bg_sz), twopf_size(tw_sz), threepf_size(th_sz),
+        backg_start(bg_st),
+        twopf_re_k1_start(tw_re_k1_st), twopf_im_k1_start(tw_im_k1_st),
+        twopf_re_k2_start(tw_re_k2_st), twopf_im_k2_start(tw_im_k2_st),
+        twopf_re_k3_start(tw_re_k3_st), twopf_im_k3_start(tw_im_k3_st),
+        threepf_start(th_st)
+      {
+      }
+
+
+    template <typename number>
+    template <typename State>
+    void threepf_groupconfig_batch_observer<number>::push(const State& x)
+      {
+        if(this->store_time_step())
+          {
+            unsigned int n = this->work_list.size();
+
+            // loop through all k-configurations
+            for(unsigned int c = 0; c < n; c++)
+              {
+                if(this->work_list[c].store_background)
+                  {
+                    std::vector<number> bg_x(this->backg_size);
+
+                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
+                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                  }
+
+                if(this->work_list[c].store_twopf_k1)
+                  {
+                    std::vector<number> tpf_x(this->twopf_size);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k1_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k1_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                  }
+
+                if(this->work_list[c].store_twopf_k2)
+                  {
+                    std::vector<number> tpf_x(this->twopf_size);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k2_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k2_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                  }
+
+                if(this->work_list[c].store_twopf_k3)
+                  {
+                    std::vector<number> tpf_x(this->twopf_size);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k3_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+
+                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k3_start + i)*n + c];
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                  }
+
+                std::vector<number> thpf_x(this->threepf_size);
+                for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
+                this->batcher.push_threepf(this->get_current_time_step(), this->work_list[c].serial, thpf_x);
+              }
+
+            this->advance_storage_list();
+          }
+
+        this->step();
+      }
+
+
+    template <typename number>
+    void threepf_groupconfig_batch_observer<number>::stop_timers()
+      {
+        this->timing_observer::stop_timers();
+        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time());
+      }
+
 
   } // namespace transport
 

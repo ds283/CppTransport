@@ -112,9 +112,6 @@ namespace transport
 
       protected:
 
-//        //! Validate initial conditions (optionally adding initial conditions for momenta)
-//        virtual void validate_initial_conditions(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
-
         //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
         void find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                       double Ninit, double Ncross, double Npre,
@@ -148,11 +145,6 @@ namespace transport
 
 
         // INTERFACE - PARAMETER HANDLING
-
-//      protected:
-//
-//        //! Validate parameter values
-//        virtual void validate_parameters(const std::vector<number>& input, std::vector<number>& output) = 0;
 
       public:
 
@@ -216,8 +208,11 @@ namespace transport
                                                      bool silent=false) = 0;
 
         // return size of state vectors
-        virtual unsigned int backend_twopf_state_size(void) = 0;
-        virtual unsigned int backend_threepf_state_size(void) = 0;
+        virtual unsigned int backend_twopf_state_size(void) const = 0;
+        virtual unsigned int backend_threepf_state_size(void) const = 0;
+
+        // does the backend support collection of per-configuration statistics?
+        virtual bool supports_per_configuration_statistics(void) const = 0;
 
 
         // INTERNAL UTILITY FUNCTIONS

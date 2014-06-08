@@ -132,6 +132,16 @@ namespace transport
             std::vector<number> elements;
           };
 
+        //! Stores per-configuration statistics about the performance of the integrator.
+        //! Not used by all backends
+        class configuration_statistics
+          {
+          public:
+            unsigned int                  serial;
+            boost::timer::nanosecond_type integration;
+            boost::timer::nanosecond_type batching;
+          };
+
         // writer functions, used by the compute backends to store the output of each integration
         // in a temporary container
 
@@ -148,6 +158,9 @@ namespace transport
         //! Three-point function writer function
         typedef std::function<void(generic_batcher*, const std::vector<threepf_item>&)> threepf_writer;
 
+        //! Per-configuration statistics writer function
+        typedef std::function<void(generic_batcher*, const std::vector<configuration_statistics>&)> stats_writer;
+
 
 				//! Aggregation of writers for a two-point function integration
         class twopf_writer_group
@@ -155,6 +168,7 @@ namespace transport
           public:
             backg_writer backg;
             twopf_writer twopf;
+            stats_writer stats;
           };
 
 
@@ -166,6 +180,7 @@ namespace transport
             twopf_writer   twopf_re;
             twopf_writer   twopf_im;
             threepf_writer threepf;
+            stats_writer   stats;
           };
 
 
@@ -204,7 +219,7 @@ namespace transport
             generic_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w);
+                            handle_type h, unsigned int w, bool s);
 
             virtual ~generic_batcher();
 
@@ -244,6 +259,9 @@ namespace transport
             //! Add integration details
             void report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
 
+            //! Add integration details, plus report a k-configuration serial number for storing per-configuration statistics
+            void report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial);
+
             //! Get aggregate integration time
             boost::timer::nanosecond_type get_integration_time() const { return(this->integration_time); }
 
@@ -276,6 +294,9 @@ namespace transport
             //! Return logger
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
+
+            // FLUSH INTERFACE
+
           protected:
 
             //! Compute the size of all currently-batched results
@@ -284,7 +305,24 @@ namespace transport
             //! Flush currently-batched results into the database, and then send to the master process
             virtual void flush(replacement_action action) = 0;
 
+
+            // INTERNAL DATA
+
           protected:
+
+            // CACHES
+
+            //! Number of background pushes
+            unsigned int                                             num_backg;
+
+            //! Cache of background pushes
+            std::vector<backg_item>                                  backg_batch;
+
+            //! Cache of per-configuration statistics
+            std::vector<configuration_statistics>                    stats_batch;
+
+
+            // OTHER INTERNAL DATA
 
             //! Capacity of this batcher; when the capacity is exceeded, the batcher
             //! flushes its data to a temporary database and pushes it to the
@@ -293,12 +331,6 @@ namespace transport
 
             //! Number of fields associated with this integration
             const unsigned int                                       Nfields;
-
-            //! Number of background pushes
-            unsigned int                                             num_backg;
-
-            //! Cache of background pushes
-            std::vector<backg_item>                                  backg_batch;
 
             //! Container path
             boost::filesystem::path                                  container_path;
@@ -317,6 +349,12 @@ namespace transport
 
             //! Worker number associated with this batcher
             unsigned int                                             worker_number;
+
+
+            // STATISTICS
+
+            //! Are we collecting per-configuration statistics?
+            bool                                                     collect_statistics;
 
             //! Number of integrations handled by this batcher
             unsigned int                                             num_integrations;
@@ -339,6 +377,9 @@ namespace transport
             //! Shortest batching time
             boost::timer::nanosecond_type                            min_batching_time;
 
+
+            // LOGGING
+
             //! Logger source
             boost::log::sources::severity_logger<log_severity_level> log_source;
 
@@ -356,8 +397,8 @@ namespace transport
                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                           const twopf_writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
-                          handle_type h, unsigned int wn)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf(0)
+                          handle_type h, unsigned int wn, bool s)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w), num_twopf(0)
               {
               }
 
@@ -384,12 +425,14 @@ namespace transport
                 // set up a timer to measure how long it takes to flush
                 boost::timer::cpu_timer flush_timer;
 
+                if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf(this, this->twopf_batch);
 
                 flush_timer.stop();
                 BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
+                this->stats_batch.clear();
                 this->backg_batch.clear();
                 this->twopf_batch.clear();
                 this->num_backg = this->num_twopf = 0;
@@ -405,11 +448,13 @@ namespace transport
               }
 
           protected:
+
             const twopf_writer_group writers;
 
             unsigned int             num_twopf;
 
             std::vector<twopf_item>  twopf_batch;
+
           };
 
 
@@ -424,8 +469,8 @@ namespace transport
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             const threepf_writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int wn)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
+                            handle_type h, unsigned int wn, bool s)
+              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
               {
               }
 
@@ -468,6 +513,7 @@ namespace transport
                 // set up a timer to measure how long it takes to flush
                 boost::timer::cpu_timer flush_timer;
 
+                if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
                 this->writers.backg(this, this->backg_batch);
                 this->writers.twopf_re(this, this->twopf_re_batch);
                 this->writers.twopf_im(this, this->twopf_im_batch);
@@ -476,6 +522,7 @@ namespace transport
                 flush_timer.stop();
                 BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
 
+                this->stats_batch.clear();
                 this->backg_batch.clear();
                 this->twopf_re_batch.clear();
                 this->twopf_im_batch.clear();
@@ -1298,12 +1345,12 @@ namespace transport
 
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         virtual twopf_batcher create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                          unsigned int worker, unsigned int Nfields,
+                                                          unsigned int worker, model<number>* m,
                                                           container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                              unsigned int worker, unsigned int Nfields,
+                                                              unsigned int worker, model<number>* m,
                                                               container_dispatch_function dispatcher) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
@@ -1379,7 +1426,7 @@ namespace transport
                                                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                            typename data_manager<number>::container_dispatch_function d,
                                                            typename data_manager<number>::container_replacement_function r,
-                                                           handle_type h, unsigned int w)
+                                                           handle_type h, unsigned int w, bool s)
       : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
         dispatcher(d), replacer(r), worker_number(w),
         manager_handle(static_cast<void*>(h)),
@@ -1387,7 +1434,8 @@ namespace transport
         integration_time(0),
         max_integration_time(0), min_integration_time(0),
         batching_time(0),
-        max_batching_time(0), min_batching_time(0)
+        max_batching_time(0), min_batching_time(0),
+        collect_statistics(s)
       {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -1436,6 +1484,21 @@ namespace transport
 
         if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
         if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+    unsigned int kserial)
+      {
+        this->report_integration_timings(integration, batching);
+
+        configuration_statistics stats;
+        stats.serial     = kserial;
+        stats.integration = integration;
+        stats.batching    = batching;
+
+        this->stats_batch.push_back(stats);
       }
 
 

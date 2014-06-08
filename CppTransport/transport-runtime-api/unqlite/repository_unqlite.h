@@ -140,17 +140,17 @@ namespace transport
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_integration_output_group to do the work.
         virtual typename repository<number>::integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                            const std::string& backend, unsigned int worker) override;
+                                                                                            model<number>* m, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
         //! Delegates insert_integration_output_group to do the work.
         virtual typename repository<number>::integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                            const std::string& backend, unsigned int worker) override;
+                                                                                            model<number>* m, unsigned int worker) override;
 
       protected:
 
         //! Insert an output record for a specified task, in a specified collection.
-        typename repository<number>::integration_writer insert_integration_output_group(const std::string& backend,
+        typename repository<number>::integration_writer insert_integration_output_group(model<number>* m,
                                                                                         unsigned int worker, integration_task<number>* tk,
                                                                                         const std::list<std::string>& tags);
 
@@ -1064,11 +1064,13 @@ namespace transport
     template <typename number>
     typename repository<number>::integration_writer
     repository_unqlite<number>::new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                            const std::string& backend, unsigned int worker)
+                                                            model<number>* m, unsigned int worker)
       {
         assert(tk != nullptr);
+        assert(m != nullptr);
 
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
+        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -1083,7 +1085,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(m, worker, tk, tags);
 
 		    // close database handles
         this->commit_transaction();
@@ -1097,11 +1099,13 @@ namespace transport
     template <typename number>
     typename repository<number>::integration_writer
     repository_unqlite<number>::new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                            const std::string& backend, unsigned int worker)
+                                                            model<number>* m, unsigned int worker)
       {
         assert(tk != nullptr);
+        assert(m != nullptr);
 
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -1116,7 +1120,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(backend, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->insert_integration_output_group(m, worker, tk, tags);
 
 		    // commit transaction
         this->commit_transaction();
@@ -1130,7 +1134,7 @@ namespace transport
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::insert_integration_output_group(const std::string& backend,
+    repository_unqlite<number>::insert_integration_output_group(model<number>* m,
                                                                 unsigned int worker, integration_task<number>* tk, const std::list<std::string>& tags)
       {
         // get serialization_reader for the named task record
@@ -1158,7 +1162,7 @@ namespace transport
         // create and serialize an empty output group
         typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(), output_path,
                                                                                                                    now, false, std::list<std::string>(), tags);
-        group.get_payload().set_backend(backend);
+        group.get_payload().set_backend(m->get_backend());
         group.get_payload().set_container_path(sql_path);
         unqlite_serialization_writer writer;
         group.serialize(writer);
@@ -1183,7 +1187,7 @@ namespace transport
 
 		    return typename repository<number>::integration_writer(this->get_root_path()/output_path, this->get_root_path()/sql_path,
 		                                                           this->get_root_path()/log_path, this->get_root_path()/task_path,
-		                                                           this->get_root_path()/temp_path, worker);
+		                                                           this->get_root_path()/temp_path, worker, m->supports_per_configuration_statistics());
       }
 
 

@@ -481,7 +481,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m, this->get_rank());
 
         // create the data writer
         this->data_mgr->create_writer(writer);
@@ -519,7 +519,7 @@ namespace transport
 
         // create new output record in the repository database, and set up
         // paths to the integration database
-        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m->get_backend(), this->get_rank());
+        typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m, this->get_rank());
 
         // create the data writer
         this->data_mgr->create_writer(writer);
@@ -1110,7 +1110,7 @@ namespace transport
         // construct a batcher to hold the output of the integration
         typename data_manager<number>::twopf_batcher batcher =
 	                                                     this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                 this->get_rank(), m->get_N_fields(), dispatcher);
+	                                                                                                 this->get_rank(), m, dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1164,7 +1164,7 @@ namespace transport
         // construct a batcher to hold the output of the integration
         typename data_manager<number>::threepf_batcher batcher =
 	                                                       this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                     this->get_rank(), m->get_N_fields(), dispatcher);
+	                                                                                                     this->get_rank(), m, dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;

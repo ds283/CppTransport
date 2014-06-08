@@ -31,13 +31,7 @@
 #define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG         "re"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG    "im"
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE    "threepf"
-#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_1_TABLE      "gauge_xfm_1"
-#define __CPP_TRANSPORT_SQLITE_GAUGE_XFM_2_TABLE      "gauge_xfm_2"
-#define __CPP_TRANSPORT_SQLITE_U2_TABLE               "u2"
-#define __CPP_TRANSPORT_SQLITE_U3_TABLE               "u3"
-#define __CPP_TRANSPORT_SQLITE_A_TABLE                "A"
-#define __CPP_TRANSPORT_SQLITE_B_TABLE                "B"
-#define __CPP_TRANSPORT_SQLITE_C_TABLE                "C"
+#define __CPP_TRANSPORT_SQLITE_STATS_TABLE            "statistics"
 
 #define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE         "task_list"
 #define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE      "serial_search"
@@ -56,7 +50,7 @@ namespace transport
 
         typedef enum { real_twopf, imag_twopf } twopf_value_type;
 
-        typedef enum { gauge_xfm_1, gauge_xfm_2 } gauge_xfm_type;
+        typedef enum { twopf_configs, threepf_configs } statistics_configuration_type;
 
         // Utility functions
         namespace
@@ -371,6 +365,39 @@ namespace transport
           }
 
 
+        // Create table for statistics, if they are being collected
+        void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, statistics_configuration_type type=twopf_configs)
+          {
+            std::ostringstream create_stmt;
+            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
+              << "kserial INTEGER,"
+              << "integration_time DOUBLE,"
+              << "batch_time DOUBLE";
+
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(kserial) REFERENCES ";
+                switch(type)
+                  {
+                    case twopf_configs:
+                      create_stmt << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE;
+                      break;
+
+                    case threepf_configs:
+                      create_stmt << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE;
+                      break;
+
+                    default:
+                      assert(false);
+                  }
+                create_stmt << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
         // Create table for background values
         void create_backg_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
@@ -439,41 +466,36 @@ namespace transport
           }
 
 
-        // Create table for 1st-order gauge xfm values
-        void create_dN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
+        // Write a batch of per-configuration statistics values
+        template <typename number>
+        void write_stats(typename data_manager<number>::generic_batcher* batcher,
+                         const std::vector<typename data_manager<number>::configuration_statistics>& batch)
           {
-            std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_GAUGE_XFM_1_TABLE << "("
-              << "tserial INTEGER PRIMARY KEY";
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
 
-            for(unsigned int i = 0; i < 2*Nfields; i++)
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::configuration_statistics>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                create_stmt << ", ele" << i << " DOUBLE";
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).integration));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).batching));
+
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
               }
 
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
-            create_stmt << ");";
-
-            exec(db, create_stmt.str());
-          }
-
-
-        // Create table for 2nd-order gauge xfm values
-        void create_ddN_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
-          {
-            std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_GAUGE_XFM_2_TABLE << "("
-              << "tserial INTEGER PRIMARY KEY";
-
-            for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
-              {
-                create_stmt << ", ele" << i << " DOUBLE";
-              }
-
-            if(keys == foreign_keys) create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
-            create_stmt << ");";
-
-            exec(db, create_stmt.str());
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
           }
 
 
@@ -609,7 +631,7 @@ namespace transport
 
 
         // Create a temporary container for a twopf integration
-        sqlite3* create_temp_twopf_container(const boost::filesystem::path& container, unsigned int Nfields)
+        sqlite3* create_temp_twopf_container(const boost::filesystem::path& container, unsigned int Nfields, bool collect_stats)
           {
             sqlite3* db = nullptr;
 
@@ -633,6 +655,7 @@ namespace transport
               }
 
             // create the necessary tables
+            if(collect_stats) create_stats_table(db, no_foreign_keys);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
 
@@ -641,7 +664,7 @@ namespace transport
 
 
         // Create a temporary container for a threepf integration
-        sqlite3* create_temp_threepf_container(const boost::filesystem::path& container, unsigned int Nfields)
+        sqlite3* create_temp_threepf_container(const boost::filesystem::path& container, unsigned int Nfields, bool collect_stats)
           {
             sqlite3* db = nullptr;
 
@@ -665,6 +688,7 @@ namespace transport
               }
 
             // create the necessary tables
+            if(collect_stats) create_stats_table(db, no_foreign_keys);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
             create_twopf_table(db, Nfields, imag_twopf, no_foreign_keys);
@@ -677,7 +701,7 @@ namespace transport
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
         void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr,
-                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk, gauge_xfm_type gauge_xfm)
+                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
           {
             char* errmsg;
 
@@ -704,26 +728,6 @@ namespace transport
             sqlite3_stmt* write_stmt;
             check_stmt(db, sqlite3_prepare_v2(db, write_stmt_text.str().c_str(), write_stmt_text.str().length()+1, &write_stmt, nullptr));
 
-//            std::ostringstream xfm1_stmt_text;
-//            xfm1_stmt_text << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_GAUGE_XFM_1_TABLE << " VALUES (@tserial";
-//            for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-//              {
-//                xfm1_stmt_text << ", @ele" << i;
-//              }
-//            xfm1_stmt_text << ");";
-//            sqlite3_stmt* xfm1_stmt;
-//            check_stmt(db, sqlite3_prepare_v2(db, xfm1_stmt_text.str().c_str(), xfm1_stmt_text.str().length()+1, &xfm1_stmt, nullptr));
-//
-//            std::ostringstream xfm2_stmt_text;
-//            xfm2_stmt_text << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_GAUGE_XFM_2_TABLE << " VALUES (@tserial";
-//            for(unsigned int i = 0; i < 2*m->get_N_fields()*2*m->get_N_fields(); i++)
-//              {
-//                xfm2_stmt_text << ", @ele" << i;
-//              }
-//            xfm2_stmt_text << ");";
-//            sqlite3_stmt* xfm2_stmt;
-//            check_stmt(db, sqlite3_prepare_v2(db, xfm2_stmt_text.str().c_str(), xfm2_stmt_text.str().length()+1, &xfm2_stmt, nullptr));
-
             // read rows from the temporary container, then write them into the principal database
             int status;
             while((status = sqlite3_step(read_stmt)) != SQLITE_DONE)
@@ -744,52 +748,14 @@ namespace transport
 
                 check_stmt(db, sqlite3_step(write_stmt), __CPP_TRANSPORT_DATACTR_BACKGWRITE, SQLITE_DONE);
 
-//                const parameters<number>& params = tk->get_params();
-//                std::vector<number> xfm1;
-//
-//                m->compute_gauge_xfm_1(params, coords, xfm1);
-//
-//                check_stmt(db, sqlite3_bind_int(xfm1_stmt, 1, serial));
-//                for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-//                  {
-//                    check_stmt(db, sqlite3_bind_double(xfm1_stmt, 2 + m->flatten(i), static_cast<double>(xfm1[i])));
-//                  }
-//
-//                check_stmt(db, sqlite3_step(xfm1_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
-//
-//                if(gauge_xfm == gauge_xfm_2)
-//                  {
-//                    std::vector< std::vector<number> > xfm2;
-//                    m->compute_gauge_xfm_2(params, coords, xfm2);
-//
-//                    check_stmt(db, sqlite3_bind_int(xfm2_stmt, 1, serial));
-//                    for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-//                      {
-//                        for(unsigned int j = 0; j < 2*m->get_N_fields(); j++)
-//                          {
-//                            check_stmt(db, sqlite3_bind_double(xfm2_stmt, 2 + m->flatten(i, j), static_cast<double>(xfm2[i][j])));
-//                          }
-//
-//                      }
-//
-//                    check_stmt(db, sqlite3_step(xfm2_stmt), __CPP_TRANSPORT_DATACTR_BACKGXFM, SQLITE_DONE);
-//
-//                    check_stmt(db, sqlite3_clear_bindings(xfm2_stmt));
-//                    check_stmt(db, sqlite3_reset(xfm2_stmt));
-//                  }
-
                 check_stmt(db, sqlite3_clear_bindings(write_stmt));
-//                check_stmt(db, sqlite3_clear_bindings(xfm1_stmt));
                 check_stmt(db, sqlite3_reset(write_stmt));
-//                check_stmt(db, sqlite3_reset(xfm1_stmt));
               }
 
             exec(db, "END TRANSACTION;");
 
             check_stmt(db, sqlite3_finalize(read_stmt));
             check_stmt(db, sqlite3_finalize(write_stmt));
-//            check_stmt(db, sqlite3_finalize(xfm1_stmt));
-//            check_stmt(db, sqlite3_finalize(xfm2_stmt));
 
             exec(db, static_cast<std::string>("DETACH DATABASE ") + __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME + ";", __CPP_TRANSPORT_DATACTR_BACKGDETACH);
           }
@@ -814,7 +780,7 @@ namespace transport
           }
 
 
-        // Aggregate a twopf value table from a temporary container into the principal container
+        // Aggregate a threepf value table from a temporary container into the principal container
         template <typename number>
         void aggregate_threepf(sqlite3* db, typename repository<number>::integration_writer& ctr,
                                const std::string& temp_ctr)
@@ -830,6 +796,25 @@ namespace transport
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
+          }
+
+
+        // Aggregate a statistics value table from a temporary container into the principal container
+        template <typename number>
+        void aggregate_statistics(sqlite3* db, typename repository<number>::integration_writer& ctr,
+                                  const std::string& temp_ctr)
+          {
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating per-configuration statistics";
+
+            std::ostringstream copy_stmt;
+            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
+              << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "; "
+              << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICSCOPY);
           }
 
 

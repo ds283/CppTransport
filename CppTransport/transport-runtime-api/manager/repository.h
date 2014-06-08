@@ -177,7 +177,7 @@ namespace transport
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                               const boost::filesystem::path& temp, unsigned int w);
+                               const boost::filesystem::path& temp, unsigned int w, bool s);
 
             //! Destroy an integration container object
             ~integration_writer();
@@ -204,38 +204,22 @@ namespace transport
 
 
             //! Return logger
-            boost::log::sources::severity_logger<log_severity_level>& get_log()
-	            {
-                return (this->log_source);
-	            }
-
+            boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
 
             //! Return path to data container
-            const boost::filesystem::path& data_container_path() const
-	            {
-                return (this->path_to_data_container);
-	            }
-
+            const boost::filesystem::path& data_container_path() const { return (this->path_to_data_container); }
 
             //! Return path to log directory
-            const boost::filesystem::path& log_directory_path() const
-	            {
-                return (this->path_to_log_directory);
-	            }
-
+            const boost::filesystem::path& log_directory_path() const { return (this->path_to_log_directory); }
 
             //! Return path to task-data container
-            const boost::filesystem::path& taskfile_path() const
-	            {
-                return (this->path_to_taskfile);
-	            }
-
+            const boost::filesystem::path& taskfile_path() const { return (this->path_to_taskfile); }
 
             //! Return path to directory for temporary files
-            const boost::filesystem::path& temporary_files_path() const
-	            {
-                return (this->path_to_temp_directory);
-	            }
+            const boost::filesystem::path& temporary_files_path() const { return (this->path_to_temp_directory); }
+
+            //! Return whether we're collecting per-configuration statistics
+            const bool collect_statistics() const { return(this->supports_stats); }
 
 
             // INTERNAL DATA
@@ -248,6 +232,8 @@ namespace transport
             const boost::filesystem::path path_to_log_directory;
             const boost::filesystem::path path_to_taskfile;
             const boost::filesystem::path path_to_temp_directory;
+
+            bool supports_stats;
 
             const unsigned int worker_number;
 
@@ -650,11 +636,11 @@ namespace transport
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container
         virtual integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                               const std::string& backend, unsigned int worker) = 0;
+                                                               model<number>* m, unsigned int worker) = 0;
 
         //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
         virtual integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                               const std::string& backend, unsigned int worker) = 0;
+                                                               model<number>* m, unsigned int worker) = 0;
 
 
         // PULL OUTPUT-GROUPS FROM A TASK
@@ -714,11 +700,12 @@ namespace transport
     template <typename number>
     repository<number>::integration_writer::integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
                                                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                                               const boost::filesystem::path& temp, unsigned int w)
+                                                               const boost::filesystem::path& temp, unsigned int w, bool s)
 	    : path_to_directory(dir), path_to_data_container(data),
 	      path_to_log_directory(log), path_to_taskfile(task),
 	      path_to_temp_directory(temp),
-	      worker_number(w), data_manager_handle(nullptr), data_manager_taskfile(nullptr)
+	      worker_number(w), data_manager_handle(nullptr), data_manager_taskfile(nullptr),
+        supports_stats(s)
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
