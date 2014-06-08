@@ -243,10 +243,13 @@ namespace transport
 
             //! Return an implementation-dependent handle
             template <typename handle_type>
-            void get_manager_handle(handle_type* h) { *h = static_cast<handle_type>(this->manager_handle); }
+            void get_manager_handle(handle_type* h) const { *h = static_cast<handle_type>(this->manager_handle); }
 
             //! Return number of fields
-            unsigned int get_number_fields() { return(this->Nfields); }
+            unsigned int get_number_fields() const { return(this->Nfields); }
+
+            //! Return worker numbers
+            unsigned int get_worker_number() const { return(this->worker_number); }
 
             //! Close this batcher -- called at the end of an integration
             void close();
