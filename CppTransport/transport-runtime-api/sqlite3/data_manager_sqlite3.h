@@ -366,7 +366,7 @@ namespace transport
 				sqlite3* taskfile = nullptr;
 
 				// get path to taskfile
-		    boost::filesystem::path taskfile_path = ctr.taskfile_path();
+		    boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
 
 				// open the taskfile
 

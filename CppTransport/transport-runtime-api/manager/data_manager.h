@@ -1093,8 +1093,8 @@ namespace transport
 				    //! Get total threepf k-config cache hits
 				    unsigned int get_threepf_kconfig_cache_hits() const { return(this->threepf_kconfig_cache.get_hits()); }
 
-				    //! Get total time-data cache hits
-				    unsigned int get_time_data_cache_hits() const { return(this->data_cache.get_hits()); }
+				    //! Get total data cache hits
+				    unsigned int get_data_cache_hits() const { return(this->data_cache.get_hits()); }
 
 
 		        //! Get total time-config cache unloads
@@ -1106,8 +1106,8 @@ namespace transport
 		        //! Get total threepf k-config cache unloads
 		        unsigned int get_threepf_kconfig_cache_unloads() const { return(this->threepf_kconfig_cache.get_unloads()); }
 
-		        //! Get total time-data cache unloads
-		        unsigned int get_time_data_cache_unloads() const { return(this->data_cache.get_unloads()); }
+		        //! Get total data cache unloads
+		        unsigned int get_data_cache_unloads() const { return(this->data_cache.get_unloads()); }
 
 
 		        // ATTACH, DETACH OUTPUT GROUPS
@@ -2156,7 +2156,7 @@ namespace transport
 		    template<>
         unsigned int elementsof_container(const std::vector<double>& container) { return(container.size()); }
 
-	    }   // namespace linecache -- specializaitons
+	    }   // namespace linecache -- specializations
 
 
   }   // namespace transport

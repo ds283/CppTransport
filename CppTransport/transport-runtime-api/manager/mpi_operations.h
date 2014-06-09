@@ -399,7 +399,7 @@ namespace transport
 			              time_config_hits(tc), time_config_unloads(tc_u),
 			              twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
 			              threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
-			              time_data_hits(td), time_data_unloads(td_u)
+			              data_hits(td), data_unloads(td_u)
 			            {
 			            }
 
@@ -419,7 +419,7 @@ namespace transport
 				        unsigned int                   get_threepf_kconfig_hits()    const { return(this->threepf_kconfig_hits); }
 
 				        //! Get time-data hits
-				        unsigned int                   get_time_data_hits()          const { return(this->time_data_hits); }
+				        unsigned int                   get_data_hits()               const { return(this->data_hits); }
 
 		            //! Get time config unloads
 		            unsigned int                   get_time_config_unloads()     const { return(this->time_config_unloads); }
@@ -431,7 +431,7 @@ namespace transport
 		            unsigned int                   get_threepf_kconfig_unloads() const { return(this->threepf_kconfig_unloads); }
 
 		            //! Get time-data unloads
-		            unsigned int                   get_time_data_unloads()       const { return(this->time_data_unloads); }
+		            unsigned int                   get_data_unloads()            const { return(this->data_unloads); }
 
 
 		          private:
@@ -460,11 +460,11 @@ namespace transport
 				        //! Number of threepf-kconfig cache unloads
 				        unsigned int threepf_kconfig_unloads;
 
-				        //! Number of time-data cache hits
-				        unsigned int time_data_hits;
+				        //! Number of data cache hits
+				        unsigned int data_hits;
 
-				        //! Number of time-data cache unloads
-				        unsigned int time_data_unloads;
+				        //! Number of data cache unloads
+				        unsigned int data_unloads;
 
 		            // enable boost::serialization support, and hence automated packing for transmission over MPI
 		            friend class boost::serialization::access;
@@ -480,8 +480,8 @@ namespace transport
 				            ar & twopf_kconfig_unloads;
 				            ar & threepf_kconfig_hits;
 				            ar & threepf_kconfig_unloads;
-				            ar & time_data_hits;
-				            ar & time_data_unloads;
+				            ar & data_hits;
+				            ar & data_unloads;
 			            }
 			        };
 
