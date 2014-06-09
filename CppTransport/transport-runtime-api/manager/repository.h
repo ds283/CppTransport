@@ -393,7 +393,7 @@ namespace transport
             //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
-                               integration_commit_callback c,
+                               boost::posix_time::ptime& ct, integration_commit_callback c,
                                const boost::filesystem::path& root,
                                const boost::filesystem::path& output, const boost::filesystem::path& data,
                                const boost::filesystem::path& log, const boost::filesystem::path& task,
@@ -503,6 +503,9 @@ namespace transport
 		        //! Get metadata
 		        const integration_metadata& get_metadata() const { return(this->metadata); }
 
+            //! Get creation time
+            const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
+
 
             // INTERNAL DATA
 
@@ -525,6 +528,9 @@ namespace transport
 
 		        //! metadata for this integration
 		        integration_metadata metadata;
+
+            //! creation time (associated with name for output group
+            boost::posix_time::ptime creation_time;
 
 
 		        // PATHS
@@ -1183,6 +1189,7 @@ namespace transport
 
     template <typename number>
     repository<number>::integration_writer::integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
+                                                               boost::posix_time::ptime& ct,
                                                                typename repository<number>::integration_commit_callback c,
                                                                const boost::filesystem::path& root,
                                                                const boost::filesystem::path& output, const boost::filesystem::path& data,
@@ -1190,6 +1197,7 @@ namespace transport
                                                                const boost::filesystem::path& temp,
                                                                unsigned int w, bool s)
 	    : parent_task(dynamic_cast<integration_task<number>*>(tk->clone())), tags(tg),
+        creation_time(ct),
 	      committer(c),
 	      repo_root(root),
 	      output_path(output), data_path(data),
@@ -1226,6 +1234,7 @@ namespace transport
 		template <typename number>
 		repository<number>::integration_writer::integration_writer(const typename repository<number>::integration_writer& obj)
 			: parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
+        creation_time(obj.creation_time),
 			  committer(obj.committer),
 			  repo_root(obj.repo_root),
 			  output_path(obj.output_path), data_path(obj.data_path),

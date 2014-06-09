@@ -1189,7 +1189,7 @@ namespace transport
 
 		    // integration_writer constructor takes copies of tk and tags because we can't be sure that they're long-lived objects;
 		    // model is ok because mode instances are handled by the instance_manager
-		    return typename repository<number>::integration_writer(tk, tags,
+		    return typename repository<number>::integration_writer(tk, tags, now,
 		                                                           std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1, m),
 		                                                           this->get_root_path(),
 		                                                           output_path, sql_path, log_path, task_path, temp_path,
@@ -1229,7 +1229,8 @@ namespace transport
 				// FIXME: insert note about integrability for 3pf tasks, __CPP_TRANSPORT_REPO_NOTE_NO_INTEGRATION
 		    typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(),
 		                                                                                                               writer.get_relative_output_path(),
-		                                                                                                               now, false, std::list<std::string>(), tags);
+		                                                                                                               writer.get_creation_time(),
+                                                                                                                   false, std::list<std::string>(), tags);
 		    group.get_payload().set_backend(m->get_backend());
 		    group.get_payload().set_container_path(writer.get_relative_container_path());
 		    group.get_payload().set_metadata(writer.get_metadata());
@@ -1279,8 +1280,17 @@ namespace transport
         if(boost::filesystem::is_directory(fail_path))
           {
             boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
-
             boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+
+            std::ostringstream msg;
+
+            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+            msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task()->get_name() << "': "
+                << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" <<  group_name << "' "
+                << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
+
+            this->message(msg.str());
           }
         else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
       }
