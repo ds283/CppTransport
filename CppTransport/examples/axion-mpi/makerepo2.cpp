@@ -97,13 +97,13 @@ int main(int argc, char* argv[])
                                                                                   model->ics_validator_factory(),
                                                                                   model->ics_finder_factory());
 
-    const unsigned int t_samples = 100000;       // record 5000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 50000;       // record 5000 samples - enough to find a good stepsize
 
     // time storage policy is to store only 500 samples
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 200) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 100) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
