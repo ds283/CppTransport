@@ -81,7 +81,8 @@ namespace transport
 
 		    //! Write a value
 		    virtual void write_value(const std::string& name, const std::string& value) override;
-		    virtual void write_value(const std::string& name, unsigned value) override;
+		    virtual void write_value(const std::string& name, unsigned int value) override;
+				virtual void write_value(const std::string& name, long long int value) override;
 		    virtual void write_value(const std::string& name, double value) override;
 		    virtual void write_value(const std::string& name, bool value) override;
 
@@ -131,10 +132,16 @@ namespace transport
 	    }
 
 
-    void unqlite_serialization_writer::write_value(const std::string& name, unsigned value)
+    void unqlite_serialization_writer::write_value(const std::string& name, unsigned int value)
 	    {
         this->stack.write_value(name, value);
 	    }
+
+
+		void unqlite_serialization_writer::write_value(const std::string& name, long long int value)
+			{
+		    this->stack.write_value(name, value);
+			}
 
 
     void unqlite_serialization_writer::write_value(const std::string& name, double value)
@@ -218,6 +225,7 @@ namespace transport
 		    //! Read a value
 		    virtual bool read_value(const std::string& name, std::string& value) override;
 		    virtual bool read_value(const std::string& name, unsigned int& value) override;
+				virtual bool read_value(const std::string& name, long long int& value) override;
 		    virtual bool read_value(const std::string& name, double& value) override;
 		    virtual bool read_value(const std::string& name, bool& value) override;
 
@@ -240,6 +248,7 @@ namespace transport
 				//! Insert a value in the current node
 				virtual void insert_value(const std::string& name, const std::string& value) override;
 				virtual void insert_value(const std::string& name, unsigned int value) override;
+				virtual void insert_value(const std::string& name, long long int value) override;
 				virtual void insert_value(const std::string& name, double value) override;
 				virtual void insert_value(const std::string& name, bool value) override;
 
@@ -371,14 +380,14 @@ namespace transport
 									}
 								else if(unqlite_value_is_int(value))
 									{
-										int number = unqlite_value_to_int(value);
-										if(number < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+										unqlite_int64 number = unqlite_value_to_int64(value);
 
 										#ifdef __CPP_TRANSPORT_UNQLITE_SERIALIZABLE_DEBUG
-								    std::cerr << "READER: unsigned int '" << key_name << "' = " << static_cast<unsigned int>(number) << std::endl;
+								    std::cerr << "READER: unqlite_int64 '" << key_name << "' = " << static_cast<unsigned int>(number) << std::endl;
 										#endif
 
-								    this->stack.write_value(key_name, static_cast<unsigned int>(number));
+										if(number < 0 || number > UINT_MAX) this->stack.write_value(key_name, static_cast<long long int>(number));
+										else this->stack.write_value(key_name, static_cast<unsigned int>(number));
 									}
 								else if(unqlite_value_is_float(value))
 									{
@@ -498,6 +507,19 @@ namespace transport
 	    }
 
 
+    bool unqlite_serialization_reader::read_value(const std::string& name, long long int& value)
+	    {
+        if(!this->stack.read_value(name, value))
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_UNQLITE_READ_VALUE_FAIL << " '" << name << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+	        }
+
+        return(true);
+	    }
+
+
     bool unqlite_serialization_reader::read_value(const std::string& name, double& value)
 	    {
         if(!this->stack.read_value(name, value))
@@ -587,6 +609,12 @@ namespace transport
 			{
 		    this->stack.write_value(name, value, true);
 			}
+
+
+    void unqlite_serialization_reader::insert_value(const std::string& name, long long int value)
+	    {
+        this->stack.write_value(name, value, true);
+	    }
 
 
 		void unqlite_serialization_reader::insert_value(const std::string& name, double value)

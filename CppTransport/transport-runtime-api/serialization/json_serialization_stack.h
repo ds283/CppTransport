@@ -298,10 +298,12 @@ namespace transport
 					    }
 
 		        //! Convert content to different representations, if possible
-		        virtual std::string  get_string() const = 0;
-		        virtual unsigned int get_unsigned_int() const = 0;
-		        virtual double       get_double() const = 0;
-		        virtual bool         get_bool() const = 0;
+		        virtual std::string   get_string() const = 0;
+		        virtual unsigned int  get_unsigned_int() const = 0;
+				    virtual long long int get_long_long_int() const = 0;
+		        virtual double        get_double() const = 0;
+		        virtual bool          get_bool() const = 0;
+
 			    };
 
 
@@ -333,10 +335,11 @@ namespace transport
 
 		        //! Convert content to different representations, if possible.
 		        //! Implements the basic_value_element conversion interface.
-		        std::string  get_string()       const override { return(boost::lexical_cast<std::string>(this->value)); }
-            unsigned int get_unsigned_int() const override { return(boost::lexical_cast<unsigned int>(this->value)); }
-            double       get_double()       const override { return(boost::lexical_cast<double>(this->value)); }
-            bool         get_bool()         const override
+		        std::string   get_string()        const override { return(boost::lexical_cast<std::string>(this->value)); }
+            unsigned int  get_unsigned_int()  const override { return(boost::lexical_cast<unsigned int>(this->value)); }
+		        long long int get_long_long_int() const override { return(boost::lexical_cast<long long int>(this->value)); }
+            double        get_double()        const override { return(boost::lexical_cast<double>(this->value)); }
+            bool          get_bool()          const override
               {
                 #ifdef __CPP_TRANSPORT_JSON_DEBUG
                 std::ostringstream test;
@@ -351,6 +354,7 @@ namespace transport
 		        //! Convert value to string for JSON output.
 		        //! Partly done this way because string values need to be quoted.
             std::string to_string(const std::string& v) const;
+		        std::string to_string(const long long int& v) const;
 		        std::string to_string(const unsigned int& v) const;
 		        std::string to_string(const double& v) const;
 		        std::string to_string(const bool& v) const;
@@ -359,6 +363,7 @@ namespace transport
 
             //! Stored value
             T value;
+
 	        };
 
 
@@ -404,7 +409,8 @@ namespace transport
         //! Write a value.
 		    //! If an existing node exists with the same name, its value is replaced.
         void write_value(const std::string& name, const std::string& value, bool is_insert=false);
-        void write_value(const std::string& name, unsigned value, bool is_insert=false);
+        void write_value(const std::string& name, unsigned int value, bool is_insert=false);
+		    void write_value(const std::string& name, long long int value, bool is_insert=false);
         void write_value(const std::string& name, double value, bool is_insert=false);
         void write_value(const std::string& name, bool value, bool is_insert=false);
 
@@ -464,6 +470,7 @@ namespace transport
         //! Returns true if the value was pulled ok.
         bool read_value(const std::string& name, std::string& val);
         bool read_value(const std::string& name, unsigned& val);
+        bool read_value(const std::string& name, long long int& val);
         bool read_value(const std::string& name, double& val);
         bool read_value(const std::string& name, bool& val);
 
@@ -893,6 +900,13 @@ namespace transport
 
 
     template <typename T>
+	  std::string json_serialization_stack::value_element<T>::to_string(const long long int& v) const
+	    {
+		    return(boost::lexical_cast<std::string>(v));
+	    }
+
+
+    template <typename T>
     std::string json_serialization_stack::value_element<T>::to_string(const double& v) const
 	    {
         return(boost::lexical_cast<std::string>(v));
@@ -1299,7 +1313,7 @@ namespace transport
 	    }
 
 
-    void json_serialization_stack::write_value(const std::string& name, unsigned value, bool is_insert)
+    void json_serialization_stack::write_value(const std::string& name, unsigned int value, bool is_insert)
 	    {
         value_element<unsigned int>* ele = new value_element<unsigned int>(name, value);
 
@@ -1318,6 +1332,27 @@ namespace transport
         std::cerr << "JSON: Wrote unsigned int value '" << name << "' = " << value << std::endl;
 		    #endif
 	    }
+
+
+        void json_serialization_stack::write_value(const std::string& name, long long int value, bool is_insert)
+	        {
+            value_element<long long int>* ele = new value_element<long long int>(name, value);
+
+            if(this->node_stack.size() == 0)
+	            {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+                throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+	            }
+
+            // get reference to current front-of-stack node, and push this value to its contents
+            basic_node* n = this->node_stack.front();
+            n->push_content(ele, is_insert);
+
+						#ifdef __CPP_TRANSPORT_JSON_DEBUG
+		        std::cerr << "JSON: Wrote long long int value '" << name << "' = " << value << std::endl;
+				    #endif
+	        }
 
 
     void json_serialization_stack::write_value(const std::string& name, double value, bool is_insert)
@@ -1448,6 +1483,37 @@ namespace transport
 
         return(rval);
 	    }
+
+
+    bool json_serialization_stack::read_value(const std::string& name, long long int& val)
+      {
+        bool rval = false;
+
+        if(this->node_stack.size() == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+          }
+
+        // get reference to front-of-stack node, and check whether it can service this request
+        basic_node* n = this->node_stack.front();
+        element* ele = nullptr;
+
+        if((rval = n->pull_content(value, name, ele)))
+          {
+            // if successful, extract
+            basic_value_element* value = dynamic_cast< basic_value_element* >(ele);
+            if(value == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_SERIAL_TYPEDETECT_FAIL);
+            val = value->get_long_long_int();
+
+						#ifdef __CPP_TRANSPORT_JSON_DEBUG
+            std::cerr << "JSON: read long long int value '" << name << "' = " << val << std::endl;
+		        #endif
+          }
+
+        return(rval);
+      }
 
 
     bool json_serialization_stack::read_value(const std::string& name, double& val)
