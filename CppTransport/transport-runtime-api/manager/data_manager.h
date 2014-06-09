@@ -255,6 +255,17 @@ namespace transport
             void close();
 
 
+            // FAILURE MANAGEMENT
+
+          public:
+
+            //! Report a failed integration
+            void report_integration_failure() { this->failures++; }
+
+            //! Query whether any integrations failed
+            bool integrations_failed() const { return(this->failures > 0); }
+
+
             // STATISTICS
 
           public:
@@ -352,6 +363,12 @@ namespace transport
 
             //! Worker number associated with this batcher
             unsigned int                                             worker_number;
+
+
+            // FAILURE TRACKING
+
+            //! number of integrations which have failed
+            unsigned int                                             failures;
 
 
             // STATISTICS
@@ -1438,7 +1455,7 @@ namespace transport
         max_integration_time(0), min_integration_time(0),
         batching_time(0),
         max_batching_time(0), min_batching_time(0),
-        collect_statistics(s)
+        collect_statistics(s), failures(0)
       {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;

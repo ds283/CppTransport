@@ -232,14 +232,25 @@ namespace transport
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
 
-            // write the time history for this k-configuration
-            this->twopf_kmode(list[i], tk, batcher, int_time, batch_time);
+            try
+              {
+                // write the time history for this k-configuration
+                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time);
 
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
-                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                    << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
+                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
+               }
+            catch(std::overflow_error& xe)
+              {
+                batcher.report_integration_failure();
+
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)
+                    << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
+                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
+              }
           }
       }
 
@@ -326,14 +337,25 @@ namespace transport
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
 
-            // write the time history for this k-configuration
-            this->threepf_kmode(list[i], tk, batcher, int_time, batch_time);
+            try
+              {
+                // write the time history for this k-configuration
+                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time);
 
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
-                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                  << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                  << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
+                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
+              }
+            catch(std::overflow_error& xe)
+              {
+                batcher.report_integration_failure();
+
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                    << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
+                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
+              }
           }
       }
 

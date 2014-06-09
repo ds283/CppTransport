@@ -38,6 +38,7 @@
 #define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF                        "tempfiles"
 #define __CPP_TRANSPORT_REPO_TASKFILE_LEAF                       "tasks.sqlite"
 #define __CPP_TRANSPORT_REPO_DATABASE_LEAF                       "integration.sqlite"
+#define __CPP_TRANSPORT_REPO_FAILURE_LEAF                        "failed"
 
 #define __CPP_TRANSPORT_NODE_PACKAGE_NAME                        "package-name"
 #define __CPP_TRANSPORT_NODE_PACKAGE_MODELUID                    "package-model-uid"
@@ -450,7 +451,10 @@ namespace transport
 		        // ABSOLUTE PATHS
 		        
           public:
-		        
+
+            //! Return path to output directory
+            boost::filesystem::path get_abs_output_path() const { return(this->repo_root/this->output_path); }
+
             //! Return path to data container
             boost::filesystem::path get_abs_container_path() const { return(this->repo_root/this->data_path); }
 
@@ -791,25 +795,23 @@ namespace transport
 
           public:
 
-            //! Get creation time
-            const boost::posix_time::ptime& get_creation_time() const { return (this->created); }
+            //! Get task name
+            const std::string& get_task_name() const { return(this->task); }
 
+            //! Get creation time. Functions as the 'name' of this output group
+            const boost::posix_time::ptime& get_creation_time() const { return (this->created); }
 
             //! Get path to repository root
             const boost::filesystem::path& get_repo_root_path() const { return (this->repo_root_path); }
 
-
             //! Get path to output root (typically a subdir of the repository root)
             const boost::filesystem::path& get_data_root_path() const { return (this->data_root_path); }
-
 
             //! Get locked flag
             bool get_lock_status() const { return (this->locked); }
 
-
             //! Get notes
             const std::list<std::string>& get_notes() const { return (this->notes); }
-
 
             //! Get tags
             const std::list<std::string>& get_tags() const { return (this->tags); }
@@ -830,7 +832,7 @@ namespace transport
 
           private:
 
-            //! Parent task associated with this output. Not ordinarily user-visible.
+            //! Parent task associated with this output.
             std::string task;
 
             //! Path to root of repository. Other paths are relative to this.
@@ -1080,6 +1082,9 @@ namespace transport
         //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
         virtual integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
                                                                model<number>* m, unsigned int worker) = 0;
+
+        //! Move a failed output group to a safe location
+        virtual void move_output_group_to_failure(integration_writer& writer) = 0;
 
 
         // PULL OUTPUT-GROUPS FROM A TASK

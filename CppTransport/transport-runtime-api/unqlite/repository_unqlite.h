@@ -50,6 +50,9 @@ namespace transport
     //! Warning callback object
     typedef std::function<void(const std::string&)> repository_unqlite_warning_callback;
 
+    //! Message callback object
+    typedef std::function<void(const std::string&)> repository_unqlite_message_callback;
+
     // class 'repository_unqlite' implements the 'repository' interface using
     // UnQLite as the database backend.
     // It replaces the earlier DbXml-based repository implementation
@@ -73,6 +76,12 @@ namespace transport
         class default_warning_handler
           {
           public:
+            void operator() (const std::string& msg) { std::cout << msg << std::endl; }
+          };
+
+        class default_message_handler
+          {
+          public:
             void operator() (const std::string& msg) {std::cout << msg << std::endl; }
           };
 
@@ -86,7 +95,8 @@ namespace transport
         repository_unqlite(const std::string& path,
                            typename repository<number>::access_type mode = repository<number>::access_type::readwrite,
                            repository_unqlite_error_callback e=default_error_handler(),
-                           repository_unqlite_warning_callback w=default_warning_handler());
+                           repository_unqlite_warning_callback w=default_warning_handler(),
+                           repository_unqlite_message_callback m=default_message_handler());
 
         //! Create a repository with a specific pathname
         repository_unqlite(const std::string& path, const repository_creation_key& key);
@@ -147,6 +157,9 @@ namespace transport
         virtual typename repository<number>::integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
                                                                                             model<number>* m, unsigned int worker) override;
 
+        //! Move a failed output group to a safe location
+        virtual void move_output_group_to_failure(typename repository<number>::integration_writer& writer) override;
+
       protected:
 
         //! Create an integration writer and its associated environment.
@@ -156,6 +169,10 @@ namespace transport
 
 		    //! Commit the output of an integration writer to the database. Called as a callback
 		    void close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m);
+
+        //! Advise that an output group has been committed
+        template <typename Payload>
+        void advise_commit(typename repository<number>::template output_group<Payload>& group);
 
 
         // PULL OUTPUT-GROUPS FROM A TASK -- implements a 'repository' interface
@@ -260,6 +277,9 @@ namespace transport
         //! Warning handler
         repository_unqlite_warning_callback warning;
 
+        //! Message handler
+        repository_unqlite_message_callback message;
+
         //! BOOST path to database
         boost::filesystem::path db_path;
 
@@ -284,8 +304,10 @@ namespace transport
     // Create a repository object associated with a pathname
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode,
-                                                   repository_unqlite_error_callback e, repository_unqlite_warning_callback w)
-      : db(nullptr), open_clients(0), repository<number>(path, mode), error(e), warning(w)
+                                                   repository_unqlite_error_callback e, repository_unqlite_warning_callback w,
+                                                   repository_unqlite_message_callback m)
+      : db(nullptr), open_clients(0), repository<number>(path, mode),
+        error(e), warning(w), message(m)
       {
         // supplied path should be a directory which exists
         if(!boost::filesystem::is_directory(path))
@@ -305,9 +327,9 @@ namespace transport
           }
 
         // open database connexions for reading (slave processes) or reading/writing (master process)
-		    unsigned int m = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
+		    unsigned int unqlite_mode = (mode == repository<number>::access_type::readonly ? UNQLITE_OPEN_READONLY : UNQLITE_OPEN_READWRITE);
 
-        if(unqlite_open(&db, db_path.c_str(), m) != UNQLITE_OK)
+        if(unqlite_open(&db, db_path.c_str(), unqlite_mode) != UNQLITE_OK)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_FAIL_DATABASE_OPEN << " " << db_path;
@@ -335,7 +357,8 @@ namespace transport
     repository_unqlite<number>::repository_unqlite(const std::string& path, const repository_creation_key& key)
       : db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite),
         error(typename repository_unqlite<number>::default_error_handler()),
-        warning(typename repository_unqlite<number>::default_warning_handler())
+        warning(typename repository_unqlite<number>::default_warning_handler()),
+        message(typename repository_unqlite<number>::default_message_handler())
       {
         // check whether root directory for the repository already exists -- it shouldn't
         if(boost::filesystem::exists(path))
@@ -1228,7 +1251,39 @@ namespace transport
 
 		    // commit transaction
 		    this->commit_transaction();
+        this->advise_commit(group);
 			}
+
+
+    template <typename number>
+    template <typename Payload>
+    void repository_unqlite<number>::advise_commit(typename repository<number>::template output_group<Payload>& group)
+      {
+        std::ostringstream msg;
+
+        std::string group_name = boost::posix_time::to_iso_string(group.get_creation_time());
+
+        msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group_name << "' "
+            << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group.get_task_name() << "'";
+
+        this->message(msg.str());
+      }
+
+
+    template <typename number>
+    void repository_unqlite<number>::move_output_group_to_failure(typename repository<number>::integration_writer& writer)
+      {
+        boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+        if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+        if(boost::filesystem::is_directory(fail_path))
+          {
+            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+          }
+        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+      }
 
 
     namespace
@@ -1549,9 +1604,10 @@ namespace transport
     repository<number>* repository_factory(const std::string& path,
                                            typename repository<number>::access_type mode,
                                            repository_unqlite_error_callback e,
-                                           repository_unqlite_warning_callback w)
+                                           repository_unqlite_warning_callback w,
+                                           repository_unqlite_message_callback m)
       {
-        return new repository_unqlite<number>(path, mode, e, w);
+        return new repository_unqlite<number>(path, mode, e, w, m);
       }
 
 

@@ -18,6 +18,8 @@
 #define __CPP_TRANSPORT_REPO_COMMIT_ERROR                "Repository error: Error while committing changes to repository (backend id="
 #define __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR             "Repository error: Error while preparing to commit changes to repository (backend id="
 
+#define __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move output group to failure cache"
+
 #define __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A    "Autocommit: integration task"
 #define __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B    "requires package"
 #define __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A        "Autocommit: derived product"
@@ -27,6 +29,10 @@
 
 #define __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS          "Collection of per-configuration timing statistics disabled because not supported by backend"
 #define __CPP_TRANSPORT_REPO_NOTE_NO_INTEGRATION         "Cannot be used for integrations over the spectrum or bispectrum because task does not linearly step in k-configurations or the storage policy disables some configurations"
+
+#define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A   "Committed output group"
+#define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B   "for task"
+#define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C   "tags"
 
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"

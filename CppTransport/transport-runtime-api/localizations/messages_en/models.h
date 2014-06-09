@@ -30,6 +30,7 @@
 #define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
 
 #define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
+#define __CPP_TRANSPORT_FAILED_CONFIG         "Failed to integrate configuration"
 #define __CPP_TRANSPORT_OF                    "of"
 #define __CPP_TRANSPORT_INTEGRATION_TIME      "integration time"
 #define __CPP_TRANSPORT_BATCHING_TIME         "batching time"

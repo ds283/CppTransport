@@ -140,8 +140,16 @@ namespace transport
         void master_push_repository(void);
 
         //! Master node: Pass new integration task to the workers
-        void master_integration_task_to_workers(typename repository<number>::integration_writer& ctr,
+        bool master_integration_task_to_workers(typename repository<number>::integration_writer& writer,
                                                 integration_task<number>* task_name, model<number>* m);
+
+        //! Master node: respond to a batch aggregation message
+        void aggregate_batch(typename repository<number>::integration_writer& writer, int source,
+                             typename repository<number>::integration_metadata& metadata,
+                             model<number>* m, integration_task<number>* tk);
+
+        //! Master node: update integration metadata after a worker has finished its tasks
+        void update_integration_metadata(MPI::finished_integration_payload& payload, typename repository<number>::integration_metadata& metadata);
 
 		    //! Master node: Pass new output task to the workers
 		    void master_output_task_to_workers(typename repository<number>::derived_content_writer& writer,
@@ -198,6 +206,9 @@ namespace transport
 
         //! Report a warning
         void warn(const std::string& msg) { std::cout << msg << std::endl; }
+
+        //! Report a message
+        void message(const std::string& msg) {std::cout << msg << std::endl; }
 
 
         // INTERNAL DATA
@@ -268,7 +279,8 @@ namespace transport
                           {
                             repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
                                                               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-                                                              std::bind(&task_manager<number>::warn, this, std::placeholders::_1));
+                                                              std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
+                                                              std::bind(&task_manager<number>::message, this, std::placeholders::_1));
                           }
                         catch (runtime_exception& xe)
                           {
@@ -490,13 +502,14 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        this->master_integration_task_to_workers(writer, tk, m);
+        bool success = this->master_integration_task_to_workers(writer, tk, m);
 
         // close the data writer
         this->data_mgr->close_writer(writer);
 
-        // commit integration output to the database
-        writer.commit();
+        // commit output or move it to failure directory
+        if(success) writer.commit();
+        else this->repo->move_output_group_to_failure(writer);
       }
 
 
@@ -531,52 +544,41 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        this->master_integration_task_to_workers(writer, tk, m);
+        bool success = this->master_integration_task_to_workers(writer, tk, m);
 
         // close the data writer
         this->data_mgr->close_writer(writer);
 
-		    // commit integration output to the database
-		    writer.commit();
+        // commit output or move it to failure directory
+        if(success) writer.commit();
+        else this->repo->move_output_group_to_failure(writer);
       }
 
 
     template <typename number>
-    void task_manager<number>::master_integration_task_to_workers(typename repository<number>::integration_writer& ctr,
+    bool task_manager<number>::master_integration_task_to_workers(typename repository<number>::integration_writer& writer,
                                                                   integration_task<number>* tk, model<number>* m)
       {
         if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
+        bool success = true;
+
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << *tk;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate integration times reported by worker processes
-        boost::timer::nanosecond_type total_wallclock_time = 0;
-        boost::timer::nanosecond_type total_aggregation_time = 0;
-
-        boost::timer::nanosecond_type total_integration_time = 0;
-        boost::timer::nanosecond_type min_mean_integration_time = 0;
-        boost::timer::nanosecond_type max_mean_integration_time = 0;
-        boost::timer::nanosecond_type global_min_integration_time = 0;
-        boost::timer::nanosecond_type global_max_integration_time = 0;
-        boost::timer::nanosecond_type total_batching_time = 0;
-        boost::timer::nanosecond_type min_mean_batching_time = 0;
-        boost::timer::nanosecond_type max_mean_batching_time = 0;
-        boost::timer::nanosecond_type global_min_batching_time = 0;
-        boost::timer::nanosecond_type global_max_batching_time = 0;
-
-        unsigned int num_integrations = 0;
+        typename repository<number>::integration_metadata metadata;
 
         // get paths the workers will need
         assert(this->repo != nullptr);
-        boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
-        boost::filesystem::path tempdir_path  = ctr.get_abs_tempdir_path();
-        boost::filesystem::path logdir_path   = ctr.get_abs_logdir_path();
+        boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
+        boost::filesystem::path tempdir_path  = writer.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path   = writer.get_abs_logdir_path();
 
         MPI::new_integration_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path);
 
@@ -588,14 +590,14 @@ namespace transport
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
 
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ All workers received NEW_INTEGRATION instruction";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ All workers received NEW_INTEGRATION instruction";
 
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
         while(workers.size() > 0)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) <<  "++ Master polling for INTEGRATION_DATA_READY messages";
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) <<  "++ Master polling for INTEGRATION_DATA_READY messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
@@ -603,43 +605,7 @@ namespace transport
               {
                 case MPI::INTEGRATION_DATA_READY:
                   {
-                    MPI::data_ready_payload payload;
-                    this->world.recv(stat.source(), MPI::INTEGRATION_DATA_READY, payload);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent aggregation notification for container '" << payload.get_container_path() << "'";
-
-                    // set up a timer to measure how long we spend batching
-                    boost::timer::cpu_timer batching_timer;
-
-                    // batch data into the main container
-                    switch(payload.get_payload_type())
-                      {
-                        case MPI::data_ready_payload::twopf_payload:
-                          {
-                            this->data_mgr->aggregate_twopf_batch(ctr, payload.get_container_path(), m, tk);
-                            break;
-                          }
-
-                        case MPI::data_ready_payload::threepf_payload:
-                          {
-                            this->data_mgr->aggregate_threepf_batch(ctr, payload.get_container_path(), m, tk);
-                            break;
-                          }
-
-                        default:
-                          assert(false);
-                      }
-
-                    batching_timer.stop();
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Aggregated temporary container in time " << format_time(batching_timer.elapsed().wall);
-                    total_aggregation_time += batching_timer.elapsed().wall;
-
-		                // remove temporary container
-				            if(!boost::filesystem::remove(payload.get_container_path()))
-				              {
-				                std::ostringstream msg;
-				                msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-				                this->error(msg.str());
-				              }
+                    this->aggregate_batch(writer, stat.source(), metadata, m, tk);
                     break;
                   }
 
@@ -647,62 +613,127 @@ namespace transport
                   {
                     MPI::finished_integration_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in wallclock time " << format_time(payload.get_wallclock_time());
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in wallclock time " << format_time(payload.get_wallclock_time());
 
-                    total_wallclock_time += payload.get_wallclock_time();
-
-                    total_integration_time += payload.get_integration_time();
-                    boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / payload.get_num_integrations();
-                    if(max_mean_integration_time == 0 || mean_integration_time > max_mean_integration_time) max_mean_integration_time = mean_integration_time;
-                    if(min_mean_integration_time == 0 || mean_integration_time < min_mean_integration_time) min_mean_integration_time = mean_integration_time;
-
-                    if(global_max_integration_time == 0 || payload.get_max_integration_time() > global_max_integration_time) global_max_integration_time = payload.get_max_integration_time();
-                    if(global_min_integration_time == 0 || payload.get_min_integration_time() < global_min_integration_time) global_min_integration_time = payload.get_min_integration_time();
-
-                    total_batching_time += payload.get_batching_time();
-                    boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / payload.get_num_integrations();
-                    if(max_mean_batching_time == 0 || mean_batching_time > max_mean_batching_time) max_mean_batching_time = mean_batching_time;
-                    if(min_mean_batching_time == 0 || mean_batching_time < min_mean_batching_time) min_mean_batching_time = mean_batching_time;
-
-                    if(global_max_batching_time == 0 || payload.get_max_batching_time() > global_max_batching_time) global_max_batching_time = payload.get_max_batching_time();
-                    if(global_min_batching_time == 0 || payload.get_min_batching_time() < global_min_batching_time) global_min_batching_time = payload.get_min_batching_time();
-
-                    num_integrations += payload.get_num_integrations();
+                    this->update_integration_metadata(payload, metadata);
 
                     workers.erase(this->worker_number(stat.source()));
                     break;
                   }
 
+                case MPI::INTEGRATION_FAIL:
+                  {
+                    MPI::finished_integration_payload payload;
+                    this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising integration failure (successful tasks consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
+
+                    this->update_integration_metadata(payload, metadata);
+
+                    workers.erase(this->worker_number(stat.source()));
+                    success = false;
+                    break;
+                  }
+
                 default:
                   {
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
                     break;
                   }
               }
           }
 
-        typename repository<number>::integration_metadata timings(total_wallclock_time, total_aggregation_time,
-                                                             total_integration_time, min_mean_integration_time, max_mean_integration_time,
-                                                             global_min_integration_time, global_max_integration_time,
-                                                             total_batching_time, min_mean_batching_time, max_mean_batching_time,
-                                                             global_min_batching_time, global_max_batching_time,
-                                                             num_integrations);
-        ctr.set_metadata(timings);
+        writer.set_metadata(metadata);
 
         wallclock_timer.stop();
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total wallclock time required by worker processes = " << format_time(total_wallclock_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(total_aggregation_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Workers processed " << num_integrations << " individual integrations";
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total integration time    = " << format_time(total_integration_time) << " | global mean integration time = " << format_time(total_integration_time/num_integrations);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Min mean integration time = " << format_time(min_mean_integration_time) << " | global min integration time = " << format_time(global_min_integration_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Max mean integration time = " << format_time(max_mean_integration_time) << " | global max integration time = " << format_time(global_max_integration_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Total batching time       = " << format_time(total_batching_time) << " | global mean batching time = " << format_time(total_batching_time/num_integrations);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Min mean batching time    = " << format_time(min_mean_batching_time) << " | global min batching time = " << format_time(global_min_batching_time);
-        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Max mean batching time    = " << format_time(max_mean_batching_time) << " | global max bathcing time = " << format_time(global_max_batching_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total wallclock time required by worker processes = " << format_time(metadata.total_wallclock_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total aggregation time required by master process = " << format_time(metadata.total_aggregation_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Workers processed " << metadata.total_configurations << " individual integrations";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total integration time    = " << format_time(metadata.total_integration_time) << " | global mean integration time = " << format_time(metadata.total_integration_time/metadata.total_configurations);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Min mean integration time = " << format_time(metadata.min_mean_integration_time) << " | global min integration time = " << format_time(metadata.global_min_integration_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Max mean integration time = " << format_time(metadata.max_mean_integration_time) << " | global max integration time = " << format_time(metadata.global_max_integration_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Total batching time       = " << format_time(metadata.total_batching_time) << " | global mean batching time = " << format_time(metadata.total_batching_time/metadata.total_configurations);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Min mean batching time    = " << format_time(metadata.min_mean_batching_time) << " | global min batching time = " << format_time(metadata.global_min_batching_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Max mean batching time    = " << format_time(metadata.max_mean_batching_time) << " | global max bathcing time = " << format_time(metadata.global_max_batching_time);
+
+        return(success);
+      }
+
+
+    template <typename number>
+    void task_manager<number>::aggregate_batch(typename repository<number>::integration_writer& writer, int source,
+                                               typename repository<number>::integration_metadata& metadata,
+                                               model<number>* m, integration_task<number>* tk)
+      {
+        assert(m != nullptr);
+        assert(tk != nullptr);
+
+        MPI::data_ready_payload payload;
+        this->world.recv(source, MPI::INTEGRATION_DATA_READY, payload);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << source << " sent aggregation notification for container '" << payload.get_container_path() << "'";
+
+        // set up a timer to measure how long we spend batching
+        boost::timer::cpu_timer batching_timer;
+
+        // batch data into the main container
+        switch(payload.get_payload_type())
+          {
+            case MPI::data_ready_payload::twopf_payload:
+              {
+                this->data_mgr->aggregate_twopf_batch(writer, payload.get_container_path(), m, tk);
+                break;
+              }
+
+            case MPI::data_ready_payload::threepf_payload:
+              {
+                this->data_mgr->aggregate_threepf_batch(writer, payload.get_container_path(), m, tk);
+                break;
+              }
+
+            default:
+              assert(false);
+          }
+
+        batching_timer.stop();
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Aggregated temporary container in time " << format_time(batching_timer.elapsed().wall);
+        metadata.total_aggregation_time += batching_timer.elapsed().wall;
+
+        // remove temporary container
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
+        if(!boost::filesystem::remove(payload.get_container_path()))
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+            this->error(msg.str());
+          }
+      }
+
+
+    template <typename number>
+    void task_manager<number>::update_integration_metadata(MPI::finished_integration_payload& payload, typename repository<number>::integration_metadata& metadata)
+      {
+        metadata.total_wallclock_time += payload.get_wallclock_time();
+
+        metadata.total_integration_time += payload.get_integration_time();
+        boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / payload.get_num_integrations();
+        if(metadata.max_mean_integration_time == 0 || mean_integration_time > metadata.max_mean_integration_time) metadata.max_mean_integration_time = mean_integration_time;
+        if(metadata.min_mean_integration_time == 0 || mean_integration_time < metadata.min_mean_integration_time) metadata.min_mean_integration_time = mean_integration_time;
+
+        if(metadata.global_max_integration_time == 0 || payload.get_max_integration_time() > metadata.global_max_integration_time) metadata.global_max_integration_time = payload.get_max_integration_time();
+        if(metadata.global_min_integration_time == 0 || payload.get_min_integration_time() < metadata.global_min_integration_time) metadata.global_min_integration_time = payload.get_min_integration_time();
+
+        metadata.total_batching_time += payload.get_batching_time();
+        boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / payload.get_num_integrations();
+        if(metadata.max_mean_batching_time == 0 || mean_batching_time > metadata.max_mean_batching_time) metadata.max_mean_batching_time = mean_batching_time;
+        if(metadata.min_mean_batching_time == 0 || mean_batching_time < metadata.min_mean_batching_time) metadata.min_mean_batching_time = mean_batching_time;
+
+        if(metadata.global_max_batching_time == 0 || payload.get_max_batching_time() > metadata.global_max_batching_time) metadata.global_max_batching_time = payload.get_max_batching_time();
+        if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();
+
+        metadata.total_configurations += payload.get_num_integrations();
       }
 
 
@@ -728,158 +759,158 @@ namespace transport
 
     template <typename number>
     void task_manager<number>::master_dispatch_output_task(output_task<number>* tk, model<number>* m, const std::list<std::string>& tags)
-	    {
+      {
         assert(tk != nullptr);  // should be guaranteed
         assert(m == nullptr);   // should be guaranteed
 
-		    // can't process a task if there are no workers
-		    if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
+        // can't process a task if there are no workers
+        if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
-		    // set up a work queue representing our workers
-		    context ctx = this->make_workers_context();
-		    scheduler sch = scheduler(ctx);
+        // set up a work queue representing our workers
+        context ctx = this->make_workers_context();
+        scheduler sch = scheduler(ctx);
 
-		    work_queue< output_task_element<number> > queue = sch.make_queue(*tk);
+        work_queue< output_task_element<number> > queue = sch.make_queue(*tk);
 
-		    // set up an derived_content_writer object to coordinate logging, output destination and commits into the repository
-		    typename repository<number>::derived_content_writer writer = this->repo->new_output_task_output(tk, tags, this->get_rank());
+        // set up an derived_content_writer object to coordinate logging, output destination and commits into the repository
+        typename repository<number>::derived_content_writer writer = this->repo->new_output_task_output(tk, tags, this->get_rank());
 
-		    // set up the writer for us
+        // set up the writer for us
         this->data_mgr->initialize_writer(writer);
 
-		    // write a task distribution list -- subsequently read by the worker processes
-		    // to find out which work items they should process
-		    this->data_mgr->create_taskfile(writer, queue);
+        // write a task distribution list -- subsequently read by the worker processes
+        // to find out which work items they should process
+        this->data_mgr->create_taskfile(writer, queue);
 
-		    // instruct workers to carry out their tasks
-		    this->master_output_task_to_workers(writer, tk, tags);
+        // instruct workers to carry out their tasks
+        this->master_output_task_to_workers(writer, tk, tags);
 
-		    // close the writer
-		    this->data_mgr->close_writer(writer);
+        // close the writer
+        this->data_mgr->close_writer(writer);
 
-		    // commit output to the database
-		    writer.commit();
-	    }
+        // commit output to the database
+        writer.commit();
+      }
 
 
-		template <typename number>
-		void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& writer,
-		                                                         output_task<number>* tk, const std::list<std::string>& tags)
-			{
-				if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+    template <typename number>
+    void task_manager<number>::master_output_task_to_workers(typename repository<number>::derived_content_writer& writer,
+                                                             output_task<number>* tk, const std::list<std::string>& tags)
+      {
+        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
-		    std::vector<boost::mpi::request> requests(this->world.size()-1);
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "'";
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "'";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
 
-		    // set up a timer to keep track of the total wallclock time used in this task
-		    boost::timer::cpu_timer wallclock_timer;
+        // set up a timer to keep track of the total wallclock time used in this task
+        boost::timer::cpu_timer wallclock_timer;
 
-		    // aggregate work times reported by worker processes
-		    boost::timer::nanosecond_type total_work_time = 0;
-		    boost::timer::nanosecond_type total_db_time = 0;
-		    boost::timer::nanosecond_type total_aggregation_time = 0;
+        // aggregate work times reported by worker processes
+        boost::timer::nanosecond_type total_work_time = 0;
+        boost::timer::nanosecond_type total_db_time = 0;
+        boost::timer::nanosecond_type total_aggregation_time = 0;
 
-				// aggregate cache information
-				unsigned int total_time_config_hits        = 0;
-				unsigned int total_twopf_kconfig_hits      = 0;
-				unsigned int total_threepf_kconfig_hits    = 0;
-				unsigned int total_data_hits = 0;
-		    unsigned int total_time_config_unloads     = 0;
-		    unsigned int total_twopf_kconfig_unloads   = 0;
-		    unsigned int total_threepf_kconfig_unloads = 0;
-		    unsigned int total_data_unloads = 0;
+        // aggregate cache information
+        unsigned int total_time_config_hits        = 0;
+        unsigned int total_twopf_kconfig_hits      = 0;
+        unsigned int total_threepf_kconfig_hits    = 0;
+        unsigned int total_data_hits = 0;
+        unsigned int total_time_config_unloads     = 0;
+        unsigned int total_twopf_kconfig_unloads   = 0;
+        unsigned int total_threepf_kconfig_unloads = 0;
+        unsigned int total_data_unloads = 0;
 
-		    // get paths the workers will need
-		    assert(this->repo != nullptr);
-		    boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
-		    boost::filesystem::path tempdir_path  = writer.get_abs_tempdir_path();
-		    boost::filesystem::path logdir_path   = writer.get_abs_logdir_path();
+        // get paths the workers will need
+        assert(this->repo != nullptr);
+        boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
+        boost::filesystem::path tempdir_path  = writer.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path   = writer.get_abs_logdir_path();
 
-		    MPI::new_derived_content_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
+        MPI::new_derived_content_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
 
-		    for(unsigned int i = 0; i < this->world.size()-1; i++)
-			    {
-		        requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_DERIVED_CONTENT, payload);
-			    }
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+          {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_DERIVED_CONTENT, payload);
+          }
 
-		    // wait for all messages to be received
-		    boost::mpi::wait_all(requests.begin(), requests.end());
+        // wait for all messages to be received
+        boost::mpi::wait_all(requests.begin(), requests.end());
 
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
 
-		    // poll workers, receiving data until workers are exhausted
-		    std::set<unsigned int> workers;
-		    for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
-		    while(workers.size() > 0)
-			    {
-		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
-		        // wait until a message is available from a worker
-		        boost::mpi::status stat = this->world.probe();
+        // poll workers, receiving data until workers are exhausted
+        std::set<unsigned int> workers;
+        for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
+        while(workers.size() > 0)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
+            // wait until a message is available from a worker
+            boost::mpi::status stat = this->world.probe();
 
-		        switch(stat.tag())
-			        {
-		            case MPI::DERIVED_CONTENT_READY:
-			            {
-		                MPI::content_ready_payload payload;
-		                this->world.recv(stat.source(), MPI::DERIVED_CONTENT_READY, payload);
-		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent content-ready notification";
+            switch(stat.tag())
+              {
+                case MPI::DERIVED_CONTENT_READY:
+                  {
+                    MPI::content_ready_payload payload;
+                    this->world.recv(stat.source(), MPI::DERIVED_CONTENT_READY, payload);
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " sent content-ready notification";
 
-		                break;
-			            }
+                    break;
+                  }
 
-		            case MPI::FINISHED_DERIVED_CONTENT:
-			            {
-		                MPI::derived_finished_payload payload;
-		                this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
+                case MPI::FINISHED_DERIVED_CONTENT:
+                  {
+                    MPI::derived_finished_payload payload;
+                    this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
 
-		                BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(payload.get_cpu_time());
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in CPU time " << format_time(payload.get_cpu_time());
 
-		                total_work_time               += payload.get_cpu_time();
-				            total_db_time                 += payload.get_database_time();
-				            total_time_config_hits        += payload.get_time_config_hits();
-				            total_time_config_unloads     += payload.get_time_config_unloads();
-				            total_twopf_kconfig_hits      += payload.get_twopf_kconfig_hits();
-				            total_twopf_kconfig_unloads   += payload.get_twopf_kconfig_unloads();
-				            total_threepf_kconfig_hits    += payload.get_threepf_kconfig_hits();
-				            total_threepf_kconfig_unloads += payload.get_threepf_kconfig_unloads();
-				            total_data_hits               += payload.get_data_hits();
-				            total_data_unloads            += payload.get_data_unloads();
+                    total_work_time               += payload.get_cpu_time();
+                    total_db_time                 += payload.get_database_time();
+                    total_time_config_hits        += payload.get_time_config_hits();
+                    total_time_config_unloads     += payload.get_time_config_unloads();
+                    total_twopf_kconfig_hits      += payload.get_twopf_kconfig_hits();
+                    total_twopf_kconfig_unloads   += payload.get_twopf_kconfig_unloads();
+                    total_threepf_kconfig_hits    += payload.get_threepf_kconfig_hits();
+                    total_threepf_kconfig_unloads += payload.get_threepf_kconfig_unloads();
+                    total_data_hits               += payload.get_data_hits();
+                    total_data_unloads            += payload.get_data_unloads();
 
-		                workers.erase(this->worker_number(stat.source()));
-		                break;
-			            }
+                    workers.erase(this->worker_number(stat.source()));
+                    break;
+                  }
 
-		            default:
-			            {
-		                BOOST_LOG_SEV(writer.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
-		                break;
-			            }
-			        }
-			    }
+                default:
+                  {
+                    BOOST_LOG_SEV(writer.get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+                    break;
+                  }
+              }
+          }
 
-		    typename repository<number>::output_metadata timings(total_work_time, total_db_time, total_aggregation_time,
-		                                                         total_time_config_hits, total_time_config_unloads,
-		                                                         total_twopf_kconfig_hits, total_twopf_kconfig_unloads,
-		                                                         total_threepf_kconfig_hits, total_threepf_kconfig_unloads,
-		                                                         total_data_hits, total_data_unloads);
-		    writer.set_metadata(timings);
+        typename repository<number>::output_metadata timings(total_work_time, total_db_time, total_aggregation_time,
+                                                             total_time_config_hits, total_time_config_unloads,
+                                                             total_twopf_kconfig_hits, total_twopf_kconfig_unloads,
+                                                             total_threepf_kconfig_hits, total_threepf_kconfig_unloads,
+                                                             total_data_hits, total_data_unloads);
+        writer.set_metadata(timings);
 
         wallclock_timer.stop();
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++     " << wallclock_timer.format();
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total work time required by worker processes      = " << format_time(total_work_time);
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(total_aggregation_time);
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time spent reading database                 = " << format_time(total_db_time);
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time-configuration cache hits               = " << total_time_config_hits << ", unloads = " << total_time_config_unloads;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache hits                   = " << total_twopf_kconfig_hits << ", unloads = " << total_twopf_kconfig_unloads;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache hits                 = " << total_threepf_kconfig_hits << ", unloads = " << total_threepf_kconfig_unloads;
-				BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache hits                             = " << total_data_hits << ", unloads = " << total_data_unloads;
-			}
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++     " << wallclock_timer.format();
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total work time required by worker processes      = " << format_time(total_work_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(total_aggregation_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time spent reading database                 = " << format_time(total_db_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time-configuration cache hits               = " << total_time_config_hits << ", unloads = " << total_time_config_unloads;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache hits                   = " << total_twopf_kconfig_hits << ", unloads = " << total_twopf_kconfig_unloads;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache hits                 = " << total_threepf_kconfig_hits << ", unloads = " << total_threepf_kconfig_unloads;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache hits                             = " << total_data_hits << ", unloads = " << total_data_unloads;
+      }
 
 
     // SLAVE FUNCTIONS
@@ -947,7 +978,8 @@ namespace transport
           {
             this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly,
                                                     std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-                                                    std::bind(&task_manager<number>::warn, this, std::placeholders::_1));
+                                                    std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
+                                                    std::bind(&task_manager<number>::message, this, std::placeholders::_1));
           }
         catch (runtime_exception& xe)
           {
@@ -1083,13 +1115,8 @@ namespace transport
 	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
-            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
-	            {
-                std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
-	            }
-            else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
+            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
+                    || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
@@ -1111,6 +1138,8 @@ namespace transport
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
+
+        bool success = true;
 
         // keep track of wallclock time
         boost::timer::cpu_timer timer;
@@ -1134,23 +1163,41 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
         // perform the integration
-        m->backend_process_twopf(work, tk, batcher, true);    // 'true' = work silently
+        try
+          {
+            m->backend_process_twopf(work, tk, batcher, true);    // 'true' = work silently
+          }
+        catch(runtime_exception& xe)
+          {
+            success = false;
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+          }
 
         // close the batcher
         batcher.close();
+        if(batcher.integrations_failed()) success = false;
 
         // all work is now done - stop the wallclock timer
         timer.stop();
 
         // notify master process that all work has been finished (temporary containers will be deleted by the master node)
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
-        MPI::finished_integration_payload            outgoing_payload(batcher.get_integration_time(),
-                                                                      batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-                                                                      batcher.get_batching_time(),
-                                                                      batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-                                                                      timer.elapsed().wall,
-                                                                      batcher.get_reported_integrations());
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
+        if(success)
+          {
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master";
+          }
+        else
+          {
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << std::endl << "-- Worker reporting INTEGRATION_FAIL to master";
+          }
+
+        MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
+                                                           batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+                                                           batcher.get_batching_time(),
+                                                           batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                                           timer.elapsed().wall,
+                                                           batcher.get_reported_integrations());
+
+        this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
       }
 
 
@@ -1162,6 +1209,8 @@ namespace transport
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
+
+        bool success = true;
 
         // keep track of wallclock time
         boost::timer::cpu_timer timer;
@@ -1185,23 +1234,41 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
         // perform the integration
-        m->backend_process_threepf(work, tk, batcher, true);    // 'true' = work silently
+        try
+          {
+            m->backend_process_threepf(work, tk, batcher, true);    // 'true' = work silently
+          }
+        catch(runtime_exception& xe)
+          {
+            success = false;
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+          }
 
         // close the batcher
         batcher.close();
+        if(batcher.integrations_failed()) success = false;
 
         // all work is now done - stop the wallclock timer
         timer.stop();
 
         // notify master process that all work has been finished (temporary containers will be deleted by the master node)
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master";
+        if(success)
+          {
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master";
+          }
+        else
+          {
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << std::endl << "-- Worker reporting INTEGRATION_FAIL to master";
+          }
+
         MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
                                                            batcher.get_max_integration_time(), batcher.get_min_integration_time(),
                                                            batcher.get_batching_time(),
                                                            batcher.get_max_batching_time(), batcher.get_min_batching_time(),
                                                            timer.elapsed().wall,
                                                            batcher.get_reported_integrations());
-        this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
+
+        this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
       }
 
 
