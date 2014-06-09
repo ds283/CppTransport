@@ -168,16 +168,6 @@ namespace transport
         //! Slave node: set repository
         void slave_set_repository(const MPI::set_repository_payload& payload);
 
-        //! Slave node: clean up after integration: wait for, and process, DELETE_CONTAINER messages until all temporary containers are gone
-        void slave_clean_up(typename data_manager<number>::generic_batcher& batcher);
-
-        //! Slave node: process queued DELETE_CONTAINER messages
-
-        //! Note that this function takes a pointer to a batcher, even though we mostly use references elsewhere.
-        //! This is because batchers will dispatch to this function, setting a pointer to themselves using 'this'.
-        //! Therefore we have to take a pointer; there's no way for an object to get a reference to itself.
-        void slave_process_delete_containers(typename data_manager<number>::generic_batcher* batcher);
-
         //! Push a temporary container to the master process
         void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
 
@@ -209,19 +199,31 @@ namespace transport
         //! Report a warning
         void warn(const std::string& msg) { std::cout << msg << std::endl; }
 
+
         // INTERNAL DATA
 
       protected:
 
+
+		    // MPI ENVIRONMENT
+
         //! BOOST::MPI environment
         boost::mpi::environment environment;
+
         //! BOOST::MPI world communicator
         boost::mpi::communicator world;
 
+
+		    // RUNTIME AGENTS
+
         //! Repository manager instance
         repository<number>* repo;
+
         //! Data manager instance
         data_manager<number>* data_mgr;
+
+
+		    // DATA AND STATE
 
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
@@ -229,8 +231,6 @@ namespace transport
         //! Storage capacity per worker
         const unsigned int worker_capacity;
 
-        //! Queue of temporary containers to be deleted (only relevant on slave nodes)
-        std::list<std::string> temporary_container_queue;
       };
 
 
@@ -632,6 +632,14 @@ namespace transport
                     batching_timer.stop();
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Aggregated temporary container in time " << format_time(batching_timer.elapsed().wall);
                     total_aggregation_time += batching_timer.elapsed().wall;
+
+		                // remove temporary container
+				            if(!boost::filesystem::remove(payload.get_container_path()))
+				              {
+				                std::ostringstream msg;
+				                msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
+				                this->error(msg.str());
+				              }
 
                     // instruct worker to remove the temporary container
                     BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Sending worker " << stat.source() << " delete instruction for container '" << payload.get_container_path() << "'";
@@ -1118,13 +1126,13 @@ namespace transport
 
         // construct a callback for the integrator to push new batches to the master
         typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                   std::bind(&task_manager<number>::slave_push_temp_container,
-	                                                                             this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
+                                                                     std::bind(&task_manager<number>::slave_push_temp_container,
+                                                                               this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
 
         // construct a batcher to hold the output of the integration
         typename data_manager<number>::twopf_batcher batcher =
-	                                                     this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                 this->get_rank(), m, dispatcher);
+                                                       this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                                                                   this->get_rank(), m, dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1138,17 +1146,14 @@ namespace transport
         // all work is now done - stop the wallclock timer
         timer.stop();
 
-        // wait until all temporary containers have been deleted, and then return
-        this->slave_clean_up(batcher);
-
-        // notify master process that all work has been finished
+        // notify master process that all work has been finished (temporary containers will be deleted by the master node)
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker sending FINISHED_INTEGRATION to master";
-        MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
-                                                           batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-                                                           batcher.get_batching_time(),
-                                                           batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-                                                           timer.elapsed().wall,
-                                                           batcher.get_reported_integrations());
+        MPI::finished_integration_payload            outgoing_payload(batcher.get_integration_time(),
+                                                                      batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+                                                                      batcher.get_batching_time(),
+                                                                      batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                                                      timer.elapsed().wall,
+                                                                      batcher.get_reported_integrations());
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
       }
 
@@ -1192,10 +1197,7 @@ namespace transport
         // all work is now done - stop the wallclock timer
         timer.stop();
 
-        // wait until all temporary containers have been deleted, and then return
-        this->slave_clean_up(batcher);
-
-        // notify master process that all work has been finished
+        // notify master process that all work has been finished (temporary containers will be deleted by the master node)
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master";
         MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
                                                            batcher.get_max_integration_time(), batcher.get_min_integration_time(),
@@ -1204,46 +1206,6 @@ namespace transport
                                                            timer.elapsed().wall,
                                                            batcher.get_reported_integrations());
         this->world.isend(MPI::RANK_MASTER, MPI::FINISHED_INTEGRATION, outgoing_payload);
-      }
-
-
-    template <typename number>
-    void task_manager<number>::slave_clean_up(typename data_manager<number>::generic_batcher& batcher)
-      {
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Worker entering post-integration cleanup: waiting to delete containers";
-
-        while(this->temporary_container_queue.size() > 0)
-          {
-            this->slave_process_delete_containers(&batcher);
-          }
-      }
-
-
-    template <typename number>
-    void task_manager<number>::slave_process_delete_containers(typename data_manager<number>::generic_batcher* batcher)
-      {
-//        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Slave waiting for DELETE_CONTAINER instructions";
-
-        // check for DELETE_CONTAINER instructions from the master node
-        boost::optional<boost::mpi::status> stat = this->world.iprobe(MPI::RANK_MASTER, MPI::DELETE_CONTAINER);
-
-        // work through all queued messages
-        while(stat)
-          {
-            std::string payload;
-            this->world.recv(MPI::RANK_MASTER, MPI::DELETE_CONTAINER, payload);
-            BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Worker received delete instruction: " << payload;
-
-            if(!boost::filesystem::remove(payload))
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload << "'";
-                this->error(msg.str());
-              }
-            this->temporary_container_queue.remove(payload);
-
-            stat = this->world.iprobe(MPI::RANK_MASTER, MPI::DELETE_CONTAINER);
-          }
       }
 
 
@@ -1339,16 +1301,6 @@ namespace transport
 			}
 
 
-		template <typename number>
-		void task_manager<number>::slave_push_derived_content(typename data_manager<number>::datapipe* pipe)
-			{
-				assert(pipe != nullptr);
-
-				// FIXME: error message tag is possibly in the wrong namespace (but error message namespaces are totally confused anyway)
-				if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
-			}
-
-
     // MPI UTILITY FUNCTIONS
 
 
@@ -1401,13 +1353,17 @@ namespace transport
 
         // advise master process that data is available in the named container
         this->world.isend(MPI::RANK_MASTER, MPI::INTEGRATION_DATA_READY, payload);
-
-        // add this container to the list of containers which should be deleted
-        this->temporary_container_queue.push_back(batcher->get_container_path().string());
-
-        // work through any queued DELETE_CONTAINER messages
-        this->slave_process_delete_containers(batcher);
       }
+
+
+    template <typename number>
+    void task_manager<number>::slave_push_derived_content(typename data_manager<number>::datapipe* pipe)
+	    {
+        assert(pipe != nullptr);
+
+        // FIXME: error message tag is possibly in the wrong namespace (but error message namespaces are totally confused anyway)
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+	    }
 
 
   } // namespace transport

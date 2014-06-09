@@ -24,15 +24,18 @@ namespace transport
           {
 
             // MPI message tags
-            const unsigned int NEW_INTEGRATION = 0;
-            const unsigned int FINISHED_INTEGRATION = 1;
-            const unsigned int INTEGRATION_DATA_READY = 2;
-            const unsigned int DELETE_CONTAINER = 3;
-		        const unsigned int NEW_DERIVED_CONTENT = 4;
-		        const unsigned int DERIVED_CONTENT_READY = 5;
-		        const unsigned int FINISHED_DERIVED_CONTENT = 6;
-            const unsigned int SET_REPOSITORY = 98;
-            const unsigned int TERMINATE = 99;
+            const unsigned int NEW_INTEGRATION          = 0;
+            const unsigned int FINISHED_INTEGRATION     = 1;
+            const unsigned int INTEGRATION_DATA_READY   = 2;
+		        const unsigned int INTEGRATION_ABORT        = 8;
+		        const unsigned int INTEGRATION_FAIL         = 9;
+
+		        const unsigned int NEW_DERIVED_CONTENT      = 10;
+		        const unsigned int DERIVED_CONTENT_READY    = 11;
+		        const unsigned int FINISHED_DERIVED_CONTENT = 12;
+
+            const unsigned int SET_REPOSITORY           = 98;
+            const unsigned int TERMINATE                = 99;
 
             // MPI ranks
             const unsigned int RANK_MASTER = 0;
