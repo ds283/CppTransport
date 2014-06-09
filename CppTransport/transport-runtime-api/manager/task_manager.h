@@ -640,10 +640,6 @@ namespace transport
 				                msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
 				                this->error(msg.str());
 				              }
-
-                    // instruct worker to remove the temporary container
-                    BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ Sending worker " << stat.source() << " delete instruction for container '" << payload.get_container_path() << "'";
-                    this->world.isend(stat.source(), MPI::DELETE_CONTAINER, payload.get_container_path());
                     break;
                   }
 
