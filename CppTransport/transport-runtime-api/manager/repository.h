@@ -342,7 +342,7 @@ namespace transport
           public:
 
             //! Commit contents of this integration_writer to the database
-		        void commit() { this->committer(this); }
+		        void commit() { this->committer(*this); }
 
 		        
 		        // LOGGING
@@ -358,16 +358,16 @@ namespace transport
           public:
 		        
             //! Return path to data container
-            const boost::filesystem::path& get_abs_container_path() const { return(this->repo_root/this->data_path); }
+            boost::filesystem::path get_abs_container_path() const { return(this->repo_root/this->data_path); }
 
             //! Return path to log directory
-            const boost::filesystem::path& get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
+            boost::filesystem::path get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
 
             //! Return path to task-data container
-            const boost::filesystem::path& get_abs_taskfile_path() const { return(this->repo_root/this->task_path); }
+            boost::filesystem::path get_abs_taskfile_path() const { return(this->repo_root/this->task_path); }
 
             //! Return path to directory for temporary files
-            const boost::filesystem::path& get_abs_tempdir_path() const { return(this->repo_root/this->temp_path); }
+            boost::filesystem::path get_abs_tempdir_path() const { return(this->repo_root/this->temp_path); }
 
 
 		        // RELATIVE PATHS
@@ -375,10 +375,10 @@ namespace transport
           public:
 
 		        //! Return path to output directory
-		        const boost::filesystem::path& get_relative_output_path() const { return(this->output_path); }
+		        boost::filesystem::path get_relative_output_path() const { return(this->output_path); }
 
 		        //! Return path to data container
-		        const boost::filesystem::path& get_relative_container_path() const { return(this->data_path); }
+		        boost::filesystem::path get_relative_container_path() const { return(this->data_path); }
 
 
 		        // STATISTICS
@@ -990,14 +990,12 @@ namespace transport
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path log_path = repo_root/log_path / log_file.str();
+        boost::filesystem::path logfile_path = repo_root/log_path / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
-        std::ostringstream log_file_path;
-
         boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
+	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string());
 
         // enable auto-flushing of log entries
         // this degrades performance, but we are not writing many entries and they
