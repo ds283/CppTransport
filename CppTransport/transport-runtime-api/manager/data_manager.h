@@ -1300,13 +1300,13 @@ namespace transport
 
         //! Create data files for an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_writer(typename repository<number>::integration_writer& ctr) = 0;
+        virtual void initialize_writer(typename repository<number>::integration_writer& ctr) = 0;
 
         //! Close an open container integration_writer object.
         virtual void close_writer(typename repository<number>::integration_writer& ctr) = 0;
 
         //! Create data files for a new derived_content_writer object.
-        virtual void create_writer(typename repository<number>::derived_content_writer& ctr) = 0;
+        virtual void initialize_writer(typename repository<number>::derived_content_writer& ctr) = 0;
 
         //! Close an open derived_content_writer object.
         virtual void close_writer(typename repository<number>::derived_content_writer& ctr) = 0;

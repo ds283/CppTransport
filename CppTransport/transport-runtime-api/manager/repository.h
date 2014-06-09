@@ -93,6 +93,20 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                "tags"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG                 "tag"
 
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME           "total-aggregation-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME           "total-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME        "min-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME        "max-mean-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME      "global-min-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME      "global-max-integration-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME         "total-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME      "min-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME      "max-mean-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME    "global-min-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME    "global-max-batching-time"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS       "total-configurations"
+
 
 namespace transport
 	{
@@ -147,7 +161,7 @@ namespace transport
       public:
 
 		    //! Task finder service
-		    typedef std::function<task<number>*(const std::string&,model<number>*&)> task_finder;
+		    typedef std::function<task<number>*(const std::string&, model<number>*&)> task_finder;
 
         //! Types needed for logging
         typedef enum
@@ -165,22 +179,142 @@ namespace transport
 
         // DATA CONTAINER WRITE HANDLE
 
-        //! Integration container writer: forms a handle for a data container when writing the output of an integration
+		    class integration_writer;
 
+		    //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
+		    typedef std::function<void(integration_writer&)> commit_callback;
+
+		    //! Timing metadata for an integration
+		    class timing_metadata: public serializable
+			    {
+		      public:
+
+				    //! null constructor - set all fields to zero
+				    timing_metadata(void)
+					    : total_wallclock_time(0),
+					      total_aggregation_time(0),
+					      total_integration_time(0),
+					      min_mean_integration_time(0),
+					      global_min_integration_time(0),
+					      global_max_integration_time(0),
+					      total_batching_time(0),
+					      min_mean_batching_time(0),
+					      max_mean_batching_time(0),
+					      global_min_batching_time(0),
+					      global_max_batching_time(0),
+					      total_configurations(0)
+					    {
+					    }
+
+				    //! value constructor - ensure all fields get set at once
+		        timing_metadata(boost::timer::nanosecond_type wc, boost::timer::nanosecond_type ag,
+		                        boost::timer::nanosecond_type it, boost::timer::nanosecond_type min_m_it, boost::timer::nanosecond_type max_m_it,
+		                        boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
+		                        boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
+		                        boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
+		                        unsigned int num)
+			        : total_wallclock_time(wc),
+			          total_aggregation_time(ag),
+			          total_integration_time(it),
+			          min_mean_integration_time(min_m_it),
+			          max_mean_integration_time(max_m_it),
+			          global_min_integration_time(min_it),
+			          global_max_integration_time(max_it),
+			          total_batching_time(bt),
+			          min_mean_batching_time(min_m_bt),
+			          max_mean_batching_time(max_m_bt),
+			          global_min_batching_time(min_bt),
+			          global_max_batching_time(max_bt),
+			          total_configurations(num)
+			        {
+			        }
+
+				    //! deserialization constructor
+				    timing_metadata(serialization_reader* reader);
+
+
+				    // SERIALIZE -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    void serialize(serialization_writer& writer) const override;
+
+
+				    // DATA
+
+		      public:
+
+				    //! total wallclock time (measured on master process)
+				    boost::timer::nanosecond_type total_wallclock_time;
+
+				    //! total aggregation time (measured on master process)
+				    boost::timer::nanosecond_type total_aggregation_time;
+
+				    //! total integration time (measured by aggregating times reported by workers)
+				    boost::timer::nanosecond_type total_integration_time;
+
+				    //! minimum mean integration time (taken over all workers)
+				    boost::timer::nanosecond_type min_mean_integration_time;
+
+				    //! maxmimum mean integration time (taken over all workers)
+				    boost::timer::nanosecond_type max_mean_integration_time;
+
+				    //! global minimum integration time (per configuration)
+				    boost::timer::nanosecond_type global_min_integration_time;
+
+				    // global maximum integration time (per configuration)
+				    boost::timer::nanosecond_type global_max_integration_time;
+
+				    // total batching time (measured by aggregating times reported by workers)
+				    boost::timer::nanosecond_type total_batching_time;
+
+				    //! minimum mean batching time (taken over all workers)
+				    boost::timer::nanosecond_type min_mean_batching_time;
+
+				    // maximum mean batching time (taken over all workers)
+				    boost::timer::nanosecond_type max_mean_batching_time;
+
+				    // global minimum batching time (per configuration)
+				    boost::timer::nanosecond_type global_min_batching_time;
+
+				    // global maximum batching time (per configuration)
+				    boost::timer::nanosecond_type global_max_batching_time;
+
+				    // total number of configurations processed
+				    unsigned int total_configurations;
+
+			    };
+
+        //! Integration container writer: forms a handle for a data container when writing the output of an integration
         class integration_writer
 	        {
+
+	          // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
             //! Construct an integration container object.
             //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-            integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
+            integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
+                               commit_callback c,
+                               const boost::filesystem::path& root,
+                               const boost::filesystem::path& output, const boost::filesystem::path& data,
                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                               const boost::filesystem::path& temp, unsigned int w, bool s);
+                               const boost::filesystem::path& temp,
+                               unsigned int w, bool s);
+
+		        //! override copy constructor to perform a deep copy
+		        integration_writer(const integration_writer& obj);
 
             //! Destroy an integration container object
             ~integration_writer();
+
+
+		        // ADMINISTRATION
+
+          public:
 
             //! Set data_manager handle for data container
             template <typename data_manager_type>
@@ -203,41 +337,127 @@ namespace transport
             void get_data_manager_taskfile(data_manager_type* data);
 
 
+		        // COMMIT TO DATABASE
+
+          public:
+
+            //! Commit contents of this integration_writer to the database
+		        void commit() { this->committer(this); }
+
+		        
+		        // LOGGING
+		        
+          public:
+
             //! Return logger
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
 
+		        
+		        // ABSOLUTE PATHS
+		        
+          public:
+		        
             //! Return path to data container
-            const boost::filesystem::path& data_container_path() const { return (this->path_to_data_container); }
+            const boost::filesystem::path& get_abs_container_path() const { return(this->repo_root/this->data_path); }
 
             //! Return path to log directory
-            const boost::filesystem::path& log_directory_path() const { return (this->path_to_log_directory); }
+            const boost::filesystem::path& get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
 
             //! Return path to task-data container
-            const boost::filesystem::path& taskfile_path() const { return (this->path_to_taskfile); }
+            const boost::filesystem::path& get_abs_taskfile_path() const { return(this->repo_root/this->task_path); }
 
             //! Return path to directory for temporary files
-            const boost::filesystem::path& temporary_files_path() const { return (this->path_to_temp_directory); }
+            const boost::filesystem::path& get_abs_tempdir_path() const { return(this->repo_root/this->temp_path); }
+
+
+		        // RELATIVE PATHS
+
+          public:
+
+		        //! Return path to output directory
+		        const boost::filesystem::path& get_relative_output_path() const { return(this->output_path); }
+
+		        //! Return path to data container
+		        const boost::filesystem::path& get_relative_container_path() const { return(this->data_path); }
+
+
+		        // STATISTICS
+
+          public:
 
             //! Return whether we're collecting per-configuration statistics
             const bool collect_statistics() const { return(this->supports_stats); }
+
+
+		        // METADATA
+
+          public:
+
+		        //! Return task
+		        integration_task<number>* get_task() const { return(this->parent_task); }
+
+		        //! Return tags
+		        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+		        //! Set timing metadata
+		        void set_timing_metadata(const timing_metadata& timing) { this->timing_data = timing; }
+
+		        //! Get timing metadata
+		        const timing_metadata& get_timing_metadata() const { return(this->timing_data); }
 
 
             // INTERNAL DATA
 
           private:
 
-            const boost::filesystem::path path_to_directory;
+		        // COMMIT CALLBACK
 
-            const boost::filesystem::path path_to_data_container;
-            const boost::filesystem::path path_to_log_directory;
-            const boost::filesystem::path path_to_taskfile;
-            const boost::filesystem::path path_to_temp_directory;
+		        //! commit data products to the repository
+		        commit_callback committer;
 
+
+		        // METADATA
+
+		        //! task associated with this integration writer
+		        integration_task<number>* parent_task;
+
+		        //! tags
+		        std::list<std::string> tags;
+
+		        //! timing metadata for this integration
+		        timing_metadata timing_data;
+
+
+		        // PATHS
+
+		        //! root directory of the parent repository
+		        const boost::filesystem::path repo_root;
+
+		        //! relative path to output directory within the repository
+            const boost::filesystem::path output_path;
+
+		        //! relative path to data container
+            const boost::filesystem::path data_path;
+
+		        //! relative path to log direcotry
+            const boost::filesystem::path log_path;
+
+		        //! relative path to task file
+            const boost::filesystem::path task_path;
+
+		        //! relative path to temporary direcotry
+            const boost::filesystem::path temp_path;
+
+		        //! are we collecting per-configuration statistics?
             bool supports_stats;
 
+		        //! our MPI worker number
             const unsigned int worker_number;
 
+		        //! internal handle used by data_manager to associate this writer with an integration database
             void* data_manager_handle;
+
+		        //! internal handle used by data_manager to associate this writer with a task database
             void* data_manager_taskfile;
 
             //! Logger source
@@ -245,6 +465,7 @@ namespace transport
 
             //! Logger sink
             boost::shared_ptr<sink_t> log_sink;
+
 	        };
 
 
@@ -325,7 +546,10 @@ namespace transport
 		      public:
 
 				    //! Create a payload
-				    integration_payload() = default;
+				    integration_payload()
+				      : timing_data()
+					    {
+					    }
 
             //! Deserialization constructor
             integration_payload(serialization_reader* reader);
@@ -347,6 +571,11 @@ namespace transport
 				    const boost::filesystem::path& get_container_path() const { return(this->container); }
             //! Set path of data container
             void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
+
+				    //! Get timing metadata
+				    const timing_metadata& get_timing_metadata() const { return(this->timing_data); }
+				    //! Set timing metadata
+				    void set_timing_metadata(const timing_metadata& timings) { this->timing_data = timings; }
 
 
             // WRITE TO A STREAM
@@ -371,6 +600,10 @@ namespace transport
 
 				    //! Path to data container
 				    boost::filesystem::path container;
+
+				    //! Timing metadata
+				    timing_metadata timing_data;
+
 			    };
 
 
@@ -698,22 +931,71 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::integration_writer::integration_writer(const boost::filesystem::path& dir, const boost::filesystem::path& data,
+    repository<number>::timing_metadata::timing_metadata(serialization_reader* reader)
+	    {
+				assert(reader != nullptr);
+
+		    reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, total_wallclock_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, total_aggregation_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, total_integration_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, min_mean_integration_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, max_mean_integration_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, global_min_integration_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, global_max_integration_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, total_batching_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, min_mean_batching_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, max_mean_batching_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, global_min_batching_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, global_max_batching_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, total_configurations);
+	    }
+
+
+    template <typename number>
+    void repository<number>::timing_metadata::serialize(serialization_writer& writer) const
+	    {
+				this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, this->total_wallclock_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, this->total_aggregation_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, this->total_integration_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, this->min_mean_integration_time);
+				this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, this->max_mean_integration_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, this->global_min_integration_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, this->global_max_integration_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, this->total_batching_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, this->min_mean_batching_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, this->max_mean_batching_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, this->global_min_batching_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
+	    }
+
+
+    template <typename number>
+    repository<number>::integration_writer::integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
+                                                               typename repository<number>::commit_callback c,
+                                                               const boost::filesystem::path& root,
+                                                               const boost::filesystem::path& output, const boost::filesystem::path& data,
                                                                const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                                               const boost::filesystem::path& temp, unsigned int w, bool s)
-	    : path_to_directory(dir), path_to_data_container(data),
-	      path_to_log_directory(log), path_to_taskfile(task),
-	      path_to_temp_directory(temp),
-	      worker_number(w), data_manager_handle(nullptr), data_manager_taskfile(nullptr),
-        supports_stats(s)
+                                                               const boost::filesystem::path& temp,
+                                                               unsigned int w, bool s)
+	    : parent_task(dynamic_cast<integration_task<number>*>(tk->clone())), tags(tg),
+	      committer(c),
+	      repo_root(root),
+	      output_path(output), data_path(data),
+	      log_path(log), task_path(task),
+	      temp_path(temp),
+	      worker_number(w), supports_stats(s),
+	      data_manager_handle(nullptr), data_manager_taskfile(nullptr),
+		    timing_data()
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path log_path = path_to_log_directory / log_file.str();
+        boost::filesystem::path log_path = repo_root/log_path / log_file.str();
 
-        boost::shared_ptr<boost::log::core> core                        = boost::log::core::get();
+        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
-        std::ostringstream                                      log_file_path;
+        std::ostringstream log_file_path;
+
         boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
 	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = log_path.string());
 
@@ -732,6 +1014,24 @@ namespace transport
 	    }
 
 
+		template <typename number>
+		repository<number>::integration_writer::integration_writer(const typename repository<number>::integration_writer& obj)
+			: parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
+			  committer(obj.committer),
+			  repo_root(obj.repo_root),
+			  output_path(obj.output_path), data_path(obj.data_path),
+			  log_path(obj.log_path), task_path(obj.task_path),
+			  temp_path(obj.temp_path),
+			  supports_stats(obj.supports_stats), worker_number(obj.worker_number),
+			  data_manager_handle(obj.data_manager_handle),
+			  data_manager_taskfile(obj.data_manager_taskfile),
+			  log_source(obj.log_source), log_sink(obj.log_sink),
+				timing_data(obj.timing_data)
+			{
+		    std::cerr << "Warning: integration_writer object being copied" << std::endl;
+			}
+
+
     template <typename number>
     repository<number>::integration_writer::~integration_writer()
 	    {
@@ -739,6 +1039,9 @@ namespace transport
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
         core->remove_sink(this->log_sink);
+
+		    // delete copy of task object
+		    delete this->parent_task;
 	    }
 
 
@@ -1026,6 +1329,7 @@ namespace transport
 
     template <typename number>
     repository<number>::integration_payload::integration_payload(serialization_reader* reader)
+      : timing_data(reader)
       {
         assert(reader != nullptr);
 
@@ -1041,6 +1345,8 @@ namespace transport
       {
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+
+	      this->timing_data.serialize(writer);
       }
 
 

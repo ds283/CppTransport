@@ -138,21 +138,24 @@ namespace transport
       public:
 
         //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
-        //! Delegates insert_integration_output_group to do the work.
+        //! Delegates create_integration_writer to do the work.
         virtual typename repository<number>::integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
                                                                                             model<number>* m, unsigned int worker) override;
 
         //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
-        //! Delegates insert_integration_output_group to do the work.
+        //! Delegates create_integration_writer to do the work.
         virtual typename repository<number>::integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
                                                                                             model<number>* m, unsigned int worker) override;
 
       protected:
 
-        //! Insert an output record for a specified task, in a specified collection.
-        typename repository<number>::integration_writer insert_integration_output_group(model<number>* m,
-                                                                                        unsigned int worker, integration_task<number>* tk,
-                                                                                        const std::list<std::string>& tags);
+        //! Create an integration writer and its associated environment.
+        typename repository<number>::integration_writer create_integration_writer(model<number>* m,
+                                                                                  unsigned int worker, integration_task<number>* tk,
+                                                                                  const std::list<std::string>& tags);
+
+		    //! Commit the output of an integration writer to the database. Called as a callback
+		    void close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m);
 
 
         // PULL OUTPUT-GROUPS FROM A TASK -- implements a 'repository' interface
@@ -1085,7 +1088,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(m, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->create_integration_writer(m, worker, tk, tags);
 
 		    // close database handles
         this->commit_transaction();
@@ -1120,7 +1123,7 @@ namespace transport
           }
 
         // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->insert_integration_output_group(m, worker, tk, tags);
+        typename repository<number>::integration_writer writer = this->create_integration_writer(m, worker, tk, tags);
 
 		    // commit transaction
         this->commit_transaction();
@@ -1134,15 +1137,9 @@ namespace transport
 		// in an appropriate collection
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::insert_integration_output_group(model<number>* m,
-                                                                unsigned int worker, integration_task<number>* tk, const std::list<std::string>& tags)
+    repository_unqlite<number>::create_integration_writer(model<number>* m,
+                                                          unsigned int worker, integration_task<number>* tk, const std::list<std::string>& tags)
       {
-        // get serialization_reader for the named task record
-        int task_id = 0;
-		    task_type type;
-        unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
-		    assert(type == integration_record);
-
 		    // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
@@ -1159,36 +1156,76 @@ namespace transport
         boost::filesystem::path task_path    = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
         boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
-        // create and serialize an empty output group
-        typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(), output_path,
-                                                                                                                   now, false, std::list<std::string>(), tags);
-        group.get_payload().set_backend(m->get_backend());
-        group.get_payload().set_container_path(sql_path);
-        unqlite_serialization_writer writer;
-        group.serialize(writer);
-
-        // write new output group to the database
-        unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, writer.get_contents());
-
-		    // refresh edit time and update the task entry for this database
-		    // that means: first, drop this existing record; then, store a copy of the updated one
-        task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
-        task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
-        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
-        unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_id);
-        unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_reader->get_contents());
-
 		    // create directories
         boost::filesystem::create_directories(this->get_root_path() / output_path);
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
+		    // integration_writer constructor takes copies of tk and tags because we can't be sure that they're long-lived objects;
+		    // model is ok because mode instances are handled by the instance_manager
+		    return typename repository<number>::integration_writer(tk, tags,
+		                                                           std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1, m),
+		                                                           this->get_root_path(),
+		                                                           output_path, sql_path, log_path, task_path, temp_path,
+		                                                           worker, m->supports_per_configuration_statistics());
+      }
+
+
+		template <typename number>
+		void repository_unqlite<number>::close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m)
+			{
+				assert(m != nullptr);
+
+				integration_task<number>* tk = writer.get_task();
+				const std::list<std::string>& tags = writer.get_tags();
+		    assert(tk != nullptr);
+
+		    // open a new transaction, if necessary. After this we can assume the database handles are live
+		    this->begin_transaction();
+
+				// get serialization_reader for the named task record
+		    int task_id = 0;
+		    task_type type;
+		    unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
+		    assert(type == integration_record);
+
+		    // get current time
+		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+		    // create and serialize an empty output group
+		    std::list<std::string> notes;
+				if(!m->supports_per_configuration_statistics())
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << m->get_backend() << "'";
+						notes.push_back(msg.str());
+					}
+				// FIXME: insert note about integrability for 3pf tasks, __CPP_TRANSPORT_REPO_NOTE_NO_INTEGRATION
+		    typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(),
+		                                                                                                               writer.get_relative_output_path(),
+		                                                                                                               now, false, std::list<std::string>(), tags);
+		    group.get_payload().set_backend(m->get_backend());
+		    group.get_payload().set_container_path(writer.get_relative_container_path());
+				group.get_payload().set_timing_metadata(writer.get_timing_metadata());
+		    unqlite_serialization_writer swriter;
+		    group.serialize(swriter);
+
+		    // write new output group to the database
+		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, swriter.get_contents());
+
+		    // refresh edit time and update the task entry for this database
+		    // that means: first, drop this existing record; then, store a copy of the updated one
+		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
+		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
+		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
+		    unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_id);
+		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_reader->get_contents());
+
 		    delete task_reader;
 
-		    return typename repository<number>::integration_writer(this->get_root_path()/output_path, this->get_root_path()/sql_path,
-		                                                           this->get_root_path()/log_path, this->get_root_path()/task_path,
-		                                                           this->get_root_path()/temp_path, worker, m->supports_per_configuration_statistics());
-      }
+		    // commit transaction
+		    this->commit_transaction();
+			}
 
 
     namespace

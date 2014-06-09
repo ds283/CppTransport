@@ -444,18 +444,13 @@ namespace transport
                   << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
               }
-            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
-              {
+            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
+	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
+	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
-              }
-            else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
-              {
-                std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
-              }
+	            }
             else
               {
                 throw xe;
@@ -484,7 +479,7 @@ namespace transport
         typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m, this->get_rank());
 
         // create the data writer
-        this->data_mgr->create_writer(writer);
+        this->data_mgr->initialize_writer(writer);
 
         // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
@@ -499,6 +494,9 @@ namespace transport
 
         // close the data writer
         this->data_mgr->close_writer(writer);
+
+        // commit integration output to the database
+        writer.commit();
       }
 
 
@@ -522,7 +520,7 @@ namespace transport
         typename repository<number>::integration_writer writer = this->repo->new_integration_task_output(tk, tags, m, this->get_rank());
 
         // create the data writer
-        this->data_mgr->create_writer(writer);
+        this->data_mgr->initialize_writer(writer);
 
         // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
@@ -537,6 +535,9 @@ namespace transport
 
         // close the data writer
         this->data_mgr->close_writer(writer);
+
+		    // commit integration output to the database
+		    writer.commit();
       }
 
 
@@ -573,9 +574,9 @@ namespace transport
 
         // get paths the workers will need
         assert(this->repo != nullptr);
-        boost::filesystem::path taskfile_path = ctr.taskfile_path();
-        boost::filesystem::path tempdir_path  = ctr.temporary_files_path();
-        boost::filesystem::path logdir_path   = ctr.log_directory_path();
+        boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
+        boost::filesystem::path tempdir_path  = ctr.get_abs_tempdir_path();
+        boost::filesystem::path logdir_path   = ctr.get_abs_logdir_path();
 
         MPI::new_integration_payload payload(tk->get_name(), taskfile_path, tempdir_path, logdir_path);
 
@@ -676,6 +677,14 @@ namespace transport
               }
           }
 
+        typename repository<number>::timing_metadata timings(total_wallclock_time, total_aggregation_time,
+                                                             total_integration_time, min_mean_integration_time, max_mean_integration_time,
+                                                             global_min_integration_time, global_max_integration_time,
+                                                             total_batching_time, min_mean_batching_time, max_mean_batching_time,
+                                                             global_min_batching_time, global_max_batching_time,
+                                                             num_integrations);
+        ctr.set_timing_metadata(timings);
+
         wallclock_timer.stop();
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
@@ -732,7 +741,7 @@ namespace transport
 		    typename repository<number>::derived_content_writer writer = this->repo->new_output_task_output(tk, tags, this->get_rank());
 
 		    // set up the writer for us
-		    this->data_mgr->create_writer(writer);
+        this->data_mgr->initialize_writer(writer);
 
 		    // write a task distribution list -- subsequently read by the worker processes
 		    // to find out which work items they should process
@@ -997,13 +1006,8 @@ namespace transport
 	                << __CPP_TRANSPORT_REPO_MISSING_MODEL_B << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
-            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE)
-	            {
-                std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
-	            }
-            else if(xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
+            else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
+	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;

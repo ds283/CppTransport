@@ -71,7 +71,7 @@ namespace transport
 
         //! Create data files for a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void create_writer(typename repository<number>::integration_writer& ctr) override;
+        virtual void initialize_writer(typename repository<number>::integration_writer& ctr) override;
 
         //! Close an open integration_writer object.
 
@@ -80,7 +80,7 @@ namespace transport
         virtual void close_writer(typename repository<number>::integration_writer& ctr) override;
 
 		    //! Create data files for a new derived_content_writer object.
-		    virtual void create_writer(typename repository<number>::derived_content_writer& ctr) override;
+		    virtual void initialize_writer(typename repository<number>::derived_content_writer& ctr) override;
 
 		    //! Close an open derived_content_writer object.
 
@@ -266,14 +266,14 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::create_writer(typename repository<number>::integration_writer& ctr)
+    void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::integration_writer& ctr)
       {
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
 
         // get paths of the data container and taskfile
-        boost::filesystem::path ctr_path = ctr.data_container_path();
-        boost::filesystem::path taskfile_path = ctr.taskfile_path();
+        boost::filesystem::path ctr_path = ctr.get_abs_container_path();
+        boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
 
         // open the main container
 
@@ -352,16 +352,16 @@ namespace transport
         sqlite3_close(taskfile);
 
         // physically remove the taskfile from the disc; it isn't needed any more
-        boost::filesystem::remove(ctr.taskfile_path());
+        boost::filesystem::remove(ctr.get_abs_taskfile_path());
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(ctr.temporary_files_path());
+        boost::filesystem::remove(ctr.get_abs_tempdir_path());
       }
 
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::create_writer(typename repository<number>::derived_content_writer& ctr)
+		void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::derived_content_writer& ctr)
 			{
 				sqlite3* taskfile = nullptr;
 
@@ -410,7 +410,7 @@ namespace transport
 //		    boost::filesystem::remove(ctr.get_taskfile_path());
 
 				// physically remove the tempfiles directory
-//		    boost::filesystem::remove(ctr.temporary_files_path());
+//		    boost::filesystem::remove(ctr.get_abs_tempdir_path());
 			}
 
 
