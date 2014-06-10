@@ -445,7 +445,7 @@ namespace transport
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            create_stmt << ", PRIMARY KEY (tserial, kserial)";
+            create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
             if(keys == foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
@@ -474,7 +474,7 @@ namespace transport
                 create_stmt << ", ele" << i << " DOUBLE";
               }
 
-            create_stmt << ", PRIMARY KEY (tserial, kserial)";
+            create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
             if(keys == foreign_keys)
               {
                 create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
