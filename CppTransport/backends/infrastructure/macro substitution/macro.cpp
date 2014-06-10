@@ -309,9 +309,9 @@ unsigned int macro_package::apply_index(std::string& line, const std::vector<str
 			            }
 		            else    // there are no valid assignments
 			            {
-		                new_line = "// Skipped: empty index range (RHS index set is empty)";
+		                line = "// Skipped: empty index range (RHS index set is empty)";
 		                fail = true;
-		                break;
+		                break;  // will break out of the for() loop, and then immediately break out of the while loop also
 			            }
 
                 line = new_line;
