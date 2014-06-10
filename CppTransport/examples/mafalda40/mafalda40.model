@@ -166,10 +166,6 @@ field
  { latex "\phi_{40}";
  } phi40;
 
-parameter
- { latex "p";
- } dummy_parameter;
-
 % this model has no parameters
 
 % set up the potential
