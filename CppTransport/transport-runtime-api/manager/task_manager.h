@@ -658,6 +658,7 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time required by worker processes = " << format_time(metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Workers processed " << metadata.total_configurations << " individual integrations";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total integration time    = " << format_time(metadata.total_integration_time) << " | global mean integration time = " << format_time(metadata.total_integration_time/metadata.total_configurations);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Min mean integration time = " << format_time(metadata.min_mean_integration_time) << " | global min integration time = " << format_time(metadata.global_min_integration_time);
@@ -881,6 +882,7 @@ namespace transport
 		                this->update_output_metadata(payload, metadata);
 
 		                workers.erase(this->worker_number(stat.source()));
+		                success = false;
 		                break;
 	                }
 
@@ -1328,7 +1330,7 @@ namespace transport
         assert(tk != nullptr);  // should be guaranteed
         assert(m == nullptr);   // should be guaranteed
 
-				bool success = false;
+				bool success = true;
 
 				// keep track of CPU time
 		    boost::timer::cpu_timer timer;
