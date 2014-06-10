@@ -435,6 +435,10 @@ namespace transport
 				    std::ostringstream command;
 						command << "source ~/.profile; /opt/local/bin/python2.7 \"" << script_file.string() << "\"";
 				    system(command.str().c_str());
+
+						// remove python script
+						// FIXME: consider what to do with the script if the plot doesn't generate
+				    boost::filesystem::remove(script_file);
 					}
 
 
