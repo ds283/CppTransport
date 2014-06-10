@@ -361,12 +361,12 @@ namespace transport
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::derived_content_writer& ctr)
+		void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::derived_content_writer& writer)
 			{
 				sqlite3* taskfile = nullptr;
 
 				// get path to taskfile
-		    boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
+		    boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
 
 				// open the taskfile
 
@@ -391,26 +391,26 @@ namespace transport
 
 				// remember this connexion
 				this->open_containers.push_back(taskfile);
-				ctr.set_data_manager_taskfile(taskfile);
+				writer.set_data_manager_taskfile(taskfile);
 			}
 
 
 		// Close data files for a derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::close_writer(typename repository<number>::derived_content_writer& ctr)
+		void data_manager_sqlite3<number>::close_writer(typename repository<number>::derived_content_writer& writer)
 			{
 				// close sqlite3 handle to taskfile
 				sqlite3* taskfile = nullptr;
-				ctr.get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
+				writer.get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
 
 				this->open_containers.remove(taskfile);
 				sqlite3_close(taskfile);
 
 				// physically remove the taskfile from the disc; it isn't needed any more
-		    boost::filesystem::remove(ctr.get_taskfile_path());
+		    boost::filesystem::remove(writer.get_abs_taskfile_path());
 
 				// physically remove the tempfiles directory
-		    boost::filesystem::remove(ctr.get_abs_tempdir_path());
+		    boost::filesystem::remove(writer.get_abs_tempdir_path());
 			}
 
 
