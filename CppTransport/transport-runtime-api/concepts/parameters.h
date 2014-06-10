@@ -170,7 +170,7 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_MPLANCK, this->M_Planck);
 
         // serialize array of parameter values
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRM_VALUES, false);
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRM_VALUES, this->params.size()==0);
         if(this->params.size() == this->names.size())
           {
             for(unsigned int i = 0; i < this->params.size(); i++)

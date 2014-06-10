@@ -232,7 +232,7 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_NSTAR, this->Nstar);
 
         // serialize array of initial values
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, false);
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
             this->write_value_node(writer, __CPP_TRANSPORT_NODE_COORDINATE, this->ics[i], __CPP_TRANSPORT_ATTR_NAME, this->names[i]);
