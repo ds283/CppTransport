@@ -56,7 +56,7 @@ namespace transport
 		    // sqlite has a default maximum number of columns equal to 2000
 		    // that can rapidly be used up where we have a large number of fields,
 		    // so we need to take care
-		    constexpr unsigned int max_columns=1997;
+		    constexpr unsigned int max_columns = 2000 - 4;
 
 
         // Utility functions
