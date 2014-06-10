@@ -876,9 +876,9 @@ namespace transport
 	    {
 		    std::ostringstream output;
 
-				output << "'" << (attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string(""))
+				output << "\"" << (attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string(""))
 											<< this->name
-							 << "': "
+							 << "\": "
 							 << this->to_string(this->value);
 
 				return(output.str());
@@ -888,7 +888,7 @@ namespace transport
 		template <typename T>
 		std::string json_serialization_stack::value_element<T>::to_string(const std::string& v) const
 			{
-				return(std::string("'") + v + std::string("'"));
+				return(std::string("\"") + v + std::string("\""));
 			}
 
 
@@ -961,7 +961,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -991,7 +991,7 @@ namespace transport
 		    if(this->node_stack.size() == 0)
 			    {
 		        std::ostringstream msg;
-				    msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << name << "'";
+				    msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << " '" << name << "'";
 				    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			    }
 
@@ -1035,7 +1035,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTY << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1064,7 +1064,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTY << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1147,7 +1147,7 @@ namespace transport
         if(this->node_stack.size() == 1)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_ENDNODE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_ENDNODE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1157,7 +1157,7 @@ namespace transport
         if(n->get_name() != name)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n->get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << " '" << n->get_name() << "', " << __CPP_TRANSPORT_SERIAL_ENDNAME_B << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1165,7 +1165,7 @@ namespace transport
         if(!is_insert && !n->validate())
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_VALIDATE_FAIL << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_VALIDATE_FAIL << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1185,7 +1185,7 @@ namespace transport
 				if(this->node_stack.size() == 1)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_SERIAL_ENDNODE << name << "'";
+						msg << __CPP_TRANSPORT_SERIAL_ENDNODE << " '" << name << "'";
 						throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					}
 
@@ -1195,7 +1195,7 @@ namespace transport
 				if(n->get_name() != name)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << n->get_name() << __CPP_TRANSPORT_SERIAL_ENDNAME_B << name << "'";
+						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << " '" << n->get_name() << "', " << __CPP_TRANSPORT_SERIAL_ENDNAME_B << " '" name << "'";
 						throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					}
 
@@ -1242,7 +1242,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYATTR << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYATTR << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1264,7 +1264,7 @@ namespace transport
 		    if(this->node_stack.size() == 0)
 			    {
 		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << name << "'";
+		        msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYATTR << " '" << name << "'";
 		        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			    }
 
@@ -1299,7 +1299,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1320,7 +1320,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1341,7 +1341,7 @@ namespace transport
             if(this->node_stack.size() == 0)
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+                msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << " '" << name << "'";
                 throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	            }
 
@@ -1362,7 +1362,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1389,7 +1389,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PUSHEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1430,7 +1430,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1461,7 +1461,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1492,7 +1492,7 @@ namespace transport
         if(this->node_stack.size() == 0)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
           }
 
@@ -1523,7 +1523,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
@@ -1554,7 +1554,7 @@ namespace transport
         if(this->node_stack.size() == 0)
 	        {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << name << "'";
+            msg << __CPP_TRANSPORT_SERIAL_PULLEMPTYVALUE << " '" << name << "'";
             throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 	        }
 
