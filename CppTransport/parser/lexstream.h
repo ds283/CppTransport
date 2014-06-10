@@ -227,8 +227,6 @@ void lexstream<keywords, characters>::lexicalize(lexfile& input)
                             }
                           else
                             {
-                              // TODO remove this when confident everything works with new line number system
-//                              this->stack.set_line(input.current_line());       // update which line this file was included from
                               if(parse(word) == false)
                                 {
                                   std::ostringstream msg;
