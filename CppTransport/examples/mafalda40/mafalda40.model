@@ -1,0 +1,217 @@
+model "mafalda40";
+name  "Mafalda 40-field example";
+
+% include details of library tags, stepper definitions, etc.
+#include "defaults.model"
+
+% set up the fields
+
+field
+ { latex "\phi_1";
+ } phi1;
+
+field
+ { latex "\phi_2";
+ } phi2;
+
+field
+ { latex "\phi_3";
+ } phi3;
+
+field
+ { latex "\phi_4";
+ } phi4;
+
+field
+ { latex "\phi_5";
+ } phi5;
+
+field
+ { latex "\phi_6";
+ } phi6;
+
+field
+ { latex "\phi_7";
+ } phi7;
+
+field
+ { latex "\phi_8";
+ } phi8;
+
+field
+ { latex "\phi_9";
+ } phi9;
+
+field
+ { latex "\phi_{10}";
+ } phi10;
+
+field
+ { latex "\phi_{11}";
+ } phi11;
+
+field
+ { latex "\phi_{12}";
+ } phi12;
+
+field
+ { latex "\phi_{13}";
+ } phi13;
+
+field
+ { latex "\phi_{14}";
+ } phi14;
+
+field
+ { latex "\phi_{15}";
+ } phi15;
+
+field
+ { latex "\phi_{16}";
+ } phi16;
+
+field
+ { latex "\phi_{17}";
+ } phi17;
+
+field
+ { latex "\phi_{18}";
+ } phi18;
+
+field
+ { latex "\phi_{19}";
+ } phi19;
+
+field
+ { latex "\phi_{20}";
+ } phi20;
+
+field
+ { latex "\phi_{21}";
+ } phi21;
+
+field
+ { latex "\phi_{22}";
+ } phi22;
+
+field
+ { latex "\phi_{23}";
+ } phi23;
+
+field
+ { latex "\phi_{24}";
+ } phi24;
+
+field
+ { latex "\phi_{25}";
+ } phi25;
+
+field
+ { latex "\phi_{26}";
+ } phi26;
+
+field
+ { latex "\phi_{27}";
+ } phi27;
+
+field
+ { latex "\phi_{28}";
+ } phi28;
+
+field
+ { latex "\phi_{29}";
+ } phi29;
+
+field
+ { latex "\phi_{30}";
+ } phi30;
+
+field
+ { latex "\phi_{31}";
+ } phi31;
+
+field
+ { latex "\phi_{32}";
+ } phi32;
+
+field
+ { latex "\phi_{33}";
+ } phi33;
+
+field
+ { latex "\phi_{34}";
+ } phi34;
+
+field
+ { latex "\phi_{34}";
+ } phi35;
+
+field
+ { latex "\phi_{36}";
+ } phi36;
+
+field
+ { latex "\phi_{37}";
+ } phi37;
+
+field
+ { latex "\phi_{38}";
+ } phi38;
+
+field
+ { latex "\phi_{39}";
+ } phi39;
+
+field
+ { latex "\phi_{40}";
+ } phi40;
+
+parameter
+ { latex "p";
+ } dummy_parameter;
+
+% this model has no parameters
+
+% set up the potential
+% note that 'M_P' is a predefined symbol which resolves to the (user-specified) Planck mass at runtime
+
+potential (0.09999999999999996*pow(phi1,2)
+           + 0.17640596649360385*pow(phi10,2)
+           + 0.19713493868620416*pow(phi11,2)
+           + 0.21394225948732082*pow(phi12,2)
+           + 0.2220324071505732*pow(phi13,2)
+           + 0.25770844490597783*pow(phi14,2)
+           + 0.28488672966813733*pow(phi15,2)
+           + 0.3014609489355054*pow(phi16,2)
+           + 0.3122264630612337*pow(phi17,2)
+           + 0.36598913924513626*pow(phi18,2)
+           + 0.39848774420840866*pow(phi19,2)
+           + 0.1065894660626079*pow(phi2,2)
+           + 0.46816435488309316*pow(phi20,2)
+           + 0.5123941680076379*pow(phi21,2)
+           + 0.5865315049037768*pow(phi22,2)
+           + 0.6572365876804771*pow(phi23,2)
+           + 0.7463299270485322*pow(phi24,2)
+           + 0.8321074885967328*pow(phi25,2)
+           + 0.9603573109810916*pow(phi26,2)
+           + 1.0913274267551099*pow(phi27,2)
+           + 1.3751604038155494*pow(phi28,2)
+           + 1.6016725516787196*pow(phi29,2)
+           + 0.11369558953708529*pow(phi3,2)
+           + 1.7220519999051218*pow(phi30,2)
+           + 2.21747683611418*pow(phi31,2)
+           + 3.6266711223094883*pow(phi32,2)
+           + 4.333407307786618*pow(phi33,2)
+           + 5.675835395311419*pow(phi34,2)
+           + 6.126797879934771*pow(phi35,2)
+           + 12.99556888495492*pow(phi36,2)
+           + 24.486323587771107*pow(phi37,2)
+           + 37.722745280912555*pow(phi38,2)
+           + 112.82912302296631*pow(phi39,2)
+           + 0.11701205956696446*pow(phi4,2)
+           + 531.662291902594*pow(phi40,2)
+           + 0.12513711355832366*pow(phi5,2)
+           + 0.13532554392993598*pow(phi6,2)
+           + 0.1467757370597014*pow(phi7,2)
+           + 0.15867941858778456*pow(phi8,2)
+           + 0.17025097918035167*pow(phi9,2) ) / 2.0;
