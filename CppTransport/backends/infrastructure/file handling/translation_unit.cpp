@@ -31,7 +31,7 @@ const std::string keyword_table[] =
                       "indexorder", "left", "right",
                       "abs", "step", "sqrt", "sin", "cos", "tan",
                       "asin", "acos", "atan", "atan2", "sinh", "cosh", "tanh",
-                      "asinh", "acosh", "atanh", "exp", "log", "Li2", "Li", "G_func", "S_func", "H_func",
+                      "asinh", "acosh", "atanh", "exp", "log", "pow", "Li2", "Li", "G_func", "S_func", "H_func",
                       "zeta_func", "zetaderiv", "tgamma_func", "lgamma_func", "beta_func", "psi_func", "factorial", "binomial"
                     };
 
@@ -47,7 +47,7 @@ const enum keyword_type keyword_map[] =
                             f_asin, f_acos, f_atan, f_atan2,
                             f_sinh, f_cosh, f_tanh,
                             f_asinh, f_acosh, f_atanh,
-                            f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
+                            f_exp, f_log, f_pow, f_Li2, f_Li, f_G, f_S, f_H,
                             f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
                             f_beta, f_psi, f_factorial, f_binomial
                           };
@@ -92,7 +92,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
     stream = new lexstream<keyword_type, character_type>(name, path,
                                                          keyword_table, keyword_map, NUMBER_KEYWORDS,
                                                          character_table, character_map, character_unary_context, NUMBER_CHARACTERS);
-    // in.stream->print(std::cerr);
+//    stream->print(std::cerr);
 
     // now pass to the parser for syntactic analysis
     lexer  = new y::y_lexer(stream);

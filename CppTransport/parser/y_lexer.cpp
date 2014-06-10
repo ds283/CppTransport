@@ -49,6 +49,7 @@ enum y::y_parser::token::yytokentype keyword_tokens[] =
       y::y_parser::token::atanh,
       y::y_parser::token::exp,
       y::y_parser::token::log,
+      y::y_parser::token::pow,
       y::y_parser::token::Li2,
       y::y_parser::token::Li,
       y::y_parser::token::G,

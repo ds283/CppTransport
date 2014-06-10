@@ -24,12 +24,12 @@ enum keyword_type
       f_asin, f_acos, f_atan, f_atan2,
       f_sinh, f_cosh, f_tanh,
       f_asinh, f_acosh, f_atanh,
-      f_exp, f_log, f_Li2, f_Li, f_G, f_S, f_H,
+      f_exp, f_log, f_pow, f_Li2, f_Li, f_G, f_S, f_H,
       f_zeta, f_zetaderiv, f_tgamma, f_lgamma,
       f_beta, f_psi, f_factorial, f_binomial
   };
 
-#define NUMBER_KEYWORDS (50)
+#define NUMBER_KEYWORDS (51)
 
 enum character_type
   {
