@@ -142,9 +142,10 @@ namespace transport
 
         typedef typename std::function< transport::derived_data::derived_product<number>*(const std::string&) > derived_product_finder;
 
-      public:
 
         // CONSTRUCTOR, DESTRUCTOR
+
+      public:
 
         //! Construct a named output task using a supplied list of elements
 
@@ -184,56 +185,38 @@ namespace transport
 
         // INTERFACE
 
+      public:
+
         //! Obtain number of task elements
         unsigned int size() const { return(this->elements.size()); }
 
 		    //! Obtain task elements
-		    const typename std::vector< output_task_element<number> >& get_elements() const
-			    {
-				    return(this->elements);
-			    }
+		    const typename std::vector< output_task_element<number> >& get_elements() const { return(this->elements); }
 
         //! Obtain a specific element
-        const output_task_element<number>& get(unsigned int i) const
-	        {
-            if(i >= this->elements.size())
-	            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
-
-            return(this->elements[i]);
-	        }
+        const output_task_element<number>& get(unsigned int i) const;
 
 		    //! Add an element, no tags provided
-		    void add_element(const derived_data::derived_product<number>& prod)
-			    {
-				    this->add_element(prod, std::list<std::string>());
-			    }
+		    void add_element(const derived_data::derived_product<number>& prod) { this->add_element(prod, std::list<std::string>()); }
 
 		    //! Add an element, tags provided
-		    void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
-			    {
-				    // check that this derived product has a distinct filename
+        void add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags);
 
-				    for(typename std::vector< output_task_element<number> >::const_iterator t = elements.begin(); t != this->elements.end(); t++)
-					    {
-						    if((*t).get_product()->get_filename() == prod.get_filename())
-							    {
-						        std::ostringstream msg;
-								    msg << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
-									      << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "',  ";
-								    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-							    }
-					    }
+		    //! Lookup a derived product
+		    derived_data::derived_product<number>* lookup_derived_product(const std::string& name);
 
-				    elements.push_back(output_task_element<number>(prod, tags, serial++));
-			    }
 
         // SERIALIZATION (implements a 'serializable' interface)
+
+      public:
 
         //! Serialize this task to the repository
         virtual void serialize(serialization_writer& writer) const override;
 
 
         // CLONE
+
+      public:
 
         //! Virtual copy
         virtual task<number>* clone() const override { return new output_task<number>(static_cast<const output_task<number>&>(*this)); }
@@ -258,7 +241,7 @@ namespace transport
         out << __CPP_TRANSPORT_OUTPUT_ELEMENTS << std::endl;
         for(typename std::vector< output_task_element<number> >::const_iterator t = obj.elements.begin(); t != obj.elements.end(); t++)
 	        {
-		        out << *t;
+            out << *t;
 	        }
 
         return(out);
@@ -346,6 +329,62 @@ namespace transport
 
         this->task<number>::serialize(writer);
 	    }
+
+
+		template <typename number>
+    void output_task<number>::add_element(const derived_data::derived_product<number>& prod, const std::list<std::string>& tags)
+	    {
+        // check that this derived product has a distinct filename
+
+        for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+	        {
+            if((*t).get_product()->get_filename() == prod.get_filename())
+	            {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
+	                << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B << " '" << this->name << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+	            }
+
+            if((*t).get_product_name() == prod.get_name())
+	            {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
+	                << __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_B << " '" << this->name << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+	            }
+	        }
+
+        elements.push_back(output_task_element<number>(prod, tags, serial++));
+	    }
+
+
+		template <typename number>
+    const output_task_element<number>& output_task<number>::get(unsigned int i) const
+	    {
+        if(i >= this->elements.size())
+	        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_OUTPUT_TASK_RANGE);
+
+        return(this->elements[i]);
+	    }
+
+
+		template <typename number>
+		derived_data::derived_product<number>* output_task<number>::lookup_derived_product(const std::string& name)
+			{
+		    derived_data::derived_product<number>* rval = nullptr;
+
+				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
+					{
+						if((*t).get_product_name() == name)
+							{
+								rval = (*t).get_product();
+								break;
+							}
+					}
+
+				return(rval);
+			}
 
 
 	}   // namespace transport

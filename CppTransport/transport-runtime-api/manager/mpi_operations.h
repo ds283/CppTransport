@@ -27,12 +27,12 @@ namespace transport
             const unsigned int NEW_INTEGRATION          = 0;
             const unsigned int FINISHED_INTEGRATION     = 1;
             const unsigned int INTEGRATION_DATA_READY   = 2;
-		        const unsigned int INTEGRATION_ABORT        = 8;
 		        const unsigned int INTEGRATION_FAIL         = 9;
 
 		        const unsigned int NEW_DERIVED_CONTENT      = 10;
 		        const unsigned int DERIVED_CONTENT_READY    = 11;
 		        const unsigned int FINISHED_DERIVED_CONTENT = 12;
+		        const unsigned int DERIVED_CONTENT_FAIL     = 19;
 
             const unsigned int SET_REPOSITORY           = 98;
             const unsigned int TERMINATE                = 99;
@@ -342,30 +342,18 @@ namespace transport
 	                }
 
                 //! Value constructor (used for sending messages)
-                content_ready_payload(const std::string& tk, const std::string& dp, unsigned int og)
-	                : task(tk), product(dp), group(og)
+                content_ready_payload(const std::string& dp)
+	                : product(dp)
 	                {
 	                }
 
-                //! Get container path
-                const std::string& get_task_name()    const { return(this->task); }
-
-                //! Get payload type
+                //! Get derived product name
                 const std::string& get_product_name() const { return(this->product); }
-
-		            //! Get output group
-		            unsigned int       get_output_group() const { return(this->group); }
 
               private:
 
-                //! Name of task
-		            std::string task;
-
 		            //! Name of derived product
 		            std::string product;
-
-		            //! Serial number of output group
-		            unsigned int group;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -373,26 +361,24 @@ namespace transport
                 template <typename Archive>
                 void serialize(Archive& ar, unsigned int version)
 	                {
-                    ar & task;
                     ar & product;
-		                ar & group;
 	                }
 	            };
 
 
-		        class derived_finished_payload
+		        class finished_derived_payload
 			        {
 
 		          public:
 
 		            //! Null constructor (used for receiving messages)
-		            derived_finished_payload()
+		            finished_derived_payload()
 			            {
 			            }
 
 
 		            //! Value constructor (used for sending messages)
-		            derived_finished_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+		            finished_derived_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
 		                                     const unsigned int tc, const unsigned int tc_u,
 		                                     const unsigned int twopf_k, const unsigned int twopf_k_u,
 		                                     const unsigned int threepf_k, const unsigned int threepf_k_u,

@@ -318,7 +318,11 @@ namespace transport
 				    typename std::vector< typename line_collection<number>::output_line > output_lines;
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
 
+						// generate plot
 				    this->make_plot(pipe, axis, output_lines);
+
+						// commit product
+						pipe.commit(this);
 					}
 
 
@@ -427,7 +431,10 @@ namespace transport
 				    out << "plt.close()" << std::endl;
 
 				    out.close();
-				    system(("source ~/.profile; /opt/local/bin/python2.7 " + script_file.string()).c_str());
+
+				    std::ostringstream command;
+						command << "source ~/.profile; /opt/local/bin/python2.7 \"" << script_file.string() << "\"";
+				    system(command.str().c_str());
 					}
 
 

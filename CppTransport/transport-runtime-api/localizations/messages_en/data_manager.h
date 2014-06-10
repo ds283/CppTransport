@@ -57,6 +57,11 @@
 #define __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE                     "Data manager error: Datapipe pull request for unknown correlation function type"
 #define __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP                     "Data manager error: Could not find a matching output group for task"
 
+#define __CPP_TRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT                "Data manager error: Null derived product"
+#define __CPP_TRANSPORT_DATAMGR_NULL_BATCHER                        "Data manager error: Null batcher"
+
+#define __CPP_TRANSPORT_DATAMGR_DERIVED_PRODUCT_MISSING             "Data manager error: Can not find expected derived product in temporary location"
+
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_CREATE_FAIL             "Data manager error: Failed to create temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL             "Data manager error: Failed to insert value in temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_DROP_FAIL               "Data manager error: Failed to drop temporary table of serial numbers (backend code="

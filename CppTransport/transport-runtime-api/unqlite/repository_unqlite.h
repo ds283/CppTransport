@@ -209,13 +209,14 @@ namespace transport
 
         //! Add derived content
         virtual typename repository<number>::derived_content_writer
-          new_output_task_output(output_task<number> *tk, const std::list<std::string> &tags,
-                                 unsigned int worker) override;
+          new_output_task_output(output_task<number> *tk, const std::list<std::string> &tags, unsigned int worker) override;
+
+		    //! Move a failed output group to a safe location
+		    virtual void move_output_group_to_failure(typename repository<number>::derived_content_writer& writer) override;
 
         //! Lookup an output group for a task, given a set of tags
         virtual typename repository<number>::template output_group<typename repository<number>::integration_payload>
-          find_integration_task_output_group(const integration_task<number> *tk,
-                                             const std::list<std::string> &tags) override;
+          find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags) override;
 
       protected:
 
@@ -1280,14 +1281,22 @@ namespace transport
         if(boost::filesystem::is_directory(fail_path))
           {
             boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
-            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+
+		        try
+			        {
+		            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+			        }
+		        catch(boost::filesystem::filesystem_error& xe)
+			        {
+		            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+			        }
 
             std::ostringstream msg;
 
             std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
 
             msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task()->get_name() << "': "
-                << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" <<  group_name << "' "
+                << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
                 << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
 
             this->message(msg.str());
@@ -1522,11 +1531,12 @@ namespace transport
 		    boost::filesystem::create_directories(this->get_root_path() / log_path);
 		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-		    return typename repository<number>::derived_content_writer(tk, tags,
+		    return typename repository<number>::derived_content_writer(tk, tags, now,
 		                                                               std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1),
 		                                                               this->get_root_path(),
 		                                                               output_path, log_path, task_path, temp_path, worker);
 			}
+
 
 		template <typename number>
 		void repository_unqlite<number>::close_derived_content_writer(typename repository<number>::derived_content_writer& writer)
@@ -1550,7 +1560,8 @@ namespace transport
 		    // create and serialize an empty output group
 		    typename repository<number>::template output_group<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(),
 		                                                                                                          writer.get_relative_output_path(),
-		                                                                                                          now, false, std::list<std::string>(), tags);
+		                                                                                                          writer.get_creation_time(),
+		                                                                                                          false, std::list<std::string>(), tags);
 
 		    unqlite_serialization_writer swriter;
 		    group.serialize(swriter);
@@ -1570,6 +1581,40 @@ namespace transport
 
 				// commit transaction
 				this->commit_transaction();
+				this->advise_commit(group);
+			}
+
+
+		template <typename number>
+		void repository_unqlite<number>::move_output_group_to_failure(typename repository<number>::derived_content_writer& writer)
+			{
+		    boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+		    if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+		    if(boost::filesystem::is_directory(fail_path))
+			    {
+		        boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+		        try
+			        {
+		            boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+			        }
+		        catch(boost::filesystem::filesystem_error& xe)
+			        {
+		            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+			        }
+
+		        std::ostringstream msg;
+
+		        std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+		        msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task()->get_name() << "': "
+			          << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
+			          << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
+
+		        this->message(msg.str());
+			    }
+		    else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
 			}
 
 

@@ -152,7 +152,7 @@ namespace transport
         virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir,
                                                                         const boost::filesystem::path& tempdir,
                                                                         typename data_manager<number>::output_group_finder finder,
-                                                                        typename data_manager<number>::derived_content_dispatch_function dispatcher,
+                                                                        typename data_manager<number>::content_dispatch_function dispatcher,
                                                                         unsigned int worker, boost::timer::cpu_timer& timer) override;
 
         //! Pull a set of time sample-points from a datapipe
@@ -671,7 +671,7 @@ namespace transport
 		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir,
 		                                                                                      const boost::filesystem::path& tempdir,
                                                                                           typename data_manager<number>::output_group_finder finder,
-                                                                                          typename data_manager<number>::derived_content_dispatch_function dispatcher,
+                                                                                          typename data_manager<number>::content_dispatch_function dispatcher,
 		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer)
 			{
 		    // set up callback API

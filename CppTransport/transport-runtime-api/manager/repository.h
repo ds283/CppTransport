@@ -879,7 +879,7 @@ namespace transport
           public:
 
             //! Construct a derived-content writer object
-            derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg,
+            derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
                                    output_commit_callback c,
                                    const boost::filesystem::path& root,
                                    const boost::filesystem::path& output, const boost::filesystem::path& log,
@@ -928,6 +928,9 @@ namespace transport
 
           public:
 
+		        //! Return path to output directory
+		        boost::filesystem::path get_abs_output_path() const { return(this->repo_root/this->output_path); }
+
             //! Return path to log directory
             boost::filesystem::path get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
 
@@ -962,6 +965,9 @@ namespace transport
 		        //! Get metadata
 		        const output_metadata& get_metadata() const { return(this->metadata); }
 
+		        //! Get creation time
+		        const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
+
 
             // INTERNAL DATA
 
@@ -984,6 +990,9 @@ namespace transport
 
 		        //! metadata for this output task
 		        output_metadata metadata;
+
+		        //! creation time
+		        boost::posix_time::ptime creation_time;
 
 
 		        // PATHS
@@ -1125,6 +1134,9 @@ namespace transport
         //! Add derived content
         virtual derived_content_writer
           new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker) = 0;
+
+		    //! Move a failed output group to a safe location
+		    virtual void move_output_group_to_failure(derived_content_writer& writer) = 0;
 
         //! Lookup an output group for a task, given a set of tags
         virtual output_group<integration_payload>
@@ -1346,13 +1358,14 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::derived_content_writer::derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg,
+    repository<number>::derived_content_writer::derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
                                                                        output_commit_callback c,
                                                                        const boost::filesystem::path& root,
                                                                        const boost::filesystem::path& output, const boost::filesystem::path& log,
                                                                        const boost::filesystem::path& task, const boost::filesystem::path& temp,
                                                                        unsigned int w)
 	    : parent_task(dynamic_cast<output_task<number>*>(tk->clone())), tags(tg),
+	      creation_time(ct),
 	      committer(c),
 	      repo_root(root),
 	      output_path(output), log_path(log),
@@ -1388,6 +1401,7 @@ namespace transport
 		template <typename number>
 		repository<number>::derived_content_writer::derived_content_writer(const typename repository<number>::derived_content_writer& obj)
 			: parent_task(dynamic_cast<output_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
+			  creation_time(obj.creation_time),
 			  committer(obj.committer),
 			  repo_root(obj.repo_root),
 			  output_path(obj.output_path), log_path(obj.log_path),

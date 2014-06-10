@@ -146,7 +146,11 @@ namespace transport
 						typename std::vector< typename line_collection<number>::output_line > output_lines;
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
 
+						// make table
 						this->make_table(pipe, axis, output_lines);
+
+						// commit product
+						pipe.commit(this);
 					}
 
 

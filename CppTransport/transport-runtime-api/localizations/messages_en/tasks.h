@@ -18,6 +18,9 @@
 #define __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A "Output task error: attempt to add two derived products with the filename"
 #define __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_B "to output task"
 
+#define __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_A     "Output task error: attempt to add two derived products with the same name"
+#define __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_B     "to output task"
+
 #define __CPP_TRANSPORT_TASK_TIMES                       "Sampling times: "
 #define __CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal Error: attempt to serialize background 'task' object"
 

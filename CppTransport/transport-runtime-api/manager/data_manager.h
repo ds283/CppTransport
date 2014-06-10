@@ -197,9 +197,6 @@ namespace transport
 		    //! task-manager callback to push a container to the master node
         typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
 
-		    //! task-manager callback to push new derived content to the master node
-		    typedef std::function<void(datapipe* pipe)> derived_content_dispatch_function;
-
 		    //! Logging severity level
         typedef enum { normal, notification, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
@@ -588,7 +585,7 @@ namespace transport
         typedef std::function<void(datapipe*)> detach_callback;
 
         //! Push derived content
-        typedef std::function<void(datapipe*)> content_dispatch_function;
+        typedef std::function<void(datapipe*, typename derived_data::derived_product<number>*)> content_dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
         typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<double>&, unsigned int)> time_config_callback;
@@ -1096,7 +1093,17 @@ namespace transport
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
 
+				    // COMMIT AN OUTPUT
+
+		      public:
+
+				    //! Commit an output
+				    void commit(typename derived_data::derived_product<number>* product) { this->dispatcher(this, product); }
+
+
 				    // CACHE STATISTICS
+
+		      public:
 
 				    //! Get total time spent reading database
 				    const boost::timer::nanosecond_type get_database_time() const { return(this->database_timer.elapsed().wall); }
@@ -1257,6 +1264,7 @@ namespace transport
 		        //! Database access timer
 		        boost::timer::cpu_timer database_timer;
 
+
 		        // CALLBACKS
 
 		        //! Callback: find an output group for a task
@@ -1294,6 +1302,7 @@ namespace transport
 
 				    //! Callback: extraca a kconfig-series sample of a component of a 3pf at fixed time
 				    threepf_kconfig_callback threepf_kconfig_sampler;
+
 			    };
 
 
@@ -1388,7 +1397,7 @@ namespace transport
 
 		    //! Create a datapipe
 		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                         output_group_finder finder, derived_content_dispatch_function dispatcher,
+                                         output_group_finder finder, content_dispatch_function dispatcher,
 		                                     unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
         //! Pull a set of time sample-points from a datapipe
@@ -1435,6 +1444,7 @@ namespace transport
 
         //! Maximum memory available to each worker process
         unsigned int capacity;
+
       };
 
 
