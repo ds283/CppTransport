@@ -182,13 +182,13 @@ namespace lexeme    // package in a unique namespace to protect common words lik
                     error(msg.str(), path);
                   }
 
-                if (type == decimal && buffer[0] == '0' && buffer[1] == 'x')
+                if(type == integer && buffer[0] == '0' && buffer[1] == 'x')
                   {
                     std::ostringstream msg;
                     msg << WARNING_HEX_CONVERSION_A << " '" << buffer << "' " << WARNING_HEX_CONVERSION_B;
                     warn(msg.str(), path);
                   }
-                else if (type == decimal && buffer[0] == '0')
+                else if(type == integer && buffer[0] == '0')
                   {
                     std::ostringstream msg;
                     msg << WARNING_OCTAL_CONVERSION_A << " '" << buffer << "' " << WARNING_OCTAL_CONVERSION_B;
