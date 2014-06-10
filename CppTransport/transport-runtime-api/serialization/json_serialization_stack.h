@@ -1195,7 +1195,7 @@ namespace transport
 				if(n->get_name() != name)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << " '" << n->get_name() << "', " << __CPP_TRANSPORT_SERIAL_ENDNAME_B << " '" name << "'";
+						msg << __CPP_TRANSPORT_SERIAL_ENDNAME_A << " '" << n->get_name() << "', " << __CPP_TRANSPORT_SERIAL_ENDNAME_B << " '" << name << "'";
 						throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					}
 
