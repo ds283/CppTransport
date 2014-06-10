@@ -158,7 +158,7 @@ namespace transport
 				void line_asciitable<number>::make_table(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
 					{
 						// extract paths from the datapipe
-				    boost::filesystem::path temp_root = pipe.get_temporary_files_path();
+				    boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
 
 						// obtain our output filename
 				    boost::filesystem::path table_file = temp_root / this->filename;

@@ -588,32 +588,28 @@ namespace transport
         typedef std::function<void(datapipe*, typename derived_data::derived_product<number>*)> content_dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<double>&, unsigned int)> time_config_callback;
+        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&, unsigned int)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&, unsigned int)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&)> kconfig_threepf_callback;
 
         //! Extract a background field at a set of time sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&, unsigned int)> background_time_callback;
+        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
 
         //! Extract a twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int,
-                                   std::vector<number>&, twopf_type, unsigned int)> twopf_time_callback;
+        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
 
         //! Extract a threepf component at fixed k-configuration for a set of time sample-point
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int,
-                                   std::vector<number>&, unsigned int)> threepf_time_callback;
+        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_time_callback;
 
         //! Extract a twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int,
-                                   std::vector<number>&, twopf_type, unsigned int)> twopf_kconfig_callback;
+        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
         //! Extract a threepf component at fixed time for a set of k-configuration sample-point
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int,
-                                   std::vector<number>&, unsigned int)> threepf_kconfig_callback;
+        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
 
 
 		    //! Data pipe, used when generating derived content to extract data from an integration database.
@@ -1083,11 +1079,24 @@ namespace transport
 		        template <typename handle_type>
 		        void get_manager_handle(handle_type* h) const { *h = static_cast<handle_type>(this->manager_handle); }
 
+				    //! Get worker numbers
+				    unsigned int get_worker_number() const { return(this->worker_number); }
+
 				    //! Validate that the pipe is attached to a container
 				    bool validate(void);
 
+
+				    // ABSOLUTE PATHS
+
+		      public:
+
 				    //! Return temporary files path
-				    const boost::filesystem::path& get_temporary_files_path() const { return(this->temporary_path); }
+				    const boost::filesystem::path& get_abs_tempdir_path() const { return(this->temporary_path); }
+
+
+				    // LOGGING
+
+		      public:
 
 		        //! Return logger
 		        boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -1139,7 +1148,7 @@ namespace transport
 		      public:
 
 				    //! Attach an output-group to the datapipe, ready for reading
-				    void attach(integration_task<number>* tk, const std::list<std::string>& tags);
+				    void attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags);
 
 				    //! Detach an output-group from the datapipe
 				    void detach(void);
@@ -1147,11 +1156,18 @@ namespace transport
             //! Is this datapipe attached to an output group?
             bool is_attached() const { return(this->attached_group != nullptr); }
 
-            //!
+
+				    // PROPERTIES OF CURRENTLY-ATTACHED GROUP
+
+		      public:
 
 				    //! Get attached output group
 				    typename repository<number>::template output_group< typename repository<number>::integration_payload >*
               get_attached_output_group(void) const;
+
+				    //! Get number of fields associated with currently attached group.
+				    //! Output is meaningful only when a group is attached.
+				    unsigned int get_N_fields() const { return(this->N_fields); }
 
 
 				    // PULL DATA
@@ -1210,6 +1226,9 @@ namespace transport
 
 		      private:
 
+
+				    // CACHES
+
 		        //! time configuration cache
 		        linecache::cache<std::vector<double>, time_config_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> time_config_cache;
 
@@ -1222,29 +1241,8 @@ namespace transport
 		        //! data cache
 		        linecache::cache<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
 
-		        //! Maximum capacity to use (approximately--we don't try to do a detailed accounting of memory use)
-		        unsigned int capacity;
 
-		        //! Path to logging directory
-		        const boost::filesystem::path logdir_path;
-
-		        //! Path to temporary files
-		        const boost::filesystem::path temporary_path;
-
-		        //! Unique serial number identifying the worker process owning this datapipe
-		        const unsigned int worker_number;
-
-		        //! Logger source
-		        boost::log::sources::severity_logger<log_severity_level> log_source;
-
-		        //! Logger sink
-		        boost::shared_ptr<sink_t> log_sink;
-
-		        //! Timer, used to track how long the datapipe is kept open
-		        boost::timer::cpu_timer& timer;
-
-		        //! Currently-attached output group; null if no group is attached
-		        typename repository<number>::template output_group<typename repository<number>::integration_payload>* attached_group;
+				    // CACHE TABLES
 
 		        //! Time configuration cache table for currently-attached group; null if no group is attached
 		        linecache::table<std::vector<number>, time_config_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* time_config_cache_table;
@@ -1258,11 +1256,53 @@ namespace transport
 		        //! data cache table for currently-attached group; null if no group is attached
 		        linecache::table<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
 
-		        //! Implementation-dependent handle
+
+				    // PROPERTIES
+
+		        //! Maximum capacity to use (approximately--we don't try to do a detailed accounting of memory use)
+		        unsigned int capacity;
+
+		        //! Unique serial number identifying the worker process owning this datapipe
+		        const unsigned int worker_number;
+
+		        //! Implementation-dependent handle used by data_manager
 		        void* manager_handle;
+
+
+				    // CURRENTLY ATTACHED OUTPUT GROUP
+
+		        //! Currently-attached output group; null if no group is attached
+		        typename repository<number>::template output_group<typename repository<number>::integration_payload>* attached_group;
+
+				    //! Number of fields associated with currently attached group
+				    unsigned int N_fields;
+
+
+				    // PATHS
+
+		        //! Path to logging directory
+		        const boost::filesystem::path logdir_path;
+
+		        //! Path to temporary files
+		        const boost::filesystem::path temporary_path;
+
+
+				    // TIMERS
 
 		        //! Database access timer
 		        boost::timer::cpu_timer database_timer;
+
+		        //! Timer, used to track how long the datapipe is kept open
+		        boost::timer::cpu_timer& timer;
+
+
+				    // LOGGING
+
+		        //! Logger source
+		        boost::log::sources::severity_logger<log_severity_level> log_source;
+
+		        //! Logger sink
+		        boost::shared_ptr<sink_t> log_sink;
 
 
 		        // CALLBACKS
@@ -1401,42 +1441,34 @@ namespace transport
 		                                     unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
         //! Pull a set of time sample-points from a datapipe
-        virtual void pull_time_config(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample,
-                                      unsigned int worker) = 0;
+        virtual void pull_time_config(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
 
         //! Pull a set of 2pf k-configuration serial numbers from a datapipe
-        virtual void pull_kconfig_twopf(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample,
-                                        unsigned int worker) = 0;
+        virtual void pull_kconfig_twopf(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<twopf_configuration>& sample) = 0;
 
         //! Pull a set of 3pd k-configuration serial numbesr from a datapipe
         //! Simultaneously, populates three lists (k1, k2, k3) with serial numbers for the 2pf k-configurations
         //! corresponding to k1, k2, k3
-        virtual void pull_kconfig_threepf(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample,
-                                          unsigned int worker) = 0;
+        virtual void pull_kconfig_threepf(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<threepf_configuration>& sample) = 0;
 
         //! Pull a time sample of a background field from a datapipe
-        virtual void pull_background_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample,
-                                                 unsigned int worker) = 0;
+        virtual void pull_background_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials, std::vector<number>& sample) = 0;
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
         virtual void pull_twopf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
-                                            unsigned int k_serial, std::vector<number>& sample, twopf_type type,
-                                            unsigned int worker) = 0;
+                                            unsigned int k_serial, std::vector<number>& sample, twopf_type type) = 0;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
-                                              unsigned int k_serial, std::vector<number>& sample,
-                                              unsigned int worker) = 0;
+                                              unsigned int k_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
-                                               unsigned int t_serial, std::vector<number>& sample, twopf_type type,
-                                               unsigned int worker) = 0;
+                                               unsigned int t_serial, std::vector<number>& sample, twopf_type type) = 0;
 
         //! Pull a kconfig of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
-                                                 unsigned int t_serial, std::vector<number>& sample,
-                                                 unsigned int worker) = 0;
+                                                 unsigned int t_serial, std::vector<number>& sample) = 0;
 
         // INTERNAL DATA
 
@@ -1660,7 +1692,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::datapipe::attach(integration_task<number>* tk, const std::list<std::string>& tags)
+    void data_manager<number>::datapipe::attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags)
 	    {
         assert(tk != nullptr);
         if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
@@ -1689,6 +1721,9 @@ namespace transport
 		    this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
 		    this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
 		    this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
+
+		    // remember number of fields associated with this container
+		    this->N_fields = Nf;
 	    }
 
 
@@ -1912,7 +1947,7 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL time sample request";
 
 				this->pipe->database_timer.resume();
-		    this->pipe->time_config_sampler(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->time_config_sampler(this->pipe, sns, data);
 		    this->pipe->database_timer.stop();
 			}
 
@@ -1934,7 +1969,7 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 2pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
-		    this->pipe->kconfig_twopf_sampler(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->kconfig_twopf_sampler(this->pipe, sns, data);
 		    this->pipe->database_timer.stop();
 			}
 
@@ -1956,7 +1991,7 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 3pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
-		    this->pipe->kconfig_threepf_sampler(this->pipe, sns, data, this->pipe->worker_number);
+		    this->pipe->kconfig_threepf_sampler(this->pipe, sns, data);
 		    this->pipe->database_timer.stop();
 			}
 
@@ -1978,7 +2013,7 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL background time sample request for element " << this->id;
 
 				this->pipe->database_timer.resume();
-		    this->pipe->background_time_sampler(this->pipe, this->id, sns, sample, this->pipe->worker_number);
+		    this->pipe->background_time_sampler(this->pipe, this->id, sns, sample);
 		    this->pipe->database_timer.stop();
 			}
 
@@ -2002,7 +2037,7 @@ namespace transport
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
-				    this->pipe->twopf_time_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_real, this->pipe->worker_number);
+				    this->pipe->twopf_time_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_real);
 						this->pipe->database_timer.stop();
 					}
 				else if(this->type == cf_twopf_im)
@@ -2010,7 +2045,7 @@ namespace transport
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
-				    this->pipe->twopf_time_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_imag, this->pipe->worker_number);
+				    this->pipe->twopf_time_sampler(this->pipe, this->id, sns, this->kserial, sample, twopf_imag);
 						this->pipe->database_timer.stop();
 					}
 				else if (this->type == cf_threepf)
@@ -2018,7 +2053,7 @@ namespace transport
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
-				    this->pipe->threepf_time_sampler(this->pipe, this->id, sns, this->kserial, sample, this->pipe->worker_number);
+				    this->pipe->threepf_time_sampler(this->pipe, this->id, sns, this->kserial, sample);
 						this->pipe->database_timer.stop();
 					}
 				else
@@ -2076,7 +2111,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_real, this->pipe->worker_number);
+            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_real);
             this->pipe->database_timer.stop();
 	        }
         else if(this->type == cf_twopf_im)
@@ -2084,7 +2119,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_imag, this->pipe->worker_number);
+            this->pipe->twopf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, twopf_imag);
             this->pipe->database_timer.stop();
 	        }
         else if (this->type == cf_threepf)
@@ -2092,7 +2127,7 @@ namespace transport
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
-            this->pipe->threepf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample, this->pipe->worker_number);
+            this->pipe->threepf_kconfig_sampler(this->pipe, this->id, sns, this->tserial, sample);
             this->pipe->database_timer.stop();
 	        }
         else

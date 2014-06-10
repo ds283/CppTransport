@@ -52,6 +52,13 @@ namespace transport
 
         typedef enum { twopf_configs, threepf_configs } statistics_configuration_type;
 
+
+		    // sqlite has a default maximum number of columns equal to 2000
+		    // that can rapidly be used up where we have a large number of fields,
+		    // so we need to take care
+		    constexpr unsigned int max_columns=1997;
+
+
         // Utility functions
         namespace
           {
@@ -402,11 +409,15 @@ namespace transport
         // Create table for background values
         void create_backg_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
-            std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
-              << "tserial INTEGER PRIMARY KEY";
+		        unsigned int num_cols = std::min(2*Nfields, max_columns);
 
-            for(unsigned int i = 0; i < 2*Nfields; i++)
+            std::ostringstream create_stmt;
+            create_stmt
+	            << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
+              << "tserial INTEGER PRIMARY KEY, "
+	            << "page INTEGER";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 create_stmt << ", coord" << i << " DOUBLE";
               }
@@ -420,12 +431,16 @@ namespace transport
         // Create table for twopf values
         void create_twopf_table(sqlite3* db, unsigned int Nfields, twopf_value_type type=real_twopf, add_foreign_keys_type keys=no_foreign_keys)
           {
-            std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << twopf_table_name(type) << "("
-              << "tserial INTEGER,"
-              << "kserial INTEGER";
+		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
 
-            for(unsigned int i = 0; i < 2*Nfields * 2*Nfields; i++)
+            std::ostringstream create_stmt;
+            create_stmt
+	            << "CREATE TABLE " << twopf_table_name(type) << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+	            << "page INTEGER";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
@@ -445,12 +460,16 @@ namespace transport
         // Create table for threepf values
         void create_threepf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
-            std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
-              << "tserial INTEGER,"
-              << "kserial INTEGER";
+		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
 
-            for(unsigned int i = 0; i < 2*Nfields * 2*Nfields * 2*Nfields; i++)
+            std::ostringstream create_stmt;
+            create_stmt
+	            << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+	            << "page INTEGER";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 create_stmt << ", ele" << i << " DOUBLE";
               }
@@ -511,10 +530,16 @@ namespace transport
 
             unsigned int Nfields = batcher->get_number_fields();
 
-            std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << " VALUES (@tserial";
+            // work out how many columns we have, and how many pages
+            // we need to fit in our number of columns.
+            // num_pages will be 1 or greater
+		        unsigned int num_cols = std::min(2*Nfields, max_columns);
+            unsigned int num_pages = (2*Nfields)/num_cols;
 
-            for(unsigned int i = 0; i < 2*Nfields; i++)
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << " VALUES (@tserial, @page";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 insert_stmt << ", @coord" << i;
               }
@@ -527,16 +552,24 @@ namespace transport
 
             for(typename std::vector<typename data_manager<number>::backg_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                for(unsigned int i = 0; i < 2*Nfields; i++)
-                  {
-                    check_stmt(db, sqlite3_bind_double(stmt, i+2, static_cast<double>((*t).coords[i])));    // 'number' must be castable to double
-                  }
+                for(unsigned int page = 0; page < num_pages; page++)
+	                {
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
-                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL, SQLITE_DONE);
+		                for(unsigned int i = 0; i < num_cols; i++)
+			                {
+				                unsigned int index = page*num_cols + i;
+				                number       value = index < 2*Nfields ? (*t).coords[i] : 0.0;
 
-                check_stmt(db, sqlite3_clear_bindings(stmt));
-                check_stmt(db, sqlite3_reset(stmt));
+		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
+			                }
+
+		                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL, SQLITE_DONE);
+
+		                check_stmt(db, sqlite3_clear_bindings(stmt));
+		                check_stmt(db, sqlite3_reset(stmt));
+	                }
               }
 
             exec(db, "END TRANSACTION;");
@@ -554,10 +587,16 @@ namespace transport
 
             unsigned int Nfields = batcher->get_number_fields();
 
-            std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << twopf_table_name(type) << " VALUES (@tserial, @kserial";
+            // work out how many columns we have, and how many pages
+            // we need to fit in our number of columns.
+            // num_pages will be 1 or greater
+            unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
+            unsigned int num_pages = (2*Nfields * 2*Nfields)/num_cols;
 
-            for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << twopf_table_name(type) << " VALUES (@tserial, @kserial, @page";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 insert_stmt << ", @ele" << i;
               }
@@ -570,17 +609,25 @@ namespace transport
 
             for(typename std::vector<typename data_manager<number>::twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
-                for(unsigned int i = 0; i < 2*Nfields*2*Nfields; i++)
-                  {
-                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i])));    // 'number' must be castable to double
-                  }
+		            for(unsigned int page = 0; page < num_pages; page++)
+			            {
+		                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+				            check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
-                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL, SQLITE_DONE);
+		                for(unsigned int i = 0; i < num_cols; i++)
+			                {
+				                unsigned int index = page*num_cols + i;
+				                number       value = index < 2*Nfields * 2*Nfields ? (*t).elements[i] : 0.0;
 
-                check_stmt(db, sqlite3_clear_bindings(stmt));
-                check_stmt(db, sqlite3_reset(stmt));
+		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
+			                }
+
+		                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL, SQLITE_DONE);
+
+		                check_stmt(db, sqlite3_clear_bindings(stmt));
+		                check_stmt(db, sqlite3_reset(stmt));
+			            }
               }
 
             exec(db, "END TRANSACTION;");
@@ -598,10 +645,16 @@ namespace transport
 
             unsigned int Nfields = batcher->get_number_fields();
 
-            std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << " VALUES (@tserial, @kserial";
+            // work out how many columns we have, and how many pages
+            // we need to fit in our number of columns.
+            // num_pages will be 1 or greater
+            unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
+            unsigned int num_pages = (2*Nfields * 2*Nfields * 2*Nfields)/num_cols;
 
-            for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << " VALUES (@tserial, @kserial, @page";
+
+            for(unsigned int i = 0; i < num_cols; i++)
               {
                 insert_stmt << ", @ele" << i;
               }
@@ -614,17 +667,25 @@ namespace transport
 
             for(typename std::vector<typename data_manager<number>::threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
-                for(unsigned int i = 0; i < 2*Nfields*2*Nfields*2*Nfields; i++)
-                  {
-                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>((*t).elements[i])));    // 'number' must be castable to double
-                  }
+		            for(unsigned int page = 0; page < num_pages; page++)
+			            {
+		                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+				            check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
-                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL, SQLITE_DONE);
+		                for(unsigned int i = 0; i < num_cols; i++)
+			                {
+				                unsigned int index = page*num_cols + i;
+				                number       value = index < 2*Nfields * 2*Nfields * 2*Nfields ? (*t).elements[i] : 0.0;
 
-                check_stmt(db, sqlite3_clear_bindings(stmt));
-                check_stmt(db, sqlite3_reset(stmt));
+		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
+			                }
+
+		                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL, SQLITE_DONE);
+
+		                check_stmt(db, sqlite3_clear_bindings(stmt));
+		                check_stmt(db, sqlite3_reset(stmt));
+			            }
               }
 
             exec(db, "END TRANSACTION;");
@@ -705,61 +766,18 @@ namespace transport
         void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr,
                              const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
           {
-            char* errmsg;
-
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating background values";
 
-            std::ostringstream attach_stmt;
-            attach_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+            std::ostringstream copy_stmt;
+		        copy_stmt
+		          << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+			        << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
+			        << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";"
+			        << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            exec(db, attach_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGATTACH);
-            exec(db, "BEGIN TRANSACTION;");
+		        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            std::ostringstream read_stmt_text;
-            read_stmt_text << "SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";";
-            sqlite3_stmt* read_stmt;
-            check_stmt(db, sqlite3_prepare_v2(db, read_stmt_text.str().c_str(), read_stmt_text.str().length()+1, &read_stmt, nullptr));
-
-            std::ostringstream write_stmt_text;
-            write_stmt_text << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << " VALUES (@tserial";
-            for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-              {
-                write_stmt_text << ", @coord" << i;
-              }
-            write_stmt_text << ");";
-            sqlite3_stmt* write_stmt;
-            check_stmt(db, sqlite3_prepare_v2(db, write_stmt_text.str().c_str(), write_stmt_text.str().length()+1, &write_stmt, nullptr));
-
-            // read rows from the temporary container, then write them into the principal database
-            int status;
-            while((status = sqlite3_step(read_stmt)) != SQLITE_DONE)
-              {
-                check_stmt(db, status, __CPP_TRANSPORT_DATACTR_BACKGREAD, SQLITE_ROW);
-
-                int serial = sqlite3_column_int(read_stmt, 0);
-
-                check_stmt(db, sqlite3_bind_int(write_stmt, 1, serial));
-
-                std::vector<number> coords(2*m->get_N_fields());
-                for(unsigned int i = 0; i < 2*m->get_N_fields(); i++)
-                  {
-                    double value = sqlite3_column_double(read_stmt, i+1);
-                    check_stmt(db, sqlite3_bind_double(write_stmt, i+2, value));
-                    coords[i] = static_cast<number>(value);
-                  }
-
-                check_stmt(db, sqlite3_step(write_stmt), __CPP_TRANSPORT_DATACTR_BACKGWRITE, SQLITE_DONE);
-
-                check_stmt(db, sqlite3_clear_bindings(write_stmt));
-                check_stmt(db, sqlite3_reset(write_stmt));
-              }
-
-            exec(db, "END TRANSACTION;");
-
-            check_stmt(db, sqlite3_finalize(read_stmt));
-            check_stmt(db, sqlite3_finalize(write_stmt));
-
-            exec(db, static_cast<std::string>("DETACH DATABASE ") + __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME + ";", __CPP_TRANSPORT_DATACTR_BACKGDETACH);
+		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGCOPY);
           }
 
 
@@ -771,10 +789,11 @@ namespace transport
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
 
             std::ostringstream copy_stmt;
-            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
-              << "INSERT INTO " << twopf_table_name(type)
-                << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << "; "
-              << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+            copy_stmt
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << twopf_table_name(type)
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
@@ -790,10 +809,11 @@ namespace transport
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating threepf values";
 
             std::ostringstream copy_stmt;
-            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
-              << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
-                << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "; "
-              << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+            copy_stmt
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
@@ -809,10 +829,11 @@ namespace transport
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating per-configuration statistics";
 
             std::ostringstream copy_stmt;
-            copy_stmt << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "; "
-              << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
-              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "; "
-              << "DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+            copy_stmt
+	            << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
@@ -826,7 +847,8 @@ namespace transport
 				    assert(db != nullptr);
 
             std::stringstream stmt_text;
-            stmt_text << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << "("
+            stmt_text
+	            << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << "("
               << "serial INTEGER"
               << ");";
 
@@ -877,7 +899,8 @@ namespace transport
 
 				    // pull out the set of time-sample points matching serial numbers in the temporary table
 		        std::stringstream select_stmt;
-				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".time"
+				    select_stmt
+					    << "SELECT " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".time"
 		          << " FROM " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 					    << " ON " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << ".serial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
@@ -929,7 +952,8 @@ namespace transport
 
             // pull out the set of k-sample points matching serial numbers in the temporary table
             std::stringstream select_stmt;
-            select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".conventional AS conventional,"
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".conventional AS conventional,"
 	            << " " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << ".comoving AS comoving"
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
@@ -990,7 +1014,8 @@ namespace transport
             // matching serial numbers in the temporary table, together with the looked-up
 		        // values of the corresponding 2pf k-configurations
             std::stringstream create_stmt;
-            create_stmt << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << " AS"
+            create_stmt
+	            << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << " AS"
 	            << " SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_conventional AS kt_conventional,"
 	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".kt_comoving AS kt_comoving,"
 	            << " " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << ".alpha AS alpha,"
@@ -1074,16 +1099,20 @@ namespace transport
             exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL);
 
             // check that we have as many values as we expect
-            if(sample.size()     != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
 	        }
 
 
 		    // Pull a sample of the background field evolution, for a specific field, for a specific set of time serial numbers
 		    template <typename number>
 		    void pull_background_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& t_serials,
-                                         std::vector<number>& sample, unsigned int worker)
+                                         std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
 			    {
 						assert(db != nullptr);
+
+				    unsigned int num_cols = std::min(2*Nfields, max_columns);
+				    unsigned int page = id / num_cols;
+				    unsigned int col  = id % num_cols;
 
 				    // set up a temporary table representing the serial numbers we want to use
 		        create_temporary_serial_table(db, t_serials, worker);
@@ -1091,10 +1120,12 @@ namespace transport
 				    // pull out the set of background fields (labelled by 'id')
 				    // matching serial numbers in the temporary table
 		        std::stringstream select_stmt;
-				    select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << id
+				    select_stmt
+					    << "SELECT " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".coord" << col
 					    << " FROM " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 					    << " ON " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+					    << " WHERE " __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ".page=" << page
 					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 		        sqlite3_stmt* stmt;
@@ -1133,9 +1164,13 @@ namespace transport
 		    // Pull a sample of a twopf component evolution, for a specific k-configuration and a specific set of time serial numbers
 		    template <typename number>
 		    void pull_twopf_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& t_serials,
-		                                unsigned int k_serial, std::vector<number>& sample, twopf_value_type type, unsigned int worker)
+		                                unsigned int k_serial, std::vector<number>& sample, twopf_value_type type, unsigned int worker, unsigned int Nfields)
 			    {
 				    assert(db != nullptr);
+
+		        unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
+		        unsigned int page = id / num_cols;
+		        unsigned int col  = id % num_cols;
 
 				    // set up a temporary table representing the serial numbers we want to use
 		        create_temporary_serial_table(db, t_serials, worker);
@@ -1143,11 +1178,12 @@ namespace transport
 				    // pull out the twopf component (labelled by 'id') matching serial numbers
 				    // in the temporary table
 		        std::stringstream select_stmt;
-				    select_stmt << "SELECT " << twopf_table_name(type) << ".ele" << id << ", " << twopf_table_name(type) << ".kserial"
+				    select_stmt
+					    << "SELECT " << twopf_table_name(type) << ".ele" << col
 					    << " FROM " << twopf_table_name(type)
 					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 					    << " ON " << twopf_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-					    << " WHERE kserial=" << k_serial
+					    << " WHERE " << twopf_table_name(type) << ".kserial=" << k_serial << " AND " << twopf_table_name(type) << ".page=" << page
 					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
 		        sqlite3_stmt* stmt;
@@ -1186,9 +1222,13 @@ namespace transport
         // Pull a sample of a threepf component evolution, for a specific k-configuration and a specific set of time serial numbers
         template <typename number>
         void pull_threepf_time_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& t_serials,
-                                      unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
+                                      unsigned int k_serial, std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
 	        {
             assert(db != nullptr);
+
+            unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
+            unsigned int page = id / num_cols;
+            unsigned int col  = id % num_cols;
 
             // set up a temporary table representing the serial numbers we want to use
             create_temporary_serial_table(db, t_serials, worker);
@@ -1196,11 +1236,12 @@ namespace transport
             // pull out the threepf component (labelled by 'id') matching serial numbers
             // in the temporary table
             std::stringstream select_stmt;
-            select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".ele" << id << ", " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial"
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".ele" << col
 	            << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 	            << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-	            << " WHERE kserial=" << k_serial
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial=" << k_serial << " AND " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".page=" << page
 	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
@@ -1239,9 +1280,13 @@ namespace transport
         // Pull a sample of a twopf component, for a specific time sample point and a specific set of k-configuration serial numbers
         template <typename number>
         void pull_twopf_kconfig_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& k_serials,
-                                       unsigned int t_serial, std::vector<number>& sample, twopf_value_type type, unsigned int worker)
+                                       unsigned int t_serial, std::vector<number>& sample, twopf_value_type type, unsigned int worker, unsigned int Nfields)
 	        {
             assert(db != nullptr);
+
+            unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
+            unsigned int page = id / num_cols;
+            unsigned int col  = id % num_cols;
 
 		        // set up a temporary table representing the serial numbers we want to use
 		        create_temporary_serial_table(db, k_serials, worker);
@@ -1249,11 +1294,12 @@ namespace transport
 		        // pull out the twopf component (labelled by 'id') matching serial numbers
 		        // in the temporary table
             std::stringstream select_stmt;
-		        select_stmt << "SELECT " << twopf_table_name(type) << ".ele" << id << ", " << twopf_table_name(type) << ".tserial"
+		        select_stmt
+			        << "SELECT " << twopf_table_name(type) << ".ele" << col
 			        << " FROM " << twopf_table_name(type)
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << twopf_table_name(type) << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial=" << t_serial
+			        << " WHERE " << twopf_table_name(type) << ".tserial=" << t_serial << " AND " << twopf_table_name(type) << ".page=" << page
 			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;
@@ -1292,9 +1338,13 @@ namespace transport
         // Pull a sample of a threepf component, for a specific time sample point and a specific set of k-configuration serial numbers
         template <typename number>
         void pull_threepf_kconfig_sample(sqlite3* db, unsigned int id, const std::vector<unsigned int>& k_serials,
-                                         unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
+                                         unsigned int t_serial, std::vector<number>& sample, unsigned int worker, unsigned int Nfields)
 	        {
             assert(db != nullptr);
+
+            unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
+            unsigned int page = id / num_cols;
+            unsigned int col  = id % num_cols;
 
 		        // set up a temporary table representing the serial numbers we want to use
 		        create_temporary_serial_table(db, k_serials, worker);
@@ -1302,11 +1352,12 @@ namespace transport
 		        // pull out the threepf component (labelled by 'id') matching serial numbers
 		        // in the temporary table
             std::stringstream select_stmt;
-		        select_stmt << "SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".ele" << id << ", " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial"
+		        select_stmt
+			        << "SELECT " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".ele" << col
 			        << " FROM " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE
 			        << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
 			        << " ON " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
-			        << " WHERE tserial=" << t_serial
+			        << " WHERE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".tserial=" << t_serial << " AND " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ".page=" << page
 			        << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
 
             sqlite3_stmt* stmt;

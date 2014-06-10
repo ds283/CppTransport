@@ -1497,7 +1497,7 @@ namespace transport
 
 		    BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "-- Sending DERIVED_CONTENT_READY message for derived product '" << product->get_name() << "'";
 
-        boost::filesystem::path product_filename = pipe->get_temporary_files_path() / product->get_filename();
+        boost::filesystem::path product_filename = pipe->get_abs_tempdir_path() / product->get_filename();
         if(boost::filesystem::exists(product_filename))
 	        {
             MPI::content_ready_payload payload(product->get_name());
