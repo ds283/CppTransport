@@ -67,7 +67,7 @@ std::vector< std::vector<struct index_assignment> > assignment_package::assign(c
           }
       }
 
-    assert(rval.size() > 0);
+//    assert(rval.size() > 0);
 
     return(rval);
   }
