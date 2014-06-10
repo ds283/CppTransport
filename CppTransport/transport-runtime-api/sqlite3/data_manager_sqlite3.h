@@ -407,10 +407,10 @@ namespace transport
 				sqlite3_close(taskfile);
 
 				// physically remove the taskfile from the disc; it isn't needed any more
-//		    boost::filesystem::remove(ctr.get_taskfile_path());
+		    boost::filesystem::remove(ctr.get_taskfile_path());
 
 				// physically remove the tempfiles directory
-//		    boost::filesystem::remove(ctr.get_abs_tempdir_path());
+		    boost::filesystem::remove(ctr.get_abs_tempdir_path());
 			}
 
 
