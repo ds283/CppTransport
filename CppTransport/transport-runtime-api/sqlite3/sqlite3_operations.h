@@ -178,9 +178,10 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "("
-              << "serial       INTEGER PRIMARY KEY,"
-              << "conventional DOUBLE,"
+            stmt_text
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "("
+              << "serial       INTEGER PRIMARY KEY, "
+              << "conventional DOUBLE, "
               << "comoving     DOUBLE"
               << ");";
 
@@ -222,17 +223,18 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "("
-              << "serial          INTEGER PRIMARY KEY,"
-              << "wavenumber1     INTEGER,"
-              << "wavenumber2     INTEGER,"
-              << "wavenumber3     INTEGER,"
-              << "kt_comoving     DOUBLE,"
-              << "kt_conventional DOUBLE,"
-              << "alpha           DOUBLE,"
-              << "beta            DOUBLE,"
-              << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial),"
-              << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial),"
+            stmt_text
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "("
+              << "serial          INTEGER PRIMARY KEY, "
+              << "wavenumber1     INTEGER, "
+              << "wavenumber2     INTEGER, "
+              << "wavenumber3     INTEGER, "
+              << "kt_comoving     DOUBLE, "
+              << "kt_conventional DOUBLE, "
+              << "alpha           DOUBLE, "
+              << "beta            DOUBLE, "
+              << "FOREIGN KEY(wavenumber1) REFERENCES twopf_samples(serial), "
+              << "FOREIGN KEY(wavenumber2) REFERENCES twopf_samples(serial), "
               << "FOREIGN KEY(wavenumber3) REFERENCES twopf_samples(serial)"
               << ");";
 
@@ -276,8 +278,9 @@ namespace transport
 
             // set up a table
             std::stringstream stmt_text;
-            stmt_text << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE << "("
-                << "serial INTEGER PRIMARY KEY,"
+            stmt_text
+                << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE << "("
+                << "serial INTEGER PRIMARY KEY, "
                 << "worker INTEGER"
               << ");";
 
@@ -376,7 +379,8 @@ namespace transport
         void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, statistics_configuration_type type=twopf_configs)
           {
             std::ostringstream create_stmt;
-            create_stmt << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
+            create_stmt
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
               << "kserial INTEGER, "
               << "integration_time DOUBLE, "
               << "batch_time DOUBLE, "
@@ -534,7 +538,7 @@ namespace transport
             // we need to fit in our number of columns.
             // num_pages will be 1 or greater
 		        unsigned int num_cols = std::min(2*Nfields, max_columns);
-            unsigned int num_pages = (2*Nfields)/num_cols;
+            unsigned int num_pages = (2*Nfields-1)/num_cols + 1;
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << " VALUES (@tserial, @page";
@@ -560,7 +564,7 @@ namespace transport
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields ? (*t).coords[i] : 0.0;
+				                number       value = index < 2*Nfields ? (*t).coords[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -591,7 +595,7 @@ namespace transport
             // we need to fit in our number of columns.
             // num_pages will be 1 or greater
             unsigned int num_cols = std::min(2*Nfields * 2*Nfields, max_columns);
-            unsigned int num_pages = (2*Nfields * 2*Nfields)/num_cols;
+            unsigned int num_pages = (2*Nfields * 2*Nfields - 1)/num_cols + 1;
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO " << twopf_table_name(type) << " VALUES (@tserial, @kserial, @page";
@@ -618,7 +622,7 @@ namespace transport
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields * 2*Nfields ? (*t).elements[i] : 0.0;
+				                number       value = index < 2*Nfields * 2*Nfields ? (*t).elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -649,7 +653,7 @@ namespace transport
             // we need to fit in our number of columns.
             // num_pages will be 1 or greater
             unsigned int num_cols = std::min(2*Nfields * 2*Nfields * 2*Nfields, max_columns);
-            unsigned int num_pages = (2*Nfields * 2*Nfields * 2*Nfields)/num_cols;
+            unsigned int num_pages = (2*Nfields * 2*Nfields * 2*Nfields - 1)/num_cols + 1;
 
             std::ostringstream insert_stmt;
             insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << " VALUES (@tserial, @kserial, @page";
@@ -676,7 +680,7 @@ namespace transport
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields * 2*Nfields * 2*Nfields ? (*t).elements[i] : 0.0;
+				                number       value = index < 2*Nfields * 2*Nfields * 2*Nfields ? (*t).elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
