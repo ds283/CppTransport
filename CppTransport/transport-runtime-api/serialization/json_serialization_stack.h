@@ -876,9 +876,9 @@ namespace transport
 	    {
 		    std::ostringstream output;
 
-				output << "\"" << (attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string(""))
+				output << "'" << (attribute ? std::string(__CPP_TRANSPORT_JSON_ATTRIBUTE_TAG) : std::string(""))
 											<< this->name
-							 << "\": "
+							 << "': "
 							 << this->to_string(this->value);
 
 				return(output.str());
@@ -888,7 +888,7 @@ namespace transport
 		template <typename T>
 		std::string json_serialization_stack::value_element<T>::to_string(const std::string& v) const
 			{
-				return(std::string("\"") + v + std::string("\""));
+				return(std::string("'") + v + std::string("'"));
 			}
 
 
