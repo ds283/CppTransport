@@ -20,6 +20,8 @@
 #define __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_UNKNOWN_LEG_POS            "Internal error: Unknown legend position"
 #define __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_NEGATIVE_AXIS_POINT        "line_plot2d error: Cannot have negative axis labels with a logarithmic x-axis"
 
+#define __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL                "line_plot2d error: Python interpreter failed; script has been copied as output file"
+
 #define __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_UNSUPPORTED_FORMAT         "line_plot2d error: Unsupported output format"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LINE_PLOT2D_PRODUCT_H

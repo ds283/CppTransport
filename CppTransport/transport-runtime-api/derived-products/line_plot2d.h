@@ -106,7 +106,7 @@ namespace transport
 		      protected:
 
 				    //! Make plot
-				    void make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
+				    bool make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
 
 
 		        // GET AND SET BASIC PLOT ATTRIBUTES
@@ -319,15 +319,18 @@ namespace transport
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
 
 						// generate plot
-				    this->make_plot(pipe, axis, output_lines);
+				    bool success = this->make_plot(pipe, axis, output_lines);
 
-						// commit product
+						// commit product (even if the plot failed to generate and we are committing the script - the next line
+						// will prevent the whole output group being committed)
 						pipe.commit(this);
+
+						if(!success) throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL);
 					}
 
 
 				template <typename number>
-				void line_plot2d<number>::make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
+				bool line_plot2d<number>::make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
 					{
 						// extract paths from the datapipe
             boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
@@ -434,11 +437,23 @@ namespace transport
 
 				    std::ostringstream command;
 						command << "source ~/.profile; /opt/local/bin/python2.7 \"" << script_file.string() << "\"";
-				    system(command.str().c_str());
+				    int rc = system(command.str().c_str());
 
-						// remove python script
-						// FIXME: consider what to do with the script if the plot doesn't generate
-				    boost::filesystem::remove(script_file);
+						bool rval = true;
+
+						// remove python script if worked ok, otherwise move script to destination and throw an exception
+						if(rc == 0)
+							{
+						    boost::filesystem::remove(script_file);
+							}
+						else
+							{
+								if(boost::filesystem::exists(plot_file)) boost::filesystem::remove(plot_file);
+						    boost::filesystem::rename(script_file, plot_file);
+								rval = false;
+							}
+
+						return(rval);
 					}
 
 
