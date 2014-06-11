@@ -38,6 +38,10 @@
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Some momentum configurations failed to integrate, or other errors were encountered. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C       "moved to fail cache in repository"
 
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A       "Task"
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B       "Some derived content could not be generated, or other errors were encountered. Failing output group"
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C       "moved to fail cache in repository"
+
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
