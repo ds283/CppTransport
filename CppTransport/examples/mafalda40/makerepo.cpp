@@ -79,7 +79,7 @@ int main(int argc, char* argv[])
     transport::mafalda40_basic<double>* model = new transport::mafalda40_basic<double>(mgr);
 
     // set up parameter choices
-    const std::vector<double>     init_params { 1 };
+    const std::vector<double>     init_params;
     transport::parameters<double> params      =
                                     transport::parameters<double>(M_Planck, init_params, model->get_param_names(),
                                                                   model->params_validator_factory());
@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
     // construct a twopf task
-    transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
+    transport::twopf_task<double> tk2 = transport::twopf_task<double>("mafalda40.twopf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
 
 		// construct some derived data products; first, simply plots of the background
 
