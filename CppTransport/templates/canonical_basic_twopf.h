@@ -315,48 +315,6 @@ namespace transport
                                                           typename data_manager<number>::threepf_batcher& batcher,
                                                           bool silent)
       {
-        std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-          << "** MPI compute backend processing threepf task";
-        work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-//        std::cout << work_msg.str();
-        if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
-
-        // get work queue for the zeroth device (should be only one device with this backend)
-        assert(work.size() == 1);
-        const work_queue<threepf_kconfig>::device_queue queues = work[0];
-
-        // we expect only one queue on this device
-        assert(queues.size() == 1);
-        const work_queue<threepf_kconfig>::device_work_list list = queues[0];
-
-        // step through the queue, solving for the three-point functions in each case
-        for(unsigned int i = 0; i < list.size(); i++)
-          {
-            boost::timer::nanosecond_type int_time;
-            boost::timer::nanosecond_type batch_time;
-
-            try
-              {
-                // write the time history for this k-configuration
-                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time);
-
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-                    << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
-                    << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
-              }
-            catch(std::overflow_error& xe)
-              {
-                batcher.report_integration_failure();
-
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                    << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
-              }
-          }
       }
 
 
@@ -365,41 +323,6 @@ namespace transport
                                                 typename data_manager<number>::threepf_batcher& batcher,
                                                 boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
-        // set up a functor to observe the integration
-        // this also starts the timers running, so we do it as early as possible
-        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
-
-        // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
-
-        // set up a state vector
-        threepf_state<number> x;
-        x.resize($$__MODEL_pool::threepf_state_size);
-
-        // fix initial conditions - background (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ics_vector();
-        x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
-
-        // fix initial conditions - real 2pfs
-        const std::vector<double>& times = tk->get_integration_step_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);
-
-        // fix initial conditions - imaginary 2pfs
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, true);
-
-        // fix initial conditions - threepf
-        this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, kconfig, times.front(), tk->get_params(), ics);
-
-        using namespace boost::numeric::odeint;
-        integrate_times( $$__MAKE_PERT_STEPPER{threepf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
-
-        obs.stop_timers();
-        int_time = obs.get_integration_time();
-        batch_time = obs.get_batching_time();
       }
 
 
