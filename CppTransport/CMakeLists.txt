@@ -10,8 +10,8 @@ find_package(GiNaC REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(OpenCL REQUIRED)
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast" CACHE STRING "compile flags" FORCE )
-#SET ( CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "compile flags" FORCE )
+#SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
 SET ( CMAKE_C_FLAGS "-Ofast" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
@@ -35,6 +35,7 @@ include_directories(./ backends
 					   utilities
 					   unqlite
 					   transport-runtime-api
+					   jsoncpp
 					/usr/include
 					/usr/local/include
 					${Boost_INCLUDE_DIRS}
@@ -92,45 +93,45 @@ add_executable(CppTransport main.cpp
 target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(dquad-mpi examples/dquad-mpi/main.cpp unqlite/unqlite.c)
+add_executable(dquad-mpi examples/dquad-mpi/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp unqlite/unqlite.c)
+add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(quadratic-mpi examples/quadratic/main.cpp unqlite/unqlite.c)
+add_executable(quadratic-mpi examples/quadratic/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp unqlite/unqlite.c)
+add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(axion-mpi examples/axion-mpi/main.cpp unqlite/unqlite.c)
+add_executable(axion-mpi examples/axion-mpi/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp unqlite/unqlite.c)
+add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp unqlite/unqlite.c)
+add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp unqlite/unqlite.c)
+add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-add_executable(mafalda40-mpi examples/mafalda40/main.cpp unqlite/unqlite.c)
+add_executable(mafalda40-mpi examples/mafalda40/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
+cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
 
-add_executable(dquad-opencl examples/dquad-vexcl/main.cpp unqlite/unqlite.c)
+add_executable(dquad-opencl examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})

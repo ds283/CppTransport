@@ -14,7 +14,7 @@
 #include <functional>
 #include <utility>
 
-#include "transport-runtime-api/manager/repository.h"
+#include "transport-runtime-api/manager/json_repository_interface.h"
 
 #include "transport-runtime-api/version.h"
 #include "transport-runtime-api/messages.h"
@@ -57,7 +57,7 @@ namespace transport
     // UnQLite as the database backend.
     // It replaces the earlier DbXml-based repository implementation
     template <typename number>
-    class repository_unqlite: public repository<number>
+    class repository_unqlite: public json_interface_repository<number>
       {
 
       protected:
@@ -228,16 +228,22 @@ namespace transport
 		    void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
 
 
-        // PULL RECORDS FROM THE REPOSITORY DATABASE IN JSON FORMAT -- implements a 'json_extractible_repository' interface
-        // FIXME: This interface isn't codified yet; need to add a 'json_extractible_repository' concept
+        // **************
+        // JSON INTERFACE
+        // **************
+
+        // PULL RECORDS FROM THE REPOSITORY IN JSON FORMAT -- implements a 'json_repository_interface' interface
 
       public:
 
-        //! Extract the JSON document for a named package
-        std::string json_package_document(const std::string& name);
+        //! export a package record in JSON format
+        virtual std::string export_JSON_package_record(const std::string& name) override;
 
-        //! Extract the JSON document for a named integration
-        std::string json_task_document(const std::string& name);
+        //! export a task record in JSON format
+        virtual std::string export_JSON_task_record(const std::string& name) override;
+
+        //! export a derived product record in JSON format
+        virtual std::string export_JSON_product_record(const std::string& name) override;
 
 
         // INTERNAL UTILITY FUNCTIONS
@@ -307,7 +313,8 @@ namespace transport
     repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode,
                                                    repository_unqlite_error_callback e, repository_unqlite_warning_callback w,
                                                    repository_unqlite_message_callback m)
-      : db(nullptr), open_clients(0), repository<number>(path, mode),
+      : json_interface_repository<number>(path, mode),
+        db(nullptr), open_clients(0),
         error(e), warning(w), message(m)
       {
         // supplied path should be a directory which exists
@@ -356,7 +363,8 @@ namespace transport
     // Create a named repository
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, const repository_creation_key& key)
-      : db(nullptr), open_clients(0), repository<number>(path, repository<number>::access_type::readwrite),
+      : json_interface_repository<number>(path, repository<number>::access_type::readwrite),
+        db(nullptr), open_clients(0),
         error(typename repository_unqlite<number>::default_error_handler()),
         warning(typename repository_unqlite<number>::default_warning_handler()),
         message(typename repository_unqlite<number>::default_message_handler())
@@ -1010,85 +1018,6 @@ namespace transport
 			}
 
 
-    // Extract package database record as a JSON document
-    // DATABASE ENTRY POINT
-    template <typename number>
-    std::string repository_unqlite<number>::json_package_document(const std::string& name)
-      {
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
-
-        // check a suitable record exists
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
-
-        if(count == 0)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-        else if(count > 1)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-
-        // extract this record in JSON format
-        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
-
-		    // commit transaction
-        this->commit_transaction();
-
-        return(document);
-      }
-
-
-    // Extract integration task database record as a JSON document
-		// DATABASE ENTRY POINT
-    template <typename number>
-    std::string repository_unqlite<number>::json_task_document(const std::string& name)
-      {
-        std::cerr << "Getting JSON task document '" << name << "'" << std::endl;
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
-
-        // check a suitable record exists
-        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-		    unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-
-		    unsigned int total = integration_count + output_count;
-
-        std::string rval;
-
-        if(total == 0)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-        else if(total > 1)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-        else
-          {
-            std::string collection;
-            if(integration_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
-		        else                       collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
-
-            rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-          }
-
-		    // commit transaction
-        this->commit_transaction();
-
-        return(rval);
-      }
-
-
     // Add output for a twopf task
 		// DATABASE ENTRY POINT
     template <typename number>
@@ -1644,30 +1573,140 @@ namespace transport
 	    }
 
 
+    // JSON INTERFACE
+
+
+    template <typename number>
+    std::string repository_unqlite<number>::export_JSON_package_record(const std::string& name)
+      {
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
+        // check a suitable record exists
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+
+        if(count == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+        else if(count > 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+
+        // extract this record in JSON format
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+
+        // commit transaction
+        this->commit_transaction();
+
+        return(this->format_JSON(document));
+      }
+
+
+    template <typename number>
+    std::string repository_unqlite<number>::export_JSON_task_record(const std::string& name)
+      {
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
+        // check a suitable record exists
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+
+        unsigned int total = integration_count + output_count;
+
+        std::string rval;
+
+        if(total == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+        else if(total > 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'" __CPP_TRANSPORT_RUN_REPAIR;
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+        else
+          {
+            std::string collection;
+            if(integration_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
+            else                       collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
+
+            rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+          }
+
+        // commit transaction
+        this->commit_transaction();
+
+        return(this->format_JSON(rval));
+      }
+
+
+    template <typename number>
+    std::string repository_unqlite<number>::export_JSON_product_record(const std::string& name)
+      {
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
+        // check a suitable record exists
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+
+        if(count == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+        else if(count > 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+
+        // extract this record in JSON format
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+
+        // commit transaction
+        this->commit_transaction();
+
+        return(this->format_JSON(document));
+      }
+
+
+
     // FACTORY FUNCTIONS TO BUILD A REPOSITORY
 
 
     template <typename number>
-    repository <number>* repository_factory(const std::string& path,
-                                            typename repository<number>::access_type mode=repository<number>::access_type::readwrite)
+    json_interface_repository<number>* repository_factory(const std::string& path,
+                                                          typename repository<number>::access_type mode = repository<number>::access_type::readwrite)
       {
         return new repository_unqlite<number>(path, mode);
       }
 
 
     template <typename number>
-    repository<number>* repository_factory(const std::string& path,
-                                           typename repository<number>::access_type mode,
-                                           repository_unqlite_error_callback e,
-                                           repository_unqlite_warning_callback w,
-                                           repository_unqlite_message_callback m)
+    json_interface_repository<number>* repository_factory(const std::string& path,
+                                                          typename repository<number>::access_type mode,
+                                                          repository_unqlite_error_callback e,
+                                                          repository_unqlite_warning_callback w,
+                                                          repository_unqlite_message_callback m)
       {
         return new repository_unqlite<number>(path, mode, e, w, m);
       }
 
 
     template <typename number>
-    repository<number>* repository_factory(const std::string& path, const repository_creation_key& key)
+    json_interface_repository<number>* repository_factory(const std::string& path, const repository_creation_key& key)
       {
         return new repository_unqlite<number>(path, key);
       }

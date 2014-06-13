@@ -35,7 +35,8 @@ namespace transport
 		                   SERIALIZATION_ERROR,                               // error encountered during serialization
 		                   DATAPIPE_ERROR,                                    // generic datapipe error
 		                   DERIVED_PRODUCT_ERROR,                             // error encountered when generating a derived product
-                       FILTER_EMPTY                                       // filtering produced no values
+                       FILTER_EMPTY,                                      // filtering produced no values
+                       JSON_FORMAT_ERROR                                  // error encountered while handling a JSON document
                      } exception_type;
 
         runtime_exception(exception_type t, const std::string msg)

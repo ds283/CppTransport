@@ -32,6 +32,7 @@
 #include "transport-runtime-api/localizations/messages_en/instance_manager.h"
 
 #include "transport-runtime-api/localizations/messages_en/repository.h"
+#include "transport-runtime-api/localizations/messages_en/json_repository_interface.h"
 
 #include "transport-runtime-api/localizations/messages_en/repository_unqlite.h"
 #include "transport-runtime-api/localizations/messages_en/unqlite.h"

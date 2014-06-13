@@ -72,11 +72,11 @@ license you like.
 
 
 
-#ifndef JSON_AMALGATED_H_INCLUDED
-# define JSON_AMALGATED_H_INCLUDED
+#ifndef JSON_AMALGAMATED_H_INCLUDED
+# define JSON_AMALGAMATED_H_INCLUDED
 /// If defined, indicates that the source file is amalgated
 /// to prevent private header inclusion.
-#define JSON_IS_AMALGATED
+#define JSON_IS_AMALGAMATION
 
 // //////////////////////////////////////////////////////////////////////
 // Beginning of content of file: include/json/config.h
@@ -1852,4 +1852,4 @@ namespace Json {
 
 
 
-#endif //ifndef JSON_AMALGATED_H_INCLUDED
+#endif //ifndef JSON_AMALGAMATED_H_INCLUDED

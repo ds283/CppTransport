@@ -21,6 +21,7 @@
 #include "transport-runtime-api/manager/mpi_operations.h"
 
 #include "transport-runtime-api/manager/repository.h"
+#include "transport-runtime-api/manager/json_repository_interface.h"
 #include "transport-runtime-api/manager/data_manager.h"
 
 #include "transport-runtime-api/scheduler/context.h"
@@ -37,12 +38,18 @@
 #include "boost/timer/timer.hpp"
 
 
-#define __CPP_TRANSPORT_SWITCH_REPO     "-repo"
-#define __CPP_TRANSPORT_SWITCH_TASK     "-task"
-#define __CPP_TRANSPORT_SWITCH_TAG      "-tag"
+#define __CPP_TRANSPORT_SWITCH_REPO  "-repo"
+#define __CPP_TRANSPORT_SWITCH_TAG   "-tag"
+
+#define __CPP_TRANSPORT_VERB_TASK    "task"
+#define __CPP_TRANSPORT_VERB_GET     "get"
+
+#define __CPP_TRANSPORT_NOUN_TASK    "task"
+#define __CPP_TRANSPORT_NOUN_PACKAGE "package"
+#define __CPP_TRANSPORT_NOUN_PRODUCT "product"
 
 // name for worker devices
-#define __CPP_TRANSPORT_WORKER_NAME     "mpi-worker-"
+#define __CPP_TRANSPORT_WORKER_NAME  "mpi-worker-"
 
 // default storage limit on nodes - 300 Mb
 // on a machine with 8 workers, that would give 2400 Mb or 2.4 Gb
@@ -54,12 +61,15 @@
 namespace transport
   {
 
+    //! Task manager is a managed interface to CppTransport's integration and output stacks,
+    //! relying on a JSON-aware repository interface 'json_interface_repository'
+    //! to handle storage and serialization, and MPI to handle task communication.
     template <typename number>
     class task_manager : public instance_manager<number>
       {
       public:
 
-        typedef enum { job_task } job_type;
+        typedef enum { job_task, job_get_package, job_get_task, job_get_product } job_type;
 
 
         class job_descriptor
@@ -68,6 +78,8 @@ namespace transport
             job_type               type;
             std::string            name;
 		        std::list<std::string> tags;
+
+            std::string            output; // destination for output, if needed
           };
 
 
@@ -79,7 +91,7 @@ namespace transport
         task_manager(int argc, char* argv[], unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], repository<number>* r, unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
+        task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
 
         //! Destroy a task manager.
         ~task_manager();
@@ -90,7 +102,7 @@ namespace transport
       public:
 
 		    //! Return handle to repository
-		    repository<number>* get_repository();
+		    json_interface_repository<number>* get_repository();
 
 		    //! Return handle to data manager
 		    data_manager<number>* get_data_manager();
@@ -117,6 +129,9 @@ namespace transport
 
 
       protected:
+
+        //! Master node: Process a 'get' job
+        void master_process_get(const job_descriptor& job);
 
         //! Master node: Process a 'task' job.
 		    //! Some tasks are integrations, others process the numerical output from an integration to product
@@ -235,7 +250,7 @@ namespace transport
 		    // RUNTIME AGENTS
 
         //! Repository manager instance
-        repository<number>* repo;
+        json_interface_repository<number>* repo;
 
         //! Data manager instance
         data_manager<number>* data_mgr;
@@ -303,7 +318,12 @@ namespace transport
                           }
                       }
                   }
-                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TASK)
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TAG);
+                    else            tags.push_back(std::string(argv[++i]));
+                  }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
                   {
                     if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TASK_ID);
                     else
@@ -319,11 +339,37 @@ namespace transport
 		                    tags.clear();
                       }
                   }
-	              else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
-	                {
-		                if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TAG);
-		                else            tags.push_back(std::string(argv[++i]));
-	                }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_GET)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
+                    ++i;
+
+                    job_descriptor desc;
+
+                    if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      desc.type = job_get_package;
+                    else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    desc.type = job_get_task;
+                    else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) desc.type = job_get_product;
+                    else
+                      {
+                        std::ostringstream msg;
+                        msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
+                        this->error(msg.str());
+                      }
+
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_GET_NAME);
+                    ++i;
+                    desc.name = argv[i];
+
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
+                    ++i;
+                    desc.output = argv[i];
+
+                    desc.tags = tags;
+
+
+                    job_queue.push_back(desc);
+                    tags.clear();
+                  }
                 else
                   {
                     std::ostringstream msg;
@@ -336,7 +382,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], repository<number>* r, unsigned int cp)
+    task_manager<number>::task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int cp)
       : instance_manager<number>(), environment(argc, argv),
         worker_capacity(cp),
         repo(r), data_mgr(data_manager_factory<number>(cp))
@@ -356,7 +402,7 @@ namespace transport
 
 
 		template <typename number>
-		repository<number>* task_manager<number>::get_repository()
+		json_interface_repository<number>* task_manager<number>::get_repository()
 			{
 				assert(this->repo != nullptr);
 
@@ -396,8 +442,18 @@ namespace transport
                 switch((*t).type)
                   {
                     case job_task:
-                      this->master_process_task(*t);
-                      break;
+                      {
+                        this->master_process_task(*t);
+                        break;
+                      }
+
+                    case job_get_product:
+                    case job_get_task:
+                    case job_get_package:
+                      {
+                        this->master_process_get(*t);
+                        break;
+                      }
 
                     default:
                       throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_JOB_TYPE);
@@ -408,6 +464,58 @@ namespace transport
         // there is no more work, so ask all workers to shut down
         // and then exit ourselves
         this->master_terminate_workers();
+      }
+
+
+    template <typename number>
+    void task_manager<number>::master_process_get(const job_descriptor& job)
+      {
+        try
+          {
+            std::string document;
+
+            switch(job.type)
+              {
+                case job_get_package:
+                  {
+                    document = this->repo->export_JSON_package_record(job.name);
+                    break;
+                  }
+
+                case job_get_task:
+                  {
+                    document = this->repo->export_JSON_task_record(job.name);
+                    break;
+                  }
+
+                case job_get_product:
+                  {
+                    document = this->repo->export_JSON_product_record(job.name);
+                    break;
+                  }
+
+                default:
+                  assert(false);
+              }
+
+            std::ofstream out;
+            out.open(job.output);
+            if(out.is_open() && !out.fail())
+              {
+                out << document;
+              }
+            else
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.output << "'";
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+              }
+            out.close();
+          }
+        catch(runtime_exception& xe)
+          {
+            this->error(xe.what());
+          }
       }
 
 
@@ -470,10 +578,7 @@ namespace transport
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
                 this->error(msg.str());
 	            }
-            else
-              {
-                throw xe;
-              }
+            else throw xe;
           }
       }
 
