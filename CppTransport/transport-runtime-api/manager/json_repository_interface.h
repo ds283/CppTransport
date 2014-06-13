@@ -49,6 +49,9 @@ namespace transport
         //! export a derived product record in JSON format
         virtual std::string export_JSON_product_record(const std::string& name) = 0;
 
+        //! export an output group record in JSON format
+        virtual std::string export_JSON_content_record(const std::string& name) = 0;
+
 
         // JSON SERVICES
 

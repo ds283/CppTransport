@@ -47,6 +47,7 @@
 #define __CPP_TRANSPORT_NOUN_TASK    "task"
 #define __CPP_TRANSPORT_NOUN_PACKAGE "package"
 #define __CPP_TRANSPORT_NOUN_PRODUCT "product"
+#define __CPP_TRANSPORT_NOUN_CONTENT "content"
 
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME  "mpi-worker-"
@@ -69,7 +70,7 @@ namespace transport
       {
       public:
 
-        typedef enum { job_task, job_get_package, job_get_task, job_get_product } job_type;
+        typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
 
 
         class job_descriptor
@@ -349,6 +350,7 @@ namespace transport
                     if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      desc.type = job_get_package;
                     else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    desc.type = job_get_task;
                     else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) desc.type = job_get_product;
+                    else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) desc.type = job_get_content;
                     else
                       {
                         std::ostringstream msg;
@@ -450,6 +452,7 @@ namespace transport
                     case job_get_product:
                     case job_get_task:
                     case job_get_package:
+                    case job_get_content:
                       {
                         this->master_process_get(*t);
                         break;
@@ -491,6 +494,12 @@ namespace transport
                 case job_get_product:
                   {
                     document = this->repo->export_JSON_product_record(job.name);
+                    break;
+                  }
+
+                case job_get_content:
+                  {
+                    document = this->repo->export_JSON_content_record(job.name);
                     break;
                   }
 
@@ -1059,8 +1068,12 @@ namespace transport
 
         boost::filesystem::rename(temp_location, dest_location);
 
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Emplaced derived product " << dest_location;
+
+        // commit this product to the current output group
+        writer.push_content(*product);
+
 		    aggregate_timer.stop();
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Emplaced derived product " << dest_location;
 
 		    return(true);
 	    }

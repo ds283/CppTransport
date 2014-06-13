@@ -47,10 +47,17 @@
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_NULL_MODEL                  "Internal error: Null model when communicating with repository"
 #define __CPP_TRANSPORT_REPO_NULL_TASK                   "Internal error: Null task when communicating with repository"
+
 #define __CPP_TRANSPORT_REPO_MISSING_TASK                "Repository error: Could not find specified task"
 #define __CPP_TRANSPORT_REPO_MISSING_PACKAGE             "Repository error: Could not find specified package"
+#define __CPP_TRANSPORT_REPO_MISSING_PRODUCT             "Repository error: Could not find specified derived product"
+#define __CPP_TRANSPORT_REPO_MISSING_CONTENT             "Repostiory error: Could not find specified content group"
+
 #define __CPP_TRANSPORT_REPO_DUPLICATE_TASK              "Repository error: Duplicate task"
 #define __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE           "Repository error: Duplicate package"
+#define __CPP_TRANSPORT_REPO_DUPLICATE_PRODUCT           "Repository error: Duplicate derived product"
+#define __CPP_TRANSPORT_REPO_DUPLICATE_CONTENT           "Repository error: Duplicate content group"
+
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_A             "Repository error: Could not find model"
 #define __CPP_TRANSPORT_REPO_MISSING_MODEL_B             "corresponding to specified task"
 

@@ -60,6 +60,8 @@
 // used for output tasks
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS                 "output-task"
 
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF                    "group"
+
 #define __CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE               "package-name"
 #define __CPP_TRANSPORT_NODE_TASK_METADATA_CREATED               "creation-time"
 #define __CPP_TRANSPORT_NODE_TASK_METADATA_EDITED                "last-edit-time"
@@ -592,10 +594,10 @@ namespace transport
 
             //! Create a derived_product descriptor
             derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-            const std::list<std::string>& notes, const std::list<std::string>& tags)
-	            : parent_product(prod), filename(fnam), created(now)
-	            {
-	            }
+                            const std::list<std::string>& nt, const std::list<std::string>& tg)
+              : parent_product(prod), filename(fnam), created(now), notes(nt), tags(tg)
+              {
+              }
 
             //! Deserialization constructor
             derived_content(serialization_reader* reader);
@@ -605,6 +607,8 @@ namespace transport
 
 
             // INTERFACE
+
+          public:
 
             //! Get product name
             const std::string& get_parent_product() const { return (this->parent_product); }
@@ -624,8 +628,11 @@ namespace transport
 
             // SERIALIZATION -- implements a 'serializable' interface
 
+          public:
+
             //! Serialize this object
             virtual void serialize(serialization_writer& writer) const override;
+
 
             // INTERNAL DATA
 
@@ -645,6 +652,7 @@ namespace transport
 
             //! Tags
             std::list<std::string> tags;
+
 	        };
 
 
@@ -908,6 +916,17 @@ namespace transport
             void get_data_manager_taskfile(data_manager_type* data);
 
 
+            // CONTENT MANAGEMENT
+
+          public:
+
+            //! Push new item of derived content to the writer
+            void push_content(derived_data::derived_product<number>& product);
+
+            //! Get content
+            const std::list<derived_content>& get_content() const { return(this->content); }
+
+
 		        // COMMIT TO DATABASE
 
           public:
@@ -978,6 +997,11 @@ namespace transport
 
 		        //! commit data products to the repository
 		        output_commit_callback committer;
+
+
+            // CONTENT
+
+            std::list<derived_content> content;
 
 
 		        // METADATA
@@ -1442,6 +1466,19 @@ namespace transport
         if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK);
         *data = static_cast<data_manager_type>(this->data_manager_taskfile);
 	    }
+
+
+    template <typename number>
+    void repository<number>::derived_content_writer::push_content(derived_data::derived_product<number>& product)
+      {
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        std::list<std::string> notes;
+        std::list<std::string> tags;
+
+        typename repository<number>::derived_content data(product.get_name(), product.get_filename().string(), now, notes, tags);
+
+        content.push_back(data);
+      }
 
 
     // OUTPUT_GROUP METHODS

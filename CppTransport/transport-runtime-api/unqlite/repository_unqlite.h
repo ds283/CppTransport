@@ -228,9 +228,8 @@ namespace transport
 		    void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
 
 
-        // **************
         // JSON INTERFACE
-        // **************
+
 
         // PULL RECORDS FROM THE REPOSITORY IN JSON FORMAT -- implements a 'json_repository_interface' interface
 
@@ -244,6 +243,9 @@ namespace transport
 
         //! export a derived product record in JSON format
         virtual std::string export_JSON_product_record(const std::string& name) override;
+
+        //! export a content record in JSON format
+        virtual std::string export_JSON_content_record(const std::string& name) override;
 
 
         // INTERNAL UTILITY FUNCTIONS
@@ -668,6 +670,10 @@ namespace transport
 		    writer.start_node(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
 		    tk.serialize(writer);
 		    writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS);
+
+        // write empty array of output blocks: will be populated when derived content is produced
+        writer.start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS, true);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
         // insert this record in the task database
         unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, writer.get_contents());
@@ -1170,11 +1176,21 @@ namespace transport
 		    // write new output group to the database
 		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, swriter.get_contents());
 
-		    // refresh edit time and update the task entry for this database
-		    // that means: first, drop this existing record; then, store a copy of the updated one
+		    // refresh edit time
 		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
+
+        // insert cross-reference to new output group
+        std::string output_group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+        task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+        task_reader->insert_node("arrayelt", false);    // node names are ignored in arrays
+        task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF, output_group_name);
+        task_reader->end_element("arrayelt");
+        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+
+        // update the task entry for this database
+        // that means: first, drop this existing record; then, store a copy of the updated one
 		    unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_id);
 		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_reader->get_contents());
 
@@ -1492,17 +1508,33 @@ namespace transport
 		                                                                                                          writer.get_creation_time(),
 		                                                                                                          false, std::list<std::string>(), tags);
 
+        const std::list< typename repository<number>::derived_content >& content = writer.get_content();
+        for(typename std::list< typename repository<number>::derived_content >::const_iterator t = content.begin(); t != content.end(); t++)
+          {
+            group.get_payload().add_derived_content(*t);
+          }
+        group.get_payload().set_metadata(writer.get_metadata());
 		    unqlite_serialization_writer swriter;
 		    group.serialize(swriter);
 
 		    // write new output group to the database
 		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, swriter.get_contents());
 
-		    // refresh edit time and update the task entry for this database
-		    // that means: first, drop this existing record; then, store a copy of the updated one
+		    // refresh edit time
 		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
 		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
 		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
+
+        // insert cross-reference to new output group
+        std::string output_group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+        task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+        task_reader->insert_node("arrayelt", false);    // node names are ignored in arrays
+        task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF, output_group_name);
+        task_reader->end_element("arrayelt");
+        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+
+        // update the task entry for this database
+        // that means: first, drop this existing record; then, store a copy of the updated one
 		    unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, task_id);
 		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, task_reader->get_contents());
 
@@ -1662,18 +1694,50 @@ namespace transport
         if(count == 0)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_MISSING_PRODUCT << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
         else if(count > 1)
           {
             std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE << " '" << name << "'";
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_PRODUCT << " '" << name << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
           }
 
         // extract this record in JSON format
         std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+
+        // commit transaction
+        this->commit_transaction();
+
+        return(this->format_JSON(document));
+      }
+
+
+    template <typename number>
+    std::string repository_unqlite<number>::export_JSON_content_record(const std::string& name)
+      {
+        // open a new transaction, if necessary. After this we can assume the database handles are live
+        this->begin_transaction();
+
+        // check a suitable record exists
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED);
+
+        if(count == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_MISSING_CONTENT << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+        else if(count > 1)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_DUPLICATE_CONTENT << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+          }
+
+        // extract this record in JSON format
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED);
 
         // commit transaction
         this->commit_transaction();
