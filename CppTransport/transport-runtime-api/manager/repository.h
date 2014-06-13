@@ -839,6 +839,8 @@ namespace transport
 
             // SERIALIZATION -- implements a 'serializable' interface
 
+          public:
+
             //! Serialize this object
             void serialize(serialization_writer& writer) const;
 
@@ -1565,7 +1567,7 @@ namespace transport
 
         std::string ctime;
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, ctime);
-        this->created = boost::posix_time::time_from_string(ctime);
+        this->created = boost::posix_time::from_iso_string(ctime);
 
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
@@ -1604,7 +1606,7 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, this->repo_root_path.string());
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->data_root_path.string());
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_simple_string(this->created));
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_iso_string(this->created));
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
         writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, this->notes.size() == 0);
@@ -1743,7 +1745,7 @@ namespace transport
 
         std::string ctime_string;
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED, ctime_string);
-        created = boost::posix_time::time_from_string(ctime_string);
+        created = boost::posix_time::from_iso_string(ctime_string);
 
         unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
         for(unsigned int i = 0; i < num_notes; i++)
