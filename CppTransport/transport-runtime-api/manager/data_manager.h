@@ -576,10 +576,10 @@ namespace transport
 		    typedef enum { twopf_real, twopf_imag } twopf_type;
 
         //! Output-group finder function -- serivce provided by a repository implementation
-        typedef std::function<typename repository<number>::template output_group< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
+        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
 
         //! Attach function for a datapipe
-        typedef std::function<typename repository<number>::template output_group< typename repository<number>::integration_payload >(datapipe*, output_group_finder&, integration_task<number>*, const std::list<std::string>&)> attach_callback;
+        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(datapipe*, output_group_finder&, integration_task<number>*, const std::list<std::string>&)> attach_callback;
 
         //! Detach function for a datapipe
         typedef std::function<void(datapipe*)> detach_callback;
@@ -1162,7 +1162,7 @@ namespace transport
 		      public:
 
 				    //! Get attached output group
-				    typename repository<number>::template output_group< typename repository<number>::integration_payload >*
+				    typename repository<number>::template output_group_record< typename repository<number>::integration_payload >*
               get_attached_output_group(void) const;
 
 				    //! Get number of fields associated with currently attached group.
@@ -1272,7 +1272,7 @@ namespace transport
 				    // CURRENTLY ATTACHED OUTPUT GROUP
 
 		        //! Currently-attached output group; null if no group is attached
-		        typename repository<number>::template output_group<typename repository<number>::integration_payload>* attached_group;
+		        typename repository<number>::template output_group_record<typename repository<number>::integration_payload>* attached_group;
 
 				    //! Number of fields associated with currently attached group
 				    unsigned int N_fields;
@@ -1708,7 +1708,7 @@ namespace transport
 	        this->threepf_kconfig_cache_table != nullptr ||
 	        this->data_cache_table != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
-        this->attached_group = new typename repository<number>::template output_group< typename repository<number>::integration_payload >(this->attacher(this, this->output_finder, tk, tags));
+        this->attached_group = new typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(this->attacher(this, this->output_finder, tk, tags));
 
         typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
@@ -1757,7 +1757,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::template output_group< typename repository<number>::integration_payload >* data_manager<number>::datapipe::get_attached_output_group(void) const
+    typename repository<number>::template output_group_record< typename repository<number>::integration_payload >* data_manager<number>::datapipe::get_attached_output_group(void) const
 	    {
         assert(this->attached_group != nullptr
 	               &&this->time_config_cache_table != nullptr

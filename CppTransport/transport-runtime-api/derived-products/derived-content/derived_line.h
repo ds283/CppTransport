@@ -16,7 +16,7 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/serialization/serializable.h"
-// need repository in order to get the details of a repository<number>::output_group
+// need repository in order to get the details of a repository<number>::output_group_record
 // (can't forward-declare because it is a nested class)
 #include "transport-runtime-api/manager/repository.h"
 

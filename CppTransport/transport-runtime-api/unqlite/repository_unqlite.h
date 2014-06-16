@@ -172,7 +172,7 @@ namespace transport
 
         //! Advise that an output group has been committed
         template <typename Payload>
-        void advise_commit(typename repository<number>::template output_group<Payload>& group);
+        void advise_commit(typename repository<number>::template output_group_record<Payload>& group);
 
 
         // PULL OUTPUT-GROUPS FROM A TASK -- implements a 'repository' interface
@@ -180,7 +180,7 @@ namespace transport
       public:
 
 		    //! Enumerate the output available from a named task
-        virtual std::list<typename repository<number>::template output_group< typename repository<number>::integration_payload > >
+        virtual std::list<typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
           enumerate_integration_task_output(const std::string& name) override;
 
 
@@ -215,7 +215,7 @@ namespace transport
 		    virtual void move_output_group_to_failure(typename repository<number>::derived_content_writer& writer) override;
 
         //! Lookup an output group for a task, given a set of tags
-        virtual typename repository<number>::template output_group<typename repository<number>::integration_payload>
+        virtual typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
           find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags) override;
 
       protected:
@@ -1035,7 +1035,7 @@ namespace transport
         assert(m != nullptr);
 
         if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
 
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -1163,7 +1163,7 @@ namespace transport
 						notes.push_back(msg.str());
 					}
 				// FIXME: insert note about integrability for 3pf tasks, __CPP_TRANSPORT_REPO_NOTE_NO_INTEGRATION
-		    typename repository<number>::template output_group<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(),
+		    typename repository<number>::template output_group_record<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(),
 		                                                                                                               writer.get_relative_output_path(),
 		                                                                                                               writer.get_creation_time(),
                                                                                                                    false, std::list<std::string>(), tags);
@@ -1204,7 +1204,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository_unqlite<number>::advise_commit(typename repository<number>::template output_group<Payload>& group)
+    void repository_unqlite<number>::advise_commit(typename repository<number>::template output_group_record<Payload>& group)
       {
         std::ostringstream msg;
 
@@ -1260,12 +1260,12 @@ namespace transport
             assert(value != nullptr);
             assert(handle != nullptr);
 
-            std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >* list =
-              static_cast< std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >* >(handle);
+            std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >* list =
+              static_cast< std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >* >(handle);
 
             unqlite_serialization_reader reader(value);
 
-            list->push_back( typename repository<number>::template output_group< typename repository<number>::integration_payload >(&reader) );
+            list->push_back( typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(&reader) );
 
             return(UNQLITE_OK);
           }
@@ -1278,10 +1278,10 @@ namespace transport
 		// derived_content_writer objects, which allow the corresponding integration output
 		// to be extracted from the database
 		template <typename number>
-		std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >
+		std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
     repository_unqlite<number>::enumerate_integration_task_output(const std::string& name)
 			{
-		    std::list<typename repository<number>::template output_group< typename repository<number>::integration_payload > > group_list;
+		    std::list<typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group_list;
 
 				// open a new transaction, if necessary. After this we can assume the database handles are live
 				this->begin_transaction();
@@ -1305,7 +1305,7 @@ namespace transport
         if(groups == nullptr || !unqlite_value_is_json_array(groups))
           throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
-        std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > > list;
+        std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > list;
         unqlite_array_walk(groups, &array_extract_output_groups<number>, &list);
 
         unqlite_vm_release(vm);
@@ -1503,7 +1503,7 @@ namespace transport
 		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
 		    // create and serialize an empty output group
-		    typename repository<number>::template output_group<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(),
+		    typename repository<number>::template output_group_record<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(),
 		                                                                                                          writer.get_relative_output_path(),
 		                                                                                                          writer.get_creation_time(),
 		                                                                                                          false, std::list<std::string>(), tags);
@@ -1580,7 +1580,7 @@ namespace transport
 
 
     template<typename number>
-    typename repository<number>::template output_group<typename repository<number>::integration_payload>
+    typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
     repository_unqlite<number>::find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags)
 	    {
 		    assert(tk != nullptr);
@@ -1588,11 +1588,11 @@ namespace transport
 		    if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
 
 		    // search for output groups associated with this task
-        std::list< typename repository<number>::template output_group< typename repository<number>::integration_payload > >
+        std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
           output = this->enumerate_integration_task_output(tk->get_name());
 
 		    // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const typename repository<number>::template output_group< typename repository<number>::integration_payload >& group) { return(group.check_tags(tags)); } );
+        output.remove_if( [&] (const typename repository<number>::template output_group_record< typename repository<number>::integration_payload >& group) { return(group.check_tags(tags)); } );
 
 		    if(output.empty())
 			    {

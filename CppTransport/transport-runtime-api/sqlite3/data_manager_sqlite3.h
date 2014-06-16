@@ -195,13 +195,13 @@ namespace transport
 
       protected:
 
-        //! Attach an output_group to a pipe
-        typename repository<number>::template output_group<typename repository<number>::integration_payload>
+        //! Attach an output_group_record to a pipe
+        typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
           datapipe_attach(typename data_manager<number>::datapipe* pipe,
                           typename data_manager<number>::output_group_finder& finder,
                           integration_task<number>* tk, const std::list<std::string>& tags);
 
-        //! Detach an output_group from a pipe
+        //! Detach an output_group_record from a pipe
         void datapipe_detach(typename data_manager<number>::datapipe* pipe);
 
 
@@ -842,7 +842,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::template output_group<typename repository<number>::integration_payload>
+    typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
     data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
                                                   typename data_manager<number>::output_group_finder& finder,
                                                   integration_task<number>* tk, const std::list<std::string>& tags)
@@ -856,7 +856,7 @@ namespace transport
 				sqlite3* db = nullptr;
 
         // find a suitable output group for this task
-        typename repository<number>::template output_group< typename repository<number>::integration_payload > group = finder(tk, tags);
+        typename repository<number>::template output_group_record< typename repository<number>::integration_payload > group = finder(tk, tags);
 
         typename repository<number>::integration_payload& payload = group.get_payload();
 

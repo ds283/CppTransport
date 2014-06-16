@@ -179,127 +179,470 @@ namespace transport
 		    typedef std::function<task<number>*(const std::string&, model<number>*&)> task_finder;
 
         //! Types needed for logging
-        typedef enum
-	        {
-            normal, notification, warning, error, critical
-	        }                                                                               log_severity_level;
+        typedef enum { normal, notification, warning, error, critical } log_severity_level;
+
         typedef boost::log::sinks::synchronous_sink<boost::log::sinks::text_file_backend> sink_t;
 
         //! Read-only/Read-write access to the repository
-        typedef enum
-	        {
-            readonly, readwrite
-	        }                                                                               access_type;
+        typedef enum { readonly, readwrite } access_type;
 
 
-        // DATA CONTAINER WRITE HANDLE
+		    // REPOSITORY METADATA RECORD
 
-		    class integration_writer;
-
-		    //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
-		    typedef std::function<void(integration_writer&)> integration_commit_callback;
-
-		    //! Timing metadata for an integration
-		    class integration_metadata : public serializable
+		    //! Encapsulates metadata for a record stored in the repository
+		    class record_metadata: public serializable
 			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
 		      public:
 
-				    //! null constructor - set all fields to zero
-				    integration_metadata(void)
-					    : total_wallclock_time(0),
-					      total_aggregation_time(0),
-					      total_integration_time(0),
-					      min_mean_integration_time(0),
-					      global_min_integration_time(0),
-					      global_max_integration_time(0),
-					      total_batching_time(0),
-					      min_mean_batching_time(0),
-					      max_mean_batching_time(0),
-					      global_min_batching_time(0),
-					      global_max_batching_time(0),
-					      total_configurations(0)
-					    {
-					    }
-
-				    //! value constructor - ensure all fields get set at once
-				    integration_metadata(boost::timer::nanosecond_type wc, boost::timer::nanosecond_type ag,
-				                                boost::timer::nanosecond_type it, boost::timer::nanosecond_type min_m_it, boost::timer::nanosecond_type max_m_it,
-				                                boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
-				                                boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
-				                                boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
-				                                unsigned int num)
-			        : total_wallclock_time(wc),
-			          total_aggregation_time(ag),
-			          total_integration_time(it),
-			          min_mean_integration_time(min_m_it),
-			          max_mean_integration_time(max_m_it),
-			          global_min_integration_time(min_it),
-			          global_max_integration_time(max_it),
-			          total_batching_time(bt),
-			          min_mean_batching_time(min_m_bt),
-			          max_mean_batching_time(max_m_bt),
-			          global_min_batching_time(min_bt),
-			          global_max_batching_time(max_bt),
-			          total_configurations(num)
-			        {
-			        }
+				    //! construct a metadata record
+				    record_metadata();
 
 				    //! deserialization constructor
-				    integration_metadata(serialization_reader* reader);
+				    record_metadata(serialization_reader* reader);
+
+				    virtual ~record_metadata() = default;
 
 
-				    // SERIALIZE -- implements a 'serializable' interface
+				    // GET AND SET METADATA
+
+		      public:
+
+				    //! get creation time
+				    const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
+
+				    //! get last-edit time
+				    const boost::posix_time::ptime& get_last_edit_time() const { return(this->last_edit_time); }
+
+				    //! reset last-edit time to now
+				    void update_last_edit_time() { this->last_edit_time = boost::posix_time::second_clock::universal_time(); }
+
+				    //! get runtime API version
+				    unsigned int get_runtime_API_version() const { return(this->runtime_api); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! creation time
+				    boost::posix_time::ptime creation_time;
+
+				    //! last-edited time
+				    boost::posix_time::ptime last_edit_time;
+
+				    //! version of runtime API used to create this record
+				    unsigned int runtime_api;
+
+			    };
+
+
+		    // GENERIC REPOSITORY RECORD
+
+		    //! Encapsulates common details shared by all repository records
+		    class repository_record: public serializable
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
+				    //! construct a repository record
+				    repository_record(const std::string& nm);
+
+				    //! deserialization constructor
+				    repository_record(serialization_reader* reader);
+
+				    virtual ~repository_record() = default;
+
+
+				    // GET NAME
+
+		      public:
+
+				    const std::string get_name() const { return(this->name); }
+
+
+				    // GET AND SET METADATA -- delegated to the metadata container
+
+		      public:
+
+				    //! get creation time
+				    const boost::posix_time::ptime& get_creation_time() const { return(this->metadata.get_creation_time()); }
+
+				    //! get last-edit time
+				    const boost::posix_time::ptime& get_last_edit_time() const { return(this->metadata.get_last_edit_time()); }
+
+				    //! reset last-edit time to now
+				    void update_last_edit_time() { this->metadata.update_last_edit_time(); }
+
+				    //! get runtime API version
+				    unsigned int get_runtime_API_version() const { return(this->metadata.get_runtime_API_version()); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
 
 		      public:
 
 				    //! serialize this object
-				    void serialize(serialization_writer& writer) const override;
+				    virtual void serialize(serialization_writer& writer) const override;
 
 
-				    // DATA
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Name
+				    const std::string& name;
+
+				    //! Metadata record
+				    record_metadata metadata;
+
+			    };
+
+
+		    // PACKAGE RECORD
+
+		    //! Encapsulates metadata for a package record stored in the repository
+		    class package_record: public repository_record
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
 
 		      public:
 
-				    //! total wallclock time (measured on master process)
-				    boost::timer::nanosecond_type total_wallclock_time;
+				    //! construct a package record
+				    package_record(const std::string& nm, model<number>* m, const initial_conditions<number>& i);
 
-				    //! total aggregation time (measured on master process)
-				    boost::timer::nanosecond_type total_aggregation_time;
+				    //! deserialization constructor
+				    package_record(serialization_reader* reader);
 
-				    //! total integration time (measured by aggregating times reported by workers)
-				    boost::timer::nanosecond_type total_integration_time;
+				    virtual ~package_record() = default;
 
-				    //! minimum mean integration time (taken over all workers)
-				    boost::timer::nanosecond_type min_mean_integration_time;
 
-				    //! maxmimum mean integration time (taken over all workers)
-				    boost::timer::nanosecond_type max_mean_integration_time;
+				    // GET AND SET METADATA
 
-				    //! global minimum integration time (per configuration)
-				    boost::timer::nanosecond_type global_min_integration_time;
+		      public:
 
-				    // global maximum integration time (per configuration)
-				    boost::timer::nanosecond_type global_max_integration_time;
+				    //! Get authors
+				    const std::string& get_author() const { return(this->author); }
 
-				    // total batching time (measured by aggregating times reported by workers)
-				    boost::timer::nanosecond_type total_batching_time;
+				    //! Get tag
+				    const std::string& get_tag() const { return(this->tag); }
 
-				    //! minimum mean batching time (taken over all workers)
-				    boost::timer::nanosecond_type min_mean_batching_time;
+				    //! Get model uid
+				    const std::string& get_uid() const { return(this->uid); }
 
-				    // maximum mean batching time (taken over all workers)
-				    boost::timer::nanosecond_type max_mean_batching_time;
 
-				    // global minimum batching time (per configuration)
-				    boost::timer::nanosecond_type global_min_batching_time;
+				    // GET CONTENTS
 
-				    // global maximum batching time (per configuration)
-				    boost::timer::nanosecond_type global_max_batching_time;
+		      public:
 
-				    // total number of configurations processed
-				    unsigned int total_configurations;
+				    //! Get model associated with this package
+				    model<number>* get_model() const { return(this->mdl); }
+
+				    //! Get initial conditionss
+						const initial_conditions<number>& get_ics() const { return(this->ics); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Model associated with this package
+				    model<number>* mdl;
+
+				    //! Initial conditions data associated with this package
+				    initial_conditions<number> ics;
+
+
+				    // METADATA
+
+				    //! Package author
+				    std::string author;
+
+				    //! Package tag
+				    std::string tag;
+
+				    //! uid for model associated with package
+						std::string uid;
 
 			    };
+
+
+		    // INTEGRATION TASK RECORD
+
+		    class integration_task_record: public repository_record
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
+				    //! construct an integration task record
+				    integration_task_record(const integration_task<number>& tk, model<number>* m);
+
+				    //! override copy constructor to perform a deep copy
+				    integration_task_record(const integration_task_record& obj);
+
+				    //! deserialization constructor
+				    integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
+
+				    virtual ~integration_task_record() = default;
+
+
+				    // GET CONTENTS
+
+		      public:
+
+				    //! Get task
+				    integration_task<number>* get_task() const { return(this->tk); }
+
+				    //! Get parent model
+				    model<number>* get_model() const { return(this->mdl); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Task associated with this record
+				    integration_task<number>* tk;
+
+				    //! Model associated with this task
+				    model<number>* mdl;
+
+			    };
+
+
+		    // OUTPUT TASK RECORD
+
+		    class output_task_record: public repository_record
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
+				    //! construct an output task record
+				    output_task_record(const output_task<number>& tk);
+
+				    //! override copy constructor to perform a deep copy
+				    output_task_record(const output_task_record& obj);
+
+				    //! deserialization constructor
+				    output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
+
+				    virtual ~output_task_record() = default;
+
+
+				    // GET CONTENTS
+
+		      public:
+
+				    //! Get task
+				    output_task<number>* get_task() const { return(this->tk); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Task associated with this record
+				    output_task<number>* tk;
+
+			    };
+
+
+		    // DERIVED PRODUCT RECORD
+
+		    class derived_product_record: public repository_record
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
+				    //! construct a derived product record
+				    derived_product_record(const derived_data::derived_product<number>& prod);
+
+				    //! Override copy constructor to perform a deep copy
+				    derived_product_record(const derived_product_record& obj);
+
+				    //! deserialization constructor
+				    derived_product_record(serialization_reader* reader);
+
+				    virtual ~derived_product_record() = default;
+
+
+				    // GET CONTENTS
+
+		      public:
+
+				    //! Get product
+				    derived_data::derived_product<number>* get_product() const { return(this->product); }
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! Derived product associated with this record
+				    derived_data::derived_product<number>* product;
+
+			    };
+
+
+        // OUTPUT GROUP RECORDS
+
+
+				// OUTPUT METADATA
+
+        //! Timing metadata for an integration
+        class integration_metadata : public serializable
+	        {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! null constructor - set all fields to zero
+            integration_metadata(void)
+	            : total_wallclock_time(0),
+	              total_aggregation_time(0),
+	              total_integration_time(0),
+	              min_mean_integration_time(0),
+	              global_min_integration_time(0),
+	              global_max_integration_time(0),
+	              total_batching_time(0),
+	              min_mean_batching_time(0),
+	              max_mean_batching_time(0),
+	              global_min_batching_time(0),
+	              global_max_batching_time(0),
+	              total_configurations(0)
+	            {
+	            }
+
+            //! value constructor - ensure all fields get set at once
+            integration_metadata(boost::timer::nanosecond_type wc, boost::timer::nanosecond_type ag,
+                                 boost::timer::nanosecond_type it, boost::timer::nanosecond_type min_m_it, boost::timer::nanosecond_type max_m_it,
+                                 boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
+                                 boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
+                                 boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
+                                 unsigned int num)
+	            : total_wallclock_time(wc),
+	              total_aggregation_time(ag),
+	              total_integration_time(it),
+	              min_mean_integration_time(min_m_it),
+	              max_mean_integration_time(max_m_it),
+	              global_min_integration_time(min_it),
+	              global_max_integration_time(max_it),
+	              total_batching_time(bt),
+	              min_mean_batching_time(min_m_bt),
+	              max_mean_batching_time(max_m_bt),
+	              global_min_batching_time(min_bt),
+	              global_max_batching_time(max_bt),
+	              total_configurations(num)
+	            {
+	            }
+
+            //! deserialization constructor
+            integration_metadata(serialization_reader* reader);
+
+
+            // SERIALIZE -- implements a 'serializable' interface
+
+          public:
+
+            //! serialize this object
+            void serialize(serialization_writer& writer) const override;
+
+
+            // DATA
+
+          public:
+
+            //! total wallclock time (measured on master process)
+            boost::timer::nanosecond_type total_wallclock_time;
+
+            //! total aggregation time (measured on master process)
+            boost::timer::nanosecond_type total_aggregation_time;
+
+            //! total integration time (measured by aggregating times reported by workers)
+            boost::timer::nanosecond_type total_integration_time;
+
+            //! minimum mean integration time (taken over all workers)
+            boost::timer::nanosecond_type min_mean_integration_time;
+
+            //! maxmimum mean integration time (taken over all workers)
+            boost::timer::nanosecond_type max_mean_integration_time;
+
+            //! global minimum integration time (per configuration)
+            boost::timer::nanosecond_type global_min_integration_time;
+
+            // global maximum integration time (per configuration)
+            boost::timer::nanosecond_type global_max_integration_time;
+
+            // total batching time (measured by aggregating times reported by workers)
+            boost::timer::nanosecond_type total_batching_time;
+
+            //! minimum mean batching time (taken over all workers)
+            boost::timer::nanosecond_type min_mean_batching_time;
+
+            // maximum mean batching time (taken over all workers)
+            boost::timer::nanosecond_type max_mean_batching_time;
+
+            // global minimum batching time (per configuration)
+            boost::timer::nanosecond_type global_min_batching_time;
+
+            // global maximum batching time (per configuration)
+            boost::timer::nanosecond_type global_max_batching_time;
+
+            // total number of configurations processed
+            unsigned int total_configurations;
+
+	        };
 
 
         //! Timing metadata for an output task
@@ -381,6 +724,324 @@ namespace transport
             unsigned int data_unloads;
 
 	        };
+
+
+		    // OUTPUT DESCRIPTORS
+
+        //! Derived product descriptor. Used to enumerate the content associated with
+        //! a output task output group.
+        class derived_content: public serializable
+	        {
+
+          public:
+
+            //! Create a derived_product descriptor
+            derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
+                            const std::list<std::string>& nt, const std::list<std::string>& tg)
+	            : parent_product(prod), filename(fnam), created(now), notes(nt), tags(tg)
+	            {
+	            }
+
+            //! Deserialization constructor
+            derived_content(serialization_reader* reader);
+
+            //! Destroy a derived_product descriptor
+            ~derived_content() = default;
+
+
+            // INTERFACE
+
+          public:
+
+            //! Get product name
+            const std::string& get_parent_product() const { return (this->parent_product); }
+
+            //! Get product pathname
+            const boost::filesystem::path& get_filename() const { return(this->filename); }
+
+            //! Get notes
+            const std::list<std::string>& get_notes() const { return(this->notes); }
+
+            //! Add note
+            void add_note(const std::string& note) { this->notes.push_back(note); }
+
+            //! Get creation time
+            const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! Name of parent derived product
+            std::string parent_product;
+
+            //! Path to output
+            boost::filesystem::path filename;
+
+            //! Creation time
+            boost::posix_time::ptime created;
+
+            //! Notes
+            std::list<std::string> notes;
+
+            //! Tags
+            std::list<std::string> tags;
+
+	        };
+
+
+        // PAYLOADS FOR OUTPUT GROUPS
+
+        //! Integration payload
+        class integration_payload: public serializable
+	        {
+
+          public:
+
+            //! Create a payload
+            integration_payload()
+	            : metadata()
+	            {
+	            }
+
+            //! Deserialization constructor
+            integration_payload(serialization_reader* reader);
+
+            //! Destroy a payload
+            ~integration_payload() = default;
+
+
+            // ADMIN
+
+          public:
+
+            //! Get name of backend used to generate this output group
+            const std::string& get_backend() const { return(this->backend); }
+            //! Set name of backend used to generate this output group
+            void set_backend(const std::string& be) { this->backend = be; }
+
+            //! Get path of data container
+            const boost::filesystem::path& get_container_path() const { return(this->container); }
+            //! Set path of data container
+            void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
+
+            //! Get metadata
+            const integration_metadata& get_metadata() const { return(this->metadata); }
+            //! Set metadata
+            void set_metadata(const integration_metadata& data) { this->metadata = data; }
+
+
+            // WRITE TO A STREAM
+
+          public:
+
+            void write(std::ostream& out) const;
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! Backend used to generate this payload
+            std::string backend;
+
+            //! Path to data container
+            boost::filesystem::path container;
+
+            //! Metadata
+            integration_metadata metadata;
+
+	        };
+
+
+        //! Derived product payload
+        class output_payload: public serializable
+	        {
+
+          public:
+
+            //! Create a payload
+            output_payload()
+	            : metadata()
+	            {
+	            }
+
+            //! Deserialization constructor
+            output_payload(serialization_reader* reader);
+
+            //! Destroy a payload
+            ~output_payload() = default;
+
+
+            // ADMIN
+
+          public:
+
+            //! Add an output
+            void add_derived_content(const derived_content& prod) { this->content.push_back(prod); }
+
+            //! Get metadata
+            const output_metadata& get_metadata() const { return(this->metadata); }
+            //! Set metadata
+            void set_metadata(const output_metadata& data) { this->metadata = data; }
+
+
+            // WRITE TO A STREAM
+
+          public:
+
+            void write(std::ostream& out) const;
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+            //! Serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! List of derived outputs
+            std::list<derived_content> content;
+
+            //! Metadata
+            output_metadata metadata;
+
+	        };
+
+
+        //! Output group descriptor. Used to enumerate the output groups available for a particular task
+        template <typename Payload>
+        class output_group_record : public repository_record
+	        {
+
+	          // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! Create an output_group_record descriptor
+            output_group_record(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+                                const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+
+            //! Deserialization constructor
+            output_group_record(serialization_reader* reader, const boost::filesystem::path& root);
+
+            //! Destroy an output_group_record descriptor
+            ~output_group_record() = default;
+
+            //! Write self to output stream
+            void write(std::ostream& out) const;
+
+
+            // GET AND SET METADATA
+
+          public:
+
+            //! Get task name
+            const std::string& get_task_name() const { return(this->task); }
+
+            //! Get locked flag
+            bool get_lock_status() const { return (this->locked); }
+
+		        //! Set locked flag
+		        void set_lock_status(bool g) { this->locked = g; }
+
+            //! Get notes
+            const std::list<std::string>& get_notes() const { return (this->notes); }
+
+            //! Get tags
+            const std::list<std::string>& get_tags() const { return (this->tags); }
+
+            //! Check whether we match a set of tags
+            bool check_tags(std::list<std::string> match_tags) const;
+
+
+		        // PATHS
+
+          public:
+
+            //! Get path to repository root
+            const boost::filesystem::path& get_repo_root_path() const { return (this->repo_root_path); }
+
+            //! Get path to output root (typically a subdir of the repository root)
+            const boost::filesystem::path& get_abs_output_path() const { return (this->data_root_path); }
+
+
+		        // PAYLOAD
+
+          public:
+
+            //! Get payload
+            Payload& get_payload() { return(this->payload); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
+
+            //! Serialize this object
+            void serialize(serialization_writer& writer) const;
+
+
+            // INTERNAL DATA
+
+          private:
+
+		        // PAYLOAD
+
+            //! Payload
+            Payload payload;
+
+
+		        // METADATA
+
+            //! Parent task associated with this output.
+            std::string task;
+
+            //! Flag indicating whether or not this output group is locked
+            bool locked;
+
+            //! Array of strings representing notes attached to this group
+            std::list<std::string> notes;
+
+            //! Array of strings representing metadata tags
+            std::list<std::string> tags;
+
+
+		        // PATHS
+
+            //! Path to root of repository. Other paths are relative to this.
+            boost::filesystem::path repo_root_path;
+
+            //! Path of parent directory containing the output, usually residing within the repository
+            boost::filesystem::path data_root_path;
+
+	        };
+
+
+        // DATA CONTAINER WRITE HANDLE
+
+		    class integration_writer;
+
+		    //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
+		    typedef std::function<void(integration_writer&)> integration_commit_callback;
 
 
         //! Integration container writer: forms a handle for a data container when writing the output of an integration
@@ -579,298 +1240,6 @@ namespace transport
             //! Logger sink
             boost::shared_ptr<sink_t> log_sink;
 
-	        };
-
-
-        // OUTPUT GROUPS
-
-
-        //! Derived product descriptor. Used to enumerate the content associated with
-        //! a output task output group.
-        class derived_content: public serializable
-	        {
-
-          public:
-
-            //! Create a derived_product descriptor
-            derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-                            const std::list<std::string>& nt, const std::list<std::string>& tg)
-              : parent_product(prod), filename(fnam), created(now), notes(nt), tags(tg)
-              {
-              }
-
-            //! Deserialization constructor
-            derived_content(serialization_reader* reader);
-
-            //! Destroy a derived_product descriptor
-            ~derived_content() = default;
-
-
-            // INTERFACE
-
-          public:
-
-            //! Get product name
-            const std::string& get_parent_product() const { return (this->parent_product); }
-
-            //! Get product pathname
-            const boost::filesystem::path& get_filename() const { return(this->filename); }
-
-            //! Get notes
-            const std::list<std::string>& get_notes() const { return(this->notes); }
-
-            //! Add note
-            void add_note(const std::string& note) { this->notes.push_back(note); }
-
-            //! Get creation time
-            const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
-
-
-            // SERIALIZATION -- implements a 'serializable' interface
-
-          public:
-
-            //! Serialize this object
-            virtual void serialize(serialization_writer& writer) const override;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! Name of parent derived product
-            std::string parent_product;
-
-            //! Path to output
-            boost::filesystem::path filename;
-
-            //! Creation time
-            boost::posix_time::ptime created;
-
-            //! Notes
-            std::list<std::string> notes;
-
-            //! Tags
-            std::list<std::string> tags;
-
-	        };
-
-
-		    // PAYLOADS FOR OUTPUT GROUPS
-
-		    //! Integration payload
-		    class integration_payload: public serializable
-			    {
-
-		      public:
-
-				    //! Create a payload
-				    integration_payload()
-				      : metadata()
-					    {
-					    }
-
-            //! Deserialization constructor
-            integration_payload(serialization_reader* reader);
-
-				    //! Destroy a payload
-				    ~integration_payload() = default;
-
-
-				    // ADMIN
-
-		      public:
-
-		        //! Get name of backend used to generate this output group
-		        const std::string& get_backend() const { return(this->backend); }
-            //! Set name of backend used to generate this output group
-            void set_backend(const std::string& be) { this->backend = be; }
-
-				    //! Get path of data container
-				    const boost::filesystem::path& get_container_path() const { return(this->container); }
-            //! Set path of data container
-            void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
-
-				    //! Get metadata
-				    const integration_metadata& get_metadata() const { return(this->metadata); }
-				    //! Set metadata
-				    void set_metadata(const integration_metadata& data) { this->metadata = data; }
-
-
-            // WRITE TO A STREAM
-
-          public:
-
-            void write(std::ostream& out) const;
-
-
-            // SERIALIZATION -- implements a 'serializable' interface
-
-            //! Serialize this object
-            virtual void serialize(serialization_writer& writer) const override;
-
-
-				    // INTERNAL DATA
-
-		      protected:
-
-				    //! Backend used to generate this payload
-				    std::string backend;
-
-				    //! Path to data container
-				    boost::filesystem::path container;
-
-				    //! Metadata
-				    integration_metadata metadata;
-
-			    };
-
-
-        //! Derived product payload
-        class output_payload: public serializable
-	        {
-
-          public:
-
-						//! Create a payload
-            output_payload()
-							: metadata()
-							{
-							}
-
-            //! Deserialization constructor
-            output_payload(serialization_reader* reader);
-
-		        //! Destroy a payload
-		        ~output_payload() = default;
-
-
-		        // ADMIN
-
-          public:
-
-            //! Add an output
-            void add_derived_content(const derived_content& prod) { this->content.push_back(prod); }
-
-		        //! Get metadata
-		        const output_metadata& get_metadata() const { return(this->metadata); }
-		        //! Set metadata
-		        void set_metadata(const output_metadata& data) { this->metadata = data; }
-
-
-            // WRITE TO A STREAM
-
-          public:
-
-            void write(std::ostream& out) const;
-
-
-            // SERIALIZATION -- implements a 'serializable' interface
-
-            //! Serialize this object
-            virtual void serialize(serialization_writer& writer) const override;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! List of derived outputs
-            std::list<derived_content> content;
-
-		        //! Metadata
-		        output_metadata metadata;
-
-	        };
-
-
-        //! Output group descriptor. Used to enumerate the output groups available for a particular task
-		    template <typename Payload>
-        class output_group: public serializable
-	        {
-
-          public:
-
-            //! Create an output_group descriptor
-            output_group(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
-                         const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
-
-            //! Deserialization constructor
-            output_group(serialization_reader* reader);
-
-            //! Destroy an output_group descriptor
-            ~output_group() = default;
-
-            //! Write self to output stream
-            void write(std::ostream& out) const;
-
-
-            // INTERFACE
-
-          public:
-
-            //! Get task name
-            const std::string& get_task_name() const { return(this->task); }
-
-            //! Get creation time. Functions as the 'name' of this output group
-            const boost::posix_time::ptime& get_creation_time() const { return (this->created); }
-
-            //! Get path to repository root
-            const boost::filesystem::path& get_repo_root_path() const { return (this->repo_root_path); }
-
-            //! Get path to output root (typically a subdir of the repository root)
-            const boost::filesystem::path& get_data_root_path() const { return (this->data_root_path); }
-
-            //! Get locked flag
-            bool get_lock_status() const { return (this->locked); }
-
-            //! Get notes
-            const std::list<std::string>& get_notes() const { return (this->notes); }
-
-            //! Get tags
-            const std::list<std::string>& get_tags() const { return (this->tags); }
-
-            //! Check whether we match a set of tags
-            bool check_tags(std::list<std::string> match_tags) const;
-
-		        //! Get payload
-		        Payload& get_payload() { return(this->payload); }
-
-
-            // SERIALIZATION -- implements a 'serializable' interface
-
-          public:
-
-            //! Serialize this object
-            void serialize(serialization_writer& writer) const;
-
-            // PRIVATE DATA
-
-          private:
-
-            //! Parent task associated with this output.
-            std::string task;
-
-            //! Path to root of repository. Other paths are relative to this.
-            boost::filesystem::path repo_root_path;
-
-            //! Path of parent directory containing the output, usually residing within the repository
-            boost::filesystem::path data_root_path;
-
-            //! Creation time
-            boost::posix_time::ptime created;
-
-            //! Flag indicating whether or not this output group is locked
-            bool locked;
-
-            //! Array of strings representing notes attached to this group
-            std::list<std::string> notes;
-
-            //! Array of strings representing metadata tags
-            std::list<std::string> tags;
-
-		        //! Payload
-		        Payload payload;
 	        };
 
 
@@ -1133,7 +1502,7 @@ namespace transport
       public:
 
         //! Enumerate the output groups available from a named task
-        virtual std::list< output_group<integration_payload> > enumerate_integration_task_output(const std::string& name) = 0;
+        virtual std::list< output_group_record<integration_payload> > enumerate_integration_task_output(const std::string& name) = 0;
 
 
         // PUSH DERIVED-PRODUCT SPECIFICATIONS TO THE DATABASE
@@ -1165,7 +1534,7 @@ namespace transport
 		    virtual void move_output_group_to_failure(derived_content_writer& writer) = 0;
 
         //! Lookup an output group for a task, given a set of tags
-        virtual output_group<integration_payload>
+        virtual output_group_record<integration_payload>
           find_integration_task_output_group(const integration_task<number>* tk, const std::list<std::string>& tags) = 0;
 
 
@@ -1488,7 +1857,7 @@ namespace transport
 
     template<typename number>
     template<typename Payload>
-    repository<number>::output_group<Payload>::output_group(const std::string &tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+    repository<number>::output_groupoutput_group_record::output_group_record(const std::string &tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
                                                             const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string> &nt, const std::list<std::string> &tg)
       : task(tn), repo_root_path(root), data_root_path(path),
         created(ctime), locked(lock), notes(nt), tags(tg),
@@ -1499,7 +1868,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_group<Payload>::write(std::ostream& out) const
+    void repository<number>::output_groupoutput_group_record::write(std::ostream& out) const
 	    {
         out << __CPP_TRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
@@ -1535,7 +1904,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    bool repository<number>::output_group<Payload>::check_tags(std::list<std::string> match_tags) const
+    bool repository<number>::output_groupoutput_group_record::check_tags(std::list<std::string> match_tags) const
 	    {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
@@ -1550,7 +1919,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    repository<number>::output_group<Payload>::output_group(serialization_reader* reader)
+    repository<number>::output_groupoutput_group_record::output_group_record(serialization_reader* reader)
       : payload(reader)
       {
         assert(reader != nullptr);
@@ -1601,7 +1970,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_group<Payload>::serialize(serialization_writer& writer) const
+    void repository<number>::output_groupoutput_group_record::serialize(serialization_writer& writer) const
       {
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, this->repo_root_path.string());
@@ -1631,10 +2000,10 @@ namespace transport
       }
 
 
-    // output an output_group descriptor to a standard stream
+    // output an output_group_record descriptor to a standard stream
     // notice obscure syntax to declare a templated member of an explicitly named namespace
     template <typename number, typename Payload>
-    std::ostream& operator<<(std::ostream& out, const typename repository<number>::template output_group<Payload>& group)
+    std::ostream& operator<<(std::ostream& out, const typename repository<number>::template output_group_record<Payload>& group)
       {
         group.write(out);
         return (out);
@@ -1649,7 +2018,7 @@ namespace transport
 
             // used for sorting a list of output_groups into decreasing chronological order
             template <typename number, typename Payload>
-            bool comparator(const typename repository<number>::template output_group<Payload>& A, const typename repository<number>::template output_group<Payload>& B)
+            bool comparator(const typename repository<number>::template output_group_record<Payload>& A, const typename repository<number>::template output_group_record<Payload>& B)
               {
                 return (A.get_creation_time() > B.get_creation_time());
               }
