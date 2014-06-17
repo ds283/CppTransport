@@ -103,53 +103,62 @@ namespace transport
       public:
 
         //! Compute Hubble rate H given a phase-space configuration
-        virtual number                  H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
+        virtual number H(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
         //! Compute slow-roll parameter epsilon given a phase-space configuration
-        virtual number                  epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
+        virtual number epsilon(const parameters<number>& __params, const std::vector<number>& __coords) const = 0;
 
 
         // INITIAL CONDITIONS HANDLING
 
-      protected:
+      public:
 
-        //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing
-        void find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+		    //! Validate initial conditions
+		    void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0
+
+        //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing.
+		    //! The supplied parameters should be validated.
+        void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
                       double Ninit, double Ncross, double Npre,
                       double tolerance= __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
                       unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
-        double get_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+        double compute_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+
+//      public:
+//
+//        //! Make an 'ics_validator' object for this model
+//        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
+//
+//        //! Make an 'ics_finder' object for this model
+//        typename initial_conditions<number>::ics_finder ics_finder_factory()
+//          {
+//            return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+//                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
+//                             __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
+//          }
+//
+//        //! Make a 'kconfig_kstar' object for this model.
+//		    //! This is callback function which computes the value of H = k* at horizon crossing,
+//		    //! which must be known in order to convert from conventionally-normalized to
+//		    //! comoving wavenumbers
+//        typename integration_task<number>::kconfig_kstar kconfig_kstar_factory()
+//          {
+//            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
+//          }
+//
+//
+//        // INTERFACE - PARAMETER HANDLING
+
 
       public:
 
-        //! Make an 'ics_validator' object for this model
-        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
+		    virtual void validate_params(const std::vector<number>& input, std::vector<number>& output) = 0;
 
-        //! Make an 'ics_finder' object for this model
-        typename initial_conditions<number>::ics_finder ics_finder_factory()
-          {
-            return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
-                             __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
-          }
-
-        //! Make a 'kconfig_kstar' object for this model.
-		    //! This is callback function which computes the value of H = k* at horizon crossing,
-		    //! which must be known in order to convert from conventionally-normalized to
-		    //! comoving wavenumbers
-        typename integration_task<number>::kconfig_kstar kconfig_kstar_factory()
-          {
-            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
-          }
-
-
-        // INTERFACE - PARAMETER HANDLING
-
-      public:
-
-        //! Make a 'params_validator' object for this model
-        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
+//      public:
+//
+//        //! Make a 'params_validator' object for this model
+//        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
@@ -265,9 +274,9 @@ namespace transport
 
 
     template <typename number>
-    void model<number>::find_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
-                                 double Ninit, double Ncross, double Npre,
-                                 double tolerance, unsigned int time_steps)
+    void model<number>::offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
+                                   double Ninit, double Ncross, double Npre,
+                                   double tolerance, unsigned int time_steps)
       {
         assert(Ncross >= Npre);
 
@@ -292,7 +301,7 @@ namespace transport
             // set up initial conditions
             // Npre is irrelevant, provided it falls between the beginning and end times
             double temp_Nstar = (Ninit + Ncross - Npre)/2.0;
-            initial_conditions<double> ics(params, input, this->get_state_names(), temp_Nstar, this->ics_validator_factory());
+            initial_conditions<double> ics(params, this, input, this->get_state_names(), temp_Nstar);
 
             // set up a new task object for this integration
             background_task<double> tk(ics, times);
@@ -328,7 +337,7 @@ namespace transport
 
 
     template <typename number>
-    double model<number>::get_kstar(const integration_task<number>* tk, unsigned int time_steps)
+    double model<number>::compute_kstar(const integration_task<number>* tk, unsigned int time_steps)
       {
         // integrate for a small interval up to horizon-crossing,
         // and extract the value of H there

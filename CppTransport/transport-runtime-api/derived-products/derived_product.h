@@ -141,6 +141,7 @@ namespace transport
 
 				    //! Wrapped output utility
 				    wrapped_output wrapper;
+
 			    };
 
 

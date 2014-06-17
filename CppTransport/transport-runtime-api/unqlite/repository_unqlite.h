@@ -1414,7 +1414,7 @@ namespace transport
 				if(rval == nullptr)
 					{
 				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT   << " '" << product << "'";
+						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT << " '" << product << "'";
 						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 

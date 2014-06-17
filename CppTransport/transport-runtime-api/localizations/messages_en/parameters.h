@@ -18,5 +18,7 @@
 #define __CPP_TRANSPORT_PARAMS_TAG                       "Parameters:"
 #define __CPP_TRANSPORT_MPLANCK_TAG                      "M_Planck = "
 
+#define __CPP_TRANSPORT_PARAMS_NULL_MODEL                "Internal error: null model in 'parameters' object"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_PARAMETERS_H

@@ -23,6 +23,7 @@
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
+#include "model.h"
 
 
 // log file name
@@ -302,7 +303,7 @@ namespace transport
 		      protected:
 
 				    //! Name
-				    const std::string& name;
+				    std::string& name;
 
 				    //! Metadata record
 				    record_metadata metadata;
@@ -324,23 +325,9 @@ namespace transport
 				    package_record(const std::string& nm, model<number>* m, const initial_conditions<number>& i);
 
 				    //! deserialization constructor
-				    package_record(serialization_reader* reader);
+				    package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
 
 				    virtual ~package_record() = default;
-
-
-				    // GET AND SET METADATA
-
-		      public:
-
-				    //! Get authors
-				    const std::string& get_author() const { return(this->author); }
-
-				    //! Get tag
-				    const std::string& get_tag() const { return(this->tag); }
-
-				    //! Get model uid
-				    const std::string& get_uid() const { return(this->uid); }
 
 
 				    // GET CONTENTS
@@ -371,18 +358,6 @@ namespace transport
 
 				    //! Initial conditions data associated with this package
 				    initial_conditions<number> ics;
-
-
-				    // METADATA
-
-				    //! Package author
-				    std::string author;
-
-				    //! Package tag
-				    std::string tag;
-
-				    //! uid for model associated with package
-						std::string uid;
 
 			    };
 
@@ -946,9 +921,6 @@ namespace transport
             //! Destroy an output_group_record descriptor
             ~output_group_record() = default;
 
-            //! Write self to output stream
-            void write(std::ostream& out) const;
-
 
             // GET AND SET METADATA
 
@@ -966,19 +938,25 @@ namespace transport
             //! Get notes
             const std::list<std::string>& get_notes() const { return (this->notes); }
 
+		        //! Add note
+		        void push_note(const std::string& note) { this->notes.push_back(note); }
+
             //! Get tags
             const std::list<std::string>& get_tags() const { return (this->tags); }
+
+		        //! Add tag
+		        void push_tag(const std::string& tag) { this->tags.push_back(tag); }
 
             //! Check whether we match a set of tags
             bool check_tags(std::list<std::string> match_tags) const;
 
 
-		        // PATHS
+		        // ABSOLUTE PATHS
 
           public:
 
             //! Get path to repository root
-            const boost::filesystem::path& get_repo_root_path() const { return (this->repo_root_path); }
+            const boost::filesystem::path& get_abs_repo_path() const { return (this->repo_root_path); }
 
             //! Get path to output root (typically a subdir of the repository root)
             const boost::filesystem::path& get_abs_output_path() const { return (this->data_root_path); }
@@ -998,6 +976,14 @@ namespace transport
 
             //! Serialize this object
             void serialize(serialization_writer& writer) const;
+
+
+		        // WRITE TO A STREAM
+
+          public:
+
+            //! Write self to output stream
+            void write(std::ostream& out) const;
 
 
             // INTERNAL DATA
@@ -1551,8 +1537,131 @@ namespace transport
 	    };
 
 
-    // INTEGRATION_WRITER METHODS
+    // METADATA METHODS
 
+
+		// REPOSITORY RECORD METADATA
+
+		template <typename number>
+		repository<number>::record_metadata::record_metadata()
+			: creation_time(boost::posix_time::second_clock::universal_time()),
+				last_edit_time(boost::posix_time::second_clock::universal_time()),    // don't initialize from creation_time; order of initialization depends on order of *declaration* in class, and that might change
+				runtime_api(__CPP_TRANSPORT_RUNTIME_API_VERSION)
+			{
+			}
+
+
+		template <typename number>
+		repository<number>::record_metadata::record_metadata(serialization_reader* reader)
+			{
+				assert(reader != nullptr);
+
+		    std::string ctime_str;
+				reader->read_value(__CPP_TRANSPORT_NODE_METADATA_CREATED, ctime_str);
+				this->creation_time = boost::posix_time::from_iso_string(ctime_str);
+
+		    std::string etime_str;
+				reader->read_value(__CPP_TRANSPORT_NODE_METADATA_EDITED, etime_str);
+				this->last_edit_time = boost::posix_time::from_iso_string(etime_str);
+
+				reader->read_value(__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
+			}
+
+
+		template <typename number>
+		void repository<number>::record_metadata::serialize(serialization_writer& writer) const
+			{
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_CREATED, boost::posix_time::to_iso_string(this->creation_time));
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_EDITED, boost::posix_time::to_iso_string(this->last_edit_time));
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
+			}
+
+
+		// GENERIC REPOSITORY RECORD
+
+		template <typename number>
+		repository<number>::repository_record::repository_record(const std::string& nm)
+			: name(nm),
+				metadata()
+			{
+			}
+
+
+		template <typename number>
+		repository<number>::repository_record::repository_record(serialization_reader* reader)
+			: metadata(reader)
+			{
+				assert(reader != nullptr);
+
+				reader->read_value(__CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+			}
+
+
+		template <typename number>
+		void repository<number>::repository_record::serialize(serialization_writer& writer) const
+			{
+				this->write_value_node(writer, __CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+			}
+
+
+		// PACKAGE RECORD
+
+		template <typename number>
+		repository<number>::package_record::package_record(model<number>* m, const initial_conditions<number>& i)
+			: repository_record(i.get_name()),
+			  mdl(m),
+				ics(i)
+			{
+		    assert(m != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::package_record::package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
+			: ics(reader)
+			{
+				assert(reader != nullptr);
+			}
+
+
+		// OUTPUT METDATA
+
+    template <typename number>
+    repository<number>::output_metadata::output_metadata(serialization_reader* reader)
+	    {
+        assert(reader != nullptr);
+
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, work_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, db_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, time_config_hits);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, time_config_unloads);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, twopf_kconfig_hits);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, twopf_kconfig_unloads);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, threepf_kconfig_hits);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, threepf_kconfig_unloads);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, data_hits);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, data_unloads);
+	    }
+
+
+    template <typename number>
+    void repository<number>::output_metadata::serialize(serialization_writer& writer) const
+	    {
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, this->time_config_hits);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, this->time_config_unloads);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, this->twopf_kconfig_hits);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, this->twopf_kconfig_unloads);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, this->threepf_kconfig_hits);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
+	    }
+
+		// INTEGRATION METADATA
 
     template <typename number>
     repository<number>::integration_metadata::integration_metadata(serialization_reader* reader)
@@ -1592,6 +1701,9 @@ namespace transport
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
 	    }
+
+
+    // INTEGRATION_WRITER METHODS
 
 
     template <typename number>
@@ -1713,43 +1825,7 @@ namespace transport
 	    }
 
 
-    // DERIVED_CONTENT_WRITER METHODS
-
-
-		template <typename number>
-		repository<number>::output_metadata::output_metadata(serialization_reader* reader)
-			{
-				assert(reader != nullptr);
-
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, work_time);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, db_time);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, time_config_hits);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, time_config_unloads);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, twopf_kconfig_hits);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, twopf_kconfig_unloads);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, threepf_kconfig_hits);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, threepf_kconfig_unloads);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, data_hits);
-				reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, data_unloads);
-			}
-
-
-		template <typename number>
-		void repository<number>::output_metadata::serialize(serialization_writer& writer) const
-			{
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, this->time_config_hits);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, this->time_config_unloads);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, this->twopf_kconfig_hits);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, this->twopf_kconfig_unloads);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, this->threepf_kconfig_hits);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
-			}
+		// DERIVED CONTENT WRITER METHODS
 
 
     template <typename number>

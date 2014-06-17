@@ -19,17 +19,21 @@
 
 #include "transport-runtime-api/utilities/named_list.h"
 #include "transport-runtime-api/utilities/random_string.h"
+#include "model.h"
 
 
-#define __CPP_TRANSPORT_NODE_COORDINATE  "coordinate"
-#define __CPP_TRANSPORT_ATTR_NAME        "name"
-#define __CPP_TRANSPORT_NODE_NSTAR       "nstar"
-#define __CPP_TRANSPORT_NODE_ICS_VALUES  "values"
-#define __CPP_TRANSPORT_NODE_PARAM_BLOCK "parameter-block"
+#define __CPP_TRANSPORT_NODE_ICS_VALUE     "value"
+#define __CPP_TRANSPORT_NODE_ICS_MODEL_UID "ics-model-uid"
+#define __CPP_TRANSPORT_NODE_ICS_NAME      "name"
+#define __CPP_TRANSPORT_NODE_ICS_NSTAR     "ics-nstar"
+#define __CPP_TRANSPORT_NODE_ICS_VALUES    "ics-values"
 
 
 namespace transport
   {
+
+		// forward-declare model class
+		template <typename number> class model;
 
     template <typename number> class initial_conditions;
 
@@ -40,51 +44,34 @@ namespace transport
     class initial_conditions: public serializable
       {
 
-      public:
-
-        typedef std::function<void(const parameters<number>&, const std::vector<number>&, std::vector<number>&)> ics_validator;
-
-        typedef std::function<void(const parameters<number>&, const std::vector<number>&, std::vector<number>&, double, double, unsigned int)> ics_finder;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct named initial conditions from directly-supplied data
-        initial_conditions(const std::string& nm, const parameters<number>& p,
-                           const std::vector<number>& i, const std::vector<std::string>& n,
-                           double Npre, ics_validator v);
+        initial_conditions(const std::string& nm, model<number>* m, const parameters<number>& p, const std::vector<number>& i, double Npre);
 
         //! Construct anonymized initial conditions from directly-supplied data
-        initial_conditions(const parameters<number>& p,
-                           const std::vector<number>& i, const std::vector<std::string>& n,
-                           double Npre, ics_validator v)
-          : initial_conditions(random_string(), p, i, n, Npre, v)
+        initial_conditions(model<number>* m, const parameters<number>& p, const std::vector<number>& i, double Npre)
+          : initial_conditions(random_string(), m, p, i, Npre)
           {
           }
 
         //! Construct named initial conditions offset from directly-supplied data using a supplied model
-        initial_conditions(const std::string& nm, const parameters<number>& p,
-                           const std::vector<number>& i, const std::vector<std::string>& n,
-                           double Ninit, double Ncross, double Npre,
-                           ics_validator v, ics_finder f);
+        initial_conditions(const std::string& nm, model<number>* m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Ninit, double Ncross, double Npre);
 
         //! Construct anonymized initial conditions offset from directly-supplied data using a supplied model
-        initial_conditions(const parameters<number>& p,
-                           const std::vector<number>& i, const std::vector<std::string>& n,
-                           double Ninit, double Ncross, double Npre,
-                           ics_validator v, ics_finder f)
-          : initial_conditions(random_string(), p, i, n, Ninit, Ncross, Npre, v, f)
+        initial_conditions(model<number>* m,
+                           const parameters<number>& p, const std::vector<number>& i,
+                           double Ninit, double Ncross, double Npre)
+          : initial_conditions(random_string(), m, p, i, Ninit, Ncross, Npre)
           {
           }
 
         //! Deserialization constructor
-        initial_conditions(const std::string& nm, serialization_reader* reader,
-                           const std::vector<std::string>& parameter_ordering,
-                           const std::vector<std::string>& field_ordering,
-                           typename transport::parameters<number>::params_validator p_v,
-                           typename transport::initial_conditions<number>::ics_validator ics_v);
+        initial_conditions(const std::string& nm, serialization_reader* reader, typename instance_manager<number>::model_finder f);
 
         virtual ~initial_conditions() = default;
 
@@ -102,7 +89,7 @@ namespace transport
         //! Return relative time of horizon-crossing
         const double get_Nstar() const { return(this->Nstar); }
 
-        //! Return name
+        //! Return name of this 'package'
         const std::string& get_name() const { return(this->name); }
 
 
@@ -126,17 +113,17 @@ namespace transport
 
       protected:
 
-        //! name of this ics/params combination, used for tagging with deposited in a repository
-        const std::string name;
+        //! name of this ics/params package, used for tagging when deposited in a repository
+        std::string name;
+
+		    //! model object associated with this package
+		    model<number>* mdl;
 
         //! copy of parameters
-        const parameters<number> params;
+        parameters<number> params;
 
         //! values of fields and their derivatives, constituting the initial conditions
         std::vector<number> ics;
-
-        //! names of fields and their derivatives
-        std::vector<std::string> names;
 
         //! number of e-folds from initial conditions to horizon-crossing
         double Nstar;
@@ -145,47 +132,54 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
-                                                   const std::vector<number>& i, const std::vector<std::string>& n,
-                                                   double Npre, ics_validator v)
-      : name(nm), params(p), Nstar(Npre), names(n)
+    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
+                                                   const parameters<number>& p, const std::vector<number>& i, double Npre)
+      : name(nm), mdl(m), params(p), Nstar(Npre)
       {
+		    assert(m != nullptr);
+		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+
         // validate supplied initial conditions - we rely on the validator to throw
         // an exception if the supplied number of ics is incorrect
-        v(params, i, ics);
+
+        mdl->validate_ics(params, i, ics);
       }
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, const parameters<number>& p,
-                                                   const std::vector<number>& i, const std::vector<std::string>& n,
-                                                   double Ninit, double Ncross, double Npre,
-                                                   ics_validator v, ics_finder f)
-      : name(nm), params(p), Nstar(Npre), names(n)
+    initial_conditions<number>::initial_conditions(const std::string& nm, model<number>* m,
+                                                   const parameters<number>& p, const std::vector<number>& i,
+                                                   double Ninit, double Ncross, double Npre)
+      : name(nm), mdl(m), params(p), Nstar(Npre)
       {
+        assert(m != nullptr);
+        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
+
         std::vector<number> validated_ics;
 
         // validate supplied initial conditions
-        v(p, i, validated_ics);
+        mdl->validate_ics(p, i, validated_ics);
 
         // call supplied finder function to correctly offset these ics
-        f(p, validated_ics, ics, Ninit, Ncross, Npre);
+        mdl->offset_ics(p, validated_ics, ics, Ninit, Ncross, Npre);
       }
 
 
     template <typename number>
     initial_conditions<number>::initial_conditions(const std::string& nm, serialization_reader* reader,
-                                                   const std::vector<std::string>& parameter_ordering,
-                                                   const std::vector<std::string>& field_ordering,
-                                                   typename transport::parameters<number>::params_validator p_v,
-                                                   typename transport::initial_conditions<number>::ics_validator ics_v)
-      : name(nm), params(reader, parameter_ordering, p_v)
+                                                   typename instance_manager<number>::model_finder f)
+      : name(nm), params(reader, f)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_ICS_NULL_SERIALIZATION_READER);
 
+		    // construct model object
+        std::string uid;
+		    reader->read_value(__CPP_TRANSPORT_NODE_ICS_MODEL_UID, uid);
+		    mdl = f(uid);
+
         // deserialize N*
-        reader->read_value(__CPP_TRANSPORT_NODE_NSTAR, Nstar);
+        reader->read_value(__CPP_TRANSPORT_NODE_ICS_NSTAR, Nstar);
 
         // deserialize array of initial values
         unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_ICS_VALUES);
@@ -195,16 +189,19 @@ namespace transport
             reader->start_array_element();
 
             std::string field_name;
-            reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, field_name);
+            reader->read_value(__CPP_TRANSPORT_NODE_ICS_NAME, field_name);
 
             double field_value;
-            reader->read_value(__CPP_TRANSPORT_NODE_COORDINATE, field_value);
+            reader->read_value(__CPP_TRANSPORT_NODE_ICS_VALUE, field_value);
 
             temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
 
             reader->end_array_element();
           }
         reader->end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
+
+		    // sort into order required by model object
+        const std::vector<std::string>& field_ordering = mdl->get_state_names();
 
         if(temp.size() != field_ordering.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_ICS);
 
@@ -217,25 +214,31 @@ namespace transport
         for(unsigned int j = 0; j < temp.size(); j++)
           {
             i.push_back((temp[j]).get_value());
-            names.push_back((temp[j]).get_name());
           }
 
         // validate supplied initial conditions
-        ics_v(params, i, ics);
+		    mdl->validate_ics(params, i, ics);
       }
 
 
     template <typename number>
     void initial_conditions<number>::serialize(serialization_writer& writer) const
       {
+		    // serialize model UID
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_MODEL_UID, this->mdl->get_identity_string());
+
         // serialize N*
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_NSTAR, this->Nstar);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_NSTAR, this->Nstar);
 
         // serialize array of initial values
+		    const std::vector<std::string>& names = this->mdl->get_state_names();
+		    assert(names.size() == this->ics.size());
+
         this->begin_array(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_COORDINATE, this->ics[i], __CPP_TRANSPORT_ATTR_NAME, this->names[i]);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_NAME, names[i]);
+		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUE, this->ics[i]);
           }
         this->end_element(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
 
@@ -249,12 +252,13 @@ namespace transport
       {
         out << obj.params << std::endl;
 
-        assert(obj.ics.size() == obj.names.size());
+		    const std::vector<std::string>& names = obj.mdl->get_state_names();
+        assert(obj.ics.size() == names.size());
 
         out << __CPP_TRANSPORT_ICS_TAG << std::endl;
         for(unsigned int i = 0; i < obj.ics.size(); i++)
           {
-            out << "  " << obj.names[i] << " = " << obj.ics[i] << std::endl;
+            out << "  " << names[i] << " = " << obj.ics[i] << std::endl;
           }
 
         return(out);

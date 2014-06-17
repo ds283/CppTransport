@@ -20,17 +20,21 @@
 #include "transport-runtime-api/utilities/named_list.h"
 
 #include "boost/lexical_cast.hpp"
+#include "model.h"
 
 
-#define __CPP_TRANSPORT_NODE_MPLANCK    "param-mplanck"
-#define __CPP_TRANSPORT_NODE_PRM_VALUES "param-values"
-#define __CPP_TRANSPORT_NODE_PARAMETER  "parameter"
-#define __CPP_TRANSPORT_ATTR_NAME       "name"
+#define __CPP_TRANSPORT_NODE_PARAMS_MPLANCK   "param-mplanck"
+#define __CPP_TRANSPORT_NODE_PARAMS_VALUES    "param-values"
+#define __CPP_TRANSPORT_NODE_PARAMS_VALUE     "value"
+#define __CPP_TRANSPORT_NODE_PARAMS_NAME      "name"
+#define __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID "param-model-uid"
 
 
 namespace transport
   {
 
+		// forward-declare model class
+		template <typename number> class model;
 
     template <typename number> class parameters;
 
@@ -41,20 +45,15 @@ namespace transport
     class parameters: public serializable
       {
 
-      public:
-
-        typedef std::function<void(const std::vector<number>&, std::vector<number>&)> params_validator;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct 'parameter' object from explicit
-        parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v);
+        parameters(number Mp, const std::vector<number>& p, model<number>* m);
 
         //! Deserialization constructor
-        parameters(serialization_reader* reader, const std::vector<std::string>& order, params_validator v);
+        parameters(serialization_reader* reader, typename instance_manager<number>::model_finder f);
 
         virtual ~parameters() = default;
 
@@ -92,8 +91,8 @@ namespace transport
         //! std::vector representing values of parameters
         std::vector<number> params;
 
-        //! std::vector representing names of parameters
-        std::vector<std::string> names;
+		    //! model object associated with these parameters
+		    model<number>* mdl;
 
         //! Value of M_Planck, which sets the scale for all units
         number M_Planck;
@@ -102,47 +101,53 @@ namespace transport
 
 
     template <typename number>
-    parameters<number>::parameters(number Mp, const std::vector<number>& p, const std::vector<std::string>& n, params_validator v)
-      : M_Planck(Mp), names(n)
+    parameters<number>::parameters(number Mp, const std::vector<number>& p, model<number>* m)
+      : M_Planck(Mp), mdl(m)
       {
-        assert(p.size() == n.size());
+		    assert(m != nullptr);
 
+				if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PARAMS_NULL_MODEL);
         if(M_Planck <= 0.0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_MPLANCK_NEGATIVE);
 
         // validate supplied parameters
-        if(p.size() == n.size()) v(p, params);
-        else throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PARAMS_MISMATCH);
+		    mdl->validate_params(p, params);
       }
 
 
     template <typename number>
-    parameters<number>::parameters(serialization_reader* reader, const std::vector<std::string>& order, params_validator v)
+    parameters<number>::parameters(serialization_reader* reader, typename instance_manager<number>::model_finder f)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PARAMS_NULL_SERIALIZATION_READER);
 
+		    // construct model object
+        std::string uid;
+		    reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, uid);
+		    mdl = f(uid);
+
         // deserialize value of Planck mass
-        reader->read_value(__CPP_TRANSPORT_NODE_MPLANCK, M_Planck);
+        reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_MPLANCK, M_Planck);
 
         // deserialize array of parameter values
-        unsigned int parameters = reader->start_array(__CPP_TRANSPORT_NODE_PRM_VALUES);
+        unsigned int parameters = reader->start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
         std::vector< named_list::element<number> > temp;
         for(unsigned int i = 0; i < parameters; i++)
           {
             reader->start_array_element();
 
             std::string param_name;
-            reader->read_attribute(__CPP_TRANSPORT_ATTR_NAME, param_name);
+            reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_NAME, param_name);
 
             double param_value;
-            reader->read_value(__CPP_TRANSPORT_NODE_PARAMETER, param_value);
+            reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_VALUE, param_value);
 
             temp.push_back(named_list::element<number>(param_name, static_cast<number>(param_value)));
 
             reader->end_array_element();
           }
-        reader->end_element(__CPP_TRANSPORT_NODE_PRM_VALUES);
+        reader->end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
 
+		    const std::vector<std::string>& order = mdl->get_param_names();
         if(temp.size() != order.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
 
         named_list::ordering order_map = named_list::make_ordering(order);
@@ -153,33 +158,37 @@ namespace transport
         for(unsigned int i = 0; i < temp.size(); i++)
           {
             p.push_back((temp[i]).get_value());
-            names.push_back((temp[i]).get_name());
           }
 
         // validate supplied parameters
-        v(p, params);
+		    mdl->validate_params(p, params);
       }
 
 
     template <typename number>
     void parameters<number>::serialize(serialization_writer& writer) const
       {
-        assert(this->params.size() == this->names.size());
+		    // serialize model UID
+		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, this->mdl->get_identity_string());
 
         // serialize value of Planck mass
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_MPLANCK, this->M_Planck);
+        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_MPLANCK, this->M_Planck);
 
         // serialize array of parameter values
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRM_VALUES, this->params.size()==0);
-        if(this->params.size() == this->names.size())
+		    const std::vector<std::string>& names = this->mdl->get_param_names();
+		    assert(names.size() == this->params.size());
+
+        this->begin_array(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
+        if(this->params.size() == names.size())
           {
             for(unsigned int i = 0; i < this->params.size(); i++)
               {
-                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMETER, this->params[i], __CPP_TRANSPORT_ATTR_NAME, this->names[i]);
+		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_NAME, names[i]);
+		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUE, this->params[i]);
               }
           }
         else throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
-        this->end_element(writer, __CPP_TRANSPORT_NODE_PRM_VALUES);
+        this->end_element(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUES);
       }
 
 
@@ -189,11 +198,12 @@ namespace transport
         out << __CPP_TRANSPORT_PARAMS_TAG << std::endl;
         out << "  " << __CPP_TRANSPORT_MPLANCK_TAG << obj.M_Planck << std::endl;
 
-        assert(obj.params.size() == obj.names.size());
+		    const std::vector<std::string>& names = obj.mdl->get_param_names();
+        assert(obj.params.size() == names.size());
 
         for(unsigned int i = 0; i < obj.params.size(); i++)
           {
-            out << "  " << obj.names[i] << " = " << obj.params[i] << std::endl;
+            out << "  " << names[i] << " = " << obj.params[i] << std::endl;
           }
 
         return(out);
