@@ -38,15 +38,16 @@
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Some momentum configurations failed to integrate, or other errors were encountered. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C       "moved to fail cache in repository"
 
-#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A       "Task"
-#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B       "Some derived content could not be generated, or other errors were encountered. Failing output group"
-#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C       "moved to fail cache in repository"
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A      "Task"
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B      "Some derived content could not be generated, or other errors were encountered. Failing output group"
+#define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C      "moved to fail cache in repository"
 
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
-#define __CPP_TRANSPORT_REPO_NULL_MODEL                  "Internal error: Null model when communicating with repository"
-#define __CPP_TRANSPORT_REPO_NULL_TASK                   "Internal error: Null task when communicating with repository"
+#define __CPP_TRANSPORT_REPO_NULL_MODEL                  "Internal error: Null model in repository"
+#define __CPP_TRANSPORT_REPO_NULL_TASK                   "Internal error: Null task in repository"
+#define __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER   "Internal error: Null serialization reader in repository"
 
 #define __CPP_TRANSPORT_REPO_MISSING_TASK                "Repository error: Could not find specified task"
 #define __CPP_TRANSPORT_REPO_MISSING_PACKAGE             "Repository error: Could not find specified package"
@@ -78,6 +79,9 @@
 
 #define __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN     "Repository error: task named in output task is not of integration-type"
 #define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   "Repository error: no matching output groups for task"
+
+#define __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
+#define __CPP_TRANSPORT_REPO_PROUDCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

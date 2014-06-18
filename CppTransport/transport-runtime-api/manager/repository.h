@@ -24,6 +24,7 @@
 #include "boost/log/utility/setup/common_attributes.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 #include "model.h"
+#include "derived_product.h"
 
 
 // log file name
@@ -40,6 +41,13 @@
 #define __CPP_TRANSPORT_REPO_TASKFILE_LEAF                       "tasks.sqlite"
 #define __CPP_TRANSPORT_REPO_DATABASE_LEAF                       "integration.sqlite"
 #define __CPP_TRANSPORT_REPO_FAILURE_LEAF                        "failed"
+
+#define __CPP_TRANSPORT_NODE_RECORD_NAME                         "name"
+
+#define __CPP_TRANSPORT_NODE_METADATA_GROUP                      "metadata"
+#define __CPP_TRANSPORT_NODE_METADATA_CREATED                    "created"
+#define __CPP_TRANSPORT_NODE_METADATA_EDITED                     "edited"
+#define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                "api"
 
 #define __CPP_TRANSPORT_NODE_PACKAGE_NAME                        "package-name"
 #define __CPP_TRANSPORT_NODE_PACKAGE_MODELUID                    "package-model-uid"
@@ -97,6 +105,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                "tags"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG                 "tag"
 
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                    "integration-metadata"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME           "total-aggregation-time"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME           "total-integration-time"
@@ -111,6 +120,7 @@
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME    "global-max-batching-time"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS       "total-configurations"
 
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                    "output-metadata"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME            "total-db-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME           "total-aggregation-time"
@@ -257,7 +267,10 @@ namespace transport
 
 		      public:
 
-				    //! construct a repository record
+				    //! construct a repository record with a default name (taken from its creation time)
+				    repository_record();
+
+				    //! construct a repository record with a supplied name
 				    repository_record(const std::string& nm);
 
 				    //! deserialization constructor
@@ -303,7 +316,7 @@ namespace transport
 		      protected:
 
 				    //! Name
-				    std::string& name;
+				    std::string name;
 
 				    //! Metadata record
 				    record_metadata metadata;
@@ -322,7 +335,7 @@ namespace transport
 		      public:
 
 				    //! construct a package record
-				    package_record(const std::string& nm, model<number>* m, const initial_conditions<number>& i);
+				    package_record(const initial_conditions<number>& i);
 
 				    //! deserialization constructor
 				    package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
@@ -333,9 +346,6 @@ namespace transport
 				    // GET CONTENTS
 
 		      public:
-
-				    //! Get model associated with this package
-				    model<number>* get_model() const { return(this->mdl); }
 
 				    //! Get initial conditionss
 						const initial_conditions<number>& get_ics() const { return(this->ics); }
@@ -353,9 +363,6 @@ namespace transport
 
 		      protected:
 
-				    //! Model associated with this package
-				    model<number>* mdl;
-
 				    //! Initial conditions data associated with this package
 				    initial_conditions<number> ics;
 
@@ -372,7 +379,7 @@ namespace transport
 		      public:
 
 				    //! construct an integration task record
-				    integration_task_record(const integration_task<number>& tk, model<number>* m);
+				    integration_task_record(const integration_task<number>& tk);
 
 				    //! override copy constructor to perform a deep copy
 				    integration_task_record(const integration_task_record& obj);
@@ -380,7 +387,7 @@ namespace transport
 				    //! deserialization constructor
 				    integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
 
-				    virtual ~integration_task_record() = default;
+				    virtual ~integration_task_record();
 
 
 				    // GET CONTENTS
@@ -389,9 +396,6 @@ namespace transport
 
 				    //! Get task
 				    integration_task<number>* get_task() const { return(this->tk); }
-
-				    //! Get parent model
-				    model<number>* get_model() const { return(this->mdl); }
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -408,9 +412,6 @@ namespace transport
 
 				    //! Task associated with this record
 				    integration_task<number>* tk;
-
-				    //! Model associated with this task
-				    model<number>* mdl;
 
 			    };
 
@@ -433,7 +434,7 @@ namespace transport
 				    //! deserialization constructor
 				    output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f);
 
-				    virtual ~output_task_record() = default;
+				    virtual ~output_task_record();
 
 
 				    // GET CONTENTS
@@ -478,7 +479,7 @@ namespace transport
 				    derived_product_record(const derived_product_record& obj);
 
 				    //! deserialization constructor
-				    derived_product_record(serialization_reader* reader);
+				    derived_product_record(serialization_reader* reader, task_finder f);
 
 				    virtual ~derived_product_record() = default;
 
@@ -913,7 +914,7 @@ namespace transport
 
             //! Create an output_group_record descriptor
             output_group_record(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
-                                const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+                                bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
 
             //! Deserialization constructor
             output_group_record(serialization_reader* reader, const boost::filesystem::path& root);
@@ -1555,6 +1556,9 @@ namespace transport
 		repository<number>::record_metadata::record_metadata(serialization_reader* reader)
 			{
 				assert(reader != nullptr);
+				if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+
+				reader->start_node(__CPP_TRANSPORT_NODE_METADATA_GROUP);
 
 		    std::string ctime_str;
 				reader->read_value(__CPP_TRANSPORT_NODE_METADATA_CREATED, ctime_str);
@@ -1565,19 +1569,31 @@ namespace transport
 				this->last_edit_time = boost::posix_time::from_iso_string(etime_str);
 
 				reader->read_value(__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
+
+				reader->end_element(__CPP_TRANSPORT_NODE_METADATA_GROUP);
 			}
 
 
 		template <typename number>
 		void repository<number>::record_metadata::serialize(serialization_writer& writer) const
 			{
+				this->begin_node(writer, __CPP_TRANSPORT_NODE_METADATA_GROUP, false);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_CREATED, boost::posix_time::to_iso_string(this->creation_time));
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_EDITED, boost::posix_time::to_iso_string(this->last_edit_time));
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
+				this->end_element(writer, __CPP_TRANSPORT_NODE_METADATA_GROUP);
 			}
 
 
 		// GENERIC REPOSITORY RECORD
+
+
+		template <typename number>
+		repository<number>::repository_record::repository_record()
+			: metadata()
+			{
+				name = boost::posix_time::to_iso_string(metadata.get_creation_time());
+			}
 
 		template <typename number>
 		repository<number>::repository_record::repository_record(const std::string& nm)
@@ -1592,6 +1608,7 @@ namespace transport
 			: metadata(reader)
 			{
 				assert(reader != nullptr);
+		    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
 
 				reader->read_value(__CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
 			}
@@ -1601,26 +1618,174 @@ namespace transport
 		void repository<number>::repository_record::serialize(serialization_writer& writer) const
 			{
 				this->write_value_node(writer, __CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+				this->metadata.serialize(writer);
 			}
 
 
 		// PACKAGE RECORD
 
 		template <typename number>
-		repository<number>::package_record::package_record(model<number>* m, const initial_conditions<number>& i)
+		repository<number>::package_record::package_record(const initial_conditions<number>& i)
 			: repository_record(i.get_name()),
-			  mdl(m),
 				ics(i)
 			{
-		    assert(m != nullptr);
 			}
 
 
 		template <typename number>
 		repository<number>::package_record::package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
-			: ics(reader)
+			: repository_record(reader),
+			  ics(name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
 			{
 				assert(reader != nullptr);
+		    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+			}
+
+
+		template <typename number>
+		void repository<number>::package_record::serialize(serialization_writer& writer) const
+			{
+				this->ics.serialize(writer);
+				this->repository_record::serialize(writer);
+			}
+
+
+		// INTEGRATION TASK RECORD
+
+		template <typename number>
+		repository<number>::integration_task_record::integration_task_record(const integration_task<number>& t)
+			: repository_record(t.get_name()),
+			  tk(dynamic_cast<integration_task<number>*>(t.clone()))
+			{
+				assert(tk != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::integration_task_record::integration_task_record(const typename repository<number>::integration_task_record& obj)
+			: repository_record(obj),
+			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
+			{
+				assert(tk != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::integration_task_record::integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
+			: repository_record(reader),
+				tk(integration_task_helper::deserialize(reader, f))
+			{
+				assert(tk != nullptr);
+				if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+			}
+
+
+		template <typename number>
+		repository<number>::integration_task_record::~integration_task_record()
+			{
+				delete this->tk;
+			}
+
+
+		template <typename number>
+		void repository<number>::integration_task_record::serialize(serialization_writer& writer) const
+			{
+				this->tk->serialize(writer);
+				this->repository_record::serialize(writer);
+			}
+
+
+		// OUTPUT TASK RECORD
+
+		template <typename number>
+		repository<number>::output_task_record::output_task_record(const output_task<number>& t)
+			: repository_record(t.get_name()),
+			  tk(dynamic_cast<output_task<number>*>(t.clone()))
+			{
+				assert(tk != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::output_task_record::output_task_record(const typename repository<number>::output_task_record& obj)
+			: repository_record(obj),
+			  tk(dynamic_cast<output_task<number>*>(obj.tk->clone()))
+			{
+				assert(tk != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::output_task_record::output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
+			: repository_record(reader),
+				tk(output_task_helper::deserialize(reader, f))
+			{
+				assert(reader != nullptr);
+				assert(tk != nullptr);
+
+				if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+			}
+
+
+		template <typename number>
+		repository<number>::output_task_record::~output_task_record()
+			{
+				delete this->tk;
+			}
+
+
+		template <typename number>
+		void repository<number>::output_task_record::serialize(serialization_writer& writer) const
+			{
+				this->tk->serialize(writer);
+				this->repository_record::serialize(writer);
+			}
+
+
+		// DERIVED PRODUCT RECORD
+
+		template <typename number>
+		repository<number>::derived_product_record::derived_product_record(const derived_data::derived_product<number>& prod)
+			: repository_record(prod.get_name()),
+			  product(prod.clone())
+			{
+				assert(product != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::derived_product_record::derived_product_record(const typename repository<number>::derived_product_record& obj)
+			: repository_record(obj),
+			  product(obj.product->clone())
+			{
+				assert(product != nullptr);
+			}
+
+
+		template <typename number>
+		repository<number>::derived_product_record::derived_product_record(serialization_reader* reader, typename repository<number>::task_finder f)
+			: repository_record(reader),
+				product(derived_product_helper::deserialize(reader, f))
+			{
+				assert(reader ! nullptr);
+				assert(product != nullptr);
+
+				if(product == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
+			}
+
+
+		template <typename number>
+		repository<number>::derived_product_record::~derived_product_record()
+			{
+				delete this->product;
+			}
+
+
+		template <typename number>
+		void repository<number>::derived_product_record::serialize(serialization_writer& writer) const
+			{
+				this->product->serialize(writer);
+				this->repository_record::serialize(writer);
 			}
 
 
@@ -1631,6 +1796,7 @@ namespace transport
 	    {
         assert(reader != nullptr);
 
+		    reader->start_node(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, work_time);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, db_time);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
@@ -1642,12 +1808,14 @@ namespace transport
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, threepf_kconfig_unloads);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, data_hits);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, data_unloads);
+		    reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 
 
     template <typename number>
     void repository<number>::output_metadata::serialize(serialization_writer& writer) const
 	    {
+		    this->begin_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP, false);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
@@ -1659,6 +1827,7 @@ namespace transport
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
         this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
+		    this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 
 		// INTEGRATION METADATA
@@ -1667,7 +1836,9 @@ namespace transport
     repository<number>::integration_metadata::integration_metadata(serialization_reader* reader)
 	    {
 				assert(reader != nullptr);
+        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
 
+		    reader->start_node(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
 		    reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, total_wallclock_time);
         reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, total_aggregation_time);
         reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, total_integration_time);
@@ -1681,12 +1852,14 @@ namespace transport
         reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, global_min_batching_time);
         reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, global_max_batching_time);
         reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, total_configurations);
+		    reader->end_element(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
 	    }
 
 
     template <typename number>
     void repository<number>::integration_metadata::serialize(serialization_writer& writer) const
 	    {
+		    this->begin_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP, false);
 				this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, this->total_wallclock_time);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, this->total_aggregation_time);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, this->total_integration_time);
@@ -1700,6 +1873,7 @@ namespace transport
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, this->global_min_batching_time);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
 		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
+		    this->end_element(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
 	    }
 
 
@@ -1931,27 +2105,28 @@ namespace transport
     // OUTPUT_GROUP METHODS
 
 
-    template<typename number>
-    template<typename Payload>
-    repository<number>::output_groupoutput_group_record::output_group_record(const std::string &tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
-                                                            const boost::posix_time::ptime& ctime, bool lock, const std::list<std::string> &nt, const std::list<std::string> &tg)
-      : task(tn), repo_root_path(root), data_root_path(path),
-        created(ctime), locked(lock), notes(nt), tags(tg),
-        payload()
-      {
-      }
+    template <typename number>
+    template <typename Payload>
+    repository<number>::output_group_record::output_group_record(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+                                                                 bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+	    : repository_record(),
+        task(tn),
+        repo_root_path(root), data_root_path(path),
+	      locked(lock), notes(nt), tags(tg),
+	      payload()
+	    {
+	    }
 
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_groupoutput_group_record::write(std::ostream& out) const
+    void repository<number>::output_group_record::write(std::ostream& out) const
 	    {
         out << __CPP_TRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
         out << std::endl;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->repo_root_path << std::endl;
         out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->data_root_path << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_CREATED << " = " << this->created << std::endl;
 
         unsigned int count = 0;
 
@@ -1980,7 +2155,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    bool repository<number>::output_groupoutput_group_record::check_tags(std::list<std::string> match_tags) const
+    bool repository<number>::output_group_record::check_tags(std::list<std::string> match_tags) const
 	    {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
@@ -1995,24 +2170,18 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    repository<number>::output_groupoutput_group_record::output_group_record(serialization_reader* reader)
-      : payload(reader)
+    repository<number>::output_group_record::output_group_record(serialization_reader* reader, const boost::filesystem::path& root)
+      : repository_record(reader),
+        payload(reader),
+		    repo_root_path(root)
       {
         assert(reader != nullptr);
 
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, task);
 
-        std::string repo_root;
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, repo_root);
-        repo_root_path = repo_root;
-
         std::string data_root;
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, data_root);
         data_root_path = data_root;
-
-        std::string ctime;
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, ctime);
-        this->created = boost::posix_time::from_iso_string(ctime);
 
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
@@ -2046,12 +2215,10 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_groupoutput_group_record::serialize(serialization_writer& writer) const
+    void repository<number>::output_group_record::serialize(serialization_writer& writer) const
       {
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT, this->repo_root_path.string());
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->data_root_path.string());
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED, boost::posix_time::to_iso_string(this->created));
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
         writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, this->notes.size() == 0);
@@ -2073,6 +2240,8 @@ namespace transport
         writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
         this->payload.serialize(writer);
+
+		    this->repository_record::serialize(writer);
       }
 
 
