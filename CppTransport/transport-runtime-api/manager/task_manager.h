@@ -304,6 +304,7 @@ namespace transport
                                                               std::bind(&task_manager<number>::error, this, std::placeholders::_1),
                                                               std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
                                                               std::bind(&task_manager<number>::message, this, std::placeholders::_1));
+		                        this->repo->set_model_finder(this->model_finder_factory());
                           }
                         catch (runtime_exception& xe)
                           {
@@ -390,6 +391,8 @@ namespace transport
         repo(r), data_mgr(data_manager_factory<number>(cp))
       {
         assert(repo != nullptr);
+
+		    repo->set_model_finder(this->model_finder_factory());
       }
 
 
@@ -1160,6 +1163,7 @@ namespace transport
                                                     std::bind(&task_manager<number>::error, this, std::placeholders::_1),
                                                     std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
                                                     std::bind(&task_manager<number>::message, this, std::placeholders::_1));
+						this->set_model_finder(this->model_finder_factory());
           }
         catch (runtime_exception& xe)
           {
