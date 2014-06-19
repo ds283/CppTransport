@@ -151,8 +151,8 @@ namespace transport
         //! Create a new datapipe
         virtual typename data_manager<number>::datapipe create_datapipe(const boost::filesystem::path& logdir,
                                                                         const boost::filesystem::path& tempdir,
-                                                                        typename data_manager<number>::output_group_finder finder,
-                                                                        typename data_manager<number>::content_dispatch_function dispatcher,
+                                                                        typename data_manager<number>::datapipe::output_group_finder finder,
+                                                                        typename data_manager<number>::datapipe::dispatch_function dispatcher,
                                                                         unsigned int worker, boost::timer::cpu_timer& timer) override;
 
         //! Pull a set of time sample-points from a datapipe
@@ -176,7 +176,7 @@ namespace transport
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
         virtual void pull_twopf_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                             const std::vector<unsigned int>& t_serials, unsigned int k_serial,
-                                            std::vector<number>& sample, typename data_manager<number>::twopf_type type) override;
+                                            std::vector<number>& sample, typename data_manager<number>::datapipe::twopf_type type) override;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
@@ -186,7 +186,7 @@ namespace transport
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                                const std::vector<unsigned int>& k_serials, unsigned int t_serial,
-                                               std::vector<number>& sample, typename data_manager<number>::twopf_type type) override;
+                                               std::vector<number>& sample, typename data_manager<number>::datapipe::twopf_type type) override;
 
         //! Pull a kconfig of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
@@ -198,7 +198,7 @@ namespace transport
         //! Attach an output_group_record to a pipe
         typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
           datapipe_attach(typename data_manager<number>::datapipe* pipe,
-                          typename data_manager<number>::output_group_finder& finder,
+                          typename data_manager<number>::datapipe::output_group_finder& finder,
                           integration_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach an output_group_record from a pipe
@@ -667,50 +667,59 @@ namespace transport
 		template <typename number>
 		typename data_manager<number>::datapipe data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir,
 		                                                                                      const boost::filesystem::path& tempdir,
-                                                                                          typename data_manager<number>::output_group_finder finder,
-                                                                                          typename data_manager<number>::content_dispatch_function dispatcher,
+                                                                                          typename data_manager<number>::datapipe::output_group_finder finder,
+                                                                                          typename data_manager<number>::datapipe::dispatch_function dispatcher,
 		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer)
 			{
 		    // set up callback API
-		    typename data_manager<number>::attach_callback attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
-		                                                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    typename data_manager<number>::detach_callback detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this,
-		                                                                      std::placeholders::_1);
+		    typename data_manager<number>::datapipe::utility_callbacks utilities;
 
-		    typename data_manager<number>::time_config_callback tsample = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
-		                                                                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    utilities.attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
+		                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
-		    typename data_manager<number>::kconfig_twopf_callback twopf_kcfg_ksample = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
-		                                                                                         std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
 
-		    typename data_manager<number>::kconfig_threepf_callback threepf_kcfg_ksample = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
-		                                                                                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    utilities.finder   = finder;
+		    utilities.dispatch = dispatcher;
 
-		    typename data_manager<number>::background_time_callback bsample = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
-		                                                                                std::placeholders::_1, std::placeholders::_2,
-		                                                                                std::placeholders::_3, std::placeholders::_4);
+		    typename data_manager<number>::datapipe::config_cache config;
 
-		    typename data_manager<number>::twopf_time_callback twopf_tsample = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
-		                                                                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                                                                 std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+		    config.time = std::bind(&data_manager_sqlite3<number>::pull_time_config, this,
+		                            std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    typename data_manager<number>::threepf_time_callback threepf_tsample = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
-		                                                                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                                                                     std::placeholders::_4, std::placeholders::_5);
+		    config.twopf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_twopf, this,
+		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    typename data_manager<number>::twopf_kconfig_callback twopf_ksample = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
-		                                                                                    std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                                                                    std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+		    config.threepf = std::bind(&data_manager_sqlite3<number>::pull_kconfig_threepf, this,
+		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
-		    typename data_manager<number>::threepf_kconfig_callback threepf_ksample = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
-		                                                                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-		                                                                                        std::placeholders::_4, std::placeholders::_5);
+		    typename data_manager<number>::datapipe::timeslice_cache timeslice;
+
+		    timeslice.background = std::bind(&data_manager_sqlite3<number>::pull_background_time_sample, this,
+		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_time_sample, this,
+		                                std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+		                                std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+
+		    timeslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_time_sample, this,
+		                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+		                                  std::placeholders::_4, std::placeholders::_5);
+
+		    typename data_manager<number>::datapipe::kslice_cache kslice;
+
+		    kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
+		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+		                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+
+		    kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
+		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+		                               std::placeholders::_4, std::placeholders::_5);
 
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(this->capacity, logdir, tempdir, worker, timer, finder, attach, detach, dispatcher,
-		                                                 tsample, twopf_kcfg_ksample, threepf_kcfg_ksample,
-		                                                 bsample, twopf_tsample, threepf_tsample, twopf_ksample, threepf_ksample);
+		    typename data_manager<number>::datapipe pipe(this->capacity, logdir, tempdir, worker, timer,
+		                                                 utilities, config, timeslice, kslice);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, cache capacity " << format_memory(this->capacity);
 
