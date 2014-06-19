@@ -148,7 +148,7 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::serialize(serialization_writer& writer) const
 					{
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename.string());
+						writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename.string());
 					}
 
 

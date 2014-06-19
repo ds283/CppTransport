@@ -43,6 +43,12 @@
 #define __CPP_TRANSPORT_REPO_FAILURE_LEAF                        "failed"
 
 #define __CPP_TRANSPORT_NODE_RECORD_NAME                         "name"
+#define __CPP_TRANSPORT_NODE_RECORD_TYPE                         "record-type"
+#define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                      "package"
+#define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK             "integration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                  "output-task"
+#define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT              "derived-product"
+#define __CPP_TRANSPORT_NODE_RECORD_CONTENT                      "content-group"
 
 #define __CPP_TRANSPORT_NODE_METADATA_GROUP                      "metadata"
 #define __CPP_TRANSPORT_NODE_METADATA_CREATED                    "created"
@@ -1603,11 +1609,11 @@ namespace transport
 		template <typename number>
 		void repository<number>::record_metadata::serialize(serialization_writer& writer) const
 			{
-				this->begin_node(writer, __CPP_TRANSPORT_NODE_METADATA_GROUP, false);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_CREATED, boost::posix_time::to_iso_string(this->creation_time));
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_EDITED, boost::posix_time::to_iso_string(this->last_edit_time));
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
-				this->end_element(writer, __CPP_TRANSPORT_NODE_METADATA_GROUP);
+				writer.start_node(__CPP_TRANSPORT_NODE_METADATA_GROUP, false);
+		    writer.write_value(__CPP_TRANSPORT_NODE_METADATA_CREATED, boost::posix_time::to_iso_string(this->creation_time));
+		    writer.write_value(__CPP_TRANSPORT_NODE_METADATA_EDITED, boost::posix_time::to_iso_string(this->last_edit_time));
+		    writer.write_value(__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
+				writer.end_element(__CPP_TRANSPORT_NODE_METADATA_GROUP);
 			}
 
 
@@ -1643,7 +1649,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::repository_record::serialize(serialization_writer& writer) const
 			{
-				this->write_value_node(writer, __CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+				writer.write_value(__CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
 				this->metadata.serialize(writer);
 			}
 
@@ -1671,6 +1677,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::package_record::serialize(serialization_writer& writer) const
 			{
+		    writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE));
 				this->ics.serialize(writer);
 				this->repository_record::serialize(writer);
 			}
@@ -1739,6 +1746,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::integration_task_record::serialize(serialization_writer& writer) const
 			{
+		    writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK));
 				this->tk->serialize(writer);
 				this->task_record::serialize(writer);
 			}
@@ -1786,6 +1794,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::output_task_record::serialize(serialization_writer& writer) const
 			{
+		    writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK));
 				this->tk->serialize(writer);
 				this->task_record::serialize(writer);
 			}
@@ -1833,6 +1842,7 @@ namespace transport
 		template <typename number>
 		void repository<number>::derived_product_record::serialize(serialization_writer& writer) const
 			{
+		    writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT));
 				this->product->serialize(writer);
 				this->repository_record::serialize(writer);
 			}
@@ -1864,19 +1874,19 @@ namespace transport
     template <typename number>
     void repository<number>::output_metadata::serialize(serialization_writer& writer) const
 	    {
-		    this->begin_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP, false);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, this->time_config_hits);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, this->time_config_unloads);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, this->twopf_kconfig_hits);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, this->twopf_kconfig_unloads);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, this->threepf_kconfig_hits);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
-		    this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
+		    writer.start_node(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP, false);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, this->time_config_hits);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, this->time_config_unloads);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, this->twopf_kconfig_hits);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, this->twopf_kconfig_unloads);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, this->threepf_kconfig_hits);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
+		    writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 
 		// INTEGRATION METADATA
@@ -1908,21 +1918,21 @@ namespace transport
     template <typename number>
     void repository<number>::integration_metadata::serialize(serialization_writer& writer) const
 	    {
-		    this->begin_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP, false);
-				this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, this->total_wallclock_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, this->total_aggregation_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, this->total_integration_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, this->min_mean_integration_time);
-				this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, this->max_mean_integration_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, this->global_min_integration_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, this->global_max_integration_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, this->total_batching_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, this->min_mean_batching_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, this->max_mean_batching_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, this->global_min_batching_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
-		    this->end_element(writer, __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
+		    writer.start_node(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP, false);
+				writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, this->total_wallclock_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, this->total_aggregation_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, this->total_integration_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, this->min_mean_integration_time);
+				writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, this->max_mean_integration_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, this->global_min_integration_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, this->global_max_integration_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, this->total_batching_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, this->min_mean_batching_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, this->max_mean_batching_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, this->global_min_batching_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
+		    writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
+		    writer.end_element(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
 	    }
 
 
@@ -2266,6 +2276,8 @@ namespace transport
     template <typename Payload>
     void repository<number>::output_group_record::serialize(serialization_writer& writer) const
       {
+        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT));
+
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->data_root_path.string());
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);

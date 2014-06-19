@@ -216,9 +216,9 @@ namespace transport
 				template <typename number>
 				void zeta_reduced_bispectrum_line<number>::serialize(serialization_writer& writer) const
 					{
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT, this->use_kt_label);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA, this->use_beta_label);
+				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT, this->use_kt_label);
+				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA, this->use_alpha_label);
+				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA, this->use_beta_label);
 					}
 
 

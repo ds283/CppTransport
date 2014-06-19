@@ -303,29 +303,29 @@ namespace transport
     template <typename number>
     void output_task<number>::serialize(serialization_writer& writer) const
 	    {
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT));
 
         // serialize array of task elements
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
+        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
         for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 	        {
-            this->begin_node(writer, "arrayelt", false);    // node name is ignored for arrays
+            writer.start_node("arrayelt", false);    // node name is ignored for arrays
 
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, (*t).get_product_name());
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUT_SERIAL, (*t).get_serial());
+            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, (*t).get_product_name());
+		        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUT_SERIAL, (*t).get_serial());
 
             const std::list<std::string>& tags = (*t).get_tags();
 
-            this->begin_array(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
+            writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
             for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
 	            {
-                this->write_value_node(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
+                writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
 	            }
-            this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+            writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 
-            this->end_element(writer, "arrayelt");
+            writer.end_element("arrayelt");
 	        }
-        this->end_element(writer, __CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
 
         this->task<number>::serialize(writer);
 	    }

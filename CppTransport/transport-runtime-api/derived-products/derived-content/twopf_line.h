@@ -264,13 +264,13 @@ namespace transport
 			        {
 		            case real:
 			            {
-		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL));
+		                writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL));
 		                break;
 			            }
 
 		            case imaginary:
 			            {
-		                this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY));
+		                writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY));
 		                break;
 			            }
 

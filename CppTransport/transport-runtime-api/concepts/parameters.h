@@ -169,26 +169,26 @@ namespace transport
     void parameters<number>::serialize(serialization_writer& writer) const
       {
 		    // serialize model UID
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, this->mdl->get_identity_string());
+		    writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, this->mdl->get_identity_string());
 
         // serialize value of Planck mass
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_MPLANCK, this->M_Planck);
+        writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_MPLANCK, this->M_Planck);
 
         // serialize array of parameter values
 		    const std::vector<std::string>& names = this->mdl->get_param_names();
 		    assert(names.size() == this->params.size());
 
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
+        writer.start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
         if(this->params.size() == names.size())
           {
             for(unsigned int i = 0; i < this->params.size(); i++)
               {
-		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_NAME, names[i]);
-		            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUE, this->params[i]);
+		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_NAME, names[i]);
+		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_VALUE, this->params[i]);
               }
           }
         else throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
-        this->end_element(writer, __CPP_TRANSPORT_NODE_PARAMS_VALUES);
+        writer.end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
       }
 
 

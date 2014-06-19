@@ -187,18 +187,18 @@ namespace transport
 		template <unsigned int indices>
 		void index_selector<indices>::serialize(serialization_writer& writer) const
 			{
-				this->write_value_node(writer, __CPP_TRANSPORT_NODE_INDEX_RANGE,
+				writer.write_value(__CPP_TRANSPORT_NODE_INDEX_RANGE,
 				                       this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD));
-				this->write_value_node(writer, __CPP_TRANSPORT_NODE_INDEX_FIELDS, this->N_fields);
+				writer.write_value(__CPP_TRANSPORT_NODE_INDEX_FIELDS, this->N_fields);
 
-				this->begin_array(writer, __CPP_TRANSPORT_NODE_INDEX_TOGGLES, this->size == 0);
+				writer.start_array(__CPP_TRANSPORT_NODE_INDEX_TOGGLES, this->size == 0);
 				for(unsigned int i = 0; i < this->size; i++)
 					{
-						this->begin_node(writer, "arrayelt", false);   // node names are ignored for arrays
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_INDEX_TOGGLE, this->enabled[i]);
-						this->end_element(writer, "arrayelt");
+						writer.start_node("arrayelt", false);   // node names are ignored for arrays
+						writer.write_value(__CPP_TRANSPORT_NODE_INDEX_TOGGLE, this->enabled[i]);
+						writer.end_element("arrayelt");
 					}
-				this->end_element(writer, __CPP_TRANSPORT_NODE_INDEX_TOGGLES);
+				writer.end_element(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
 			}
 
 

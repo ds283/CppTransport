@@ -198,7 +198,7 @@ namespace transport
 		    template <typename number>
 		    void zeta_twopf_wavenumber_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_WAVENUMBER_SERIES));
 
 		        this->derived_line<number>::serialize(writer);
@@ -462,7 +462,7 @@ namespace transport
 		    template <typename number>
 		    void zeta_threepf_wavenumber_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES));
 
 		        this->derived_line<number>::serialize(writer);
@@ -766,7 +766,7 @@ namespace transport
 		    template <typename number>
 		    void zeta_reduced_bispectrum_wavenumber_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES));
 
 		        this->derived_line<number>::serialize(writer);

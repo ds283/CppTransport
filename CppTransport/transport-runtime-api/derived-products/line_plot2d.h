@@ -460,58 +460,58 @@ namespace transport
 		    template <typename number>
 		    void line_plot2d<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D));
+		        writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D));
 
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX, this->reverse_x);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY, this->reverse_y);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL, this->x_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT, this->x_label_text);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL, this->y_label);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT, this->y_label_text);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE, this->title);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT, this->title_text);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND, this->legend);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX, this->reverse_x);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY, this->reverse_y);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL, this->x_label);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT, this->x_label_text);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL, this->y_label);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT, this->y_label_text);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE, this->title);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT, this->title_text);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND, this->legend);
 
 		        switch(this->position)
 			        {
 		            case top_left:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL));
 		            break;
 
 		            case top_right:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR));
 		            break;
 
 		            case bottom_left:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL));
 		            break;
 
 		            case bottom_right:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR));
 		            break;
 
 		            case right:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R));
 		            break;
 
 		            case centre_right:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR));
 		            break;
 
 		            case centre_left:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL));
 		            break;
 
 		            case upper_centre:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC));
 		            break;
 
 		            case lower_centre:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC));
 		            break;
 
 		            case centre:
-			            this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C));
+			            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS, std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C));
 		            break;
 
 		            default:
@@ -519,7 +519,7 @@ namespace transport
 		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_INVALID_LEGEND_POSITION);
 			        }
 
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX, this->typeset_with_LaTeX);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX, this->typeset_with_LaTeX);
 
 		        // call next serialization
 		        this->line_collection<number>::serialize(writer);

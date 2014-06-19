@@ -225,22 +225,22 @@ namespace transport
     void initial_conditions<number>::serialize(serialization_writer& writer) const
       {
 		    // serialize model UID
-		    this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_MODEL_UID, this->mdl->get_identity_string());
+		    writer.write_value(__CPP_TRANSPORT_NODE_ICS_MODEL_UID, this->mdl->get_identity_string());
 
         // serialize N*
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_NSTAR, this->Nstar);
+        writer.write_value(__CPP_TRANSPORT_NODE_ICS_NSTAR, this->Nstar);
 
         // serialize array of initial values
 		    const std::vector<std::string>& names = this->mdl->get_state_names();
 		    assert(names.size() == this->ics.size());
 
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
+        writer.start_array(__CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_NAME, names[i]);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_ICS_VALUE, this->ics[i]);
+		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_NAME, names[i]);
+		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_VALUE, this->ics[i]);
           }
-        this->end_element(writer, __CPP_TRANSPORT_NODE_ICS_VALUES);
+        writer.end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
 
         // serialize parameter values
         this->params.serialize(writer);

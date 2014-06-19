@@ -145,7 +145,7 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND));
 
 		        this->active_indices.serialize(writer);
@@ -380,7 +380,7 @@ namespace transport
 		    template <typename number>
 		    void twopf_time_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES));
 
 				    this->derived_line<number>::serialize(writer);
@@ -549,7 +549,7 @@ namespace transport
 		    template <typename number>
 		    void threepf_time_series<number>::serialize(serialization_writer& writer) const
 			    {
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
 		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_TIME_SERIES));
 
 		        this->derived_line<number>::serialize(writer);

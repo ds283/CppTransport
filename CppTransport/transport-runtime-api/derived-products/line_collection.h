@@ -503,21 +503,21 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::serialize(serialization_writer& writer) const
 			    {
-				    this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, this->enforce_max_value_types);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, this->max_value_types);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, this->log_x);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, this->log_y);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, this->abs_y);
-		        this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, this->use_LaTeX);
+				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, this->enforce_max_value_types);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, this->max_value_types);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, this->log_x);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, this->log_y);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, this->abs_y);
+		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, this->use_LaTeX);
 
-		        this->begin_array(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY, this->lines.size() == 0);
+		        writer.start_array(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY, this->lines.size() == 0);
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
 			        {
-		            this->begin_node(writer, "arrayelt", false);    // node name ignored in array
+		            writer.start_node("arrayelt", false);    // node name ignored in array
 		            (*t)->serialize(writer);
-		            this->end_element(writer, "arrayelt");
+		            writer.end_element("arrayelt");
 			        }
-		        this->end_element(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
+		        writer.end_element(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
 
 		        // call next serialization
 		        this->derived_product<number>::serialize(writer);

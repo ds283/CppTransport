@@ -221,18 +221,18 @@ namespace transport
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
 
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_MIN, this->min);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_MAX, this->max);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_STEPS, this->steps);
+        writer.write_value(__CPP_TRANSPORT_NODE_MIN, this->min);
+        writer.write_value(__CPP_TRANSPORT_NODE_MAX, this->max);
+        writer.write_value(__CPP_TRANSPORT_NODE_STEPS, this->steps);
 
 		    switch(this->spacing)
 			    {
 		        case linear:
-			        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LINEAR));
+			        writer.write_value(__CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LINEAR));
 				      break;
 
 		        case logarithmic:
-			        this->write_value_node(writer, __CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC));
+			        writer.write_value(__CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC));
 				      break;
 
 		        default:

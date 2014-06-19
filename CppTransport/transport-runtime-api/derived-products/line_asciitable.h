@@ -218,10 +218,10 @@ namespace transport
 				template <typename number>
 				void line_asciitable<number>::serialize(serialization_writer& writer) const
 					{
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE));
+						writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE));
 
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION, this->precision);
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL, this->x_label);
+						writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION, this->precision);
+						writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL, this->x_label);
 
 						// call next serializer
 						this->line_collection<number>::serialize(writer);

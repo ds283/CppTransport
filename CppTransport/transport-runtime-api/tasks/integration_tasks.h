@@ -310,19 +310,19 @@ namespace transport
 		void integration_task<number>::serialize(serialization_writer& writer) const
 			{
         // serialize range of sampling times
-        this->begin_node(writer, __CPP_TRANSPORT_NODE_TIME_RANGE, false);
+        writer.start_node(__CPP_TRANSPORT_NODE_TIME_RANGE, false);
         this->times.serialize(writer);
-        this->end_element(writer, __CPP_TRANSPORT_NODE_TIME_RANGE);
+        writer.end_element(__CPP_TRANSPORT_NODE_TIME_RANGE);
 
         // serialize filtered range of times, those which will be stored in the database
-				this->begin_array(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE, this->time_config_list.size() == 0);
+				writer.start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE, this->time_config_list.size() == 0);
 				for(std::vector<time_config>::const_iterator t = this->time_config_list.begin(); t != this->time_config_list.end(); t++)
 					{
-						this->begin_node(writer, "arrayelt", false);    // node name ignored in arrays
-						this->write_value_node(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, (*t).serial);
-						this->end_element(writer, "arrayelt");
+						writer.start_node("arrayelt", false);    // node name ignored in arrays
+						writer.write_value(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, (*t).serial);
+						writer.end_element("arrayelt");
 					}
-				this->end_element(writer, __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+				writer.end_element(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
 
         // note that we DO NOT serialize the initial conditions;
         // these are handled separately by the repository layer
@@ -516,21 +516,21 @@ namespace transport
     void twopf_list_task<number>::serialize(serialization_writer& writer) const
       {
         // serialize comoving normalization constant
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_KSTAR, this->comoving_normalization);
+        writer.write_value(__CPP_TRANSPORT_NODE_KSTAR, this->comoving_normalization);
 
         // serialize list of twopf kconfigurations
         // note we store only k_conventional to save space
         // k_comoving can be reconstructed on deserialization
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE, this->twopf_config_list.size()==0);
+        writer.start_array(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE, this->twopf_config_list.size()==0);
         for(std::vector<twopf_kconfig>::const_iterator t = this->twopf_config_list.begin(); t != this->twopf_config_list.end(); t++)
           {
-            this->begin_node(writer, "arrayelt", false);    // node name ignored in arrays
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN, (*t).serial);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, (*t).k_conventional);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, (*t).store_background);
-            this->end_element(writer, "arrayelt");
+            writer.start_node("arrayelt", false);    // node name ignored in arrays
+            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN, (*t).serial);
+            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, (*t).k_conventional);
+            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, (*t).store_background);
+            writer.end_element("arrayelt");
           }
-        this->end_element(writer, __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
+        writer.end_element(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
 
         this->integration_task<number>::serialize(writer);
       }
@@ -681,7 +681,7 @@ namespace transport
     template <typename number>
     void twopf_task<number>::serialize(serialization_writer& writer) const
       {
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF));
 
         this->twopf_list_task<number>::serialize(writer);
       }
@@ -858,24 +858,24 @@ namespace transport
     void threepf_task<number>::serialize(serialization_writer& writer) const
       {
         // serialize integrable status
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE, this->integrable);
+        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE, this->integrable);
 
         // serialize array of k-configurations
-        this->begin_array(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE, this->threepf_config_list.size()==0);
+        writer.start_array(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE, this->threepf_config_list.size()==0);
         for(std::vector<threepf_kconfig>::const_iterator t = this->threepf_config_list.begin(); t != this->threepf_config_list.end(); t++)
           {
-            this->begin_node(writer, "arrayelt", false);    // node name is ignored in arrays
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN, (*t).serial);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN, (*t).index[0]);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN, (*t).index[1]);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN, (*t).index[2]);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG, (*t).store_background);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1, (*t).store_twopf_k1);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2, (*t).store_twopf_k2);
-            this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3, (*t).store_twopf_k3);
-            this->end_element(writer, "arrayelt");
+            writer.start_node("arrayelt", false);    // node name is ignored in arrays
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN, (*t).serial);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN, (*t).index[0]);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN, (*t).index[1]);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN, (*t).index[2]);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG, (*t).store_background);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1, (*t).store_twopf_k1);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2, (*t).store_twopf_k2);
+            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3, (*t).store_twopf_k3);
+            writer.end_element("arrayelt");
           }
-        this->end_element(writer, __CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
+        writer.end_element(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
 
         this->twopf_list_task<number>::serialize(writer);
       }
@@ -1023,9 +1023,9 @@ namespace transport
     template <typename number>
     void threepf_cubic_task<number>::serialize(serialization_writer& writer) const
       {
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC));
 
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING, this->spacing);
+        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING, this->spacing);
 
         this->threepf_task<number>::serialize(writer);
       }
@@ -1188,11 +1188,11 @@ namespace transport
     template <typename number>
     void threepf_fls_task<number>::serialize(serialization_writer& writer) const
       {
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS));
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS));
 
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING, this->kt_spacing);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING, this->alpha_spacing);
-        this->write_value_node(writer, __CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING, this->beta_spacing);
+        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING, this->kt_spacing);
+        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING, this->alpha_spacing);
+        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING, this->beta_spacing);
 
         this->threepf_task<number>::serialize(writer);
       }
