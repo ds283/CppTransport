@@ -44,15 +44,6 @@ namespace transport
     // which must be included to allow creation of repositories
     class repository_creation_key;
 
-    //! Error-reporting callback object
-    typedef std::function<void(const std::string&)> repository_unqlite_error_callback;
-
-    //! Warning callback object
-    typedef std::function<void(const std::string&)> repository_unqlite_warning_callback;
-
-    //! Message callback object
-    typedef std::function<void(const std::string&)> repository_unqlite_message_callback;
-
 
     //! Class 'repository_unqlite' implements the 'repository' interface using
     //! UnQLite as the database backend.
@@ -62,10 +53,23 @@ namespace transport
     class repository_unqlite: public json_interface_repository<number>
       {
 
+      public:
+
+        //! Error-reporting callback object
+        typedef std::function<void(const std::string&)> error_callback;
+
+        //! Warning callback object
+        typedef std::function<void(const std::string&)> warning_callback;
+
+        //! Message callback object
+        typedef std::function<void(const std::string&)> message_callback;
+
+
       protected:
 
 		    //! Internal record-type flag
         typedef enum { integration_record, output_record } task_type;
+
 
       private:
 
@@ -96,9 +100,9 @@ namespace transport
         //! and specified warning and error handlers
         repository_unqlite(const std::string& path,
                            typename repository<number>::access_type mode = repository<number>::access_type::readwrite,
-                           repository_unqlite_error_callback e=default_error_handler(),
-                           repository_unqlite_warning_callback w=default_warning_handler(),
-                           repository_unqlite_message_callback m=default_message_handler());
+                           error_callback e=default_error_handler(),
+                           warning_callback w=default_warning_handler(),
+                           message_callback m=default_message_handler());
 
         //! Create a repository with a specific pathname
         repository_unqlite(const std::string& path, const repository_creation_key& key);
@@ -281,13 +285,13 @@ namespace transport
       private:
 
         //! Error handler
-        repository_unqlite_error_callback error;
+        error_callback error;
 
         //! Warning handler
-        repository_unqlite_warning_callback warning;
+        warning_callback warning;
 
         //! Message handler
-        repository_unqlite_message_callback message;
+        message_callback message;
 
         //! BOOST path to database
         boost::filesystem::path db_path;
@@ -313,8 +317,9 @@ namespace transport
     // Create a repository object associated with a pathname
     template <typename number>
     repository_unqlite<number>::repository_unqlite(const std::string& path, typename repository<number>::access_type mode,
-                                                   repository_unqlite_error_callback e, repository_unqlite_warning_callback w,
-                                                   repository_unqlite_message_callback m)
+                                                   typename repository_unqlite<number>::error_callback e,
+                                                   typename repository_unqlite<number>::warning_callback w,
+                                                   typename repository_unqlite<number>::message_callback m)
       : json_interface_repository<number>(path, mode),
         db(nullptr), open_clients(0),
         error(e), warning(w), message(m)
@@ -417,6 +422,9 @@ namespace transport
       }
 
 
+		// TRANSACTION MANAGEMENT
+
+
 		// Open database handles.
 		template <typename number>
 		void repository_unqlite<number>::begin_transaction()
@@ -476,15 +484,13 @@ namespace transport
 	    }
 
 
-    // Write a model/initial-conditions/parameters combination to the repository
-		// DATABASE ENTRY POINT
+		// CREATEA RECORDS
+
+
+    // Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
     template <typename number>
-    void repository_unqlite<number>::commit_package(const initial_conditions<number>& ics, const model<number>* m)
+    void repository_unqlite<number>::commit_package(const initial_conditions<number>& ics)
 	    {
-        assert(m != nullptr);
-
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
-
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
 
