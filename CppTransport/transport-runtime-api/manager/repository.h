@@ -369,9 +369,37 @@ namespace transport
 			    };
 
 
+		    // GENERIC TASK RECORD
+
+		    class task_record: public repository_record
+			    {
+
+			      // CONSTRUCTOR, DESTRUCTOR
+
+		      public:
+
+				    //! construct a task record
+				    task_record(const std::string& nm);
+
+				    //! deserialization constructor
+				    task_record(serialization_reader* f);
+
+				    virtual ~task_record() = default;
+
+
+				    // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+				    //! serialize this object
+				    virtual void serialize(serialization_writer& writer) const override;
+
+			    };
+
+
 		    // INTEGRATION TASK RECORD
 
-		    class integration_task_record: public repository_record
+		    class integration_task_record: public task_record
 			    {
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -418,7 +446,7 @@ namespace transport
 
 		    // OUTPUT TASK RECORD
 
-		    class output_task_record: public repository_record
+		    class output_task_record: public task_record
 			    {
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -1025,15 +1053,24 @@ namespace transport
 
         // DATA CONTAINER WRITE HANDLE
 
-		    class integration_writer;
-
-		    //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
-		    typedef std::function<void(integration_writer&)> integration_commit_callback;
-
-
         //! Integration container writer: forms a handle for a data container when writing the output of an integration
         class integration_writer
 	        {
+
+          public:
+
+            //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
+            typedef std::function<void(integration_writer&)> commit_callback;
+
+            //! Define an abort callback object. Used by integration_writer to abort storage of its data products
+            typedef std::function<void(integration_writer&)> abort_callback;
+
+            class callback_group
+	            {
+              public:
+                commit_callback commit;
+                abort_callback  abort;
+	            };
 
 	          // CONSTRUCTOR, DESTRUCTOR
 
@@ -1043,7 +1080,7 @@ namespace transport
             //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
             integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
-                               boost::posix_time::ptime& ct, integration_commit_callback c,
+                               boost::posix_time::ptime& ct, callback_group& c,
                                const boost::filesystem::path& root,
                                const boost::filesystem::path& output, const boost::filesystem::path& data,
                                const boost::filesystem::path& log, const boost::filesystem::path& task,
@@ -1082,12 +1119,15 @@ namespace transport
             void get_data_manager_taskfile(data_manager_type* data);
 
 
-		        // COMMIT TO DATABASE
+		        // DATABASE FUNCTIONS
 
           public:
 
             //! Commit contents of this integration_writer to the database
-		        void commit() { this->committer(*this); }
+		        void commit() { this->callbacks.commit(*this); }
+
+		        //! Abort contents
+		        void abort() { this->callbacks.abort(*this); }
 
 		        
 		        // LOGGING
@@ -1164,8 +1204,8 @@ namespace transport
 
 		        // COMMIT CALLBACK
 
-		        //! commit data products to the repository
-		        integration_commit_callback committer;
+		        //! Repository callbacks
+		        callback_group callbacks;
 
 
 		        // METADATA
@@ -1234,9 +1274,6 @@ namespace transport
 
 		    class derived_content_writer;
 
-		    //! Define a commit callback object. Used by derived_content_writer to commit its data products to the repository
-		    typedef std::function<void(derived_content_writer&)> output_commit_callback;
-
 
         //! Integration container reader: forms a handle for a data container when reading the an integration from the database
         class derived_content_writer
@@ -1244,9 +1281,24 @@ namespace transport
 
           public:
 
+            //! Define a commit callback object. Used by derived_content_writer to commit its data products to the repository
+            typedef std::function<void(derived_content_writer&)> commit_callback;
+
+            //! Define an abort callback object. Used by derived_content_writer to abort commit of its data products
+            typedef std::function<void(derived_content_writer&)> abort_callback;
+
+            class callback_group
+	            {
+              public:
+                commit_callback commit;
+                abort_callback  abort;
+	            };
+
+          public:
+
             //! Construct a derived-content writer object
             derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
-                                   output_commit_callback c,
+                                   callback_group& c,
                                    const boost::filesystem::path& root,
                                    const boost::filesystem::path& output, const boost::filesystem::path& log,
                                    const boost::filesystem::path& task, const boost::filesystem::path& temp,
@@ -1285,12 +1337,15 @@ namespace transport
             const std::list<derived_content>& get_content() const { return(this->content); }
 
 
-		        // COMMIT TO DATABASE
+		        // DATABASE FUNCTIONS
 
           public:
 
 		        //! Commit contents out this derived_content_writer to the batabase
-		        void commit() { this->committer(*this); }
+		        void commit() { this->callbacks.commit(*this); }
+
+		        //! Abort contents
+		        void abort() { this->callbacks.abort(*this); }
 
 
 		        // LOGGING
@@ -1353,8 +1408,8 @@ namespace transport
 
 		        // COMMIT CALLBACK
 
-		        //! commit data products to the repository
-		        output_commit_callback committer;
+		        //! Repository callbacks
+		        callback_group callbacks;
 
 
             // CONTENT
@@ -1430,99 +1485,67 @@ namespace transport
         virtual ~repository() = default;
 
 
-        // ADMIN DATA
+        // ADMINISTRATION
 
       public:
 
+		    //! Set model_finder object
+		    void set_model_finder(const typename instance_manager<number>::model_finder f) { this->finder = f; }
+
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() const { return (this->root_path); };
-
 
         //! Get access mode
         const access_type& get_access_mode() const { return (this->access_mode); }
 
 
-        // PUSH TASKS TO THE REPOSITORY DATABASE
+		    // CREATE RECORDS
 
       public:
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) = 0;
+        virtual void commit_package(const initial_conditions<number>& ics) = 0;
 
         //! Write an integration task to the database.
-        virtual void write_task(const integration_task<number>& tk, const model<number>* m) = 0;
+        virtual void commit_task(const integration_task<number>& tk) = 0;
 
         //! Write an output task to the database
-        virtual void write_task(const output_task<number>& tk) = 0;
-
-
-        // PULL TASKS FROM THE REPOSITORY DATABASE
-
-      public:
-
-        //! Query the database for a named task, and reconstruct it if present.
-        //! Supports both integration_task<> and output_task<> items.
-        //! Output tasks write nullptr to the model* handle.
-        virtual task<number>* lookup_task(const std::string& name, model<number>*& m,
-                                          typename instance_manager<number>::model_finder finder) = 0;
-
-
-        // ADD AN OUTPUT-GROUP TO A TASK
-
-      public:
-
-        //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container
-        virtual integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                               model<number>* m, unsigned int worker) = 0;
-
-        //! Insert a record for new threepf output in the task database, and set up paths to a suitable data container
-        virtual integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                               model<number>* m, unsigned int worker) = 0;
-
-        //! Move a failed output group to a safe location
-        virtual void move_output_group_to_failure(integration_writer& writer) = 0;
-
-
-        // PULL OUTPUT-GROUPS FROM A TASK
-
-      public:
-
-        //! Enumerate the output groups available from a named task
-        virtual std::list< output_group_record<integration_payload> > enumerate_integration_task_output(const std::string& name) = 0;
-
-
-        // PUSH DERIVED-PRODUCT SPECIFICATIONS TO THE DATABASE
-
-      public:
+        virtual void commit_task(const output_task<number>& tk) = 0;
 
         //! Write a derived product specification
-        virtual void write_derived_product(const derived_data::derived_product<number>& d) = 0;
+        virtual void commit_derived_product(const derived_data::derived_product<number>& d) = 0;
 
 
-        // PULL DERIVED-PRODUCT SPECIFICATIONS FROM THE DATABASE
-
-      public:
-
-        //! Query a derived product specification
-        virtual derived_data::derived_product<number>*
-          lookup_derived_product(const std::string &product, typename instance_manager<number>::model_finder finder) = 0;
-
-
-        // ADD DERIVED CONTENT FROM AN OUTPUT TASK
+		    // READ RECORDS FROM THE DATABASE
 
       public:
 
-        //! Add derived content
-        virtual derived_content_writer
-          new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    //! Read a package record from the database
+		    virtual package_record query_package(const std::string& name) = 0;
 
-		    //! Move a failed output group to a safe location
-		    virtual void move_output_group_to_failure(derived_content_writer& writer) = 0;
+		    //! Read a task record from the database
+		    virtual task_record query_task(const std::string& name) = 0;
 
-        //! Lookup an output group for a task, given a set of tags
-        virtual output_group_record<integration_payload>
-          find_integration_task_output_group(const integration_task<number>* tk, const std::list<std::string>& tags) = 0;
+		    //! Read a derived product specification from the database
+		    virtual derived_product_record query_derived_product(const std::string& name) = 0;
+
+        //! Enumerate the output groups available from a named integration task
+        virtual std::list< output_group_record<integration_payload> > enumerate_integration_task_content(const std::string& name) = 0;
+
+		    //! Enumerate the output groups available from a named output task
+		    virtual std::list< output_group_record<output_payload> > enumerate_output_task_content(const std::string& name) = 0;
+
+
+        // ADD CONTENT ASSOCIATED WITH A TASK
+
+      public:
+
+		    //! Generate a writer object for new integration output
+		    virtual integration_writer new_integration_task_content(integration_task_record& rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+
+		    //! Generate a writer object for new derived-content output
+		    virtual derived_content_writer new_output_task_content(output_task_record& rec, const std::list<std::string>& tags, unsigned int worker) = 0;
 
 
         // PRIVATE DATA
@@ -1534,6 +1557,9 @@ namespace transport
 
         //! BOOST path to the repository root directory
         const boost::filesystem::path root_path;
+
+		    //! Model-finder supplied by instance manager
+		    typename instance_manager<number>::model_finder finder;
 
 	    };
 
@@ -1650,11 +1676,34 @@ namespace transport
 			}
 
 
+		// GENERIC TASK RECORD
+
+		template <typename number>
+		repository<number>::task_record::task_record(const std::string& name)
+			: repository_record(name)
+			{
+			}
+
+
+		template <typename number>
+		repository<number>::task_record::task_record(serialization_reader* reader)
+			: repository_record(reader)
+			{
+			}
+
+
+		template <typename number>
+		void repository<number>::task_record::serialize(serialization_writer& writer) const
+			{
+				this->repository_record::serialize(writer);
+			}
+
+
 		// INTEGRATION TASK RECORD
 
 		template <typename number>
 		repository<number>::integration_task_record::integration_task_record(const integration_task<number>& t)
-			: repository_record(t.get_name()),
+			: task_record(t.get_name()),
 			  tk(dynamic_cast<integration_task<number>*>(t.clone()))
 			{
 				assert(tk != nullptr);
@@ -1663,7 +1712,7 @@ namespace transport
 
 		template <typename number>
 		repository<number>::integration_task_record::integration_task_record(const typename repository<number>::integration_task_record& obj)
-			: repository_record(obj),
+			: task_record(obj),
 			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
 			{
 				assert(tk != nullptr);
@@ -1672,7 +1721,7 @@ namespace transport
 
 		template <typename number>
 		repository<number>::integration_task_record::integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
-			: repository_record(reader),
+			: task_record(reader),
 				tk(integration_task_helper::deserialize(reader, f))
 			{
 				assert(tk != nullptr);
@@ -1691,7 +1740,7 @@ namespace transport
 		void repository<number>::integration_task_record::serialize(serialization_writer& writer) const
 			{
 				this->tk->serialize(writer);
-				this->repository_record::serialize(writer);
+				this->task_record::serialize(writer);
 			}
 
 
@@ -1699,7 +1748,7 @@ namespace transport
 
 		template <typename number>
 		repository<number>::output_task_record::output_task_record(const output_task<number>& t)
-			: repository_record(t.get_name()),
+			: task_record(t.get_name()),
 			  tk(dynamic_cast<output_task<number>*>(t.clone()))
 			{
 				assert(tk != nullptr);
@@ -1708,7 +1757,7 @@ namespace transport
 
 		template <typename number>
 		repository<number>::output_task_record::output_task_record(const typename repository<number>::output_task_record& obj)
-			: repository_record(obj),
+			: task_record(obj),
 			  tk(dynamic_cast<output_task<number>*>(obj.tk->clone()))
 			{
 				assert(tk != nullptr);
@@ -1717,7 +1766,7 @@ namespace transport
 
 		template <typename number>
 		repository<number>::output_task_record::output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f)
-			: repository_record(reader),
+			: task_record(reader),
 				tk(output_task_helper::deserialize(reader, f))
 			{
 				assert(reader != nullptr);
@@ -1738,7 +1787,7 @@ namespace transport
 		void repository<number>::output_task_record::serialize(serialization_writer& writer) const
 			{
 				this->tk->serialize(writer);
-				this->repository_record::serialize(writer);
+				this->task_record::serialize(writer);
 			}
 
 
@@ -1883,7 +1932,7 @@ namespace transport
     template <typename number>
     repository<number>::integration_writer::integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
                                                                boost::posix_time::ptime& ct,
-                                                               typename repository<number>::integration_commit_callback c,
+                                                               typename repository<number>::integration_writer::callback_group& c,
                                                                const boost::filesystem::path& root,
                                                                const boost::filesystem::path& output, const boost::filesystem::path& data,
                                                                const boost::filesystem::path& log, const boost::filesystem::path& task,
@@ -1891,7 +1940,7 @@ namespace transport
                                                                unsigned int w, bool s)
 	    : parent_task(dynamic_cast<integration_task<number>*>(tk->clone())), tags(tg),
         creation_time(ct),
-	      committer(c),
+	      callbacks(c),
 	      repo_root(root),
 	      output_path(output), data_path(data),
 	      log_path(log), task_path(task),
@@ -1928,7 +1977,7 @@ namespace transport
 		repository<number>::integration_writer::integration_writer(const typename repository<number>::integration_writer& obj)
 			: parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
         creation_time(obj.creation_time),
-			  committer(obj.committer),
+			  callbacks(obj.callbacks),
 			  repo_root(obj.repo_root),
 			  output_path(obj.output_path), data_path(obj.data_path),
 			  log_path(obj.log_path), task_path(obj.task_path),
@@ -2004,14 +2053,14 @@ namespace transport
 
     template <typename number>
     repository<number>::derived_content_writer::derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
-                                                                       output_commit_callback c,
+                                                                       typename repository<number>::derived_content_writer::callback_group& c,
                                                                        const boost::filesystem::path& root,
                                                                        const boost::filesystem::path& output, const boost::filesystem::path& log,
                                                                        const boost::filesystem::path& task, const boost::filesystem::path& temp,
                                                                        unsigned int w)
 	    : parent_task(dynamic_cast<output_task<number>*>(tk->clone())), tags(tg),
 	      creation_time(ct),
-	      committer(c),
+	      callbacks(c),
 	      repo_root(root),
 	      output_path(output), log_path(log),
 	      task_path(task), temp_path(temp),
@@ -2047,7 +2096,7 @@ namespace transport
 		repository<number>::derived_content_writer::derived_content_writer(const typename repository<number>::derived_content_writer& obj)
 			: parent_task(dynamic_cast<output_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
 			  creation_time(obj.creation_time),
-			  committer(obj.committer),
+			  callbacks(obj.callbacks),
 			  repo_root(obj.repo_root),
 			  output_path(obj.output_path), log_path(obj.log_path),
 			  task_path(obj.task_path), temp_path(obj.temp_path),

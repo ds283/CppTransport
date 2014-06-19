@@ -53,9 +53,11 @@ namespace transport
     //! Message callback object
     typedef std::function<void(const std::string&)> repository_unqlite_message_callback;
 
-    // class 'repository_unqlite' implements the 'repository' interface using
-    // UnQLite as the database backend.
-    // It replaces the earlier DbXml-based repository implementation
+
+    //! Class 'repository_unqlite' implements the 'repository' interface using
+    //! UnQLite as the database backend.
+		//! It also implements the 'json_interface_repository' interface.
+    //! It replaces an earlier DbXml-based repository implementation
     template <typename number>
     class repository_unqlite: public json_interface_repository<number>
       {
@@ -105,127 +107,77 @@ namespace transport
         ~repository_unqlite();
 
 
-        // PUSH TASKS TO THE REPOSITORY DATABASE -- implements a 'repository' interface
+        // TRANSACTION MANAGEMENT
+
+      protected:
+
+        //! Notionally begin a transaction on the database.
+        //! Currently this is implemented by opening the database at the beginning of an 'atomic' transaction,
+        //! and then closing it at the end.
+        //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
+        void begin_transaction();
+
+        //! Notionally commit a transaction to the database.
+        //! Currently this is implemented by closing the database at the end of an 'atomic' transaction.
+        //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
+        void commit_transaction();
+
+
+        // CREATE RECORDS -- implements a 'repository' interface
 
       public:
 
         //! Write a 'model/initial conditions/parameters' combination (a 'package') to the package database.
         //! No combination with the supplied name should already exist; if it does, this is considered an error.
-        virtual void write_package(const initial_conditions<number>& ics, const model<number>* m) override;
+        virtual void commit_package(const initial_conditions<number>& ics) override;
 
         //! Write an integration task to the database.
         //! Delegates write_integration_task() to do the work.
-        virtual void write_task(const integration_task<number>& tk, const model<number>* m) override;
+        virtual void commit_task(const integration_task<number>& tk) override;
 
         //! Write an output task to the database
-        virtual void write_task(const output_task<number>& tk) override;
-
-
-        // PULL TASKS FROM THE REPOSITORY DATABASE -- implements a 'repository' interface
-
-      public:
-
-        //! Query the database for a named task, and reconstruct it if present.
-		    //! Supports both integration_task<> and output_task<> items.
-		    //! Output tasks write nullptr to the model* handle.
-        virtual task<number>* lookup_task(const std::string& name, model<number>*& m,
-                                          typename instance_manager<number>::model_finder finder) override;
-
-      protected:
-
-        //! Extract an integration task from a serialization reader
-        task<number>* lookup_integration_task(const std::string& name, task_type type,
-                                              model<number>*& m, typename instance_manager<number>::model_finder finder,
-                                              unqlite_serialization_reader* reader);
-
-        //! Extract an output task from a serialization reader
-        task<number>* lookup_output_task(const std::string& name, typename instance_manager<number>::model_finder finder,
-                                         unqlite_serialization_reader* reader);
-
-
-        // ADD AN OUTPUT-GROUP TO A TASK -- implements a 'repository' interface
-
-      public:
-
-        //! Insert a record for new twopf output in the task database, and set up paths to a suitable data container.
-        //! Delegates create_integration_writer to do the work.
-        virtual typename repository<number>::integration_writer new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                            model<number>* m, unsigned int worker) override;
-
-        //! Insert a record for a new threepf output in the task database, and set up paths to a suitable data container.
-        //! Delegates create_integration_writer to do the work.
-        virtual typename repository<number>::integration_writer new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                                                            model<number>* m, unsigned int worker) override;
-
-        //! Move a failed output group to a safe location
-        virtual void move_output_group_to_failure(typename repository<number>::integration_writer& writer) override;
-
-      protected:
-
-        //! Create an integration writer and its associated environment.
-        typename repository<number>::integration_writer create_integration_writer(model<number>* m,
-                                                                                  unsigned int worker, integration_task<number>* tk,
-                                                                                  const std::list<std::string>& tags);
-
-		    //! Commit the output of an integration writer to the database. Called as a callback
-		    void close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m);
-
-        //! Advise that an output group has been committed
-        template <typename Payload>
-        void advise_commit(typename repository<number>::template output_group_record<Payload>& group);
-
-
-        // PULL OUTPUT-GROUPS FROM A TASK -- implements a 'repository' interface
-
-      public:
-
-		    //! Enumerate the output available from a named task
-        virtual std::list<typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
-          enumerate_integration_task_output(const std::string& name) override;
-
-
-        // PUSH DERIVED-PRODUCT SPECIFICATIONS TO THE DATABASE -- implements a 'repository' interface
-
-      public:
+        virtual void commit_task(const output_task<number>& tk) override;
 
         //! Write a derived product specification
-        virtual void write_derived_product(const derived_data::derived_product<number>& d) override;
+        virtual void commit_derived_product(const derived_data::derived_product<number>& d) override;
 
 
-		    // PULL DERIVED-PRODUCT SPECIFICATIONS FROM THE DATABASE -- implements a 'repository' interface
-
-      public:
-
-        //! Query a derived product specification
-		    virtual derived_data::derived_product<number>* lookup_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder) override;
-
-
-      protected:
-
-
-        // ADD DERIVED CONTENT TO AN OUTPUT TASK -- implements a 'repository' interface
+		    // READ RECORDS FROM THE DATABASE -- implements a 'repository' interface
 
       public:
 
-        //! Add derived content
-        virtual typename repository<number>::derived_content_writer
-          new_output_task_output(output_task<number> *tk, const std::list<std::string> &tags, unsigned int worker) override;
+		    //! Read a package record from the database
+		    virtual package_record query_package(const std::string& name) override;
 
-		    //! Move a failed output group to a safe location
-		    virtual void move_output_group_to_failure(typename repository<number>::derived_content_writer& writer) override;
+        //! Read a task record from the database
+        virtual task_record query_task(const std::string& name) override;
 
-        //! Lookup an output group for a task, given a set of tags
-        virtual typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
-          find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags) override;
+        //! Read a derived product specification from the database
+        virtual derived_product_record query_derived_product(const std::string& name) override;
 
-      protected:
+        //! Enumerate the output groups available from a named integration task
+        virtual std::list<typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
+	        enumerate_integration_task_content(const std::string& name) override;
 
-		    //! Create a derived content writer and its associated environment.
-        typename repository<number>::derived_content_writer
-          create_derived_content_writer(unsigned int worker, output_task<number>* tk, const std::list<std::string>& tags);
+		    //! Enumerate the output groups available from a named output task
+		    virtual std::list<typename repository<number>::template output_group_record< typename repository<number>::output_payload > >
+		      enumerate_output_task_content(const std::string& name) override;
 
-		    //! Commit the output of a derived content writer to the database. Called as a callback
-		    void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
+
+        // ADD CONTENT ASSOCIATED WITH A TASK -- implements a 'repository' interface
+
+      public:
+
+        //! Generate a writer object for new integration output
+        virtual typename repository<number>::integration_writer new_integration_task_content(integration_task_record& rec, const std::list<std::string>& tags, unsigned int worker) override;
+
+        //! Generate a writer object for new derived-content output
+        virtual typename repository<number>::derived_content_writer new_output_task_content(output_task_record& rec, const std::list<std::string>& tags, unsigned int worker) override;
+
+
+		    // QUARANTINE FAILED CONTENT
+
+      public:
 
 
         // JSON INTERFACE
@@ -248,32 +200,80 @@ namespace transport
         virtual std::string export_JSON_content_record(const std::string& name) override;
 
 
-        // INTERNAL UTILITY FUNCTIONS
+		    // INTEGRATION WRITER CALLBACKS
 
       protected:
 
-		    //! Notionally begin a transaction on the database.
-		    //! Currently this is implemented by opening the database at the beginning of an 'atomic' transaction,
-		    //! and then closing it at the end.
-		    //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
-		    void begin_transaction();
+        //! Commit the output of an integration writer to the database. Called as a callback
+        void close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m);
 
-		    //! Notionally commit a transaction to the database.
-		    //! Currently this is implemented by closing the database at the end of an 'atomic' transaction.
-		    //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
-		    void commit_transaction();
+        //! Advise that an output group has been committed
+        template <typename Payload>
+        void advise_commit(typename repository<number>::template output_group_record<Payload>& group);
 
-		    //! Convert a named database task record into a serialization reader, returned as a pointer.
-		    //! It's up to the calling function to destroy the pointer which is returned.
+        //! Move a failed output group to a safe location
+        virtual void abort_integration_writer(typename repository<number>::integration_writer& writer) override;
+
+
+		    // DERIVED CONTENT WRITER CALLBACKS
+
+      protected:
+
+        //! Commit the output of a derived content writer to the database. Called as a callback
+        void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
+
+        //! Move a failed output group to a safe location
+        virtual void abort_derived_content_writer(typename repository<number>::derived_content_writer& writer) override;
+
+
+		    // ******* OLD STUFF
+
+
+        //! Extract an integration task from a serialization reader
+        task<number>* lookup_integration_task(const std::string& name, task_type type,
+                                              model<number>*& m, typename instance_manager<number>::model_finder finder,
+                                              unqlite_serialization_reader* reader);
+
+        //! Extract an output task from a serialization reader
+        task<number>* lookup_output_task(const std::string& name, typename instance_manager<number>::model_finder finder,
+                                         unqlite_serialization_reader* reader);
+
+        //! Convert a named database task record into a serialization reader, returned as a pointer.
+        //! It's up to the calling function to destroy the pointer which is returned.
         unqlite_serialization_reader* get_task_serialization_reader(const std::string& name, int& unqlite_id, task_type& type);
 
-		    //! Convert a named database package record into a serialization reader, returned as a pointer.
-		    //! It's up to the calling function to destroy the pointer which is returned.
-		    unqlite_serialization_reader* get_package_serialization_reader(const std::string& name, int& unqlite_id);
+        //! Convert a named database package record into a serialization reader, returned as a pointer.
+        //! It's up to the calling function to destroy the pointer which is returned.
+        unqlite_serialization_reader* get_package_serialization_reader(const std::string& name, int& unqlite_id);
 
-		    //! Convert a named database derived product record into a serialization reader, returned as a pointer.
-		    //! It's up to the calling function to destroy the pointer which is returned.
-		    unqlite_serialization_reader* get_derived_product_serialization_reader(const std::string& name, int& unqlite_id);
+        //! Convert a named database derived product record into a serialization reader, returned as a pointer.
+        //! It's up to the calling function to destroy the pointer which is returned.
+        unqlite_serialization_reader* get_derived_product_serialization_reader(const std::string& name, int& unqlite_id);
+
+      protected:
+
+        //! Create an integration writer and its associated environment.
+        typename repository<number>::integration_writer create_integration_writer(model<number>* m,
+                                                                                  unsigned int worker, integration_task<number>* tk,
+                                                                                  const std::list<std::string>& tags);
+
+
+        // ADD DERIVED CONTENT TO AN OUTPUT TASK -- implements a 'repository' interface
+
+      public:
+
+        //! Lookup an output group for a task, given a set of tags
+        virtual typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
+          find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags) override;
+
+      protected:
+
+		    //! Create a derived content writer and its associated environment.
+        typename repository<number>::derived_content_writer
+          create_derived_content_writer(unsigned int worker, output_task<number>* tk, const std::list<std::string>& tags);
+
+
+		    // ********** END OLD STUFF
 
 
         // INTERNAL DATA
@@ -479,7 +479,7 @@ namespace transport
     // Write a model/initial-conditions/parameters combination to the repository
 		// DATABASE ENTRY POINT
     template <typename number>
-    void repository_unqlite<number>::write_package(const initial_conditions<number>& ics, const model<number>* m)
+    void repository_unqlite<number>::commit_package(const initial_conditions<number>& ics, const model<number>* m)
 	    {
         assert(m != nullptr);
 
@@ -538,7 +538,7 @@ namespace transport
     // Write a task to the repository
 		// DATABASE ENTRY POINT
     template <typename number>
-    void repository_unqlite<number>::write_task(const integration_task<number>& tk, const model<number>* m)
+    void repository_unqlite<number>::commit_task(const integration_task<number>& tk, const model<number>* m)
 	    {
         assert(m != nullptr);
 
@@ -568,7 +568,7 @@ namespace transport
             msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A << " '" << tk.get_name() << "' "
                 << __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_B << " '" << tk.get_ics().get_name() << "'";
             this->warning(msg.str());
-            this->write_package(tk.get_ics(), m);
+            this->commit_package(tk.get_ics(), m);
           }
 
         // create an unqlite_serialization_writer, used to emit the serialized record to the database
@@ -610,7 +610,7 @@ namespace transport
     // Write an output task to the database
 		// DATABASE ENTRY POINT
 		template <typename number>
-		void repository_unqlite<number>::write_task(const output_task<number>& tk)
+		void repository_unqlite<number>::commit_task(const output_task<number>& tk)
 	    {
 		    // open a new transaction, if necessary. After this we can assume the database handles are live
 		    this->begin_transaction();
@@ -645,7 +645,7 @@ namespace transport
                 msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_A << " '" << tk.get_name() << "' "
                     << __CPP_TRANSPORT_REPO_AUTOCOMMIT_OUTPUT_B << " '" << product->get_name() << "'";
                 this->warning(msg.str());
-                this->write_derived_product(*product);
+                this->commit_derived_product(*product);
               }
           }
 
@@ -904,8 +904,8 @@ namespace transport
     // Query the database for a named task, which is reconstructed and returned as a task<> object
 		// DATABASE ENTRY POINT
     template <typename number>
-    task<number>* repository_unqlite<number>::lookup_task(const std::string& name, model<number>*& m,
-                                                          typename instance_manager<number>::model_finder finder)
+    task<number>* repository_unqlite<number>::query_task(const std::string& name, model<number>*& m,
+                                                         typename instance_manager<number>::model_finder finder)
 	    {
         // open a new transaction, if necessary. After this we can assume the database handles are live
         this->begin_transaction();
@@ -1013,7 +1013,7 @@ namespace transport
 
 				// generate lookup functions for tasks and derived products
 
-		    typename output_task<number>::derived_product_finder pfinder = std::bind(&repository_unqlite<number>::lookup_derived_product, this, std::placeholders::_1, finder);
+		    typename output_task<number>::derived_product_finder pfinder = std::bind(&repository_unqlite<number>::query_derived_product, this, std::placeholders::_1, finder);
 
 		    task<number>* rval = output_task_helper::deserialize<number>(name, reader, pfinder);
 
@@ -1028,8 +1028,8 @@ namespace transport
 		// DATABASE ENTRY POINT
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::new_integration_task_output(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                            model<number>* m, unsigned int worker)
+    repository_unqlite<number>::new_integration_task_content(twopf_task<number>* tk, const std::list<std::string>& tags,
+                                                             model<number>* m, unsigned int worker)
       {
         assert(tk != nullptr);
         assert(m != nullptr);
@@ -1125,8 +1125,11 @@ namespace transport
 
 		    // integration_writer constructor takes copies of tk and tags because we can't be sure that they're long-lived objects;
 		    // model is ok because mode instances are handled by the instance_manager
-		    return typename repository<number>::integration_writer(tk, tags, now,
-		                                                           std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1, m),
+		    typename repository<number>::integration_writer::callback_group callbacks;
+		    callbacks.commit = std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1, m);
+		    callbacks.abort  = std::bind(&repository_unqlite<number>::abort_integration_writer, this, std::placeholders::_1);
+
+		    return typename repository<number>::integration_writer(tk, tags, now, callbacks,
 		                                                           this->get_root_path(),
 		                                                           output_path, sql_path, log_path, task_path, temp_path,
 		                                                           worker, m->supports_per_configuration_statistics());
@@ -1218,7 +1221,7 @@ namespace transport
 
 
     template <typename number>
-    void repository_unqlite<number>::move_output_group_to_failure(typename repository<number>::integration_writer& writer)
+    void repository_unqlite<number>::abort_integration_writer(typename repository<number>::integration_writer& writer)
       {
         boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
@@ -1279,7 +1282,7 @@ namespace transport
 		// to be extracted from the database
 		template <typename number>
 		std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
-    repository_unqlite<number>::enumerate_integration_task_output(const std::string& name)
+    repository_unqlite<number>::enumerate_integration_task_content(const std::string& name)
 			{
 		    std::list<typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group_list;
 
@@ -1326,7 +1329,7 @@ namespace transport
 
     // Write a derived product specification
 		template <typename number>
-    void repository_unqlite<number>::write_derived_product(const derived_data::derived_product<number>& d)
+    void repository_unqlite<number>::commit_derived_product(const derived_data::derived_product<number>& d)
 	    {
 		    // open a new transaction, if necessary. After this we can assume the database handles are live
 		    this->begin_transaction();
@@ -1353,7 +1356,7 @@ namespace transport
                 msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
                     << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << (*t).first->get_name() << "'";
                 this->warning(msg.str());
-                this->write_task(*((*t).first), (*t).second);
+                this->commit_task(*((*t).first), (*t).second);
               }
           }
 
@@ -1390,7 +1393,7 @@ namespace transport
 
 		//! Query a derived product specification
 		template <typename number>
-		derived_data::derived_product<number>* repository_unqlite<number>::lookup_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder)
+		derived_data::derived_product<number>* repository_unqlite<number>::query_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder)
 			{
 				// open a new transaction, if necessary. After this we can assume the database handles are live
 				this->begin_transaction();
@@ -1399,7 +1402,7 @@ namespace transport
 				int product_id = 0;
 				unqlite_serialization_reader* product_reader = this->get_derived_product_serialization_reader(product, product_id);
 
-				typename repository<number>::task_finder tfinder = std::bind(&repository_unqlite<number>::lookup_task, this, std::placeholders::_1, std::placeholders::_2, finder);
+				typename repository<number>::task_finder tfinder = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1, std::placeholders::_2, finder);
 
         // move reader to details block
         product_reader->start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
@@ -1424,7 +1427,7 @@ namespace transport
 
 		template <typename number>
 		typename repository<number>::derived_content_writer
-		repository_unqlite<number>::new_output_task_output(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
+		repository_unqlite<number>::new_output_task_content(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
 			{
 		    assert(tk != nullptr);
 
@@ -1476,8 +1479,11 @@ namespace transport
 		    boost::filesystem::create_directories(this->get_root_path() / log_path);
 		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-		    return typename repository<number>::derived_content_writer(tk, tags, now,
-		                                                               std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1),
+				typename repository<number>::derived_content_writer::callback_group callbacks;
+				callbacks.commit = std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1);
+				callbacks.abort  = std::bind(&repository_unqlite<number>::abort_derived_content_writer, this, std::placeholders::_1);
+
+		    return typename repository<number>::derived_content_writer(tk, tags, now, callbacks,
 		                                                               this->get_root_path(),
 		                                                               output_path, log_path, task_path, temp_path, worker);
 			}
@@ -1547,7 +1553,7 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::move_output_group_to_failure(typename repository<number>::derived_content_writer& writer)
+		void repository_unqlite<number>::abort_derived_content_writer(typename repository<number>::derived_content_writer& writer)
 			{
 		    boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
@@ -1589,7 +1595,7 @@ namespace transport
 
 		    // search for output groups associated with this task
         std::list< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
-          output = this->enumerate_integration_task_output(tk->get_name());
+          output = this->enumerate_integration_task_content(tk->get_name());
 
 		    // remove items from the list which have mismatching tags
         output.remove_if( [&] (const typename repository<number>::template output_group_record< typename repository<number>::integration_payload >& group) { return(group.check_tags(tags)); } );

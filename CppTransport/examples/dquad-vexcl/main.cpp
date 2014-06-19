@@ -44,7 +44,7 @@ int main(int argc, char* argv[])
     if(mgr->is_master())
       {
         transport::repository<double>* repo = mgr->get_repository();
-        std::list<typename transport::repository<double>::output_group_record> output = repo->enumerate_integration_task_output("dquad.threepf-1");
+        std::list<typename transport::repository<double>::output_group_record> output = repo->enumerate_integration_task_content("dquad.threepf-1");
 
         for(std::list<typename transport::repository<double>::output_group_record>::iterator t = output.begin(); t != output.end(); t++)
           {

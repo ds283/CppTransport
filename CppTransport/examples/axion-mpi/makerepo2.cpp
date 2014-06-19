@@ -223,7 +223,7 @@ int main(int argc, char* argv[])
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
 		// write output tasks to the database
-		repo->write_task(threepf_output);
+    repo->commit_task(threepf_output);
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
