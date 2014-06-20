@@ -106,7 +106,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary integration tasks
-            virtual void get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const = 0;
+            virtual void get_task_list(typename std::vector< integration_task<number>* >& list) const = 0;
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface

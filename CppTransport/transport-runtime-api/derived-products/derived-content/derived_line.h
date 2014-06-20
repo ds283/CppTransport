@@ -121,7 +121,7 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						derived_line(const integration_task<number>& tk, model<number>* m, axis_type at, value_type vt,
+						derived_line(const integration_task<number>& tk, axis_type at, value_type vt,
 						             unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! Deserialization constructor
@@ -138,10 +138,7 @@ namespace transport
 				    //! Get parent task
 				    integration_task<number>* get_parent_task() const { return(this->parent_task); }
 
-            //! Get parent model
-            model<number>* get_parent_model() const { return(this->mdl); }
-
-						//! Get axis type
+            //! Get axis type
 						axis_type get_axis_type() const { return(this->x_type); }
 						//! Get value type
 						value_type get_value_type() const { return(this->y_type); }
@@ -236,10 +233,14 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(const integration_task<number>& tk, model<number>* m,
-				                                   axis_type at, value_type vt, unsigned int prec)
-					: x_type(at), y_type(vt), dot_meaning(momenta), klabel_meaning(conventional), precision(prec),
-		        mdl(m), parent_task(dynamic_cast<integration_task<number>*>(tk.clone()))
+				derived_line<number>::derived_line(const integration_task<number>& tk, axis_type at, value_type vt, unsigned int prec)
+					: x_type(at),
+            y_type(vt),
+            dot_meaning(momenta),
+            klabel_meaning(conventional),
+            precision(prec),
+		        mdl(tk->get_model()),
+            parent_task(dynamic_cast<integration_task<number>*>(tk.clone()))
 					{
 						assert(parent_task != nullptr);
 
@@ -262,9 +263,10 @@ namespace transport
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME, parent_task_name);
 
 				    // extract parent task and model
-				    task<number>* tk = finder(parent_task_name, mdl);
+				    task<number>* tk = finder(parent_task_name);
 				    if((parent_task = dynamic_cast< integration_task<number>* >(tk)) == nullptr)
 					    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
+            mdl = tk->get_model();
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype;

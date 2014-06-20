@@ -10,8 +10,17 @@
 
 #define __CPP_TRANSPORT_REPO_MISSING_ROOT                "Repository error: Root directory does not exist"
 #define __CPP_TRANSPORT_REPO_MISSING_DATABASE            "Repository error: Repository database not present or inaccessible"
-#define __CPP_TRANSPORT_REPO_PACKAGE_EXISTS              "Repository error: Attempt to insert duplicate model specification"
-#define __CPP_TRANSPORT_REPO_TASK_EXISTS                 "Repository error: Attempt to insert duplicate integration specification"
+
+#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_A             "Repository error: Atttempt to insert duplicate"
+#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_B             "record"
+
+#define __CPP_TRANSPORT_REPO_RECORD_MISSING_A            "Repository error:"
+#define __CPP_TRANSPORT_REPO_RECORD_MISSING_B            "record for"
+#define __CPP_TRANSPORT_REPO_RECORD_MISSING_C            "not found when committing update to repository"
+
+#define __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_A          "Repository error: Duplicate"
+#define __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_B          "record for"
+
 #define __CPP_TRANSPORT_REPO_INSERT_ERROR                "Repository error: Error while inserting document into repository (backend code="
 #define __CPP_TRANSPORT_REPO_QUERY_ERROR                 "Repository error: Error while querying document from repository (backend code="
 #define __CPP_TRANSPORT_REPO_DELETE_ERROR                "Repository error: Error while deleting repository document (backend id="
@@ -72,7 +81,8 @@
 #define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
 
 #define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS      "Repository error: Attempt to insert duplicate derived-product specification"
-#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived-product specifications for non integration task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
 
 #define __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT     "Repository error: Could not find specified derived-product"
 #define __CPP_TRANSPORT_REPO_DUPLICATE_DERIVED_PRODUCT   "Repository error: Duplicate derived-product"
@@ -81,7 +91,14 @@
 #define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   "Repository error: no matching output groups for task"
 
 #define __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
-#define __CPP_TRANSPORT_REPO_PROUDCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
+#define __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
+
+#define __CPP_TRANSPORT_REPO_PACKAGE_RECORD              "package"
+#define __CPP_TRANSPORT_REPO_TASK_RECORD                 "task"
+#define __CPP_TRANSPORT_REPO_INTEGRATION_TASK_RECORD     "integration task"
+#define __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD          "output task"
+#define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_RECORD      "derived product"
+#define __CPP_TRANSPORT_REPO_CONTENT_RECORD              "content"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

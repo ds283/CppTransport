@@ -70,7 +70,7 @@ namespace transport
 	          // CONSTRUCTOR, DESTRUCTOR
 
 		        //! Basic user-facing constructor
-		        twopf_line(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel, filter::twopf_kconfig_filter& kfilter);
+		        twopf_line(const twopf_list_task<number>& tk, index_selector<2>& sel, filter::twopf_kconfig_filter& kfilter);
 
 		        //! Deserialization constructor
 		        twopf_line(serialization_reader* reader);
@@ -142,19 +142,15 @@ namespace transport
 
 
 		    template <typename number>
-		    twopf_line<number>::twopf_line(const twopf_list_task<number>& tk, model<number>* m,
-		                                   index_selector<2>& sel, filter::twopf_kconfig_filter& kfilter)
+		    twopf_line<number>::twopf_line(const twopf_list_task<number>& tk, index_selector<2>& sel, filter::twopf_kconfig_filter& kfilter)
 		      : active_indices(sel), twopf_meaning(real)
 			    {
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
-
-		        if(active_indices.get_number_fields() != m->get_N_fields())
+		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << m->get_N_fields() << ")";
+			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 

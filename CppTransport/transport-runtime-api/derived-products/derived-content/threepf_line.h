@@ -61,7 +61,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        threepf_line(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter);
+		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter);
 
 		        //! Deserialization constructor
 		        threepf_line(serialization_reader* reader);
@@ -138,19 +138,15 @@ namespace transport
 
 
         template <typename number>
-        threepf_line<number>::threepf_line(const threepf_task<number>& tk, model<number>* m,
-                                           index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter)
+        threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter)
 	        : active_indices(sel), use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 	        {
-            assert(m != nullptr);
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
-
-            if(active_indices.get_number_fields() != m->get_N_fields())
+            if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << m->get_N_fields() << ")";
+	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
 

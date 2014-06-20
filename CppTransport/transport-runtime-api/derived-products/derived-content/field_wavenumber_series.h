@@ -38,7 +38,7 @@ namespace transport
           public:
 
             //! construct a twopf wavenumber-series object
-            twopf_wavenumber_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+            twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                     filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
                                     unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -80,14 +80,12 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+        twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, m, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
-	          twopf_line<number>(tk, m, sel, kfilter),
+	        : derived_line<number>(tk, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
+	          twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
-            assert(m != nullptr);
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 	        }
 
 
@@ -190,7 +188,7 @@ namespace transport
 		      public:
 
 				    //! construct a threepf wavenumber-data object
-				    threepf_wavenumber_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+				    threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
 				    filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 				    unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -238,11 +236,11 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+        threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, m, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
-	          threepf_line<number>(tk, m, sel, kfilter),
+	        : derived_line<number>(tk, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
+	          threepf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
             assert(m != nullptr);

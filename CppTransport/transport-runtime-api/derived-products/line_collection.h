@@ -177,7 +177,7 @@ namespace transport
 
             //! Collect a list of tasks which this derived product depends on;
             //! used by the repository to autocommit any necessary integration tasks
-            virtual void get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const override;
+            virtual void get_task_list(typename std::vector< integration_task<number>* >& list) const override;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -488,14 +488,14 @@ namespace transport
 
 
         template <typename number>
-        void line_collection<number>::get_task_list(typename std::vector< typename std::pair< integration_task<number>*, model<number>* > >& list) const
+        void line_collection<number>::get_task_list(typename std::vector< integration_task<number>* >& list) const
           {
             list.clear();
 
             // collect data from each derived_line
             for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
               {
-                list.push_back(std::make_pair((*t)->get_parent_task(), (*t)->get_parent_model()));
+                list.push_back((*t)->get_parent_task());
               }
           }
 

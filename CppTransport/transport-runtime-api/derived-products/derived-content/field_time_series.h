@@ -38,7 +38,7 @@ namespace transport
 		      public:
 
             //! construct a background time-data object
-            background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
+            background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
                                    filter::time_filter tfilter, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
@@ -97,14 +97,12 @@ namespace transport
 				// note that because time_series<> inherits virtually from derived_line<>, the constructor for
 				// derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    background_time_series<number>::background_time_series(const integration_task<number>& tk, model<number>* m, index_selector<1>& sel,
+		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
 			    : active_indices(sel),
-			      derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::background_field, prec),
+			      derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::background_field, prec),
 			      time_series<number>(tk, tfilter)
 			    {
-		        assert(m != nullptr);
-
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 			        {
 		            std::ostringstream msg;
@@ -246,7 +244,7 @@ namespace transport
 		      public:
 
 		        //! construct a twopf time-series object
-		        twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+		        twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                          filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
 		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -289,14 +287,12 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, model<number>* m, index_selector<2>& sel,
+		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
-			      twopf_line<number>(tk, m, sel, kfilter),
+			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+			      twopf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 			    }
 
 
@@ -399,7 +395,7 @@ namespace transport
 		      public:
 
             //! construct a threepf time-data object
-            threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+            threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -447,15 +443,13 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, model<number>* m, index_selector<3>& sel,
+		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
 		                                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
-			      threepf_line<number>(tk, m, sel, kfilter),
+			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+			      threepf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
 			    }
 
 

@@ -39,9 +39,8 @@ namespace transport
           public:
 
             //! construct a zeta two-pf time data object
-            zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
-                                   filter::time_filter tfilter,
-                                   filter::twopf_kconfig_filter kfilter,
+            zeta_twopf_time_series(const twopf_list_task<number>& tk,
+                                   filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
                                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -82,14 +81,12 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_twopf_time_series<number>::zeta_twopf_time_series(const twopf_list_task<number>& tk, model<number>* m,
+        zeta_twopf_time_series<number>::zeta_twopf_time_series(const twopf_list_task<number>& tk,
                                                                filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
-	          zeta_twopf_line<number>(tk, m, kfilter),
+	        : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+	          zeta_twopf_line<number>(tk, kfilter),
 	          time_series<number>(tk, tfilter)
           {
-            assert(m != nullptr);
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
           }
 
 
@@ -224,8 +221,7 @@ namespace transport
           public:
 
             //! construct a zeta_threepf_time_series object
-            zeta_threepf_time_series(const threepf_task<number>& tk, model<number>* m,
-                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
+            zeta_threepf_time_series(const threepf_task<number>& tk, filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                      unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
@@ -266,14 +262,12 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_threepf_time_series<number>::zeta_threepf_time_series(const threepf_task<number>& tk, model<number>* m,
+        zeta_threepf_time_series<number>::zeta_threepf_time_series(const threepf_task<number>& tk,
                                                                    filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-          : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
-            zeta_threepf_line<number>(tk, m, kfilter),
+          : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+            zeta_threepf_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {
-            assert(m != nullptr);
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
           }
 
 
@@ -476,7 +470,7 @@ namespace transport
           public:
 
             //! construct a zeta_reduced_bispectrum_time_series object
-            zeta_reduced_bispectrum_time_series(const threepf_task<number>& tk, model<number>* m,
+            zeta_reduced_bispectrum_time_series(const threepf_task<number>& tk,
                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -518,14 +512,13 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const threepf_task<number>& tk, model<number>* m,
-                                                                                         filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-          : derived_line<number>(tk, m, derived_line<number>::time_series, derived_line<number>::fNL, prec),
-            zeta_reduced_bispectrum_line<number>(tk, m, kfilter),
+        zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const threepf_task<number>& tk,
+                                                                                         filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
+                                                                                         unsigned int prec)
+          : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::fNL, prec),
+            zeta_reduced_bispectrum_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {
-            assert(m != nullptr);
-            if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_MODEL);
           }
 
 
