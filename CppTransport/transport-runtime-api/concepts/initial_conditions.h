@@ -83,6 +83,9 @@ namespace transport
         //! Return parameters associated with these initial conditions
         const parameters<number>& get_params() const { return(this->params); }
 
+        //! Return model associated with this package
+        model<number>* get_model() const { return(this->mdl); }
+
         //! Return std::vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
 

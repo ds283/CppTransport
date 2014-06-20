@@ -72,6 +72,7 @@
 // used for integration tasks
 #define __CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS            "integration-details"
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                  "output-groups"
+#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP                   "name"
 // used for output tasks
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS                 "output-task"
 
@@ -218,6 +219,9 @@ namespace transport
 				    //! get creation time
 				    const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
 
+            //! set creation time (to be used with care)
+            void set_creation_time(const boost::posix_time::ptime& t) { this->creation_time = t; }
+
 				    //! get last-edit time
 				    const boost::posix_time::ptime& get_last_edit_time() const { return(this->last_edit_time); }
 
@@ -283,11 +287,15 @@ namespace transport
 				    virtual ~repository_record() = default;
 
 
-				    // GET NAME
+				    // NAME HANDLING
 
 		      public:
 
+            //! Get record name
 				    const std::string get_name() const { return(this->name); }
+
+            //! Set record time from creation-time metadata
+            const std::string set_name_from_creation_time() { this->name = boost::posix_time::to_iso_string(this->metadata.get_creation_time()); }
 
 
 				    // GET AND SET METADATA -- delegated to the metadata container
@@ -296,6 +304,9 @@ namespace transport
 
 				    //! get creation time
 				    const boost::posix_time::ptime& get_creation_time() const { return(this->metadata.get_creation_time()); }
+
+            //! set creation time (use with care)
+            void set_creation_time(const boost::posix_time::ptime& t) { this->metadata.set_creation_time(t); }
 
 				    //! get last-edit time
 				    const boost::posix_time::ptime& get_last_edit_time() const { return(this->metadata.get_last_edit_time()); }
@@ -321,6 +332,14 @@ namespace transport
 
 				    //! serialize this object
 				    virtual void serialize(serialization_writer& writer) const override;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const = 0;
 
 
 				    // INTERNAL DATA
@@ -374,6 +393,14 @@ namespace transport
 				    virtual void serialize(serialization_writer& writer) const override;
 
 
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new package_record(static_cast<const package_record&>(*this)); };
+
+
 				    // INTERNAL DATA
 
 		      protected:
@@ -411,8 +438,11 @@ namespace transport
 
           public:
 
-            // get record type
+            //! get record type
             virtual type get_type() const = 0;
+
+            //! Add content
+            void add_new_output_group(const std::string& name) { this->content_groups.push_back(name); }
 
 
 				    // SERIALIZATION -- implements a 'serializable' interface
@@ -421,6 +451,14 @@ namespace transport
 
 				    //! serialize this object
 				    virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! List of content groups associated with this task
+            std::list<std::string> content_groups;
 
 			    };
 
@@ -468,6 +506,14 @@ namespace transport
 
 				    //! serialize this object
 				    virtual void serialize(serialization_writer& writer) const override;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new integration_task_record(static_cast<const integration_task_record&>(*this)); };
 
 
 				    // INTERNAL DATA
@@ -525,6 +571,14 @@ namespace transport
 				    virtual void serialize(serialization_writer& writer) const override;
 
 
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new output_task_record(static_cast<const output_task_record&>(*this)); };
+
+
 				    // INTERNAL DATA
 
 		      protected:
@@ -570,6 +624,14 @@ namespace transport
 
 				    //! serialize this object
 				    virtual void serialize(serialization_writer& writer) const override;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new derived_product_record(static_cast<const derived_product_record&>(*this)); };
 
 
 				    // INTERNAL DATA
@@ -980,12 +1042,21 @@ namespace transport
         class output_group_record : public repository_record
 	        {
 
+          public:
+
+            class paths_group
+              {
+              public:
+                boost::filesystem::path root;
+                boost::filesystem::path output;
+              };
+
 	          // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
             //! Create an output_group_record descriptor
-            output_group_record(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+            output_group_record(const std::string& tn, const paths_group& p,
                                 bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
                                 repository_record::handler_package& pkg);
 
@@ -1030,10 +1101,10 @@ namespace transport
           public:
 
             //! Get path to repository root
-            const boost::filesystem::path& get_abs_repo_path() const { return (this->repo_root_path); }
+            const boost::filesystem::path& get_abs_repo_path() const { return(this->paths.root); }
 
             //! Get path to output root (typically a subdir of the repository root)
-            const boost::filesystem::path& get_abs_output_path() const { return (this->data_root_path); }
+            const boost::filesystem::path& get_abs_output_path() const { return(this->paths.root/this->paths.output); }
 
 
 		        // PAYLOAD
@@ -1050,6 +1121,14 @@ namespace transport
 
             //! Serialize this object
             void serialize(serialization_writer& writer) const;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new output_group_record(static_cast<const output_group_record&>(*this)); };
 
 
 		        // WRITE TO A STREAM
@@ -1087,11 +1166,8 @@ namespace transport
 
 		        // PATHS
 
-            //! Path to root of repository. Other paths are relative to this.
-            boost::filesystem::path repo_root_path;
-
-            //! Path of parent directory containing the output, usually residing within the repository
-            boost::filesystem::path data_root_path;
+            //! Paths associated with this output group
+            paths_group paths;
 
 	        };
 
@@ -1128,9 +1204,24 @@ namespace transport
             class callback_group
 	            {
               public:
-                commit_callback commit;
-                abort_callback  abort;
+                commit_callback          commit;
+                abort_callback           abort;
+
+                std::list<std::string>   tags;
+                boost::posix_time::ptime creation_time;
 	            };
+
+            class paths_group
+              {
+              public:
+                const boost::filesystem::path root;
+                const boost::filesystem::path output;
+                const boost::filesystem::path data;
+                const boost::filesystem::path log;
+                const boost::filesystem::path task;
+                const boost::filesystem::path temp;
+              };
+
 
 	          // CONSTRUCTOR, DESTRUCTOR
 
@@ -1139,13 +1230,7 @@ namespace transport
             //! Construct an integration container object.
             //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
             //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-            integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
-                               boost::posix_time::ptime& ct, callback_group& c,
-                               const boost::filesystem::path& root,
-                               const boost::filesystem::path& output, const boost::filesystem::path& data,
-                               const boost::filesystem::path& log, const boost::filesystem::path& task,
-                               const boost::filesystem::path& temp,
-                               unsigned int w, bool s);
+            integration_writer(integration_task_record* rec, callback_group& c, paths_group& p, unsigned int w);
 
 		        //! override copy constructor to perform a deep copy
 		        integration_writer(const integration_writer& obj);
@@ -1203,19 +1288,19 @@ namespace transport
           public:
 
             //! Return path to output directory
-            boost::filesystem::path get_abs_output_path() const { return(this->repo_root/this->output_path); }
+            boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
 
             //! Return path to data container
-            boost::filesystem::path get_abs_container_path() const { return(this->repo_root/this->data_path); }
+            boost::filesystem::path get_abs_container_path() const { return(this->paths.root/this->paths.data); }
 
             //! Return path to log directory
-            boost::filesystem::path get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
+            boost::filesystem::path get_abs_logdir_path() const { return(this->paths.root/this->paths.log); }
 
             //! Return path to task-data container
-            boost::filesystem::path get_abs_taskfile_path() const { return(this->repo_root/this->task_path); }
+            boost::filesystem::path get_abs_taskfile_path() const { return(this->paths.root/this->paths.task); }
 
             //! Return path to directory for temporary files
-            boost::filesystem::path get_abs_tempdir_path() const { return(this->repo_root/this->temp_path); }
+            boost::filesystem::path get_abs_tempdir_path() const { return(this->paths.root/this->paths.temp); }
 
 
 		        // RELATIVE PATHS
@@ -1223,10 +1308,10 @@ namespace transport
           public:
 
 		        //! Return path to output directory
-		        boost::filesystem::path get_relative_output_path() const { return(this->output_path); }
+		        boost::filesystem::path get_relative_output_path() const { return(this->paths.output); }
 
 		        //! Return path to data container
-		        boost::filesystem::path get_relative_container_path() const { return(this->data_path); }
+		        boost::filesystem::path get_relative_container_path() const { return(this->paths.data); }
 
 
 		        // STATISTICS
@@ -1242,10 +1327,10 @@ namespace transport
           public:
 
 		        //! Return task
-		        integration_task<number>* get_task() const { return(this->parent_task); }
+		        integration_task_record* get_record() const { return(this->parent_record); }
 
 		        //! Return tags
-		        const std::list<std::string>& get_tags() const { return(this->tags); }
+		        const std::list<std::string>& get_tags() const { return(this->callbacks.tags); }
 
 		        //! Set metadata
 		        void set_metadata(const integration_metadata& data) { this->metadata = data; }
@@ -1254,7 +1339,7 @@ namespace transport
 		        const integration_metadata& get_metadata() const { return(this->metadata); }
 
             //! Get creation time
-            const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
+            const boost::posix_time::ptime& get_creation_time() const { return(this->callbacks.creation_time); }
 
 
             // INTERNAL DATA
@@ -1271,37 +1356,16 @@ namespace transport
 		        // METADATA
 
 		        //! task associated with this integration writer
-		        integration_task<number>* parent_task;
-
-		        //! tags
-		        std::list<std::string> tags;
+		        integration_task_record<number>* parent_record;
 
 		        //! metadata for this integration
 		        integration_metadata metadata;
 
-            //! creation time (associated with name for output group
-            boost::posix_time::ptime creation_time;
-
 
 		        // PATHS
 
-		        //! root directory of the parent repository
-		        const boost::filesystem::path repo_root;
-
-		        //! relative path to output directory within the repository
-            const boost::filesystem::path output_path;
-
-		        //! relative path to data container
-            const boost::filesystem::path data_path;
-
-		        //! relative path to log directory
-            const boost::filesystem::path log_path;
-
-		        //! relative path to task file
-            const boost::filesystem::path task_path;
-
-		        //! relative path to temporary direcotry
-            const boost::filesystem::path temp_path;
+            //! paths associated with this writer
+            const paths_group paths;
 
 
 		        // MISCELLANEOUS
@@ -1349,19 +1413,27 @@ namespace transport
             class callback_group
 	            {
               public:
-                commit_callback commit;
-                abort_callback  abort;
+                commit_callback          commit;
+                abort_callback           abort;
+
+                std::list<std::string>   tags;
+                boost::posix_time::ptime creation_time;
 	            };
+
+            class paths_group
+              {
+              public:
+                const boost::filesystem::path root;
+                const boost::filesystem::path output;
+                const boost::filesystem::path log;
+                const boost::filesystem::path task;
+                const boost::filesystem::path temp;
+              };
 
           public:
 
             //! Construct a derived-content writer object
-            derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
-                                   callback_group& c,
-                                   const boost::filesystem::path& root,
-                                   const boost::filesystem::path& output, const boost::filesystem::path& log,
-                                   const boost::filesystem::path& task, const boost::filesystem::path& temp,
-                                   unsigned int w);
+            derived_content_writer(output_task_record* rec, callback_group& c, paths_group& p, unsigned int w);
 
 		        //! override copy constructor to perform a deep copy
 		        derived_content_writer(const derived_content_writer& obj);
@@ -1420,16 +1492,16 @@ namespace transport
           public:
 
 		        //! Return path to output directory
-		        boost::filesystem::path get_abs_output_path() const { return(this->repo_root/this->output_path); }
+		        boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
 
             //! Return path to log directory
-            boost::filesystem::path get_abs_logdir_path() const { return(this->repo_root/this->log_path); }
+            boost::filesystem::path get_abs_logdir_path() const { return(this->paths.root/this->paths.log); }
 
             //! Return path to task-data container
-            boost::filesystem::path get_abs_taskfile_path() const { return(this->repo_root/this->task_path); }
+            boost::filesystem::path get_abs_taskfile_path() const { return(this->paths.root/this->paths.task); }
 
             //! Return path to directory for temporary files
-            boost::filesystem::path get_abs_tempdir_path() const { return(this->repo_root/this->temp_path); }
+            boost::filesystem::path get_abs_tempdir_path() const { return(this->paths.root/this->paths.temp); }
 
 
 		        // RELATIVE PATHS
@@ -1437,7 +1509,7 @@ namespace transport
           public:
 
 		        //! Return path to output directory
-		        boost::filesystem::path get_relative_output_path() const { return(this->output_path); }
+		        boost::filesystem::path get_relative_output_path() const { return(this->paths.output); }
 
 
 		        // METADATA
@@ -1445,10 +1517,10 @@ namespace transport
           public:
 
 		        //! Return task
-		        output_task<number>* get_task() const { return(this->parent_task); }
+		        output_task_record* get_record() const { return(this->parent_record); }
 
 		        //! Return tags
-		        const std::list<std::string>& get_tags() const { return(this->tags); }
+		        const std::list<std::string>& get_tags() const { return(this->callbacks.tags); }
 
 		        //! Set metadata
 		        void set_metadata(const output_metadata& data) { this->metadata = data; }
@@ -1457,7 +1529,7 @@ namespace transport
 		        const output_metadata& get_metadata() const { return(this->metadata); }
 
 		        //! Get creation time
-		        const boost::posix_time::ptime& get_creation_time() const { return(this->creation_time); }
+		        const boost::posix_time::ptime& get_creation_time() const { return(this->callbacks.creation_time); }
 
 
             // INTERNAL DATA
@@ -1479,34 +1551,16 @@ namespace transport
 		        // METADATA
 
 		        //! task associated with this derived_content_writer
-		        output_task<number>* parent_task;
-
-		        //! tags
-		        std::list<std::string> tags;
+		        output_task_record* parent_record;
 
 		        //! metadata for this output task
 		        output_metadata metadata;
 
-		        //! creation time
-		        boost::posix_time::ptime creation_time;
-
 
 		        // PATHS
 
-		        //! root directory of the parent repository
-		        const boost::filesystem::path repo_root;
-
-		        //! relative path to output directory within the repository
-            const boost::filesystem::path output_path;
-
-		        //! relative path to log directory
-            const boost::filesystem::path log_path;
-
-		        //! relative path to task file
-            const boost::filesystem::path task_path;
-
-		        //! relative path to temporary directory
-            const boost::filesystem::path temp_path;
+            //! paths associated with this writer
+            const paths_group paths;
 
 
 		        // MISCELLANEOUS
@@ -1609,10 +1663,10 @@ namespace transport
       public:
 
 		    //! Generate a writer object for new integration output
-		    virtual integration_writer new_integration_task_content(integration_task_record& rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual integration_writer new_integration_task_content(integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
 
 		    //! Generate a writer object for new derived-content output
-		    virtual derived_content_writer new_output_task_content(output_task_record& rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual derived_content_writer new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
 
 
         // PRIVATE DATA
@@ -1758,12 +1812,40 @@ namespace transport
 		repository<number>::task_record::task_record(serialization_reader* reader, typename repository<number>::repository_record::handler_package& pkg)
 			: repository_record(reader, pkg)
 			{
+        assert(reader != nullptr);
+        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+
+        unsigned int num_groups = reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+
+        for(unsigned int i = 0; i < num_groups; i++)
+          {
+            reader->start_array_element();
+
+            std::string name;
+            reader->read_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP, name);
+            this->content_groups.push_back(name);
+
+            reader->end_array_element();
+          }
+
+        reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 			}
 
 
 		template <typename number>
 		void repository<number>::task_record::serialize(serialization_writer& writer) const
 			{
+        writer.start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS, this->content_groups.size()==0);
+
+        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
+          {
+            writer.start_node("arrayelt", false);   // node names ignored in arrays
+            writer.write_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP, *t);
+            writer.end_node("arrayelt");
+          }
+
+        write.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+
 				this->repository_record::serialize(writer);
 			}
 
@@ -2005,28 +2087,20 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::integration_writer::integration_writer(integration_task<number>* tk, const std::list<std::string>& tg,
-                                                               boost::posix_time::ptime& ct,
+    repository<number>::integration_writer::integration_writer(integration_task_record* rec,
                                                                typename repository<number>::integration_writer::callback_group& c,
-                                                               const boost::filesystem::path& root,
-                                                               const boost::filesystem::path& output, const boost::filesystem::path& data,
-                                                               const boost::filesystem::path& log, const boost::filesystem::path& task,
-                                                               const boost::filesystem::path& temp,
-                                                               unsigned int w, bool s)
-	    : parent_task(dynamic_cast<integration_task<number>*>(tk->clone())), tags(tg),
-        creation_time(ct),
+                                                               typename repository<number>::integration_writer::paths_group& p,
+                                                               unsigned int w)
+	    : parent_record(dynamic_cast<integration_task_record*>(rec->clone())),
 	      callbacks(c),
-	      repo_root(root),
-	      output_path(output), data_path(data),
-	      log_path(log), task_path(task),
-	      temp_path(temp),
-	      worker_number(w), supports_stats(s),
+        paths(p),
+	      worker_number(w), supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
 	      data_manager_handle(nullptr), data_manager_taskfile(nullptr),
 		    metadata()
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path logfile_path = repo_root/log_path / log_file.str();
+        boost::filesystem::path logfile_path = paths.root/paths.log / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
@@ -2050,13 +2124,9 @@ namespace transport
 
 		template <typename number>
 		repository<number>::integration_writer::integration_writer(const typename repository<number>::integration_writer& obj)
-			: parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
-        creation_time(obj.creation_time),
+			: parent_record(dynamic_cast<integration_task_record*>(obj.parent_record->clone())),
 			  callbacks(obj.callbacks),
-			  repo_root(obj.repo_root),
-			  output_path(obj.output_path), data_path(obj.data_path),
-			  log_path(obj.log_path), task_path(obj.task_path),
-			  temp_path(obj.temp_path),
+        paths(obj.paths),
 			  supports_stats(obj.supports_stats), worker_number(obj.worker_number),
 			  data_manager_handle(obj.data_manager_handle),
 			  data_manager_taskfile(obj.data_manager_taskfile),
@@ -2076,7 +2146,7 @@ namespace transport
         core->remove_sink(this->log_sink);
 
 		    // delete copy of task object
-		    delete this->parent_task;
+		    delete this->parent_record;
 	    }
 
 
@@ -2127,24 +2197,19 @@ namespace transport
 
 
     template <typename number>
-    repository<number>::derived_content_writer::derived_content_writer(output_task<number>* tk, const std::list<std::string>& tg, boost::posix_time::ptime& ct,
+    repository<number>::derived_content_writer::derived_content_writer(output_task_record* rec,
                                                                        typename repository<number>::derived_content_writer::callback_group& c,
-                                                                       const boost::filesystem::path& root,
-                                                                       const boost::filesystem::path& output, const boost::filesystem::path& log,
-                                                                       const boost::filesystem::path& task, const boost::filesystem::path& temp,
+                                                                       typename repository<number>::derived_content_writer::paths_group& p,
                                                                        unsigned int w)
-	    : parent_task(dynamic_cast<output_task<number>*>(tk->clone())), tags(tg),
-	      creation_time(ct),
+	    : parent_record(dynamic_cast<output_task_record*>(rec->clone())),
 	      callbacks(c),
-	      repo_root(root),
-	      output_path(output), log_path(log),
-	      task_path(task), temp_path(temp),
+        paths(p),
 	      worker_number(w), data_manager_taskfile(nullptr),
         metadata()
 	    {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path logfile_path = repo_root/log_path / log_file.str();
+        boost::filesystem::path logfile_path = paths.root/paths.log / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
@@ -2169,12 +2234,9 @@ namespace transport
 
 		template <typename number>
 		repository<number>::derived_content_writer::derived_content_writer(const typename repository<number>::derived_content_writer& obj)
-			: parent_task(dynamic_cast<output_task<number>*>(obj.parent_task->clone())), tags(obj.tags),
-			  creation_time(obj.creation_time),
+			: parent_record(dynamic_cast<output_task_record*>(obj.parent_record->clone())),
 			  callbacks(obj.callbacks),
-			  repo_root(obj.repo_root),
-			  output_path(obj.output_path), log_path(obj.log_path),
-			  task_path(obj.task_path), temp_path(obj.temp_path),
+        paths(obj.paths),
 			  worker_number(obj.worker_number),
 			  data_manager_taskfile(obj.data_manager_taskfile),
 			  log_source(obj.log_source), log_sink(obj.log_sink),
@@ -2192,7 +2254,7 @@ namespace transport
 
         core->remove_sink(this->log_sink);
 
-		    delete this->parent_task;
+		    delete this->parent_record;
 	    }
 
 
@@ -2231,12 +2293,12 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    repository<number>::output_group_record::output_group_record(const std::string& tn, const boost::filesystem::path& root, const boost::filesystem::path& path,
+    repository<number>::output_group_record::output_group_record(const std::string& tn, const paths_group& p,
                                                                  bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
                                                                  typename repository<number>::repository_record::handler_package& pkg)
 	    : repository_record(pkg),
         task(tn),
-        repo_root_path(root), data_root_path(path),
+        paths(p),
 	      locked(lock), notes(nt), tags(tg),
 	      payload()
 	    {
@@ -2250,8 +2312,8 @@ namespace transport
         out << __CPP_TRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
         out << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->repo_root_path << std::endl;
-        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->data_root_path << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_REPO_ROOT << " = " << this->paths.root << std::endl;
+        out << "  " << __CPP_TRANSPORT_OUTPUT_GROUP_DATA_ROOT << " = " << this->paths.output << std::endl;
 
         unsigned int count = 0;
 
@@ -2298,16 +2360,17 @@ namespace transport
     repository<number>::output_group_record::output_group_record(serialization_reader* reader, const boost::filesystem::path& root,
                                                                  typename repository<number>::repository_record::handler_package& pkg)
       : repository_record(reader, pkg),
-        payload(reader),
-		    repo_root_path(root)
+        payload(reader)
       {
         assert(reader != nullptr);
 
+        paths.root = root;
+
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, task);
 
-        std::string data_root;
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, data_root);
-        data_root_path = data_root;
+        std::string output_str;
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, output_str);
+        paths.output = output_str;
 
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
@@ -2346,7 +2409,7 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT));
 
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->data_root_path.string());
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->paths.output.string());
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
 
         writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, this->notes.size() == 0);

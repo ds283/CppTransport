@@ -149,6 +149,9 @@ namespace transport
         //! Get 'parameters' object associated with this task
         const parameters<number>& get_params() const { return(this->ics.get_params()); }
 
+        //! Get model associated with this task
+        model<number>* get_model() const { return(this->ics.get_model()); }
+
         //! Get initial times
         double get_Ninit() const { return(this->times.get_min()); }
 

@@ -200,10 +200,10 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual typename repository<number>::integration_writer new_integration_task_content(integration_task_record& rec, const std::list<std::string>& tags, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer new_integration_task_content(integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) override;
 
         //! Generate a writer object for new derived-content output
-        virtual typename repository<number>::derived_content_writer new_output_task_content(output_task_record& rec, const std::list<std::string>& tags, unsigned int worker) override;
+        virtual typename repository<number>::derived_content_writer new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) override;
 
 
         // JSON INTERFACE
@@ -250,7 +250,7 @@ namespace transport
 
         //! Extract output groups with output payload from UnQLite array
         int array_extract_content_groups(unqlite_value* key, unqlite_value* value,
-                                         std::list<typename repository<number>::template output_group_record<typename repository<number>::output_payload> >*);
+                                         std::list<typename repository<number>::template output_group_record<typename repository<number>::output_payload>* >*);
 
         //! Get a serialization reader from the database. The internal UnQLite record id is stored in 'id'
         unqlite_serialization_reader* query_serialization_reader(const std::string& name, const std::string& collection,
@@ -259,39 +259,29 @@ namespace transport
         //! Get a serialization reader from the database.
         unqlite_serialization_reader* query_serialization_reader(const std::string& name, const std::string& collection, const std::string& record_type);
 
-
-
-        // CREATE RECORD - INTERNAL FUNCTIONS
-
-      protected:
-
         //! Check whether a task already exists in the database. Throws an exception if so.
         void check_task_duplicate(const std::string& name);
 
-        // INTEGRATION WRITER CALLBACKS
+
+        // WRITER CALLBACKS
 
       protected:
-
-        //! Commit the output of an integration writer to the database. Called as a callback
-        void close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m);
 
         //! Advise that an output group has been committed
         template <typename Payload>
-        void advise_commit(typename repository<number>::template output_group_record<Payload>& group);
+        void advise_commit(typename repository<number>::template output_group_record<Payload>* group);
+
+        //! Commit the output of an integration writer to the database. Called as a callback
+        void close_integration_writer(typename repository<number>::integration_writer& writer);
 
         //! Move a failed output group to a safe location
-        virtual void abort_integration_writer(typename repository<number>::integration_writer& writer) override;
-
-
-        // DERIVED CONTENT WRITER CALLBACKS
-
-      protected:
+        void abort_integration_writer(typename repository<number>::integration_writer& writer);
 
         //! Commit the output of a derived content writer to the database. Called as a callback
         void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
 
         //! Move a failed output group to a safe location
-        virtual void abort_derived_content_writer(typename repository<number>::derived_content_writer& writer) override;
+        void abort_derived_content_writer(typename repository<number>::derived_content_writer& writer);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS
@@ -947,7 +937,11 @@ namespace transport
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::first_time_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, __CPP_TRANSPORT_REPO_CONTENT_RECORD);
 
-        return new typename repository<number>::output_group_record<Payload>(tn, this->root_path, path, lock, nt, tg, pkg);
+        typename repository<number>::output_group_record::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = path;
+
+        return new typename repository<number>::output_group_record<Payload>(tn, paths, lock, nt, tg, pkg);
       }
 
 
@@ -1181,93 +1175,22 @@ namespace transport
       }
 
 
-    // Add output for a twopf task
-		// DATABASE ENTRY POINT
+    // ADD CONTENT ASSOCIATED WITH A TASK
+
+
     template <typename number>
     typename repository<number>::integration_writer
-    repository_unqlite<number>::new_integration_task_content(twopf_task<number>* tk, const std::list<std::string>& tags,
-                                                             model<number>* m, unsigned int worker)
+    repository_unqlite<number>::new_integration_task_content(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker)
       {
-        assert(tk != nullptr);
-        assert(m != nullptr);
-
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
-
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
-
-        // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        if(count == 0)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-
-        // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->create_integration_writer(m, worker, tk, tags);
-
-		    // close database handles
-        this->end_transaction();
-
-        return(writer);
-      }
-
-
-    // Add output for a threepf task
-		// DATABASE ENTRY POINT
-    template <typename number>
-    typename repository<number>::integration_writer
-    repository_unqlite<number>::new_integration_task_output(threepf_task<number>* tk, const std::list<std::string>& tags,
-                                                            model<number>* m, unsigned int worker)
-      {
-        assert(tk != nullptr);
-        assert(m != nullptr);
-
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_TASK);
-        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_MODEL);
-
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
-
-        // check this task name exists in the database
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-        if(count == 0)
-          {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-          }
-
-        // insert a new output record, and return the corresponding integration_writer handle
-        typename repository<number>::integration_writer writer = this->create_integration_writer(m, worker, tk, tags);
-
-		    // commit transaction
-        this->commit_transaction();
-
-        return(writer);
-      }
-
-
-    // Add output for a specified task.
-		// We are allowed to assume that the database handles are already open, and that the task exists
-		// in an appropriate collection
-    template <typename number>
-    typename repository<number>::integration_writer
-    repository_unqlite<number>::create_integration_writer(model<number>* m,
-                                                          unsigned int worker, integration_task<number>* tk, const std::list<std::string>& tags)
-      {
-		    // get current time
+        // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-		    // construct paths for the various output files and directories.
-		    // We use the ISO form of the current time to label the output group directory.
-		    // This means the repository directory structure will be human-readable if necessary.
+        // construct paths for the various output files and directories.
+        // We use the ISO form of the current time to label the output group directory.
+        // This means the repository directory structure will be human-readable if necessary.
         std::string output_leaf = boost::posix_time::to_iso_string(now);
 
-        boost::filesystem::path output_path  = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / tk->get_name() / output_leaf;
+        boost::filesystem::path output_path  = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
         boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
 
         // temporary stuff, location not recorded in the database
@@ -1275,106 +1198,127 @@ namespace transport
         boost::filesystem::path task_path    = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
         boost::filesystem::path temp_path    = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
-		    // create directories
+        // create directories
         boost::filesystem::create_directories(this->get_root_path() / output_path);
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-		    // integration_writer constructor takes copies of tk and tags because we can't be sure that they're long-lived objects;
-		    // model is ok because mode instances are handled by the instance_manager
-		    typename repository<number>::integration_writer::callback_group callbacks;
-		    callbacks.commit = std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1, m);
-		    callbacks.abort  = std::bind(&repository_unqlite<number>::abort_integration_writer, this, std::placeholders::_1);
+        typename repository<number>::integration_writer::callback_group callbacks;
+        callbacks.commit        = std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1);
+        callbacks.abort         = std::bind(&repository_unqlite<number>::abort_integration_writer, this, std::placeholders::_1);
+        callbacks.tags          = tags;
+        callbacks.creation_time = now;
 
-		    return typename repository<number>::integration_writer(tk, tags, now, callbacks,
-		                                                           this->get_root_path(),
-		                                                           output_path, sql_path, log_path, task_path, temp_path,
-		                                                           worker, m->supports_per_configuration_statistics());
+        typename repository<number>::integration_writer::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = output_path;
+        paths.data   = sql_path;
+        paths.log    = log_path;
+        paths.task   = task_path;
+        paths.temp   = temp_path;
+
+        // integration_writer constructor takes a copy of the integration_task_record
+        return typename repository<number>::integration_writer(rec, callbacks, paths, worker);
       }
 
 
-		template <typename number>
-		void repository_unqlite<number>::close_integration_writer(typename repository<number>::integration_writer& writer, model<number>* m)
-			{
-				assert(m != nullptr);
+    template <typename number>
+    typename repository<number>::derived_content_writer
+    repository_unqlite<number>::new_output_task_content(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags, unsigned int worker)
+      {
+        // get current time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-				integration_task<number>* tk = writer.get_task();
-				const std::list<std::string>& tags = writer.get_tags();
-		    assert(tk != nullptr);
+        // construct paths for output files and directories
+        // We use the ISO form of the current time to label the output group directory.
+        // This means the repository directory structure is human-readable if necessary.
+        std::string output_leaf = boost::posix_time::to_iso_string(now);
 
-		    // open a new transaction, if necessary. After this we can assume the database handles are live
-		    this->begin_transaction();
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
 
-				// get serialization_reader for the named task record
-		    int task_id = 0;
-		    task_type type;
-		    unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
-		    assert(type == integration_record);
+        // temporary stuff, location not recorded in the database
+        boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+        boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
 
-		    // get current time
-		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        // create directories
+        boost::filesystem::create_directories(this->get_root_path() / output_path);
+        boost::filesystem::create_directories(this->get_root_path() / log_path);
+        boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-		    // create and serialize an empty output group
-		    std::list<std::string> notes;
-				if(!m->supports_per_configuration_statistics())
-					{
-				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << m->get_backend() << "'";
-						notes.push_back(msg.str());
-					}
-				// FIXME: insert note about integrability for 3pf tasks, __CPP_TRANSPORT_REPO_NOTE_NO_INTEGRATION
-		    typename repository<number>::template output_group_record<typename repository<number>::integration_payload> group(tk->get_name(), this->get_root_path(),
-		                                                                                                               writer.get_relative_output_path(),
-		                                                                                                               writer.get_creation_time(),
-                                                                                                                   false, std::list<std::string>(), tags);
-		    group.get_payload().set_backend(m->get_backend());
-		    group.get_payload().set_container_path(writer.get_relative_container_path());
-		    group.get_payload().set_metadata(writer.get_metadata());
-		    unqlite_serialization_writer swriter;
-		    group.serialize(swriter);
+        typename repository<number>::derived_content_writer::callback_group callbacks;
+        callbacks.commit        = std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1);
+        callbacks.abort         = std::bind(&repository_unqlite<number>::abort_derived_content_writer, this, std::placeholders::_1);
+        callbacks.tags          = tags;
+        callbacks.creation_time = now;
 
-		    // write new output group to the database
-		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, swriter.get_contents());
+        typename repository<number>::integration_writer::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = output_path;
+        paths.log    = log_path;
+        paths.task   = task_path;
+        paths.temp   = temp_path;
 
-		    // refresh edit time
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
+        return typename repository<number>::derived_content_writer(rec, callbacks, paths, worker);
+      }
 
-        // insert cross-reference to new output group
-        std::string output_group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-        task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-        task_reader->insert_node("arrayelt", false);    // node names are ignored in arrays
-        task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF, output_group_name);
-        task_reader->end_element("arrayelt");
-        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
-        // update the task entry for this database
-        // that means: first, drop this existing record; then, store a copy of the updated one
-		    unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_id);
-		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, task_reader->get_contents());
-
-		    delete task_reader;
-
-		    // commit transaction
-        this->end_transaction();
-        this->advise_commit(group);
-			}
+    // WRITER CALLBACKS
 
 
     template <typename number>
     template <typename Payload>
-    void repository_unqlite<number>::advise_commit(typename repository<number>::template output_group_record<Payload>& group)
+    void repository_unqlite<number>::advise_commit(typename repository<number>::template output_group_record<Payload>* group)
       {
         std::ostringstream msg;
 
-        std::string group_name = boost::posix_time::to_iso_string(group.get_creation_time());
-
-        msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group_name << "' "
-            << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group.get_task_name() << "'";
+        msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
+            << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "'";
 
         this->message(msg.str());
       }
+
+
+		template <typename number>
+		void repository_unqlite<number>::close_integration_writer(typename repository<number>::integration_writer& writer)
+			{
+				integration_task_record* rec = writer.get_record();
+				const std::list<std::string>& tags = writer.get_tags();
+		    assert(rec != nullptr);
+
+        // set up notes for the new output record, if it exists
+        std::list<std::string> notes;
+        if(!writer.collect_statistics())
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << rec->get_task()->get_model()->get_backend() << "'";
+            notes.push_back(msg.str());
+          }
+
+        // create a new, empty output group record
+        boost::scoped_ptr<typename repository<number>::template output_group_record<typename repository<number>::integration_payload>>
+          output_record(this->output_group_record_factory<typename repository<number>::integration_payload>(rec->get_task()->get_name(), writer.get_relative_output_path,
+                                                                                                            false, notes, tags));
+
+        // stamp output group with the correct 'created' time stamp
+        output_record.get()->set_creation_time(writer.get_creation_time());
+        output_record.get()->set_name_from_creation_time();
+
+        // populate output group with content from the writer
+        output_record.get()->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
+        output_record.get()->get_payload().set_container_path(writer.get_relative_container_path());
+        output_record.get()->get_payload().set_metadata(writer.get_metadata());
+
+        // commit new output record
+        output_record.get()->commit();
+
+        // add this output group to the integration task record
+        rec->add_new_output_group(output_record.get()->get_name());
+        rec->update_last_edit_time();
+        rec->commit();
+
+        this->advise_commit(output_record.get());
+			}
 
 
     template <typename number>
@@ -1400,7 +1344,7 @@ namespace transport
 
             std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
 
-            msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_task()->get_name() << "': "
+            msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
                 << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
                 << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
 
@@ -1410,164 +1354,39 @@ namespace transport
       }
 
 
-		//! Query a derived product specification
-		template <typename number>
-		derived_data::derived_product<number>* repository_unqlite<number>::query_derived_product(const std::string& product, typename instance_manager<number>::model_finder finder)
-			{
-				// open a new transaction, if necessary. After this we can assume the database handles are live
-				this->begin_transaction();
-
-				// get serialization_reader for the named product
-				int product_id = 0;
-				unqlite_serialization_reader* product_reader = this->get_derived_product_serialization_reader(product, product_id);
-
-				typename repository<number>::task_finder tfinder = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1, std::placeholders::_2, finder);
-
-        // move reader to details block
-        product_reader->start_node(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
-		    derived_data::derived_product<number>* rval = derived_data::derived_product_helper::deserialize<number>(product, product_reader, tfinder);
-        product_reader->end_element(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS);
-
-				// commit transaction
-        this->end_transaction();
-
-		    delete product_reader;
-
-				if(rval == nullptr)
-					{
-				    std::ostringstream msg;
-						msg << __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT << " '" << product << "'";
-						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-					}
-
-				return(rval);
-			}
-
-
-		template <typename number>
-		typename repository<number>::derived_content_writer
-		repository_unqlite<number>::new_output_task_content(output_task<number>* tk, const std::list<std::string>& tags, unsigned int worker)
-			{
-		    assert(tk != nullptr);
-
-		    // open a new transaction if necessary. After this we can assume the database handles are live
-		    this->begin_transaction();
-
-		    // check this task name exists in the database
-		    unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, tk->get_name(), __CPP_TRANSPORT_NODE_TASK_NAME);
-		    if(count == 0)
-			    {
-		        std::ostringstream msg;
-		        msg << __CPP_TRANSPORT_REPO_MISSING_TASK << " '" << tk->get_name() << "'";
-		        throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
-			    }
-
-		    // insert a new output record, and return the corresponding derived_content_writer handle
-		    typename repository<number>::derived_content_writer writer = this->create_derived_content_writer(worker, tk, tags);
-
-		    // close database handles
-        this->end_transaction();
-
-		    return(writer);
-			}
-
-
-		template <typename number>
-		typename repository<number>::derived_content_writer
-		repository_unqlite<number>::create_derived_content_writer(unsigned int worker, output_task<number>* tk, const std::list<std::string>& tags)
-			{
-		    // FIXME: tags not currently enforced
-
-				// get current time
-		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-
-				// construct paths for output files and directories
-				// We use the ISO form of the current time to label the output group directory.
-				// This means the repository directory structure is human-readable if necessary.
-		    std::string output_leaf = boost::posix_time::to_iso_string(now);
-
-		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / tk->get_name() / output_leaf;
-
-        // temporary stuff, location not recorded in the database
-		    boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
-		    boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
-		    boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
-
-				// create directories
-		    boost::filesystem::create_directories(this->get_root_path() / output_path);
-		    boost::filesystem::create_directories(this->get_root_path() / log_path);
-		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
-
-				typename repository<number>::derived_content_writer::callback_group callbacks;
-				callbacks.commit = std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1);
-				callbacks.abort  = std::bind(&repository_unqlite<number>::abort_derived_content_writer, this, std::placeholders::_1);
-
-		    return typename repository<number>::derived_content_writer(tk, tags, now, callbacks,
-		                                                               this->get_root_path(),
-		                                                               output_path, log_path, task_path, temp_path, worker);
-			}
-
-
 		template <typename number>
 		void repository_unqlite<number>::close_derived_content_writer(typename repository<number>::derived_content_writer& writer)
 			{
-				output_task<number>* tk = writer.get_task();
+				output_task_record* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
-				assert(tk != nullptr);
+				assert(rec != nullptr);
 
-		    // open a new transaction, if necessary. After this we can assume the database handles are live
-		    this->begin_transaction();
+        // create a new, empty output group record
+        boost::scoped_ptr<typename repository<number>::template output_group_record<typename repository<number>::output_payload>>
+          output_record(this->output_group_record_factory<typename repository<number>::output_payload>(rec->get_task()->get_name(), writer.get_relative_output_path,
+                                                                                                       false, std::list<std::string>(), tags));
 
-		    // get serialization_reader for the named output task record
-		    int task_id = 0;
-		    task_type type;
-		    unqlite_serialization_reader* task_reader = this->get_task_serialization_reader(tk->get_name(), task_id, type);
-		    assert(type == output_record);
+        // stamp output group with the correct 'created' time stamp
+        output_record.get()->set_creation_time(writer.get_creation_time());
+        output_record.get()->set_name_from_creation_time();
 
-		    // get current time
-		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-
-		    // create and serialize an empty output group
-		    typename repository<number>::template output_group_record<typename repository<number>::output_payload> group(tk->get_name(), this->get_root_path(),
-		                                                                                                          writer.get_relative_output_path(),
-		                                                                                                          writer.get_creation_time(),
-		                                                                                                          false, std::list<std::string>(), tags);
-
+        // populate output group with content from the writer
         const std::list< typename repository<number>::derived_content >& content = writer.get_content();
         for(typename std::list< typename repository<number>::derived_content >::const_iterator t = content.begin(); t != content.end(); t++)
           {
-            group.get_payload().add_derived_content(*t);
+            output_record.get()->get_payload().add_derived_content(*t);
           }
-        group.get_payload().set_metadata(writer.get_metadata());
-		    unqlite_serialization_writer swriter;
-		    group.serialize(swriter);
+        output_record.get()->get_payload().set_metadata(writer.get_metadata());
 
-		    // write new output group to the database
-		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, swriter.get_contents());
+        // commit new output record
+        output_record.get()->commit();
 
-		    // refresh edit time
-		    task_reader->start_node(__CPP_TRANSPORT_NODE_TASK_METADATA);
-		    task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_METADATA_EDITED, boost::posix_time::to_iso_string(now));   // insert overwrites previous value
-		    task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_METADATA);
+        // add this output group to the integration task record
+        rec->add_new_output_group(output_record.get()->get_name());
+        rec->update_last_edit_time();
+        rec->commit();
 
-        // insert cross-reference to new output group
-        std::string output_group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-        task_reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-        task_reader->insert_node("arrayelt", false);    // node names are ignored in arrays
-        task_reader->insert_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF, output_group_name);
-        task_reader->end_element("arrayelt");
-        task_reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-
-        // update the task entry for this database
-        // that means: first, drop this existing record; then, store a copy of the updated one
-		    unqlite_operations::drop(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, task_id);
-		    unqlite_operations::store(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, task_reader->get_contents());
-
-		    delete task_reader;
-
-				// commit transaction
-        this->end_transaction();
-				this->advise_commit(group);
+        this->advise_commit(output_record.get());
 			}
 
 
@@ -1594,7 +1413,7 @@ namespace transport
 
 		        std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
 
-		        msg << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_task()->get_name() << "': "
+		        msg << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
 			          << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << group_name << "' "
 			          << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C;
 
@@ -1606,7 +1425,7 @@ namespace transport
 
     template<typename number>
     typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
-    repository_unqlite<number>::find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string> &tags)
+    repository_unqlite<number>::find_integration_task_output_group(const integration_task<number> *tk, const std::list<std::string>& tags)
 	    {
 		    assert(tk != nullptr);
 
