@@ -20,7 +20,6 @@
 #include "transport-runtime-api/utilities/named_list.h"
 
 #include "boost/lexical_cast.hpp"
-#include "model.h"
 
 
 #define __CPP_TRANSPORT_NODE_PARAMS_MPLANCK   "param-mplanck"
