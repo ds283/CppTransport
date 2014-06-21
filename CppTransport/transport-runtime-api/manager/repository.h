@@ -55,41 +55,10 @@
 #define __CPP_TRANSPORT_NODE_METADATA_EDITED                     "edited"
 #define __CPP_TRANSPORT_NODE_METADATA_RUNTIME_API                "api"
 
-#define __CPP_TRANSPORT_NODE_PACKAGE_NAME                        "package-name"
-#define __CPP_TRANSPORT_NODE_PACKAGE_MODELUID                    "package-model-uid"
-#define __CPP_TRANSPORT_NODE_PACKAGE_METADATA                    "package-metadata"
-#define __CPP_TRANSPORT_NODE_PACKAGE_ICS                         "package-ics"
-
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_NAME                   "model-name"
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_AUTHOR                 "model-author"
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_TAG                    "model-tag"
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_CREATED                "creation-time"
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_EDITED                 "last-edit-time"
-#define __CPP_TRANSPORT_NODE_PKG_METADATA_RUNTIMEAPI             "runtime-api-version"
-
-#define __CPP_TRANSPORT_NODE_TASK_NAME                           "task-name"
-#define __CPP_TRANSPORT_NODE_TASK_METADATA                       "task-metadata"
 // used for integration tasks
-#define __CPP_TRANSPORT_NODE_TASK_INTEGRATION_DETAILS            "integration-details"
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                  "output-groups"
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP                   "name"
 // used for output tasks
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_DETAILS                 "output-task"
-
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_XREF                    "group"
-
-#define __CPP_TRANSPORT_NODE_TASK_METADATA_PACKAGE               "package-name"
-#define __CPP_TRANSPORT_NODE_TASK_METADATA_CREATED               "creation-time"
-#define __CPP_TRANSPORT_NODE_TASK_METADATA_EDITED                "last-edit-time"
-#define __CPP_TRANSPORT_NODE_TASK_METADATA_RUNTIMEAPI            "runtime-api-version"
-
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME                "product-name"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA            "product-metadata"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_CREATED    "creation-time"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_EDITED     "last-edit-time"
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_METADATA_RUNTIMEAPI "runtime-api-version"
-
-#define __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_DETAILS             "product_details"
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT               "repo-path"

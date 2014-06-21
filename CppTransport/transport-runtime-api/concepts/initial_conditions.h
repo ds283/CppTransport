@@ -247,8 +247,10 @@ namespace transport
         writer.start_array(__CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
+            writer.start_node("arrayelt", false);   // node name is ignored in arrays
 		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_NAME, names[i]);
 		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_VALUE, this->ics[i]);
+            writer.end_element("arrayelt");
           }
         writer.end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
 

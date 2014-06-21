@@ -121,6 +121,8 @@ namespace transport
               {
               }
 
+            unqlite_scoped_vm(const unqlite_scoped_vm& obj) = delete;
+
             ~unqlite_scoped_vm() { unqlite_vm_release(vm_ptr); }
 
             unqlite_vm* get() const { return(this->vm_ptr); }
@@ -687,12 +689,11 @@ namespace transport
                                                          typename repository_unqlite<number>::array_extraction_functor& f,
                                                          const std::string search_field, ValidatorObject v)
       {
-        this->begin_transaction();
-
         unqlite_vm*    vm   = nullptr;
         unqlite_value* recs = unqlite_operations::query(this->db, vm, collection, name, search_field);
 
         // set up scoped pointer to ensure deallocation of virtual machine if an exception occurs
+        assert(vm != nullptr);
         unqlite_scoped_vm scoped_vm(vm);
 
         if(recs == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -701,8 +702,6 @@ namespace transport
         v(count);
 
         unqlite_array_walk(recs, &array_walker<number>, &f);
-
-        this->end_transaction();
       }
 
 
@@ -729,7 +728,9 @@ namespace transport
         std::function<void(unsigned int)> v = std::bind(&check_number_records, std::placeholders::_1, name, record_type);
 
         // have to specify the JSON field we're searching for if we specify a validator
+        this->begin_transaction();
         this->array_apply_functor(name, collection, f, __CPP_TRANSPORT_NODE_RECORD_NAME, v);
+        this->end_transaction();
 
         assert(data.reader != nullptr);
         if(data.reader == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -961,6 +962,8 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::commit_task(const integration_task<number>& tk)
 	    {
+        this->begin_transaction();
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -977,6 +980,8 @@ namespace transport
             this->message(msg.str());
             this->commit_package(tk.get_ics());
           }
+
+        this->end_transaction();
 	    }
 
 
@@ -984,6 +989,8 @@ namespace transport
 		template <typename number>
 		void repository_unqlite<number>::commit_task(const output_task<number>& tk)
 	    {
+        this->begin_transaction();
+
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -1005,6 +1012,8 @@ namespace transport
                 this->commit_derived_product(*product);
               }
           }
+
+        this->end_transaction();
 	    }
 
 
@@ -1012,6 +1021,8 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::commit_derived_product(const derived_data::derived_product<number>& d)
       {
+        this->begin_transaction();
+
         std::unique_ptr<typename repository<number>::derived_product_record> record(derived_product_record_factory(d));
         record.get()->commit();
 
@@ -1031,6 +1042,8 @@ namespace transport
                 this->commit_task(*(*t));
               }
           }
+
+        this->end_transaction();
       }
 
 
@@ -1101,7 +1114,9 @@ namespace transport
         array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::integration_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
+        this->begin_transaction();
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
+        this->end_transaction();
 
         // sort the output groups into descending order of creation date, so the first element in the
         // list is the most recent data group.
@@ -1131,7 +1146,9 @@ namespace transport
         array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::output_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
+        this->begin_transaction();
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
+        this->end_transaction();
 
         // sort the output groups into descending order of creation date, so the first element in the
         // list is the most recent data group.
@@ -1422,7 +1439,7 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         if(count == 0)
           {
@@ -1438,7 +1455,7 @@ namespace transport
           }
 
         // extract this record in JSON format
-        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_PACKAGE_NAME);
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         // commit transaction
         this->end_transaction();
@@ -1454,8 +1471,8 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
-        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         unsigned int total = integration_count + output_count;
 
@@ -1479,7 +1496,7 @@ namespace transport
             if(integration_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
             else                       collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
 
-            rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_TASK_NAME);
+            rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
           }
 
         // commit transaction
@@ -1496,7 +1513,7 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         if(count == 0)
           {
@@ -1512,7 +1529,7 @@ namespace transport
           }
 
         // extract this record in JSON format
-        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_NAME);
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         // commit transaction
         this->end_transaction();
@@ -1528,7 +1545,7 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED);
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         if(count == 0)
           {
@@ -1544,7 +1561,7 @@ namespace transport
           }
 
         // extract this record in JSON format
-        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED);
+        std::string document = unqlite_operations::extract_json(this->db, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
         // commit transaction
         this->end_transaction();

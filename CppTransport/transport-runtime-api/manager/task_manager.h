@@ -238,9 +238,9 @@ namespace transport
         void slave_dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload);
 
         //! Slave node: process an integration queue
-        template <typename TaskObject, typename QueueObject>
-        void slave_dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue, const MPI::new_integration_payload& payload,
-                                              const MPI::data_ready_payload::payload_type type);
+        template <typename TaskObject, typename QueueObject, typename BatchObject>
+        void slave_dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
+                                              const MPI::new_integration_payload& payload, BatchObject& batcher);
 
         //! Push a temporary container to the master process
         void slave_push_temp_container(typename data_manager<number>::generic_batcher* batcher, MPI::data_ready_payload::payload_type type);
@@ -570,19 +570,18 @@ namespace transport
               {
                 case repository<number>::task_record::integration:
                   {
-                    typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record);
+                    typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record.get());
 
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    integration_task<number>* tk = int_rec->get_task();
                     this->master_dispatch_integration_task(int_rec, job.tags);
                     break;
                   }
 
                 case repository<number>::task_record::output:
                   {
-                    typename repository<number>::output_task_record* out_rec = dynamic_cast<typename repository<number>::output_task_record*>(record);
+                    typename repository<number>::output_task_record* out_rec = dynamic_cast<typename repository<number>::output_task_record*>(record.get());
 
                     assert(out_rec != nullptr);
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -641,12 +640,12 @@ namespace transport
 
         if((tka = dynamic_cast< twopf_task<number>* >(tk)) != nullptr)
           {
-            work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), tka);
+            work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tka);
             this->master_dispatch_integration_queue(rec, tka, queue, tags);
           }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
           {
-            work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), tkb);
+            work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tkb);
             this->master_dispatch_integration_queue(rec, tkb, queue, tags);
           }
         else
@@ -664,8 +663,6 @@ namespace transport
                                                                  TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags)
       {
         assert(rec != nullptr);
-
-        model<number>* m = rec->get_task()->get_model();
 
         // create new output record in the repository database, and set up
         // paths to the integration database
@@ -703,8 +700,8 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << writer->get_record()->get_name() << "'" << std::endl;
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer->get_record()->get_task());
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << writer.get_record()->get_name() << "'" << std::endl;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer.get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
@@ -785,7 +782,7 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time required by worker processes = " << format_time(metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
@@ -936,8 +933,8 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << writer->get_record()->get_name() << "'";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer->get_record()->get_task());
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << writer.get_record()->get_name() << "'";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer.get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this task
         boost::timer::cpu_timer wallclock_timer;
@@ -1018,7 +1015,7 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer.get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total work time required by worker processes      = " << format_time(metadata.work_time);
@@ -1200,7 +1197,7 @@ namespace transport
               {
                 case repository<number>::task_record::integration:
                   {
-                    typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record);
+                    typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record.get());
 
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -1271,7 +1268,17 @@ namespace transport
             scheduler                 sch  = scheduler(ctx);
             work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), *tka, filter);
 
-            this->slave_dispatch_integration_queue(tka, m, work, payload, MPI::data_ready_payload::twopf_payload);
+            // construct a callback for the integrator to push new batches to the master
+            typename data_manager<number>::container_dispatch_function dispatcher =
+                                                                         std::bind(&task_manager<number>::slave_push_temp_container,
+                                                                                   this, std::placeholders::_1, MPI::data_ready_payload::twopf_payload);
+
+            // construct a batcher to hold the output of the integration
+            typename data_manager<number>::twopf_batcher batcher =
+                                                           this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                                                                       this->get_rank(), m, dispatcher);
+
+            this->slave_dispatch_integration_queue(tka, m, work, payload, batcher);
           }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
           {
@@ -1283,7 +1290,17 @@ namespace transport
             scheduler                   sch  = scheduler(ctx);
             work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), *tkb, filter);
 
-            this->slave_dispatch_integration_queue(tkb, m, work, payload, MPI::data_ready_payload::threepf_payload);
+            // construct a callback for the integrator to push new batches to the master
+            typename data_manager<number>::container_dispatch_function dispatcher =
+                                                                         std::bind(&task_manager<number>::slave_push_temp_container,
+                                                                                   this, std::placeholders::_1, MPI::data_ready_payload::threepf_payload);
+
+            // construct a batcher to hold the output of the integration
+            typename data_manager<number>::threepf_batcher batcher =
+                                                             this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                                                                           this->get_rank(), m, dispatcher);
+
+            this->slave_dispatch_integration_queue(tkb, m, work, payload, batcher);
           }
         else
           {
@@ -1295,10 +1312,9 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename QueueObject>
+    template <typename TaskObject, typename QueueObject, typename BatchObject>
     void task_manager<number>::slave_dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
-                                                                const MPI::new_integration_payload& payload,
-                                                                const MPI::data_ready_payload::payload_type type)
+                                                                const MPI::new_integration_payload& payload, BatchObject& batcher)
       {
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
@@ -1308,16 +1324,6 @@ namespace transport
 
         // keep track of wallclock time
         boost::timer::cpu_timer timer;
-
-        // construct a callback for the integrator to push new batches to the master
-        typename data_manager<number>::container_dispatch_function dispatcher =
-                                                                     std::bind(&task_manager<number>::slave_push_temp_container,
-                                                                               this, std::placeholders::_1, type);
-
-        // construct a batcher to hold the output of the integration
-        typename data_manager<number>::twopf_batcher batcher =
-                                                       this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                                   this->get_rank(), m, dispatcher);
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
@@ -1380,7 +1386,7 @@ namespace transport
 
                 case repository<number>::task_record::output:
                   {
-                    typename repository<number>::output_task_record* out_rec = dynamic_cast<typename repository<number>::output_task_record*>(record);
+                    typename repository<number>::output_task_record* out_rec = dynamic_cast<typename repository<number>::output_task_record*>(record.get());
 
                     assert(out_rec != nullptr);
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);

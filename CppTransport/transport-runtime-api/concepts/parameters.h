@@ -181,17 +181,19 @@ namespace transport
 		    const std::vector<std::string>& names = this->mdl->get_param_names();
 		    assert(names.size() == this->params.size());
 
-        writer.start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
         if(this->params.size() == names.size())
           {
+            writer.start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
             for(unsigned int i = 0; i < this->params.size(); i++)
               {
+                writer.start_node("arrayelt", false);   // node name is ignored in arrays
 		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_NAME, names[i]);
 		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_VALUE, this->params[i]);
+                writer.end_element("arrayelt");
               }
+            writer.end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
           }
         else throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
-        writer.end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
       }
 
 
