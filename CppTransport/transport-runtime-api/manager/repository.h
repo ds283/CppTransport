@@ -1652,10 +1652,10 @@ namespace transport
 		    virtual derived_product_record* query_derived_product(const std::string& name) = 0;
 
         //! Enumerate the output groups available from a named integration task
-        virtual std::list< output_group_record<integration_payload>* > enumerate_integration_task_content(const std::string& name) = 0;
+        virtual std::list< std::shared_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
 
 		    //! Enumerate the output groups available from a named output task
-		    virtual std::list< output_group_record<output_payload>* > enumerate_output_task_content(const std::string& name) = 0;
+		    virtual std::list< std::shared_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
 
 
         // ADD CONTENT ASSOCIATED WITH A TASK
@@ -1667,6 +1667,15 @@ namespace transport
 
 		    //! Generate a writer object for new derived-content output
 		    virtual derived_content_writer new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+
+
+        // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
+
+      public:
+
+        //! Find an output group for an integration task
+        virtual std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
+          find_integration_task_output(const integration_task_record* rec, const std::list<std::string>& tags) = 0;
 
 
         // PRIVATE DATA
@@ -1841,10 +1850,10 @@ namespace transport
           {
             writer.start_node("arrayelt", false);   // node names ignored in arrays
             writer.write_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP, *t);
-            writer.end_node("arrayelt");
+            writer.end_element("arrayelt");
           }
 
-        write.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+        writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 
 				this->repository_record::serialize(writer);
 			}
@@ -2293,21 +2302,21 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    repository<number>::output_group_record::output_group_record(const std::string& tn, const paths_group& p,
-                                                                 bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
-                                                                 typename repository<number>::repository_record::handler_package& pkg)
-	    : repository_record(pkg),
+    repository<number>::output_group_record<Payload>::output_group_record(const std::string& tn, const paths_group& p,
+                                                                          bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
+                                                                          typename repository<number>::repository_record::handler_package& pkg)
+      : repository_record(pkg),
         task(tn),
         paths(p),
-	      locked(lock), notes(nt), tags(tg),
-	      payload()
-	    {
-	    }
+        locked(lock), notes(nt), tags(tg),
+        payload()
+      {
+      }
 
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_group_record::write(std::ostream& out) const
+    void repository<number>::output_group_record<Payload>::write(std::ostream& out) const
 	    {
         out << __CPP_TRANSPORT_OUTPUT_GROUP;
         if(this->locked) out << ", " << __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED;
@@ -2342,7 +2351,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    bool repository<number>::output_group_record::check_tags(std::list<std::string> match_tags) const
+    bool repository<number>::output_group_record<Payload>::check_tags(std::list<std::string> match_tags) const
 	    {
         // remove all this group's tags from the matching set.
         // If any remain after this process, then the match set isn't a subset of the group's tags.
@@ -2357,8 +2366,8 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    repository<number>::output_group_record::output_group_record(serialization_reader* reader, const boost::filesystem::path& root,
-                                                                 typename repository<number>::repository_record::handler_package& pkg)
+    repository<number>::output_group_record<Payload>::output_group_record(serialization_reader* reader, const boost::filesystem::path& root,
+                                                                          typename repository<number>::repository_record::handler_package& pkg)
       : repository_record(reader, pkg),
         payload(reader)
       {
@@ -2404,7 +2413,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    void repository<number>::output_group_record::serialize(serialization_writer& writer) const
+    void repository<number>::output_group_record<Payload>::serialize(serialization_writer& writer) const
       {
         writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT));
 
@@ -2454,9 +2463,10 @@ namespace transport
 
             // used for sorting a list of output_groups into decreasing chronological order
             template <typename number, typename Payload>
-            bool comparator(const typename repository<number>::template output_group_record<Payload>* A, const typename repository<number>::template output_group_record<Payload>* B)
+            bool comparator(const std::shared_ptr< typename repository<number>::template output_group_record<Payload> > A,
+                            const std::shared_ptr< typename repository<number>::template output_group_record<Payload> > B)
               {
-                return (A->get_creation_time() > B->get_creation_time());
+                return (A.get()->get_creation_time() > B.get()->get_creation_time());
               }
 
           }   // namespace output_group_helper

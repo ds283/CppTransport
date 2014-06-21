@@ -129,8 +129,7 @@ int main(int argc, char* argv[])
     // set up parameter choices
     const std::vector<double>     init_params = { m, Lambda, f, M_PI };
     transport::parameters<double> params      =
-                                    transport::parameters<double>(M_Planck, init_params, model->get_param_names(),
-                                                                  model->params_validator_factory());
+                                    transport::parameters<double>(M_Planck, init_params, model);
 
     const std::vector<double> init_values = { phi_init, chi_init };
 
@@ -141,10 +140,7 @@ int main(int argc, char* argv[])
 
     // set up initial conditions
     transport::initial_conditions<double> ics =
-                                            transport::initial_conditions<double>("axion-1", params, init_values, model->get_state_names(),
-                                                                                  Ninit, Ncross, Npre,
-                                                                                  model->ics_validator_factory(),
-                                                                                  model->ics_finder_factory());
+                                            transport::initial_conditions<double>("axion-1", model, params, init_values, Ninit, Ncross, Npre,);
 
     const unsigned int t_samples = 10000;       // record 5000 samples - enough to find a good stepsize
 
@@ -172,13 +168,12 @@ int main(int argc, char* argv[])
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
     // construct a threepf task
-    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks,
-                                                                                      model->kconfig_kstar_factory(), TimeStoragePolicy(), ThreepfStoragePolicy());
+    transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
 
     std::cout << tk3;
 
     // construct a twopf task
-    transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks, model->kconfig_kstar_factory());
+    transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
 
 
 		// construct some derived data products; first, simply plots of the background

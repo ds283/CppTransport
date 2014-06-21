@@ -54,11 +54,13 @@
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
+
 #define __CPP_TRANSPORT_REPO_NULL_MODEL                  "Internal error: Null model in repository"
 #define __CPP_TRANSPORT_REPO_NULL_TASK                   "Internal error: Null task in repository"
 #define __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER   "Internal error: Null serialization reader in repository"
+#define __CPP_TRANSPORT_REPO_NULL_RECORD                 "Internal error: Null record in repository"
 
-#define __CPP_TRANSPORT_REPO_MISSING_TASK                "Repository error: Could not find specified task"
+#define __CPP_TRANSPORT_REPO_MISSING_RECORD              "Repository error: Could not find database record"
 #define __CPP_TRANSPORT_REPO_MISSING_PACKAGE             "Repository error: Could not find specified package"
 #define __CPP_TRANSPORT_REPO_MISSING_PRODUCT             "Repository error: Could not find specified derived product"
 #define __CPP_TRANSPORT_REPO_MISSING_CONTENT             "Repostiory error: Could not find specified content group"
@@ -99,6 +101,12 @@
 #define __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD          "output task"
 #define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_RECORD      "derived product"
 #define __CPP_TRANSPORT_REPO_CONTENT_RECORD              "content"
+
+#define __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE         "Repository error: unknown type for record"
+#define __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED          "Internal error: dynamic cast of repository record failed"
+
+#define __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT              "Internal error: received unexpected output task"
+#define __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION         "Internal error: received unexpected integration task"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

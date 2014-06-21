@@ -456,14 +456,15 @@ namespace transport
 
     template <typename number>
     twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                             typename integration_task<number>::kconfig_kstar kstar,
                                              typename integration_task<number>::time_config_storage_policy p)
       : integration_task<number>(nm, i, t, p),
         serial(0)
       {
         // we can use 'this' here, because the integration-task components are guaranteed to be initialized
         // by the time the body of the constructor is executed
-        comoving_normalization = kstar(this);
+        model<number>* m = i.get_model();
+
+        comoving_normalization = m->compute_kstar(this);
       }
 
 
@@ -658,9 +659,8 @@ namespace transport
     // build a twopf task
     template <typename number>
     twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
-                                   typename integration_task<number>::time_config_storage_policy p)
-      : twopf_list_task<number>(nm, i, t, kstar, p)
+                                   const range<double>& ks, typename integration_task<number>::time_config_storage_policy p)
+      : twopf_list_task<number>(nm, i, t, p)
       {
         // the mapping from the provided list of ks to the work list is just one-to-one
         for(unsigned int j = 0; j < ks.size(); j++)
@@ -743,7 +743,6 @@ namespace transport
 
         //! Construct a threepf-task
         threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                     typename integration_task<number>::kconfig_kstar kstar,
                      typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
@@ -787,9 +786,8 @@ namespace transport
 
     template <typename number>
     threepf_task<number>::threepf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                       typename integration_task<number>::kconfig_kstar kstar,
                                        typename integration_task<number>::time_config_storage_policy p)
-      : twopf_list_task<number>(nm, i, t, kstar, p),
+      : twopf_list_task<number>(nm, i, t, p),
         serial(0), integrable(true)
       {
       }
@@ -895,7 +893,6 @@ namespace transport
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
         //! with specified policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                           const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
                            typename integration_task<number>::time_config_storage_policy tp,
                            typename threepf_task<number>::threepf_kconfig_storage_policy kp);
 
@@ -903,7 +900,7 @@ namespace transport
         //! with default policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                            const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-	        : threepf_cubic_task(nm, i, t, ks, kstar,
+	        : threepf_cubic_task(nm, i, t, ks,
 	                             typename integration_task<number>::default_time_config_storage_policy(),
 	                             typename threepf_task<number>::default_threepf_kconfig_storage_policy())
 	        {
@@ -941,10 +938,9 @@ namespace transport
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
     threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
-                                                   typename integration_task<number>::time_config_storage_policy tp,
+                                                   const range<double>& ks, typename integration_task<number>::time_config_storage_policy tp,
                                                    typename threepf_task<number>::threepf_kconfig_storage_policy kp)
-	    : threepf_task<number>(nm, i, t, kstar, tp)
+	    : threepf_task<number>(nm, i, t, tp)
       {
         bool stored_background = false;
 
@@ -1047,7 +1043,6 @@ namespace transport
         //! with specified storage policies
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         typename integration_task<number>::kconfig_kstar kstar,
                          typename integration_task<number>::time_config_storage_policy tp,
                          typename threepf_task<number>::threepf_kconfig_storage_policy kp);
 
@@ -1055,9 +1050,8 @@ namespace transport
         //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
         //! with default storage policies
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                         const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                         typename integration_task<number>::kconfig_kstar kstar)
-          : threepf_fls_task(nm, i, t, kts, alphas, betas, kstar,
+                         const range<double>& kts, const range<double>& alphas, const range<double>& betas)
+          : threepf_fls_task(nm, i, t, kts, alphas, betas,
                              typename integration_task<number>::default_time_config_storage_policy(),
                              typename threepf_task<number>::default_threepf_kconfig_storage_policy())
           {
@@ -1105,7 +1099,7 @@ namespace transport
                                                typename integration_task<number>::kconfig_kstar kstar,
                                                typename integration_task<number>::time_config_storage_policy tp,
                                                typename threepf_task<number>::threepf_kconfig_storage_policy kp)
-	    : threepf_task<number>(nm, i, t, kstar, tp)
+	    : threepf_task<number>(nm, i, t, tp)
       {
         bool stored_background = false;
 

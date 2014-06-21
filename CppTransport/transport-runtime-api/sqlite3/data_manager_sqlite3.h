@@ -71,22 +71,22 @@ namespace transport
 
         //! Create data files for a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(typename repository<number>::integration_writer& ctr) override;
+        virtual void initialize_writer(typename repository<number>::integration_writer& writer) override;
 
         //! Close an open integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to use an integration_writer will lead to unsubtle errors.
-        virtual void close_writer(typename repository<number>::integration_writer& ctr) override;
+        virtual void close_writer(typename repository<number>::integration_writer& writer) override;
 
 		    //! Create data files for a new derived_content_writer object.
-		    virtual void initialize_writer(typename repository<number>::derived_content_writer& ctr) override;
+		    virtual void initialize_writer(typename repository<number>::derived_content_writer& writer) override;
 
 		    //! Close an open derived_content_writer object.
 
 		    //! Any open sqlite3 handles are closed. Attempting to use the writer after closing
 		    //! will lead to unsubtle errors.
-		    virtual void close_writer(typename repository<number>::derived_content_writer& ctr) override;
+		    virtual void close_writer(typename repository<number>::derived_content_writer& writer) override;
 
 
         // WRITE INDEX TABLES -- implements a 'data_manager' interface
@@ -94,12 +94,10 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
-                                   unsigned int Nfields) override;
+        virtual void create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk) override;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk,
-                                   unsigned int Nfields) override;
+        virtual void create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk) override;
 
 
         // TASK FILES -- implements a 'data_manager' interface
@@ -136,11 +134,11 @@ namespace transport
                                                                                              typename data_manager<number>::container_dispatch_function dispatcher) override;
 
         //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer,
                                            const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
 
         //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer,
                                              const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
 
 
@@ -263,14 +261,14 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::integration_writer& ctr)
+    void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::integration_writer& writer)
       {
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
 
         // get paths of the data container and taskfile
-        boost::filesystem::path ctr_path = ctr.get_abs_container_path();
-        boost::filesystem::path taskfile_path = ctr.get_abs_taskfile_path();
+        boost::filesystem::path ctr_path = writer.get_abs_container_path();
+        boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
 
         // open the main container
 
@@ -299,7 +297,7 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(db);
-        ctr.set_data_manager_handle(db);
+        writer.set_data_manager_handle(db);
 
         // open the taskfile associated with this container
 
@@ -326,33 +324,33 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
-        ctr.set_data_manager_taskfile(taskfile);
+        writer.set_data_manager_taskfile(taskfile);
       }
 
 
     // Close data files associated with an integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(typename repository<number>::integration_writer& ctr)
+    void data_manager_sqlite3<number>::close_writer(typename repository<number>::integration_writer& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
         // close sqlite3 handle to taskfile
         sqlite3* taskfile = nullptr;
-        ctr.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(taskfile);
         sqlite3_close(taskfile);
 
         // physically remove the taskfile from the disc; it isn't needed any more
-        boost::filesystem::remove(ctr.get_abs_taskfile_path());
+        boost::filesystem::remove(writer.get_abs_taskfile_path());
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(ctr.get_abs_tempdir_path());
+        boost::filesystem::remove(writer.get_abs_tempdir_path());
       }
 
 
@@ -414,27 +412,29 @@ namespace transport
     // INDEX TABLE MANAGEMENT
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& ctr,
-                                                     twopf_task<number>* tk, unsigned int Nfields)
+    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        unsigned int Nfields = tk->get_model()->get_N_fields();
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
 
-        if(ctr.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+        if(writer.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& ctr,
-                                                     threepf_task<number>* tk, unsigned int Nfields)
+    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        unsigned int Nfields = tk->get_model()->get_N_fields();
 
         sqlite3_operations::create_time_sample_table(db, tk);
         sqlite3_operations::create_twopf_sample_table(db, tk);
@@ -444,7 +444,7 @@ namespace transport
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
-        if(ctr.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+        if(writer.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
       }
 
 
@@ -632,32 +632,30 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
-                                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
+    void data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg<number>(db, ctr, temp_ctr, m, tk);
-        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
 
-        if(ctr.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, ctr, temp_ctr);
+        if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
-                                                               const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
+    void data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
       {
         sqlite3* db = nullptr;
-        ctr.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::aggregate_backg<number>(db, ctr, temp_ctr, m, tk);
-        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::real_twopf);
-        sqlite3_operations::aggregate_twopf<number>(db, ctr, temp_ctr, sqlite3_operations::imag_twopf);
-        sqlite3_operations::aggregate_threepf<number>(db, ctr, temp_ctr);
+        sqlite3_operations::aggregate_backg<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
+        sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::imag_twopf);
+        sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
 
-        if(ctr.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, ctr, temp_ctr);
+        if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
       }
 
 

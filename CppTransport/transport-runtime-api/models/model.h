@@ -206,15 +206,15 @@ namespace transport
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
-        virtual void         backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                                   typename data_manager<number>::twopf_batcher& batcher,
-                                                   bool silent=false) = 0;
+        virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
-        virtual void         backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                                     typename data_manager<number>::threepf_batcher& batcher,
-                                                     bool silent=false) = 0;
+        virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           bool silent = false) = 0;
 
         // return size of state vectors
         virtual unsigned int backend_twopf_state_size(void) const = 0;

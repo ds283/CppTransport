@@ -64,14 +64,14 @@ namespace transport
         virtual context backend_get_context() override;
 
         // Integrate background and 2-point function on the CPU
-        virtual void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                            typename data_manager<number>::twopf_batcher& batcher,
                                            bool silent = false) override;
 
         // Integrate background, 2-point function and 3-point function on the CPU
-        virtual void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                             typename data_manager<number>::threepf_batcher& batcher,
-                                             bool silent = false) override;
+        virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           bool silent = false) override;
 
         virtual unsigned int backend_twopf_state_size(void)   const override { return($$__MODEL_pool::twopf_state_size); }
         virtual unsigned int backend_threepf_state_size(void) const override { return($$__MODEL_pool::threepf_state_size); }
@@ -207,7 +207,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $$__MODEL_basic<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+    void $$__MODEL_basic<number>::backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
@@ -311,9 +311,9 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL_basic<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                                          typename data_manager<number>::threepf_batcher& batcher,
-                                                          bool silent)
+    void $$__MODEL_basic<number>::backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                                        typename data_manager<number>::threepf_batcher& batcher,
+                                                        bool silent)
       {
       }
 

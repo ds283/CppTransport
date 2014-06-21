@@ -142,6 +142,14 @@ namespace transport
 		    assert(m != nullptr);
 		    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ICS_NULL_MODEL);
 
+        // check model matches the one supplied with parameters
+        if(m->get_identity_string() != p.get_model()->get_identity_string())
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_ICS_MODEL_MISMATCH << " '" << nm << "'";
+            throw runtime_exception(runtime_exception::TASK_STRUCTURE_ERROR, msg.str());
+          }
+
         // validate supplied initial conditions - we rely on the validator to throw
         // an exception if the supplied number of ics is incorrect
 

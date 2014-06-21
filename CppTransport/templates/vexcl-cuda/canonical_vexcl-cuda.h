@@ -125,14 +125,14 @@ namespace transport
         virtual context backend_get_context();
 
         // Integrate background and 2-point function on a CUDA device
-        virtual void backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+        virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                            typename data_manager<number>::twopf_batcher& batcher,
-                                           bool silent=false) override;
+                                           bool silent = false) override;
 
         // Integrate background, 2-point function and 3-point function on a CUDA device
-        virtual void backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                     typename data_manager<number>::threepf_batcher& batcher,
-                                     bool silent=false) override;
+        virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           bool silent = false) override;
 
         virtual unsigned int backend_twopf_state_size(void)   const override { return($$__MODEL_pool::twopf_state_size); }
         virtual unsigned int backend_threepf_state_size(void) const override { return($$__MODEL_pool::threepf_state_size); }
@@ -289,7 +289,7 @@ namespace transport
 
     // process work queue for twopf
     template <typename number>
-    void $$__MODEL_vexcl<number>::backend_process_twopf(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
+    void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
@@ -371,220 +371,220 @@ namespace transport
       }
 
 
-      // make initial conditions for each component of the 2pf
-      // x         - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
-      // start     - starting position of twopf components within the state vector
-      // list      - work list of 2pf configurations
-      // Ninit     - initial time
-      // p         - parameters
-      // ics       - iniitial conditions for the background fields (or fields+momenta)
-      // imaginary - whether to populate using real or imaginary components of the 2pf
-      template <typename number>
-      template <typename State, typename Config>
-      void $$__MODEL_vexcl<number>::populate_twopf_ic(State& x, unsigned int start,
-                                                      const typename work_queue<Config>::device_work_list& list,
-                                                      std::function<double(const Config&)> visitor,
-                                                      double Ninit,
-                                                      const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
-        {
-          // scan through k-modes, assigning values to the (i,j)-th element
-          for(unsigned int c = 0; c < list.size(); c++)
-            {
-              __GENERIC_TWOPF(x, start, $$__A, $$__B, c, list.size()) = imaginary ? this->make_twopf_im_ic($$__A, $$__B, visitor(list[c]), Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, visitor(list[c]), Ninit, p, ics) $$// ;
-            }
-        }
+    // make initial conditions for each component of the 2pf
+    // x         - state vector *containing* space for the 2pf (doesn't have to be entirely the 2pf)
+    // start     - starting position of twopf components within the state vector
+    // list      - work list of 2pf configurations
+    // Ninit     - initial time
+    // p         - parameters
+    // ics       - iniitial conditions for the background fields (or fields+momenta)
+    // imaginary - whether to populate using real or imaginary components of the 2pf
+    template <typename number>
+    template <typename State, typename Config>
+    void $$__MODEL_vexcl<number>::populate_twopf_ic(State& x, unsigned int start,
+                                                    const typename work_queue<Config>::device_work_list& list,
+                                                    std::function<double(const Config&)> visitor,
+                                                    double Ninit,
+                                                    const parameters<number>& p, const std::vector<number>& ics, bool imaginary)
+      {
+        // scan through k-modes, assigning values to the (i,j)-th element
+        for(unsigned int c = 0; c < list.size(); c++)
+          {
+            __GENERIC_TWOPF(x, start, $$__A, $$__B, c, list.size()) = imaginary ? this->make_twopf_im_ic($$__A, $$__B, visitor(list[c]), Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, visitor(list[c]), Ninit, p, ics) $$// ;
+          }
+      }
 
 
-      // THREE-POINT FUNCTION INTEGRATION
+    // THREE-POINT FUNCTION INTEGRATION
 
 
-      template <typename number>
-      void $$__MODEL_vexcl<number>::backend_process_threepf(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                                            typename data_manager<number>::threepf_batcher& batcher,
-                                                            bool silent)
-        {
-          std::ostringstream work_msg;
-          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-              << "** VexCL/CUDA compute backend processing threepf task";
-          work_msg << work;
-          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-          std::cout << work_msg.str();
-          if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
+    template <typename number>
+    void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
+                                                        typename data_manager<number>::threepf_batcher& batcher,
+                                                        bool silent)
+      {
+        std::ostringstream work_msg;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+            << "** VexCL/CUDA compute backend processing threepf task";
+        work_msg << work;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        std::cout << work_msg.str();
+        if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
-          // get work queue for the zeroth device (should be the only device in this backend)
-          assert(work.size() == 1);
-          const work_queue<threepf_kconfig>::device_queue queues = work[0];
+        // get work queue for the zeroth device (should be the only device in this backend)
+        assert(work.size() == 1);
+        const work_queue<threepf_kconfig>::device_queue queues = work[0];
 
-          // there may be more than one work list if there are too many configurations to integrate
-          // with our current GPU memory capacity
-          for(unsigned int i = 0; i < queues.size(); i++)
-            {
-              try
-                {
-                  const work_queue<threepf_kconfig>::device_work_list list = queues[i];
+        // there may be more than one work list if there are too many configurations to integrate
+        // with our current GPU memory capacity
+        for(unsigned int i = 0; i < queues.size(); i++)
+          {
+            try
+              {
+                const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
-                  // set up a functor to observe this system
-                  // this also starts the timers running, so we do it as early as possible
-                  $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
+                // set up a functor to observe this system
+                // this also starts the timers running, so we do it as early as possible
+                $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
 
-                  // integrate all items on this work list
-                  BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                      << "** VexCL/CUDA compute backend: integrating triangles from work list " << i;
-                  BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                      << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
+                // integrate all items on this work list
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                    << "** VexCL/CUDA compute backend: integrating triangles from work list " << i;
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                    << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
 
-                  // initialize the device's copy of the k-modes
-                  vex::vector<double> dev_k1s(ctx.queue(), list.size());
-                  vex::vector<double> dev_k2s(ctx.queue(), list.size());
-                  vex::vector<double> dev_k3s(ctx.queue(), list.size());
+                // initialize the device's copy of the k-modes
+                vex::vector<double> dev_k1s(ctx.queue(), list.size());
+                vex::vector<double> dev_k2s(ctx.queue(), list.size());
+                vex::vector<double> dev_k3s(ctx.queue(), list.size());
 
-                  std::vector<double> hst_k1s(list.size());
-                  std::vector<double> hst_k2s(list.size());
-                  std::vector<double> hst_k3s(list.size());
-                  for(unsigned int j = 0; j < list.size(); j++)
-                    {
-                      hst_k1s[j] = list[j].k1;
-                      hst_k2s[j] = list[j].k2;
-                      hst_k3s[j] = list[j].k3;
-                    }
-                  vex::copy(hst_k1s, dev_k1s);
-                  vex::copy(hst_k2s, dev_k2s);
-                  vex::copy(hst_k3s, dev_k3s);
+                std::vector<double> hst_k1s(list.size());
+                std::vector<double> hst_k2s(list.size());
+                std::vector<double> hst_k3s(list.size());
+                for(unsigned int j = 0; j < list.size(); j++)
+                  {
+                    hst_k1s[j] = list[j].k1;
+                    hst_k2s[j] = list[j].k2;
+                    hst_k3s[j] = list[j].k3;
+                  }
+                vex::copy(hst_k1s, dev_k1s);
+                vex::copy(hst_k2s, dev_k2s);
+                vex::copy(hst_k3s, dev_k3s);
 
-                  // set up a functor to evolve this system
-                  $$__MODEL_vexcl_threepf_functor<number> rhs(this->ctx, tk->get_params(), dev_k1s, dev_k2s, dev_k3s);
+                // set up a functor to evolve this system
+                $$__MODEL_vexcl_threepf_functor<number> rhs(this->ctx, tk->get_params(), dev_k1s, dev_k2s, dev_k3s);
 
-                  // set up a state vector
-                  threepf_state dev_x(this->ctx.queue(), $$__MODEL_pool::threepf_state_size*list.size());
+                // set up a state vector
+                threepf_state dev_x(this->ctx.queue(), $$__MODEL_pool::threepf_state_size*list.size());
 
-                  // set up a host vector to store the initial conditions
-                  // it's not quite clear what the best way to set ics on the device, but here we aggregate everything
-                  // on the host and then copy to the device
-                  std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*list.size());
+                // set up a host vector to store the initial conditions
+                // it's not quite clear what the best way to set ics on the device, but here we aggregate everything
+                // on the host and then copy to the device
+                std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*list.size());
 
-                  // fix initial conditions - background
-                  const std::vector<number>& ics = tk->get_ics_vector();
-                  for(unsigned int j = 0; j < list.size(); j++)
-                    {
-                      __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
-                    }
+                // fix initial conditions - background
+                const std::vector<number>& ics = tk->get_ics_vector();
+                for(unsigned int j = 0; j < list.size(); j++)
+                  {
+                    __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
+                  }
 
-                  // fix initial conditions - real 2pfs
-                  const std::vector<double>& times = tk->get_integration_step_times();
+                // fix initial conditions - real 2pfs
+                const std::vector<double>& times = tk->get_integration_step_times();
 
-                  std::function<double(const threepf_kconfig&)> v1 = [](const threepf_kconfig& c) -> double { return(c.k1); };
-                  std::function<double(const threepf_kconfig&)> v2 = [](const threepf_kconfig& c) -> double { return(c.k2); };
-                  std::function<double(const threepf_kconfig&)> v3 = [](const threepf_kconfig& c) -> double { return(c.k3); };
+                std::function<double(const threepf_kconfig&)> v1 = [](const threepf_kconfig& c) -> double { return(c.k1); };
+                std::function<double(const threepf_kconfig&)> v2 = [](const threepf_kconfig& c) -> double { return(c.k2); };
+                std::function<double(const threepf_kconfig&)> v3 = [](const threepf_kconfig& c) -> double { return(c.k3); };
 
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k1_start,
-                                          list, v1, times.front(), tk->get_params(), ics, false);
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k2_start,
-                                          list, v2, times.front(), tk->get_params(), ics, false);
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k3_start,
-                                          list, v3, times.front(), tk->get_params(), ics, false);
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k1_start,
+                                        list, v1, times.front(), tk->get_params(), ics, false);
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k2_start,
+                                        list, v2, times.front(), tk->get_params(), ics, false);
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k3_start,
+                                        list, v3, times.front(), tk->get_params(), ics, false);
 
-                  // fix initial conditions - imaginary 2pfs
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k1_start,
-                                          list, v1, times.front(), tk->get_params(), ics, true);
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k2_start,
-                                          list, v2, times.front(), tk->get_params(), ics, true);
-                  this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k3_start,
-                                          list, v3, times.front(), tk->get_params(), ics, true);
+                // fix initial conditions - imaginary 2pfs
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k1_start,
+                                        list, v1, times.front(), tk->get_params(), ics, true);
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k2_start,
+                                        list, v2, times.front(), tk->get_params(), ics, true);
+                this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_im_k3_start,
+                                        list, v3, times.front(), tk->get_params(), ics, true);
 
-                  // fix initial conditions - 3pfs
-                  this->populate_threepf_ic(hst_x, $$__MODEL_pool::threepf_start, list, times.front(), tk->get_params(), ics);
+                // fix initial conditions - 3pfs
+                this->populate_threepf_ic(hst_x, $$__MODEL_pool::threepf_start, list, times.front(), tk->get_params(), ics);
 
-                  // copy ics to device
-                  vex::copy(hst_x, dev_x);
+                // copy ics to device
+                vex::copy(hst_x, dev_x);
 
-                  using namespace boost::numeric::odeint;
-                  integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
+                using namespace boost::numeric::odeint;
+                integrate_times($$__MAKE_PERT_STEPPER{threepf_state}, rhs, dev_x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
 
-                  obs.stop_timers();
-                }
-              catch(std::overflow_error& xe)
-                {
-                  batcher.report_integration_failure();
+                obs.stop_timers();
+              }
+            catch(std::overflow_error& xe)
+              {
+                batcher.report_integration_failure();
 
-                  BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "!! Integration failure in work list " << i;
-                }
-            }
-        }
-
-
-      template <typename number>
-      template <typename State>
-      void $$__MODEL_vexcl<number>::populate_threepf_ic(State& x, unsigned int start,
-                                                        const work_queue<threepf_kconfig>::device_work_list& list, double Ninit,
-                                                        const parameters<number>& p, const std::vector<number>& ics)
-        {
-          // scan through k-modes, assigning values to the (i,j,k)-th element
-          for(int c = 0; c < list.size(); c++)
-            {
-              __GENERIC_THREEPF(x, start, $$__A, $$__B, $$__C, c, list.size()) = this->make_threepf_ic($$__A, $$__B, $$__C, list[c].k1, list[c].k2, list[c].k3, Ninit, p, ics) $$// ;
-            }
-        }
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "!! Integration failure in work list " << i;
+              }
+          }
+      }
 
 
-      // IMPLEMENTATION - FUNCTOR FOR 2PF INTEGRATION
+    template <typename number>
+    template <typename State>
+    void $$__MODEL_vexcl<number>::populate_threepf_ic(State& x, unsigned int start,
+                                                      const work_queue<threepf_kconfig>::device_work_list& list, double Ninit,
+                                                      const parameters<number>& p, const std::vector<number>& ics)
+      {
+        // scan through k-modes, assigning values to the (i,j,k)-th element
+        for(int c = 0; c < list.size(); c++)
+          {
+            __GENERIC_THREEPF(x, start, $$__A, $$__B, $$__C, c, list.size()) = this->make_threepf_ic($$__A, $$__B, $$__C, list[c].k1, list[c].k2, list[c].k3, Ninit, p, ics) $$// ;
+          }
+      }
 
 
-      template <typename number>
-      void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
-        {
-          const auto __a = exp(__t);
-
-          std::vector<vex::backend::kernel> twopf_kernel;
-
-          assert(this->ctx.size() == 1);
-
-          // build a kernel to evolve the twopf and background combined
-          twopf_kernel.emplace_back(this->ctx.queue(0),
-                                    $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
-
-          struct
-            {
-              size_t operator()(size_t w_size)
-                {
-                  return(1 + $$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size)*w_size*sizeof(double);
-                }
-            } twopf_kernel_smem_functor;
-
-          // apply the twopf kernel
-          twopf_kernel[0].push_arg<unsigned long long>(this->k_list.part_size(0));
-          twopf_kernel[0].push_arg(this->params.get_Mp());
-          twopf_kernel[0].push_arg(this->params.get_vector()[$$__1]); $$//
-          twopf_kernel[0].push_arg(__x(0));
-          twopf_kernel[0].push_arg(__dxdt(0));
-          twopf_kernel[0].push_arg(this->k_list(0));
-          twopf_kernel[0].push_arg(__a);
-
-          // set amount of shared memory required per block
-          // VexCL passes us the block dimension, so we have to multiply by the required shared memory per thread
-          twopf_kernel[0].config(ctx.queue(0), twopf_kernel_smem_functor);
-          twopf_kernel[0].set_smem(twopf_kernel_smem_functor);
-
-          twopf_kernel[0](this->ctx.queue(0));
-        }
+    // IMPLEMENTATION - FUNCTOR FOR 2PF INTEGRATION
 
 
-      // IMPLEMENTATION - FUNCTOR FOR 2PF OBSERVATION
+    template <typename number>
+    void $$__MODEL_vexcl_twopf_functor<number>::operator()(const twopf_state& __x, twopf_state& __dxdt, double __t)
+      {
+        const auto __a = exp(__t);
+
+        std::vector<vex::backend::kernel> twopf_kernel;
+
+        assert(this->ctx.size() == 1);
+
+        // build a kernel to evolve the twopf and background combined
+        twopf_kernel.emplace_back(this->ctx.queue(0),
+                                  $$__IMPORT_KERNEL{vexcl-cuda/twopf.cu, twopffused, );}
+
+        struct
+          {
+            size_t operator()(size_t w_size)
+              {
+                return(1 + $$__MODEL_pool::twopf_size + $$__MODEL_pool::u2_size)*w_size*sizeof(double);
+              }
+          } twopf_kernel_smem_functor;
+
+        // apply the twopf kernel
+        twopf_kernel[0].push_arg<unsigned long long>(this->k_list.part_size(0));
+        twopf_kernel[0].push_arg(this->params.get_Mp());
+        twopf_kernel[0].push_arg(this->params.get_vector()[$$__1]); $$//
+        twopf_kernel[0].push_arg(__x(0));
+        twopf_kernel[0].push_arg(__dxdt(0));
+        twopf_kernel[0].push_arg(this->k_list(0));
+        twopf_kernel[0].push_arg(__a);
+
+        // set amount of shared memory required per block
+        // VexCL passes us the block dimension, so we have to multiply by the required shared memory per thread
+        twopf_kernel[0].config(ctx.queue(0), twopf_kernel_smem_functor);
+        twopf_kernel[0].set_smem(twopf_kernel_smem_functor);
+
+        twopf_kernel[0](this->ctx.queue(0));
+      }
 
 
-      template <typename number>
-      void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
-        {
-          this->start_batching(t, this->get_log(), data_manager<number>::normal);
+    // IMPLEMENTATION - FUNCTOR FOR 2PF OBSERVATION
 
-          // allocate storage for state, then copy device vector
-          std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
-          vex::copy(x, hst_x);
 
-          // push to batcher
-          this->push(hst_x);
+    template <typename number>
+    void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
+      {
+        this->start_batching(t, this->get_log(), data_manager<number>::normal);
 
-          this->stop_batching();
-        }
+        // allocate storage for state, then copy device vector
+        std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
+        vex::copy(x, hst_x);
+
+        // push to batcher
+        this->push(hst_x);
+
+        this->stop_batching();
+      }
 
 
     // IMPLEMENTATION - FUNCTOR FOR 3PF INTEGRATION

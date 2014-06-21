@@ -588,7 +588,7 @@ namespace transport
 		        typedef enum { twopf_real, twopf_imag } twopf_type;
 
 		        //! Output-group finder function -- serivce provided by a repository implementation
-		        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(integration_task<number>*, const std::list<std::string>&)> output_group_finder;
+		        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(typename repository<number>::integration_task_record*, const std::list<std::string>&)> output_group_finder;
 
 		        //! Attach function for a datapipe
 		        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(datapipe*, output_group_finder&, integration_task<number>*, const std::list<std::string>&)> attach_callback;
@@ -1380,12 +1380,10 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk,
-                                   unsigned int Nfields) = 0;
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk,
-                                   unsigned int Nfields) = 0;
+        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk) = 0;
 
 
         // TASK FILES

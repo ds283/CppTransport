@@ -767,8 +767,7 @@ namespace transport
 
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr,
-                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk)
+        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr, const std::string& temp_ctr)
           {
             BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating background values";
 
