@@ -10,6 +10,8 @@
 
 #include <iostream>
 #include <string>
+#include <memory>
+#include <functional>
 
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/instance_manager.h"
@@ -23,8 +25,6 @@
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "model.h"
-#include "derived_product.h"
 
 
 // log file name
@@ -148,28 +148,22 @@ namespace transport
     template <typename number>
     class model;
 
-
     // forward-declare initial_conditions
     template <typename number>
     class initial_conditions;
-
 
     // forward-declare tasks
     template <typename number>
     class task;
 
-
     template <typename number>
     class integration_task;
-
 
     template <typename number>
     class twopf_task;
 
-
     template <typename number>
     class threepf_task;
-
 
     template <typename number>
     class output_task;
@@ -191,11 +185,11 @@ namespace transport
     class repository
 	    {
 
-      public:
-
 		    // REPOSITORY METADATA RECORD
 
-		    //! Encapsulates metadata for a record stored in the repository
+      public:
+
+        //! Encapsulates metadata for a record stored in the repository
 		    class record_metadata: public serializable
 			    {
 
@@ -257,6 +251,8 @@ namespace transport
 
 		    // GENERIC REPOSITORY RECORD
 
+      public:
+
 		    //! Encapsulates common details shared by all repository records
 		    class repository_record: public serializable
 			    {
@@ -295,7 +291,7 @@ namespace transport
 				    const std::string get_name() const { return(this->name); }
 
             //! Set record time from creation-time metadata
-            const std::string set_name_from_creation_time() { this->name = boost::posix_time::to_iso_string(this->metadata.get_creation_time()); }
+            void set_name_from_creation_time() { this->name = boost::posix_time::to_iso_string(this->metadata.get_creation_time()); }
 
 
 				    // GET AND SET METADATA -- delegated to the metadata container
@@ -360,6 +356,8 @@ namespace transport
 
 		    // PACKAGE RECORD
 
+      public:
+
 		    //! Encapsulates metadata for a package record stored in the repository
 		    class package_record: public repository_record
 			    {
@@ -369,10 +367,10 @@ namespace transport
 		      public:
 
 				    //! construct a package record
-				    package_record(const initial_conditions<number>& i, repository_record::handler_package& pkg);
+				    package_record(const initial_conditions<number>& i, typename repository_record::handler_package& pkg);
 
 				    //! deserialization constructor
-				    package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f, repository_record::handler_package& pkg);
+				    package_record(serialization_reader* reader, typename instance_manager<number>::model_finder& f, typename repository_record::handler_package& pkg);
 
 				    virtual ~package_record() = default;
 
@@ -411,7 +409,17 @@ namespace transport
 			    };
 
 
+        // PACKAGE FINDER SERVICE
+
+      public:
+
+        //! Package finder service
+        typedef std::function<package_record*(const std::string&)> package_finder;
+
+
 		    // GENERIC TASK RECORD
+
+      public:
 
 		    class task_record: public repository_record
 			    {
@@ -426,10 +434,10 @@ namespace transport
 		      public:
 
 				    //! construct a task record
-				    task_record(const std::string& nm, repository_record::handler_package& pkg);
+				    task_record(const std::string& nm, typename repository_record::handler_package& pkg);
 
 				    //! deserialization constructor
-				    task_record(serialization_reader* f, repository_record::handler_package& pkg);
+				    task_record(serialization_reader* f, typename repository_record::handler_package& pkg);
 
 				    virtual ~task_record() = default;
 
@@ -465,6 +473,8 @@ namespace transport
 
 		    // INTEGRATION TASK RECORD
 
+      public:
+
 		    class integration_task_record: public task_record
 			    {
 
@@ -473,13 +483,13 @@ namespace transport
 		      public:
 
 				    //! construct an integration task record
-				    integration_task_record(const integration_task<number>& tk, repository_record::handler_package& pkg);
+				    integration_task_record(const integration_task<number>& tk, typename repository_record::handler_package& pkg);
 
 				    //! override copy constructor to perform a deep copy
 				    integration_task_record(const integration_task_record& obj);
 
 				    //! deserialization constructor
-				    integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f, repository_record::handler_package& pkg);
+				    integration_task_record(serialization_reader* reader, typename repository<number>::package_finder& f, typename repository_record::handler_package& pkg);
 
 				    virtual ~integration_task_record();
 
@@ -526,70 +536,17 @@ namespace transport
 			    };
 
 
-		    // OUTPUT TASK RECORD
+        // TASK FINDER SERVICE
 
-		    class output_task_record: public task_record
-			    {
+      public:
 
-			      // CONSTRUCTOR, DESTRUCTOR
-
-		      public:
-
-				    //! construct an output task record
-				    output_task_record(const output_task<number>& tk, repository_record::handler_package& pkg);
-
-				    //! override copy constructor to perform a deep copy
-				    output_task_record(const output_task_record& obj);
-
-				    //! deserialization constructor
-				    output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f, repository_record::handler_package& pkg);
-
-				    virtual ~output_task_record();
-
-
-				    // GET CONTENTS
-
-		      public:
-
-				    //! Get task
-				    output_task<number>* get_task() const { return(this->tk); }
-
-
-            // ADMINISTRATION
-
-          public:
-
-            //! Get type
-            virtual typename task_record::type get_type() const override { return(task_record::output); }
-
-
-				    // SERIALIZATION -- implements a 'serializable' interface
-
-		      public:
-
-				    //! serialize this object
-				    virtual void serialize(serialization_writer& writer) const override;
-
-
-            // CLONE
-
-          public:
-
-            //! clone this object
-            virtual repository_record* clone() const override { return new output_task_record(static_cast<const output_task_record&>(*this)); };
-
-
-				    // INTERNAL DATA
-
-		      protected:
-
-				    //! Task associated with this record
-				    output_task<number>* tk;
-
-			    };
+        //! Task finder service
+        typedef std::function<task_record*(const std::string&)> task_finder;
 
 
 		    // DERIVED PRODUCT RECORD
+
+      public:
 
 		    class derived_product_record: public repository_record
 			    {
@@ -599,15 +556,15 @@ namespace transport
 		      public:
 
 				    //! construct a derived product record
-				    derived_product_record(const derived_data::derived_product<number>& prod, repository_record::handler_package& pkg);
+				    derived_product_record(const derived_data::derived_product<number>& prod, typename repository_record::handler_package& pkg);
 
 				    //! Override copy constructor to perform a deep copy
 				    derived_product_record(const derived_product_record& obj);
 
 				    //! deserialization constructor
-				    derived_product_record(serialization_reader* reader, task_finder f, repository_record::handler_package& pkg);
+				    derived_product_record(serialization_reader* reader, task_finder& f, typename repository_record::handler_package& pkg);
 
-				    virtual ~derived_product_record() = default;
+				    virtual ~derived_product_record();
 
 
 				    // GET CONTENTS
@@ -644,8 +601,81 @@ namespace transport
 			    };
 
 
+        // DERIVED PRODUCT FINDER SERVICE
+
+      public:
+
+        typedef std::function<derived_product_record*(const std::string&)> derived_product_finder;
+
+
+        // OUTPUT TASK RECORD
+
+      public:
+
+        class output_task_record: public task_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! construct an output task record
+            output_task_record(const output_task<number>& tk, typename repository_record::handler_package& pkg);
+
+            //! override copy constructor to perform a deep copy
+            output_task_record(const output_task_record& obj);
+
+            //! deserialization constructor
+            output_task_record(serialization_reader* reader, derived_product_finder& f, typename repository_record::handler_package& pkg);
+
+            virtual ~output_task_record();
+
+
+            // GET CONTENTS
+
+          public:
+
+            //! Get task
+            output_task<number>* get_task() const { return(this->tk); }
+
+
+            // ADMINISTRATION
+
+          public:
+
+            //! Get type
+            virtual typename task_record::type get_type() const override { return(task_record::output); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
+
+            //! serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new output_task_record(static_cast<const output_task_record&>(*this)); };
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! Task associated with this record
+            output_task<number>* tk;
+
+          };
+
+
         // OUTPUT GROUP RECORDS
 
+      public:
 
 				// OUTPUT METADATA
 
@@ -1058,10 +1088,10 @@ namespace transport
             //! Create an output_group_record descriptor
             output_group_record(const std::string& tn, const paths_group& p,
                                 bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg,
-                                repository_record::handler_package& pkg);
+                                typename repository_record::handler_package& pkg);
 
             //! Deserialization constructor
-            output_group_record(serialization_reader* reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
+            output_group_record(serialization_reader* reader, const boost::filesystem::path& root, typename repository_record::handler_package& pkg);
 
             //! Destroy an output_group_record descriptor
             ~output_group_record() = default;
@@ -1214,12 +1244,12 @@ namespace transport
             class paths_group
               {
               public:
-                const boost::filesystem::path root;
-                const boost::filesystem::path output;
-                const boost::filesystem::path data;
-                const boost::filesystem::path log;
-                const boost::filesystem::path task;
-                const boost::filesystem::path temp;
+                boost::filesystem::path root;
+                boost::filesystem::path output;
+                boost::filesystem::path data;
+                boost::filesystem::path log;
+                boost::filesystem::path task;
+                boost::filesystem::path temp;
               };
 
 
@@ -1356,7 +1386,7 @@ namespace transport
 		        // METADATA
 
 		        //! task associated with this integration writer
-		        integration_task_record<number>* parent_record;
+		        integration_task_record* parent_record;
 
 		        //! metadata for this integration
 		        integration_metadata metadata;
@@ -1423,11 +1453,11 @@ namespace transport
             class paths_group
               {
               public:
-                const boost::filesystem::path root;
-                const boost::filesystem::path output;
-                const boost::filesystem::path log;
-                const boost::filesystem::path task;
-                const boost::filesystem::path temp;
+                boost::filesystem::path root;
+                boost::filesystem::path output;
+                boost::filesystem::path log;
+                boost::filesystem::path task;
+                boost::filesystem::path temp;
               };
 
           public:
@@ -1583,14 +1613,6 @@ namespace transport
 	        };
 
 
-        // TASK FINDER SERVICE
-
-      public:
-
-        //! Task finder service
-        typedef std::function<task_record<number>*(const std::string&)> task_finder;
-
-
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -1675,7 +1697,7 @@ namespace transport
 
         //! Find an output group for an integration task
         virtual std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
-          find_integration_task_output(const integration_task_record* rec, const std::list<std::string>& tags) = 0;
+          find_integration_task_output(const std::string& name, const std::list<std::string>& tags) = 0;
 
 
         // PRIVATE DATA
@@ -1692,6 +1714,31 @@ namespace transport
 
 
     // METADATA METHODS
+
+
+    // forward declare task-deserialization helpers
+    namespace integration_task_helper
+      {
+        template <typename number>
+        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::package_finder& f);
+      }
+
+    namespace output_task_helper
+      {
+        template <typename number>
+        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::derived_product_finder& pfinder);
+      }
+
+    // forward-declare derived_product deserialization helper
+    namespace derived_data
+      {
+        namespace derived_product_helper
+          {
+            template <typename number>
+            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader,
+                                                               typename repository<number>::task_finder finder);
+          }
+      }
 
 
 		// REPOSITORY RECORD METADATA
@@ -1789,10 +1836,10 @@ namespace transport
 
 
 		template <typename number>
-		repository<number>::package_record::package_record(serialization_reader* reader, typename instance_manager<number>::model_finder f,
+		repository<number>::package_record::package_record(serialization_reader* reader, typename instance_manager<number>::model_finder& f,
                                                        typename repository<number>::repository_record::handler_package& pkg)
 			: repository_record(reader, pkg),
-			  ics(name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
+			  ics(this->name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
 			{
 				assert(reader != nullptr);
 		    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -1880,10 +1927,10 @@ namespace transport
 
 
 		template <typename number>
-		repository<number>::integration_task_record::integration_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f,
+		repository<number>::integration_task_record::integration_task_record(serialization_reader* reader, typename repository<number>::package_finder& f,
                                                                          typename repository<number>::repository_record::handler_package& pkg)
 			: task_record(reader, pkg),
-				tk(integration_task_helper::deserialize(reader, f))
+				tk(integration_task_helper::deserialize<number>(this->name, reader, f))
 			{
 				assert(tk != nullptr);
 				if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
@@ -1927,10 +1974,10 @@ namespace transport
 
 
 		template <typename number>
-		repository<number>::output_task_record::output_task_record(serialization_reader* reader, typename instance_manager<number>::model_finder f,
+		repository<number>::output_task_record::output_task_record(serialization_reader* reader, typename repository<number>::derived_product_finder& f,
                                                                typename repository<number>::repository_record::handler_package& pkg)
 			: task_record(reader, pkg),
-				tk(output_task_helper::deserialize(reader, f))
+				tk(output_task_helper::deserialize<number>(this->name, reader, f))
 			{
 				assert(reader != nullptr);
 				assert(tk != nullptr);
@@ -1976,12 +2023,12 @@ namespace transport
 
 
 		template <typename number>
-		repository<number>::derived_product_record::derived_product_record(serialization_reader* reader, typename repository<number>::task_finder f,
+		repository<number>::derived_product_record::derived_product_record(serialization_reader* reader, typename repository<number>::task_finder& f,
                                                                        typename repository<number>::repository_record::handler_package& pkg)
 			: repository_record(reader, pkg),
-				product(derived_product_helper::deserialize(reader, f))
+				product(derived_data::derived_product_helper::deserialize<number>(this->name, reader, f))
 			{
-				assert(reader ! nullptr);
+				assert(reader != nullptr);
 				assert(product != nullptr);
 
 				if(product == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);

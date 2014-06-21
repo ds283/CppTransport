@@ -61,7 +61,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_reduced_bispectrum_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter);
+				    zeta_reduced_bispectrum_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    zeta_reduced_bispectrum_line(serialization_reader* reader);
@@ -139,12 +139,9 @@ namespace transport
 
 
         template <typename number>
-        zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter)
+        zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
           : use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 			    {
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
-
 		        // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
             try
               {

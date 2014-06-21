@@ -69,7 +69,7 @@ namespace transport
         number get_Mp() const { return(this->M_Planck); }
 
         //! Get model
-        model<number>* get_model() const { return(this->model); }
+        model<number>* get_model() const { return(this->mdl); }
 
 
         // SERIALIZATION -- implements a 'serializable' interface

@@ -113,14 +113,14 @@ namespace transport
       public:
 
 		    //! Validate initial conditions
-		    void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0
+		    virtual void validate_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output) = 0;
 
         //! Compute initial conditions which give horizon-crossing at Nstar, if we allow Npre e-folds before horizon-crossing.
-		    //! The supplied parameters should be validated.
+        //! The supplied parameters should be validated.
         void offset_ics(const parameters<number>& params, const std::vector<number>& input, std::vector<number>& output,
-                      double Ninit, double Ncross, double Npre,
-                      double tolerance= __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
-                      unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
+                        double Ninit, double Ncross, double Npre,
+                        double tolerance = __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE,
+                        unsigned int time_steps = __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
         double compute_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
@@ -301,7 +301,7 @@ namespace transport
             // set up initial conditions
             // Npre is irrelevant, provided it falls between the beginning and end times
             double temp_Nstar = (Ninit + Ncross - Npre)/2.0;
-            initial_conditions<double> ics(params, this, input, this->get_state_names(), temp_Nstar);
+            initial_conditions<double> ics(params.get_model(), params, input, temp_Nstar);
 
             // set up a new task object for this integration
             background_task<double> tk(ics, times);
@@ -348,8 +348,7 @@ namespace transport
         range<double> times(tk->get_Ninit(), tk->get_Nstar(), time_steps);
 
         double new_Npre = (tk->get_Ninit() + tk->get_Nstar()) / 2.0;
-        initial_conditions<double> new_ics(tk->get_params(), tk->get_ics().get_vector(), this->get_state_names(),
-                                           new_Npre, this->ics_validator_factory());
+        initial_conditions<double> new_ics(tk->get_model(), tk->get_params(), tk->get_ics().get_vector(), new_Npre);
 
         background_task<double> new_task(new_ics, times);
 

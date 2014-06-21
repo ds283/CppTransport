@@ -588,10 +588,10 @@ namespace transport
 		        typedef enum { twopf_real, twopf_imag } twopf_type;
 
 		        //! Output-group finder function -- serivce provided by a repository implementation
-		        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(typename repository<number>::integration_task_record*, const std::list<std::string>&)> output_group_finder;
+		        typedef std::function<std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >(const std::string& name, const std::list<std::string>&)> output_group_finder;
 
 		        //! Attach function for a datapipe
-		        typedef std::function<typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(datapipe*, output_group_finder&, integration_task<number>*, const std::list<std::string>&)> attach_callback;
+		        typedef std::function<std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >(datapipe*, output_group_finder&, const std::string&, const std::list<std::string>&)> attach_callback;
 
 		        //! Detach function for a datapipe
 		        typedef std::function<void(datapipe*)> detach_callback;
@@ -1169,13 +1169,13 @@ namespace transport
 		      public:
 
 				    //! Attach an output-group to the datapipe, ready for reading
-				    void attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags);
+				    void attach(const std::string& name, unsigned int Nf, const std::list<std::string>& tags);
 
 				    //! Detach an output-group from the datapipe
 				    void detach(void);
 
             //! Is this datapipe attached to an output group?
-            bool is_attached() const { return(this->attached_group != nullptr); }
+            bool is_attached() const { return(this->attached_group.get() != nullptr); }
 
 
 				    // PROPERTIES OF CURRENTLY-ATTACHED GROUP
@@ -1183,7 +1183,7 @@ namespace transport
 		      public:
 
 				    //! Get attached output group
-				    typename repository<number>::template output_group_record< typename repository<number>::integration_payload >*
+				    std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
               get_attached_output_group(void) const;
 
 				    //! Get number of fields associated with currently attached group.
@@ -1293,7 +1293,7 @@ namespace transport
 				    // CURRENTLY ATTACHED OUTPUT GROUP
 
 		        //! Currently-attached output group; null if no group is attached
-		        typename repository<number>::template output_group_record<typename repository<number>::integration_payload>* attached_group;
+		        std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> > attached_group;
 
 				    //! Number of fields associated with currently attached group
 				    unsigned int N_fields;
@@ -1363,16 +1363,16 @@ namespace transport
 
         //! Create data files for an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(typename repository<number>::integration_writer& ctr) = 0;
+        virtual void initialize_writer(typename repository<number>::integration_writer& writer) = 0;
 
         //! Close an open container integration_writer object.
-        virtual void close_writer(typename repository<number>::integration_writer& ctr) = 0;
+        virtual void close_writer(typename repository<number>::integration_writer& writer) = 0;
 
         //! Create data files for a new derived_content_writer object.
-        virtual void initialize_writer(typename repository<number>::derived_content_writer& ctr) = 0;
+        virtual void initialize_writer(typename repository<number>::derived_content_writer& writer) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(typename repository<number>::derived_content_writer& ctr) = 0;
+        virtual void close_writer(typename repository<number>::derived_content_writer& writer) = 0;
 
 
         // WRITE INDEX TABLES FOR A DATA CONTAINER
@@ -1380,10 +1380,10 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, twopf_task<number>* tk) = 0;
+        virtual void create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_writer& ctr, threepf_task<number>* tk) = 0;
+        virtual void create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk) = 0;
 
 
         // TASK FILES
@@ -1418,12 +1418,10 @@ namespace transport
                                                               container_dispatch_function dispatcher) = 0;
 
         //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& ctr,
-                                           const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) = 0;
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) = 0;
 
         //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& ctr,
-                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) = 0;
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) = 0;
 
 
 		    // DATA PIPES AND DATA ACCESS
@@ -1432,7 +1430,7 @@ namespace transport
 
 		    //! Create a datapipe
 		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                         datapipe::output_group_finder finder, datapipe::dispatch_function dispatcher,
+                                         typename datapipe::output_group_finder finder, typename datapipe::dispatch_function dispatcher,
 		                                     unsigned int worker, boost::timer::cpu_timer& timer) = 0;
 
         //! Pull a set of time sample-points from a datapipe
@@ -1451,7 +1449,7 @@ namespace transport
 
         //! Pull a time sample of a twopf component at fixed k-configuration from a datapipe
         virtual void pull_twopf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
-                                            unsigned int k_serial, std::vector<number>& sample, datapipe::twopf_type type) = 0;
+                                            unsigned int k_serial, std::vector<number>& sample, typename datapipe::twopf_type type) = 0;
 
         //! Pull a sample of a threepf at fixed k-configuration from a datapipe
         virtual void pull_threepf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
@@ -1459,7 +1457,7 @@ namespace transport
 
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
-                                               unsigned int t_serial, std::vector<number>& sample, datapipe::twopf_type type) = 0;
+                                               unsigned int t_serial, std::vector<number>& sample, typename datapipe::twopf_type type) = 0;
 
         //! Pull a kconfig of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
@@ -1601,11 +1599,10 @@ namespace transport
                                              unsigned int w, boost::timer::cpu_timer& tm,
                                              typename data_manager<number>::datapipe::utility_callbacks& u,
                                              typename data_manager<number>::datapipe::config_cache& cf,
-                                             typename data_manager<number>::timeslice_cache& t,
-                                             typename data_manager<number>::kslice_cache& k)
+                                             typename data_manager<number>::datapipe::timeslice_cache& t,
+                                             typename data_manager<number>::datapipe::kslice_cache& k)
 	    : logdir_path(lp), temporary_path(tp), worker_number(w), timer(tm),
 	      utilities(u), pull_config(cf), pull_timeslice(t), pull_kslice(k),
-	      attached_group(nullptr),
 	      time_config_cache_table(nullptr),
 	      twopf_kconfig_cache_table(nullptr),
 	      threepf_kconfig_cache_table(nullptr),
@@ -1665,33 +1662,30 @@ namespace transport
         core->remove_sink(this->log_sink);
 
         // detach any attached output group, if necessary
-        if(this->attached_group != nullptr) this->detach();
+        if(this->attached_group.get() != nullptr) this->detach();
 	    }
 
 
     template <typename number>
-    void data_manager<number>::datapipe::attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags)
+    void data_manager<number>::datapipe::attach(const std::string& name, unsigned int Nf, const std::list<std::string>& tags)
 	    {
-        assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
-
-        assert(this->attached_group == nullptr
+        assert(this->attached_group.get() == nullptr
 	               &&this->time_config_cache_table == nullptr
 	               && this->twopf_kconfig_cache_table == nullptr
 	               && this->threepf_kconfig_cache_table == nullptr
 	               && this->data_cache_table == nullptr);
-        if(this->attached_group != nullptr ||
+        if(this->attached_group.get() != nullptr ||
 	        this->time_config_cache_table != nullptr ||
 	        this->twopf_kconfig_cache_table != nullptr ||
 	        this->threepf_kconfig_cache_table != nullptr ||
 	        this->data_cache_table != nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
 
-        this->attached_group = new typename repository<number>::template output_group_record< typename repository<number>::integration_payload >(this->utilities.attach(this, this->utilities.finder, tk, tags));
+        this->attached_group = this->utilities.attach(this, this->utilities.finder, name, tags);
 
-        typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
+        typename repository<number>::integration_payload& payload = this->attached_group.get()->get_payload();
 
-        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
-          << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group.get()->get_creation_time())
+          << " (from task '" << name << "', generated using integration backend '" << payload.get_backend() << "')";
 
 		     // attach new cache tables
 
@@ -1708,25 +1702,23 @@ namespace transport
 		template <typename number>
     void data_manager<number>::datapipe::detach(void)
 	    {
-		    assert(this->attached_group != nullptr
+		    assert(this->attached_group.get() != nullptr
 		           &&this->time_config_cache_table != nullptr
 		           && this->twopf_kconfig_cache_table != nullptr
 		           && this->threepf_kconfig_cache_table != nullptr
 		           && this->data_cache_table != nullptr);
 
-		    if(this->attached_group == nullptr ||
+		    if(this->attached_group.get() == nullptr ||
 		       this->time_config_cache_table == nullptr ||
 		       this->twopf_kconfig_cache_table == nullptr ||
 		       this->threepf_kconfig_cache_table == nullptr ||
 		       this->data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group.get()->get_creation_time());
 
 				this->utilities.detach(this);
+        this->attached_group.reset();
 
-		    delete this->attached_group;
-
-		    this->attached_group = nullptr;
 		    this->time_config_cache_table = nullptr;
 		    this->twopf_kconfig_cache_table = nullptr;
 		    this->threepf_kconfig_cache_table = nullptr;
@@ -1735,15 +1727,15 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::template output_group_record< typename repository<number>::integration_payload >* data_manager<number>::datapipe::get_attached_output_group(void) const
+    std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > data_manager<number>::datapipe::get_attached_output_group(void) const
 	    {
-        assert(this->attached_group != nullptr
+        assert(this->attached_group.get() != nullptr
 	               &&this->time_config_cache_table != nullptr
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
 
-        if(this->attached_group == nullptr ||
+        if(this->attached_group.get() == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
 	        this->threepf_kconfig_cache_table == nullptr ||
@@ -1756,14 +1748,14 @@ namespace transport
 		template <typename number>
 		typename data_manager<number>::datapipe::time_config_handle& data_manager<number>::datapipe::new_time_config_handle(const std::vector<unsigned int>& sns) const
 			{
-		    assert(this->attached_group != nullptr
+		    assert(this->attached_group.get() != nullptr
 			           &&this->time_config_cache_table != nullptr
 			           && this->twopf_kconfig_cache_table != nullptr
 			           && this->threepf_kconfig_cache_table != nullptr
 			           && this->data_cache_table != nullptr);
 		    assert(sns.size() > 0);
 
-		    if(this->attached_group == nullptr ||
+		    if(this->attached_group.get() == nullptr ||
 			    this->time_config_cache_table == nullptr ||
 			    this->twopf_kconfig_cache_table == nullptr ||
 			    this->threepf_kconfig_cache_table == nullptr ||
@@ -1776,14 +1768,14 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::twopf_kconfig_handle& data_manager<number>::datapipe::new_twopf_kconfig_handle(const std::vector<unsigned int>& sns) const
 	    {
-        assert(this->attached_group != nullptr
+        assert(this->attached_group.get() != nullptr
 	               &&this->time_config_cache_table != nullptr
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
         assert(sns.size() > 0);
 
-        if(this->attached_group == nullptr ||
+        if(this->attached_group.get() == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
 	        this->threepf_kconfig_cache_table == nullptr ||
@@ -1796,14 +1788,14 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::threepf_kconfig_handle& data_manager<number>::datapipe::new_threepf_kconfig_handle(const std::vector<unsigned int>& sns) const
 	    {
-        assert(this->attached_group != nullptr
+        assert(this->attached_group.get() != nullptr
 	               &&this->time_config_cache_table != nullptr
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
         assert(sns.size() > 0);
 
-        if(this->attached_group == nullptr ||
+        if(this->attached_group.get() == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
 	        this->threepf_kconfig_cache_table == nullptr ||
@@ -1816,14 +1808,14 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::time_data_handle& data_manager<number>::datapipe::new_time_data_handle(const std::vector<unsigned int>& sns) const
 	    {
-        assert(this->attached_group != nullptr
+        assert(this->attached_group.get() != nullptr
 	               &&this->time_config_cache_table != nullptr
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
 		    assert(sns.size() > 0);
 
-        if(this->attached_group == nullptr ||
+        if(this->attached_group.get() == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
 	        this->threepf_kconfig_cache_table == nullptr ||
@@ -1836,14 +1828,14 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::kconfig_data_handle& data_manager<number>::datapipe::new_kconfig_data_handle(const std::vector<unsigned int>& sns) const
 	    {
-        assert(this->attached_group != nullptr
+        assert(this->attached_group.get() != nullptr
 	               &&this->time_config_cache_table != nullptr
 	               && this->twopf_kconfig_cache_table != nullptr
 	               && this->threepf_kconfig_cache_table != nullptr
 	               && this->data_cache_table != nullptr);
         assert(sns.size() > 0);
 
-        if(this->attached_group == nullptr ||
+        if(this->attached_group.get() == nullptr ||
 	        this->time_config_cache_table == nullptr ||
 	        this->twopf_kconfig_cache_table == nullptr ||
 	        this->threepf_kconfig_cache_table == nullptr ||
@@ -1911,12 +1903,12 @@ namespace transport
 		template <typename number>
 		void data_manager<number>::datapipe::time_config_tag::pull(const std::vector<unsigned int>& sns, std::vector<double>& data)
 			{
-		    assert(this->pipe->attached_group != nullptr
+		    assert(this->pipe->attached_group.get() != nullptr
 		           &&this->pipe->time_config_cache_table != nullptr
 		           && this->pipe->twopf_kconfig_cache_table != nullptr
 		           && this->pipe->threepf_kconfig_cache_table != nullptr
 		           && this->pipe->data_cache_table != nullptr);
-		    if(this->pipe->attached_group == nullptr ||
+		    if(this->pipe->attached_group.get() == nullptr ||
 		       this->pipe->time_config_cache_table == nullptr ||
 		       this->pipe->twopf_kconfig_cache_table == nullptr ||
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
@@ -1933,12 +1925,12 @@ namespace transport
 		template <typename number>
 		void data_manager<number>::datapipe::twopf_kconfig_tag::pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data)
 			{
-		    assert(this->pipe->attached_group != nullptr
+		    assert(this->pipe->attached_group.get() != nullptr
 		           &&this->pipe->time_config_cache_table != nullptr
 		           && this->pipe->twopf_kconfig_cache_table != nullptr
 		           && this->pipe->threepf_kconfig_cache_table != nullptr
 		           && this->pipe->data_cache_table != nullptr);
-		    if(this->pipe->attached_group == nullptr ||
+		    if(this->pipe->attached_group.get() == nullptr ||
 		       this->pipe->time_config_cache_table == nullptr ||
 		       this->pipe->twopf_kconfig_cache_table == nullptr ||
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
@@ -1955,12 +1947,12 @@ namespace transport
 		template <typename number>
 		void data_manager<number>::datapipe::threepf_kconfig_tag::pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data)
 			{
-		    assert(this->pipe->attached_group != nullptr
+		    assert(this->pipe->attached_group.get() != nullptr
 		           &&this->pipe->time_config_cache_table != nullptr
 		           && this->pipe->twopf_kconfig_cache_table != nullptr
 		           && this->pipe->threepf_kconfig_cache_table != nullptr
 		           && this->pipe->data_cache_table != nullptr);
-		    if(this->pipe->attached_group == nullptr ||
+		    if(this->pipe->attached_group.get() == nullptr ||
 		       this->pipe->time_config_cache_table == nullptr ||
 		       this->pipe->twopf_kconfig_cache_table == nullptr ||
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
@@ -1977,12 +1969,12 @@ namespace transport
 		template <typename number>
 		void data_manager<number>::datapipe::background_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 			{
-		    assert(this->pipe->attached_group != nullptr
+		    assert(this->pipe->attached_group.get() != nullptr
 		           &&this->pipe->time_config_cache_table != nullptr
 		           && this->pipe->twopf_kconfig_cache_table != nullptr
 		           && this->pipe->threepf_kconfig_cache_table != nullptr
 		           && this->pipe->data_cache_table != nullptr);
-		    if(this->pipe->attached_group == nullptr ||
+		    if(this->pipe->attached_group.get() == nullptr ||
 		       this->pipe->time_config_cache_table == nullptr ||
 		       this->pipe->twopf_kconfig_cache_table == nullptr ||
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
@@ -1999,12 +1991,12 @@ namespace transport
 		template <typename number>
 		void data_manager<number>::datapipe::cf_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 			{
-		    assert(this->pipe->attached_group != nullptr
+		    assert(this->pipe->attached_group.get() != nullptr
 			           &&this->pipe->time_config_cache_table != nullptr
 			           && this->pipe->twopf_kconfig_cache_table != nullptr
 			           && this->pipe->threepf_kconfig_cache_table != nullptr
 			           && this->pipe->data_cache_table != nullptr);
-		    if(this->pipe->attached_group == nullptr ||
+		    if(this->pipe->attached_group.get() == nullptr ||
 			    this->pipe->time_config_cache_table == nullptr ||
 			    this->pipe->twopf_kconfig_cache_table == nullptr ||
 			    this->pipe->threepf_kconfig_cache_table == nullptr ||
@@ -2073,12 +2065,12 @@ namespace transport
     template <typename number>
     void data_manager<number>::datapipe::cf_kconfig_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->attached_group != nullptr
+        assert(this->pipe->attached_group.get() != nullptr
 	               &&this->pipe->time_config_cache_table != nullptr
 	               && this->pipe->twopf_kconfig_cache_table != nullptr
 	               && this->pipe->threepf_kconfig_cache_table != nullptr
 	               && this->pipe->data_cache_table != nullptr);
-        if(this->pipe->attached_group == nullptr ||
+        if(this->pipe->attached_group.get() == nullptr ||
 	        this->pipe->time_config_cache_table == nullptr ||
 	        this->pipe->twopf_kconfig_cache_table == nullptr ||
 	        this->pipe->threepf_kconfig_cache_table == nullptr ||

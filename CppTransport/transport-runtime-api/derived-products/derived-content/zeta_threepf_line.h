@@ -61,7 +61,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_threepf_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter);
+				    zeta_threepf_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    zeta_threepf_line(serialization_reader* reader);
@@ -142,12 +142,9 @@ namespace transport
         // derived_line<> is *not* called from time_series<>.
         // Concrete classes must call it themselves
 		    template <typename number>
-		    zeta_threepf_line<number>::zeta_threepf_line(const threepf_task<number>& tk, model<number>* m, filter::threepf_kconfig_filter& kfilter)
+		    zeta_threepf_line<number>::zeta_threepf_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
 		      : use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 			    {
-		        assert(m != nullptr);
-		        if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
-
             try
               {
                 this->f.filter_threepf_kconfig_sample(kfilter, tk.get_threepf_kconfig_list(), this->kconfig_sample_sns);

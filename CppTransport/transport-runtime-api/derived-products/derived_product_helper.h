@@ -18,39 +18,34 @@ namespace transport
 		namespace derived_data
 			{
 
-		      namespace
-			    {
+        namespace derived_product_helper
+          {
 
-		        namespace derived_product_helper
-			        {
+            template <typename number>
+            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader,
+                                                               typename repository<number>::task_finder finder)
+              {
+                assert(reader != nullptr);
 
-		            template <typename number>
-		            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader,
-		                                                               typename repository<number>::task_finder finder)
-			            {
-		                assert(reader != nullptr);
+                std::string type;
 
-		                std::string type;
+                derived_data::derived_product<number>* rval = nullptr;
 
-		                derived_data::derived_product<number>* rval = nullptr;
+                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
-		                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
+                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
+                else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) rval = new line_asciitable<number>(name, reader, finder);
+                else
+                  {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
+                    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+                  }
 
-		                if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
-			              else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) rval = new line_asciitable<number>(name, reader, finder);
-				            else
-			                {
-		                    std::ostringstream msg;
-		                    msg << __CPP_TRANSPORT_PRODUCT_UNKNOWN_TYPE << " '" << type << "'";
-		                    throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-			                }
+                return(rval);
+              }
 
-		                return(rval);
-			            }
-
-			        }   // namespace derived_product_helper
-
-			    }   // unnamed namespace
+          }   // namespace derived_product_helper
 
 			}   // namespace derived_data
 

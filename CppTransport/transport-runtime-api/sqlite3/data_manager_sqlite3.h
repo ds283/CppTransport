@@ -134,12 +134,10 @@ namespace transport
                                                                                              typename data_manager<number>::container_dispatch_function dispatcher) override;
 
         //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer,
-                                           const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
+        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) override;
 
         //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer,
-                                             const std::string& temp_ctr, model<number>* m, integration_task<number>* tk) override;
+        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) override;
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -194,10 +192,10 @@ namespace transport
       protected:
 
         //! Attach an output_group_record to a pipe
-        typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
+        std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
           datapipe_attach(typename data_manager<number>::datapipe* pipe,
                           typename data_manager<number>::datapipe::output_group_finder& finder,
-                          integration_task<number>* tk, const std::list<std::string>& tags);
+                          const std::string& name, const std::list<std::string>& tags);
 
         //! Detach an output_group_record from a pipe
         void datapipe_detach(typename data_manager<number>::datapipe* pipe);
@@ -786,7 +784,7 @@ namespace transport
     void data_manager_sqlite3<number>::pull_twopf_time_sample(typename data_manager<number>::datapipe* pipe,
                                                               unsigned int id, const std::vector<unsigned int>& t_serials,
                                                               unsigned int k_serial, std::vector<number>& sample,
-                                                              typename data_manager<number>::twopf_type type)
+                                                              typename data_manager<number>::datapipe::twopf_type type)
 	    {
         assert(pipe != nullptr);
         if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -795,7 +793,7 @@ namespace transport
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
         sqlite3_operations::pull_twopf_time_sample(db, id, t_serials, k_serial, sample,
-                                                   (type == data_manager<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
+                                                   (type == data_manager<number>::datapipe::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
                                                    pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
@@ -819,7 +817,7 @@ namespace transport
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe,
                                                                  unsigned int id, const std::vector<unsigned int>& k_serials,
                                                                  unsigned int t_serial, std::vector<number>& sample,
-                                                                 typename data_manager<number>::twopf_type type)
+                                                                 typename data_manager<number>::datapipe::twopf_type type)
 	    {
 				assert(pipe != nullptr);
 		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
@@ -828,7 +826,7 @@ namespace transport
 		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
         sqlite3_operations::pull_twopf_kconfig_sample(db, id, k_serials, t_serial, sample,
-                                                      (type == data_manager<number>::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
+                                                      (type == data_manager<number>::datapipe::twopf_real ? sqlite3_operations::real_twopf : sqlite3_operations::imag_twopf),
                                                       pipe->get_worker_number(), pipe->get_N_fields());
 	    }
 
@@ -849,26 +847,23 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::template output_group_record<typename repository<number>::integration_payload>
+    std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
-                                                  typename data_manager<number>::output_group_finder& finder,
-                                                  integration_task<number>* tk, const std::list<std::string>& tags)
+                                                  typename data_manager<number>::datapipe::output_group_finder& finder,
+                                                  const std::string& name, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
 				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
 
-        assert(tk != nullptr);
-        if(tk == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
-
 				sqlite3* db = nullptr;
 
         // find a suitable output group for this task
-        typename repository<number>::template output_group_record< typename repository<number>::integration_payload > group = finder(tk, tags);
+        std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group = finder(name, tags);
 
-        typename repository<number>::integration_payload& payload = group.get_payload();
+        typename repository<number>::integration_payload& payload = group.get()->get_payload();
 
 				// get path to the output group data container
-		    boost::filesystem::path ctr_path = group.get_abs_repo_path() / payload.get_container_path();
+		    boost::filesystem::path ctr_path = group.get()->get_abs_repo_path() / payload.get_container_path();
 
 				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
 

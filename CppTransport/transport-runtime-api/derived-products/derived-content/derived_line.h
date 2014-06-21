@@ -239,7 +239,7 @@ namespace transport
             dot_meaning(momenta),
             klabel_meaning(conventional),
             precision(prec),
-		        mdl(tk->get_model()),
+		        mdl(tk.get_model()),
             parent_task(dynamic_cast<integration_task<number>*>(tk.clone()))
 					{
 						assert(parent_task != nullptr);
@@ -263,10 +263,17 @@ namespace transport
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME, parent_task_name);
 
 				    // extract parent task and model
-				    task<number>* tk = finder(parent_task_name);
-				    if((parent_task = dynamic_cast< integration_task<number>* >(tk)) == nullptr)
-					    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
-            mdl = tk->get_model();
+            std::unique_ptr<typename repository<number>::task_record> task_record(finder(parent_task_name));
+            assert(task_record.get() != nullptr);
+            
+            if(task_record.get()->get_type() != repository<number>::task_record::integration)
+              throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
+            
+            typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(task_record.get());
+            assert(int_rec != nullptr);
+            
+            parent_task = int_rec->get_task();
+            mdl = parent_task->get_model();
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype;
@@ -380,7 +387,7 @@ namespace transport
 		    template <typename number>
 		    void derived_line<number>::attach(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) const
 			    {
-		        pipe.attach(this->parent_task, this->mdl->get_N_fields(), tags);
+		        pipe.attach(this->parent_task->get_name(), this->mdl->get_N_fields(), tags);
 			    }
 
 

@@ -61,7 +61,7 @@ namespace transport
           public:
 
 				    //! Basic user-facing constructor
-				    zeta_twopf_line(const twopf_list_task<number>& tk, model<number>* m, filter::twopf_kconfig_filter& kfilter);
+				    zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    zeta_twopf_line(serialization_reader* reader);
@@ -107,11 +107,8 @@ namespace transport
 
 
 				template <typename number>
-				zeta_twopf_line<number>::zeta_twopf_line(const twopf_list_task<number>& tk, model<number>* m, filter::twopf_kconfig_filter& kfilter)
+				zeta_twopf_line<number>::zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
 					{
-				    assert(m != nullptr);
-				    if(m == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_MODEL);
-
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
             try
               {

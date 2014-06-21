@@ -639,12 +639,12 @@ namespace transport
         twopf_task<number>* tka = nullptr;
         threepf_task<number>* tkb = nullptr;
 
-        if((tka = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
+        if((tka = dynamic_cast< twopf_task<number>* >(tk)) != nullptr)
           {
             work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), tka);
             this->master_dispatch_integration_queue(rec, tka, queue, tags);
           }
-        else if((tkb = dynamic_cast<threepf_task<number*>(tk)) != nullptr)
+        else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
           {
             work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), tkb);
             this->master_dispatch_integration_queue(rec, tkb, queue, tags);
@@ -658,7 +658,8 @@ namespace transport
       }
 
 
-    template <typename number, typename TaskObject, typename QueueObject>
+    template <typename number>
+    template <typename TaskObject, typename QueueObject>
     void task_manager<number>::master_dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
                                                                  TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags)
       {
@@ -702,8 +703,8 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "'" << std::endl;
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << writer->get_record()->get_name() << "'" << std::endl;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer->get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
@@ -784,7 +785,7 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE: FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time required by worker processes = " << format_time(metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
@@ -935,16 +936,11 @@ namespace transport
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "'";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *tk;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << writer->get_record()->get_name() << "'";
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << *(writer->get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this task
         boost::timer::cpu_timer wallclock_timer;
-
-        // aggregate work times reported by worker processes
-        boost::timer::nanosecond_type total_work_time = 0;
-        boost::timer::nanosecond_type total_db_time = 0;
-        boost::timer::nanosecond_type total_aggregation_time = 0;
 
         // aggregate cache information
 		    typename repository<number>::output_metadata metadata;
@@ -1022,7 +1018,7 @@ namespace transport
         wallclock_timer.stop();
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << tk->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ AGGREGATE CACHE STATISTICS";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total work time required by worker processes      = " << format_time(metadata.work_time);
@@ -1049,7 +1045,7 @@ namespace transport
         boost::timer::cpu_timer aggregate_timer;
 
 		    // lookup derived product from output task
-        output_task_record* rec = writer.get_record();
+        typename repository<number>::output_task_record* rec = writer.get_record();
         output_task<number>* tk = rec->get_task();
 		    derived_data::derived_product<number>* product = tk->lookup_derived_product(payload.get_product_name());
 
@@ -1298,7 +1294,8 @@ namespace transport
       }
 
 
-    template <typename number, typename TaskObject, typename QueueObject>
+    template <typename number>
+    template <typename TaskObject, typename QueueObject>
     void task_manager<number>::slave_dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
                                                                 const MPI::new_integration_payload& payload,
                                                                 const MPI::data_ready_payload::payload_type type)
@@ -1328,7 +1325,7 @@ namespace transport
         // perform the integration
         try
           {
-            m->backend_process_queue(work, tk, batcher, true);    // 'true' = work silently
+            m->backend_process_queue(queue, tk, batcher, true);    // 'true' = work silently
           }
         catch(runtime_exception& xe)
           {
@@ -1440,10 +1437,6 @@ namespace transport
         scheduler sch = scheduler(ctx);
         work_queue< output_task_element<number> > work = sch.make_queue(*tk, filter);
 
-        std::ostringstream work_msg;
-        work_msg << work;
-        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
-
 				bool success = true;
 
 				// keep track of CPU time
@@ -1464,6 +1457,10 @@ namespace transport
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "'" << std::endl;
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
+
+        std::ostringstream work_msg;
+        work_msg << work;
+        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
 
 		    const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
 				assert(queues.size() == 1);

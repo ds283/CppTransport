@@ -134,6 +134,101 @@ namespace transport
         return(out);
 	    }
 
+
+    // OUTPUT DATA
+
+    // forward-declare derived_product
+    namespace derived_data
+      {
+        template <typename number> class derived_product;
+      }
+
+    template <typename number> class output_task_element;
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj);
+
+    template <typename number>
+    class output_task_element
+      {
+
+      public:
+
+        // CONSTRUCTOR, DESTRUCTOR
+
+        //! Construct an output task element: requires a derived product and a list of tags to match.
+        output_task_element(const derived_data::derived_product<number>& dp, const std::list<std::string>& tgs, unsigned int sn)
+          : product(dp.clone()), tags(tgs), serial(sn)
+          {
+            assert(product != nullptr);
+          }
+
+        //! Override the default copy constructor to perform a deep copy of the stored derived_product<>
+        output_task_element(const output_task_element<number>& obj)
+          : product(obj.product->clone()), tags(obj.tags), serial(obj.serial)
+          {
+          }
+
+        //! Destroy an output task element
+        ~output_task_element()
+          {
+            assert(this->product != nullptr);
+
+            delete this->product;
+          }
+
+
+        // INTERFACE - EXTRACT DETAILS
+
+        //! Get name of derived product associated with this task element
+        const std::string& get_product_name() const { return(this->product->get_name()); }
+
+        //! Get derived product associated with this task element
+        derived_data::derived_product<number>* get_product() const { return(this->product); }
+
+        //! Get tags associated with this task element
+        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+        //! Get serial number of this element
+        unsigned int get_serial() const { return(this->serial); }
+
+
+        //! Write to a standard output stream
+        friend std::ostream& operator<< <>(std::ostream& out, const output_task_element<number>& obj);
+
+        // INTERNAL DATA
+
+      protected:
+
+        //! Pointer to derived data product (part of the task description, specifying which eg. plot to produce) which which this output is associated
+        derived_data::derived_product<number>* product;
+
+        //! Optional list of tags to enforce for each content provider in the product
+        std::list<std::string> tags;
+
+        //! Internal serial number
+        unsigned int serial;
+      };
+
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const output_task_element<number>& obj)
+      {
+        out << "  " << __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT << " " << obj.get_product_name() << ",";
+        out << " " << __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS  << ": ";
+
+        unsigned int count = 0;
+        const std::list<std::string>& tags = obj.get_tags();
+        for (std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
+          {
+            if(count > 0) out << ", ";
+            out << *u;
+          }
+        out << std::endl;
+
+        return(out);
+      }
+
 	}
 
 

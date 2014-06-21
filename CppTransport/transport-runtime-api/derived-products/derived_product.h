@@ -45,8 +45,7 @@ namespace transport
     template <typename number> class model;
 
 		// forward-declare class task.
-		// task.h includes this header, so we cannot include task.h otherwise we create
-		// a circular dependency.
+		// task.h includes this header, so we cannot include task.h otherwise we create a circular dependency.
 		template <typename number> class task;
 		template <typename number> class integration_task;
 		template <typename number> class twopf_list_task;

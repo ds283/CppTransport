@@ -19,6 +19,9 @@
 #include <functional>
 
 
+// need repository to get repository::package_finder
+#include "transport-runtime-api/manager/repository.h"
+
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
@@ -36,6 +39,7 @@
 #define __CPP_TRANSPORT_NODE_TIME_RANGE                    "time-config-range"
 
 #define __CPP_TRANSPORT_NODE_KSTAR                         "kstar"
+#define __CPP_TRANSPORT_NODE_PACKAGE_NAME                  "package"
 
 #define __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE         "twopf-kconfig-storage-policy"
 #define __CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN      "n"
@@ -193,7 +197,7 @@ namespace transport
       protected:
 
         //! Initial conditions for this task (including parameter choices)
-        const initial_conditions<number> ics;
+        initial_conditions<number> ics;
 
         //! Range of times at which to sample for this task;
 				//! really kept only for serialization purposes
@@ -259,8 +263,7 @@ namespace transport
 
 
 		template <typename number>
-		integration_task<number>::integration_task(const std::string& nm, serialization_reader* reader,
-                                               const initial_conditions<number>& i)
+		integration_task<number>::integration_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
 			: time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
         ics(i),
         task<number>(nm, reader)
@@ -312,6 +315,9 @@ namespace transport
 		template <typename number>
 		void integration_task<number>::serialize(serialization_writer& writer) const
 			{
+        // store name of package
+        writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, this->ics.get_name());
+
         // serialize range of sampling times
         writer.start_node(__CPP_TRANSPORT_NODE_TIME_RANGE, false);
         this->times.serialize(writer);
@@ -400,7 +406,6 @@ namespace transport
 
         //! construct a twopf-list-task object
         twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                        typename integration_task<number>::kconfig_kstar kstar,
                         typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
@@ -609,14 +614,14 @@ namespace transport
         // CONSTRUCTOR, DESTRUCTOR
 
         //! Construct a named two-point function task with specified time-configuration storage policy
-        twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar,
+        twopf_task(const std::string& nm, const initial_conditions<number>& i,
+                   const range<double>& t, const range<double>& ks,
                    typename integration_task<number>::time_config_storage_policy p);
 
         //! Construct a named two-point function task with default storage policies
-        twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                   const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
-          : twopf_task(nm, i, t, ks, kstar, typename integration_task<number>::default_time_config_storage_policy())
+        twopf_task(const std::string& nm, const initial_conditions<number>& i,
+                   const range<double>& t, const range<double>& ks)
+          : twopf_task(nm, i, t, ks, typename integration_task<number>::default_time_config_storage_policy())
           {
           }
 
@@ -658,8 +663,9 @@ namespace transport
 
     // build a twopf task
     template <typename number>
-    twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                   const range<double>& ks, typename integration_task<number>::time_config_storage_policy p)
+    twopf_task<number>::twopf_task(const std::string& nm, const initial_conditions<number>& i,
+                                   const range<double>& t, const range<double>& ks,
+                                   typename integration_task<number>::time_config_storage_policy p)
       : twopf_list_task<number>(nm, i, t, p)
       {
         // the mapping from the provided list of ks to the work list is just one-to-one
@@ -892,14 +898,15 @@ namespace transport
 
         //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
         //! with specified policies
-        threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
+        threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
+                           const range<double>& t, const range<double>& ks,
                            typename integration_task<number>::time_config_storage_policy tp,
                            typename threepf_task<number>::threepf_kconfig_storage_policy kp);
 
         //! Construct a named three-point function task based on sampling from a cubix lattice of ks,
         //! with default policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                           const range<double>& ks, typename integration_task<number>::kconfig_kstar kstar)
+                           const range<double>& ks)
 	        : threepf_cubic_task(nm, i, t, ks,
 	                             typename integration_task<number>::default_time_config_storage_policy(),
 	                             typename threepf_task<number>::default_threepf_kconfig_storage_policy())
@@ -937,8 +944,9 @@ namespace transport
 
     // build a 3pf task from a cubic lattice of k-modes
     template <typename number>
-    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
-                                                   const range<double>& ks, typename integration_task<number>::time_config_storage_policy tp,
+    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i,
+                                                   const range<double>& t, const range<double>& ks,
+                                                   typename integration_task<number>::time_config_storage_policy tp,
                                                    typename threepf_task<number>::threepf_kconfig_storage_policy kp)
 	    : threepf_task<number>(nm, i, t, tp)
       {
@@ -1096,7 +1104,6 @@ namespace transport
     template <typename number>
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
-                                               typename integration_task<number>::kconfig_kstar kstar,
                                                typename integration_task<number>::time_config_storage_policy tp,
                                                typename threepf_task<number>::threepf_kconfig_storage_policy kp)
 	    : threepf_task<number>(nm, i, t, tp)

@@ -28,7 +28,6 @@
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
-#include "boost/scoped_ptr.hpp"
 
 
 extern "C"
@@ -113,6 +112,25 @@ namespace transport
           };
 
 
+        // RAII scoped wrapper for unqlite_vm*
+        class unqlite_scoped_vm
+          {
+          public:
+            unqlite_scoped_vm(unqlite_vm* p)
+              : vm_ptr(p)
+              {
+              }
+
+            ~unqlite_scoped_vm() { unqlite_vm_release(vm_ptr); }
+
+            unqlite_vm* get() const { return(this->vm_ptr); }
+
+          private:
+
+            unqlite_vm* vm_ptr;
+          };
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -178,13 +196,13 @@ namespace transport
       public:
 
         //! Read a package record from the database
-        virtual package_record* query_package(const std::string& name) override;
+        virtual typename repository<number>::package_record* query_package(const std::string& name) override;
 
         //! Read a task record from the database
-        virtual task_record* query_task(const std::string& name) override;
+        virtual typename repository<number>::task_record* query_task(const std::string& name) override;
 
         //! Read a derived product specification from the database
-        virtual derived_product_record* query_derived_product(const std::string& name) override;
+        virtual typename repository<number>::derived_product_record* query_derived_product(const std::string& name) override;
 
         //! Enumerate the output groups available from a named integration task
         virtual std::list< std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> > >
@@ -200,10 +218,12 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual typename repository<number>::integration_writer new_integration_task_content(integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) override;
+        virtual typename repository<number>::integration_writer new_integration_task_content(typename repository<number>::integration_task_record* rec,
+                                                                                             const std::list<std::string>& tags, unsigned int worker) override;
 
         //! Generate a writer object for new derived-content output
-        virtual typename repository<number>::derived_content_writer new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) override;
+        virtual typename repository<number>::derived_content_writer new_output_task_content(typename repository<number>::output_task_record* rec,
+                                                                                            const std::list<std::string>& tags, unsigned int worker) override;
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -212,7 +232,7 @@ namespace transport
 
         //! Find an output group for an integration task
         virtual std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
-          find_integration_task_output(const integration_task_record* rec, const std::list<std::string>& tags) override;
+          find_integration_task_output(const std::string& name, const std::list<std::string>& tags) override;
 
         // JSON INTERFACE
 
@@ -238,13 +258,13 @@ namespace transport
 
       protected:
 
-        //! Apply a functor to a collection of records, applying a validator object
+        //! Apply a functor to a collection of records, applying a validator object.
+        //! If omitted, the validator is trivial.
         template <typename ValidatorObject>
         void array_apply_functor(const std::string& name, const std::string& collection,
-                                 typename repository_unqlite<number>::array_extraction_functor& f, ValidatorObject& v,
-                                 const std::string search_field = __CPP_TRANSPORT_NODE_RECORD_NAME);
+                                 typename repository_unqlite<number>::array_extraction_functor& f,
+                                 const std::string search_field, ValidatorObject);
 
-        //! Apply a functor to a collection of records, with no validator object
         void array_apply_functor(const std::string& name, const std::string& collection,
                                  typename repository_unqlite<number>::array_extraction_functor& f,
                                  const std::string search_field = __CPP_TRANSPORT_NODE_RECORD_NAME);
@@ -252,13 +272,10 @@ namespace transport
         //! Extract a repository record and its UnQLite id
         int array_extract_id(unqlite_value* key, unqlite_value* value, array_extraction_data* data);
 
-        //! Extract output groups with integration payload from UnQLite array
+        //! Extract output groups  from UnQLite array
+        template <typename Payload>
         int array_extract_content_groups(unqlite_value* key, unqlite_value* value,
-                                         std::list< std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> > >* list);
-
-        //! Extract output groups with output payload from UnQLite array
-        int array_extract_content_groups(unqlite_value* key, unqlite_value* value,
-                                         std::list< std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::output_payload> > >* list);
+                                         std::list< std::shared_ptr< typename repository<number>::template output_group_record<Payload> > >* list);
 
         //! Get a serialization reader from the database. The internal UnQLite record id is stored in 'id'
         unqlite_serialization_reader* query_serialization_reader(const std::string& name, const std::string& collection,
@@ -335,12 +352,12 @@ namespace transport
 
         //! Create a new content record from an explicit object
         template <typename Payload>
-        typename repository<number>::output_group_record<Payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                               bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
+        typename repository<number>::template output_group_record<Payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                        bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
 
         //! Create a new content from from a serialization reader
         template <typename Payload>
-        typename repository<number>::output_group_record<Payload>* output_group_record_factory(serialization_reader* reader);
+        typename repository<number>::template output_group_record<Payload>* output_group_record_factory(serialization_reader* reader);
 
 
         // INTERNAL DATA
@@ -362,8 +379,14 @@ namespace transport
         //! Cached model-finder supplied by instance manager
         typename instance_manager<number>::model_finder model_finder;
 
+        //! Cached package-finder instance
+        typename repository<number>::package_finder package_finder;
+
         //! Cached task-finder instance
         typename repository<number>::task_finder task_finder;
+
+        //! Cached derived-product-finder instance
+        typename repository<number>::derived_product_finder derived_product_finder;
 
 
         // UNQLITE DATABASE HANDLES
@@ -497,8 +520,10 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::set_model_finder(const typename instance_manager<number>::model_finder& f)
       {
-        this->model_finder = f;
-        this->task_finder = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1);
+        this->model_finder           = f;
+        this->package_finder         = std::bind(&repository_unqlite<number>::query_package, this, std::placeholders::_1);
+        this->task_finder            = std::bind(&repository_unqlite<number>::query_task, this, std::placeholders::_1);
+        this->derived_product_finder = std::bind(&repository_unqlite<number>::query_derived_product, this, std::placeholders::_1);
       }
 
 
@@ -577,7 +602,7 @@ namespace transport
             assert(value != nullptr);
             assert(handle != nullptr);
 
-            typename repository_unqlite<number>::array_extraction_functor* f = static_cast<typename repository_unqlite<number>::array_extraction_functor*>(f);
+            typename repository_unqlite<number>::array_extraction_functor* f = static_cast<typename repository_unqlite<number>::array_extraction_functor*>(handle);
 
             return (*f)(key,value);
           }
@@ -638,9 +663,10 @@ namespace transport
       }
 
 
-    template <typename number, typename Payload>
+    template <typename number>
+    template <typename Payload>
     int repository_unqlite<number>::array_extract_content_groups(unqlite_value* key, unqlite_value* value,
-                                                                 std::list< std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> > >* list)
+                                                                 std::list< std::shared_ptr< typename repository<number>::template output_group_record<Payload> > >* list)
       {
         assert(key != nullptr);
         assert(value != nullptr);
@@ -648,34 +674,18 @@ namespace transport
 
         unqlite_serialization_reader reader(value);
 
-        std::shared_ptr record(this->output_group_record_factory<typename repository<number>::integration_payload>(&reader));
+        std::shared_ptr< typename repository<number>::template output_group_record<Payload> > record(this->output_group_record_factory<Payload>(&reader));
         list->push_back(record);
 
         return(UNQLITE_OK);
       }
 
 
-    template <typename number, typename Payload>
-    int repository_unqlite<number>::array_extract_content_groups(unqlite_value* key, unqlite_value* value,
-                                                                 std::list< std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::output_payload> > >* list)
-      {
-        assert(key != nullptr);
-        assert(value != nullptr);
-        assert(list != nullptr);
-
-        unqlite_serialization_reader reader(value);
-
-        std::shared_ptr record(this->output_group_record_factory<typename repository<number>::output_payload>(&reader));
-        list->push_back(record);
-
-        return(UNQLITE_OK);
-      }
-
-
-    template <typename number, typename ValidatorObject>
+    template <typename number>
+    template <typename ValidatorObject>
     void repository_unqlite<number>::array_apply_functor(const std::string& name, const std::string& collection,
-                                                         typename repository_unqlite<number>::array_extraction_functor& f, ValidatorObject& v,
-                                                         const std::string search_field)
+                                                         typename repository_unqlite<number>::array_extraction_functor& f,
+                                                         const std::string search_field, ValidatorObject v)
       {
         this->begin_transaction();
 
@@ -683,37 +693,25 @@ namespace transport
         unqlite_value* recs = unqlite_operations::query(this->db, vm, collection, name, search_field);
 
         // set up scoped pointer to ensure deallocation of virtual machine if an exception occurs
-        std::unique_ptr<unqlite_vm> scoped_vm(vm);
+        unqlite_scoped_vm scoped_vm(vm);
 
         if(recs == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
         unsigned int count = static_cast<unsigned int>(unqlite_array_count(recs));
         v(count);
 
-        unqlite_array_walk(recs, array_walker, &f);
+        unqlite_array_walk(recs, &array_walker<number>, &f);
 
         this->end_transaction();
       }
 
 
-    template <typename number, typename ValidatorObject>
+    template <typename number>
     void repository_unqlite<number>::array_apply_functor(const std::string& name, const std::string& collection,
                                                          typename repository_unqlite<number>::array_extraction_functor& f,
                                                          const std::string search_field)
       {
-        this->begin_transaction();
-
-        unqlite_vm*    vm   = nullptr;
-        unqlite_value* recs = unqlite_operations::query(this->db, vm, collection, name, search_field);
-
-        // set up scoped pointer to ensure deallocation of virtual machine if an exception occurs
-        std::unique_ptr<unqlite_vm> scoped_vm(vm);
-
-        if(recs == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
-
-        unqlite_array_walk(recs, array_walker, &f);
-
-        this->end_transaction();
+        this->array_apply_functor(name, collection, f, search_field, [](unsigned int){});
       }
 
 
@@ -730,7 +728,8 @@ namespace transport
         array_extraction_functor          f = std::bind(&repository_unqlite<number>::array_extract_id, this, std::placeholders::_1, std::placeholders::_2, &data);
         std::function<void(unsigned int)> v = std::bind(&check_number_records, std::placeholders::_1, name, record_type);
 
-        this->array_apply_functor(name, collection, f, v);
+        // have to specify the JSON field we're searching for if we specify a validator
+        this->array_apply_functor(name, collection, f, __CPP_TRANSPORT_NODE_RECORD_NAME, v);
 
         assert(data.reader != nullptr);
         if(data.reader == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
@@ -823,7 +822,7 @@ namespace transport
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::replace_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, __CPP_TRANSPORT_REPO_PACKAGE_RECORD);
 
-        return new typename repository<number>::package_record(reader, pkg);
+        return new typename repository<number>::package_record(reader, this->model_finder, pkg);
       }
 
 
@@ -846,7 +845,7 @@ namespace transport
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::replace_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_INTEGRATION_TASK_RECORD);
 
-        return new typename repository<number>::integration_task_record(reader, this->model_finder, pkg);
+        return new typename repository<number>::integration_task_record(reader, this->package_finder, pkg);
       }
 
 
@@ -869,7 +868,7 @@ namespace transport
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::replace_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD);
 
-        return new typename repository<number>::output_task_record(reader, this->model_finder, pkg);
+        return new typename repository<number>::output_task_record(reader, this->derived_product_finder, pkg);
       }
 
 
@@ -896,23 +895,25 @@ namespace transport
       }
 
 
-    template <typename number, typename Payload>
-    typename repository<number>::output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-                                                                                                                       bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
+    template <typename number>
+    template <typename Payload>
+    typename repository<number>::template output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+                                                                                                                                bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
       {
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::first_time_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, __CPP_TRANSPORT_REPO_CONTENT_RECORD);
 
-        typename repository<number>::output_group_record::paths_group paths;
+        typename repository<number>::template output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = path;
 
-        return new typename repository<number>::output_group_record<Payload>(tn, paths, lock, nt, tg, pkg);
+        return new typename repository<number>::template output_group_record<Payload>(tn, paths, lock, nt, tg, pkg);
       }
 
 
-    template <typename number, typename Payload>
-    typename repository<number>::output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(serialization_reader* reader)
+    template <typename number>
+    template <typename Payload>
+    typename repository<number>::template output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(serialization_reader* reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -920,7 +921,7 @@ namespace transport
         typename repository<number>::repository_record::handler_package pkg;
         pkg.commit = std::bind(&repository_unqlite::replace_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, __CPP_TRANSPORT_REPO_CONTENT_RECORD);
 
-        return new typename repository<number>::output_group_record<Payload>(reader, this->root_path, pkg);
+        return new typename repository<number>::template output_group_record<Payload>(reader, this->root_path, pkg);
       }
 
 
@@ -1018,7 +1019,7 @@ namespace transport
         typename std::vector< integration_task<number>* > task_list;
         d.get_task_list(task_list);
 
-        for(typename std::vector< typename integration_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); t++)
+        for(typename std::vector< integration_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); t++)
           {
             unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, (*t)->get_name(), __CPP_TRANSPORT_NODE_RECORD_NAME);
             if(count == 0)
@@ -1088,7 +1089,7 @@ namespace transport
       {
         std::unique_ptr<typename repository<number>::task_record> record(query_task(name));
 
-        if(record.get()->get_type() != typename repository<number>::task_record::integration)
+        if(record.get()->get_type() != repository<number>::task_record::integration)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
@@ -1097,7 +1098,7 @@ namespace transport
 
         std::list< std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > > list;
 
-        array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups, this,
+        array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::integration_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
@@ -1118,7 +1119,7 @@ namespace transport
       {
         std::unique_ptr<typename repository<number>::task_record> record(query_task(name));
 
-        if(record.get()->get_type() != typename repository<number>::task_record::output)
+        if(record.get()->get_type() != repository<number>::task_record::output)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
@@ -1127,7 +1128,7 @@ namespace transport
 
         std::list< std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::output_payload > > > list;
 
-        array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups, this,
+        array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::output_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
@@ -1135,7 +1136,7 @@ namespace transport
         // sort the output groups into descending order of creation date, so the first element in the
         // list is the most recent data group.
         // This is usually what would be required.
-        list.sort(&output_group_helper::comparator<number, typename repository<number>::integration_payload>);
+        list.sort(&output_group_helper::comparator<number, typename repository<number>::output_payload>);
 
         return(list);
       }
@@ -1248,7 +1249,7 @@ namespace transport
 		template <typename number>
 		void repository_unqlite<number>::close_integration_writer(typename repository<number>::integration_writer& writer)
 			{
-				integration_task_record* rec = writer.get_record();
+				typename repository<number>::integration_task_record* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 		    assert(rec != nullptr);
 
@@ -1263,7 +1264,7 @@ namespace transport
 
         // create a new, empty output group record
         std::unique_ptr<typename repository<number>::template output_group_record<typename repository<number>::integration_payload>>
-          output_record(this->output_group_record_factory<typename repository<number>::integration_payload>(rec->get_task()->get_name(), writer.get_relative_output_path,
+          output_record(this->output_group_record_factory<typename repository<number>::integration_payload>(rec->get_task()->get_name(), writer.get_relative_output_path(),
                                                                                                             false, notes, tags));
 
         // stamp output group with the correct 'created' time stamp
@@ -1323,13 +1324,13 @@ namespace transport
 		template <typename number>
 		void repository_unqlite<number>::close_derived_content_writer(typename repository<number>::derived_content_writer& writer)
 			{
-				output_task_record* rec = writer.get_record();
+				typename repository<number>::output_task_record* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 				assert(rec != nullptr);
 
         // create a new, empty output group record
         std::unique_ptr<typename repository<number>::template output_group_record<typename repository<number>::output_payload>>
-          output_record(this->output_group_record_factory<typename repository<number>::output_payload>(rec->get_task()->get_name(), writer.get_relative_output_path,
+          output_record(this->output_group_record_factory<typename repository<number>::output_payload>(rec->get_task()->get_name(), writer.get_relative_output_path(),
                                                                                                        false, std::list<std::string>(), tags));
 
         // stamp output group with the correct 'created' time stamp
@@ -1391,15 +1392,11 @@ namespace transport
 
     template<typename number>
     std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
-    repository_unqlite<number>::find_integration_task_output(const integration_task_record* rec, const std::list<std::string>& tags)
+    repository_unqlite<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
 	    {
-		    assert(rec != nullptr);
-
-		    if(rec == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_RECORD);
-
 		    // search for output groups associated with this task
         std::list< std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > >
-          output = this->enumerate_integration_task_content(rec->get_name());
+          output = this->enumerate_integration_task_content(name);
 
 		    // remove items from the list which have mismatching tags
         output.remove_if( [&] (const std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group) { return(group.get()->check_tags(tags)); } );
@@ -1407,7 +1404,7 @@ namespace transport
 		    if(output.empty())
 			    {
 		        std::ostringstream msg;
-				    msg << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << rec->get_name() << "'";
+				    msg << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 			    }
 

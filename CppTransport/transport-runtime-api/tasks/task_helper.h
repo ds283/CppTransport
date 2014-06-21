@@ -7,6 +7,9 @@
 #ifndef __task_helper_H_
 #define __task_helper_H_
 
+#include <string>
+#include <memory>
+
 #include "transport-runtime-api/serialization/serializable.h"
 
 #include "transport-runtime-api/concepts/initial_conditions.h"
@@ -25,19 +28,25 @@ namespace transport
       {
 
         template <typename number>
-        task<number>* deserialize(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::package_finder& f)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
 
-            task<number>* rval = nullptr;
+            integration_task<number>* rval = nullptr;
 
             std::string type;
             reader->read_value(__CPP_TRANSPORT_NODE_TASK_TYPE, type);
 
-            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF) rval = new twopf_task<number>(nm, reader, i);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) rval = new threepf_cubic_task<number>(nm, reader, i);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS) rval = new threepf_fls_task<number>(nm, reader, i);
+            // extract initial conditions
+            std::string pkg_name;
+            reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, pkg_name);
+            std::unique_ptr<typename repository<number>::package_record> record(f(pkg_name));
+            initial_conditions<number> ics = record.get()->get_ics();
+
+            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF) rval = new twopf_task<number>(nm, reader, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) rval = new threepf_cubic_task<number>(nm, reader, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS) rval = new threepf_fls_task<number>(nm, reader, ics);
             else
               {
                 std::ostringstream msg;
@@ -54,12 +63,12 @@ namespace transport
       {
 
         template <typename number>
-        task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename output_task<number>::derived_product_finder& pfinder)
+        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::derived_product_finder& pfinder)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
 
-            task<number>* rval = nullptr;
+            output_task<number>* rval = nullptr;
 
             std::string type;
             reader->read_value(__CPP_TRANSPORT_NODE_TASK_TYPE, type);
