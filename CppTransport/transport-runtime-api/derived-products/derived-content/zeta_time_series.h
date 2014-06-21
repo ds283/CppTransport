@@ -147,6 +147,7 @@ namespace transport
             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
+//                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
@@ -154,6 +155,11 @@ namespace transport
                 // time-line for zeta will be stored in 'line_data'
                 std::vector<number> line_data;
                 line_data.assign(this->time_sample_sns.size(), 0.0);
+
+                std::vector<number> small;
+                std::vector<number> large;
+		            small.assign(this->time_sample_sns.size(), +DBL_MAX);
+		            large.assign(this->time_sample_sns.size(), -DBL_MAX);
 
                 for(unsigned int m = 0; m < 2*N_fields; m++)
                   {
@@ -167,10 +173,30 @@ namespace transport
 
                         for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                           {
-                            line_data[j] += dN[j][m]*dN[j][n]*sigma_line[j];
+		                        number component = dN[j][m]*dN[j][n]*sigma_line[j];
+
+														if(fabs(component) > large[j]) large[j] = fabs(component);
+		                        if(fabs(component) < small[j]) small[j] = fabs(component);
+                            line_data[j] += component;
                           }
                       }
                   }
+
+		            number global_small = +DBL_MAX;
+		            number global_large = -DBL_MAX;
+		            for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
+			            {
+				            number large_fraction = fabs(large[j]/line_data[j]);
+				            number small_fraction = fabs(small[j]/line_data[j]);
+
+				            if(large_fraction > global_large) global_large = large_fraction;
+				            if(small_fraction < global_small) global_small = small_fraction;
+			            }
+
+                std::ostringstream msg;
+		            msg << std::setprecision(2) << "-- zeta twopf time series: sample " << i << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
+                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << msg.str();
+                std::cout << msg.str() << std::endl;
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
@@ -353,6 +379,11 @@ namespace transport
                 std::vector<number> line_data;
                 line_data.assign(this->time_sample_sns.size(), 0.0);
 
+                std::vector<number> small;
+                std::vector<number> large;
+                small.assign(this->time_sample_sns.size(), +DBL_MAX);
+                large.assign(this->time_sample_sns.size(), -DBL_MAX);
+
                 // linear component of the gauge transformation
                 for(unsigned int l = 0; l < 2*N_fields; l++)
                   {
@@ -371,7 +402,11 @@ namespace transport
 
                             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                               {
-                                line_data[j] += dN[j][l]*dN[j][m]*dN[j][n]*threepf_line[j];
+		                            number component = dN[j][l]*dN[j][m]*dN[j][n]*threepf_line[j];
+
+                                if(fabs(component) > large[j])  large[j]  = fabs(component);
+                                if(fabs(component) < small[j]) small[j] = fabs(component);
+                                line_data[j] += component;
                               }
                           }
                       }
@@ -412,14 +447,41 @@ namespace transport
 
                                 for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                                   {
-                                    line_data[j] += ddN123[j][l][m] * dN[j][p] * dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
-                                    line_data[j] += ddN213[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
-                                    line_data[j] += ddN312[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
+		                                number component1 = ddN123[j][l][m] * dN[j][p] * dN[j][q] * (k2_re_lp[j]*k3_re_mq[j] - k2_im_lp[j]*k3_im_mq[j]);
+		                                number component2 = ddN213[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
+		                                number component3 = ddN312[j][l][m] * dN[j][p] * dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
+
+                                    if(fabs(component1) > large[j]) large[j] = fabs(component1);
+                                    if(fabs(component1) < small[j]) small[j] = fabs(component1);
+                                    if(fabs(component2) > large[j]) large[j] = fabs(component2);
+                                    if(fabs(component2) < small[j]) small[j] = fabs(component2);
+                                    if(fabs(component3) > large[j]) large[j] = fabs(component3);
+                                    if(fabs(component3) < small[j]) small[j] = fabs(component3);
+
+                                    line_data[j] += component1;
+                                    line_data[j] += component2;
+                                    line_data[j] += component3;
                                   }
                               }
                           }
                       }
                   }
+
+                number global_small = +DBL_MAX;
+                number global_large = -DBL_MAX;
+                for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
+	                {
+                    number large_fraction = fabs(large[j]/line_data[j]);
+                    number small_fraction = fabs(small[j]/line_data[j]);
+
+                    if(large_fraction > global_large) global_large = large_fraction;
+                    if(small_fraction < global_small) global_small = small_fraction;
+	                }
+
+                std::ostringstream msg;
+                msg << std::setprecision(2) << "-- zeta threepf time series: sample " << i << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
+                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << msg.str();
+                std::cout << msg.str() << std::endl;
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
