@@ -133,6 +133,28 @@ namespace transport
           };
 
 
+        // RAII transaction manager
+        class scoped_transaction
+          {
+          public:
+            typedef std::function<void()> open_handler;
+            typedef std::function<void()> close_handler;
+
+            scoped_transaction(open_handler& o, close_handler& c)
+              : opener(o), closer(c)
+              {
+                opener();
+              }
+
+            ~scoped_transaction() { this->closer(); }
+
+          private:
+
+            open_handler opener;
+            close_handler closer;
+          };
+
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
@@ -167,6 +189,8 @@ namespace transport
         //! As UnQLite develops in sophistication it may be possible to replace this by an internal transaction manager.
         void end_transaction();
 
+        //! Generate an RAII transaction management object
+        scoped_transaction scoped_transaction_factory();
 
         // ADMINISTRATION
 
@@ -591,6 +615,16 @@ namespace transport
       }
 
 
+    template <typename number>
+    typename repository_unqlite<number>::scoped_transaction repository_unqlite<number>::scoped_transaction_factory()
+      {
+        typename repository_unqlite<number>::scoped_transaction::open_handler opener = std::bind(&repository_unqlite<number>::begin_transaction, this);
+        typename repository_unqlite<number>::scoped_transaction::close_handler closer = std::bind(&repository_unqlite<number>::end_transaction, this);
+
+        return typename repository_unqlite<number>::scoped_transaction(opener, closer);
+      }
+
+
     // DATABASE UTILITY FUNCTIONS
 
 
@@ -689,6 +723,8 @@ namespace transport
                                                          typename repository_unqlite<number>::array_extraction_functor& f,
                                                          const std::string search_field, ValidatorObject v)
       {
+        assert(this->db != nullptr);
+
         unqlite_vm*    vm   = nullptr;
         unqlite_value* recs = unqlite_operations::query(this->db, vm, collection, name, search_field);
 
@@ -696,6 +732,8 @@ namespace transport
         assert(vm != nullptr);
         unqlite_scoped_vm scoped_vm(vm);
 
+        assert(recs != nullptr);
+        assert(unqlite_value_is_json_array(recs));
         if(recs == nullptr || !unqlite_value_is_json_array(recs)) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
 
         unsigned int count = static_cast<unsigned int>(unqlite_array_count(recs));
@@ -756,8 +794,7 @@ namespace transport
     void repository_unqlite<number>::first_time_commit(const typename repository<number>::repository_record& record,
                                                        const std::string& collection, const std::string& record_type)
       {
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         // check that no record with this name already exists
         unsigned int count = unqlite_operations::query_count(this->db, collection, record.get_name(), __CPP_TRANSPORT_NODE_RECORD_NAME);
@@ -773,9 +810,6 @@ namespace transport
         record.serialize(writer);
 
         unqlite_operations::store(this->db, collection, writer.get_contents());
-
-        // commit transaction
-        this->end_transaction();
       }
 
 
@@ -783,6 +817,8 @@ namespace transport
     void repository_unqlite<number>::replace_commit(const typename repository<number>::repository_record& record,
                                                     const std::string& collection, const std::string& record_type)
       {
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
+
         // find existing record in the database
         unsigned int task_id;
         std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(record.get_name(), collection, record_type, task_id));
@@ -790,14 +826,8 @@ namespace transport
         unqlite_serialization_writer writer;
         record.serialize(writer);
 
-        // open a new transaction, if necessary. After this we can assume the database handles are live
-        this->begin_transaction();
-
         unqlite_operations::drop(this->db, collection, task_id);
         unqlite_operations::store(this->db, collection, writer.get_contents());
-
-        // commit transaction
-        this->end_transaction();
       }
 
 
@@ -933,6 +963,8 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::commit_package(const initial_conditions<number>& ics)
 	    {
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
+
         std::unique_ptr<typename repository<number>::package_record> record(package_record_factory(ics));
         record.get()->commit();
 	    }
@@ -942,12 +974,10 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::check_task_duplicate(const std::string& name)
       {
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         unsigned int A = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
         unsigned int B = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
-
-        this->end_transaction();
 
         if(A+B > 0)
           {
@@ -962,7 +992,7 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::commit_task(const integration_task<number>& tk)
 	    {
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -980,8 +1010,6 @@ namespace transport
             this->message(msg.str());
             this->commit_package(tk.get_ics());
           }
-
-        this->end_transaction();
 	    }
 
 
@@ -989,7 +1017,7 @@ namespace transport
 		template <typename number>
 		void repository_unqlite<number>::commit_task(const output_task<number>& tk)
 	    {
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
@@ -1012,8 +1040,6 @@ namespace transport
                 this->commit_derived_product(*product);
               }
           }
-
-        this->end_transaction();
 	    }
 
 
@@ -1021,7 +1047,7 @@ namespace transport
     template <typename number>
     void repository_unqlite<number>::commit_derived_product(const derived_data::derived_product<number>& d)
       {
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         std::unique_ptr<typename repository<number>::derived_product_record> record(derived_product_record_factory(d));
         record.get()->commit();
@@ -1042,19 +1068,22 @@ namespace transport
                 this->commit_task(*(*t));
               }
           }
-
-        this->end_transaction();
       }
 
 
 
     // READ RECORDS FROM THE DATABASE
 
+    // Calls to the record factories fall under the scope of a scoped_transaction, and are therefore all managed
+    // by a *single* database session.
+    // This is intended to prevent too many open/close events on the database.
+
 
     // Read a package record from the database
     template <typename number>
     typename repository<number>::package_record* repository_unqlite<number>::query_package(const std::string& name)
       {
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
         std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, __CPP_TRANSPORT_REPO_PACKAGE_RECORD));
 
         return this->package_record_factory(reader.get());
@@ -1065,10 +1094,9 @@ namespace transport
     template <typename number>
     typename repository<number>::task_record* repository_unqlite<number>::query_task(const std::string& name)
       {
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
         unsigned int A = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
         unsigned int B = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
-        this->end_transaction();
 
         check_number_records(A+B, name, __CPP_TRANSPORT_REPO_TASK_RECORD);
 
@@ -1089,6 +1117,7 @@ namespace transport
     template <typename number>
     typename repository<number>::derived_product_record* repository_unqlite<number>::query_derived_product(const std::string& name)
       {
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
         std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION, __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_RECORD));
 
         return this->derived_product_record_factory(reader.get());
@@ -1114,9 +1143,8 @@ namespace transport
         array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::integration_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
-        this->end_transaction();
 
         // sort the output groups into descending order of creation date, so the first element in the
         // list is the most recent data group.
@@ -1146,9 +1174,8 @@ namespace transport
         array_extraction_functor f = std::bind(&repository_unqlite<number>::array_extract_content_groups<typename repository<number>::output_payload>, this,
                                                std::placeholders::_1, std::placeholders::_2, &list);
 
-        this->begin_transaction();
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
         this->array_apply_functor(name, __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION, f, __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME);
-        this->end_transaction();
 
         // sort the output groups into descending order of creation date, so the first element in the
         // list is the most recent data group.

@@ -272,7 +272,7 @@ namespace transport
             typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(task_record.get());
             assert(int_rec != nullptr);
             
-            parent_task = int_rec->get_task();
+            parent_task = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());
             mdl = parent_task->get_model();
 
 						// Deserialize: axis type for this derived line

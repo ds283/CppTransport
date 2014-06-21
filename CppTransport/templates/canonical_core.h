@@ -141,26 +141,12 @@ namespace transport
 
         virtual void validate_ics(const parameters<number>& p, const std::vector<number>& input, std::vector<number>& output) override;
 
-//      public:
-//
-//        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() override
-//          {
-//            return(std::bind(&$$__MODEL::validate_initial_conditions, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-//          }
-
 
         // PARAMETER HANDLING -- implements a 'model' interface
 
       public:
 
         virtual void validate_params(const std::vector<number>& input, std::vector<number>& output) override;
-
-//      public:
-//
-//        virtual typename parameters<number>::params_validator params_validator_factory() override
-//          {
-//            return(std::bind(&$$__MODEL::validate_parameters, this, std::placeholders::_1, std::placeholders::_2));
-//          }
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES -- implements a 'model' interface
@@ -190,7 +176,7 @@ namespace transport
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
 
-        // CALCULTAE CONDITIONS FOR N-POINT FUNCTIONS
+        // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
       protected:
 

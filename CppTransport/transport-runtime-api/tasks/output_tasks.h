@@ -203,10 +203,6 @@ namespace transport
             // construct a output_task_element<> object wrapping these elements, and push it to the list
             elements.push_back(output_task_element<number>(*dp, tags, sn));
             if(sn > serial) serial = sn;
-
-            // the repository-supplied objects (via pfinder) can now be deleted; output_task_element performs a deep copy,
-            // so there is no risk of dangling pointers or references
-            delete dp;
           }
 
         reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);

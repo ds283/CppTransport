@@ -18,14 +18,10 @@
 
 #define __CPP_TRANSPORT_REPO_JSON_FAIL                    "Repository error: failure when extracting JSON fields from unqlite"
 #define __CPP_TRANSPORT_REPO_JSON_NO_ID                   "Repository error: missing UnQLite ID when deserializing JSON block"
-#define __CPP_TRANSPORT_REPO_TASK_EXTRACT_FAIL            "Repository error: failure when extracting task record from JSON array"
-#define __CPP_TRANSPORT_REPO_PKG_EXTRACT_FAIL             "Repository error: failure when extracting package record from JSON array"
-#define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXTRACT_FAIL "Repository error: failure when extracting derived package record from JSON array"
 
 #define __CPP_TRANSPORT_BADLY_FORMED_RANGE                "Repository error: badly formed JSON document for 'range' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS               "Repository error: badly formed JSON for 'parameters' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_ICS                  "Repository error: badly formed JSON for 'initial_conditions' group"
-#define __CPP_TRANSPORT_BADLY_FORMED_TASK                 "Repository error: badly formed JSON for 'task' group"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_UNQLITE_H

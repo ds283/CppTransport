@@ -137,30 +137,16 @@ namespace transport
 
         // INITIAL CONDITIONS HANDLING -- implements a 'model' interface
 
-      protected:
-
-        void validate_initial_conditions(const parameters<number>& p, const std::vector<number>& input, std::vector<number>& output);
-
       public:
 
-        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() override
-          {
-            return(std::bind(&$$__MODEL::validate_initial_conditions, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
-          }
+        virtual void validate_ics(const parameters<number>& p, const std::vector<number>& input, std::vector<number>& output) override;
 
 
         // PARAMETER HANDLING -- implements a 'model' interface
 
-      protected:
-
-        void validate_parameters(const std::vector<number>& input, std::vector<number>& output);
-
       public:
 
-        virtual typename parameters<number>::params_validator params_validator_factory() override
-          {
-            return(std::bind(&$$__MODEL::validate_parameters, this, std::placeholders::_1, std::placeholders::_2));
-          }
+        virtual void validate_params(const std::vector<number>& input, std::vector<number>& output) override;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES -- implements a 'model' interface
@@ -190,7 +176,7 @@ namespace transport
         virtual void backend_process_backg(const background_task<number>* tk, typename model<number>::backg_history& solution, bool silent=false) override;
 
 
-        // CALCULTAE CONDITIONS FOR N-POINT FUNCTIONS
+        // CALCULATE INITIAL CONDITIONS FOR N-POINT FUNCTIONS
 
       protected:
 
@@ -339,7 +325,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::validate_initial_conditions(const parameters<number>& __params, const std::vector<number>& __input, std::vector<number>& __output)
+    void $$__MODEL<number>::validate_ics(const parameters<number>& __params, const std::vector<number>& __input, std::vector<number>& __output)
       {
         __output.clear();
         __output.reserve(2*$$__NUMBER_FIELDS);
@@ -377,7 +363,7 @@ namespace transport
 
 
     template <typename number>
-    void $$__MODEL<number>::validate_parameters(const std::vector<number>& input, std::vector<number>& output)
+    void $$__MODEL<number>::validate_params(const std::vector<number>& input, std::vector<number>& output)
       {
         output.clear();
 

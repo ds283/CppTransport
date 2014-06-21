@@ -136,8 +136,6 @@ namespace transport
             std::ostringstream* msg_buf = static_cast<std::ostringstream*>(handle);
 
             (*msg_buf) << (msg_buf->str().empty() ? "" : ", ") << "'" << jx9_msg << "'";
-//            throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
-//            std::cerr << msg.str() << std::endl;
 
             return(UNQLITE_OK);
           }
@@ -412,7 +410,10 @@ namespace transport
 	            }
 
             int signed_num = unqlite_value_to_int(num_records);
+
+            assert(signed_num >= 0);
             if(signed_num < 0) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_JSON_FAIL);
+
             unsigned int num = static_cast<unsigned int>(signed_num);
 
             // release the virtual machine
@@ -441,7 +442,7 @@ namespace transport
 	            << "    else" << std::endl
 	            << "      { return FALSE; }" << std::endl
 	            << "    };" << std::endl
-	            << "$data = db_fetch_all('" << collection << "', $callback);" << std::endl;
+	            << "$data = db_fetch_all('" << collection << "', $callback);";
 
             vm = exec_jx9_vm(db, jx9.str());
 

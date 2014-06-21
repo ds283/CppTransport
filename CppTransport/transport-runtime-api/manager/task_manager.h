@@ -1393,6 +1393,7 @@ namespace transport
 
                     output_task<number>* tk = out_rec->get_task();
                     this->slave_dispatch_output_task(tk, payload);
+                    break;
                   }
 
                 default:
