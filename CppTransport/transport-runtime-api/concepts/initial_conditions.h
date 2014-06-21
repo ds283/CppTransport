@@ -19,7 +19,6 @@
 
 #include "transport-runtime-api/utilities/named_list.h"
 #include "transport-runtime-api/utilities/random_string.h"
-#include "model.h"
 
 
 #define __CPP_TRANSPORT_NODE_ICS_VALUE     "value"
