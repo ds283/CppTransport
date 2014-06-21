@@ -640,6 +640,7 @@ namespace transport
             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
                 this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
+//                this->mdl->compute_deltaN_xfm_1(this->parent_task->get_params(), background[j], dN[j]);
               }
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
@@ -656,6 +657,9 @@ namespace transport
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k1_comoving, k_values[i].k2_comoving, k_values[i].k3_comoving, time_axis[j], ddN123[j]);
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k2_comoving, k_values[i].k1_comoving, k_values[i].k3_comoving, time_axis[j], ddN213[j]);
                     this->mdl->compute_gauge_xfm_2(this->parent_task->get_params(), background[j], k_values[i].k3_comoving, k_values[i].k1_comoving, k_values[i].k2_comoving, time_axis[j], ddN312[j]);
+//                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN123[j]);
+//                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN213[j]);
+//                    this->mdl->compute_deltaN_xfm_2(this->parent_task->get_params(), background[j], ddN312[j]);
                   }
 
                 // time-line for the reduced bispectrum will be stored in 'line_data'
