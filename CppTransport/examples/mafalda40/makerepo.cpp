@@ -81,8 +81,7 @@ int main(int argc, char* argv[])
     // set up parameter choices
     const std::vector<double>     init_params;
     transport::parameters<double> params      =
-                                    transport::parameters<double>(M_Planck, init_params, model->get_param_names(),
-                                                                  model->params_validator_factory());
+                                    transport::parameters<double>(M_Planck, init_params, model);
 
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 5.0;  // horizon-crossing occurs at 5 e-folds from init_values
@@ -92,10 +91,7 @@ int main(int argc, char* argv[])
     // set up initial conditions
 		const std::vector<double> init_values = INIT_VALUE_LIST;
     transport::initial_conditions<double> ics =
-                                            transport::initial_conditions<double>("mafalda40", params, init_values, model->get_state_names(),
-                                                                                  Ninit, Ncross, Npre,
-                                                                                  model->ics_validator_factory(),
-                                                                                  model->ics_finder_factory());
+                                            transport::initial_conditions<double>("mafalda40", model, params, init_values, Ninit, Ncross, Npre);
 
     const unsigned int t_samples = 2000;       // record 2000 samples - enough to find a good stepsize
 
@@ -117,14 +113,14 @@ int main(int argc, char* argv[])
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
     // construct a twopf task
-    transport::twopf_task<double> tk2 = transport::twopf_task<double>("mafalda40.twopf-1", ics, times, ks, model->kconfig_kstar_factory(), TimeStoragePolicy());
+    transport::twopf_task<double> tk2 = transport::twopf_task<double>("mafalda40.twopf-1", ics, times, ks, TimeStoragePolicy());
 
 		// construct some derived data products; first, simply plots of the background
 
     transport::index_selector<1> bg_sel(model->get_N_fields());
 		bg_sel.all();
 
-    transport::derived_data::background_time_series<double> tk2_bg = transport::derived_data::background_time_series<double>(tk2, model, bg_sel, transport::derived_data::filter::time_filter(timeseries_filter));
+    transport::derived_data::background_time_series<double> tk2_bg = transport::derived_data::background_time_series<double>(tk2, bg_sel, transport::derived_data::filter::time_filter(timeseries_filter));
 
     transport::derived_data::time_series_plot<double> tk2_bg_plot =
 	                                                       transport::derived_data::time_series_plot<double>("mafalda40.twopf-1.background", "background.pdf");
@@ -132,7 +128,7 @@ int main(int argc, char* argv[])
     tk2_bg_plot.set_title_text("Background fields");
 
 
-    transport::derived_data::zeta_twopf_time_series<double> tk2_zeta_times = transport::derived_data::zeta_twopf_time_series<double>(tk2, model,
+    transport::derived_data::zeta_twopf_time_series<double> tk2_zeta_times = transport::derived_data::zeta_twopf_time_series<double>(tk2,
                                                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
                                                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_timeseries_filter));
 
@@ -141,7 +137,7 @@ int main(int argc, char* argv[])
 		tk2_zeta_timeplot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ time evolution");
 		tk2_zeta_timeplot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk2_zeta_spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk2, model,
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk2_zeta_spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk2,
                                                                                                                                                 transport::derived_data::filter::time_filter(spectrum_timefilter),
                                                                                                                                                 transport::derived_data::filter::twopf_kconfig_filter(all_k_modes));
 
@@ -159,7 +155,7 @@ int main(int argc, char* argv[])
 		twopf_output.add_element(tk2_zeta_spectable);
 
 		// write output tasks to the database
-		repo->write_task(twopf_output);
+		repo->commit_task(twopf_output);
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
