@@ -21,6 +21,8 @@
 #include "transport-runtime-api/derived-products/derived-content/twopf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/threepf_line.h"
 
+#include "transport-runtime-api/derived-products/derived-content/threepf_time_shift.h"
+
 
 namespace transport
 	{
@@ -436,6 +438,14 @@ namespace transport
 
 		        //! serialize this object
 		        virtual void serialize(serialization_writer& writer) const override;
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! 3pf shift delegate
+            threepf_time_shift<number> shifter;
 
 			    };
 
