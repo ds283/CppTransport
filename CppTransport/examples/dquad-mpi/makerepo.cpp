@@ -137,21 +137,21 @@ int main(int argc, char* argv[])
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 5.0;  // horizon-crossing occurs at 7 e-folds from init_values
     const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 60; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
     transport::initial_conditions<double> ics =
                                             transport::initial_conditions<double>("dquad-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 10000;       // record 5000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 80000;       // record 5000 samples - enough to find a good stepsize
 
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 320) == 0); }
       };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
+    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::range<double>::logarithmic);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -166,7 +166,8 @@ int main(int argc, char* argv[])
         bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 	    };
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
+    // have to choose linear spacing if we want the task to be fNL-integrable
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::linear);
 
     std::cout << ks;
 
@@ -626,6 +627,15 @@ int main(int argc, char* argv[])
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
 
+    transport::derived_data::fNL_time_series<double> fNLloc_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+
+    transport::derived_data::time_series_plot<double> fNLloc_plot = transport::derived_data::time_series_plot<double>("dquad.threepf-1.fNLlocal", "fNLlocal.pdf");
+    fNLloc_plot.add_line(fNLloc_time_series);
+    fNLloc_plot.add_line(tk3_zeta_redbsp);
+    fNLloc_plot.set_title(false);
+
+    transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
+    fNLloc_table.add_line(fNLloc_time_series);
 
 		// construct output tasks
 //    transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
@@ -672,11 +682,15 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_redbsp_spec_plot);
 		threepf_output.add_element(tk3_redbsp_spec_table);
 
+    transport::output_task<double> fNLloc_task = transport::output_task<double>("dquad.threepf-1.fNLlocal", fNLloc_plot);
+    fNLloc_task.add_element(fNLloc_table);
+
     std::cout << "dquad.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
 		// write output tasks to the database
 //		repo->commit_task(twopf_output);
     repo->commit_task(threepf_output);
+    repo->commit_task(fNLloc_task);
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
