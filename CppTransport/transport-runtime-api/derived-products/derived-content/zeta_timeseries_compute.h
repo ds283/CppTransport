@@ -15,8 +15,9 @@
 // need data_manager for datapipe
 #include "transport-runtime-api/manager/data_manager.h"
 
-// need time shifter
+// need 3pf shifter
 #include "transport-runtime-api/derived-products/derived-content/threepf_time_shift.h"
+
 
 namespace transport
   {
@@ -68,7 +69,7 @@ namespace transport
                 //! number of fields
                 unsigned int N_fields;
 
-                //! cache background evolutiion
+                //! cache background evolution
                 std::vector< std::vector<number> > background;
 
                 //! cached gauge transformation coefficients
@@ -110,6 +111,7 @@ namespace transport
 
             //! compute a time series for the zeta reduced bispectrum
             void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const;
+
 
             // INTERNAL DATA
 
@@ -365,8 +367,6 @@ namespace transport
         void zeta_timeseries_compute<number>::reduced_bispectrum(std::shared_ptr<typename zeta_timeseries_compute::handle>& h,
                                                                  std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const
           {
-            unsigned int N_fields = h.get()->N_fields;
-
             line_data.clear();
             line_data.assign(h.get()->time_sample_sns.size(), 0.0);
 

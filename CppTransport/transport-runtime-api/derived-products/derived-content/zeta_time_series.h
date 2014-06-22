@@ -132,7 +132,8 @@ namespace transport
             const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = k_handle.lookup_tag(k_tag);
 
             // set up handle for compute delegate
-            std::shared_ptr<typename zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(pipe, this->parent_task, this->time_sample_sns, time_axis, N_fields);
+            std::shared_ptr<typename zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(pipe, this->parent_task,
+                                                                                                                  this->time_sample_sns, time_axis, N_fields);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
