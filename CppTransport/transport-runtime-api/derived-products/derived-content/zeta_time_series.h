@@ -52,6 +52,8 @@ namespace transport
 
             // DERIVE LINES -- implements a 'time_series' interface
 
+          public:
+
             //! generate data lines for plotting
             virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
@@ -59,11 +61,15 @@ namespace transport
 
             // CLONE
 
+          public:
+
             //! self-replicate
             virtual derived_line<number>* clone() const override { return new zeta_twopf_time_series<number>(static_cast<const zeta_twopf_time_series<number>&>(*this)); }
 
 
             // WRITE TO A STREAM
+
+          public:
 
             //! write self-details to a stream
             virtual void write(std::ostream& out) override;

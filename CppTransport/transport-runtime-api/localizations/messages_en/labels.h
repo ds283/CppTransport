@@ -70,7 +70,19 @@
 #define __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL               "zeta"
 
 #define __CPP_TRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL    "f_{\\mathrm{NL}}(k_1, k_2, k_3)"
-#define __CPP_TRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL "f_NL(k1, k2, k3)"
+#define __CPP_TRANSPORT_NONLATEX_REDUCED_BISPECTRUM_SYMBOL "fNL(k1, k2, k3)"
+
+#define __CPP_TRANSPORT_LATEX_FNL_LOCAL_SYMBOL             "f_{\\mathrm{NL}}^{\\mathrm{local}}"
+#define __CPP_TRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL          "fNL_local"
+
+#define __CPP_TRANSPORT_LATEX_FNL_EQUI_SYMBOL              "f_{\\mathrm{NL}}^{\\mathrm{equi}}"
+#define __CPP_TRANSPORT_NONLATEX_FNL_EQUI_SYMBOL           "fNL_equi"
+
+#define __CPP_TRANSPORT_LATEX_FNL_ORTHO_SYMBOL             "f_{\\mathrm{NL}}^{\\mathrm{ortho}}"
+#define __CPP_TRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL          "fNL_ortho"
+
+#define __CPP_TRANSPORT_LATEX_FNL_DBI_SYMBOL               "f_{\\mathrm{NL}}^{\\mathrm{DBI}}"
+#define __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL            "fNL_DBI"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H

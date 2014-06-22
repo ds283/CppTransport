@@ -765,6 +765,12 @@ namespace transport
         //! Get list of k-configurations at which this task will sample the threepf
         const std::vector<threepf_kconfig>& get_threepf_kconfig_list() const { return(this->threepf_config_list); }
 
+        //! Determine whether this task is integrable
+        bool is_integrable() const { return(this->integrable); }
+
+        //! get size of a voxel on the integration grid
+        virtual double voxel_size() const = 0;
+
 
         // SERIALIZATION -- implements a 'serialiazble' interface
 
@@ -917,6 +923,14 @@ namespace transport
         threepf_cubic_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
 
 
+        // INTERFACE
+
+      public:
+
+        //! get size of a voxel on the integration grid
+        virtual double voxel_size() const override { return(this->spacing*this->spacing*this->spacing); }
+
+
         // SERIALIZATION (implements a 'serialiazble' interface)
 
       public:
@@ -1067,6 +1081,15 @@ namespace transport
 
         //! Deserialization construcitr
         threepf_fls_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+
+
+        // INTERFACE
+
+      public:
+
+        //! get size of a voxel on the integration grid
+        virtual double voxel_size() const override { return(this->kt_spacing*this->alpha_spacing*this->beta_spacing); }
+
 
         // SERIALIZATION (implements a 'serialiazble' interface)
 

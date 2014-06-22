@@ -231,7 +231,7 @@ namespace transport
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h.get()->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
             BOOST_LOG_SEV(h.get()->pipe.get_log(), data_manager<number>::normal) << msg.str();
-            std::cout << msg.str() << std::endl;
+//            std::cout << msg.str() << std::endl;
           }
 
 
@@ -387,7 +387,7 @@ namespace transport
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h.get()->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
             BOOST_LOG_SEV(h.get()->pipe.get_log(), data_manager<number>::normal) << msg.str();
-            std::cout << msg.str() << std::endl;
+//            std::cout << msg.str() << std::endl;
           }
 
 

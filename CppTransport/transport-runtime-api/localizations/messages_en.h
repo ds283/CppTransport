@@ -49,6 +49,7 @@
 #include "transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/time_series_convenience.h"
 #include "transport-runtime-api/localizations/messages_en/derived-products/wavenumber_series_convenience.h"
+#include "transport-runtime-api/localizations/messages_en/derived-products/fNL_line.h"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_H_
