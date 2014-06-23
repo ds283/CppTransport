@@ -142,22 +142,22 @@ int main(int argc, char* argv[])
     transport::initial_conditions<double> ics =
                                             transport::initial_conditions<double>("axion-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 10000;       // record 5000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 800000;       // record 5000 samples - enough to find a good stepsize
 
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1600) == 0); }
       };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
+    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::range<double>::logarithmic);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
     const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
-    const unsigned int  k_samples = 20;          // number of k-points
+    const unsigned int  k_samples = 25;         // number of k-points
 
 		struct ThreepfStoragePolicy
 			{
@@ -165,7 +165,7 @@ int main(int argc, char* argv[])
 				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 			};
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::linear);
 
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
@@ -618,6 +618,16 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
+    transport::derived_data::fNL_time_series<double> fNLloc_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+
+    transport::derived_data::time_series_plot<double> fNLloc_plot = transport::derived_data::time_series_plot<double>("dquad.threepf-1.fNLlocal", "fNLlocal.pdf");
+    fNLloc_plot.add_line(fNLloc_time_series);
+    fNLloc_plot.add_line(tk3_zeta_redbsp);
+    fNLloc_plot.set_title(false);
+
+    transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
+    fNLloc_table.add_line(fNLloc_time_series);
+
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
     std::cout << "3pf squeezed plot:" << std::endl<< tk3_zeta_sq << std::endl;
@@ -668,11 +678,15 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_redbsp_spec_plot);
 		threepf_output.add_element(tk3_redbsp_spec_table);
 
+    transport::output_task<double> fNLloc_task = transport::output_task<double>("dquad.threepf-1.fNLlocal", fNLloc_plot);
+    fNLloc_task.add_element(fNLloc_table);
+
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
 		// write output tasks to the database
 //		repo->commit_task(twopf_output);
     repo->commit_task(threepf_output);
+    repo->commit_task(fNLloc_task);
 
     delete mgr;     // task_manager adopts its repository and destroys it silently; also destroys any registered models
 
