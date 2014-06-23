@@ -205,7 +205,7 @@ namespace transport
             std::vector<number> line_data(this->time_sample_sns.size());
             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
-                line_data[j] = (3.0/5.0) * BT_line[j]/TT_line[j];
+                line_data[j] = (5.0/3.0) * BT_line[j]/TT_line[j];
               }
 
             std::string latex_label = "$" + this->make_LaTeX_label() + "$";
