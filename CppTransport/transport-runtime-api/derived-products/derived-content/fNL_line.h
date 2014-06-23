@@ -102,10 +102,34 @@ namespace transport
 
           public:
 
-            //! compute shape function for fNL
-            void fNL_shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-                                      const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
-                                      std::vector<number>& shape) const;
+            //! compute shape function for a given bispectrum
+            void shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
+                                const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
+                                std::vector<number>& shape) const;
+
+		        //! compute shape function for the selected template
+		        void shape_function(const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
+		                            const std::vector<number>& twopf_k3, std::vector<number>& shape) const;
+
+
+		        // BISPECTRUM SHAPES AND TEMPLATES
+
+          protected:
+
+		        //! compute reference shape
+		        number reference_bispectrum(number Pk1, number Pk2, number Pk3) const;
+
+		        //! compute local template
+		        number local_template(number Pk1, number Pk2, number Pk3) const;
+
+		        //! compute equilateral template
+		        number equi_template(number Pk1, number Pk2, number Pk3) const;
+
+		        //! compute orthogonal template
+		        number ortho_template(number Pk1, number Pk2, number Pk3) const;
+
+		        //! DBI template
+		        number DBI_template(number Pk1, number Pk2, number Pk3) const;
 
 
             // WRITE TO A STREAM
@@ -122,15 +146,6 @@ namespace transport
 
             //! Serialize this object
             virtual void serialize(serialization_writer& writer) const override;
-
-
-            // SHAPE TEMPLATES
-
-          protected:
-
-            void local_template(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-                                const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
-                                std::vector<number>& shape) const;
 
 
             // INTERNAL DATA
@@ -239,51 +254,105 @@ namespace transport
           }
 
 
+		    // compute shape function for a supplied bispectrum
         template <typename number>
-        void fNL_line<number>::fNL_shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-                                const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
-                                std::vector<number>& shape) const
-          {
+        void fNL_line<number>::shape_function(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
+                                              const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
+                                              std::vector<number>& shape) const
+	        {
             shape.clear();
             shape.resize(bispectrum.size());
 
-            switch(this->type)
-              {
-                case fNLlocal:
-                  return this->local_template(bispectrum, twopf_k1, twopf_k2, twopf_k3, shape);
-                  break;
-
-                case fNLequi:
-                  assert(false);
-                  break;
-
-                case fNLortho:
-                  assert(false);
-                  break;
-
-                case fNLDBI:
-                  assert(false);
-                  break;
-
-                default:
-                  assert(false);
-                  throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
-              }
-          }
-
-
-        template <typename number>
-        void fNL_line<number>::local_template(const std::vector<number>& bispectrum, const std::vector<number>& twopf_k1,
-                                              const std::vector<number>& twopf_k2, const std::vector<number>& twopf_k3,
-                                              std::vector<number>& shape) const
-          {
             for(unsigned int j = 0; j < bispectrum.size(); j++)
-              {
-                number form_factor = (6.0/5.0) * (twopf_k1[j]*twopf_k2[j] + twopf_k1[j]*twopf_k3[j] + twopf_k2[j]*twopf_k3[j]);
+	            {
+                number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 
-                shape[j] = bispectrum[j] / form_factor;
-              }
+                shape[j] = bispectrum[j] / Bref;
+	            }
+	        }
+
+
+		    // compute shape function for the intended template
+		    template <typename number>
+		    void fNL_line<number>::shape_function(const std::vector<number>& twopf_k1, const std::vector<number>& twopf_k2,
+		                                          const std::vector<number>& twopf_k3, std::vector<number>& shape) const
+			    {
+				    shape.clear();
+				    shape.resize(twopf_k1.size());
+
+				    for(unsigned int j = 0; j < twopf_k1.size(); j++)
+					    {
+						    number T = 0.0;
+
+				        switch(this->type)
+					        {
+				            case fNLlocal:
+					            T = this->local_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+					            break;
+
+				            case fNLequi:
+					            T = this->equi_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+					            break;
+
+				            case fNLortho:
+					            T = this->ortho_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+					            break;
+
+				            case fNLDBI:
+					            T = this->DBI_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+					            break;
+
+				            default:
+					            assert(false);
+					            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+					        }
+
+						    number Bref = this->reference_bispectrum(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
+
+						    shape[j] = T/Bref;
+					    }
+
           }
+
+
+        // compute reference bispectrum -- currently uses the constant bispectrum
+        template <typename number>
+        number fNL_line<number>::reference_bispectrum(number Pk1, number Pk2, number Pk3) const
+	        {
+            return(pow(Pk1*Pk2*Pk3, 2.0/3.0));
+	        }
+
+
+		    // local template
+		    template <typename number>
+		    number fNL_line<number>::local_template(number Pk1, number Pk2, number Pk3) const
+			    {
+				    return(2.0 * (Pk1*Pk2 + Pk1*Pk3 + Pk2*Pk3));
+			    }
+
+
+		    // equilateral template
+		    template <typename number>
+		    number fNL_line<number>::equi_template(number Pk1, number Pk2, number Pk3) const
+			    {
+				    return(1.0);
+			    }
+
+
+		    // orthogonal template
+		    template <typename number>
+		    number fNL_line<number>::ortho_template(number Pk1, number Pk2, number Pk3) const
+			    {
+				    return(1.0);
+			    }
+
+
+		    // DBI template
+		    template <typename number>
+		    number fNL_line<number>::DBI_template(number Pk1, number Pk2, number Pk3) const
+			    {
+				    return(1.0);
+			    }
 
 
         template <typename number>

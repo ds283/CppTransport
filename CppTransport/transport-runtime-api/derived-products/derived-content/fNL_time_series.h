@@ -155,8 +155,10 @@ namespace transport
                                                                                                                   this->time_sample_sns, time_axis, N_fields);
 
             // time-line will be stored in 'line_data'
-            std::vector<number> line_data;
-            line_data.assign(this->time_sample_sns.size(), 0.0);
+            std::vector<number> BT_line;  // will hold <B, T>
+            std::vector<number> TT_line;  // will hold <T, T>
+            BT_line.assign(this->time_sample_sns.size(), 0.0);
+		        TT_line.assign(this->time_sample_sns.size(), 0.0);
 
             for(unsigned int i = 0; i < k_values.size(); i++)
               {
@@ -188,18 +190,22 @@ namespace transport
                 this->computer.twopf(handle, twopf_k2, k2);
                 this->computer.twopf(handle, twopf_k3, k3);
 
-                std::vector<number> shape;
-                this->fNL_shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, shape);
+                std::vector<number> S_bispectrum;
+                std::vector<number> S_template;
+                this->shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, S_bispectrum);
+		            this->shape_function(twopf_k1, twopf_k2, twopf_k3, S_template);
 
                 for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
                   {
-                    line_data[j] += shape[j];
+                    BT_line[j] += S_bispectrum[j]*S_template[j];
+		                TT_line[j] += S_template[j]  *S_template[j];
                   }
               }
 
+            std::vector<number> line_data(this->time_sample_sns.size());
             for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
               {
-                line_data[j] /= static_cast<number>(k_values.size()+1);
+                line_data[j] = (3.0/5.0) * BT_line[j]/TT_line[j];
               }
 
             std::string latex_label = "$" + this->make_LaTeX_label() + "$";
