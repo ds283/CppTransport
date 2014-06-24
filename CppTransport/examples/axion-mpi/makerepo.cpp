@@ -620,13 +620,23 @@ int main(int argc, char* argv[])
 
     transport::derived_data::fNL_time_series<double> fNLloc_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
 
+    transport::derived_data::fNL_time_series<double> fNLequi_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+    fNLequi_time_series.set_type(transport::derived_data::fNL_line<double>::fNLequi);
+
+    transport::derived_data::fNL_time_series<double> fNLortho_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+    fNLortho_time_series.set_type(transport::derived_data::fNL_line<double>::fNLortho);
+
     transport::derived_data::time_series_plot<double> fNLloc_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.fNLlocal", "fNLlocal.pdf");
     fNLloc_plot.add_line(fNLloc_time_series);
+    fNLloc_plot.add_line(fNLequi_time_series);
+    fNLloc_plot.add_line(fNLortho_time_series);
     fNLloc_plot.add_line(tk3_zeta_redbsp);
     fNLloc_plot.set_title(false);
 
     transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("axion.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
     fNLloc_table.add_line(fNLloc_time_series);
+    fNLloc_table.add_line(fNLequi_time_series);
+    fNLloc_table.add_line(fNLortho_time_series);
 
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
