@@ -644,12 +644,12 @@ namespace transport
         // set up a functor to evolve this system
         $$__MODEL_background_functor<number> system(tk->get_params());
 
-        auto ics = tk->get_raw_ics_vector();
+        auto ics = tk->get_ics_vector();
 
         backg_state<number> x($$__MODEL_pool::backg_state_size);
         x[this->flatten($$__A)] = $$// ics[$$__A];
 
-        auto times = tk->get_raw_integration_step_times();
+        auto times = tk->get_integration_step_times();
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_BACKG_STEPPER{backg_state<number>}, system, x, times.begin(), times.end(), $$__BACKG_STEP_SIZE, obs);

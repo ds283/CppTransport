@@ -31,6 +31,7 @@ namespace transport
                        DATA_CONTAINER_ERROR,                              // generic data-container error
 		                   DATA_MANAGER_BACKEND_ERROR,                        // error from data manager database backend
                        MISSING_MODEL_INSTANCE,                            // could not find model instance to dispatch to
+                       REFINEMENT_FAILURE,                                // failure of mesh refinement
                        STORAGE_ERROR,                                     // error while storing the output of an integration
                        BACKEND_ERROR,                                     // problem encountered by a compute backend
 		                   SERIALIZATION_ERROR,                               // error encountered during serialization

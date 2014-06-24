@@ -354,7 +354,7 @@ namespace transport
                 $$__MODEL_vexcl_twopf_functor<number> rhs(this->ctx, tk->get_params(), dev_ks);
 
                 // fix initial conditions - background
-                const std::vector<number>& ics = tk->get_raw_ics_vector();
+                const std::vector<number> ics = tk->get_ics_vector();
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
@@ -475,7 +475,7 @@ namespace transport
                 std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*list.size());
 
                 // fix initial conditions - background
-                const std::vector<number>& ics = tk->get_raw_ics_vector();
+                const std::vector<number> ics = tk->get_ics_vector();
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];

@@ -260,7 +260,7 @@ namespace transport
 			          refinement_level++;
 
 			          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
-			              << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" i+1
+			              << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 		                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
 		                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
 		          }
@@ -285,7 +285,7 @@ namespace transport
       {
 		    // get list of time steps, and storage list
         std::vector< typename integration_task<number>::time_storage_record > slist;
-        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist, refinement_level);
+        const std::vector<double> times = tk->get_integration_step_times(kconfig, slist, refinement_level);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -299,7 +299,7 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ff_ics_vector(kconfig);
+        const std::vector<number>& ics = tk->get_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
@@ -390,7 +390,7 @@ namespace transport
 		            refinement_level++;
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
-		                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" i+1
+		                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 				            << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
 	                  << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
               }
@@ -415,7 +415,7 @@ namespace transport
       {
 		    // get list of time steps, and storage list
         std::vector<typename integration_task<number>::time_storage_record> slist;
-        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist, refinement_level);
+        const std::vector<double> times = tk->get_integration_step_times(kconfig, slist, refinement_level);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -431,7 +431,7 @@ namespace transport
         // fix initial conditions - background
 		    // use fast-forwarding if enabled
         // (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ff_ics_vector(kconfig);
+        const std::vector<number>& ics = tk->get_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs

@@ -185,34 +185,31 @@ namespace transport
         double get_Nstar() const { return(this->ics.get_Nstar()); }
 
 		    //! Get std::vector of integration step times
-		    const std::vector<double>& get_raw_integration_step_times() const;
+		    const std::vector<double> get_integration_step_times() const;
 
         //! Get std::vector of integration step times, and simultaneously populate a storage list
-        const std::vector<double>& get_raw_integration_step_times(std::vector<time_storage_record>& slist) const;
+        const std::vector<double> get_integration_step_times(std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
 
 		    //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-		    std::vector<double> get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine=0) const;
+		    std::vector<double> get_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
 
         //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-        std::vector<double> get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int regine=0) const;
+        std::vector<double> get_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int regine = 0) const;
 
 		    //! Get std::vector of integration step times, truncated at Nstart if fast-forwarding enabled
-		    std::vector<double> get_ff_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine=0) const;
+		    std::vector<double> get_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
 
         //! Get vector of time configurations to store
         const std::vector<time_config>& get_time_config_list() const { return(this->time_config_list); }
 
-        //! Get std::vector of initial conditions
-        const std::vector<number>& get_raw_ics_vector() const { return(this->ics.get_vector()); }
-
 		    //! Get std::vector of initial conditions, offset using fast forwarding if enabled
-		    std::vector<number> get_ff_ics_vector(const twopf_kconfig& kconfig) const;
+		    std::vector<number> get_ics_vector(const twopf_kconfig& kconfig) const;
 
         //! Get std::vector of initial conditions, offset using fast forwarding if enabled
-        std::vector<number> get_ff_ics_vector(const threepf_kconfig& kconfig) const;
+        std::vector<number> get_ics_vector(const threepf_kconfig& kconfig) const;
 
 		    //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
-		    std::vector<number> get_ff_ics_vector(double Nstart) const;
+		    std::vector<number> get_ics_vector(double Nstart=0.0) const;
 
       protected:
 
@@ -479,64 +476,47 @@ namespace transport
 
 
 		template <typename number>
-		const std::vector<double>& integration_task<number>::get_raw_integration_step_times() const
+		const std::vector<double> integration_task<number>::get_integration_step_times() const
 			{
 				return this->raw_time_list;
 			}
 
 
 		template <typename number>
-		const std::vector<double>& integration_task<number>::get_raw_integration_step_times(std::vector<time_storage_record>& slist) const
+		const std::vector<double> integration_task<number>::get_integration_step_times(std::vector<time_storage_record>& slist, unsigned int refine) const
 			{
-				slist.clear();
-				slist.reserve(this->raw_time_list.size());
-
-		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
-
-				for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
-					{
-						if(t != this->time_config_list.end() && (*t).serial == i)
-							{
-								slist.push_back(time_storage_record(true, (*t).serial));
-								t++;
-							}
-						else
-							{
-								slist.push_back(time_storage_record(false, 0));
-							}
-					}
-         assert(slist.size() == this->raw_time_list.size());
-
-				return this->raw_time_list;
+        return(this->get_integration_step_times(0.0, slist, refine));
 			}
 
 
 		template <typename number>
-		std::vector<double> integration_task<number>::get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
+		std::vector<double> integration_task<number>::get_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
 			{
 		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
 
-		    return this->get_ff_integration_step_times(Nstart, slist, refine);
+		    return this->get_integration_step_times(Nstart, slist, refine);
 			}
 
 
     template <typename number>
-    std::vector<double> integration_task<number>::get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
+    std::vector<double> integration_task<number>::get_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist, unsigned int refine) const
 	    {
         double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
 
         double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
 
-        return this->get_ff_integration_step_times(Nstart, slist, refine);
+        return this->get_integration_step_times(Nstart, slist, refine);
 	    }
 
 
 		template <typename number>
-		std::vector<double> integration_task<number>::get_ff_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine) const
+		std::vector<double> integration_task<number>::get_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine) const
 			{
-				if(!this->fast_forward || Nstart <= 0.0) return this->get_raw_integration_step_times(slist);
+        if(refine > this->max_refinements) throw runtime_exception(runtime_exception::REFINEMENT_FAILURE, __CPP_TRANSPORT_REFINEMENT_TOO_DEEP);
 
-				unsigned int reserve_size = (this->time_config_list.size()+1) * static_cast<unsigned int>(pow(2.0, refine));
+				if(!this->fast_forward || Nstart <= 0.0) Nstart = 0.0;
+
+				unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(2.0, refine));
 
 				slist.clear();
 				slist.reserve(reserve_size);
@@ -548,8 +528,6 @@ namespace transport
 				    times.push_back(Nstart);
 				    slist.push_back(time_storage_record(false, 0));
 			    }
-
-				assert(Nstart < this->time_config_list.front().t);
 
 		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
 
@@ -599,27 +577,27 @@ namespace transport
 
 
 		template <typename number>
-		std::vector<number> integration_task<number>::get_ff_ics_vector(const twopf_kconfig& kconfig) const
+		std::vector<number> integration_task<number>::get_ics_vector(const twopf_kconfig& kconfig) const
 			{
 		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
 
-		    return this->get_ff_ics_vector(Nstart);
+		    return this->get_ics_vector(Nstart);
 			}
 
 
     template <typename number>
-    std::vector<number> integration_task<number>::get_ff_ics_vector(const threepf_kconfig& kconfig) const
+    std::vector<number> integration_task<number>::get_ics_vector(const threepf_kconfig& kconfig) const
 	    {
         double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
 
         double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
 
-        return this->get_ff_ics_vector(Nstart);
+        return this->get_ics_vector(Nstart);
 	    }
 
 
     template <typename number>
-		std::vector<number> integration_task<number>::get_ff_ics_vector(double Nstart) const
+		std::vector<number> integration_task<number>::get_ics_vector(double Nstart) const
 			{
 		    if(this->fast_forward && Nstart > 0.0) return this->ics.get_offset_vector(Nstart);
 		    else                                   return this->ics.get_vector();
