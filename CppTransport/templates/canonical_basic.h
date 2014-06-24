@@ -85,11 +85,13 @@ namespace transport
 
         void twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
                          typename data_manager<number>::twopf_batcher& batcher,
-                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time);
+                         boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
+                         unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig&, const integration_task<number>* tk,
                            typename data_manager<number>::threepf_batcher& batcher,
-                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time);
+                           boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
+                           unsigned int refinement_level);
 
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
@@ -235,10 +237,14 @@ namespace transport
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
 
+            bool success = false;
+            unsigned int refinement_level = 0;
+
+            while(!success)
             try
               {
                 // write the time history for this k-configuration
-                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time);
+                this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
@@ -246,7 +252,19 @@ namespace transport
                     << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
                     << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
                }
-            catch(std::overflow_error& xe)
+	          catch(std::overflow_error& xe)
+		          {
+			          // unwind any batched results before trying again with a refined mesh
+			          if(refinement_level == 0) batcher.report_refinement();
+			          batcher.unbatch(list[i].serial);
+			          refinement_level++;
+
+			          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
+			              << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" i+1
+		                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+		                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
+		          }
+            catch(runtime_exception& xe)
               {
                 batcher.report_integration_failure();
 		            batcher.unbatch(list[i].serial);
@@ -262,11 +280,12 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
                                               typename data_manager<number>::twopf_batcher& batcher,
-                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
+                                              boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
+                                              unsigned int refinement_level)
       {
 		    // get list of time steps, and storage list
         std::vector< typename integration_task<number>::time_storage_record > slist;
-        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
+        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist, refinement_level);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
@@ -347,11 +366,16 @@ namespace transport
             boost::timer::nanosecond_type int_time;
             boost::timer::nanosecond_type batch_time;
 
+            bool success = false;
+		        unsigned int refinement_level = 0;
+
+            while(!success)
             try
               {
                 // write the time history for this k-configuration
-                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time);
+                this->threepf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
+		            success = true;
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
                     << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
@@ -360,8 +384,20 @@ namespace transport
               }
             catch(std::overflow_error& xe)
               {
-                batcher.report_integration_failure();
+		            // unwind any batched results before trying again with a refined mesh
+		            if(refinement_level == 0) batcher.report_refinement();
 		            batcher.unbatch(list[i].serial);
+		            refinement_level++;
+
+                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
+		                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" i+1
+				            << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+	                  << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
+              }
+            catch(runtime_exception& xe)
+              {
+                batcher.report_integration_failure();
+                batcher.unbatch(list[i].serial);
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
@@ -374,11 +410,12 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
                                                 typename data_manager<number>::threepf_batcher& batcher,
-                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
+                                                boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
+                                                unsigned int refinement_level)
       {
 		    // get list of time steps, and storage list
         std::vector<typename integration_task<number>::time_storage_record> slist;
-        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
+        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist, refinement_level);
 
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible

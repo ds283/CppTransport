@@ -260,24 +260,27 @@ namespace transport
                                               typename data_manager<number>::twopf_batcher& batcher,
                                               boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
+		    // get time step list and storage list
+        const std::vector<bool>   slist;
+        const std::vector<double> times = tk->get_raw_integration_step_times(slist);
+
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
+        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, slist);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k_comoving);
 
         // set up a state vector
         twopf_state<number> x;
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector();
+        const std::vector<number>& ics = tk->get_raw_ics_vector();
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
-        const std::vector<double>& times = tk->get_integration_step_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k_comoving, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);

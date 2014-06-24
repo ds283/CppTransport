@@ -305,8 +305,14 @@ namespace transport
             //! Report a failed integration
             void report_integration_failure();
 
+		        //! Report an integration which required mesh refinement
+		        void report_refinement();
+
             //! Query whether any integrations failed
             bool integrations_failed() const { return(this->failures > 0); }
+
+		        //! Query how many refinements occurred
+		        unsigned int number_refinements() const { return(this->refinements); }
 
 
             // STATISTICS
@@ -427,10 +433,13 @@ namespace transport
             flush_mode                                               mode;
 
 
-            // FAILURE TRACKING
+            // EVENT TRACKING
 
             //! number of integrations which have failed
             unsigned int                                             failures;
+
+		        //! number of integrations which required refinement
+		        unsigned int                                             refinements;
 
 
             // STATISTICS
@@ -1457,7 +1466,7 @@ namespace transport
         max_integration_time(0), min_integration_time(0),
         batching_time(0),
         max_batching_time(0), min_batching_time(0),
-        collect_statistics(s), failures(0),
+        collect_statistics(s), failures(0), refinements(0),
         mode(data_manager<number>::generic_batcher::flush_immediate),
         flush_due(false)
       {
@@ -1566,6 +1575,13 @@ namespace transport
       }
 
 
+		template <typename number>
+		void data_manager<number>::generic_batcher::report_refinement()
+			{
+				this->refinements++;
+			}
+
+
     template <typename number>
     void data_manager<number>::generic_batcher::close()
       {
@@ -1582,6 +1598,17 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean batching time              = " << format_time(this->batching_time/this->num_integrations);
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
+
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+
+        if(this->refinements > 0)
+			    {
+				    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->refinements << " triangles required mesh refinement";
+			    }
+		    if(this->failures > 0)
+			    {
+				    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->failures << " triangles failed to integrate";
+			    }
       }
 
 
