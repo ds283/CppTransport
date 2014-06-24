@@ -69,7 +69,7 @@ bool threepf_kconfig_equilateral(const transport::derived_data::filter::threepf_
 // filter for near-squeezed 3pf k-configurations
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
   {
-    return(fabs(data.beta) > 0.94);
+    return(fabs(data.beta) >= 0.95);
   }
 
 
@@ -629,13 +629,24 @@ int main(int argc, char* argv[])
 
     transport::derived_data::fNL_time_series<double> fNLloc_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
 
+    transport::derived_data::fNL_time_series<double> fNLequi_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+    fNLequi_time_series.set_type(transport::derived_data::fNL_line<double>::fNLequi);
+
+    transport::derived_data::fNL_time_series<double> fNLortho_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
+    fNLortho_time_series.set_type(transport::derived_data::fNL_line<double>::fNLortho);
+
     transport::derived_data::time_series_plot<double> fNLloc_plot = transport::derived_data::time_series_plot<double>("dquad.threepf-1.fNLlocal", "fNLlocal.pdf");
     fNLloc_plot.add_line(fNLloc_time_series);
+    fNLloc_plot.add_line(fNLequi_time_series);
+    fNLloc_plot.add_line(fNLortho_time_series);
     fNLloc_plot.add_line(tk3_zeta_redbsp);
     fNLloc_plot.set_title(false);
 
     transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("dquad.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
     fNLloc_table.add_line(fNLloc_time_series);
+    fNLloc_table.add_line(fNLequi_time_series);
+    fNLloc_table.add_line(fNLortho_time_series);
+    fNLloc_table.add_line(tk3_zeta_redbsp);
 
 		// construct output tasks
 //    transport::output_task<double> twopf_output   = transport::output_task<double>("dquad.twopf-1.output", tk2_bg_plot);
