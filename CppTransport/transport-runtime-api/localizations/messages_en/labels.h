@@ -8,6 +8,9 @@
 #define __CPP_TRANSPORT_MESSAGES_EN_LABELS_H
 
 
+#define __CPP_TRANSPORT_YES                                "yes"
+#define __CPP_TRANSPORT_NO                                 "no"
+
 #define __CPP_TRANSPORT_EFOLDS                             "e-folds"
 #define __CPP_TRANSPORT_TWOPF_MESSAGE                      "Two-point function for"
 #define __CPP_TRANSPORT_THREEPF_MESSAGE                    "Three-point function for"
@@ -29,6 +32,9 @@
 
 #define __CPP_TRANSPORT_TIME_CONFIG_SERIAL                 "Serial ="
 #define __CPP_TRANSPORT_TIME_CONFIG_TEQUALS                "t ="
+
+#define __CPP_TRANSPORT_FAST_FORWARD                       "Fast-forward integration"
+#define __CPP_TRANSPORT_MESH_REFINEMENTS                   "Maximum number of mesh refinements"
 
 #define __CPP_TRANSPORT_OUTPUT_GROUP                       "Output group"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED                "locked"

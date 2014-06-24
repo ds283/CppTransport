@@ -34,6 +34,9 @@
 #include "transport-runtime-api/utilities/random_string.h"
 
 
+#define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
+#define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
+
 #define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE           "time-config-storage-policy"
 #define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN        "n"
 #define __CPP_TRANSPORT_NODE_TIME_RANGE                    "time-config-range"
@@ -197,7 +200,7 @@ namespace transport
       protected:
 
         //! Initial conditions for this task (including parameter choices)
-        initial_conditions<number> ics;
+        initial_conditions<number>       ics;
 
         //! Range of times at which to sample for this task;
 				//! really kept only for serialization purposes
@@ -212,13 +215,24 @@ namespace transport
 				//! Filtered list of time-configurations (corresponding to values stored in the database)
 				std::vector<time_config>         time_config_list;
 
+		    //! Whether to use fast-forward integration
+		    bool                             fast_forward;
+
+		    //! How many mesh refinements to allow per triangle
+		    unsigned int                     max_refinements;
+
       };
 
 
     template <typename number>
     integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i,
                                                const range<double>& t, time_config_storage_policy p)
-      : ics(i), times(t), task<number>(nm), time_storage_policy(p)
+      : ics(i),
+        times(t),
+        task<number>(nm),
+        time_storage_policy(p),
+        fast_forward(true),
+        max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
       {
         // validate relation between Nstar and the sampling time
         assert(times.get_steps() > 0);
@@ -271,6 +285,12 @@ namespace transport
 				assert(reader != nullptr);
 		    if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
 
+				// deserialize fast-forward integration setting
+				reader->read_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, fast_forward);
+
+				// deserialize max number of mesh refinements
+				reader->read_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, max_refinements);
+
         // deserialize range of sampling times
         reader->start_node(__CPP_TRANSPORT_NODE_TIME_RANGE);
         times = range<double>(reader);
@@ -318,6 +338,12 @@ namespace transport
         // store name of package
         writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, this->ics.get_name());
 
+				// store fast-forward integration setting
+				writer.write_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, this->fast_forward);
+
+				// store max number of mesh refinements
+				writer.write_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, this->max_refinements);
+
         // serialize range of sampling times
         writer.start_node(__CPP_TRANSPORT_NODE_TIME_RANGE, false);
         this->times.serialize(writer);
@@ -344,6 +370,8 @@ namespace transport
     template <typename number>
     std::ostream& operator<<(std::ostream& out, const integration_task<number>& obj)
       {
+        out << __CPP_TRANSPORT_FAST_FORWARD     << ": " << (obj.fast_forward ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << ", ";
+        out << __CPP_TRANSPORT_MESH_REFINEMENTS << ": " << obj.max_refinements << std::endl;
         out << obj.ics << std::endl;
 //        out << __CPP_TRANSPORT_TASK_TIMES << obj.times;
         return(out);

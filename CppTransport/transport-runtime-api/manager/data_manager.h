@@ -113,26 +113,53 @@ namespace transport
         class backg_item
           {
           public:
+
+		        //! time serial number for this configuration
             unsigned int        time_serial;
+
+		        //! values
             std::vector<number> coords;
+
+		        //! kconfig serial number for the integration which produced this. Used when unwinding a batch.
+            unsigned int        source_serial;
+
           };
 
 		    //! Stores a twopf configuration associated with a single time-point and k-configuration
         class twopf_item
           {
           public:
+
+		        //! time serial number for this configuration
             unsigned int        time_serial;
+
+		        //! kconfig serial number for this configuration
             unsigned int        kconfig_serial;
+
+						// values
             std::vector<number> elements;
+
+		        //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+		        unsigned int        source_serial;
+
           };
 
 		    //! Stores a threepf configuration associated with a single time-point and k-configuration
         class threepf_item
           {
           public:
+
+		        //! time serial number for this configuration
             unsigned int        time_serial;
+
+		        //! kconfig serial number for this configuration
             unsigned int        kconfig_serial;
+
+		        //! values
             std::vector<number> elements;
+
+		        //! kconfig serial number for the integration which produced these values. Used when unwinding a  batch
+		        unsigned int        source_serial;
           };
 
         //! Stores per-configuration statistics about the performance of the integrator.
@@ -140,8 +167,14 @@ namespace transport
         class configuration_statistics
           {
           public:
+
+		        //! kconfig serial number for this configuration
             unsigned int                  serial;
+
+		        //! time spent integrating, in nanoseconds
             boost::timer::nanosecond_type integration;
+
+		        //! time spent batching, in nanoseconds
             boost::timer::nanosecond_type batching;
           };
 
@@ -215,6 +248,10 @@ namespace transport
 
           public:
 
+            typedef enum { flush_immediate, flush_delayed } flush_mode;
+
+          public:
+
             template <typename handle_type>
             generic_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
@@ -255,9 +292,15 @@ namespace transport
             void close();
 
 
-            // FAILURE MANAGEMENT
+            // INTEGRATION MANAGEMENT
 
           public:
+
+            //! Add integration details
+            void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
+
+            //! Add integration details, plus report a k-configuration serial number for storing per-configuration statistics
+            void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial);
 
             //! Report a failed integration
             void report_integration_failure() { this->failures++; }
@@ -269,12 +312,6 @@ namespace transport
             // STATISTICS
 
           public:
-
-            //! Add integration details
-            void report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
-
-            //! Add integration details, plus report a k-configuration serial number for storing per-configuration statistics
-            void report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial);
 
             //! Get aggregate integration time
             boost::timer::nanosecond_type get_integration_time() const { return(this->integration_time); }
@@ -303,7 +340,7 @@ namespace transport
           public:
 
             //! Push a background sample
-            void push_backg(unsigned int time_serial, const std::vector<number>& values);
+            void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
             //! Return logger
             boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
@@ -319,15 +356,23 @@ namespace transport
             //! Flush currently-batched results into the database, and then send to the master process
             virtual void flush(replacement_action action) = 0;
 
+		        //! Check if the batcher is ready for flush
+		        void check_for_flush();
+
+
+		        // UNBATCH
+
+          public:
+
+		        //! Unbatch a given configuration
+		        virtual void unbatch(unsigned int source_serial) = 0;
+
 
             // INTERNAL DATA
 
           protected:
 
             // CACHES
-
-            //! Number of background pushes
-            unsigned int                                             num_backg;
 
             //! Cache of background pushes
             std::vector<backg_item>                                  backg_batch;
@@ -363,6 +408,15 @@ namespace transport
 
             //! Worker number associated with this batcher
             unsigned int                                             worker_number;
+
+
+		        // FLUSH HANDLING
+
+		        //! Needs flushing at next opportunity?
+		        bool                                                     ready;
+
+            //! Flushing mode
+            flush_mode                                               mode;
 
 
             // FAILURE TRACKING
@@ -411,67 +465,29 @@ namespace transport
 
         class twopf_batcher: public generic_batcher
           {
+
           public:
+
             template <typename handle_type>
             twopf_batcher(unsigned int cap, unsigned int Nf,
                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                           const twopf_writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
-                          handle_type h, unsigned int wn, bool s)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w), num_twopf(0)
-              {
-              }
+                          handle_type h, unsigned int wn, bool s);
 
-            void push_twopf(unsigned int time_serial, unsigned int k_serial, const std::vector<number>& values)
-              {
-                if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
-                twopf_item item;
-                item.time_serial    = time_serial;
-                item.kconfig_serial = k_serial;
-                item.elements       = values;
+            void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
-                this->twopf_batch.push_back(item), num_twopf++;
-                if(this->storage() > this->capacity) this->flush(action_replace);
-              }
+		        virtual void unbatch(unsigned int source_serial) override;
 
           protected:
-            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->num_backg
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->num_twopf); }
 
-            void flush(replacement_action action)
-              {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+            virtual size_t storage() const override;
 
-                // set up a timer to measure how long it takes to flush
-                boost::timer::cpu_timer flush_timer;
-
-                if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
-                this->writers.backg(this, this->backg_batch);
-                this->writers.twopf(this, this->twopf_batch);
-
-                flush_timer.stop();
-                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
-
-                this->stats_batch.clear();
-                this->backg_batch.clear();
-                this->twopf_batch.clear();
-                this->num_backg = this->num_twopf = 0;
-
-                // push a message to the master node, indicating that new data is available
-                // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one created by
-                // 'replacer'
-                this->dispatcher(this);
-
-                // close current container, and replace with a new one if required
-                this->replacer(this, action);
-              }
+            virtual void flush(replacement_action action) override;
 
           protected:
 
             const twopf_writer_group writers;
-
-            unsigned int             num_twopf;
 
             std::vector<twopf_item>  twopf_batch;
 
@@ -489,83 +505,23 @@ namespace transport
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             const threepf_writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int wn, bool s)
-              : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w), num_twopf_re(0), num_twopf_im(0), num_threepf(0)
-              {
-              }
+                            handle_type h, unsigned int wn, bool s);
 
-            void push_twopf(unsigned int time_serial, unsigned int k_serial, const std::vector<number>& values, twopf_type type=real_twopf)
-              {
-                if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
-                twopf_item item;
-                item.time_serial    = time_serial;
-                item.kconfig_serial = k_serial;
-                item.elements       = values;
+            void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, twopf_type t=real_twopf);
 
-                if(type == real_twopf) this->twopf_re_batch.push_back(item), num_twopf_re++;
-                else                   this->twopf_im_batch.push_back(item), num_twopf_im++;
+            void push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
-                if(this->storage() > this->capacity) this->flush(action_replace);
-              }
-
-            void push_threepf(unsigned int time_serial, unsigned int k_serial, const std::vector<number>& values)
-              {
-                if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_THREEPF);
-                threepf_item item;
-                item.time_serial    = time_serial;
-                item.kconfig_serial = k_serial;
-                item.elements       = values;
-
-                this->threepf_batch.push_back(item), num_threepf++;
-                if(this->storage() > this->capacity) this->flush(action_replace);
-              }
+		        virtual void unbatch(unsigned int source_serial) override;
 
           protected:
 
-            size_t storage() const { return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->num_backg
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->num_twopf_re + this->num_twopf_im)
-                                            + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->num_threepf); }
+            virtual size_t storage() const override;
 
-            void flush(replacement_action action)
-              {
-                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
-
-                // set up a timer to measure how long it takes to flush
-                boost::timer::cpu_timer flush_timer;
-
-                if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
-                this->writers.backg(this, this->backg_batch);
-                this->writers.twopf_re(this, this->twopf_re_batch);
-                this->writers.twopf_im(this, this->twopf_im_batch);
-                this->writers.threepf(this, this->threepf_batch);
-
-                flush_timer.stop();
-                BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
-
-                this->stats_batch.clear();
-                this->backg_batch.clear();
-                this->twopf_re_batch.clear();
-                this->twopf_im_batch.clear();
-                this->threepf_batch.clear();
-                this->num_backg = this->num_twopf_re = this->num_twopf_im = this->num_threepf = 0;
-
-                // push a message to the master node, indicating that new data is available
-                // note that the order of calls to 'dispatcher' and 'replacer' is important
-                // because 'dispatcher' needs the current path name, not the one created by
-                // 'replacer'
-                this->dispatcher(this);
-
-                // close current container, and replace with a new one if required
-                this->replacer(this, action);
-              }
+            virtual void flush(replacement_action action) override;
 
           protected:
 
             const threepf_writer_group writers;
-
-            unsigned int               num_twopf_re;
-            unsigned int               num_twopf_im;
-            unsigned int               num_threepf;
 
             std::vector<twopf_item>    twopf_re_batch;
             std::vector<twopf_item>    twopf_im_batch;
@@ -574,7 +530,7 @@ namespace transport
           };
 
 
-		    // DATAPIPE OBJECTS
+        // DATAPIPE OBJECTS
 
 
 		    //! Data pipe, used when generating derived content to extract data from an integration database.
@@ -1485,7 +1441,7 @@ namespace transport
                                                            typename data_manager<number>::container_dispatch_function d,
                                                            typename data_manager<number>::container_replacement_function r,
                                                            handle_type h, unsigned int w, bool s)
-      : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp), num_backg(0),
+      : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp),
         dispatcher(d), replacer(r), worker_number(w),
         manager_handle(static_cast<void*>(h)),
         num_integrations(0),
@@ -1493,7 +1449,8 @@ namespace transport
         max_integration_time(0), min_integration_time(0),
         batching_time(0),
         max_batching_time(0), min_batching_time(0),
-        collect_statistics(s), failures(0)
+        collect_statistics(s), failures(0),
+        mode(data_manager<number>::generic_batcher::flush_immediate)
       {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -1532,7 +1489,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
+    void data_manager<number>::generic_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
       {
         this->integration_time += integration;
         this->batching_time += batching;
@@ -1544,14 +1501,20 @@ namespace transport
 
         if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
         if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
+
+		    if(this->ready)
+			    {
+				    ready = false;
+				    this->flush(action_replace);
+			    }
       }
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::report_integration_timings(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+    void data_manager<number>::generic_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
     unsigned int kserial)
       {
-        this->report_integration_timings(integration, batching);
+        this->report_integration_success(integration, batching);
 
         configuration_statistics stats;
         stats.serial     = kserial;
@@ -1559,19 +1522,26 @@ namespace transport
         stats.batching    = batching;
 
         this->stats_batch.push_back(stats);
+
+		    if(this->ready)
+			    {
+				    ready = false;
+				    this->flush(action_replace);
+			    }
       }
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::push_backg(unsigned int time_serial, const std::vector<number>& values)
+    void data_manager<number>::generic_batcher::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
       {
         if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
         backg_item item;
-        item.time_serial = time_serial;
-        item.coords      = values;
+        item.time_serial   = time_serial;
+		    item.source_serial = source_serial;
+        item.coords        = values;
 
-        this->backg_batch.push_back(item), num_backg++;
-        if(this->storage() > this->capacity) this->flush(action_replace);
+        this->backg_batch.push_back(item);
+		    this->check_for_flush();
       }
 
 
@@ -1592,6 +1562,223 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
       }
+
+
+		template <typename number>
+		void data_manager<number>::generic_batcher::check_for_flush()
+			{
+				if(this->storage() > this->capacity)
+					{
+						if(this->mode == flush_immediate) this->flush(action_replace);
+						else                              this->ready = true;
+					}
+			}
+
+
+		template <typename number>
+		template <typename handle_type>
+		data_manager<number>::twopf_batcher::twopf_batcher(unsigned int cap, unsigned int Nf,
+		                                                   const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+		                                                   const twopf_writer_group& w,
+		                                                   container_dispatch_function d, container_replacement_function r,
+		                                                   handle_type h, unsigned int wn, bool s)
+			: generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w)
+			{
+			}
+
+
+		template <typename number>
+    void data_manager<number>::twopf_batcher::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                         const std::vector<number>& values)
+	    {
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+				item.source_serial  = source_serial;
+        item.elements       = values;
+
+        this->twopf_batch.push_back(item);
+        this->check_for_flush();
+	    }
+
+
+		template <typename number>
+    size_t data_manager<number>::twopf_batcher::storage() const
+	    {
+		    return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
+	             + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size());
+			}
+
+
+		template <typename number>
+    void data_manager<number>::twopf_batcher::flush(replacement_action action)
+	    {
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+        // set up a timer to measure how long it takes to flush
+        boost::timer::cpu_timer flush_timer;
+
+        if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+        this->writers.backg(this, this->backg_batch);
+        this->writers.twopf(this, this->twopf_batch);
+
+        flush_timer.stop();
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+
+        this->stats_batch.clear();
+        this->backg_batch.clear();
+        this->twopf_batch.clear();
+
+        // push a message to the master node, indicating that new data is available
+        // note that the order of calls to 'dispatcher' and 'replacer' is important
+        // because 'dispatcher' needs the current path name, not the one created by
+        // 'replacer'
+        this->dispatcher(this);
+
+        // close current container, and replace with a new one if required
+        this->replacer(this, action);
+	    }
+
+
+    template <typename number>
+    void data_manager<number>::twopf_batcher::unbatch(unsigned int source_serial)
+	    {
+        this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
+                                               [ & ](const backg_item& item) -> bool
+                                               {
+                                                 return (item.source_serial == source_serial);
+                                               }),
+                                this->backg_batch.end());
+
+        this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
+                                               [ & ](const twopf_item& item) -> bool
+                                               {
+                                                 return (item.source_serial == source_serial);
+                                               }),
+                                this->twopf_batch.end());
+	    }
+
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::threepf_batcher::threepf_batcher(unsigned int cap, unsigned int Nf,
+                                                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                           const threepf_writer_group& w,
+                                                           container_dispatch_function d, container_replacement_function r,
+                                                           handle_type h, unsigned int wn, bool s)
+	    : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w)
+	    {
+	    }
+
+
+		template <typename number>
+    void data_manager<number>::threepf_batcher::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                           const std::vector<number>& values, twopf_type t)
+	    {
+        if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
+        twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+				item.source_serial  = source_serial;
+        item.elements       = values;
+
+        if(t == real_twopf) this->twopf_re_batch.push_back(item);
+        else                this->twopf_im_batch.push_back(item);
+
+        this->check_for_flush();
+	    }
+
+
+		template <typename number>
+    void data_manager<number>::threepf_batcher::push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                             const std::vector<number>& values)
+	    {
+        if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_THREEPF);
+        threepf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+				item.source_serial  = source_serial;
+        item.elements       = values;
+
+        this->threepf_batch.push_back(item);
+        this->check_for_flush();
+	    }
+
+
+		template <typename number>
+		size_t data_manager<number>::threepf_batcher::storage() const
+			{ return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
+							 + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
+							 + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size());
+			}
+
+
+		template <typename number>
+    void data_manager<number>::threepf_batcher::flush(replacement_action action)
+	    {
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+        // set up a timer to measure how long it takes to flush
+        boost::timer::cpu_timer flush_timer;
+
+        if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
+        this->writers.backg(this, this->backg_batch);
+        this->writers.twopf_re(this, this->twopf_re_batch);
+        this->writers.twopf_im(this, this->twopf_im_batch);
+        this->writers.threepf(this, this->threepf_batch);
+
+        flush_timer.stop();
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+
+        this->stats_batch.clear();
+        this->backg_batch.clear();
+        this->twopf_re_batch.clear();
+        this->twopf_im_batch.clear();
+        this->threepf_batch.clear();
+
+        // push a message to the master node, indicating that new data is available
+        // note that the order of calls to 'dispatcher' and 'replacer' is important
+        // because 'dispatcher' needs the current path name, not the one created by
+        // 'replacer'
+        this->dispatcher(this);
+
+        // close current container, and replace with a new one if required
+        this->replacer(this, action);
+	    }
+
+
+		template <typename number>
+		void data_manager<number>::threepf_batcher::unbatch(unsigned int source_serial)
+			{
+		    this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
+		                                           [ & ](const backg_item& item) -> bool
+		                                           {
+		                                             return (item.source_serial == source_serial);
+		                                           }),
+		                            this->backg_batch.end());
+
+		    this->twopf_re_batch.erase(std::remove_if(this->twopf_re_batch.begin(), this->twopf_re_batch.end(),
+		                                              [ & ](const twopf_item& item) -> bool
+		                                              {
+		                                                return (item.source_serial == source_serial);
+		                                              }),
+		                               this->twopf_re_batch.end());
+
+		    this->twopf_im_batch.erase(std::remove_if(this->twopf_im_batch.begin(), this->twopf_im_batch.end(),
+		                                              [ & ](const twopf_item& item) -> bool
+		                                              {
+		                                                return (item.source_serial == source_serial);
+		                                              }),
+		                               this->twopf_im_batch.end());
+
+		    this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
+		                                             [ & ](const threepf_item& item) -> bool
+		                                             {
+		                                               return (item.source_serial == source_serial);
+		                                             }),
+		                              this->threepf_batch.end());
+			}
 
 
 

@@ -246,6 +246,7 @@ namespace transport
             catch(std::overflow_error& xe)
               {
                 batcher.report_integration_failure();
+		            batcher.unbatch(list[i].serial);
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
@@ -351,6 +352,7 @@ namespace transport
             catch(std::overflow_error& xe)
               {
                 batcher.report_integration_failure();
+		            batcher.unbatch(list[i].serial);
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1

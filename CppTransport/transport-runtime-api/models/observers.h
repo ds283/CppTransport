@@ -240,13 +240,13 @@ namespace transport
                 std::vector<number> bg_x(this->backg_size);
 
                 for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
-                this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                this->batcher.push_backg(this->get_current_time_step(), this->k_config.serial, bg_x);
               }
 
             std::vector<number> tpf_x(this->twopf_size);
 
             for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_start + i];
-            this->batcher.push_twopf(this->get_current_time_step(), this->k_config.serial, tpf_x);
+            this->batcher.push_twopf(this->get_current_time_step(), this->k_config.serial, this->k_config.serial, tpf_x);
 
             this->advance_storage_list();
           }
@@ -259,7 +259,7 @@ namespace transport
     void twopf_singleconfig_batch_observer<number>::stop_timers()
       {
         this->timing_observer::stop_timers();
-        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
       }
 
 
@@ -354,7 +354,7 @@ namespace transport
                 std::vector<number> bg_x(this->backg_size);
 
                 for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
-                this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                this->batcher.push_backg(this->get_current_time_step(), this->k_config.serial, bg_x);
               }
 
             if(this->k_config.store_twopf_k1)
@@ -362,10 +362,10 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k1_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k1_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[0], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k2)
@@ -373,10 +373,10 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k2_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k2_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[1], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k3)
@@ -384,15 +384,15 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k3_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k3_start + i];
-                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->get_current_time_step(), this->k_config.index[2], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
               }
 
             std::vector<number> thpf_x(this->threepf_size);
             for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
-            this->batcher.push_threepf(this->get_current_time_step(), this->k_config.serial, thpf_x);
+            this->batcher.push_threepf(this->get_current_time_step(), this->k_config.serial, this->k_config.serial, thpf_x);
 
             this->advance_storage_list();
           }
@@ -405,7 +405,7 @@ namespace transport
     void threepf_singleconfig_batch_observer<number>::stop_timers()
       {
         this->timing_observer::stop_timers();
-        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
       }
 
 
@@ -490,13 +490,13 @@ namespace transport
                     std::vector<number> bg_x(this->backg_size);
 
                     for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
-                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                    this->batcher.push_backg(this->get_current_time_step(), this->work_list[c].serial, bg_x);
                   }
 
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_start + i)*n + c];
-                this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].serial, tpf_x);
+                this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].serial, this->work_list[c].serial, tpf_x);
               }
 
             this->advance_storage_list();
@@ -510,7 +510,7 @@ namespace transport
     void twopf_groupconfig_batch_observer<number>::stop_timers()
       {
         this->timing_observer::stop_timers();
-        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time());
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time());
       }
 
 
@@ -614,7 +614,7 @@ namespace transport
                     std::vector<number> bg_x(this->backg_size);
 
                     for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
-                    this->batcher.push_backg(this->get_current_time_step(), bg_x);
+                    this->batcher.push_backg(this->get_current_time_step(), this->work_list[c].serial, bg_x);
                   }
 
                 if(this->work_list[c].store_twopf_k1)
@@ -622,10 +622,10 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k2)
@@ -633,10 +633,10 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k3)
@@ -644,15 +644,15 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->get_current_time_step(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
                   }
 
                 std::vector<number> thpf_x(this->threepf_size);
                 for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
-                this->batcher.push_threepf(this->get_current_time_step(), this->work_list[c].serial, thpf_x);
+                this->batcher.push_threepf(this->get_current_time_step(), this->work_list[c].serial, this->work_list[c].serial, thpf_x);
               }
 
             this->advance_storage_list();
@@ -666,7 +666,7 @@ namespace transport
     void threepf_groupconfig_batch_observer<number>::stop_timers()
       {
         this->timing_observer::stop_timers();
-        this->batcher.report_integration_timings(this->get_integration_time(), this->get_batching_time());
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time());
       }
 
 
