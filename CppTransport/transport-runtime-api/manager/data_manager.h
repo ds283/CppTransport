@@ -303,7 +303,7 @@ namespace transport
             void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial);
 
             //! Report a failed integration
-            void report_integration_failure() { this->failures++; }
+            void report_integration_failure();
 
             //! Query whether any integrations failed
             bool integrations_failed() const { return(this->failures > 0); }
@@ -347,6 +347,14 @@ namespace transport
 
 
             // FLUSH INTERFACE
+
+          public:
+
+            //! Get flush mode
+            flush_mode get_flush_mode() const { return(this->mode); }
+
+            //! Set flush mode
+            void set_flush_mode(flush_mode f) { this->mode = f; }
 
           protected:
 
@@ -413,7 +421,7 @@ namespace transport
 		        // FLUSH HANDLING
 
 		        //! Needs flushing at next opportunity?
-		        bool                                                     ready;
+		        bool flush_due;
 
             //! Flushing mode
             flush_mode                                               mode;
@@ -1450,7 +1458,8 @@ namespace transport
         batching_time(0),
         max_batching_time(0), min_batching_time(0),
         collect_statistics(s), failures(0),
-        mode(data_manager<number>::generic_batcher::flush_immediate)
+        mode(data_manager<number>::generic_batcher::flush_immediate),
+        flush_due(false)
       {
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
@@ -1459,7 +1468,7 @@ namespace transport
 
         boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
-		    core->set_filter(boost::log::trivial::severity >= data_manager<number>::normal);
+//		    core->set_filter(boost::log::trivial::severity >= data_manager<number>::normal);
 
         boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
                                                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
@@ -1502,9 +1511,9 @@ namespace transport
         if(this->max_batching_time == 0 || batching > this->max_batching_time) this->max_batching_time = batching;
         if(this->min_batching_time == 0 || batching < this->min_batching_time) this->min_batching_time = batching;
 
-		    if(this->ready)
+		    if(this->flush_due)
 			    {
-				    ready = false;
+				    flush_due = false;
 				    this->flush(action_replace);
 			    }
       }
@@ -1523,9 +1532,9 @@ namespace transport
 
         this->stats_batch.push_back(stats);
 
-		    if(this->ready)
+		    if(this->flush_due)
 			    {
-				    ready = false;
+				    flush_due = false;
 				    this->flush(action_replace);
 			    }
       }
@@ -1542,6 +1551,18 @@ namespace transport
 
         this->backg_batch.push_back(item);
 		    this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::report_integration_failure()
+      {
+        this->failures++;
+        if(this->flush_due)
+          {
+            flush_due = false;
+            this->flush(action_replace);
+          }
       }
 
 
@@ -1570,7 +1591,7 @@ namespace transport
 				if(this->storage() > this->capacity)
 					{
 						if(this->mode == flush_immediate) this->flush(action_replace);
-						else                              this->ready = true;
+						else                              this->flush_due = true;
 					}
 			}
 

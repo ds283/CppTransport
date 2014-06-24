@@ -651,15 +651,15 @@ namespace transport
               {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_RECORD_MISSING_A << " " << record_type
-                  << " " << __CPP_TRANSPORT_REPO_RECORD_MISSING_B << " '" << name << "' "
-                  << __CPP_TRANSPORT_REPO_RECORD_MISSING_C;
+                    << " " << __CPP_TRANSPORT_REPO_RECORD_MISSING_B << " '" << name << "' "
+                    << __CPP_TRANSPORT_REPO_RECORD_MISSING_C;
                 throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
               }
             else if(count > 1)
               {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_A << " " << record_type
-                  << " " << __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_B << " '" << name << "'";
+                    << " " << __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_B << " '" << name << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
               }
           }

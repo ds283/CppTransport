@@ -208,14 +208,14 @@ namespace transport
 		            if(beta_min_pos == -1 || k_samples[i].beta < beta_min) { beta_min = k_samples[i].beta; beta_min_pos = i; }
 		            if(beta_max_pos == -1 || k_samples[i].beta > beta_max) { beta_max = k_samples[i].beta; beta_max_pos = i; }
 
-		            if(k1_min_pos == -1 || k_samples[i].k1 < k1_min) { k1_min = k_samples[i].k1; k1_min_pos = i; }
-		            if(k1_max_pos == -1 || k_samples[i].k1 > k1_max) { k1_max = k_samples[i].k1; k1_max_pos = i; }
+		            if(k1_min_pos == -1 || k_samples[i].k1_conventional < k1_min) { k1_min = k_samples[i].k1_conventional; k1_min_pos = i; }
+		            if(k1_max_pos == -1 || k_samples[i].k1_conventional > k1_max) { k1_max = k_samples[i].k1_conventional; k1_max_pos = i; }
 
-		            if(k2_min_pos == -1 || k_samples[i].k2 < k2_min) { k2_min = k_samples[i].k2; k2_min_pos = i; }
-		            if(k2_max_pos == -1 || k_samples[i].k2 > k2_max) { k2_max = k_samples[i].k2; k2_max_pos = i; }
+		            if(k2_min_pos == -1 || k_samples[i].k2_conventional < k2_min) { k2_min = k_samples[i].k2_conventional; k2_min_pos = i; }
+		            if(k2_max_pos == -1 || k_samples[i].k2_conventional > k2_max) { k2_max = k_samples[i].k2_conventional; k2_max_pos = i; }
 
-		            if(k3_min_pos == -1 || k_samples[i].k3 < k3_min) { k3_min = k_samples[i].k3; k3_min_pos = i; }
-		            if(k3_max_pos == -1 || k_samples[i].k3 > k3_max) { k3_max = k_samples[i].k3; k3_max_pos = i; }
+		            if(k3_min_pos == -1 || k_samples[i].k3_conventional < k3_min) { k3_min = k_samples[i].k3_conventional; k3_min_pos = i; }
+		            if(k3_max_pos == -1 || k_samples[i].k3_conventional > k3_max) { k3_max = k_samples[i].k3_conventional; k3_max_pos = i; }
 			        }
 
 		        // ask filter to decide which values it wants
@@ -240,15 +240,15 @@ namespace transport
 
 		            data.k1_max = (i == k1_max_pos ? true : false);
 		            data.k1_min = (i == k1_min_pos ? true : false);
-		            data.k1 = k_samples[i].k1;
+		            data.k1 = k_samples[i].k1_conventional;
 
 		            data.k2_max = (i == k2_max_pos ? true : false);
 		            data.k2_min = (i == k2_min_pos ? true : false);
-		            data.k2 = k_samples[i].k2;
+		            data.k2 = k_samples[i].k2_conventional;
 
 		            data.k3_max = (i == k3_max_pos ? true : false);
 		            data.k3_min = (i == k3_min_pos ? true : false);
-		            data.k3 = k_samples[i].k3;
+		            data.k3 = k_samples[i].k3_conventional;
 
 		            if(k_filter(data)) k_serials.push_back(k_samples[i].serial);
 			        }

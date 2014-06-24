@@ -38,7 +38,7 @@
 
 
 #define __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE (1E-8)
-#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (20)
+#define __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS    (50)
 
 
 namespace transport
@@ -125,40 +125,12 @@ namespace transport
         //! Get value of H at horizon crossing, which can be used to normalize the comoving waveumbers
         double compute_kstar(const integration_task<number>* tk, unsigned int time_steps= __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS);
 
-//      public:
-//
-//        //! Make an 'ics_validator' object for this model
-//        virtual typename initial_conditions<number>::ics_validator ics_validator_factory() = 0;
-//
-//        //! Make an 'ics_finder' object for this model
-//        typename initial_conditions<number>::ics_finder ics_finder_factory()
-//          {
-//            return(std::bind(&model<number>::find_ics, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
-//                             std::placeholders::_4, std::placeholders::_5, std::placeholders::_6,
-//                             __CPP_TRANSPORT_DEFAULT_ICS_GAP_TOLERANCE, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
-//          }
-//
-//        //! Make a 'kconfig_kstar' object for this model.
-//		    //! This is callback function which computes the value of H = k* at horizon crossing,
-//		    //! which must be known in order to convert from conventionally-normalized to
-//		    //! comoving wavenumbers
-//        typename integration_task<number>::kconfig_kstar kconfig_kstar_factory()
-//          {
-//            return(std::bind(&model<number>::get_kstar, this, std::placeholders::_1, __CPP_TRANSPORT_DEFAULT_ICS_TIME_STEPS));
-//          }
-//
-//
-//        // INTERFACE - PARAMETER HANDLING
 
+        // INTERFACE - PARAMETER HANDLING
 
       public:
 
 		    virtual void validate_params(const std::vector<number>& input, std::vector<number>& output) = 0;
-
-//      public:
-//
-//        //! Make a 'params_validator' object for this model
-//        virtual typename parameters<number>::params_validator params_validator_factory() = 0;
 
 
         // CALCULATE MODEL-SPECIFIC QUANTITIES
@@ -255,7 +227,7 @@ namespace transport
 
     template <typename number>
     model<number>::model(instance_manager<number>* m, const std::string& u, unsigned int v)
-    : mgr(m), uid(u), tver(v)
+      : mgr(m), uid(u), tver(v)
       {
         // Register ourselves with the instance manager
         mgr->register_model(this, uid, tver);

@@ -131,7 +131,7 @@ namespace transport
       public:
 
         $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
-                                       const std::vector<time_config>& l)
+                                       const std::vector< typename integration_task<number>::time_storage_record >& l)
           : twopf_singleconfig_batch_observer<number>(b, c, l,
                                                       $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
                                                       $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_start)
@@ -174,7 +174,7 @@ namespace transport
 
       public:
         $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
-                                         const std::vector<time_config>& l)
+                                         const std::vector< typename integration_task<number>::time_storage_record >& l)
           : threepf_singleconfig_batch_observer<number>(b, c, l,
                                                         $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
                                                         $$__MODEL_pool::backg_start,
@@ -211,12 +211,15 @@ namespace transport
                                                         typename data_manager<number>::twopf_batcher& batcher,
                                                         bool silent)
       {
+        // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
+        batcher.set_flush_mode(data_manager<number>::generic_batcher::flush_delayed);
+
         std::ostringstream work_msg;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
             << "** MPI compute backend processing twopf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-//        std::cout << work_msg.str();
+//        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be the only device in this backend)
@@ -262,7 +265,7 @@ namespace transport
                                               boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
 		    // get list of time steps, and storage list
-        std::vector<bool>         slist;
+        std::vector< typename integration_task<number>::time_storage_record > slist;
         const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
 
         // set up a functor to observe the integration
@@ -270,7 +273,7 @@ namespace transport
         $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, slist);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
+        $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k_comoving);
 
         // set up a state vector
         twopf_state<number> x;
@@ -319,12 +322,15 @@ namespace transport
                                                         typename data_manager<number>::threepf_batcher& batcher,
                                                         bool silent)
       {
+        // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
+        batcher.set_flush_mode(data_manager<number>::generic_batcher::flush_delayed);
+
         std::ostringstream work_msg;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
           << "** MPI compute backend processing threepf task";
         work_msg << work;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
-//        std::cout << work_msg.str();
+//        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
         // get work queue for the zeroth device (should be only one device with this backend)
@@ -371,7 +377,7 @@ namespace transport
                                                 boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
 		    // get list of time steps, and storage list
-        std::vector<bool>         slist;
+        std::vector<typename integration_task<number>::time_storage_record> slist;
         const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
 
         // set up a functor to observe the integration

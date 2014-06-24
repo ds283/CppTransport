@@ -237,9 +237,13 @@ namespace transport
 		template <typename number>
 		std::vector<number> initial_conditions<number>::get_offset_vector(double N) const
 			{
-		    std::vector offset_ics;
+		    std::vector<number> offset_ics;
 
-				this->mdl->offset_ics(this->params, this->ics, offset_ics, 0.0, )
+        // offset_ics() changes the initial conditions to give horizon-crossing at Nstar, with Npre e-folds before horizon crossing.
+        // we want there to be Nstar-N efolds to horizon crossing. That can be negative if N > Nstar
+				this->mdl->offset_ics(this->params, this->ics, offset_ics, 0.0, this->Nstar, this->Nstar - N);
+
+        return(offset_ics);
 			}
 
 

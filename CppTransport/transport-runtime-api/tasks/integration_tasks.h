@@ -113,6 +113,19 @@ namespace transport
 		    //! defines an object which computes kstar for a given integration task
         typedef std::function<double(integration_task<number>*)> kconfig_kstar;
 
+        class time_storage_record
+          {
+          public:
+            time_storage_record(bool s, unsigned int n)
+              : store(s), tserial(n)
+              {
+                assert(s == true || (s== false && n == 0));
+              }
+
+            bool store;
+            unsigned int tserial;
+          };
+
 
       protected:
 
@@ -175,16 +188,16 @@ namespace transport
 		    const std::vector<double>& get_raw_integration_step_times() const;
 
         //! Get std::vector of integration step times, and simultaneously populate a storage list
-        const std::vector<double>& get_raw_integration_step_times(std::vector<bool>& slist) const;
+        const std::vector<double>& get_raw_integration_step_times(std::vector<time_storage_record>& slist) const;
 
 		    //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-		    std::vector<double> get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<bool>& slist) const;
+		    std::vector<double> get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist) const;
 
         //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
-        std::vector<double> get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<bool>& slist) const;
+        std::vector<double> get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist) const;
 
 		    //! Get std::vector of integration step times, truncated at Nstart if fast-forwarding enabled
-		    std::vector<double> get_ff_integration_step_times(double Nstart, std::vector<bool>& slist) const;
+		    std::vector<double> get_ff_integration_step_times(double Nstart, std::vector<time_storage_record>& slist) const;
 
         //! Get vector of time configurations to store
         const std::vector<time_config>& get_time_config_list() const { return(this->time_config_list); }
@@ -467,10 +480,10 @@ namespace transport
 
 
 		template <typename number>
-		const std::vector<double>& integration_task<number>::get_raw_integration_step_times(std::vector<bool>& slist) const
+		const std::vector<double>& integration_task<number>::get_raw_integration_step_times(std::vector<time_storage_record>& slist) const
 			{
 				slist.clear();
-				slist.resize(this->raw_time_list.size());
+				slist.reserve(this->raw_time_list.size());
 
 		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
 
@@ -478,21 +491,22 @@ namespace transport
 					{
 						if(t != this->time_config_list.end() && (*t).serial == i)
 							{
-								slist.push_back(true);
+								slist.push_back(time_storage_record(true, (*t).serial));
 								t++;
 							}
 						else
 							{
-								slist.push_back(false);
+								slist.push_back(time_storage_record(false, 0));
 							}
 					}
+         assert(slist.size() == this->raw_time_list.size());
 
 				return this->raw_time_list;
 			}
 
 
 		template <typename number>
-		std::vector<double> integration_task<number>::get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<bool>& slist) const
+		std::vector<double> integration_task<number>::get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<time_storage_record>& slist) const
 			{
 		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
 
@@ -501,7 +515,7 @@ namespace transport
 
 
     template <typename number>
-    std::vector<number> integration_task<number>::get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<bool>& slist) const
+    std::vector<double> integration_task<number>::get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<time_storage_record>& slist) const
 	    {
         double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
 
@@ -512,7 +526,7 @@ namespace transport
 
 
 		template <typename number>
-		std::vector<double> integration_task<number>::get_ff_integration_step_times(double Nstart, std::vector<bool>& slist) const
+		std::vector<double> integration_task<number>::get_ff_integration_step_times(double Nstart, std::vector<time_storage_record>& slist) const
 			{
 				if(!this->fast_forward || Nstart <= 0.0) return this->get_raw_integration_step_times(slist);
 
@@ -521,10 +535,10 @@ namespace transport
 
 		    std::vector<double> times;
 				times.push_back(Nstart);
-				slist.push_back(false);
+				slist.push_back(time_storage_record(false, 0));
 				assert(Nstart < this->time_config_list.front().t);
 
-		    std::vector<time_config>::iterator t = this->time_config_list.begin();
+		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
 
 				for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
 					{
@@ -533,12 +547,13 @@ namespace transport
 						    if(t != this->time_config_list.end() && (*t).serial == i)
 							    {
 								    times.push_back(this->raw_time_list[i]);
-								    slist.push_back(true);
+								    slist.push_back(time_storage_record(true, (*t).serial));
+                    t++;
 							    }
 								else
 							    {
 								    times.push_back(this->raw_time_list[i]);
-								    slist.push_back(false);
+								    slist.push_back(time_storage_record(false, 0));
 							    }
 							}
 					}

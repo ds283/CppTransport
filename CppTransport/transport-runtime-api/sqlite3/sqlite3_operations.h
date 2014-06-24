@@ -199,7 +199,7 @@ namespace transport
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).k_conventional));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).k));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).k_comoving));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
@@ -254,7 +254,7 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).index[0]));
                 check_stmt(db, sqlite3_bind_int(stmt, 3, (*t).index[1]));
                 check_stmt(db, sqlite3_bind_int(stmt, 4, (*t).index[2]));
-                check_stmt(db, sqlite3_bind_double(stmt, 5, (*t).k_t));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, (*t).k_t_comoving));
                 check_stmt(db, sqlite3_bind_double(stmt, 6, (*t).k_t_conventional));
                 check_stmt(db, sqlite3_bind_double(stmt, 7, (*t).alpha));
                 check_stmt(db, sqlite3_bind_double(stmt, 8, (*t).beta));
