@@ -26,11 +26,14 @@
 #include "boost/timer/timer.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
+#include "boost/log/expressions.hpp"
+#include "boost/log/attributes.hpp"
 #include "boost/log/sources/severity_feature.hpp"
 #include "boost/log/sources/severity_logger.hpp"
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/phoenix/bind/bind_function_object.hpp"
 
 
 // log file name
@@ -198,7 +201,7 @@ namespace transport
         typedef std::function<void(generic_batcher* batcher)> container_dispatch_function;
 
 		    //! Logging severity level
-        typedef enum { normal, notification, warning, error, critical } log_severity_level;
+        typedef enum { datapipe_pull, normal, warning, error, critical } log_severity_level;
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
         // Batcher objects, used by integration workers to push results into a container
@@ -1499,6 +1502,8 @@ namespace transport
 
         boost::shared_ptr< boost::log::core > core = boost::log::core::get();
 
+		    core->set_filter(boost::log::trivial::severity >= data_manager<number>::normal);
+
         boost::shared_ptr< boost::log::sinks::text_file_backend > backend =
                                                                     boost::make_shared< boost::log::sinks::text_file_backend >( boost::log::keywords::file_name = log_path.string() );
 
@@ -1914,7 +1919,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL time sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL time sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->pull_config.time(this->pipe, sns, data);
@@ -1936,7 +1941,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 2pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL 2pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->pull_config.twopf(this->pipe, sns, data);
@@ -1958,7 +1963,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL 3pf k-configuration sample request";
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL 3pf k-configuration sample request";
 
 				this->pipe->database_timer.resume();
 		    this->pipe->pull_config.threepf(this->pipe, sns, data);
@@ -1980,7 +1985,7 @@ namespace transport
 		       this->pipe->threepf_kconfig_cache_table == nullptr ||
 		       this->pipe->data_cache_table == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL background time sample request for element " << this->id;
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL background time sample request for element " << this->id;
 
 				this->pipe->database_timer.resume();
 		    this->pipe->pull_timeslice.background(this->pipe, this->id, sns, sample);
@@ -2004,7 +2009,7 @@ namespace transport
 
 				if(this->type == cf_twopf_re)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL twopf time sample request, type = real, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->pull_timeslice.twopf(this->pipe, this->id, sns, this->kserial, sample, twopf_real);
@@ -2012,7 +2017,7 @@ namespace transport
 					}
 				else if(this->type == cf_twopf_im)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL twopf time sample request, type = imaginary, for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->pull_timeslice.twopf(this->pipe, this->id, sns, this->kserial, sample, twopf_imag);
@@ -2020,7 +2025,7 @@ namespace transport
 					}
 				else if (this->type == cf_threepf)
 					{
-				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
 
 						this->pipe->database_timer.resume();
 				    this->pipe->pull_timeslice.threepf(this->pipe, this->id, sns, this->kserial, sample);
@@ -2078,7 +2083,7 @@ namespace transport
 
         if(this->type == cf_twopf_re)
 	        {
-            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
+            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = real, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
             this->pipe->pull_kslice.twopf(this->pipe, this->id, sns, this->tserial, sample, twopf_real);
@@ -2086,7 +2091,7 @@ namespace transport
 	        }
         else if(this->type == cf_twopf_im)
 	        {
-            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
+            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL twopf kconfig sample request, type = imaginary, for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
             this->pipe->pull_kslice.twopf(this->pipe, this->id, sns, this->tserial, sample, twopf_imag);
@@ -2094,7 +2099,7 @@ namespace transport
 	        }
         else if (this->type == cf_threepf)
 	        {
-            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::normal) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
 
             this->pipe->database_timer.resume();
             this->pipe->pull_kslice.threepf(this->pipe, this->id, sns, this->tserial, sample);
