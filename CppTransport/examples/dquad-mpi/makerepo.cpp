@@ -143,12 +143,12 @@ int main(int argc, char* argv[])
     transport::initial_conditions<double> ics =
                                             transport::initial_conditions<double>("dquad-1", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 80000;       // record 5000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 1000;       // record 5000 samples - enough to find a good stepsize
 
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 320) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::range<double>::logarithmic);
