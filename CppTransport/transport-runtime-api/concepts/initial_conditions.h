@@ -88,6 +88,9 @@ namespace transport
         //! Return std::vector of initial conditions
         const std::vector<number>& get_vector() const { return(this->ics); }
 
+		    //! Return std::vector of initial conditions, offset by N e-folds from the raw ones
+		    std::vector<number> get_offset_vector(double N) const;
+
         //! Return relative time of horizon-crossing
         const double get_Nstar() const { return(this->Nstar); }
 
@@ -229,6 +232,15 @@ namespace transport
         // validate supplied initial conditions
 		    mdl->validate_ics(params, i, ics);
       }
+
+
+		template <typename number>
+		std::vector<number> initial_conditions<number>::get_offset_vector(double N) const
+			{
+		    std::vector offset_ics;
+
+				this->mdl->offset_ics(this->params, this->ics, offset_ics, 0.0, )
+			}
 
 
     template <typename number>

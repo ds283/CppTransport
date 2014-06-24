@@ -60,7 +60,7 @@ namespace transport
         unsigned int get_serial() const { return(this->serial); }
 
         //! comoving k-value
-        double       k;
+        double       k_comoving;
         double       k_conventional;
 
         //! flag which indicates to the integrator whether to store the background
@@ -74,7 +74,7 @@ namespace transport
     std::ostream& operator<<(std::ostream& out, const twopf_kconfig& obj)
 	    {
         std::ostringstream str;
-        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k;
+        str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_comoving;
         out << __CPP_TRANSPORT_KCONFIG_SERIAL << " " << obj.serial << ", " << __CPP_TRANSPORT_KCONFIG_KEQUALS << " " << str.str() << std::endl;
 
         return(out);
@@ -93,16 +93,19 @@ namespace transport
         //! eg. used to look up appropriate values of the power spectrum when constructing reduced 3pfs
         std::array<unsigned int, 3> index;
 
-        //! comoving (k1,k2,k3) coordinates for this k-configuration
-        double                      k1;
-        double                      k2;
-        double                      k3;
+        //! (k1,k2,k3) coordinates for this k-configuration
+        double                      k1_comoving;
+        double                      k2_comoving;
+        double                      k3_comoving;
+        double                      k1_conventional;
+        double                      k2_conventional;
+        double                      k3_conventional;
 
         //! Fergusson-Shellard-Liguori coordinates for this k-configuration
-        double                      k_t;
+        double                      k_t_comoving;     // comoving normalize k_t
+        double                      k_t_conventional; // conventionally normalized k_t
         double                      alpha;
         double                      beta;
-        double                      k_t_conventional; // conventionally normalized k_t
 
         //! flags which indicate to the integrator whether to
         //! store the background and twopf results from this integration
@@ -122,7 +125,7 @@ namespace transport
         std::ostringstream alpha_str;
         std::ostringstream beta_str;
 
-        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t;
+        kt_str    << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.k_t_comoving;
         alpha_str << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.alpha;
         beta_str  << std::setprecision(__CPP_TRANSPORT_DEFAULT_K_PRECISION) << obj.beta;
 

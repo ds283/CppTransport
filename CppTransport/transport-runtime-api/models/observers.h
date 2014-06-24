@@ -33,10 +33,10 @@ namespace transport
       public:
 
         //! Create a stepping observer object
-        stepping_observer(const std::vector<time_config>& l)
+        stepping_observer(const std::vector<bool>& l)
           : time_step(0), storage_list(l)
           {
-            current_config = storage_list.begin();
+            current_step = storage_list.begin();
           }
 
         //! Get current time step
@@ -46,10 +46,10 @@ namespace transport
         void step() { this->time_step++; }
 
         //! Advance list of steps which should be stored, according to the time-storage policy
-        void advance_storage_list() { if(this->current_config != this->storage_list.end()) this->current_config++; }
+        void advance_storage_list() { if(this->current_step != this->storage_list.end()) this->current_step++; }
 
         //! Query whether the current time step should be stored
-        bool store_time_step() { return((this->current_config != this->storage_list.end()) && (this->time_step == (*(this->current_config)).serial)); }
+        bool store_time_step() { return((this->current_step != this->storage_list.end()) && (*(this->current_step)); }
 
       private:
 
@@ -57,10 +57,10 @@ namespace transport
         unsigned int time_step;
 
         //! List of steps which should be stored
-        const std::vector<time_config>& storage_list;
+        const std::vector<bool>& storage_list;
 
         //! Pointer to current location in this of stored time steps
-        std::vector<time_config>::const_iterator current_config;
+        std::vector<bool>::const_iterator current_step;
 
       };
 
@@ -73,7 +73,7 @@ namespace transport
       public:
 
         //! Create a timing observer object
-        timing_observer(const std::vector<time_config>& l, double t_int=1.0, bool s=false, unsigned int p=3);
+        timing_observer(const std::vector<bool>& l, double t_int=1.0, bool s=false, unsigned int p=3);
 
         //! Prepare for a batching step
         template <typename Level>
@@ -121,7 +121,7 @@ namespace transport
       };
 
 
-    timing_observer::timing_observer(const std::vector<time_config>& l, double t_int, bool s, unsigned int p)
+    timing_observer::timing_observer(const std::vector<bool>& l, double t_int, bool s, unsigned int p)
       : stepping_observer(l), t_interval(t_int), silent(s), first_step(true), t_last(0), precision(p)
       {
         batching_timer.stop();
@@ -179,7 +179,7 @@ namespace transport
       public:
 
         twopf_singleconfig_batch_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
-                                          const std::vector<time_config>& l,
+                                          const std::vector<bool>& l,
                                           unsigned int bg_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int tw_st,
                                           double t_int = 1.0, bool s = true, unsigned int p = 3);
@@ -218,7 +218,7 @@ namespace transport
 
     template <typename number>
     twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
-                                                                                 const std::vector<time_config>& l,
+                                                                                 const std::vector<bool>& l,
                                                                                  unsigned int bg_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int tw_st,
                                                                                  double t_int, bool s, unsigned int p)
@@ -273,7 +273,7 @@ namespace transport
       public:
 
         threepf_singleconfig_batch_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
-                                            const std::vector<time_config>& l,
+                                            const std::vector<bool>& l,
                                             unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
                                             unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,
@@ -324,7 +324,7 @@ namespace transport
 
     template <typename number>
     threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
-                                                                                     const std::vector<time_config>& l,
+                                                                                     const std::vector<bool>& l,
                                                                                      unsigned int bg_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                      unsigned int bg_st,
                                                                                      unsigned int tw_re_k1_st, unsigned int tw_im_k1_st,

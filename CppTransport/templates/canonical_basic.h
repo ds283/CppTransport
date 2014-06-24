@@ -261,9 +261,13 @@ namespace transport
                                               typename data_manager<number>::twopf_batcher& batcher,
                                               boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
+		    // get list of time steps, and storage list
+        std::vector<bool>         slist;
+        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
+
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
+        $$__MODEL_basic_twopf_observer<number> obs(batcher, kconfig, slist);
 
         // set up a functor to evolve this system
         $$__MODEL_basic_twopf_functor<number> rhs(tk->get_params(), kconfig.k);
@@ -273,12 +277,11 @@ namespace transport
         x.resize($$__MODEL_pool::twopf_state_size);
 
         // fix initial conditions - background
-        const std::vector<number>& ics = tk->get_ics_vector();
+        const std::vector<number>& ics = tk->get_ff_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
         // fix initial conditions - 2pf
-        const std::vector<double>& times = tk->get_integration_step_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k, times.front(), tk->get_params(), ics);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k_comoving, times.front(), tk->get_params(), ics);
 
         using namespace boost::numeric::odeint;
         integrate_times($$__MAKE_PERT_STEPPER{twopf_state<number>}, rhs, x, times.begin(), times.end(), $$__PERT_STEP_SIZE, obs);
@@ -367,31 +370,36 @@ namespace transport
                                                 typename data_manager<number>::threepf_batcher& batcher,
                                                 boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time)
       {
+		    // get list of time steps, and storage list
+        std::vector<bool>         slist;
+        const std::vector<double> times = tk->get_ff_integration_step_times(kconfig, slist);
+
         // set up a functor to observe the integration
         // this also starts the timers running, so we do it as early as possible
-        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, tk->get_time_config_list());
+        $$__MODEL_basic_threepf_observer<number> obs(batcher, kconfig, slist);
 
         // set up a functor to evolve this system
-        $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1, kconfig.k2, kconfig.k3);
+        $$__MODEL_basic_threepf_functor<number>  rhs(tk->get_params(), kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving);
 
         // set up a state vector
         threepf_state<number> x;
         x.resize($$__MODEL_pool::threepf_state_size);
 
-        // fix initial conditions - background (don't need explicit FLATTEN since it would appear on both sides)
-        const std::vector<number>& ics = tk->get_ics_vector();
+        // fix initial conditions - background
+		    // use fast-forwarding if enabled
+        // (don't need explicit FLATTEN since it would appear on both sides)
+        const std::vector<number>& ics = tk->get_ff_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
 
         // fix initial conditions - real 2pfs
-        const std::vector<double>& times = tk->get_integration_step_times();
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, false);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1_comoving, times.front(), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k2_start, kconfig.k2_comoving, times.front(), tk->get_params(), ics, false);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k3_start, kconfig.k3_comoving, times.front(), tk->get_params(), ics, false);
 
         // fix initial conditions - imaginary 2pfs
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig.k1, times.front(), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig.k2, times.front(), tk->get_params(), ics, true);
-        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig.k3, times.front(), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k1_start, kconfig.k1_comoving, times.front(), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k2_start, kconfig.k2_comoving, times.front(), tk->get_params(), ics, true);
+        this->populate_twopf_ic(x, $$__MODEL_pool::twopf_im_k3_start, kconfig.k3_comoving, times.front(), tk->get_params(), ics, true);
 
         // fix initial conditions - threepf
         this->populate_threepf_ic(x, $$__MODEL_pool::threepf_start, kconfig, times.front(), tk->get_params(), ics);
@@ -413,7 +421,7 @@ namespace transport
         assert(x.size() >= start);
         assert(x.size() >= start + $$__MODEL_pool::threepf_size);
 
-        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1, kconfig.k2, kconfig.k3, Ninit, p, ics) $$// ;
+        x[start + FLATTEN($$__A,$$__B,$$__C)] = this->make_threepf_ic($$__A, $$__B, $$__C, kconfig.k1_comoving, kconfig.k2_comoving, kconfig.k3_comoving, Ninit, p, ics) $$// ;
       }
 
 

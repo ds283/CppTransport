@@ -35,6 +35,7 @@
 
 
 #define __CPP_TRANSPORT_NODE_FAST_FORWARD                  "fast-forward"
+#define __CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS           "ff-efolds"
 #define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
 
 #define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE           "time-config-storage-policy"
@@ -146,7 +147,7 @@ namespace transport
         virtual ~integration_task() = default;
 
 
-        // INTERFACE - EXTRACT INFORMATION ABOUT THE TASK
+        // INTERFACE - TASK COMPONENTS
 
       public:
 
@@ -159,23 +160,86 @@ namespace transport
         //! Get model associated with this task
         model<number>* get_model() const { return(this->ics.get_model()); }
 
+
+		    // INTERFACE - INTEGRATION DETAILS - TIMES AND INITIAL CONDITIONS
+
+      public:
+
         //! Get initial times
         double get_Ninit() const { return(this->times.get_min()); }
 
         //! Get horizon-crossing time
         double get_Nstar() const { return(this->ics.get_Nstar()); }
 
-        //! Get std::vector of integration steps
-        const std::vector<double>& get_integration_step_times() const { return(this->raw_time_list); }
+		    //! Get std::vector of integration step times
+		    const std::vector<double>& get_raw_integration_step_times() const;
+
+        //! Get std::vector of integration step times, and simultaneously populate a storage list
+        const std::vector<double>& get_raw_integration_step_times(std::vector<bool>& slist) const;
+
+		    //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
+		    std::vector<double> get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<bool>& slist) const;
+
+        //! Get std::vector of integration step times, truncated for fast-forwarding if enabled
+        std::vector<double> get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<bool>& slist) const;
+
+		    //! Get std::vector of integration step times, truncated at Nstart if fast-forwarding enabled
+		    std::vector<double> get_ff_integration_step_times(double Nstart, std::vector<bool>& slist) const;
 
         //! Get vector of time configurations to store
         const std::vector<time_config>& get_time_config_list() const { return(this->time_config_list); }
 
         //! Get std::vector of initial conditions
-        const std::vector<number>& get_ics_vector() const { return(this->ics.get_vector()); }
+        const std::vector<number>& get_raw_ics_vector() const { return(this->ics.get_vector()); }
 
-        //! Get number of samples
-        unsigned int get_num_time_config_samples() const { return(this->times.size()); }
+		    //! Get std::vector of initial conditions, offset using fast forwarding if enabled
+		    std::vector<number> get_ff_ics_vector(const twopf_kconfig& kconfig) const;
+
+        //! Get std::vector of initial conditions, offset using fast forwarding if enabled
+        std::vector<number> get_ff_ics_vector(const threepf_kconfig& kconfig) const;
+
+		    //! Get std::vector of initial conditions, offset by Nstar using fast forwarding if enables
+		    std::vector<number> get_ff_ics_vector(double Nstart) const;
+
+
+		    // FAST-FORWARD INTEGRATION MANAGEMENT
+
+      public:
+
+		    //! Get fast-forward integration setting
+		    bool get_fast_forward() const { return(this->fast_forward); }
+
+		    //! Set fast-forward integration setting
+		    void set_fast_forward(bool g) { this->fast_forward = g; this->apply_time_storage_policy(); }
+
+		    //! Get number of fast-forward e-folds
+		    double get_fast_forward_efolds() const { return(this->ff_efolds); }
+
+		    //! Set number of fast-forward e-folds
+		    void set_fast_forward_efolds(double N) { this->ff_efolds = (N >= 0.0 ? N : this->ff_efolds); this->apply_time_storage_policy(); }
+
+		    //! Get largest wavenumber included in the integration
+		    virtual double get_kmax() const { return(1.0); }
+
+      protected:
+
+        //! Populate list of time configurations to be sorted, given that the earliest allowed time is tmin.
+        //! If we are using fast-forward integration, tmin will be Nstar + ln(kmax) - ff_efolds,
+        //! where kmax is the largest k number we are evolving for.
+        //! Since this is the start time for that mode, we can't guarantee that results will be available
+        //! be at earlier times
+        void apply_time_storage_policy();
+
+
+		    // MESH REFINEMENT
+
+      public:
+
+		    //! Get number of allowed mesh refinements
+		    unsigned int get_max_refinements() const { return(this->max_refinements); }
+
+		    //! Set number of allowed mesh refinements
+		    void set_max_refinemenets(unsigned int max) { this->max_refinements = (max > 0 ? max : this->max_refinements); }
 
 
 				// SERIALIZE - implements a 'serializable' interface
@@ -206,6 +270,9 @@ namespace transport
 				//! really kept only for serialization purposes
         range<double>                    times;
 
+
+		    // TIME STORAGE POLICY
+
 		    //! Time configuration storage policy for this task
 		    const time_config_storage_policy time_storage_policy;
 
@@ -215,8 +282,17 @@ namespace transport
 				//! Filtered list of time-configurations (corresponding to values stored in the database)
 				std::vector<time_config>         time_config_list;
 
+
+		    // FAST FORWARD INTEGRATION
+
 		    //! Whether to use fast-forward integration
 		    bool                             fast_forward;
+
+		    //! Number of e-folds to use in fast-forward integration
+		    double                           ff_efolds;
+
+
+		    // MESH REFINEMENT
 
 		    //! How many mesh refinements to allow per triangle
 		    unsigned int                     max_refinements;
@@ -231,7 +307,7 @@ namespace transport
         times(t),
         task<number>(nm),
         time_storage_policy(p),
-        fast_forward(true),
+        fast_forward(true), ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
       {
         // validate relation between Nstar and the sampling time
@@ -259,20 +335,6 @@ namespace transport
             msg << __CPP_TRANSPORT_NSTAR_TOO_LATE << " (Nend = " << times.get_max() << ", Nstar = " << ics.get_Nstar() << ")";
             throw std::logic_error(msg.str());
           }
-
-		    // get raw grid of sampling times
-        raw_time_list = times.get_grid();
-
-		    // filter sampling times according to our storage policy
-		    for(unsigned int i = 0; i < raw_time_list.size(); i++)
-			    {
-				    time_config tc;
-				    tc.t = raw_time_list[i];
-				    tc.serial = i;
-
-				    time_config_storage_policy_data data(tc.t, tc.serial);
-				    if(time_storage_policy(data)) time_config_list.push_back(tc);
-			    }
       }
 
 
@@ -287,6 +349,9 @@ namespace transport
 
 				// deserialize fast-forward integration setting
 				reader->read_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, fast_forward);
+
+				// deserialize number of fast-forward efolds
+				reader->read_value(__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS, ff_efolds);
 
 				// deserialize max number of mesh refinements
 				reader->read_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, max_refinements);
@@ -341,6 +406,9 @@ namespace transport
 				// store fast-forward integration setting
 				writer.write_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, this->fast_forward);
 
+				// store number of fast-forward efolds
+				writer.write_value(__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS, this->ff_efolds);
+
 				// store max number of mesh refinements
 				writer.write_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, this->max_refinements);
 
@@ -364,6 +432,147 @@ namespace transport
 
 				// call next serializers in the queue
 				this->task<number>::serialize(writer);
+			}
+
+
+		template <typename number>
+		void integration_task<number>::apply_time_storage_policy()
+			{
+		    // get raw grid of sampling times
+				raw_time_list.clear();
+		    raw_time_list = times.get_grid();
+
+				// compute earliest time at which all modes will have available data, if using fast-forward integration
+				double tmin = this->ics.get_Nstar() + log(this->get_kmax()) - this->ff_efolds;
+				if(tmin <= 0.0) tmin = 0.0;
+
+		    // filter sampling times according to our storage policy
+		    for(unsigned int i = 0; i < raw_time_list.size(); i++)
+			    {
+		        time_config tc;
+		        tc.t = raw_time_list[i];
+		        tc.serial = i;
+
+		        time_config_storage_policy_data data(tc.t, tc.serial);
+		        if((!this->fast_forward || (this->fast_forward && tc.t >= tmin)) && time_storage_policy(data)) time_config_list.push_back(tc);
+			    }
+			}
+
+
+		template <typename number>
+		const std::vector<double>& integration_task<number>::get_raw_integration_step_times() const
+			{
+				return this->raw_time_list;
+			}
+
+
+		template <typename number>
+		const std::vector<double>& integration_task<number>::get_raw_integration_step_times(std::vector<bool>& slist) const
+			{
+				slist.clear();
+				slist.resize(this->raw_time_list.size());
+
+		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
+
+				for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
+					{
+						if(t != this->time_config_list.end() && (*t).serial == i)
+							{
+								slist.push_back(true);
+								t++;
+							}
+						else
+							{
+								slist.push_back(false);
+							}
+					}
+
+				return this->raw_time_list;
+			}
+
+
+		template <typename number>
+		std::vector<double> integration_task<number>::get_ff_integration_step_times(const twopf_kconfig& kconfig, std::vector<bool>& slist) const
+			{
+		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
+
+		    return this->get_ff_integration_step_times(Nstart, slist);
+			}
+
+
+    template <typename number>
+    std::vector<number> integration_task<number>::get_ff_integration_step_times(const threepf_kconfig& kconfig, std::vector<bool>& slist) const
+	    {
+        double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
+
+        double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
+
+        return this->get_ff_integration_step_times(Nstart, slist);
+	    }
+
+
+		template <typename number>
+		std::vector<double> integration_task<number>::get_ff_integration_step_times(double Nstart, std::vector<bool>& slist) const
+			{
+				if(!this->fast_forward || Nstart <= 0.0) return this->get_raw_integration_step_times(slist);
+
+				slist.clear();
+				slist.reserve(this->time_config_list.size()+1);
+
+		    std::vector<double> times;
+				times.push_back(Nstart);
+				slist.push_back(false);
+				assert(Nstart < this->time_config_list.front().t);
+
+		    std::vector<time_config>::iterator t = this->time_config_list.begin();
+
+				for(unsigned int i = 0; i < this->raw_time_list.size(); i++)
+					{
+						if(this->raw_time_list[i] > Nstart)
+							{
+						    if(t != this->time_config_list.end() && (*t).serial == i)
+							    {
+								    times.push_back(this->raw_time_list[i]);
+								    slist.push_back(true);
+							    }
+								else
+							    {
+								    times.push_back(this->raw_time_list[i]);
+								    slist.push_back(false);
+							    }
+							}
+					}
+
+				assert(times.size() == slist.size());
+				return(times);
+			}
+
+
+		template <typename number>
+		std::vector<number> integration_task<number>::get_ff_ics_vector(const twopf_kconfig& kconfig) const
+			{
+		    double Nstart = this->ics.get_Nstar() + log(kconfig.k_conventional) - this->ff_efolds;
+
+		    return this->get_ff_ics_vector(Nstart);
+			}
+
+
+    template <typename number>
+    std::vector<number> integration_task<number>::get_ff_ics_vector(const threepf_kconfig& kconfig) const
+	    {
+        double kmin = std::min(std::min(kconfig.k1_conventional, kconfig.k2_conventional), kconfig.k3_conventional);
+
+        double Nstart = this->ics.get_Nstar() + log(kmin) - this->ff_efolds;
+
+        return this->get_ff_ics_vector(Nstart);
+	    }
+
+
+    template <typename number>
+		std::vector<number> integration_task<number>::get_ff_ics_vector(double Nstart) const
+			{
+		    if(this->fast_forward && Nstart > 0.0) return this->ics.get_offset_vector(Nstart);
+		    else                                   return this->ics.get_vector();
 			}
 
 
@@ -392,10 +601,7 @@ namespace transport
 		  public:
 
 				//! construct a background task
-				background_task(const initial_conditions<number>& i, const range<double>& t)
-		      : integration_task<number>(i, t)
-					{
-					}
+				background_task(const initial_conditions<number>& i, const range<double>& t);
 
 				virtual ~background_task() = default;
 
@@ -417,6 +623,14 @@ namespace transport
         virtual task<number>* clone() const override { return new background_task<number>(static_cast<const background_task<number>&>(*this)); }
 
 			};
+
+
+		template <typename number>
+		background_task<number>::background_task(const initial_conditions<number>& i, const range<double>& t)
+			: integration_task<number>(i, t)
+			{
+		    this->apply_time_storage_policy();
+			}
 
 
     //! Base type for a task which can represent a set of two-point functions evaluated at different wavenumbers.
@@ -463,6 +677,14 @@ namespace transport
         const twopf_kconfig& lookup_twopf_kconfig(unsigned int serial);
 
 
+		    // FAST-FORWARD INTEGRATION
+
+      public:
+
+		    //! get largest k-mode included in the integration
+		    virtual double get_kmax() const override { return(this->kmax); }
+
+
         // SERIALIZATION -- implements a 'serializable' interface
 
       public:
@@ -481,6 +703,9 @@ namespace transport
         //! List of twopf k-configurations associated with this task
         std::vector<twopf_kconfig> twopf_config_list;
 
+		    //! Maximum wavenumber
+		    double kmax;
+
         //! current serial number
         unsigned int serial;
 
@@ -491,6 +716,7 @@ namespace transport
     twopf_list_task<number>::twopf_list_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                              typename integration_task<number>::time_config_storage_policy p)
       : integration_task<number>(nm, i, t, p),
+        kmax(-DBL_MAX),
         serial(0)
       {
         // we can use 'this' here, because the integration-task components are guaranteed to be initialized
@@ -504,6 +730,7 @@ namespace transport
     template <typename number>
     twopf_list_task<number>::twopf_list_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
       : integration_task<number>(nm, reader, i),
+        kmax(-DBL_MAX),
         serial(0)
       {
         assert(reader != nullptr);
@@ -526,7 +753,8 @@ namespace transport
             reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, c.k_conventional);
 
             assert(c.k_conventional > 0.0);
-            c.k = c.k_conventional*comoving_normalization;
+            c.k_comoving = c.k_conventional*comoving_normalization;
+		        if(c.k_conventional > this->kmax) this->kmax = c.k_conventional;
 
             reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, c.store_background);
 
@@ -580,13 +808,14 @@ namespace transport
 
         twopf_kconfig c;
 
-        c.serial = this->serial++;
-        c.k = k*this->comoving_normalization;
+        c.serial         = this->serial++;
+        c.k_comoving     = k*this->comoving_normalization;
         c.k_conventional = k;
 
         c.store_background = store;
 
         this->twopf_config_list.push_back(c);
+		    if(k > this->kmax) this->kmax = k;
 
         return(c.serial);
       }
@@ -701,6 +930,8 @@ namespace transport
           {
             this->push_twopf_klist(ks[j], j==0);
           }
+
+		    this->apply_time_storage_policy();
       }
 
 
@@ -867,15 +1098,18 @@ namespace transport
             const twopf_kconfig& k2 = this->lookup_twopf_kconfig(c.index[1]);
             const twopf_kconfig& k3 = this->lookup_twopf_kconfig(c.index[2]);
 
-            c.k1 = k1.k;
-            c.k2 = k2.k;
-            c.k3 = k3.k;
-
-            c.k_t   = k1.k + k2.k + k3.k;
-            c.beta  = 1.0 - 2.0 * k3.k/(c.k_t);
-            c.alpha = 4.0*k2.k/(c.k_t) - 1.0 - c.beta;
+		        c.k1_conventional = k1.k_conventional;
+            c.k1_comoving     = k1.k_comoving;
+            c.k2_conventional = k2.k_conventional;
+            c.k2_comoving     = k2.k_comoving;
+            c.k3_conventional = k3.k_conventional;
+            c.k3_comoving     = k3.k_comoving;
 
             c.k_t_conventional = k1.k_conventional + k2.k_conventional + k3.k_conventional;
+            c.k_t_comoving     = k1.k_comoving + k2.k_comoving + k3.k_comoving;
+
+            c.beta  = 1.0 - 2.0 * k3.k_comoving/(c.k_t_comoving);
+            c.alpha = 4.0*k2.k_comoving/(c.k_t_comoving) - 1.0 - c.beta;
 
             threepf_config_list.push_back(c);
             serial++;
@@ -1009,15 +1243,18 @@ namespace transport
                       {
                         threepf_kconfig kconfig;
 
-                        kconfig.k1 = this->comoving_normalize(ks[j]);
-                        kconfig.k2 = this->comoving_normalize(ks[k]);
-                        kconfig.k3 = this->comoving_normalize(ks[l]);
-
-                        kconfig.k_t   = this->comoving_normalize(ks[j] + ks[k] + ks[l]);
-                        kconfig.beta  = 1.0 - 2.0 * ks[l] / (ks[j] + ks[k] + ks[l]);
-                        kconfig.alpha = 4.0 * ks[j] / (ks[j] + ks[k] + ks[l]) - 1.0 - kconfig.beta;
+		                    kconfig.k1_conventional = ks[j];
+                        kconfig.k1_comoving     = this->comoving_normalize(ks[j]);
+		                    kconfig.k2_conventional = ks[k];
+                        kconfig.k2_comoving     = this->comoving_normalize(ks[k]);
+		                    kconfig.k3_conventional = ks[l];
+                        kconfig.k3_comoving     = this->comoving_normalize(ks[l]);
 
                         kconfig.k_t_conventional = ks[j] + ks[k] + ks[l];
+                        kconfig.k_t_comoving     = this->comoving_normalize(kconfig.k_t_conventional);
+                        kconfig.beta             = 1.0 - 2.0 * ks[l] / (ks[j] + ks[k] + ks[l]);
+                        kconfig.alpha            = 4.0 * ks[j] / (ks[j] + ks[k] + ks[l]) - 1.0 - kconfig.beta;
+
 
                         kconfig.serial = this->serial++;
 
@@ -1055,6 +1292,8 @@ namespace transport
         // need linear spacing to be integrable
         if(ks.get_spacing() != range<double>::linear) this->integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
+
+        this->apply_time_storage_policy();
       }
 
 
@@ -1172,40 +1411,38 @@ namespace transport
                       {
                         threepf_kconfig kconfig;
 
-                        kconfig.k_t    = this->comoving_normalize(kts[j]);
-                        kconfig.alpha = alphas[k];
-                        kconfig.beta  = betas[l];
-
                         kconfig.k_t_conventional = kts[j];
+                        kconfig.k_t_comoving     = this->comoving_normalize(kts[j]);
+                        kconfig.alpha            = alphas[k];
+                        kconfig.beta             = betas[l];
 
-                        auto k1 = (kts[j]/4.0)*(1.0 + alphas[k] + betas[l]);
-                        auto k2 = (kts[j]/4.0)*(1.0 - alphas[k] + betas[l]);
-                        auto k3 = (kts[j]/2.0)*(1.0 - betas[l]);
-
-                        kconfig.k1 = this->comoving_normalize(k1);
-                        kconfig.k2 = this->comoving_normalize(k2);
-                        kconfig.k3 = this->comoving_normalize(k3);
+		                    kconfig.k1_conventional = (kts[j]/4.0)*(1.0 + alphas[k] + betas[l]);
+                        kconfig.k1_comoving     = this->comoving_normalize(kconfig.k1_conventional);
+                        kconfig.k2_conventional = (kts[j]/4.0)*(1.0 - alphas[k] + betas[l]);
+                        kconfig.k2_comoving     = this->comoving_normalize(kconfig.k2_conventional);
+                        kconfig.k3_conventional = (kts[j]/2.0)*(1.0 - betas[l]);
+                        kconfig.k3_comoving     = this->comoving_normalize(kconfig.k3_conventional);
 
                         kconfig.serial = this->serial++;
 
                         typename threepf_task<number>::threepf_kconfig_storage_policy_data data(kconfig.k_t_conventional, kconfig.alpha, kconfig.beta, kconfig.serial);
-                        if(k1 > 0.0 && k2 > 0.0 && k3 > 0.0 && kp(data))
+                        if(kconfig.k1_conventional > 0.0 && kconfig.k2_conventional > 0.0 && kconfig.k3_conventional > 0.0 && kp(data))
 	                        {
                             // check whether any of these k-wavenumbers have been stored before
                             bool stored;
                             unsigned int sn;
 
-                            stored = this->find_comoving_k(k1, sn);
+                            stored = this->find_comoving_k(kconfig.k1_conventional, sn);
                             if(stored) { kconfig.index[0] = sn; kconfig.store_twopf_k1 = false; }
-                            else { kconfig.index[0] = this->push_twopf_klist(k1); kconfig.store_twopf_k1 = true; }
+                            else { kconfig.index[0] = this->push_twopf_klist(kconfig.k1_conventional); kconfig.store_twopf_k1 = true; }
 
-                            stored = this->find_comoving_k(k2, sn);
+                            stored = this->find_comoving_k(kconfig.k2_conventional, sn);
                             if(stored) { kconfig.index[1] = sn; kconfig.store_twopf_k2= false; }
-                            else { kconfig.index[1] = this->push_twopf_klist(k2); kconfig.store_twopf_k2 = true; }
+                            else { kconfig.index[1] = this->push_twopf_klist(kconfig.k2_conventional); kconfig.store_twopf_k2 = true; }
 
-                            stored = this->find_comoving_k(k3, sn);
+                            stored = this->find_comoving_k(kconfig.k3_conventional, sn);
                             if(stored) { kconfig.index[2] = sn; kconfig.store_twopf_k3 = false; }
-                            else { kconfig.index[2] = this->push_twopf_klist(k3); kconfig.store_twopf_k3 = true; }
+                            else { kconfig.index[2] = this->push_twopf_klist(kconfig.k3_conventional); kconfig.store_twopf_k3 = true; }
 
                             kconfig.store_background = stored_background ? false : (stored_background=true);
 
@@ -1224,6 +1461,8 @@ namespace transport
         kt_spacing = (kts.get_max() - kts.get_min())/kts.get_steps();
         alpha_spacing = (alphas.get_max() - alphas.get_min())/alphas.get_steps();
         beta_spacing = (betas.get_max() - betas.get_min())/betas.get_steps();
+
+        this->apply_time_storage_policy();
       }
 
 

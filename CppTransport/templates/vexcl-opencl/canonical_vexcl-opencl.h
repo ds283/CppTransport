@@ -318,9 +318,13 @@ namespace transport
               {
                 const work_queue<twopf_kconfig>::device_work_list list = queues[i];
 
+		            // get list of time steps, and storage list
+		            std::vector<bool>          slist;
+                const std::vector<double>& times = tk->get_raw_integration_step_times(slist);
+
                 // set up a functor to observe this system
                 // this starts the timers running, so we do it as early as possible
-                $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, tk->get_time_config_list());
+                $$__MODEL_vexcl_twopf_observer<number> obs(batcher, list, slist);
 
                 // integrate all the items on this work list
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
@@ -342,7 +346,7 @@ namespace transport
                 std::vector<double> hst_ks(list.size());
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
-                    hst_ks[j] = list[j].k;
+                    hst_ks[j] = list[j].k_comoving;
                   }
                 vex::copy(hst_ks, dev_ks);
 
@@ -350,15 +354,14 @@ namespace transport
                 $$__MODEL_vexcl_twopf_functor<number> rhs(this->ctx, tk->get_params(), dev_ks);
 
                 // fix initial conditions - background
-                const std::vector<number>& ics = tk->get_ics_vector();
+                const std::vector<number>& ics = tk->get_raw_ics_vector();
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
                   }
 
                 // fix initial conditions - 2pf
-                const std::vector<double>& times = tk->get_integration_step_times();
-                std::function<double(const twopf_kconfig&)> v = [](const twopf_kconfig& c) -> double { return(c.k); };
+                std::function<double(const twopf_kconfig&)> v = [](const twopf_kconfig& c) -> double { return(c.k_comoving); };
                 this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_start,
                                         list, v, times.front(), tk->get_params(), ics);
 
@@ -432,9 +435,13 @@ namespace transport
               {
                 const work_queue<threepf_kconfig>::device_work_list list = queues[i];
 
+		            // get list of time steps, and storage list
+                std::vector<bool>          slist;
+                const std::vector<double>& times = tk->get_raw_integration_step_times(slist);
+
                 // set up a functor to observe this system
                 // this starts the timers running, so we do it as early as possible
-                $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, tk->get_time_config_list());
+                $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, slist);
 
                 // integrate all items on this work list
 
@@ -448,9 +455,9 @@ namespace transport
                 std::vector<double> hst_k3s(list.size());
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
-                    hst_k1s[j] = list[j].k1;
-                    hst_k2s[j] = list[j].k2;
-                    hst_k3s[j] = list[j].k3;
+                    hst_k1s[j] = list[j].k1_comoving;
+                    hst_k2s[j] = list[j].k2_comoving;
+                    hst_k3s[j] = list[j].k3_comoving;
                   }
                 vex::copy(hst_k1s, dev_k1s);
                 vex::copy(hst_k2s, dev_k2s);
@@ -468,18 +475,16 @@ namespace transport
                 std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*list.size());
 
                 // fix initial conditions - background
-                const std::vector<number>& ics = tk->get_ics_vector();
+                const std::vector<number>& ics = tk->get_raw_ics_vector();
                 for(unsigned int j = 0; j < list.size(); j++)
                   {
                     __TWOPF_BACKG(hst_x, $$__A, j, list.size()) = $$// ics[$$__A];
                   }
 
                 // fix initial conditions - real 2pfs
-                const std::vector<double>& times = tk->get_integration_step_times();
-
-                std::function<double(const threepf_kconfig&)> v1 = [](const threepf_kconfig& c) -> double { return(c.k1); };
-                std::function<double(const threepf_kconfig&)> v2 = [](const threepf_kconfig& c) -> double { return(c.k2); };
-                std::function<double(const threepf_kconfig&)> v3 = [](const threepf_kconfig& c) -> double { return(c.k3); };
+                std::function<double(const threepf_kconfig&)> v1 = [](const threepf_kconfig& c) -> double { return(c.k1_comoving); };
+                std::function<double(const threepf_kconfig&)> v2 = [](const threepf_kconfig& c) -> double { return(c.k2_comoving); };
+                std::function<double(const threepf_kconfig&)> v3 = [](const threepf_kconfig& c) -> double { return(c.k3_comoving); };
 
                 this->populate_twopf_ic(hst_x, $$__MODEL_pool::twopf_re_k1_start,
                                         list, v1, times.front(), tk->get_params(), ics, false);
@@ -526,7 +531,7 @@ namespace transport
         // scan through k-modes, assigning values to the (i,j,k)-th element
         for(int c = 0; c < list.size(); c++)
           {
-            __GENERIC_THREEPF(x, start, $$__A, $$__B, $$__C, c, list.size()) = this->make_threepf_ic($$__A, $$__B, $$__C, list[c].k1, list[c].k2, list[c].k3, Ninit, p, ics) $$// ;
+            __GENERIC_THREEPF(x, start, $$__A, $$__B, $$__C, c, list.size()) = this->make_threepf_ic($$__A, $$__B, $$__C, list[c].k1_comoving, list[c].k2_comoving, list[c].k3_comoving, Ninit, p, ics) $$// ;
           }
       }
 
