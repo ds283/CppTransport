@@ -12,6 +12,8 @@
 #include <fstream>
 #include <functional>
 
+#include <boost/algorithm/string.hpp>
+
 #include "transport-runtime-api/derived-products/line_collection.h"
 #include "transport-runtime-api/derived-products/data_line.h"
 
@@ -42,6 +44,7 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC     "lower-centre"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C      "centre"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX "typeset-with-latex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH   "python-path"
 
 
 namespace transport
@@ -88,6 +91,8 @@ namespace transport
 										msg << __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_UNSUPPORTED_FORMAT << " " << filename.extension();
 										throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
 									}
+
+                this->set_python_path();
 			        }
 
 				    //! Deserialization constructor
@@ -208,6 +213,22 @@ namespace transport
 				    void set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; }
 
 
+            // GET AND SET RUNTIME ENVIRONMENT
+
+          public:
+
+            //! get path to Python interpreter
+            const boost::filesystem::path& get_python_interpreter() const { return(this->python_path); }
+
+            //! set path to Python interpreter
+            void set_python_interpreter(const boost::filesystem::path& p);
+
+          protected:
+
+            //! auto-detect path to Python interpreter
+            void set_python_path();
+
+
 				    // CLONE
 
 		      public:
@@ -262,6 +283,12 @@ namespace transport
 		        //! use LaTeX to typeset labels?
 		        bool typeset_with_LaTeX;
 
+
+            // OTHER DATA
+
+            //! path to Python interpreter
+            boost::filesystem::path python_path;
+
 			    };
 
 
@@ -303,6 +330,10 @@ namespace transport
 			        }
 
 		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX, typeset_with_LaTeX);
+
+            std::string python_str;
+            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH, python_str);
+            python_path = python_str;
 			    }
 
 
@@ -436,7 +467,7 @@ namespace transport
 				    out.close();
 
 				    std::ostringstream command;
-						command << "source ~/.profile; /opt/local/bin/python2.7 \"" << script_file.string() << "\"";
+						command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
 				    int rc = system(command.str().c_str());
 
 						bool rval = true;
@@ -455,6 +486,42 @@ namespace transport
 
 						return(rval);
 					}
+
+
+        template <typename number>
+        void line_plot2d<number>::set_python_interpreter(const boost::filesystem::path& p)
+          {
+            if(!boost::filesystem::exists(p))
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_INTERPRETER_NOT_FOUND << " " << p;
+                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+              }
+
+            this->python_path = p;
+          }
+
+
+        template <typename number>
+        void line_plot2d<number>::set_python_path()
+          {
+            FILE* f = popen("which python", "r");
+
+            if(!f)
+              {
+                this->python_path = __CPP_TRANSPORT_DEFAULT_PYTHON_PATH;
+              }
+            else
+              {
+                char buffer[1024];
+                char* line = fgets(buffer, sizeof(buffer), f);
+                pclose(f);
+
+                std::string path(line);
+                boost::algorithm::trim_right(path);
+                this->python_path = path;
+              }
+          }
 
 
 		    template <typename number>
@@ -520,6 +587,8 @@ namespace transport
 			        }
 
 		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX, this->typeset_with_LaTeX);
+
+            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH, this->python_path.string());
 
 		        // call next serialization
 		        this->line_collection<number>::serialize(writer);

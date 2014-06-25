@@ -17,5 +17,7 @@
 
 #define __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION (1E-5)
 
+#define __CPP_TRANSPORT_DEFAULT_PYTHON_PATH              "/usr/bin/python"
+
 
 #endif //__defaults_H_
