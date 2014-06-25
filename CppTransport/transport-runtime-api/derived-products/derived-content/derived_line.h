@@ -388,7 +388,7 @@ namespace transport
 		    template <typename number>
 		    void derived_line<number>::attach(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) const
 			    {
-		        pipe.attach(this->parent_task->get_name(), this->mdl->get_N_fields(), tags);
+		        pipe.attach(this->parent_task, this->mdl->get_N_fields(), tags);
 			    }
 
 

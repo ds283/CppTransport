@@ -19,5 +19,11 @@
 
 #define __CPP_TRANSPORT_DEFAULT_PYTHON_PATH              "/usr/bin/python"
 
+// default storage limit on nodes - 500 Mb
+// on a machine with 8 workers, that would give 4000 Mb or 4 Gb
+// this can be increased (either here, or when creating a
+// task_manager object) on machines with more memory
+#define __CPP_TRANSPORT_DEFAULT_STORAGE (500*1024*1024)
+
 
 #endif //__defaults_H_

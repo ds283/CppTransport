@@ -328,8 +328,6 @@ namespace transport
                             // the indices are N_lm, N_p, N_q so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            BOOST_LOG_SEV(h.get()->pipe.get_log(), data_manager<number>::normal) << "Here!";
-
                             typename data_manager<number>::datapipe::cf_kconfig_data_tag k1_re_lp_tag = h.get()->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h.get()->mdl->flatten(l,p), h.get()->time_sample_sns[tindex]);
                             typename data_manager<number>::datapipe::cf_kconfig_data_tag k1_im_lp_tag = h.get()->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h.get()->mdl->flatten(l,p), h.get()->time_sample_sns[tindex]);
 

@@ -22,8 +22,6 @@
 #include "transport-runtime-api/derived-products/derived-content/zeta_threepf_line.h"
 #include "transport-runtime-api/derived-products/derived-content/zeta_reduced_bispectrum_line.h"
 
-#include "transport-runtime-api/derived-products/derived-content/zeta_timeseries_compute.h"
-
 namespace transport
   {
 
@@ -82,14 +80,6 @@ namespace transport
             //! serialize this object
             virtual void serialize(serialization_writer& writer) const override;
 
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! compute delegate
-            zeta_timeseries_compute<number> computer;
-
           };
 
 
@@ -122,31 +112,25 @@ namespace transport
         void zeta_twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                                           const std::list<std::string>& tags) const
           {
-            unsigned int N_fields = this->mdl->get_N_fields();
-
             // attach datapipe to an output group
             this->attach(pipe, tags);
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
-
-            const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = k_handle.lookup_tag(k_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(pipe, this->parent_task,
-                                                                                                                  this->time_sample_sns, time_axis, N_fields);
+            const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                // time-line for zeta will be stored in 'line_data'
-                std::vector<number> line_data;
+		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
 
-                this->computer.twopf(handle, line_data, k_values[i]);
+                // time-line for zeta will be stored in 'line_data'
+                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
@@ -232,14 +216,6 @@ namespace transport
             //! serialize this object
             virtual void serialize(serialization_writer& writer) const override;
 
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! compute delegate
-            zeta_timeseries_compute<number> computer;
-
           };
 
 
@@ -272,32 +248,27 @@ namespace transport
         void zeta_threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                                             const std::list<std::string>& tags) const
           {
-            unsigned int N_fields = this->mdl->get_N_fields();
-
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-
-            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = k_handle.lookup_tag(k_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(pipe, this->parent_task, this->time_sample_sns, time_axis, N_fields);
+            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                // time-line for zeta will be stored in 'line_data'
-                std::vector<number> line_data;
+		            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
-                this->computer.threepf(handle, line_data, k_values[i]);
+                // time-line for zeta will be stored in 'line_data'
+                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
@@ -384,13 +355,6 @@ namespace transport
             //! serialize this object
             virtual void serialize(serialization_writer& writer) const override;
 
-
-            // INTERNAL DATA
-
-          protected:
-
-            zeta_timeseries_compute<number> computer;
-
           };
 
 
@@ -424,32 +388,27 @@ namespace transport
         void zeta_reduced_bispectrum_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
                                                                        const std::list<std::string>& tags) const
           {
-            unsigned int N_fields = this->mdl->get_N_fields();
-
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
             // set up cache handles
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-
-            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = k_handle.lookup_tag(k_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(pipe, this->parent_task, this->time_sample_sns, time_axis, N_fields);
+            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
                 BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-                // time-line for the reduced bispectrum will be stored in 'line_data'
-                std::vector<number> line_data;
+		            typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 
-                this->computer.reduced_bispectrum(handle, line_data, k_values[i]);
+                // time-line for the reduced bispectrum will be stored in 'line_data'
+                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);

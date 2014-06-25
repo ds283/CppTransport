@@ -47,6 +47,7 @@
 #define __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK                      "Data manager error: Null task supplied when attaching datapipe"
 #define __CPP_TRANSPORT_DATAMGR_UNKNOWN_CF_TYPE                     "Data manager error: Datapipe pull request for unknown correlation function type"
 #define __CPP_TRANSPORT_DATAMGR_NO_OUTPUT_GROUP                     "Data manager error: Could not find a matching output group for task"
+#define __CPP_TRANSPORT_DATAMGR_ZETA_IM_NOT_IMPLEMENTED             "Data manager error: Pull for imaginary zeta two-point function is not implemented"
 
 #define __CPP_TRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT                "Data manager error: Null derived product"
 #define __CPP_TRANSPORT_DATAMGR_NULL_BATCHER                        "Data manager error: Null batcher"

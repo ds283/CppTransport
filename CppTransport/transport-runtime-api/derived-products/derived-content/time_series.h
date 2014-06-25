@@ -151,7 +151,7 @@ namespace transport
 		    template <typename number>
 		    const std::vector<double>& time_series<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe) const
 			    {
-		        if(!pipe.validate()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
+		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
 				    typename data_manager<number>::datapipe::time_config_handle& handle = pipe.new_time_config_handle(this->time_sample_sns);

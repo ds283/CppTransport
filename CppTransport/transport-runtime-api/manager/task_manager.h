@@ -30,6 +30,7 @@
 
 #include "transport-runtime-api/utilities/formatter.h"
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
@@ -51,12 +52,6 @@
 
 // name for worker devices
 #define __CPP_TRANSPORT_WORKER_NAME  "mpi-worker-"
-
-// default storage limit on nodes - 300 Mb
-// on a machine with 8 workers, that would give 2400 Mb or 2.4 Gb
-// this can be increased (either here, or when creating a
-// task_manager object) on machines with more memory
-#define __CPP_TRANSPORT_DEFAULT_STORAGE (300*1024*1024)
 
 
 namespace transport
