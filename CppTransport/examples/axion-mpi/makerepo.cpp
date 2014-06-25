@@ -563,21 +563,36 @@ int main(int argc, char* argv[])
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
 
     // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(tk3,
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_sq = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(tk3,
                                                                                                                                                                 transport::derived_data::filter::time_filter(timeseries_filter),
                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
-    tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
-    tk3_zeta_redbsp.set_use_beta_label(true);
+    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
+    tk3_zeta_redbsp_sq.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_redbsp = transport::derived_data::time_series_plot<double>("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
-    tk3_redbsp.set_log_y(false);
-    tk3_redbsp.set_abs_y(false);
-    tk3_redbsp.add_line(tk3_zeta_redbsp);
-    tk3_redbsp.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
-    tk3_redbsp.set_title_text("Reduced bispectrum near squeezed configurations");
+    // and a few equilateral configurations
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp_eq = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(tk3,
+                                                                                                                                                                   transport::derived_data::filter::time_filter(timeseries_filter),
+                                                                                                                                                                   transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_equilateral));
+    tk3_zeta_redbsp_sq.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
+    tk3_zeta_redbsp_sq.set_use_beta_label(true);
 
-    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
-    tk3_redbsp_table.add_line(tk3_zeta_redbsp);
+    transport::derived_data::time_series_plot<double> tk3_redbsp_sq = transport::derived_data::time_series_plot<double>("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
+    tk3_redbsp_sq.set_log_y(false);
+    tk3_redbsp_sq.set_abs_y(false);
+    tk3_redbsp_sq.add_line(tk3_zeta_redbsp_sq);
+    tk3_redbsp_sq.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
+    tk3_redbsp_sq.set_title_text("Reduced bispectrum near squeezed configurations");
+
+    transport::derived_data::time_series_plot<double> tk3_redbsp_eq = transport::derived_data::time_series_plot<double>("axion.threepf-1.redbsp-eq", "redbsp-eq.pdf");
+		tk3_redbsp_eq.set_log_y(false);
+		tk3_redbsp_eq.set_abs_y(false);
+		tk3_redbsp_eq.add_line(tk3_zeta_redbsp_eq);
+		tk3_redbsp_eq.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_right);
+		tk3_redbsp_eq.set_title_text("Reduced bispectrum near equilateral configurations");
+
+    transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-table", "redbsp-table.txt");
+    tk3_redbsp_table.add_line(tk3_zeta_redbsp_sq);
+		tk3_redbsp_table.add_line(tk3_zeta_redbsp_eq);
 
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk3,
                                                                                                                                                  transport::derived_data::filter::time_filter(time_config_filter),
@@ -630,7 +645,7 @@ int main(int argc, char* argv[])
     fNLloc_plot.add_line(fNLloc_time_series);
     fNLloc_plot.add_line(fNLequi_time_series);
     fNLloc_plot.add_line(fNLortho_time_series);
-    fNLloc_plot.add_line(tk3_zeta_redbsp);
+    fNLloc_plot.add_line(tk3_zeta_redbsp_sq);
     fNLloc_plot.set_title(false);
 
     transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("axion.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
@@ -653,18 +668,18 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_twopf_real_plot);
     threepf_output.add_element(tk3_twopf_imag_plot);
     threepf_output.add_element(tk3_twopf_total_plot);
-		threepf_output.add_element(tk3_threepf_field_equi_plot);
-		threepf_output.add_element(tk3_threepf_field_equi_table);
+//		threepf_output.add_element(tk3_threepf_field_equi_plot);
+//		threepf_output.add_element(tk3_threepf_field_equi_table);
 //		threepf_output.add_element(tk3_threepf_mma_equi_plot);
 //		threepf_output.add_element(tk3_threepf_mma_equi_table);
-		threepf_output.add_element(tk3_threepf_deriv_equi_plot);
-		threepf_output.add_element(tk3_threepf_deriv_equi_table);
-    threepf_output.add_element(tk3_threepf_field_sq_plot);
-    threepf_output.add_element(tk3_threepf_field_sq_table);
+//		threepf_output.add_element(tk3_threepf_deriv_equi_plot);
+//		threepf_output.add_element(tk3_threepf_deriv_equi_table);
+//    threepf_output.add_element(tk3_threepf_field_sq_plot);
+//    threepf_output.add_element(tk3_threepf_field_sq_table);
 //    threepf_output.add_element(tk3_threepf_mma_sq_plot);
 //    threepf_output.add_element(tk3_threepf_mma_sq_table);
-    threepf_output.add_element(tk3_threepf_deriv_sq_plot);
-    threepf_output.add_element(tk3_threepf_deriv_sq_table);
+//    threepf_output.add_element(tk3_threepf_deriv_sq_plot);
+//    threepf_output.add_element(tk3_threepf_deriv_sq_table);
 //		threepf_output.add_element(tk3_mixed_plot);
 //    threepf_output.add_element(tk3_check_shift);
 //		threepf_output.add_element(tk3_check_shift_table);
@@ -673,7 +688,8 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_zeta_equi_table);
     threepf_output.add_element(tk3_zeta_sq);
 		threepf_output.add_element(tk3_zeta_sq_table);
-    threepf_output.add_element(tk3_redbsp);
+    threepf_output.add_element(tk3_redbsp_sq);
+		threepf_output.add_element(tk3_redbsp_eq);
     threepf_output.add_element(tk3_redbsp_table);
 		threepf_output.add_element(tk3_twopf_real_spec);
 //    threepf_output.add_element(tk3_twopf_imag_spec);
