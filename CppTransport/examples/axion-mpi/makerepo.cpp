@@ -641,17 +641,19 @@ int main(int argc, char* argv[])
     transport::derived_data::fNL_time_series<double> fNLortho_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
     fNLortho_time_series.set_type(transport::derived_data::fNL_line<double>::fNLortho);
 
-    transport::derived_data::time_series_plot<double> fNLloc_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.fNLlocal", "fNLlocal.pdf");
-    fNLloc_plot.add_line(fNLloc_time_series);
-    fNLloc_plot.add_line(fNLequi_time_series);
-    fNLloc_plot.add_line(fNLortho_time_series);
-    fNLloc_plot.add_line(tk3_zeta_redbsp_sq);
-    fNLloc_plot.set_title(false);
+    transport::derived_data::time_series_plot<double> fNL_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.fNL", "fNL.pdf");
+    fNL_plot.add_line(fNLloc_time_series);
+    fNL_plot.add_line(fNLequi_time_series);
+    fNL_plot.add_line(fNLortho_time_series);
+    fNL_plot.add_line(tk3_zeta_redbsp_sq);
+    fNL_plot.set_log_y(false);
+    fNL_plot.set_abs_y(false);
+    fNL_plot.set_title(false);
 
-    transport::derived_data::time_series_table<double> fNLloc_table = transport::derived_data::time_series_table<double>("axion.threepf-1.fNLlocal-table", "fNLlocal-table.txt");
-    fNLloc_table.add_line(fNLloc_time_series);
-    fNLloc_table.add_line(fNLequi_time_series);
-    fNLloc_table.add_line(fNLortho_time_series);
+    transport::derived_data::time_series_table<double> fNL_table = transport::derived_data::time_series_table<double>("axion.threepf-1.fNL-table", "fNL-table.txt");
+    fNL_table.add_line(fNLloc_time_series);
+    fNL_table.add_line(fNLequi_time_series);
+    fNL_table.add_line(fNLortho_time_series);
 
     std::cout << "3pf equilateral plot:" << std::endl << tk3_zeta_equi << std::endl;
 
@@ -704,8 +706,8 @@ int main(int argc, char* argv[])
 		threepf_output.add_element(tk3_redbsp_spec_plot);
 		threepf_output.add_element(tk3_redbsp_spec_table);
 
-    transport::output_task<double> fNLloc_task = transport::output_task<double>("axion.threepf-1.fNLlocal", fNLloc_plot);
-    fNLloc_task.add_element(fNLloc_table);
+    transport::output_task<double> fNLloc_task = transport::output_task<double>("axion.threepf-1.fNL", fNL_plot);
+    fNLloc_task.add_element(fNL_table);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
