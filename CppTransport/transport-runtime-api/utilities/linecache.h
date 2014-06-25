@@ -17,6 +17,7 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
+#include "boost/timer/timer.hpp"
 #include "boost/date_time/posix_time/posix_time.hpp"
 
 
@@ -60,6 +61,7 @@ namespace transport
 			        , copied(0)
 #endif
 			        {
+				        eviction_timer.stop();
 			        }
 
 				    //! Copy a cache object. After copying all of our contents we have to reset the
@@ -109,6 +111,10 @@ namespace transport
 				    //! Return total number of cache unloads
 				    unsigned int get_unloads() const { return(this->unload_counter); };
 
+				    //! Return time spent evicting cache lines
+				    boost::timer::nanosecond_type get_eviction_timer() const { return(this->eviction_timer.elapsed().wall); }
+
+
 		        // TABLE MANAGEMENT
 
 		      public:
@@ -135,6 +141,9 @@ namespace transport
 
 				    //! Unload counter - how many times do we have to unload a cache line? Too many and we need a larger cache
 				    unsigned int unload_counter;
+
+				    //! Eviction timer - how long do we spend evicting cache lines?
+				    boost::timer::cpu_timer eviction_timer;
 
 		        //! List of tables belonging to this cache.
 				    //! We use a list because iterators pointing to list elements
@@ -458,6 +467,8 @@ namespace transport
 
 						if(this->data_size > this->capacity)   // run evictions if we are now too large
 							{
+								this->eviction_timer.start();
+
 								// build a list of data items on which to run clean-up
 						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator > clean_up_list;
 
@@ -466,13 +477,17 @@ namespace transport
 								    (*t).gather_data_items(clean_up_list);
 									}
 
-								// set up a lambda to sort the list is data items into ascending order of size
+								// set up a lambda to sort the list is data items into ascending least-recently used
 						    struct DataItemSorter
 							    {
 						        bool operator()(const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& a,
 						                        const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& b)
 							        {
-						            return (*a).get_last_access_time() < (*b).get_last_access_time();
+								        // lower priority go at front of queue
+								        if((*a).get_tag()->get_priority() != (*b).get_tag()->get_priority()) return (*a).get_tag()->get_priority() < (*b).get_tag()->get_priority();
+
+								        // older items go nearer the front of the queue
+						            return (*a).get_last_access_time() > (*b).get_last_access_time();
 							        }
 							    };
 
@@ -504,6 +519,8 @@ namespace transport
 										    this->unload_counter++;
 									    }
 									}
+
+								this->eviction_timer.stop();
 							}
 					}
 
@@ -597,7 +614,7 @@ namespace transport
 								t = this->cache[hash].begin();
 
 								// update size data - note that advising the cache of a size increase could lead to evictions,
-								// but cannot evict the data item we have just created because it is locked by
+								// but this cannot evict the data item we have just created because it is locked by
 								// default -- until we explicitly unlock it below
 								this->parent_cache->advise_size_increase((*t).get_size());
 

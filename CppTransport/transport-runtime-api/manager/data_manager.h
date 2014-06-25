@@ -675,6 +675,9 @@ namespace transport
 								//! identify this tag
 								std::string name() const { return(std::string("time config")); }
 
+								//! get priority
+								constexpr unsigned int get_priority() const { return(0); }
+
 
 								// CLONE
 
@@ -734,6 +737,9 @@ namespace transport
 				        //! identify this tag
 				        std::string name() const { return(std::string("twopf k-config")); }
 
+				        //! get priority
+				        constexpr unsigned int get_priority() const { return(0); }
+
 
 				        // CLONE
 
@@ -792,6 +798,9 @@ namespace transport
 
 				        //! identify this tag
 				        std::string name() const { return(std::string("threepf k-config")); }
+
+				        //! get priority
+				        constexpr unsigned int get_priority() const { return(0); }
 
 
 				        // CLONE
@@ -853,6 +862,9 @@ namespace transport
 						    //! virtual function to identify this tag
 						    virtual std::string name() const = 0;
 
+				        //! get priority
+				        virtual unsigned int get_priority() const = 0;
+
 				        // CLONE
 
 				      public:
@@ -907,6 +919,9 @@ namespace transport
 
 				        //! identify this tag
 				        virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
+
+				        //! get priority
+				        virtual unsigned int get_priority() const override { return(0); }
 
 
 				        // CLONE
@@ -963,6 +978,9 @@ namespace transport
 
 				        //! identify this tag
 				        virtual std::string name() const override;
+
+				        //! get priority
+				        virtual unsigned int get_priority() const override { return(0); }
 
 
 				        // CLONE
@@ -1026,6 +1044,9 @@ namespace transport
 						    //! identify this tag
 						    virtual std::string name() const override;
 
+				        //! get priority
+				        virtual unsigned int get_priority() const override { return(0); }
+
 
 						    // CLONE
 
@@ -1087,6 +1108,9 @@ namespace transport
 
 						    //! identify this tag
 						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); };
+
+				        //! get priority
+				        virtual unsigned int get_priority() const override { return(1); }
 
 
 						    // CLONE
@@ -1153,6 +1177,9 @@ namespace transport
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); };
 
+		            //! get priority
+		            virtual unsigned int get_priority() const override { return(1); }
+
 
 		            // CLONE
 
@@ -1217,6 +1244,9 @@ namespace transport
 
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); };
+
+		            //! get priority
+		            virtual unsigned int get_priority() const override { return(1); }
 
 
 		            // CLONE
@@ -1283,6 +1313,9 @@ namespace transport
 						    //! identify this tag
 						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); };;
 
+				        //! get priority
+				        virtual unsigned int get_priority() const override { return(1); }
+
 
 						    // CLONE
 
@@ -1348,6 +1381,9 @@ namespace transport
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); };;
 
+		            //! get priority
+		            virtual unsigned int get_priority() const override { return(1); }
+
 
 		            // CLONE
 
@@ -1412,6 +1448,9 @@ namespace transport
 
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); };;
+
+		            //! get priority
+		            virtual unsigned int get_priority() const override { return(1); }
 
 
 		            // CLONE
@@ -1516,7 +1555,7 @@ namespace transport
 		      public:
 
 				    //! Get total time spent reading database
-				    const boost::timer::nanosecond_type get_database_time() const { return(this->database_timer.elapsed().wall); }
+				    boost::timer::nanosecond_type get_database_time() const { return(this->database_timer.elapsed().wall); }
 
 				    //! Get total time-config cache hits
 				    unsigned int get_time_config_cache_hits() const { return(this->time_config_cache.get_hits()); }
@@ -1542,6 +1581,19 @@ namespace transport
 
 		        //! Get total data cache unloads
 		        unsigned int get_data_cache_unloads() const { return(this->data_cache.get_unloads()); }
+
+
+				    //! Get total eviction time for time-config cache
+				    boost::timer::nanosecond_type get_time_config_cache_evictions() const { return(this->time_config_cache.get_eviction_timer()); }
+
+				    //! Get total eviction time for twopf k-config cache unloads
+				    boost::timer::nanosecond_type get_twopf_kconfig_cache_evictions() const { return(this->twopf_kconfig_cache.get_eviction_timer()); }
+
+				    //! Get total eviction time for threepf k-config cache unloads
+				    boost::timer::nanosecond_type get_threepf_kconfig_cache_evictions() const { return(this->threepf_kconfig_cache.get_eviction_timer()); }
+
+				    //! Get total eviction time for data cache
+				    boost::timer::nanosecond_type get_data_cache_evictions() const { return(this->data_cache.get_unloads()); }
 
 
 		        // ATTACH, DETACH OUTPUT GROUPS
@@ -2326,7 +2378,12 @@ namespace transport
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration cache hits      = " << this->time_config_cache.get_hits() << " | unloads = " << this->time_config_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-data cache hits:              = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 

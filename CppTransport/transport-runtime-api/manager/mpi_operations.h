@@ -382,45 +382,61 @@ namespace transport
 		                                     const unsigned int tc, const unsigned int tc_u,
 		                                     const unsigned int twopf_k, const unsigned int twopf_k_u,
 		                                     const unsigned int threepf_k, const unsigned int threepf_k_u,
-		                                     const unsigned int td, const unsigned int td_u)
+		                                     const unsigned int td, const unsigned int td_u,
+		                                     const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
+		                                     const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de)
 			            : database_time(db),
 			              cpu_time(cpu),
 			              time_config_hits(tc), time_config_unloads(tc_u),
 			              twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
 			              threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
-			              data_hits(td), data_unloads(td_u)
+			              data_hits(td), data_unloads(td_u),
+		                time_config_evictions(tce), twopf_kconfig_evictions(twopf_e),
+		                threepf_kconfig_evictions(threepf_e), data_evictions(de)
 			            {
 			            }
 
 		            //! Get database time
-		            boost::timer::nanosecond_type  get_database_time()           const { return(this->database_time); }
+		            boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
 
 				        //! Get total CPU time
-				        boost::timer::nanosecond_type  get_cpu_time()                const { return(this->cpu_time); }
+				        boost::timer::nanosecond_type  get_cpu_time()                  const { return(this->cpu_time); }
 
 				        //! Get time config hits
-				        unsigned int                   get_time_config_hits()        const { return(this->time_config_hits); }
+				        unsigned int                   get_time_config_hits()          const { return(this->time_config_hits); }
 
 				        //! Get twopf kconfig hits
-				        unsigned int                   get_twopf_kconfig_hits()      const { return(this->twopf_kconfig_hits); }
+				        unsigned int                   get_twopf_kconfig_hits()        const { return(this->twopf_kconfig_hits); }
 
 				        //! Get threepf kconfig hits
-				        unsigned int                   get_threepf_kconfig_hits()    const { return(this->threepf_kconfig_hits); }
+				        unsigned int                   get_threepf_kconfig_hits()      const { return(this->threepf_kconfig_hits); }
 
 				        //! Get time-data hits
-				        unsigned int                   get_data_hits()               const { return(this->data_hits); }
+				        unsigned int                   get_data_hits()                 const { return(this->data_hits); }
 
 		            //! Get time config unloads
-		            unsigned int                   get_time_config_unloads()     const { return(this->time_config_unloads); }
+		            unsigned int                   get_time_config_unloads()       const { return(this->time_config_unloads); }
 
 		            //! Get twopf kconfig unloads
-		            unsigned int                   get_twopf_kconfig_unloads()   const { return(this->twopf_kconfig_unloads); }
+		            unsigned int                   get_twopf_kconfig_unloads()     const { return(this->twopf_kconfig_unloads); }
 
 		            //! Get threepf kconfig unloads
-		            unsigned int                   get_threepf_kconfig_unloads() const { return(this->threepf_kconfig_unloads); }
+		            unsigned int                   get_threepf_kconfig_unloads()   const { return(this->threepf_kconfig_unloads); }
 
 		            //! Get time-data unloads
-		            unsigned int                   get_data_unloads()            const { return(this->data_unloads); }
+		            unsigned int                   get_data_unloads()              const { return(this->data_unloads); }
+
+				        //! Get time-config cache evictions
+				        boost::timer::nanosecond_type  get_time_config_evictions()     const { return(this->time_config_evictions); }
+
+				        //! Get twopf k-config cache evictions
+				        boost::timer::nanosecond_type  get_twopf_kconfig_evictions()   const { return(this->twopf_kconfig_evictions); }
+
+				        //! Get threepf k-config cache evictions
+				        boost::timer::nanosecond_type  get_threepf_kconfig_evictions() const { return(this->threepf_kconfig_evictions); }
+
+				        //! Get data cache evictions
+				        boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
 
 
 		          private:
@@ -455,6 +471,18 @@ namespace transport
 				        //! Number of data cache unloads
 				        unsigned int data_unloads;
 
+				        //! Time spent doing time-config cache evictions
+				        boost::timer::nanosecond_type time_config_evictions;
+
+				        //! Time spent doing twopf k-config cache evictions
+				        boost::timer::nanosecond_type twopf_kconfig_evictions;
+
+				        //! Time spent doing threepf k-config cache evictions
+				        boost::timer::nanosecond_type threepf_kconfig_evictions;
+
+				        //! Time spent doing data cache evictions
+				        boost::timer::nanosecond_type data_evictions;
+
 		            // enable boost::serialization support, and hence automated packing for transmission over MPI
 		            friend class boost::serialization::access;
 
@@ -471,6 +499,10 @@ namespace transport
 				            ar & threepf_kconfig_unloads;
 				            ar & data_hits;
 				            ar & data_unloads;
+				            ar & time_config_evictions;
+				            ar & twopf_kconfig_evictions;
+				            ar & threepf_kconfig_evictions;
+				            ar & data_evictions;
 			            }
 			        };
 

@@ -1020,6 +1020,11 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache hits                   = " << metadata.twopf_kconfig_hits << ", unloads = " << metadata.twopf_kconfig_unloads;
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache hits                 = " << metadata.threepf_kconfig_hits << ", unloads = " << metadata.threepf_kconfig_unloads;
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache hits                             = " << metadata.data_hits << ", unloads = " << metadata.data_unloads;
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time config cache evictions                 = " << format_time(metadata.time_config_evictions);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache evictions              = " << format_time(metadata.twopf_kconfig_evictions);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache evictions            = " << format_time(metadata.threepf_kconfig_evictions);
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache evictions                        = " << format_time(metadata.data_evictions);
 
 		    return(success);
       }
@@ -1079,16 +1084,20 @@ namespace transport
 		template <typename number>
 		void task_manager<number>::update_output_metadata(MPI::finished_derived_payload& payload, typename repository<number>::output_metadata& metadata)
 			{
-		    metadata.work_time               += payload.get_cpu_time();
-		    metadata.db_time                 += payload.get_database_time();
-		    metadata.time_config_hits        += payload.get_time_config_hits();
-		    metadata.time_config_unloads     += payload.get_time_config_unloads();
-		    metadata.twopf_kconfig_hits      += payload.get_twopf_kconfig_hits();
-		    metadata.twopf_kconfig_unloads   += payload.get_twopf_kconfig_unloads();
-		    metadata.threepf_kconfig_hits    += payload.get_threepf_kconfig_hits();
-		    metadata.threepf_kconfig_unloads += payload.get_threepf_kconfig_unloads();
-		    metadata.data_hits               += payload.get_data_hits();
-		    metadata.data_unloads            += payload.get_data_unloads();
+		    metadata.work_time                 += payload.get_cpu_time();
+		    metadata.db_time                   += payload.get_database_time();
+		    metadata.time_config_hits          += payload.get_time_config_hits();
+		    metadata.time_config_unloads       += payload.get_time_config_unloads();
+		    metadata.twopf_kconfig_hits        += payload.get_twopf_kconfig_hits();
+		    metadata.twopf_kconfig_unloads     += payload.get_twopf_kconfig_unloads();
+		    metadata.threepf_kconfig_hits      += payload.get_threepf_kconfig_hits();
+		    metadata.threepf_kconfig_unloads   += payload.get_threepf_kconfig_unloads();
+		    metadata.data_hits                 += payload.get_data_hits();
+		    metadata.data_unloads              += payload.get_data_unloads();
+				metadata.time_config_evictions     += payload.get_time_config_evictions();
+				metadata.twopf_kconfig_evictions   += payload.get_twopf_kconfig_evictions();
+				metadata.threepf_kconfig_evictions += payload.get_threepf_kconfig_evictions();
+				metadata.data_evictions            += payload.get_data_evictions();
 			}
 
 
@@ -1523,7 +1532,9 @@ namespace transport
 		                                                 pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
 		                                                 pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
 		                                                 pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-		                                                 pipe.get_data_cache_hits(), pipe.get_data_cache_unloads());
+		                                                 pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
+		                                                 pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
+		                                                 pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions());
 
 		    this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
 			}
