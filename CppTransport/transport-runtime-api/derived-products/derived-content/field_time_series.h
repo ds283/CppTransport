@@ -175,6 +175,7 @@ namespace transport
                   {
 										typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(this->mdl->flatten(m));
 
+                    // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
                     data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::background_field,
@@ -319,7 +320,7 @@ namespace transport
             this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double>& time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
@@ -328,7 +329,7 @@ namespace transport
 		        // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
 
-		        const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
@@ -345,6 +346,7 @@ namespace transport
 					                                                                              pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
 					                                                                                                        this->mdl->flatten(m,n), this->kconfig_sample_sns[i]);
 
+                            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
 		                        std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
@@ -484,7 +486,7 @@ namespace transport
             this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double>& time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
@@ -493,7 +495,7 @@ namespace transport
 		        // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
 
-		        const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
@@ -511,7 +513,6 @@ namespace transport
 			                        {
 				                        typename data_manager<number>::datapipe::cf_time_data_tag tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
 
-				                        // have to take a copy of the data, rather than use a reference, because we are going to modify it in-place
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
 		                            // the integrator produces correlation functions involving the canonical momenta,

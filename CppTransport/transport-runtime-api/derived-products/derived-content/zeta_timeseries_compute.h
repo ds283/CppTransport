@@ -149,6 +149,7 @@ namespace transport
               {
                 typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
 
+                // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
 
                 assert(bg_line.size() == background.size());

@@ -77,7 +77,7 @@ namespace transport
 		      public:
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
-		        const std::vector<double>& pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
+		        const std::vector<double> pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
 
 
 				    // LABELLING SERVICES
@@ -149,7 +149,7 @@ namespace transport
 
 
 		    template <typename number>
-		    const std::vector<double>& time_series<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe) const
+		    const std::vector<double> time_series<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe) const
 			    {
 		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 

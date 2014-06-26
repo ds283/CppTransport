@@ -123,13 +123,13 @@ namespace transport
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::twopf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
 		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
 
-                // time-line for zeta will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
@@ -259,7 +259,7 @@ namespace transport
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
@@ -267,7 +267,7 @@ namespace transport
 
 		            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
-                // time-line for zeta will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
@@ -399,7 +399,7 @@ namespace transport
 
             // pull k-configuration information from the database
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
+            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
@@ -407,7 +407,7 @@ namespace transport
 
 		            typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 
-                // time-line for the reduced bispectrum will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";

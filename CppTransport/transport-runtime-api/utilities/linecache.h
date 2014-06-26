@@ -406,7 +406,11 @@ namespace transport
 
 						// CACHE LOOKUP
 
-						//! Lookup data in the cache
+						//! Lookup data in the cache.
+            //! Returns a reference, but client code *must* take a copy, but just link to the reference - the referenced data
+            //! is not guaranteed to persist after a subsequent call to lookup_tag(), because it might be
+            //! unloaded from the cache before that point.
+            //! The reference is valid to remain valid between calls to lookup_tag().
 						const DataContainer& lookup_tag(DataTag& tag);
 
 
@@ -467,8 +471,6 @@ namespace transport
 
 						if(this->data_size > this->capacity)   // run evictions if we are now too large
 							{
-                std::cerr << "-- Cache full, evicting lines" << std::endl;
-                boost::timer::cpu_timer timer;
 								this->eviction_timer.start();
 
 								// build a list of data items on which to run clean-up
@@ -493,9 +495,13 @@ namespace transport
 								// sort queue
 								clean_up_list.sort(DataItemSorter());
 
-								// work through the queue, evicting items until we have saved sufficient space
+								// work through the queue, evicting items until we have saved sufficient space.
+                // Because there is an overhead in building the clean-up list (and sorting it),
+                // we evict more items than are necessary in order that repeated requests
+                // for cache line of a similar size don't all result in clean_up operations
 						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >::iterator t = clean_up_list.begin();
-								while(this->data_size > this->capacity && t != clean_up_list.end())
+                unsigned int target_size = static_cast<unsigned int>(std::max(static_cast<int>(this->capacity) - 10*static_cast<int>(this->data_size), 0));
+								while(this->data_size > target_size && t != clean_up_list.end())
 									{
 								    if(!(*(*t)).get_locked())   // can't evict this item if it is locked
 									    {
@@ -517,11 +523,10 @@ namespace transport
 
 										    this->unload_counter++;
 									    }
+                    t++;
 									}
 
 								this->eviction_timer.stop();
-                timer.stop();
-                std::cerr << "-- Evicted lines in " << format_time(timer.elapsed().wall);
 							}
 					}
 

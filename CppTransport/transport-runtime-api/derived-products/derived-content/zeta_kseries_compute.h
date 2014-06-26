@@ -155,6 +155,7 @@ namespace transport
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
                 typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
+                // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == tsample.size());
 
@@ -340,14 +341,14 @@ namespace transport
                             typename data_manager<number>::datapipe::cf_kconfig_data_tag k3_re_mq_tag = h.get()->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h.get()->mdl->flatten(m,q), h.get()->time_sample_sns[tindex]);
                             typename data_manager<number>::datapipe::cf_kconfig_data_tag k3_im_mq_tag = h.get()->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h.get()->mdl->flatten(m,q), h.get()->time_sample_sns[tindex]);
 
-                            const std::vector<number>& k1_re_lp = k1_handle.lookup_tag(k1_re_lp_tag);
-                            const std::vector<number>& k1_im_lp = k1_handle.lookup_tag(k1_im_lp_tag);
-                            const std::vector<number>& k2_re_lp = k2_handle.lookup_tag(k2_re_lp_tag);
-                            const std::vector<number>& k2_im_lp = k2_handle.lookup_tag(k2_im_lp_tag);
-                            const std::vector<number>& k2_re_mq = k2_handle.lookup_tag(k2_re_mq_tag);
-                            const std::vector<number>& k2_im_mq = k2_handle.lookup_tag(k2_im_mq_tag);
-                            const std::vector<number>& k3_re_mq = k3_handle.lookup_tag(k3_re_mq_tag);
-                            const std::vector<number>& k3_im_mq = k3_handle.lookup_tag(k3_im_mq_tag);
+                            const std::vector<number> k1_re_lp = k1_handle.lookup_tag(k1_re_lp_tag);
+                            const std::vector<number> k1_im_lp = k1_handle.lookup_tag(k1_im_lp_tag);
+                            const std::vector<number> k2_re_lp = k2_handle.lookup_tag(k2_re_lp_tag);
+                            const std::vector<number> k2_im_lp = k2_handle.lookup_tag(k2_im_lp_tag);
+                            const std::vector<number> k2_re_mq = k2_handle.lookup_tag(k2_re_mq_tag);
+                            const std::vector<number> k2_im_mq = k2_handle.lookup_tag(k2_im_mq_tag);
+                            const std::vector<number> k3_re_mq = k3_handle.lookup_tag(k3_re_mq_tag);
+                            const std::vector<number> k3_im_mq = k3_handle.lookup_tag(k3_im_mq_tag);
 
                             for(unsigned int j = 0; j < h.get()->kconfig_sample_sns.size(); j++)
                               {
@@ -408,7 +409,8 @@ namespace transport
 
             // extract k-configuration data
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h.get()->pipe.new_threepf_kconfig_tag();
-            std::vector< typename data_manager<number>::threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
+            // safe to take a reference here and avoid a copy
+            const std::vector< typename data_manager<number>::threepf_configuration >& configs = kc_handle.lookup_tag(k_tag);
 
             // zip lists of serial numbers for each of the k1, k2, k3 configurations
             std::vector<unsigned int> k1_serials;

@@ -245,6 +245,7 @@ namespace transport
             typename data_manager<number>::datapipe::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
             typename data_manager<number>::datapipe::threepf_kconfig_tag tag = pipe.new_threepf_kconfig_tag();
 
+            // safe to take a reference here
             const std::vector< typename data_manager<number>::threepf_configuration >& configs = handle.lookup_tag(tag);
 
             axis.clear();

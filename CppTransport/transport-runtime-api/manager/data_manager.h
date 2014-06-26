@@ -2855,7 +2855,7 @@ namespace transport
         time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
         time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
@@ -2877,7 +2877,7 @@ namespace transport
         time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
         time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
@@ -2899,7 +2899,7 @@ namespace transport
         time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
         time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
@@ -2924,7 +2924,7 @@ namespace transport
 				time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
 				time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-				const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+				const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
 				// set up handle for compute delegate
 		    std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
@@ -2949,7 +2949,7 @@ namespace transport
         time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
         time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
@@ -2974,7 +2974,7 @@ namespace transport
         time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
         time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double>& time_values = tc_handle.lookup_tag(tc_tag);
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
         std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);

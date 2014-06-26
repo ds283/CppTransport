@@ -121,7 +121,7 @@ namespace transport
 
 				    // pull time-configuration information from the database
 				    typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-				    const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
+				    const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 				    // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -136,6 +136,7 @@ namespace transport
 								            typename data_manager<number>::datapipe::cf_kconfig_data_tag tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
 								                                                                                                            this->mdl->flatten(m,n), this->time_sample_sns[i]);
 
+                            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = k_handle.lookup_tag(tag);
 
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
@@ -280,14 +281,14 @@ namespace transport
 
             // pull time-configuration information from the database
             typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-            const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
+            const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
             // pull the background field configuration for each time sample point
             std::vector< std::vector<number> > background(this->time_sample_sns.size());
             for(unsigned int i = 0; i < 2*N_fields; i++)
 	            {
                 typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
-                const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
+                const std::vector<number> bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == this->time_sample_sns.size());
 
                 for(unsigned int j = 0; j < this->time_sample_sns.size(); j++)
@@ -314,7 +315,6 @@ namespace transport
 			                        {
 		                            typename data_manager<number>::datapipe::cf_kconfig_data_tag tag = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_threepf, this->mdl->flatten(l,m,n), this->time_sample_sns[i]);
 
-				                        // have to take a copy of the data, rather than use a reference, because we are going to modify it in-place
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
 
 				                        // the integrator produces correlation functions involving the canonical momenta,

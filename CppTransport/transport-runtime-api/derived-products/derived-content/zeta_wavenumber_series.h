@@ -119,14 +119,14 @@ namespace transport
 
             // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-		        const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
+		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
 				        typename data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
-                // information for zeta will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
@@ -267,7 +267,7 @@ namespace transport
 
             // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-		        const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
+		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -276,7 +276,7 @@ namespace transport
 
 				        typename data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag tag = pipe.new_zeta_threepf_kconfig_data_tag(this->time_sample_sns[i]);
 
-                // information for zeta will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
@@ -409,7 +409,7 @@ namespace transport
 
 		        // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
-		        const std::vector<double>& t_values = tc_handle.lookup_tag(t_tag);
+		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
@@ -418,7 +418,7 @@ namespace transport
 
 				        typename data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag tag = pipe.new_zeta_reduced_bispectrum_kconfig_data_tag(this->time_sample_sns[i]);
 
-                // information for zeta will be stored in 'line_data'
+                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";

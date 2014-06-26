@@ -118,6 +118,7 @@ namespace transport
 		        for(unsigned int i = 0; i < 2*N_fields; i++)
 			        {
 		            typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
+                // safe to take a reference here and avoid a copy
 		            const std::vector<number>& bg_line = handle.lookup_tag(tag);
 
 		            assert(bg_line.size() == background.size());
@@ -209,14 +210,14 @@ namespace transport
 		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_r_id, r_config.serial());
 		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_r_id, r_config.serial());
 
-		            const std::vector<number>& q_line_re     = t_handle.lookup_tag(q_re_tag);
-		            const std::vector<number>& q_line_im     = t_handle.lookup_tag(q_im_tag);
-		            const std::vector<number>& mom_q_line_re = t_handle.lookup_tag(mom_q_re_tag);
-		            const std::vector<number>& mom_q_line_im = t_handle.lookup_tag(mom_q_im_tag);
-		            const std::vector<number>& r_line_re     = t_handle.lookup_tag(r_re_tag);
-		            const std::vector<number>& r_line_im     = t_handle.lookup_tag(r_im_tag);
-		            const std::vector<number>& mom_r_line_re = t_handle.lookup_tag(mom_r_re_tag);
-		            const std::vector<number>& mom_r_line_im = t_handle.lookup_tag(mom_r_im_tag);
+		            const std::vector<number> q_line_re     = t_handle.lookup_tag(q_re_tag);
+		            const std::vector<number> q_line_im     = t_handle.lookup_tag(q_im_tag);
+		            const std::vector<number> mom_q_line_re = t_handle.lookup_tag(mom_q_re_tag);
+		            const std::vector<number> mom_q_line_im = t_handle.lookup_tag(mom_q_im_tag);
+		            const std::vector<number> r_line_re     = t_handle.lookup_tag(r_re_tag);
+		            const std::vector<number> r_line_im     = t_handle.lookup_tag(r_im_tag);
+		            const std::vector<number> mom_r_line_re = t_handle.lookup_tag(mom_r_re_tag);
+		            const std::vector<number> mom_r_line_im = t_handle.lookup_tag(mom_r_im_tag);
 
 		            for(unsigned int j = 0; j < line_data.size(); j++)
 			            {

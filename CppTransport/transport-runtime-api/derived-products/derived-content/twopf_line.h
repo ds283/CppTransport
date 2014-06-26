@@ -282,6 +282,7 @@ namespace transport
 				    typename data_manager<number>::datapipe::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
 				    typename data_manager<number>::datapipe::twopf_kconfig_tag tag = pipe.new_twopf_kconfig_tag();
 
+            // safe to take a reference here and avoid a copy
 				    const std::vector< typename data_manager<number>::twopf_configuration >& configs = handle.lookup_tag(tag);
 
 				    axis.clear();
