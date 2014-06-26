@@ -132,11 +132,10 @@ namespace transport
 
             // set up cache handles
             typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(kserials);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull 3pf k-configuration information from the database
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-
             const typename std::vector< typename data_manager<number>::threepf_configuration >& k_values = kc_handle.lookup_tag(k_tag);
 
             // time-line will be stored in 'line_data'
@@ -150,7 +149,7 @@ namespace transport
 								typename data_manager<number>::datapipe::zeta_threepf_time_data_tag bsp_tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
                 // pull bispectrum information for this triangle
-                const std::vector<number>& bispectrum = t_handle.lookup_tag(bsp_tag);
+                const std::vector<number>& bispectrum = z_handle.lookup_tag(bsp_tag);
 
                 typename data_manager<number>::twopf_configuration k1;
                 typename data_manager<number>::twopf_configuration k2;
@@ -172,9 +171,9 @@ namespace transport
                 typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = pipe.new_zeta_twopf_time_data_tag(k2);
                 typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = pipe.new_zeta_twopf_time_data_tag(k3);
 
-                const std::vector<number>& twopf_k1 = t_handle.lookup_tag(k1_tag);
-                const std::vector<number>& twopf_k2 = t_handle.lookup_tag(k2_tag);
-                const std::vector<number>& twopf_k3 = t_handle.lookup_tag(k3_tag);
+                const std::vector<number>& twopf_k1 = z_handle.lookup_tag(k1_tag);
+                const std::vector<number>& twopf_k2 = z_handle.lookup_tag(k2_tag);
+                const std::vector<number>& twopf_k3 = z_handle.lookup_tag(k3_tag);
 
                 std::vector<number> S_bispectrum;
                 std::vector<number> S_template;

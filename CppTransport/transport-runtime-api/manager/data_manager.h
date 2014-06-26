@@ -21,6 +21,8 @@
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/linecache.h"
 
+#include "transport-runtime-api/defaults.h"
+
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -43,9 +45,6 @@
 
 // default size of line cache hash table
 #define __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE (1024)
-
-// default size of the k-configuration caches - 1 Mb
-#define __CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE (1*1024*1024)
 
 //#define __CPP_TRANSPORT_DEBUG_DATAPIPE
 
@@ -675,9 +674,6 @@ namespace transport
 								//! identify this tag
 								std::string name() const { return(std::string("time config")); }
 
-								//! get priority
-								constexpr unsigned int get_priority() const { return(0); }
-
 
 								// CLONE
 
@@ -737,9 +733,6 @@ namespace transport
 				        //! identify this tag
 				        std::string name() const { return(std::string("twopf k-config")); }
 
-				        //! get priority
-				        constexpr unsigned int get_priority() const { return(0); }
-
 
 				        // CLONE
 
@@ -798,9 +791,6 @@ namespace transport
 
 				        //! identify this tag
 				        std::string name() const { return(std::string("threepf k-config")); }
-
-				        //! get priority
-				        constexpr unsigned int get_priority() const { return(0); }
 
 
 				        // CLONE
@@ -862,9 +852,6 @@ namespace transport
 						    //! virtual function to identify this tag
 						    virtual std::string name() const = 0;
 
-				        //! get priority
-				        virtual unsigned int get_priority() const = 0;
-
 				        // CLONE
 
 				      public:
@@ -919,9 +906,6 @@ namespace transport
 
 				        //! identify this tag
 				        virtual std::string name() const override { std::ostringstream msg; msg << "background field " << id; return(msg.str()); }
-
-				        //! get priority
-				        virtual unsigned int get_priority() const override { return(0); }
 
 
 				        // CLONE
@@ -978,9 +962,6 @@ namespace transport
 
 				        //! identify this tag
 				        virtual std::string name() const override;
-
-				        //! get priority
-				        virtual unsigned int get_priority() const override { return(0); }
 
 
 				        // CLONE
@@ -1044,9 +1025,6 @@ namespace transport
 						    //! identify this tag
 						    virtual std::string name() const override;
 
-				        //! get priority
-				        virtual unsigned int get_priority() const override { return(0); }
-
 
 						    // CLONE
 
@@ -1108,9 +1086,6 @@ namespace transport
 
 						    //! identify this tag
 						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); };
-
-				        //! get priority
-				        virtual unsigned int get_priority() const override { return(1); }
 
 
 						    // CLONE
@@ -1177,9 +1152,6 @@ namespace transport
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); };
 
-		            //! get priority
-		            virtual unsigned int get_priority() const override { return(1); }
-
 
 		            // CLONE
 
@@ -1244,9 +1216,6 @@ namespace transport
 
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); };
-
-		            //! get priority
-		            virtual unsigned int get_priority() const override { return(1); }
 
 
 		            // CLONE
@@ -1313,9 +1282,6 @@ namespace transport
 						    //! identify this tag
 						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); };;
 
-				        //! get priority
-				        virtual unsigned int get_priority() const override { return(1); }
-
 
 						    // CLONE
 
@@ -1381,9 +1347,6 @@ namespace transport
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); };;
 
-		            //! get priority
-		            virtual unsigned int get_priority() const override { return(1); }
-
 
 		            // CLONE
 
@@ -1448,9 +1411,6 @@ namespace transport
 
 		            //! identify this tag
 		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); };;
-
-		            //! get priority
-		            virtual unsigned int get_priority() const override { return(1); }
 
 
 		            // CLONE
@@ -1569,6 +1529,9 @@ namespace transport
 				    //! Get total data cache hits
 				    unsigned int get_data_cache_hits() const { return(this->data_cache.get_hits()); }
 
+            //! Get total zeta cache hits
+            unsigned int get_zeta_cache_hits() const { return(this->zeta_cache.get_hits()); }
+
 
 		        //! Get total time-config cache unloads
 		        unsigned int get_time_config_cache_unloads() const { return(this->time_config_cache.get_unloads()); }
@@ -1582,6 +1545,9 @@ namespace transport
 		        //! Get total data cache unloads
 		        unsigned int get_data_cache_unloads() const { return(this->data_cache.get_unloads()); }
 
+            //! Get total zeta cache unloads
+            unsigned int get_zeta_cache_unloads() const { return(this->zeta_cache.get_unloads()); }
+
 
 				    //! Get total eviction time for time-config cache
 				    boost::timer::nanosecond_type get_time_config_cache_evictions() const { return(this->time_config_cache.get_eviction_timer()); }
@@ -1594,6 +1560,9 @@ namespace transport
 
 				    //! Get total eviction time for data cache
 				    boost::timer::nanosecond_type get_data_cache_evictions() const { return(this->data_cache.get_unloads()); }
+
+            //! Get total eviction time for zeta cache
+            boost::timer::nanosecond_type get_zeta_cache_evictions() const { return(this->zeta_cache.get_unloads()); }
 
 
 		        // ATTACH, DETACH OUTPUT GROUPS
@@ -1632,6 +1601,8 @@ namespace transport
 				    typedef linecache::serial_group< std::vector<threepf_configuration>, threepf_kconfig_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > threepf_kconfig_handle;
 				    typedef linecache::serial_group< std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_data_handle;
 				    typedef linecache::serial_group< std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_data_handle;
+            typedef linecache::serial_group< std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > time_zeta_handle;
+            typedef linecache::serial_group< std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE > kconfig_zeta_handle;
 
 				    //! Generate a serial-group handle for a set of time-configuration serial numbers
 				    time_config_handle& new_time_config_handle(const std::vector<unsigned int>& sns) const;
@@ -1647,6 +1618,12 @@ namespace transport
 
 				    //! Generate a serial-group handle for a set of kconfig-data serial numbers
 				    kconfig_data_handle& new_kconfig_data_handle(const std::vector<unsigned int>& sns) const;
+
+            //! Generate a serial-group handle for a set of zeta time-serial numbers
+            time_zeta_handle& new_time_zeta_handle(const std::vector<unsigned int>& sns) const;
+
+            //! Generate a serial-group handle fora set of zeta kconfig-serial numbers
+            kconfig_zeta_handle& new_kconfig_zeta_handle(const std::vector<unsigned int>& sns) const;
 
 				    //! Generate a new time-configuration tag
 				    time_config_tag new_time_config_tag();
@@ -1718,6 +1695,9 @@ namespace transport
 		        //! data cache
 		        linecache::cache<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> data_cache;
 
+            //! zeta cache
+            linecache::cache<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE> zeta_cache;
+
 
 				    // CACHE TABLES
 
@@ -1732,6 +1712,9 @@ namespace transport
 
 		        //! data cache table for currently-attached group; null if no group is attached
 		        linecache::table<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* data_cache_table;
+
+            //! zeta cache table for currently-attached group; null if no group is attached
+            linecache::table<std::vector<number>, data_tag, serial_group_tag, __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE>* zeta_cache_table;
 
 
 				    // PROPERTIES
@@ -2329,10 +2312,12 @@ namespace transport
 	      twopf_kconfig_cache_table(nullptr),
 	      threepf_kconfig_cache_table(nullptr),
 	      data_cache_table(nullptr),
+        zeta_cache_table(nullptr),
 	      time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(cap),
+        zeta_cache(__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE),
         attached_task(nullptr)
 	    {
         this->database_timer.stop();
@@ -2379,11 +2364,13 @@ namespace transport
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration cache hits   = " << this->twopf_kconfig_cache.get_hits() << " | unloads = " << this->twopf_kconfig_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration cache hits = " << this->threepf_kconfig_cache.get_hits() << " | unloads = " << this->threepf_kconfig_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   data cache hits:                   = " << this->data_cache.get_hits() << " | unloads = " << this->data_cache.get_unloads();
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   zeta cache hits:                   = " << this->zeta_cache.get_hits() << " | unloads = " << this->zeta_cache.get_unloads();
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   time-configuration evictions       = " << format_time(this->time_config_cache.get_eviction_timer());
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   twopf k-configuration evictions    = " << format_time(this->twopf_kconfig_cache.get_eviction_timer());
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   threepf k-configuration evictions  = " << format_time(this->threepf_kconfig_cache.get_eviction_timer());
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   data evictions                     = " << format_time(this->data_cache.get_eviction_timer());
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   zeta evictions                     = " << format_time(this->zeta_cache.get_eviction_timer());
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
@@ -2402,7 +2389,8 @@ namespace transport
                this->time_config_cache_table == nullptr &&
                this->twopf_kconfig_cache_table == nullptr &&
                this->threepf_kconfig_cache_table == nullptr &&
-               this->data_cache_table == nullptr);
+               this->data_cache_table == nullptr &&
+               this->zeta_cache_table == nullptr);
       }
  
  
@@ -2414,7 +2402,8 @@ namespace transport
                this->time_config_cache_table != nullptr &&
                this->twopf_kconfig_cache_table != nullptr &&
                this->threepf_kconfig_cache_table != nullptr &&
-               this->data_cache_table != nullptr);
+               this->data_cache_table != nullptr &&
+               this->zeta_cache_table != nullptr);
       }
  
 
@@ -2441,6 +2430,7 @@ namespace transport
 		    this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
 		    this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
 		    this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
+        this->zeta_cache_table = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
 
 		    // remember number of fields associated with this container
 		    this->N_fields = Nf;
@@ -2463,6 +2453,7 @@ namespace transport
 		    this->twopf_kconfig_cache_table = nullptr;
 		    this->threepf_kconfig_cache_table = nullptr;
 		    this->data_cache_table = nullptr;
+        this->zeta_cache_table = nullptr;
 	    }
 
 
@@ -2532,6 +2523,30 @@ namespace transport
 
         return(this->data_cache_table->get_serial_handle(sns, kconfig_serial_group));
 	    }
+
+
+    template <typename number>
+    typename data_manager<number>::datapipe::time_zeta_handle& data_manager<number>::datapipe::new_time_zeta_handle(const std::vector<unsigned int>& sns) const
+      {
+        assert(this->validate_attached());
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        assert(sns.size() > 0);
+
+        return(this->zeta_cache_table->get_serial_handle(sns, time_serial_group));
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::datapipe::kconfig_zeta_handle& data_manager<number>::datapipe::new_kconfig_zeta_handle(const std::vector<unsigned int>& sns) const
+      {
+        assert(this->validate_attached());
+        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+        assert(sns.size() > 0);
+
+        return(this->zeta_cache_table->get_serial_handle(sns, kconfig_serial_group));
+      }
 
 
 		template <typename number>

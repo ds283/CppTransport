@@ -115,7 +115,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-		        typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
             // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
@@ -127,7 +127,7 @@ namespace transport
 				        typename data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
                 // information for zeta will be stored in 'line_data'
-                const std::vector<number>& line_data = k_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
@@ -263,7 +263,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-				    typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
+				    typename data_manager<number>::datapipe::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
             // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
@@ -277,7 +277,7 @@ namespace transport
 				        typename data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag tag = pipe.new_zeta_threepf_kconfig_data_tag(this->time_sample_sns[i]);
 
                 // information for zeta will be stored in 'line_data'
-                const std::vector<number>& line_data = k_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
@@ -405,7 +405,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-		        typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
+		        typename data_manager<number>::datapipe::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
 		        // pull time-configuration information from the database
 		        typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
@@ -419,7 +419,7 @@ namespace transport
 				        typename data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag tag = pipe.new_zeta_reduced_bispectrum_kconfig_data_tag(this->time_sample_sns[i]);
 
                 // information for zeta will be stored in 'line_data'
-                const std::vector<number>& line_data = k_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);

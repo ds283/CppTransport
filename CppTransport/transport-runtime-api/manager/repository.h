@@ -108,10 +108,13 @@
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS    "threepf-cache-unloads"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS          "data-cache-hits"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS       "data-cache-unloads"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS          "zeta-cache-hits"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS       "zeta-cache-unloads"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS     "time-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS    "twopf-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS  "threepf-cache-evictions"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS     "data-cache-evictions"
+#define __CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS     "zeta-cache-evictions"
 
 
 namespace transport
@@ -770,8 +773,10 @@ namespace transport
 	              twopf_kconfig_hits(0), twopf_kconfig_unloads(0),
 	              threepf_kconfig_hits(0), threepf_kconfig_unloads(0),
 	              data_hits(0), data_unloads(0),
+                zeta_hits(0), zeta_unloads(0),
                 time_config_evictions(0), twopf_kconfig_evictions(0),
-                threepf_kconfig_evictions(0), data_evictions(0)
+                threepf_kconfig_evictions(0), data_evictions(0),
+                zeta_evictions(0)
 	            {
 	            }
 
@@ -781,15 +786,19 @@ namespace transport
                             unsigned int tw_k_h, unsigned int tw_k_u,
                             unsigned int th_k_h, unsigned int th_k_u,
                             unsigned int dc_h, unsigned int dc_u,
+                            unsigned int zc_h, unsigned int zc_u,
                             boost::timer::nanosecond_type tc_e, boost::timer::nanosecond_type tw_e,
-                            boost::timer::nanosecond_type th_e, boost::timer::nanosecond_type d_e)
+                            boost::timer::nanosecond_type th_e, boost::timer::nanosecond_type d_e,
+                            boost::timer::nanosecond_type zc_e)
 	            : work_time(wt), db_time(dt), aggregation_time(ag),
 	              time_config_hits(tc_h), time_config_unloads(tc_u),
 	              twopf_kconfig_hits(tw_k_h), twopf_kconfig_unloads(tw_k_u),
 	              threepf_kconfig_hits(th_k_h), threepf_kconfig_unloads(th_k_u),
 	              data_hits(dc_h), data_unloads(dc_u),
+                zeta_hits(zc_h), zeta_unloads(zc_u),
                 time_config_evictions(tc_e), twopf_kconfig_evictions(tw_e),
-                threepf_kconfig_evictions(th_e), data_evictions(d_e)
+                threepf_kconfig_evictions(th_e), data_evictions(d_e),
+                zeta_evictions(zc_e)
 	            {
 	            }
 
@@ -830,6 +839,9 @@ namespace transport
             //! total number of data cache hits
             unsigned int data_hits;
 
+            //! total number of zeta cache hits
+            unsigned int zeta_hits;
+
             //! total number of time-configuration cache unloads
             unsigned int time_config_unloads;
 
@@ -842,6 +854,9 @@ namespace transport
             // total number of data cache unloads
             unsigned int data_unloads;
 
+            // total number of zeta cache unloads
+            unsigned int zeta_unloads;
+
 		        // total time spent doing time-config cache evictions
 		        boost::timer::nanosecond_type time_config_evictions;
 
@@ -851,8 +866,11 @@ namespace transport
 		        //! total time spent doing threepf k-config cache evictions
 		        boost::timer::nanosecond_type threepf_kconfig_evictions;
 
-		        //! totla time spend doing data cache evictions
+		        //! total time spent doing data cache evictions
 		        boost::timer::nanosecond_type data_evictions;
+
+            //! total time spent doing zeta cache evictions
+            boost::timer::nanosecond_type zeta_evictions;
 
 	        };
 
@@ -2061,10 +2079,13 @@ namespace transport
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, threepf_kconfig_unloads);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, data_hits);
         reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, data_unloads);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS, zeta_hits);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS, zeta_unloads);
 		    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS, time_config_evictions);
 		    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS, twopf_kconfig_evictions);
 		    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS, threepf_kconfig_evictions);
 		    reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS, data_evictions);
+        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS, zeta_evictions);
 		    reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 
@@ -2084,10 +2105,13 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS, this->zeta_hits);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS, this->zeta_unloads);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS, this->time_config_evictions);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS, this->twopf_kconfig_evictions);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS, this->threepf_kconfig_evictions);
         writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS, this->data_evictions);
+        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS, this->zeta_evictions);
 		    writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 

@@ -119,7 +119,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
@@ -130,7 +130,7 @@ namespace transport
 		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
 
                 // time-line for zeta will be stored in 'line_data'
-                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
@@ -255,7 +255,7 @@ namespace transport
 
 		        // set up cache handles
 		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
 		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
@@ -268,7 +268,7 @@ namespace transport
 		            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
                 // time-line for zeta will be stored in 'line_data'
-                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
@@ -395,7 +395,7 @@ namespace transport
 
             // set up cache handles
             typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
             typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
@@ -408,7 +408,7 @@ namespace transport
 		            typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 
                 // time-line for the reduced bispectrum will be stored in 'line_data'
-                const std::vector<number>& line_data = t_handle.lookup_tag(tag);
+                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);

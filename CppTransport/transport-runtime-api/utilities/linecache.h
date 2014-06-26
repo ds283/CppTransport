@@ -467,6 +467,8 @@ namespace transport
 
 						if(this->data_size > this->capacity)   // run evictions if we are now too large
 							{
+                std::cerr << "-- Cache full, evicting lines" << std::endl;
+                boost::timer::cpu_timer timer;
 								this->eviction_timer.start();
 
 								// build a list of data items on which to run clean-up
@@ -483,9 +485,6 @@ namespace transport
 						        bool operator()(const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& a,
 						                        const typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator& b)
 							        {
-								        // lower priority go at front of queue
-								        if((*a).get_tag()->get_priority() != (*b).get_tag()->get_priority()) return (*a).get_tag()->get_priority() < (*b).get_tag()->get_priority();
-
 								        // older items go nearer the front of the queue
 						            return (*a).get_last_access_time() > (*b).get_last_access_time();
 							        }
@@ -494,7 +493,7 @@ namespace transport
 								// sort queue
 								clean_up_list.sort(DataItemSorter());
 
-								// work through the queue, evicting items until we have saved sufficient size
+								// work through the queue, evicting items until we have saved sufficient space
 						    typename std::list< typename std::list< typename serial_group<DataContainer, DataTag, SerialTag, HashSize>::data_item >::iterator >::iterator t = clean_up_list.begin();
 								while(this->data_size > this->capacity && t != clean_up_list.end())
 									{
@@ -521,6 +520,8 @@ namespace transport
 									}
 
 								this->eviction_timer.stop();
+                timer.stop();
+                std::cerr << "-- Evicted lines in " << format_time(timer.elapsed().wall);
 							}
 					}
 

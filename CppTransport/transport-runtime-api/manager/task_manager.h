@@ -1016,15 +1016,18 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total work time required by worker processes      = " << format_time(metadata.work_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.aggregation_time);
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time spent reading database                 = " << format_time(metadata.db_time);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time-configuration cache hits               = " << metadata.time_config_hits << ", unloads = " << metadata.time_config_unloads;
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache hits                   = " << metadata.twopf_kconfig_hits << ", unloads = " << metadata.twopf_kconfig_unloads;
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache hits                 = " << metadata.threepf_kconfig_hits << ", unloads = " << metadata.threepf_kconfig_unloads;
         BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache hits                             = " << metadata.data_hits << ", unloads = " << metadata.data_unloads;
-		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
+		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total zeta cache hits                             = " << metadata.zeta_hits << ", unloads = " << metadata.zeta_unloads;
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "";
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total time config cache evictions                 = " << format_time(metadata.time_config_evictions);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total twopf k-config cache evictions              = " << format_time(metadata.twopf_kconfig_evictions);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total threepf k-config cache evictions            = " << format_time(metadata.threepf_kconfig_evictions);
 		    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total data cache evictions                        = " << format_time(metadata.data_evictions);
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++   Total zeta cache evictions                        = " << format_time(metadata.zeta_evictions);
 
 		    return(success);
       }
@@ -1088,16 +1091,19 @@ namespace transport
 		    metadata.db_time                   += payload.get_database_time();
 		    metadata.time_config_hits          += payload.get_time_config_hits();
 		    metadata.time_config_unloads       += payload.get_time_config_unloads();
+        metadata.time_config_evictions     += payload.get_time_config_evictions();
 		    metadata.twopf_kconfig_hits        += payload.get_twopf_kconfig_hits();
 		    metadata.twopf_kconfig_unloads     += payload.get_twopf_kconfig_unloads();
+        metadata.twopf_kconfig_evictions   += payload.get_twopf_kconfig_evictions();
 		    metadata.threepf_kconfig_hits      += payload.get_threepf_kconfig_hits();
 		    metadata.threepf_kconfig_unloads   += payload.get_threepf_kconfig_unloads();
+        metadata.threepf_kconfig_evictions += payload.get_threepf_kconfig_evictions();
 		    metadata.data_hits                 += payload.get_data_hits();
 		    metadata.data_unloads              += payload.get_data_unloads();
-				metadata.time_config_evictions     += payload.get_time_config_evictions();
-				metadata.twopf_kconfig_evictions   += payload.get_twopf_kconfig_evictions();
-				metadata.threepf_kconfig_evictions += payload.get_threepf_kconfig_evictions();
-				metadata.data_evictions            += payload.get_data_evictions();
+        metadata.data_evictions            += payload.get_data_evictions();
+        metadata.zeta_hits                 += payload.get_zeta_hits();
+        metadata.zeta_unloads              += payload.get_zeta_unloads();
+        metadata.zeta_evictions            += payload.get_zeta_evictions();
 			}
 
 
@@ -1528,13 +1534,15 @@ namespace transport
 				if(success) BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master";
 				else        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master";
 
-		    MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
-		                                                 pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
-		                                                 pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
-		                                                 pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-		                                                 pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-		                                                 pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-		                                                 pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions());
+        MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
+                                                     pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
+                                                     pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
+                                                     pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+                                                     pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
+                                                     pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
+                                                     pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
+                                                     pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
+                                                     pipe.get_zeta_cache_evictions());
 
 		    this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
 			}
