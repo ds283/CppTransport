@@ -246,6 +246,7 @@ namespace transport
                 // write the time history for this k-configuration
                 this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
+		            success = true;
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
                     << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
