@@ -449,13 +449,13 @@ namespace transport
 							        }
 						        out << ")" << std::endl;
 							    }
-						    else
-							    {
-						        std::ostringstream msg;
-						        msg << __CPP_TRANSPORT_DERIVED_PRODUCT_FAILED << " " << plot_file;
-						        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-							    }
 							}
+				    else
+					    {
+				        std::ostringstream msg;
+				        msg << __CPP_TRANSPORT_DERIVED_PRODUCT_FAILED << " " << plot_file;
+				        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+					    }
 
 				    if(this->x_label) out << "plt.xlabel(r'" << this->x_label_text << "')" << std::endl;
 				    if(this->y_label) out << "plt.ylabel(r'" << this->y_label_text << "')" << std::endl;
