@@ -56,8 +56,8 @@ namespace transport
       public:
 
         //! Create a data_manager_sqlite3 instance
-        data_manager_sqlite3(unsigned int cp)
-          : data_manager<number>(cp), temporary_container_serial(0)
+        data_manager_sqlite3(unsigned int bcap, unsigned int dcap, unsigned int zcap)
+          : data_manager<number>(bcap, dcap, zcap), temporary_container_serial(0)
           {
           }
 
@@ -512,7 +512,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::twopf_batcher batcher(this->capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
+        typename data_manager<number>::twopf_batcher batcher(this->batcher_capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary twopf container " << container;
 
@@ -548,7 +548,7 @@ namespace transport
                                                                                   std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        typename data_manager<number>::threepf_batcher batcher(this->capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
+        typename data_manager<number>::threepf_batcher batcher(this->batcher_capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary threepf container " << container;
 
@@ -714,10 +714,11 @@ namespace transport
 		                               std::placeholders::_4, std::placeholders::_5);
 
 		    // set up datapipe
-		    typename data_manager<number>::datapipe pipe(this->capacity, logdir, tempdir, worker, timer,
+		    typename data_manager<number>::datapipe pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
+                                                     logdir, tempdir, worker, timer,
 		                                                 utilities, config, timeslice, kslice);
 
-				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, cache capacity " << format_memory(this->capacity);
+				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, data cache capacity = " << format_memory(this->pipe_data_capacity) << ", zeta cache capacity = " << format_memory(this->pipe_zeta_capacity);
 
 				return(pipe);
 			}
@@ -919,9 +920,9 @@ namespace transport
     // FACTORY FUNCTIONS TO BUILD A DATA_MANAGER
 
     template <typename number>
-    data_manager<number>* data_manager_factory(unsigned int capacity)
+    data_manager<number>* data_manager_factory(unsigned int bcap, unsigned int dcap, unsigned int zcap)
       {
-        return new data_manager_sqlite3<number>(capacity);
+        return new data_manager_sqlite3<number>(bcap, dcap, zcap);
       }
 
 

@@ -12,6 +12,8 @@
 #define __CPP_TRANSPORT_EXPECTED_REPO         "Too few arguments: expected pathname to repository"
 #define __CPP_TRANSPORT_EXPECTED_TASK_ID      "Too few arguments: expected task identifier"
 #define __CPP_TRANSPORT_EXPECTED_TAG          "Too few arguments: expected metadata tag"
+#define __CPP_TRANSPORT_EXPECTED_CAPACITY     "Too few arguments: expected capacity"
+#define __CPP_TRANSPORT_EXPECTED_POSITIVE     "Argument error: expected positive integer following"
 
 #define __CPP_TRANSPORT_EXPECTED_GET_TYPE     "Too few arguments: expected record type following 'get'"
 #define __CPP_TRANSPORT_EXPECTED_GET_NAME     "Too few arguments: expected record name for 'get'"

@@ -68,7 +68,7 @@ bool threepf_kconfig_equilateral(const transport::derived_data::filter::threepf_
 // filter for near-squeezed 3pf k-configurations
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
   {
-    return(fabs(data.beta) > 0.95);
+    return(fabs(data.beta) > 0.998);
   }
 
 
@@ -156,8 +156,8 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(3.0);   // end with the mode which exits the horizon at N=N*+3
-    const unsigned int  k_samples = 25;         // number of k-points
+    const double        kmax      = exp(7.0);   // end with the mode which exits the horizon at N=N*+3
+    const unsigned int  k_samples = 100;         // number of k-points
 
 		struct ThreepfStoragePolicy
 			{

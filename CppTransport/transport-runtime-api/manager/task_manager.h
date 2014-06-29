@@ -37,10 +37,15 @@
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
 #include "boost/timer/timer.hpp"
+#include "boost/lexical_cast.hpp"
 
 
-#define __CPP_TRANSPORT_SWITCH_REPO  "-repo"
-#define __CPP_TRANSPORT_SWITCH_TAG   "-tag"
+#define __CPP_TRANSPORT_SWITCH_REPO              "-repo"
+#define __CPP_TRANSPORT_SWITCH_TAG               "-tag"
+#define __CPP_TRANSPORT_SWITCH_CAPACITY          "-caches"
+#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "-batch-cache"
+#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "-data-cache"
+#define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "-zeta-cache"
 
 #define __CPP_TRANSPORT_VERB_TASK    "task"
 #define __CPP_TRANSPORT_VERB_GET     "get"
@@ -84,10 +89,16 @@ namespace transport
       public:
 
         //! Construct a task manager using command-line arguments. The repository must exist and be named on the command line.
-        task_manager(int argc, char* argv[], unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
+        task_manager(int argc, char* argv[],
+                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
+                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
+                     unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int cp=__CPP_TRANSPORT_DEFAULT_STORAGE);
+        task_manager(int argc, char* argv[], json_interface_repository<number>* r,
+                     unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
+                     unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
+                     unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
 
         //! Destroy a task manager.
         ~task_manager();
@@ -284,17 +295,27 @@ namespace transport
         //! Queue of tasks to process
         std::list<job_descriptor> job_queue;
 
-        //! Storage capacity per worker
-        const unsigned int worker_capacity;
+        //! Storage capacity per batcher
+        unsigned int batcher_capacity;
+
+        //! Data cache capacity per datapipe
+        unsigned int pipe_data_capacity;
+
+        //! Zeta cache capacity per datapipe
+        unsigned int pipe_zeta_capacity;
 
       };
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], unsigned int cp)
-      : instance_manager<number>(), environment(argc, argv),
-        worker_capacity(cp),
-        repo(nullptr), data_mgr(data_manager_factory<number>(cp))
+    task_manager<number>::task_manager(int argc, char* argv[], unsigned int bcp, unsigned int pcp, unsigned int zcp)
+      : instance_manager<number>(),
+        environment(argc, argv),
+        batcher_capacity(bcp),
+        pipe_data_capacity(pcp),
+        pipe_zeta_capacity(zcp),
+        repo(nullptr),
+        data_mgr(data_manager_factory<number>(bcp, pcp, zcp))
       {
         if(world.rank() == MPI::RANK_MASTER)  // process command-line arguments if we are the master node
           {
@@ -346,6 +367,95 @@ namespace transport
                   {
                     if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_TAG);
                     else            tags.push_back(std::string(argv[++i]));
+                  }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+                    else
+                      {
+                        ++i;
+                        std::string capacity_str(argv[i]);
+                        int capacity = boost::lexical_cast<int>(capacity_str);
+                        capacity = capacity * 1024*1024;
+                        if(capacity > 0)
+                          {
+                            this->batcher_capacity = this->pipe_data_capacity = static_cast<unsigned int>(capacity);
+                            this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+                            this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+                          }
+                        else
+                          {
+                            std::ostringstream msg;
+                            msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CAPACITY;
+                            this->error(msg.str());
+                          }
+                      }
+                  }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+                    else
+                      {
+                        ++i;
+                        std::string capacity_str(argv[i]);
+                        int capacity = boost::lexical_cast<int>(capacity_str);
+                        capacity = capacity * 1024*1024;
+                        if(capacity > 0)
+                          {
+                            this->batcher_capacity = static_cast<unsigned int>(capacity);
+                            this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+                          }
+                        else
+                          {
+                            std::ostringstream msg;
+                            msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY;
+                            this->error(msg.str());
+                          }
+                      }
+                  }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+                    else
+                      {
+                        ++i;
+                        std::string capacity_str(argv[i]);
+                        int capacity = boost::lexical_cast<int>(capacity_str);
+                        capacity = capacity * 1024*1024;
+                        if(capacity > 0)
+                          {
+                            this->pipe_data_capacity = static_cast<unsigned int>(capacity);
+                            this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+                          }
+                        else
+                          {
+                            std::ostringstream msg;
+                            msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY;
+                            this->error(msg.str());
+                          }
+                      }
+                  }
+                else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY)
+                  {
+                    if(i+1 >= argc) this->error(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+                    else
+                      {
+                        ++i;
+                        std::string capacity_str(argv[i]);
+                        int capacity = boost::lexical_cast<int>(capacity_str);
+                        capacity = capacity * 1024*1024;
+                        if(capacity > 0)
+                          {
+                            this->pipe_zeta_capacity = static_cast<unsigned int>(capacity);
+                            this->data_mgr->set_zeta_capacity(this->pipe_zeta_capacity);
+                          }
+                        else
+                          {
+                            std::ostringstream msg;
+                            msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY;
+                            this->error(msg.str());
+                          }
+                      }
                   }
                 else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
                   {
@@ -407,10 +517,13 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int cp)
+    task_manager<number>::task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int bcp, unsigned int pcp, unsigned int zcp)
       : instance_manager<number>(), environment(argc, argv),
-        worker_capacity(cp),
-        repo(r), data_mgr(data_manager_factory<number>(cp))
+        batcher_capacity(bcp),
+        pipe_data_capacity(pcp),
+        pipe_zeta_capacity(zcp),
+        repo(r),
+        data_mgr(data_manager_factory<number>(bcp, pcp, zcp))
       {
         assert(repo != nullptr);
 

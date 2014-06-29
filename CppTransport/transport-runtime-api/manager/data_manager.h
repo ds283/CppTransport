@@ -275,7 +275,7 @@ namespace transport
 
           public:
 
-            //! Return the maximum memory available to this worker
+            //! Return the maximum memory available for batchers on this worker
             size_t get_capacity() const { return(this->capacity); }
 
             //! Set the path to the (new) container
@@ -407,10 +407,8 @@ namespace transport
 
             // OTHER INTERNAL DATA
 
-            //! Capacity of this batcher; when the capacity is exceeded, the batcher
-            //! flushes its data to a temporary database and pushes it to the
-            //! master process for aggregation
-            const unsigned int                                       capacity;
+            //! Capacity available
+            unsigned int                                             capacity;
 
             //! Number of fields associated with this integration
             const unsigned int                                       Nfields;
@@ -1453,7 +1451,8 @@ namespace transport
 		      public:
 
             //! Construct a datapipe
-            datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+            datapipe(unsigned int dcap, unsigned int zcap,
+                     const boost::filesystem::path& lp, const boost::filesystem::path& tp,
                      unsigned int w, boost::timer::cpu_timer& tm,
                      utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k);
 
@@ -1790,13 +1789,38 @@ namespace transport
       public:
 
         //! Create a data_manager instance with a nominated capacity per batcher
-        data_manager(unsigned int cp)
-          : capacity(cp)
+        data_manager(unsigned int bcap, unsigned int dcap, unsigned int zcap)
+          : batcher_capacity(bcap),
+            pipe_data_capacity(dcap),
+            pipe_zeta_capacity(zcap)
           {
           }
 
         //! Destroy the data_manager instance. In practice this would always be delegated to an implementation class
         virtual ~data_manager() = default;
+
+
+        // CAPACITY ADMIN
+
+      public:
+
+        //! Return the maximum memory available for batchers on this worker
+        size_t get_batcher_capacity() const { return(this->batcher_capacity); }
+
+        //! Set the maximum memory avilable for batchers on this worker
+        void set_batcher_capacity(size_t size) { this->batcher_capacity = size; }
+
+        //! Return the maximum memory available for data cache on this worker
+        size_t get_data_capacity() const { return(this->pipe_data_capacity); }
+
+        //! Set capacity available for data cache on this worker
+        void set_data_capacity(size_t size) { this->pipe_data_capacity = size; }
+
+        //! Return the maximum memory available for zeta cache on this worker
+        size_t get_zeta_capacity() const { return(this->pipe_zeta_capacity); }
+
+        //! Set capacity available for zeta cache on this worker
+        void set_zeta_capacity(size_t size) { this->pipe_zeta_capacity = size; }
 
 
         // WRITER HANDLING
@@ -1909,8 +1933,14 @@ namespace transport
 
       protected:
 
-        //! Maximum memory available to each worker process
-        unsigned int capacity;
+        //! Capacity available for batchers
+        unsigned int                                             batcher_capacity;
+
+        //! Capacity available for data cache
+        unsigned int                                             pipe_data_capacity;
+
+        //! Capacity available for zeta cache
+        unsigned int                                             pipe_zeta_capacity;
 
       };
 
@@ -2300,7 +2330,8 @@ namespace transport
 
 
     template <typename number>
-    data_manager<number>::datapipe::datapipe(unsigned int cap, const boost::filesystem::path& lp, const boost::filesystem::path& tp,
+    data_manager<number>::datapipe::datapipe(unsigned int dcap, unsigned int zcap,
+                                             const boost::filesystem::path& lp, const boost::filesystem::path& tp,
                                              unsigned int w, boost::timer::cpu_timer& tm,
                                              typename data_manager<number>::datapipe::utility_callbacks& u,
                                              typename data_manager<number>::datapipe::config_cache& cf,
@@ -2316,8 +2347,8 @@ namespace transport
 	      time_config_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
-	      data_cache(cap),
-        zeta_cache(__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE),
+	      data_cache(dcap),
+        zeta_cache(zcap),
         attached_task(nullptr)
 	    {
         this->database_timer.stop();

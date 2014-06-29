@@ -24,6 +24,8 @@
 // this can be increased (either here, or when creating a
 // task_manager object) on machines with more memory
 #define __CPP_TRANSPORT_DEFAULT_STORAGE (500*1024*1024)
+#define __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE (300*1024*1024)
+#define __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE (500*1024*1024)
 
 // default size of the k-configuration caches - 1 Mb
 #define __CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE (1*1024*1024)
