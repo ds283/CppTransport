@@ -463,6 +463,7 @@ namespace transport
 				if(tmin <= 0.0) tmin = 0.0;
 
 		    // filter sampling times according to our storage policy
+				time_config_list.clear();
 		    for(unsigned int i = 0; i < raw_time_list.size(); i++)
 			    {
 		        time_config tc;
@@ -470,7 +471,10 @@ namespace transport
 		        tc.serial = i;
 
 		        time_config_storage_policy_data data(tc.t, tc.serial);
-		        if((!this->fast_forward || (this->fast_forward && tc.t >= tmin)) && time_storage_policy(data)) time_config_list.push_back(tc);
+		        if((!this->fast_forward || (this->fast_forward && tc.t >= tmin)) && time_storage_policy(data))
+			        {
+		            time_config_list.push_back(tc);
+			        }
 			    }
 			}
 
