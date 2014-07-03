@@ -21,6 +21,8 @@
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/linecache.h"
 
+#include "transport-runtime-api/derived-products/template_types.h"
+
 #include "transport-runtime-api/defaults.h"
 
 
@@ -76,6 +78,7 @@ namespace transport
 
 				template <typename number> class zeta_timeseries_compute;
 				template <typename number> class zeta_kseries_compute;
+				template <typename number> class fNL_timeseries_compute;
 
 			}   // derived_data
 
@@ -1083,7 +1086,7 @@ namespace transport
 						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 						    //! identify this tag
-						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); };
+						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, kserial =  " << kdata.serial; return(msg.str()); }
 
 
 						    // CLONE
@@ -1148,7 +1151,7 @@ namespace transport
 		            virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 		            //! identify this tag
-		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); };
+		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, kserial =  " << kdata.serial; return(msg.str()); }
 
 
 		            // CLONE
@@ -1213,7 +1216,7 @@ namespace transport
 		            virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 		            //! identify this tag
-		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); };
+		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, kserial =  " << kdata.serial; return(msg.str()); }
 
 
 		            // CLONE
@@ -1278,7 +1281,7 @@ namespace transport
 						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 						    //! identify this tag
-						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); };;
+						    virtual std::string name() const override { std::ostringstream msg; msg << "zeta two-point function, tserial =  " << tserial; return(msg.str()); }
 
 
 						    // CLONE
@@ -1343,7 +1346,7 @@ namespace transport
 		            virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 		            //! identify this tag
-		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); };;
+		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta three-point function, tserial =  " << tserial; return(msg.str()); }
 
 
 		            // CLONE
@@ -1408,7 +1411,7 @@ namespace transport
 		            virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
 
 		            //! identify this tag
-		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); };;
+		            virtual std::string name() const override { std::ostringstream msg; msg << "zeta reduced bispectrum, tserial =  " << tserial; return(msg.str()); }
 
 
 		            // CLONE
@@ -1444,6 +1447,71 @@ namespace transport
 		            unsigned int N_fields;
 
 			        };
+
+
+		        // fNL time-series tag
+				    class fNL_time_data_tag: public data_tag
+					    {
+
+					      // CONSTRUCTOR, DESTRUCTOR
+
+				      public:
+
+						    fNL_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
+							    : data_tag(p), tk(t), N_fields(N), type(ty)
+							    {
+							    }
+
+						    virtual ~fNL_time_data_tag() = default;
+
+
+						    // INTERFACE
+
+				      public:
+
+						    //! check for tag equality
+						    virtual bool operator==(const data_tag& obj) const override;
+
+						    //! pull data corresponding to this tag
+						    virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+						    //! identify this tag
+						    virtual std::string name() const override { std::ostringstream msg; msg << "fNL, template =  " << template_name(this->type); return(msg.str()); }
+
+
+						    // CLONE
+
+				      public:
+
+						    //! copy this object
+						    data_tag* clone() const { return new fNL_time_data_tag(static_cast<const fNL_time_data_tag&>(*this)); }
+
+
+						    // HASH
+
+				      public:
+
+						    //! hash
+						    virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+						    // INTERNAL DATA
+
+				      protected:
+
+						    //! compute delegate
+						    derived_data::fNL_timeseries_compute<number> computer;
+
+						    //! pointer to task
+						    integration_task<number>* tk;
+
+						    //! number of fields
+						    unsigned int N_fields;
+
+						    //! template type
+						    typename derived_data::template_type type;
+
+					    };
 
 
 				    // CONSTRUCTOR, DESTRUCTOR
@@ -1659,6 +1727,9 @@ namespace transport
 
 				    //! Generate a new reduced bispectrum kconfig tag
 				    zeta_reduced_bispectrum_kconfig_data_tag new_zeta_reduced_bispectrum_kconfig_data_tag(unsigned int tserial);
+
+				    //! Generate a new fNL time tag
+				    fNL_time_data_tag new_fNL_time_data_tag(derived_data::template_type type);
 
 				    // friend sample tag classes, so they can use our data
 				    friend class time_config_tag;
@@ -2665,6 +2736,13 @@ namespace transport
 
 
 		template <typename number>
+		typename data_manager<number>::datapipe::fNL_time_data_tag data_manager<number>::datapipe::new_fNL_time_data_tag(derived_data::template_type type)
+			{
+				return data_manager<number>::datapipe::fNL_time_data_tag(this, this->attached_task, this->N_fields, type);
+			}
+
+
+		template <typename number>
 		void data_manager<number>::datapipe::time_config_tag::pull(const std::vector<unsigned int>& sns, std::vector<double>& data)
 			{
 		    assert(this->pipe->validate_attached());
@@ -3012,6 +3090,27 @@ namespace transport
         this->computer.reduced_bispectrum(handle, sample, 0);
 	    }
 
+		template <typename number>
+		void data_manager<number>::datapipe::fNL_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
+			{
+		    assert(this->pipe->validate_attached());
+		    if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
+#endif
+
+				// look up time values corresponding to these serial numbers
+				time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+				time_config_tag tc_tag = this->pipe->new_time_config_tag();
+
+				const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+
+				// set up handle for compute delegate
+		    std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+				this->computer.fNL(handle, sample);
+			}
+
 
 		template <typename number>
 		bool data_manager<number>::datapipe::background_time_data_tag::operator==(const data_tag& obj) const
@@ -3101,6 +3200,16 @@ namespace transport
         if(zeta_tag == nullptr) return(false);
         return(this->tserial == zeta_tag->tserial);
 	    }
+
+
+		template <typename number>
+		bool data_manager<number>::datapipe::fNL_time_data_tag::operator==(const data_tag& obj) const
+			{
+				const fNL_time_data_tag* fNL_tag = dynamic_cast<const fNL_time_data_tag*>(&obj);
+
+				if(fNL_tag == nullptr) return(false);
+				return(this->type == fNL_tag->type);
+			}
 
 
     // Provide specializations for the size methods used in linecache to compute the size of data elements

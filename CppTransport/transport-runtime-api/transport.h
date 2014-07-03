@@ -26,6 +26,7 @@
 
 #include "transport-runtime-api/derived-products/derived-content/zeta_timeseries_compute.h"
 #include "transport-runtime-api/derived-products/derived-content/zeta_kseries_compute.h"
+#include "transport-runtime-api/derived-products/derived-content/fNL_timeseries_compute.h"
 
 // derived data products
 #include "transport-runtime-api/derived-products/data_products.h"

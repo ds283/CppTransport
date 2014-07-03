@@ -1062,6 +1062,9 @@ namespace transport
         //! get size of a voxel on the integration grid
         virtual double voxel_size() const = 0;
 
+		    //! get measure at a particular k-configuration
+		    virtual number measure(const threepf_kconfig& config) const = 0;
+
 
         // SERIALIZATION -- implements a 'serialiazble' interface
 
@@ -1223,6 +1226,9 @@ namespace transport
 
         //! get size of a voxel on the integration grid
         virtual double voxel_size() const override { return(this->spacing*this->spacing*this->spacing); }
+
+		    //! get measure; here, just dk1 dk2 dk3 so there is nothing to do
+		    virtual number measure(const threepf_kconfig& config) const override { return(1.0); }
 
 
         // SERIALIZATION (implements a 'serialiazble' interface)
@@ -1388,6 +1394,9 @@ namespace transport
 
         //! get size of a voxel on the integration grid
         virtual double voxel_size() const override { return(this->kt_spacing*this->alpha_spacing*this->beta_spacing); }
+
+		    //! get measure; here k_t^2 dk_t dalpha dbeta
+		    virtual number measure(const threepf_kconfig& config) const override { return(static_cast<number>(config.k_t_conventional*config.k_t_conventional)); }
 
 
         // SERIALIZATION (implements a 'serialiazble' interface)

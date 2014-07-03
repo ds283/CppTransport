@@ -60,7 +60,7 @@ namespace transport
                 //! set of time serial numbers for which we are computing
                 const std::vector<unsigned int>& time_sample_sns;
 
-                //! cache time axis
+                //! cache of time axis
                 const std::vector<double>& time_axis;
 
                 //! datapipe handle for this set of serial numbers

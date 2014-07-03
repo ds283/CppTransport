@@ -80,15 +80,19 @@
 
 #define __CPP_TRANSPORT_LATEX_FNL_LOCAL_SYMBOL             "f_{\\mathrm{NL}}^{\\mathrm{local}}"
 #define __CPP_TRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL          "fNL_local"
+#define __CPP_TRANSPORT_FNL_LOCAL                          "fNL_local"
 
 #define __CPP_TRANSPORT_LATEX_FNL_EQUI_SYMBOL              "f_{\\mathrm{NL}}^{\\mathrm{equi}}"
 #define __CPP_TRANSPORT_NONLATEX_FNL_EQUI_SYMBOL           "fNL_equi"
+#define __CPP_TRANSPORT_FNL_EQUI                           "fNL_equi"
 
 #define __CPP_TRANSPORT_LATEX_FNL_ORTHO_SYMBOL             "f_{\\mathrm{NL}}^{\\mathrm{ortho}}"
 #define __CPP_TRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL          "fNL_ortho"
+#define __CPP_TRANSPORT_FNL_ORTHO                          "fNL_ortho"
 
 #define __CPP_TRANSPORT_LATEX_FNL_DBI_SYMBOL               "f_{\\mathrm{NL}}^{\\mathrm{DBI}}"
 #define __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL            "fNL_DBI"
+#define __CPP_TRANSPORT_FNL_DBI                            "fNL_DBI"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LABELS_H
