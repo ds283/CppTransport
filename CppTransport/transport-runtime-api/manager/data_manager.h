@@ -1626,10 +1626,10 @@ namespace transport
 				    boost::timer::nanosecond_type get_threepf_kconfig_cache_evictions() const { return(this->threepf_kconfig_cache.get_eviction_timer()); }
 
 				    //! Get total eviction time for data cache
-				    boost::timer::nanosecond_type get_data_cache_evictions() const { return(this->data_cache.get_unloads()); }
+				    boost::timer::nanosecond_type get_data_cache_evictions() const { return(this->data_cache.get_eviction_timer()); }
 
             //! Get total eviction time for zeta cache
-            boost::timer::nanosecond_type get_zeta_cache_evictions() const { return(this->zeta_cache.get_unloads()); }
+            boost::timer::nanosecond_type get_zeta_cache_evictions() const { return(this->zeta_cache.get_eviction_timer()); }
 
 
 		        // ATTACH, DETACH OUTPUT GROUPS
