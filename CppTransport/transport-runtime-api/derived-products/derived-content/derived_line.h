@@ -267,7 +267,7 @@ namespace transport
             std::unique_ptr<typename repository<number>::task_record> task_record(finder(parent_task_name));
             assert(task_record.get() != nullptr);
             
-            if(task_record.get()->get_type() != repository<number>::task_record::integration)
+            if(task_record->get_type() != repository<number>::task_record::integration)
               throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
             
             typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(task_record.get());

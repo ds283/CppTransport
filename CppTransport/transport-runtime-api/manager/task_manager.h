@@ -674,7 +674,7 @@ namespace transport
 						// query a task record with the name we're looking for from the database
             std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(job.name));
 
-            switch(record.get()->get_type())
+            switch(record->get_type())
               {
                 case repository<number>::task_record::integration:
                   {
@@ -1316,7 +1316,7 @@ namespace transport
             // query a task record with the name we're looking for from the database
             std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(payload.get_task_name()));
 
-            switch(record.get()->get_type())
+            switch(record->get_type())
               {
                 case repository<number>::task_record::integration:
                   {
@@ -1498,7 +1498,7 @@ namespace transport
             // query a task record with the name we're looking for from the database
             std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(payload.get_task_name()));
 
-            switch(record.get()->get_type())
+            switch(record->get_type())
               {
                 case repository<number>::task_record::integration:
                   {

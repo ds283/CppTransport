@@ -2521,9 +2521,9 @@ namespace transport
         this->attached_group = this->utilities.attach(this, this->utilities.finder, tk->get_name(), tags);
 		    this->attached_task  = tk;
 
-        typename repository<number>::integration_payload& payload = this->attached_group.get()->get_payload();
+        typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
 
-        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group.get()->get_creation_time())
+        BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
           << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
 
 		     // attach new cache tables
@@ -2545,7 +2545,7 @@ namespace transport
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
-		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group.get()->get_creation_time());
+		    BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
 
 				this->utilities.detach(this);
         this->attached_group.reset();

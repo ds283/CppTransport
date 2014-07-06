@@ -861,10 +861,10 @@ namespace transport
         // find a suitable output group for this task
         std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group = finder(name, tags);
 
-        typename repository<number>::integration_payload& payload = group.get()->get_payload();
+        typename repository<number>::integration_payload& payload = group->get_payload();
 
 				// get path to the output group data container
-		    boost::filesystem::path ctr_path = group.get()->get_abs_repo_path() / payload.get_container_path();
+		    boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
 
 				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
 

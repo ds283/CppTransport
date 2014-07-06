@@ -42,7 +42,7 @@ namespace transport
             std::string pkg_name;
             reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, pkg_name);
             std::unique_ptr<typename repository<number>::package_record> record(f(pkg_name));
-            initial_conditions<number> ics = record.get()->get_ics();
+            initial_conditions<number> ics = record->get_ics();
 
             if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF) rval = new twopf_task<number>(nm, reader, ics);
             else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) rval = new threepf_cubic_task<number>(nm, reader, ics);

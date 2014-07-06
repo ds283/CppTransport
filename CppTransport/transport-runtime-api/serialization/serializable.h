@@ -61,10 +61,10 @@ namespace transport
 
 				//! Write a value to the current node
 				virtual void write_value(const std::string& name, const std::string& value) = 0;
+		    virtual void write_value(const std::string& name, bool value) = 0;
 				virtual void write_value(const std::string& name, unsigned int value) = 0;
 				virtual void write_value(const std::string& name, long long int value) = 0;
 				virtual void write_value(const std::string& name, double value) = 0;
-				virtual void write_value(const std::string& name, bool value) = 0;
 
 
         // OUTPUT METHODS
@@ -122,10 +122,10 @@ namespace transport
 
         //! Read a value from the current node
         virtual bool read_value(const std::string& name, std::string& value) = 0;
+        virtual bool read_value(const std::string& name, bool& value) = 0;
         virtual bool read_value(const std::string& name, unsigned int& value) = 0;
 		    virtual bool read_value(const std::string& name, long long int& value) = 0;
         virtual bool read_value(const std::string& name, double& value) = 0;
-        virtual bool read_value(const std::string& name, bool& value) = 0;
 
 
 		    // UPDATE METHODS
@@ -145,10 +145,10 @@ namespace transport
 
 		    //! Insert a value in the current node
 		    virtual void insert_value(const std::string& name, const std::string& value) = 0;
+        virtual void insert_value(const std::string& name, bool value) = 0;
 		    virtual void insert_value(const std::string& name, unsigned int value) = 0;
 		    virtual void insert_value(const std::string& name, long long int value) = 0;
 		    virtual void insert_value(const std::string& name, double value) = 0;
-		    virtual void insert_value(const std::string& name, bool value) = 0;
 
 		    //! Insert the contents of a serialization_writer
 		    virtual void insert_writer_contents(serialization_writer& writer) = 0;

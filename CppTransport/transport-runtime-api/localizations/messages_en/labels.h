@@ -48,6 +48,12 @@
 #define __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA           "Data container"
 #define __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PRODUCT     "Derived product"
 #define __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH        "filename"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO               "Cached zeta twopf"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE             "Cached zeta threepf"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL              "Cached fNL_local"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI               "Cached fNL_equi"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO              "Cached fNL_ortho"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_DBI                "Cached fNL_DBI"
 
 #define __CPP_TRANSPORT_DATAPRODUCT_NAME                   "Data product"
 #define __CPP_TRANSPORT_DATAPRODUCT_PATH                   "path to product"

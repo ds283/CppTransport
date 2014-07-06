@@ -71,7 +71,7 @@ namespace transport
 			        }
 
 				    //! Deserialization constructor
-				    derived_product(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder finder)
+				    derived_product(const std::string& nm, serialization_reader* reader)
 				      : name(nm)
 					    {
 						    assert(reader != nullptr);

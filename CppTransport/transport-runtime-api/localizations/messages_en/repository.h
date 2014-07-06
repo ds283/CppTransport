@@ -70,9 +70,6 @@
 #define __CPP_TRANSPORT_REPO_DUPLICATE_PRODUCT           "Repository error: Duplicate derived product"
 #define __CPP_TRANSPORT_REPO_DUPLICATE_CONTENT           "Repository error: Duplicate content group"
 
-#define __CPP_TRANSPORT_REPO_MISSING_MODEL_A             "Repository error: Could not find model"
-#define __CPP_TRANSPORT_REPO_MISSING_MODEL_B             "corresponding to specified task"
-
 #define __CPP_TRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define __CPP_TRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
 #define __CPP_TRANSPORT_RUN_REPAIR                       "; consider checking database integrity"
@@ -82,14 +79,11 @@
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"
 #define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
 
-#define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_EXISTS      "Repository error: Attempt to insert duplicate derived-product specification"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
 
-#define __CPP_TRANSPORT_REPO_MISSING_DERIVED_PRODUCT     "Repository error: Could not find specified derived-product"
-#define __CPP_TRANSPORT_REPO_DUPLICATE_DERIVED_PRODUCT   "Repository error: Duplicate derived-product"
-
 #define __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN     "Repository error: task named in output task is not of integration-type"
+#define __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_INTGRTN       "Repository error: task named in zeta task is not of integration-type"
 #define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   "Repository error: no matching output groups for task"
 
 #define __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"

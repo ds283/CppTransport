@@ -198,7 +198,7 @@ namespace transport
 
             std::unique_ptr<typename repository<number>::derived_product_record> product_record(pfinder(product_name));
             assert(product_record.get() != nullptr);
-            derived_data::derived_product<number>* dp = product_record.get()->get_product();
+            derived_data::derived_product<number>* dp = product_record->get_product();
 
             // construct a output_task_element<> object wrapping these elements, and push it to the list
             elements.push_back(output_task_element<number>(*dp, tags, sn));

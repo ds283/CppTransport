@@ -259,7 +259,7 @@ namespace transport
 
 				template <typename number>
 				line_collection<number>::line_collection(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
-					: derived_product<number>(name, reader, finder)
+					: derived_product<number>(name, reader)
 					{
 						// extract data from reader
 						assert(reader != nullptr);

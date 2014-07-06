@@ -72,6 +72,13 @@
 
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND         "backend"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF      "zeta-twopf"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF    "zeta-threepf"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL       "fNL_local"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI        "fNL_equi"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO       "fNL_ortho"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI         "fNL_DBI"
+
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY               "output-array"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME        "parent-product"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME            "filename"
@@ -958,7 +965,9 @@ namespace transport
 
             //! Create a payload
             integration_payload()
-	            : metadata()
+	            : metadata(),
+                zeta_twopf(false), zeta_threepf(false),
+                fNL_local(false), fNL_equi(false), fNL_ortho(false), fNL_DBI(false)
 	            {
 	            }
 
@@ -969,7 +978,7 @@ namespace transport
             ~integration_payload() = default;
 
 
-            // ADMIN
+            // GET AND SET RECORD (META)DATA
 
           public:
 
@@ -987,6 +996,41 @@ namespace transport
             const integration_metadata& get_metadata() const { return(this->metadata); }
             //! Set metadata
             void set_metadata(const integration_metadata& data) { this->metadata = data; }
+
+
+		        // GET AND SET PROPERTIES
+
+          public:
+
+		        //! Get precomputed zeta_twopf availability
+		        bool get_zeta_twopf() const { return(this->zeta_twopf); }
+		        //! Add zeta_twopf availability flag
+		        void add_zeta_twopf() { this->zeta_twopf = true; }
+
+		        //! Get precomputed zeta_threepf availability (include reduced bispectrum)
+		        bool get_zeta_threepf() const { return(this->zeta_threepf); }
+		        //! Add zeta_threepf availability flag
+		        void add_zeta_threepf() { this->zeta_threepf = true; }
+
+		        //! Get precomputed fNL_local availability
+		        bool get_fNL_local() const { return(this->fNL_local); }
+		        //! Add fNL_local availability flag
+		        void add_fNL_local() { this->fNL_local = true; }
+
+		        //! Get precomputed fNL_equi availability
+		        bool get_fNL_equi() const { return(this->fNL_equi); }
+		        //! Add fNL_equi availability flag
+		        void add_fNL_eqiu() { this->fNL_equi = true; }
+
+		        //! Get precomputed fNL_ortho availability
+		        bool get_fNL_ortho() const { return(this->fNL_ortho); }
+		        //! Add fNL_ortho availability flag
+		        void add_fNL_ortho() { this->fNL_ortho = true; }
+
+		        //! Get precomputed fNL_DBI availability
+		        bool get_fNL_DBI() const { return(this->fNL_DBI); }
+		        //! Add fNL_DBI availability flag
+		        void add_fNL_DBI() { this->fNL_DBI = true; }
 
 
             // WRITE TO A STREAM
@@ -1014,6 +1058,24 @@ namespace transport
 
             //! Metadata
             integration_metadata metadata;
+
+		        //! group has pre-computed zeta twopf data?
+		        bool zeta_twopf;
+
+		        //! group has pre-computed zeta threepf data? (includes reduced bispectrum)
+		        bool zeta_threepf;
+
+		        //! group has pre-computed fNL_local data?
+		        bool fNL_local;
+
+		        //! group has pre-computed fNL_equi data?
+		        bool fNL_equi;
+
+		        //! group has pre-computed fNL_ortho data?
+		        bool fNL_ortho;
+
+		        //! group has pre-computed fNL_DBI data?
+		        bool fNL_DBI;
 
 	        };
 
@@ -2536,7 +2598,7 @@ namespace transport
             bool comparator(const std::shared_ptr< typename repository<number>::template output_group_record<Payload> > A,
                             const std::shared_ptr< typename repository<number>::template output_group_record<Payload> > B)
               {
-                return (A.get()->get_creation_time() > B.get()->get_creation_time());
+                return (A->get_creation_time() > B->get_creation_time());
               }
 
           }   // namespace output_group_helper
@@ -2555,6 +2617,13 @@ namespace transport
         std::string ctr_path;
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
         this->container = ctr_path;
+
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
+        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
       }
 
     template <typename number>
@@ -2562,6 +2631,12 @@ namespace transport
       {
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
 
 	      this->metadata.serialize(writer);
       }
@@ -2572,6 +2647,12 @@ namespace transport
       {
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
       }
 
 

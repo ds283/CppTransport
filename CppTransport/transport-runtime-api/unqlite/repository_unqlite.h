@@ -966,7 +966,7 @@ namespace transport
         scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         std::unique_ptr<typename repository<number>::package_record> record(package_record_factory(ics));
-        record.get()->commit();
+        record->commit();
 	    }
 
 
@@ -998,7 +998,7 @@ namespace transport
         this->check_task_duplicate(tk.get_name());
 
         std::unique_ptr<typename repository<number>::integration_task_record> record(integration_task_record_factory(tk));
-        record.get()->commit();
+        record->commit();
 
         // check whether the initial conditions package for this task is already present; if not, insert it
         unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION, tk.get_ics().get_name(), __CPP_TRANSPORT_NODE_RECORD_NAME);
@@ -1023,7 +1023,7 @@ namespace transport
         this->check_task_duplicate(tk.get_name());
 
         std::unique_ptr<typename repository<number>::output_task_record> record(output_task_record_factory(tk));
-        record.get()->commit();
+        record->commit();
 
         // check whether derived products on which this task depends have already been committed to the database
         const typename std::vector< output_task_element<number> > elements = tk.get_elements();
@@ -1050,7 +1050,7 @@ namespace transport
         scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
         std::unique_ptr<typename repository<number>::derived_product_record> record(derived_product_record_factory(d));
-        record.get()->commit();
+        record->commit();
 
         // check whether all tasks on which this derived product depends are already in the database
         typename std::vector< integration_task<number>* > task_list;
@@ -1131,7 +1131,7 @@ namespace transport
       {
         std::unique_ptr<typename repository<number>::task_record> record(query_task(name));
 
-        if(record.get()->get_type() != repository<number>::task_record::integration)
+        if(record->get_type() != repository<number>::task_record::integration)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN << " '" << name << "'";
@@ -1162,7 +1162,7 @@ namespace transport
       {
         std::unique_ptr<typename repository<number>::task_record> record(query_task(name));
 
-        if(record.get()->get_type() != repository<number>::task_record::output)
+        if(record->get_type() != repository<number>::task_record::output)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT << " '" << name << "'";
@@ -1312,19 +1312,19 @@ namespace transport
                                                                                                             false, notes, tags));
 
         // stamp output group with the correct 'created' time stamp
-        output_record.get()->set_creation_time(writer.get_creation_time());
-        output_record.get()->set_name_from_creation_time();
+        output_record->set_creation_time(writer.get_creation_time());
+        output_record->set_name_from_creation_time();
 
         // populate output group with content from the writer
-        output_record.get()->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
-        output_record.get()->get_payload().set_container_path(writer.get_relative_container_path());
-        output_record.get()->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
+        output_record->get_payload().set_container_path(writer.get_relative_container_path());
+        output_record->get_payload().set_metadata(writer.get_metadata());
 
         // commit new output record
-        output_record.get()->commit();
+        output_record->commit();
 
         // add this output group to the integration task record
-        rec->add_new_output_group(output_record.get()->get_name());
+        rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
         rec->commit();
 
@@ -1378,22 +1378,22 @@ namespace transport
                                                                                                        false, std::list<std::string>(), tags));
 
         // stamp output group with the correct 'created' time stamp
-        output_record.get()->set_creation_time(writer.get_creation_time());
-        output_record.get()->set_name_from_creation_time();
+        output_record->set_creation_time(writer.get_creation_time());
+        output_record->set_name_from_creation_time();
 
         // populate output group with content from the writer
         const std::list< typename repository<number>::derived_content >& content = writer.get_content();
         for(typename std::list< typename repository<number>::derived_content >::const_iterator t = content.begin(); t != content.end(); t++)
           {
-            output_record.get()->get_payload().add_derived_content(*t);
+            output_record->get_payload().add_derived_content(*t);
           }
-        output_record.get()->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_metadata(writer.get_metadata());
 
         // commit new output record
-        output_record.get()->commit();
+        output_record->commit();
 
         // add this output group to the integration task record
-        rec->add_new_output_group(output_record.get()->get_name());
+        rec->add_new_output_group(output_record->get_name());
         rec->update_last_edit_time();
         rec->commit();
 
