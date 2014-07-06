@@ -151,7 +151,7 @@ namespace transport
 		  public:
 
 				//! construct a zeta_twopf task
-				zeta_twopf_task(const std::string& nm, const integration_task<number>& t);
+				zeta_twopf_task(const std::string& nm, const twopf_task<number>& t);
 
 				//! deserialization constructor
 				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -177,7 +177,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const integration_task<number>& t)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
       : postintegration_task<number>(nm, t)
       {
       }
@@ -212,7 +212,7 @@ namespace transport
 		  public:
 
 				//! construct a zeta_threepf task
-				zeta_threepf_task(const std::string& nm, const integration_task<number>& t);
+				zeta_threepf_task(const std::string& nm, const threepf_task<number>& t);
 
 				//! deserialization constructor
 				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -238,7 +238,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const integration_task<number>& t)
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
       : postintegration_task<number>(nm, t)
       {
       }
@@ -272,7 +272,7 @@ namespace transport
 		  public:
 
 				//! construct an fNL task
-				fNL_task(const std::string& nm, const integration_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal);
+				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal);
 
 				//! deserialization constructor
 				fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -316,7 +316,7 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, const integration_task<number>& t, derived_data::template_type ty)
+    fNL_task<number>::fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty)
       : postintegration_task<number>(nm, t),
         type(ty)
       {

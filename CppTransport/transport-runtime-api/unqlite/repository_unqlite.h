@@ -1172,7 +1172,7 @@ namespace transport
             std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD));
             return this->output_task_record_factory(reader.get());
           }
-        else if(C==1) // can assume A=0, B=0, C=1
+        else          // can assume A=0, B=0, C=1
           {
             std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_POSTINTEGRATION_TASK_RECORD));
             return this->postintegration_task_record_factory(reader.get());
