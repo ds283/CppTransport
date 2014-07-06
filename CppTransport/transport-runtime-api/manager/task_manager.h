@@ -47,16 +47,16 @@
 #define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "-data-cache"
 #define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "-zeta-cache"
 
-#define __CPP_TRANSPORT_VERB_TASK    "task"
-#define __CPP_TRANSPORT_VERB_GET     "get"
+#define __CPP_TRANSPORT_VERB_TASK                "task"
+#define __CPP_TRANSPORT_VERB_GET                 "get"
 
-#define __CPP_TRANSPORT_NOUN_TASK    "task"
-#define __CPP_TRANSPORT_NOUN_PACKAGE "package"
-#define __CPP_TRANSPORT_NOUN_PRODUCT "product"
-#define __CPP_TRANSPORT_NOUN_CONTENT "content"
+#define __CPP_TRANSPORT_NOUN_TASK                "task"
+#define __CPP_TRANSPORT_NOUN_PACKAGE             "package"
+#define __CPP_TRANSPORT_NOUN_PRODUCT             "product"
+#define __CPP_TRANSPORT_NOUN_CONTENT             "content"
 
 // name for worker devices
-#define __CPP_TRANSPORT_WORKER_NAME  "mpi-worker-"
+#define __CPP_TRANSPORT_WORKER_NAME              "mpi-worker-"
 
 
 namespace transport
@@ -500,7 +500,6 @@ namespace transport
                     desc.output = argv[i];
 
                     desc.tags = tags;
-
 
                     job_queue.push_back(desc);
                     tags.clear();
