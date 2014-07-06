@@ -27,6 +27,9 @@
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC "threepf-cubic-task"
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS   "threepf-fls-task"
 #define __CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT        "output-task"
+#define __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF    "zeta-twopf-task"
+#define __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF  "zeta-threepf-task"
+#define __CPP_TRANSPORT_NODE_TASK_TYPE_FNL           "fNL-task"
 
 
 namespace transport

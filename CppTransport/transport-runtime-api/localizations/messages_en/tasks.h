@@ -24,12 +24,14 @@
 #define __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_B     "to output task"
 
 #define __CPP_TRANSPORT_TASK_TIMES                       "Sampling times: "
-#define __CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal Error: attempt to serialize background 'task' object"
+#define __CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK        "Internal error: attempt to serialize background 'task' object"
 
 #define __CPP_TRANSPORT_OUTPUT_ELEMENTS                  "Derived data tasks: "
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_TASK              "task"
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT            "output"
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS              "tags"
+
+#define __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE        "Internal error: unknown bispectrum template"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASKS_H

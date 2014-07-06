@@ -46,6 +46,7 @@
 #define __CPP_TRANSPORT_NODE_RECORD_TYPE                         "record-type"
 #define __CPP_TRANSPORT_NODE_RECORD_PACKAGE                      "package"
 #define __CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK             "integration-task"
+#define __CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK         "postintegration-task"
 #define __CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK                  "output-task"
 #define __CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT              "derived-product"
 #define __CPP_TRANSPORT_NODE_RECORD_CONTENT                      "content-group"
@@ -128,28 +129,30 @@ namespace transport
 	{
 
     // forward-declare model to avoid circular inclusion
-    template <typename number>
-    class model;
+    template <typename number> class model;
 
     // forward-declare initial_conditions
-    template <typename number>
-    class initial_conditions;
+    template <typename number> class initial_conditions;
 
-    // forward-declare tasks
-    template <typename number>
-    class task;
+    // forward-declare tasks:
+    template <typename number> class task;
 
-    template <typename number>
-    class integration_task;
+    template <typename number> class integration_task;
 
-    template <typename number>
-    class twopf_task;
+    template <typename number> class twopf_task;
 
-    template <typename number>
-    class threepf_task;
+    template <typename number> class threepf_task;
 
-    template <typename number>
-    class output_task;
+    template <typename number> class output_task;
+
+    template <typename number> class postintegration_task;
+
+    template <typename number> class zeta_twopf_task;
+
+    template <typename number> class zeta_threepf_task;
+
+    template <typename number> class fNL_task;
+
 
     // forward-declare derived_product object to avoid circular inclusion
     namespace derived_data
@@ -409,7 +412,7 @@ namespace transport
 
           public:
 
-            typedef enum { integration, output } type;
+            typedef enum { integration, postintegration, output } type;
 
 
 			      // CONSTRUCTOR, DESTRUCTOR
@@ -525,6 +528,71 @@ namespace transport
 
         //! Task finder service
         typedef std::function<task_record*(const std::string&)> task_finder;
+
+
+        // POSTINTEGRATION TASK RECORD
+
+      public:
+
+        class postintegration_task_record: public task_record
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! construct a postintegration_task_record
+            postintegration_task_record(const postintegration_task<number>& tk, typename repository_record::handler_package& pkg);
+
+            //! override copy constructor to perform a deep copy
+            postintegration_task_record(const postintegration_task_record& obj);
+
+            //! deserialization constructor
+            postintegration_task_record(serialization_reader* reader, typename repository<number>::task_finder& f, typename repository_record::handler_package& pkg);
+
+            virtual ~postintegration_task_record();
+
+
+            // GET CONTENTS
+
+          public:
+
+            //! Get task
+            postintegration_task<number>* get_task() const { return(this->tk); }
+
+
+            // ADMINISTRATION
+
+          public:
+
+            //! Get type
+            virtual typename task_record::type get_type() const override { return(task_record::postintegration); }
+
+
+            // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
+
+            //! serialize this object
+            virtual void serialize(serialization_writer& writer) const override;
+
+
+            // CLONE
+
+          public:
+
+            //! clone this object
+            virtual repository_record* clone() const override { return new postintegration_task_record(static_cast<const postintegration_task_record&>(*this)); }
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            //! Task associated with this record
+            postintegration_task<number>* tk;
+
+          };
 
 
 		    // DERIVED PRODUCT RECORD
@@ -1727,6 +1795,9 @@ namespace transport
         //! Write an output task to the database
         virtual void commit_task(const output_task<number>& tk) = 0;
 
+        //! Write a postintegration task to the database
+        virtual void commit_task(const postintegration_task<number>& tk) = 0;
+
         //! Write a derived product specification
         virtual void commit_derived_product(const derived_data::derived_product<number>& d) = 0;
 
@@ -1798,6 +1869,12 @@ namespace transport
       {
         template <typename number>
         output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::derived_product_finder& pfinder);
+      }
+
+    namespace postintegration_task_helper
+      {
+        template <typename number>
+        postintegration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& f);
       }
 
     // forward-declare derived_product deserialization helper
@@ -2022,6 +2099,53 @@ namespace transport
 				this->tk->serialize(writer);
 				this->task_record::serialize(writer);
 			}
+
+
+    // POSTINTEGRATION TASK RECORD
+
+    template <typename number>
+    repository<number>::postintegration_task_record::postintegration_task_record(const postintegration_task<number>& t, typename repository<number>::repository_record::handler_package& pkg)
+      : task_record(t.get_name(), pkg),
+        tk(dynamic_cast<postintegration_task<number>*>(t.clone()))
+      {
+        assert(tk != nullptr);
+      }
+
+
+    template <typename number>
+    repository<number>::postintegration_task_record::postintegration_task_record(const typename repository<number>::postintegration_task_record& obj)
+      : task_record(obj),
+        tk(dynamic_cast<postintegration_task<number>*>(obj.tk->clone()))
+      {
+        assert(tk != nullptr);
+      }
+
+
+    template <typename number>
+    repository<number>::postintegration_task_record::postintegration_task_record(serialization_reader* reader, typename repository<number>::task_finder& f,
+                                                                                 typename repository<number>::repository_record::handler_package& pkg)
+      : task_record(reader, pkg),
+        tk(postintegration_task_helper::deserialize<number>(this->name, reader, f))
+      {
+        assert(tk != nullptr);
+        if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
+      }
+
+
+    template <typename number>
+    repository<number>::postintegration_task_record::~postintegration_task_record()
+      {
+        delete this->tk;
+      }
+
+
+    template <typename number>
+    void repository<number>::postintegration_task_record::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK));
+        this->tk->serialize(writer);
+        this->task_record::serialize(writer);
+      }
 
 
 		// OUTPUT TASK RECORD

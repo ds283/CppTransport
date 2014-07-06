@@ -26,11 +26,12 @@ extern "C"
 }
 
 
-#define __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION           "packages"
-#define __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION "integration_tasks"
-#define __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION      "output_tasks"
-#define __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION   "derived-products"
-#define __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION           "content"
+#define __CPP_TRANSPORT_UNQLITE_PACKAGE_COLLECTION               "packages"
+#define __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION     "integration_tasks"
+#define __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION "postintegration_tasks"
+#define __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION          "output_tasks"
+#define __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION       "derived-products"
+#define __CPP_TRANSPORT_UNQLITE_CONTENT_COLLECTION               "content"
 
 
 namespace transport

@@ -213,6 +213,9 @@ namespace transport
         //! Write an output task to the database
         virtual void commit_task(const output_task<number>& tk) override;
 
+        //! Write a postintegration task to the database
+        virtual void commit_task(const postintegration_task<number>& tk) override;
+
         //! Write a derived product specification
         virtual void commit_derived_product(const derived_data::derived_product<number>& d) override;
 
@@ -367,8 +370,14 @@ namespace transport
         //! Create a new output task record from an explicit object
         typename repository<number>::output_task_record* output_task_record_factory(const output_task<number>& tk);
 
-        //! Creat an output task record from a serialization reader
+        //! Create an output task record from a serialization reader
         typename repository<number>::output_task_record* output_task_record_factory(serialization_reader* reader);
+
+        //! Create a postintegration task record from an explicit object
+        typename repository<number>::postintegration_task_record* postintegration_task_record_factory(const postintegration_task<number>& tk);
+
+        //! Create a postintegration task record from a serialization reader
+        typename repository<number>::postintegration_task_record* postintegration_task_record_factory(serialization_reader* reader);
 
         //! Create a new derived product record from explicit object
         typename repository<number>::derived_product_record* derived_product_record_factory(const derived_data::derived_product<number>& prod);
@@ -474,6 +483,7 @@ namespace transport
 
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION);
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION);
+        unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION);
 
         unqlite_operations::ensure_collection(db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
 
@@ -520,6 +530,7 @@ namespace transport
 
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION);
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION);
+        unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION);
 
         unqlite_operations::create_collection(db, __CPP_TRANSPORT_UNQLITE_DERIVED_PRODUCT_COLLECTION);
 
@@ -904,6 +915,29 @@ namespace transport
 
 
     template <typename number>
+    typename repository<number>::postintegration_task_record* repository_unqlite<number>::postintegration_task_record_factory(const postintegration_task<number>& tk)
+      {
+        typename repository<number>::repository_record::handler_package pkg;
+        pkg.commit = std::bind(&repository_unqlite::first_time_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_POSTINTEGRATION_TASK_RECORD);
+
+        return new typename repository<number>::postintegration_task_record(tk, pkg);
+      }
+
+
+    template <typename number>
+    typename repository<number>::postintegration_task_record* repository_unqlite<number>::postintegration_task_record_factory(serialization_reader* reader)
+      {
+        assert(reader != nullptr);
+        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+
+        typename repository<number>::repository_record::handler_package pkg;
+        pkg.commit = std::bind(&repository_unqlite::replace_commit, this, std::placeholders::_1, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_POSTINTEGRATION_TASK_RECORD);
+
+        return new typename repository<number>::postintegration_task_record(reader, this->task_finder, pkg);
+      }
+
+
+    template <typename number>
     typename repository<number>::derived_product_record* repository_unqlite<number>::derived_product_record_factory(const derived_data::derived_product<number>& prod)
       {
         typename repository<number>::repository_record::handler_package pkg;
@@ -978,8 +1012,9 @@ namespace transport
 
         unsigned int A = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
         unsigned int B = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int C = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
-        if(A+B > 0)
+        if(A+B+C > 0)
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_REPO_DUPLICATE_TASK << " '" << name << "'";
@@ -1043,6 +1078,32 @@ namespace transport
 	    }
 
 
+
+    // Write a postintegration task to the database
+    template <typename number>
+    void repository_unqlite<number>::commit_task(const postintegration_task<number>& tk)
+      {
+        scoped_transaction scoped_xn = this->scoped_transaction_factory();
+
+        // check for a task with a duplicate name
+        this->check_task_duplicate(tk.get_name());
+
+        std::unique_ptr<typename repository<number>::postintegration_task_record> record(postintegration_task_record_factory(tk));
+        record->commit();
+
+        // check whether parent task is already committed to the database
+        unsigned int count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, tk.get_parent_task()->get_name(), __CPP_TRANSPORT_NODE_RECORD_NAME);
+        if(count == 0)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
+                << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
+            this->warning(msg.str());
+            this->commit_task(*(tk.get_parent_task()));
+          }
+      }
+
+
     // Write a derived product specification
     template <typename number>
     void repository_unqlite<number>::commit_derived_product(const derived_data::derived_product<number>& d)
@@ -1097,18 +1158,24 @@ namespace transport
         scoped_transaction scoped_xn = this->scoped_transaction_factory();
         unsigned int A = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
         unsigned int B = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int C = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
-        check_number_records(A+B, name, __CPP_TRANSPORT_REPO_TASK_RECORD);
+        check_number_records(A+B+C, name, __CPP_TRANSPORT_REPO_TASK_RECORD);
 
-        if(A > 0) // can assume A=1, B=0
+        if(A==1)      // can assume A=1, B=0, C=0
           {
             std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_INTEGRATION_TASK_RECORD));
             return this->integration_task_record_factory(reader.get());
           }
-        else      // can assume A=0, B=1
+        else if(B==1) // can assume A=0, B=1, C=0
           {
             std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD));
             return this->output_task_record_factory(reader.get());
+          }
+        else if(C==1) // can assume A=0, B=0, C=1
+          {
+            std::unique_ptr<unqlite_serialization_reader> reader(this->query_serialization_reader(name, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, __CPP_TRANSPORT_REPO_POSTINTEGRATION_TASK_RECORD));
+            return this->postintegration_task_record_factory(reader.get());
           }
       }
 
@@ -1498,10 +1565,11 @@ namespace transport
         this->begin_transaction();
 
         // check a suitable record exists
-        unsigned int integration_count = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
-        unsigned int output_count      = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int A = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int B = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
+        unsigned int C = unqlite_operations::query_count(this->db, __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
 
-        unsigned int total = integration_count + output_count;
+        unsigned int total = A + B + C;
 
         std::string rval;
 
@@ -1520,8 +1588,9 @@ namespace transport
         else
           {
             std::string collection;
-            if(integration_count == 1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
-            else                       collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
+            if     (A==1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_INTEGRATION_COLLECTION;
+            else if(B==1) collection = __CPP_TRANSPORT_UNQLITE_TASKS_OUTPUT_COLLECTION;
+            else          collection = __CPP_TRANSPORT_UNQLITE_TASKS_POSTINTEGRATION_COLLECTION;
 
             rval = unqlite_operations::extract_json(this->db, collection, name, __CPP_TRANSPORT_NODE_RECORD_NAME);
           }

@@ -20,6 +20,12 @@
 
 #define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT "parent-task"
 
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE           "template"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL     "local"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI      "equilateral"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO     "orthogonal"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI       "DBI"
+
 
 namespace transport
 	{
@@ -30,7 +36,7 @@ namespace transport
 		//! an integration to produce zeta correlation functions and other derived products.
 		//! The more specialized two- and three-pf zeta tasks are derived from it.
 		template <typename number>
-		class postintegration_task : public task<number>
+		class postintegration_task: public task<number>
 			{
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -48,6 +54,14 @@ namespace transport
 
 				//! destroy a postintegration_task
 				virtual ~postintegration_task();
+
+
+        // INTERFACE
+
+      public:
+
+        //! Get parent integration task
+        integration_task<number>* get_parent_task() const { return(this->tk); }
 
 
 				// SERIALIZATION (implements a 'serializable' interface)
@@ -140,7 +154,7 @@ namespace transport
 				zeta_twopf_task(const std::string& nm, const integration_task<number>& t);
 
 				//! deserialization constructor
-				zeta_twopf_task(const std::string& nm, serialization_reader* reader);
+				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_twopf_task() = default;
@@ -162,6 +176,29 @@ namespace transport
 			};
 
 
+    template <typename number>
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const integration_task<number>& t)
+      : postintegration_task<number>(nm, t)
+      {
+      }
+
+
+    template <typename number>
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+      : postintegration_task<number>(nm, reader, finder)
+      {
+      }
+
+
+    template <typename number>
+    void zeta_twopf_task<number>::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF));
+
+        this->postintegration_task<number>::serialize(writer);
+      }
+
+
 		// ZETA THREEPF TASK
 
 		//! A 'zeta_threepf_task' task is a postintegration task which produces the zeta three-point
@@ -178,7 +215,7 @@ namespace transport
 				zeta_threepf_task(const std::string& nm, const integration_task<number>& t);
 
 				//! deserialization constructor
-				zeta_threepf_task(const std::string& nm, serialization_reader* reader);
+				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_threepf_task() = default;
@@ -200,6 +237,29 @@ namespace transport
 			};
 
 
+    template <typename number>
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const integration_task<number>& t)
+      : postintegration_task<number>(nm, t)
+      {
+      }
+
+
+    template <typename number>
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+      : postintegration_task<number>(nm, reader, finder)
+      {
+      }
+
+
+    template <typename number>
+    void zeta_threepf_task<number>::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF));
+
+        this->postintegration_task<number>::serialize(writer);
+      }
+
+
 		// FNL TASK
 
 		//! An 'fNL_task' is a postintegration task which produces an fNL amplitude
@@ -212,13 +272,24 @@ namespace transport
 		  public:
 
 				//! construct an fNL task
-				fNL_task(const std::string& nm, const integration_task<number>& t);
+				fNL_task(const std::string& nm, const integration_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal);
 
 				//! deserialization constructor
-				fNL_task(const std::string& nm, serialization_reader* reader);
+				fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~fNL_task() = default;
+
+
+        // GET/SET TEMPLATE TYPE
+
+      public:
+
+        //! get current template setting
+        derived_data::template_type get_template() const { return(this->type); }
+
+        //! set template setting
+        void set_template(derived_data::template_type t) { this->type = t; }
 
 
 				// SERIALIZATION
@@ -242,6 +313,70 @@ namespace transport
 				derived_data::template_type type;
 
 			};
+
+
+    template <typename number>
+    fNL_task<number>::fNL_task(const std::string& nm, const integration_task<number>& t, derived_data::template_type ty)
+      : postintegration_task<number>(nm, t),
+        type(ty)
+      {
+      }
+
+
+    template <typename number>
+    fNL_task<number>::fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+      : postintegration_task<number>(nm, reader, finder)
+      {
+        assert(reader != nullptr);
+        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
+
+        std::string type_str;
+        reader->read_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, type_str);
+
+        if     (type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::fNLlocal;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::fNLequi;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::fNLortho;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::fNLDBI;
+        else
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE << " '" << type_str << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+          }
+      }
+
+
+    template <typename number>
+    void fNL_task<number>::serialize(serialization_writer& writer) const
+      {
+        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_FNL));
+
+        switch(this->type)
+          {
+            case derived_data::fNLlocal:
+              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL));
+              break;
+
+            case derived_data::fNLequi:
+              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI));
+              break;
+
+            case derived_data::fNLortho:
+              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO));
+              break;
+
+            case derived_data::fNLDBI:
+              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI));
+              break;
+
+            default:
+              assert(false);
+              throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE);
+          }
+
+        this->postintegration_task<number>::serialize(writer);
+      }
+
 
 	}   // namespace transport
 
