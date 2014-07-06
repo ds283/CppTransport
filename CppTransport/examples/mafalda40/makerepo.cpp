@@ -93,12 +93,12 @@ int main(int argc, char* argv[])
     transport::initial_conditions<double> ics =
                                             transport::initial_conditions<double>("mafalda40", model, params, init_values, Ninit, Ncross, Npre);
 
-    const unsigned int t_samples = 2000;       // record 2000 samples - enough to find a good stepsize
+    const unsigned int t_samples = 1000;       // record 2000 samples - enough to find a good stepsize
 
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
@@ -107,8 +107,8 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(5.0);   // end with the mode which exits the horizon at N=N*+3
-    const unsigned int  k_samples = 40;         // number of k-points
+    const double        kmax      = exp(10.0);   // end with the mode which exits the horizon at N=N*+3
+    const unsigned int  k_samples = 100;         // number of k-points
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
 
