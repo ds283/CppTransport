@@ -170,10 +170,21 @@ int main(int argc, char* argv[])
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
 
+    // construct zeta threepf versions
+    transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
+    transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", tk3);
+    transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", tk3);
+    ztk3_fNL_equi.set_template(transport::derived_data::fNLequi);
+    transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", tk3);
+    ztk3_fNL_ortho.set_template(transport::derived_data::fNLortho);
+
     std::cout << tk3;
 
     // construct a twopf task
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
+
+    // construct a zeta twopf version
+    transport::zeta_twopf_task<double> ztk2 = transport::zeta_twopf_task<double>("axion.twopf-1.zeta", tk2);
 
 
 		// construct some derived data products; first, simply plots of the background
@@ -639,10 +650,10 @@ int main(int argc, char* argv[])
     transport::derived_data::fNL_time_series<double> fNLloc_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
 
     transport::derived_data::fNL_time_series<double> fNLequi_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNLequi_time_series.set_type(transport::derived_data::fNL_line<double>::fNLequi);
+    fNLequi_time_series.set_type(transport::derived_data::fNLequi);
 
     transport::derived_data::fNL_time_series<double> fNLortho_time_series = transport::derived_data::fNL_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter));
-    fNLortho_time_series.set_type(transport::derived_data::fNL_line<double>::fNLortho);
+    fNLortho_time_series.set_type(transport::derived_data::fNLortho);
 
     transport::derived_data::time_series_plot<double> fNL_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.fNL", "fNL.pdf");
     fNL_plot.add_line(fNLloc_time_series);
@@ -716,6 +727,10 @@ int main(int argc, char* argv[])
 
 		// write output tasks to the database
 //		repo->commit_task(twopf_output);
+    repo->commit_task(ztk3);
+    repo->commit_task(ztk3_fNL_local);
+    repo->commit_task(ztk3_fNL_equi);
+    repo->commit_task(ztk3_fNL_ortho);
     repo->commit_task(threepf_output);
     repo->commit_task(fNLloc_task);
 
