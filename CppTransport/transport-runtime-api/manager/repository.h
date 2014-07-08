@@ -28,8 +28,8 @@
 
 
 // log file name
-#define __CPP_TRANSPORT_WRITER_LOG_FILENAME_A   "writer_worker_"
-#define __CPP_TRANSPORT_LOG_FILENAME_B          "_%3N.log"
+#define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"
 
 
 // JSON node names
@@ -2412,7 +2412,7 @@ namespace transport
         // set up logging
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_WRITER_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
         boost::filesystem::path logfile_path = paths.root / paths.log / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();

@@ -42,9 +42,8 @@
 
 
 // log file name
-#define __CPP_TRANSPORT_DATAPIPE_LOG_FILENAME_A "pipe_worker_"
-#define __CPP_TRANSPORT_BATCHER_LOG_FILENAME_A  "batch_worker_"
-#define __CPP_TRANSPORT_LOG_FILENAME_B          "_%3N.log"
+#define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"
 
 
 // default size of line cache hash table
@@ -2294,7 +2293,7 @@ namespace transport
         flush_due(false)
       {
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_BATCHER_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 
@@ -2944,13 +2943,13 @@ namespace transport
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(dcap),
-        zeta_cache(zcap),3
+        zeta_cache(zcap),
         attached_task(nullptr)
 	    {
         this->database_timer.stop();
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_DATAPIPE_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 
