@@ -247,13 +247,16 @@ namespace transport
       public:
 
         //! Generate a writer object for new integration output
-        virtual typename repository<number>::integration_writer new_integration_task_content(typename repository<number>::integration_task_record* rec,
-                                                                                             const std::list<std::string>& tags, unsigned int worker) override;
+        virtual std::shared_ptr<typename repository<number>::integration_writer> new_integration_task_content(typename repository<number>::integration_task_record* rec,
+                                                                                                              const std::list<std::string>& tags, unsigned int worker) override;
 
         //! Generate a writer object for new derived-content output
-        virtual typename repository<number>::derived_content_writer new_output_task_content(typename repository<number>::output_task_record* rec,
-                                                                                            const std::list<std::string>& tags, unsigned int worker) override;
+        virtual std::shared_ptr<typename repository<number>::derived_content_writer> new_output_task_content(typename repository<number>::output_task_record* rec,
+                                                                                                             const std::list<std::string>& tags, unsigned int worker) override;
 
+        //! Generate a writer object for new postintegration output
+        virtual std::shared_ptr<typename repository<number>::postintegration_writer> new_postintegration_task_content(typename repository<number>::postintegration_task_record* rec,
+                                                                                                                      const std::list<std::string>& tags, unsigned int worker) override;
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
 
@@ -321,21 +324,32 @@ namespace transport
 
       protected:
 
+        // The interface here isn't very satisfactory, because we'd prefer that these callbacks take a reference of
+        // the correct type (integration_writer, postintegration_writer, derived_content_writer).
+        // The problem is incomplete types at instantiation of repository<number>; see comments in
+        // repository.h near declaration of generic_writer for details
+
         //! Advise that an output group has been committed
         template <typename Payload>
         void advise_commit(typename repository<number>::template output_group_record<Payload>* group);
 
-        //! Commit the output of an integration writer to the database. Called as a callback
-        void close_integration_writer(typename repository<number>::integration_writer& writer);
+        //! Commit the products from an integration to the database
+        void close_integration_writer(typename repository<number>::base_writer& gwriter);
 
-        //! Move a failed output group to a safe location
-        void abort_integration_writer(typename repository<number>::integration_writer& writer);
+        //! Rollback a failed integration
+        void abort_integration_writer(typename repository<number>::base_writer& gwriter);
 
-        //! Commit the output of a derived content writer to the database. Called as a callback
-        void close_derived_content_writer(typename repository<number>::derived_content_writer& writer);
+        //! Commit hte products from a postintegration to the database
+        void close_postintegration_writer(typename repository<number>::base_writer& gwriter);
 
-        //! Move a failed output group to a safe location
-        void abort_derived_content_writer(typename repository<number>::derived_content_writer& writer);
+        //! Rollback a failed postintegration
+        void abort_postintegration_writer(typename repository<number>::base_writer& gwriter);
+
+        //! Commit the products from an output task to the database
+        void close_derived_content_writer(typename repository<number>::base_writer& gwriter);
+
+        //! Rollback a failed integration
+        void abort_derived_content_writer(typename repository<number>::base_writer& gwriter);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS
@@ -1257,7 +1271,7 @@ namespace transport
 
 
     template <typename number>
-    typename repository<number>::integration_writer
+    std::shared_ptr<typename repository<number>::integration_writer>
     repository_unqlite<number>::new_integration_task_content(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker)
       {
         // get current time
@@ -1281,13 +1295,15 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-        typename repository<number>::integration_writer::callback_group callbacks;
+        typename repository<number>::template generic_writer<typename repository<number>::integration_writer>::callback_group callbacks;
         callbacks.commit        = std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1);
         callbacks.abort         = std::bind(&repository_unqlite<number>::abort_integration_writer, this, std::placeholders::_1);
-        callbacks.tags          = tags;
-        callbacks.creation_time = now;
 
-        typename repository<number>::integration_writer::paths_group paths;
+        typename repository<number>::template generic_writer<typename repository<number>::integration_writer>::metadata_group metadata;
+        metadata.tags          = tags;
+        metadata.creation_time = now;
+
+        typename repository<number>::template generic_writer<typename repository<number>::integration_writer>::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = output_path;
         paths.data   = sql_path;
@@ -1296,12 +1312,12 @@ namespace transport
         paths.temp   = temp_path;
 
         // integration_writer constructor takes a copy of the integration_task_record
-        return typename repository<number>::integration_writer(rec, callbacks, paths, worker);
+        return std::shared_ptr<typename repository<number>::integration_writer>(new typename repository<number>::integration_writer(rec, callbacks, metadata, paths, worker));
       }
 
 
     template <typename number>
-    typename repository<number>::derived_content_writer
+    std::shared_ptr<typename repository<number>::derived_content_writer>
     repository_unqlite<number>::new_output_task_content(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags, unsigned int worker)
       {
         // get current time
@@ -1324,20 +1340,65 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-        typename repository<number>::derived_content_writer::callback_group callbacks;
+        typename repository<number>::template generic_writer<typename repository<number>::derived_content_writer>::callback_group callbacks;
         callbacks.commit        = std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1);
         callbacks.abort         = std::bind(&repository_unqlite<number>::abort_derived_content_writer, this, std::placeholders::_1);
-        callbacks.tags          = tags;
-        callbacks.creation_time = now;
 
-        typename repository<number>::derived_content_writer::paths_group paths;
+        typename repository<number>::template generic_writer<typename repository<number>::derived_content_writer>::metadata_group metadata;
+        metadata.tags          = tags;
+        metadata.creation_time = now;
+
+        typename repository<number>::template generic_writer<typename repository<number>::derived_content_writer>::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = output_path;
         paths.log    = log_path;
         paths.task   = task_path;
         paths.temp   = temp_path;
 
-        return typename repository<number>::derived_content_writer(rec, callbacks, paths, worker);
+        return std::shared_ptr<typename repository<number>::derived_content_writer>(new typename repository<number>::derived_content_writer(rec, callbacks, metadata, paths, worker));
+      }
+
+
+    template <typename number>
+    std::shared_ptr<typename repository<number>::postintegration_writer>
+    repository_unqlite<number>::new_postintegration_task_content(typename repository<number>::postintegration_task_record* rec, const std::list<std::string>& tags, unsigned int worker)
+      {
+        // get current time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+        // construct paths for output files and directories
+        std::string output_leaf = boost::posix_time::to_iso_string(now);
+
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+        boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+
+        // temporary stuff, location not recorded in the database
+        boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path task_path   = output_path / __CPP_TRANSPORT_REPO_TASKFILE_LEAF;
+        boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+
+        // create directories
+        boost::filesystem::create_directories(this->get_root_path() / output_path);
+        boost::filesystem::create_directories(this->get_root_path() / log_path);
+        boost::filesystem::create_directories(this->get_root_path() / temp_path);
+
+        typename repository<number>::template generic_writer<typename repository<number>::postintegration_writer>::callback_group callbacks;
+        callbacks.commit        = std::bind(&repository_unqlite<number>::close_postintegration_writer, this, std::placeholders::_1);
+        callbacks.abort         = std::bind(&repository_unqlite<number>::abort_postintegration_writer, this, std::placeholders::_1);
+
+        typename repository<number>::template generic_writer<typename repository<number>::postintegration_writer>::metadata_group metadata;
+        metadata.tags          = tags;
+        metadata.creation_time = now;
+
+        typename repository<number>::template generic_writer<typename repository<number>::postintegration_writer>::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = output_path;
+        paths.data   = sql_path;
+        paths.log    = log_path;
+        paths.task   = task_path;
+        paths.temp   = temp_path;
+
+        return std::shared_ptr<typename repository<number>::postintegration_writer>(new typename repository<number>::postintegration_writer(rec, callbacks, metadata, paths, worker));
       }
 
 
@@ -1358,8 +1419,10 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::close_integration_writer(typename repository<number>::integration_writer& writer)
+		void repository_unqlite<number>::close_integration_writer(typename repository<number>::base_writer& gwriter)
 			{
+        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+
 				typename repository<number>::integration_task_record* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 		    assert(rec != nullptr);
@@ -1400,8 +1463,10 @@ namespace transport
 
 
     template <typename number>
-    void repository_unqlite<number>::abort_integration_writer(typename repository<number>::integration_writer& writer)
+    void repository_unqlite<number>::abort_integration_writer(typename repository<number>::base_writer& gwriter)
       {
+        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+
         boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
@@ -1432,9 +1497,29 @@ namespace transport
       }
 
 
+    template <typename number>
+    void repository_unqlite<number>::close_postintegration_writer(typename repository<number>::base_writer& gwriter)
+      {
+        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+
+        std::cerr << "CLOSE POSTINTEGRATION WRITER" << std::endl;
+      }
+
+
+    template <typename number>
+    void repository_unqlite<number>::abort_postintegration_writer(typename repository<number>::base_writer& gwriter)
+      {
+        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+
+        std::cerr << "ABORT POSTINTEGRATION WRITER" << std::endl;
+      }
+
+
 		template <typename number>
-		void repository_unqlite<number>::close_derived_content_writer(typename repository<number>::derived_content_writer& writer)
+		void repository_unqlite<number>::close_derived_content_writer(typename repository<number>::base_writer& gwriter)
 			{
+        typename repository<number>::derived_content_writer& writer = dynamic_cast<typename repository<number>::derived_content_writer&>(gwriter);
+
 				typename repository<number>::output_task_record* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 				assert(rec != nullptr);
@@ -1469,8 +1554,10 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::abort_derived_content_writer(typename repository<number>::derived_content_writer& writer)
+		void repository_unqlite<number>::abort_derived_content_writer(typename repository<number>::base_writer& gwriter)
 			{
+        typename repository<number>::derived_content_writer& writer = dynamic_cast<typename repository<number>::derived_content_writer&>(gwriter);
+
 		    boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
 		    if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);

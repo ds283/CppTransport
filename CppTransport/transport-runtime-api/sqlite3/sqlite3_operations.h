@@ -11,6 +11,7 @@
 #include <set>
 
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/derived-products/template_types.h"
 #include "transport-runtime-api/scheduler/work_queue.h"
 #include "transport-runtime-api/models/model.h"
 
@@ -23,21 +24,28 @@
 #include "transport-runtime-api/manager/data_manager.h"
 
 
-#define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE      "time_samples"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE     "twopf_samples"
-#define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE   "threepf_samples"
-#define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE      "backg"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE      "twopf"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG         "re"
-#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG    "im"
-#define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE    "threepf"
-#define __CPP_TRANSPORT_SQLITE_STATS_TABLE            "statistics"
+#define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   "time_samples"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE                  "twopf_samples"
+#define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                "threepf_samples"
+#define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE                   "backg"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE                   "twopf"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
+#define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
+#define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
+#define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "statistics"
+#define __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
+#define __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
+#define __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE "zeta_redbsp"
+#define __CPP_TRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE               "fNL_local"
+#define __CPP_TRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE                "fNL_equi"
+#define __CPP_TRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE               "fNL_ortho"
+#define __CPP_TRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE                 "fNL_DBI"
 
-#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE         "task_list"
-#define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE      "serial_search"
-#define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE     "threepf_search"
+#define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE                      "task_list"
+#define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
+#define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE                  "threepf_search"
 
-#define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME       "tempdb"
+#define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME                    "tempdb"
 
 
 namespace transport
@@ -53,8 +61,8 @@ namespace transport
         typedef enum { twopf_configs, threepf_configs } statistics_configuration_type;
 
 
-		    // sqlite has a default maximum number of columns equal to 2000
-		    // that can rapidly be used up where we have a large number of fields,
+		    // sqlite has a default maximum number of columns equal to 2000.
+		    // These columns can rapidly be used up where we have a large number of fields,
 		    // so we need to take care
 		    constexpr unsigned int max_columns = 2000 - 4;
 
@@ -120,6 +128,29 @@ namespace transport
               {
                 return(static_cast<std::string>(__CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE) + "_"
                   + (type == real_twopf ? __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG : __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG));
+              }
+            
+            // construct the name of an fNL table
+            inline std::string fNL_table_name(derived_data::template_type type)
+              {
+                switch(type)
+                  {
+                    case derived_data::fNLlocal:
+                      return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE);
+                      
+                    case derived_data::fNLequi:
+                      return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE);
+                    
+                    case derived_data::fNLortho:
+                      return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE);
+                    
+                    case derived_data::fNLDBI:
+                      return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
+                      
+                    default:
+                      assert(false);
+                      throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, __CPP_TRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE);
+                  }
               }
 
           }   // unnamed namespace
@@ -490,6 +521,93 @@ namespace transport
           }
 
 
+        // Create table for zeta twopf values
+        void create_zeta_twopf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+              << "ele DOUBLE, "
+              << "PRIMARY KEY (tserial, kserial)";
+
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
+        // Create table for zeta twopf values
+        void create_zeta_threepf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+              << "ele DOUBLE, "
+              << "PRIMARY KEY (tserial, kserial)";
+
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
+        // Create table for zeta twopf values
+        void create_zeta_reduced_bispectrum_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+              << "ele DOUBLE, "
+              << "PRIMARY KEY (tserial, kserial)";
+
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
+        // Create table for zeta twopf values
+        void create_fNL_table(sqlite3* db, derived_data::template_type type, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << fNL_table_name(type) << "("
+              << "tserial INTEGER, "
+              << "ele DOUBLE, "
+              << "PRIMARY KEY (tserial)";
+
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
         // Write a batch of per-configuration statistics values
         template <typename number>
         void write_stats(typename data_manager<number>::generic_batcher* batcher,
@@ -526,7 +644,7 @@ namespace transport
 
         // Write a batch of background values
         template <typename number>
-        void write_backg(typename data_manager<number>::generic_batcher* batcher,
+        void write_backg(typename data_manager<number>::integration_batcher* batcher,
                          const std::vector<typename data_manager<number>::backg_item>& batch)
           {
             sqlite3* db = nullptr;
@@ -583,7 +701,7 @@ namespace transport
 
         // Write a batch of twopf values
         template <typename number>
-        void write_twopf(twopf_value_type type, typename data_manager<number>::generic_batcher* batcher,
+        void write_twopf(twopf_value_type type, typename data_manager<number>::integration_batcher* batcher,
                          const std::vector<typename data_manager<number>::twopf_item>& batch)
           {
             sqlite3* db = nullptr;
@@ -641,7 +759,7 @@ namespace transport
 
         // Write a batch of threepf values
         template <typename number>
-        void write_threepf(typename data_manager<number>::generic_batcher* batcher,
+        void write_threepf(typename data_manager<number>::integration_batcher* batcher,
                            const std::vector<typename data_manager<number>::threepf_item>& batch)
           {
             sqlite3* db = nullptr;
@@ -697,6 +815,138 @@ namespace transport
           }
 
 
+        // Write a batch of zeta twopf values
+        template <typename number>
+        void write_zeta_twopf(typename data_manager<number>::postintegration_batcher* batcher,
+                              const std::vector<typename data_manager<number>::zeta_twopf_item>& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << " VALUES (@tserial, @kserial, @ele);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::zeta_twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+              {
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL, SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        // Write a batch of zeta threepf values
+        template <typename number>
+        void write_zeta_threepf(typename data_manager<number>::postintegration_batcher* batcher,
+                                const std::vector<typename data_manager<number>::zeta_threepf_item>& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << " VALUES (@tserial, @kserial, @ele);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::zeta_threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+              {
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL, SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        // Write a batch of zeta threepf values
+        template <typename number>
+        void write_zeta_redbsp(typename data_manager<number>::postintegration_batcher* batcher,
+                               const std::vector<typename data_manager<number>::zeta_threepf_item>& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << " VALUES (@tserial, @kserial, @ele);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::zeta_threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+              {
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_REDBSP_DATATAB_FAIL, SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
+        // Write a batch of zeta threepf values
+        template <typename number>
+        void write_fNL(typename data_manager<number>::postintegration_batcher* batcher,
+                       const std::vector<typename data_manager<number>::fNL_item>& batch,
+                       derived_data::template_type type)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << fNL_table_name(type) << " VALUES (@tserial, @ele);";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::fNL_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+              {
+                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>((*t).value)));
+
+                check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
+
+                check_stmt(db, sqlite3_clear_bindings(stmt));
+                check_stmt(db, sqlite3_reset(stmt));
+              }
+
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
         // Create a temporary container for a twopf integration
         sqlite3* create_temp_twopf_container(const boost::filesystem::path& container, unsigned int Nfields, bool collect_stats)
           {
@@ -710,13 +960,13 @@ namespace transport
                 if(db != nullptr)
                   {
                     msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_close(db);
                   }
                 else
                   {
                     msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
                   }
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }
@@ -743,7 +993,7 @@ namespace transport
                 if(db != nullptr)
                   {
                     msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
-                      << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
                     sqlite3_close(db);
                   }
                 else
@@ -765,11 +1015,106 @@ namespace transport
           }
 
 
+        // Create a temporary container for a zeta twopf
+        sqlite3* create_temp_zeta_twopf_container(const boost::filesystem::path& container)
+          {
+            sqlite3* db = nullptr;
+
+            int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(db != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_close(db);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // create the necessary tables
+            create_zeta_twopf_table(db, no_foreign_keys);
+
+            return(db);
+          }
+
+
+        // Create a temporary container for a zeta threepf
+        sqlite3* create_temp_zeta_threepf_container(const boost::filesystem::path& container)
+          {
+            sqlite3* db = nullptr;
+
+            int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(db != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_close(db);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // create the necessary tables
+            create_zeta_twopf_table(db, no_foreign_keys);
+            create_zeta_threepf_table(db, no_foreign_keys);
+            create_zeta_reduced_bispectrum_table(db, no_foreign_keys);
+
+            return(db);
+          }
+
+
+        // Create a temporary container for a zeta threepf
+        sqlite3* create_temp_fNL_container(const boost::filesystem::path& container, derived_data::template_type type)
+          {
+            sqlite3* db = nullptr;
+
+            int status = sqlite3_open_v2(container.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+            if(status != SQLITE_OK)
+              {
+                std::ostringstream msg;
+                if(db != nullptr)
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_close(db);
+                  }
+                else
+                  {
+                    msg << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A << " '" << container.string() << "' "
+                        << __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B << status << ")";
+                  }
+                throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+              }
+
+            // create the necessary tables
+            create_fNL_table(db, type, no_foreign_keys);
+
+            return(db);
+          }
+
+
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& ctr, const std::string& temp_ctr)
+        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating background values";
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating background values";
 
             std::ostringstream copy_stmt;
 		        copy_stmt
@@ -778,7 +1123,7 @@ namespace transport
 			        << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";"
 			        << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-		        BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
 		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGCOPY);
           }
@@ -786,10 +1131,9 @@ namespace transport
 
         // Aggregate a twopf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_writer& ctr,
-                             const std::string& temp_ctr, twopf_value_type type)
+        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr, twopf_value_type type)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -798,7 +1142,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
           }
@@ -806,10 +1150,9 @@ namespace transport
 
         // Aggregate a threepf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_writer& ctr,
-                               const std::string& temp_ctr)
+        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating threepf values";
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating threepf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -818,7 +1161,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
           }
@@ -826,10 +1169,9 @@ namespace transport
 
         // Aggregate a statistics value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_statistics(sqlite3* db, typename repository<number>::integration_writer& ctr,
-                                  const std::string& temp_ctr)
+        void aggregate_statistics(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
           {
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Aggregating per-configuration statistics";
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating per-configuration statistics";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -838,9 +1180,85 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-            BOOST_LOG_SEV(ctr.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICSCOPY);
+          }
+
+
+        // Aggregate a zeta twopf value table from a temporary container
+        template <typename number>
+        void aggregate_zeta_twopf(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta twopf values";
+
+            std::ostringstream copy_stmt;
+            copy_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_TWOPFCOPY);
+          }
+
+
+        // Aggregate a zeta threepf value table from a temporary container
+        template <typename number>
+        void aggregate_zeta_threepf(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta threepf values";
+
+            std::ostringstream copy_stmt;
+            copy_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_THREEPFCOPY);
+          }
+
+
+        // Aggregate a zeta reduced bispectrum value table from a temporary container
+        template <typename number>
+        void aggregate_zeta_reduced_bispectrum(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta reduced bispectrum values";
+
+            std::ostringstream copy_stmt;
+            copy_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_REDBSPCOPY);
+          }
+
+
+        // Aggregate an fNL value table from a temporary container
+        template <typename number>
+        void aggregate_fNL(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr, derived_data::template_type type)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating " << derived_data::template_name(type) << " values";
+
+            std::ostringstream copy_stmt;
+            copy_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << fNL_table_name(type)
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
           }
 
 

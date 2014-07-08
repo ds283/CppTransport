@@ -35,6 +35,7 @@
 
 #define __CPP_TRANSPORT_FAST_FORWARD                       "Fast-forward integration"
 #define __CPP_TRANSPORT_MESH_REFINEMENTS                   "Maximum number of mesh refinements"
+#define __CPP_TRANSPORT_PARENT_TASK                        "Parent task"
 
 #define __CPP_TRANSPORT_OUTPUT_GROUP                       "Output group"
 #define __CPP_TRANSPORT_OUTPUT_GROUP_LOCKED                "locked"

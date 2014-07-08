@@ -80,6 +80,7 @@
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"
 #define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
+#define __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Repository error: Aggregator unset in writer object"
 
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
@@ -104,6 +105,7 @@
 
 #define __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT              "Internal error: received unexpected output task"
 #define __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION         "Internal error: received unexpected integration task"
+#define __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION     "Internal error: received unexpected postintegration task"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

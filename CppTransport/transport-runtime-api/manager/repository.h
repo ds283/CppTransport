@@ -28,8 +28,8 @@
 
 
 // log file name
-#define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
-#define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
+#define __CPP_TRANSPORT_WRITER_LOG_FILENAME_A   "writer_worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B          "_%3N.log"
 
 
 // JSON node names
@@ -62,7 +62,6 @@
 // used for output tasks
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_REPO_ROOT               "repo-path"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT               "output-path"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
@@ -1354,31 +1353,59 @@ namespace transport
         typedef enum { readonly, readwrite } access_type;
 
 
-        // DATA CONTAINER WRITE HANDLE
+        // GENERIC WRITER
 
       public:
 
-        //! Integration container writer: forms a handle for a data container when writing the output of an integration
-        class integration_writer
-	        {
+        //! base_writer is a dummy class at the bottom of the *_writer hierarchy.
+        //! It is only a placeholder to allow complete instantiation of generic_writer<>
+        class base_writer
+          {
+          public:
+            base_writer() = default;
+            virtual ~base_writer() = default;
+          };
+
+        //! 'generic_writer' supplies generic services for writers
+        template <typename WriterObject>
+        class generic_writer: public base_writer
+          {
 
           public:
 
-            //! Define a commit callback object. Used by integration_writer to commit its data products to the repository
-            typedef std::function<void(integration_writer&)> commit_callback;
+            // In these callbacks, we would ideally like them to take an argument of type WriterObject&.
+            // However, that can't be done because when the WriterObject template is instantiated,
+            // causing instantiation of generic_writer<WriterObject>, WriterObject itself will be
+            // an incomplete type. That doesn't matter inside method declarations (they are only
+            // instantiated when they are used), but it *does* matter for typedefs inside generic_writer<>
+            // which must be resolved when instantiated.
 
-            //! Define an abort callback object. Used by integration_writer to abort storage of its data products
-            typedef std::function<void(integration_writer&)> abort_callback;
+            // The ultimate solution might be to extract the *_writer classes from within repository<number>
+            // and declare at namespace scope. That allows forward declarations and explicit specializations,
+            // and the problem can be solved using traits classes.
+
+            //! Define a commit callback object. Used to commit data products to the repository
+            typedef std::function<void(base_writer&)> commit_callback;
+
+            //! Define an abort callback object. Used to abort storage of data products
+            typedef std::function<void(base_writer&)> abort_callback;
+
+            //! Define an aggregation callback object. Used to aggregate results from worker processes
+            typedef std::function<bool(base_writer&, const std::string&)> aggregate_callback;
 
             class callback_group
-	            {
+              {
               public:
-                commit_callback          commit;
-                abort_callback           abort;
+                commit_callback commit;
+                abort_callback  abort;
+              };
 
+            class metadata_group
+              {
+              public:
                 std::list<std::string>   tags;
                 boost::posix_time::ptime creation_time;
-	            };
+              };
 
             class paths_group
               {
@@ -1391,24 +1418,37 @@ namespace transport
                 boost::filesystem::path temp;
               };
 
-
-	          // CONSTRUCTOR, DESTRUCTOR
+            // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
-            //! Construct an integration container object.
-            //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
-            //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-            integration_writer(integration_task_record* rec, callback_group& c, paths_group& p, unsigned int w);
+            //! construct a generic writer object
+            generic_writer(const callback_group& c, const metadata_group& m, const paths_group& p, unsigned int w);
 
-		        //! override copy constructor to perform a deep copy
-		        integration_writer(const integration_writer& obj);
-
-            //! Destroy an integration container object
-            ~integration_writer();
+            //! destroy a generic writer object
+            virtual ~generic_writer();
 
 
-		        // ADMINISTRATION
+            // AGGREGATION
+
+          public:
+
+            //! Set aggregator
+            void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+
+            //! Aggregate a product
+            bool aggregate(const std::string& product);
+
+
+            // DATABASE FUNCTIONS
+
+          public:
+
+            //! Commit contents of this integration_writer to the database
+            void commit() { this->callbacks.commit(static_cast<WriterObject&>(*this)); this->committed = true; }
+
+
+            // ADMINISTRATION
 
           public:
 
@@ -1433,27 +1473,19 @@ namespace transport
             void get_data_manager_taskfile(data_manager_type* data);
 
 
-		        // DATABASE FUNCTIONS
+            // METADATA
 
           public:
 
-            //! Commit contents of this integration_writer to the database
-		        void commit() { this->callbacks.commit(*this); }
+            //! Return tags
+            const std::list<std::string>& get_tags() const { return(this->generic_metadata.tags); }
 
-		        //! Abort contents
-		        void abort() { this->callbacks.abort(*this); }
+            //! Get creation time
+            const boost::posix_time::ptime& get_creation_time() const { return(this->generic_metadata.creation_time); }
 
-		        
-		        // LOGGING
-		        
-          public:
 
-            //! Return logger
-            boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
+            // ABSOLUTE PATHS
 
-		        
-		        // ABSOLUTE PATHS
-		        
           public:
 
             //! Return path to output directory
@@ -1472,15 +1504,107 @@ namespace transport
             boost::filesystem::path get_abs_tempdir_path() const { return(this->paths.root/this->paths.temp); }
 
 
-		        // RELATIVE PATHS
+            // RELATIVE PATHS
 
           public:
 
-		        //! Return path to output directory
-		        boost::filesystem::path get_relative_output_path() const { return(this->paths.output); }
+            //! Return path to output directory
+            boost::filesystem::path get_relative_output_path() const { return(this->paths.output); }
 
-		        //! Return path to data container
-		        boost::filesystem::path get_relative_container_path() const { return(this->paths.data); }
+            //! Return path to data container
+            boost::filesystem::path get_relative_container_path() const { return(this->paths.data); }
+
+
+            // LOGGING
+
+          public:
+
+            //! Return logger
+            boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
+
+
+            // INTERNAL DATA
+
+          protected:
+
+            // SUCCESS FLAG - USED TO DETERMINE WHETHER TO ABORT/ROLLBACK WHEN WINDING UP
+
+            bool committed;
+
+
+            // REPOSITORY CALLBACK FUNCTIONS
+
+            //! Repository callbacks
+            callback_group callbacks;
+
+
+            // DATA MANAGER CALLBACK FUNCTIONS
+
+            //! Aggregate callback
+            aggregate_callback aggregator;
+
+
+            // PATHS
+
+            //! paths associated with this writer
+            const paths_group paths;
+
+
+            // GENERIC METADATA
+
+            //! metadata
+            metadata_group generic_metadata;
+
+
+            // MISCELLANEOUS
+
+            //! our MPI worker number
+            const unsigned int worker_number;
+
+            //! internal handle used by data_manager to associate this writer with an integration database
+            void* data_manager_handle;
+
+            //! internal handle used by data_manager to associate this writer with a task database
+            void* data_manager_taskfile;
+
+
+            // LOGGING
+
+            //! Logger source
+            boost::log::sources::severity_logger<log_severity_level> log_source;
+
+            //! Logger sink
+            boost::shared_ptr<sink_t> log_sink;
+
+          };
+
+
+        // WRITER FOR INTEGRATION OUTPUT
+
+      public:
+
+        //! Integration writer: used to commit integration output to the database
+        class integration_writer: public generic_writer<integration_writer>
+	        {
+
+	          // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            //! Construct an integration writer object.
+            //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
+            //! by the task_manager, which can depute a data_manager object of its choice to do the work.
+            integration_writer(integration_task_record* rec,
+                               const typename generic_writer<integration_writer>::callback_group& c,
+                               const typename generic_writer<integration_writer>::metadata_group& m,
+                               const typename generic_writer<integration_writer>::paths_group& p,
+                               unsigned int w);
+
+		        //! disallow copying to ensure consistency of RAII idiom
+		        integration_writer(const integration_writer& obj) = delete;
+
+            //! Destroy an integration container object
+            virtual ~integration_writer();
 
 
 		        // STATISTICS
@@ -1498,28 +1622,16 @@ namespace transport
 		        //! Return task
 		        integration_task_record* get_record() const { return(this->parent_record); }
 
-		        //! Return tags
-		        const std::list<std::string>& get_tags() const { return(this->callbacks.tags); }
-
 		        //! Set metadata
 		        void set_metadata(const integration_metadata& data) { this->metadata = data; }
 
 		        //! Get metadata
 		        const integration_metadata& get_metadata() const { return(this->metadata); }
 
-            //! Get creation time
-            const boost::posix_time::ptime& get_creation_time() const { return(this->callbacks.creation_time); }
-
 
             // INTERNAL DATA
 
           private:
-
-
-		        // COMMIT CALLBACK
-
-		        //! Repository callbacks
-		        callback_group callbacks;
 
 
 		        // METADATA
@@ -1531,99 +1643,98 @@ namespace transport
 		        integration_metadata metadata;
 
 
-		        // PATHS
-
-            //! paths associated with this writer
-            const paths_group paths;
-
-
 		        // MISCELLANEOUS
 
 		        //! are we collecting per-configuration statistics?
             bool supports_stats;
 
-		        //! our MPI worker number
-            const unsigned int worker_number;
-
-		        //! internal handle used by data_manager to associate this writer with an integration database
-            void* data_manager_handle;
-
-		        //! internal handle used by data_manager to associate this writer with a task database
-            void* data_manager_taskfile;
-
-
-		        // LOGGING
-
-            //! Logger source
-            boost::log::sources::severity_logger<log_severity_level> log_source;
-
-            //! Logger sink
-            boost::shared_ptr<sink_t> log_sink;
-
 	        };
 
 
-        // DATA CONTAINER READ HANDLE
+        // WRITER FOR POSTINTEGRATION OUTPUT
 
       public:
 
-        //! Integration container reader: forms a handle for a data container when reading the an integration from the database
-        class derived_content_writer
-	        {
+        //! Postintegration writer: used to commit postprocessing of integration output to the database
+        class postintegration_writer: public generic_writer<postintegration_writer>
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
-            //! Define a commit callback object. Used by derived_content_writer to commit its data products to the repository
-            typedef std::function<void(derived_content_writer&)> commit_callback;
+            //! Construct a postintegration writer object.
+            //! After creation it must be initialized by a suitable data_manager
+            postintegration_writer(postintegration_task_record* rec,
+                                   const typename generic_writer<postintegration_writer>::callback_group& c,
+                                   const typename generic_writer<postintegration_writer>::metadata_group& m,
+                                   const typename generic_writer<postintegration_writer>::paths_group& p,
+                                   unsigned int w);
 
-            //! Define an abort callback object. Used by derived_content_writer to abort commit of its data products
-            typedef std::function<void(derived_content_writer&)> abort_callback;
+            //! disallow copying to ensure consistency of RAII idiom
+            postintegration_writer(const postintegration_writer& obj) = delete;
 
-            class callback_group
-	            {
-              public:
-                commit_callback          commit;
-                abort_callback           abort;
+            //! Destroy a postintegration writer object
+            virtual ~postintegration_writer();
 
-                std::list<std::string>   tags;
-                boost::posix_time::ptime creation_time;
-	            };
 
-            class paths_group
-              {
-              public:
-                boost::filesystem::path root;
-                boost::filesystem::path output;
-                boost::filesystem::path log;
-                boost::filesystem::path task;
-                boost::filesystem::path temp;
-              };
+            // METADATA
+
+          public:
+
+            //! Return task
+            postintegration_task_record* get_record() const { return(this->parent_record); }
+
+
+            // INTERNAL DATA
+
+          private:
+
+            // METADATA
+
+            //! task associated with this integration writer
+            postintegration_task_record* parent_record;
+
+          };
+
+
+        // WRITER FOR DERIVED CONTENT OUTPUT
+
+      public:
+
+        //! Derived content writer: used to commit derived products to the database
+        class derived_content_writer: public generic_writer<derived_content_writer>
+	        {
+
+            // CONSTRUCTOR, DESTRUCTOR
 
           public:
 
             //! Construct a derived-content writer object
-            derived_content_writer(output_task_record* rec, callback_group& c, paths_group& p, unsigned int w);
+            derived_content_writer(output_task_record* rec,
+                                   const typename generic_writer<derived_content_writer>::callback_group& c,
+                                   const typename generic_writer<derived_content_writer>::metadata_group& m,
+                                   const typename generic_writer<derived_content_writer>::paths_group& p,
+                                   unsigned int w);
 
-		        //! override copy constructor to perform a deep copy
-		        derived_content_writer(const derived_content_writer& obj);
+		        //! disallow copying to ensure consistency of RAII idiom
+		        derived_content_writer(const derived_content_writer& obj) = delete;
 
             //! Destroy a derived-content writer object
-            ~derived_content_writer();
+            virtual ~derived_content_writer();
 
 
 		        // ADMINISTRATION
 
           public:
 
-            //! Set data_manager handle for taskfile
+            //! set_data_manager_handle is not used in this writer
             template <typename data_manager_type>
-            void set_data_manager_taskfile(data_manager_type data);
+            void set_data_manager_handle(data_manager_type data) = delete;
 
-            //! Return data_manager handle for data container
-
-            //! Throws a REPOSITORY_ERROR exception if the handle is unset
+            //! get_data_manager_handle is not used in this writer
             template <typename data_manager_type>
-            void get_data_manager_taskfile(data_manager_type* data);
+            void get_data_manager_handle(data_manager_type* data) = delete;
 
 
             // CONTENT MANAGEMENT
@@ -1637,48 +1748,15 @@ namespace transport
             const std::list<derived_content>& get_content() const { return(this->content); }
 
 
-		        // DATABASE FUNCTIONS
+            // PATHS
 
           public:
 
-		        //! Commit contents out this derived_content_writer to the batabase
-		        void commit() { this->callbacks.commit(*this); }
+            //! get_abs_container_path() is not used in this writer
+            boost::filesystem::path get_abs_container_path() const = delete;
 
-		        //! Abort contents
-		        void abort() { this->callbacks.abort(*this); }
-
-
-		        // LOGGING
-
-          public:
-
-            //! Return logger
-            boost::log::sources::severity_logger<log_severity_level>& get_log() { return (this->log_source); }
-
-
-		        // ABSOLUTE PATHS
-
-          public:
-
-		        //! Return path to output directory
-		        boost::filesystem::path get_abs_output_path() const { return(this->paths.root/this->paths.output); }
-
-            //! Return path to log directory
-            boost::filesystem::path get_abs_logdir_path() const { return(this->paths.root/this->paths.log); }
-
-            //! Return path to task-data container
-            boost::filesystem::path get_abs_taskfile_path() const { return(this->paths.root/this->paths.task); }
-
-            //! Return path to directory for temporary files
-            boost::filesystem::path get_abs_tempdir_path() const { return(this->paths.root/this->paths.temp); }
-
-
-		        // RELATIVE PATHS
-
-          public:
-
-		        //! Return path to output directory
-		        boost::filesystem::path get_relative_output_path() const { return(this->paths.output); }
+            //! get_relative_container_path() is not used in this writer
+            boost::filesystem::path get_relative_container_path() const = delete;
 
 
 		        // METADATA
@@ -1688,29 +1766,16 @@ namespace transport
 		        //! Return task
 		        output_task_record* get_record() const { return(this->parent_record); }
 
-		        //! Return tags
-		        const std::list<std::string>& get_tags() const { return(this->callbacks.tags); }
-
 		        //! Set metadata
 		        void set_metadata(const output_metadata& data) { this->metadata = data; }
 
 		        //! Get metadata
 		        const output_metadata& get_metadata() const { return(this->metadata); }
 
-		        //! Get creation time
-		        const boost::posix_time::ptime& get_creation_time() const { return(this->callbacks.creation_time); }
-
 
             // INTERNAL DATA
 
           private:
-
-
-		        // COMMIT CALLBACK
-
-		        //! Repository callbacks
-		        callback_group callbacks;
-
 
             // CONTENT
 
@@ -1724,30 +1789,6 @@ namespace transport
 
 		        //! metadata for this output task
 		        output_metadata metadata;
-
-
-		        // PATHS
-
-            //! paths associated with this writer
-            const paths_group paths;
-
-
-		        // MISCELLANEOUS
-
-		        //! our MPI worker number
-            const unsigned int worker_number;
-
-		        //! internal handle used by data_manager to associate this writer with a task database
-            void* data_manager_taskfile;
-
-
-		        // LOGGING
-
-            //! Logger source
-            boost::log::sources::severity_logger<log_severity_level> log_source;
-
-            //! Logger sink
-            boost::shared_ptr<sink_t> log_sink;
 
 	        };
 
@@ -1827,10 +1868,13 @@ namespace transport
       public:
 
 		    //! Generate a writer object for new integration output
-		    virtual integration_writer new_integration_task_content(integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual std::shared_ptr<integration_writer> new_integration_task_content(integration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
 
 		    //! Generate a writer object for new derived-content output
-		    virtual derived_content_writer new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual std::shared_ptr<derived_content_writer> new_output_task_content(output_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+
+        //! Generate a writer object for new postintegration output
+        virtual std::shared_ptr<postintegration_writer> new_postintegration_task_content(postintegration_task_record* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -2348,137 +2392,31 @@ namespace transport
 	    }
 
 
-    // INTEGRATION_WRITER METHODS
+    // GENERIC WRITER METHODS
 
 
     template <typename number>
-    repository<number>::integration_writer::integration_writer(integration_task_record* rec,
-                                                               typename repository<number>::integration_writer::callback_group& c,
-                                                               typename repository<number>::integration_writer::paths_group& p,
-                                                               unsigned int w)
-	    : parent_record(dynamic_cast<integration_task_record*>(rec->clone())),
-	      callbacks(c),
+    template <typename WriterObject>
+    repository<number>::generic_writer<WriterObject>::generic_writer(const typename repository<number>::generic_writer<WriterObject>::callback_group& c,
+                                                                     const typename repository<number>::generic_writer<WriterObject>::metadata_group& m,
+                                                                     const typename repository<number>::generic_writer<WriterObject>::paths_group& p,
+                                                                     unsigned int w)
+      : callbacks(c),
+        generic_metadata(m),
         paths(p),
-	      worker_number(w), supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
-	      data_manager_handle(nullptr), data_manager_taskfile(nullptr),
-		    metadata()
-	    {
+        worker_number(w),
+        data_manager_handle(nullptr),
+        data_manager_taskfile(nullptr),
+        committed(false)
+      {
+        // set up logging
+
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path logfile_path = paths.root/paths.log / log_file.str();
+        log_file << __CPP_TRANSPORT_WRITER_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        boost::filesystem::path logfile_path = paths.root / paths.log / log_file.str();
 
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
 
-        boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
-	                                                                boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string());
-
-        // enable auto-flushing of log entries
-        // this degrades performance, but we are not writing many entries and they
-        // will not be lost in the event of a crash
-        backend->auto_flush(true);
-
-        // Wrap it into the frontend and register in the core.
-        // The backend requires synchronization in the frontend.
-        this->log_sink = boost::shared_ptr<sink_t>(new sink_t(backend));
-
-        core->add_sink(this->log_sink);
-
-        boost::log::add_common_attributes();
-	    }
-
-
-		template <typename number>
-		repository<number>::integration_writer::integration_writer(const typename repository<number>::integration_writer& obj)
-			: parent_record(dynamic_cast<integration_task_record*>(obj.parent_record->clone())),
-			  callbacks(obj.callbacks),
-        paths(obj.paths),
-			  supports_stats(obj.supports_stats), worker_number(obj.worker_number),
-			  data_manager_handle(obj.data_manager_handle),
-			  data_manager_taskfile(obj.data_manager_taskfile),
-			  log_source(obj.log_source), log_sink(obj.log_sink),
-				metadata(obj.metadata)
-			{
-		    std::cerr << "Warning: integration_writer object being copied" << std::endl;
-			}
-
-
-    template <typename number>
-    repository<number>::integration_writer::~integration_writer()
-	    {
-        // remove logging objects
-        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-
-        core->remove_sink(this->log_sink);
-
-		    // delete copy of task object
-		    delete this->parent_record;
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::integration_writer::set_data_manager_handle(data_manager_type data)
-	    {
-        this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::integration_writer::get_data_manager_handle(data_manager_type* data)
-	    {
-        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
-        *data = static_cast<data_manager_type>(this->data_manager_handle);
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::integration_writer::set_data_manager_taskfile(data_manager_type data)
-	    {
-        this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::integration_writer::get_data_manager_taskfile(data_manager_type* data)
-	    {
-        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
-        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
-	    }
-
-
-    // output a data_product descriptor to a standard stream
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const typename repository<number>::data_product& product)
-	    {
-        product.write(out);
-        return (out);
-	    }
-
-
-		// DERIVED CONTENT WRITER METHODS
-
-
-    template <typename number>
-    repository<number>::derived_content_writer::derived_content_writer(output_task_record* rec,
-                                                                       typename repository<number>::derived_content_writer::callback_group& c,
-                                                                       typename repository<number>::derived_content_writer::paths_group& p,
-                                                                       unsigned int w)
-	    : parent_record(dynamic_cast<output_task_record*>(rec->clone())),
-	      callbacks(c),
-        paths(p),
-	      worker_number(w), data_manager_taskfile(nullptr),
-        metadata()
-	    {
-        std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
-        boost::filesystem::path logfile_path = paths.root/paths.log / log_file.str();
-
-        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-
-        std::ostringstream log_file_path;
         boost::shared_ptr<boost::log::sinks::text_file_backend> backend =
                                                                   boost::make_shared<boost::log::sinks::text_file_backend>(boost::log::keywords::file_name = logfile_path.string());
 
@@ -2494,49 +2432,169 @@ namespace transport
         core->add_sink(this->log_sink);
 
         boost::log::add_common_attributes();
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    repository<number>::generic_writer<WriterObject>::~generic_writer()
+      {
+        // remove logging objects
+        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
+
+        core->remove_sink(this->log_sink);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    bool repository<number>::generic_writer<WriterObject>::aggregate(const std::string& product)
+      {
+        if(!this->aggregator)
+          {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+          }
+
+        return this->aggregator(static_cast<WriterObject&>(*this), product);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    template <typename data_manager_type>
+    void repository<number>::generic_writer<WriterObject>::set_data_manager_handle(data_manager_type data)
+      {
+        this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    template <typename data_manager_type>
+    void repository<number>::generic_writer<WriterObject>::get_data_manager_handle(data_manager_type* data)
+      {
+        if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
+        *data = static_cast<data_manager_type>(this->data_manager_handle);
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    template <typename data_manager_type>
+    void repository<number>::generic_writer<WriterObject>::set_data_manager_taskfile(data_manager_type data)
+      {
+        this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
+      }
+
+
+    template <typename number>
+    template <typename WriterObject>
+    template <typename data_manager_type>
+    void repository<number>::generic_writer<WriterObject>::get_data_manager_taskfile(data_manager_type* data)
+      {
+        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
+        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
+      }
+
+
+    // INTEGRATION_WRITER METHODS
+
+
+    template <typename number>
+    repository<number>::integration_writer::integration_writer(integration_task_record* rec,
+                                                               const typename repository<number>::generic_writer<typename repository<number>::integration_writer>::callback_group& c,
+                                                               const typename repository<number>::generic_writer<typename repository<number>::integration_writer>::metadata_group& m,
+                                                               const typename repository<number>::generic_writer<typename repository<number>::integration_writer>::paths_group& p,
+                                                               unsigned int w)
+	    : repository<number>::generic_writer<typename repository<number>::integration_writer>(c, m, p, w),
+        parent_record(dynamic_cast<integration_task_record*>(rec->clone())),
+	      supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
+		    metadata()
+	    {
+        assert(this->parent_record != nullptr);
 	    }
 
 
-		template <typename number>
-		repository<number>::derived_content_writer::derived_content_writer(const typename repository<number>::derived_content_writer& obj)
-			: parent_record(dynamic_cast<output_task_record*>(obj.parent_record->clone())),
-			  callbacks(obj.callbacks),
-        paths(obj.paths),
-			  worker_number(obj.worker_number),
-			  data_manager_taskfile(obj.data_manager_taskfile),
-			  log_source(obj.log_source), log_sink(obj.log_sink),
-			  metadata(obj.metadata)
-			{
-		    std::cerr << "Warning: derived_content_writer object being copied" << std::endl;
-			}
+    template <typename number>
+    repository<number>::integration_writer::~integration_writer()
+	    {
+        // if not committed, abort. WARNING! Although this behaviour is common to all writers,
+        // this has to happen in the derived destructor, not the base generic_writer<> destructor
+        // because by the time we arrive in the generic_writer<> destructor we have lost
+        // the identity of the derived class
+        if(!this->committed) this->callbacks.abort(*this);
+
+		    // delete copy of task object
+		    delete this->parent_record;
+	    }
+
+
+    // output a data_product descriptor to a standard stream
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const typename repository<number>::data_product& product)
+	    {
+        product.write(out);
+        return (out);
+	    }
+
+
+    // POSTINTEGRATION WRITER METHODS
+
+
+    template <typename number>
+    repository<number>::postintegration_writer::postintegration_writer(postintegration_task_record* rec,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::postintegration_writer>::callback_group& c,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::postintegration_writer>::metadata_group& m,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::postintegration_writer>::paths_group& p,
+                                                                       unsigned int w)
+      : repository<number>::generic_writer<typename repository<number>::postintegration_writer>(c, m, p, w),
+        parent_record(dynamic_cast<postintegration_task_record*>(rec->clone()))
+      {
+        assert(this->parent_record != nullptr);
+      }
+
+
+    template <typename number>
+    repository<number>::postintegration_writer::~postintegration_writer()
+      {
+        // if not committed, abort. WARNING! Although this behaviour is common to all writers,
+        // this has to happen in the derived destructor, not the base generic_writer<> destructor
+        // because by the time we arrive in the generic_writer<> destructor we have lost
+        // the identity of the derived class
+        if(!this->committed) this->callbacks.abort(*this);
+
+        delete this->parent_record;
+      }
+
+
+		// DERIVED CONTENT WRITER METHODS
+
+
+    template <typename number>
+    repository<number>::derived_content_writer::derived_content_writer(output_task_record* rec,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::derived_content_writer>::callback_group& c,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::derived_content_writer>::metadata_group& m,
+                                                                       const typename repository<number>::generic_writer<typename repository<number>::derived_content_writer>::paths_group& p,
+                                                                       unsigned int w)
+	    : repository<number>::generic_writer<typename repository<number>::derived_content_writer>(c, m, p, w),
+        parent_record(dynamic_cast<output_task_record*>(rec->clone())),
+        metadata()
+	    {
+        assert(this->parent_record != nullptr);
+	    }
 
 
     template <typename number>
     repository<number>::derived_content_writer::~derived_content_writer()
 	    {
-        // remove logging objects
-        boost::shared_ptr<boost::log::core> core = boost::log::core::get();
-
-        core->remove_sink(this->log_sink);
+        // if not committed, abort. WARNING! Although this behaviour is common to all writers,
+        // this has to happen in the derived destructor, not the base generic_writer<> destructor
+        // because by the time we arrive in the generic_writer<> destructor we have lost
+        // the identity of the derived class
+        if(!this->committed) this->callbacks.abort(*this);
 
 		    delete this->parent_record;
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::derived_content_writer::set_data_manager_taskfile(data_manager_type data)
-	    {
-        this->data_manager_taskfile = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
-	    }
-
-
-    template <typename number>
-    template <typename data_manager_type>
-    void repository<number>::derived_content_writer::get_data_manager_taskfile(data_manager_type* data)
-	    {
-        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK);
-        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
 	    }
 
 

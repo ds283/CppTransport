@@ -12,6 +12,7 @@
 #include <vector>
 #include <list>
 #include <functional>
+#include <memory>
 
 #include <math.h>
 
@@ -41,8 +42,9 @@
 
 
 // log file name
-#define __CPP_TRANSPORT_LOG_FILENAME_A  "worker_"
-#define __CPP_TRANSPORT_LOG_FILENAME_B  "_%3N.log"
+#define __CPP_TRANSPORT_DATAPIPE_LOG_FILENAME_A "pipe_worker_"
+#define __CPP_TRANSPORT_BATCHER_LOG_FILENAME_A  "batch_worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B          "_%3N.log"
 
 
 // default size of line cache hash table
@@ -171,7 +173,7 @@ namespace transport
 		        //! values
             std::vector<number> elements;
 
-		        //! kconfig serial number for the integration which produced these values. Used when unwinding a  batch
+		        //! kconfig serial number for the integration which produced these values. Used when unwinding a batch
 		        unsigned int        source_serial;
           };
 
@@ -191,46 +193,75 @@ namespace transport
             boost::timer::nanosecond_type batching;
           };
 
+        //! Stores a zeta twopf configuration
+        class zeta_twopf_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int time_serial;
+
+            //! kconfig serial number of this configuration
+            unsigned int kconfig_serial;
+
+            // value
+            number value;
+          };
+
+        //! Stores a zeta threepf configuration
+        class zeta_threepf_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int time_serial;
+
+            //! kconfig serial number of this configuration
+            unsigned int kconfig_serial;
+
+            // value
+            number value;
+          };
+
+        //! Stores an fNL configuration
+        class fNL_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int time_serial;
+
+            // value
+            number value;
+          };
+
         // writer functions, used by the compute backends to store the output of each integration
         // in a temporary container
 
         class generic_batcher;
-        class twopf_batcher;
-        class threepf_batcher;
+        class integration_batcher;
+        class postintegration_batcher;
 
         //! Background writer function
-        typedef std::function<void(generic_batcher*, const std::vector<backg_item>&)> backg_writer;
+        typedef std::function<void(integration_batcher*, const std::vector<backg_item>&)> backg_writer;
 
         //! Two-point function writer function
-        typedef std::function<void(generic_batcher*, const std::vector<twopf_item>&)> twopf_writer;
+        typedef std::function<void(integration_batcher*, const std::vector<twopf_item>&)> twopf_writer;
 
         //! Three-point function writer function
-        typedef std::function<void(generic_batcher*, const std::vector<threepf_item>&)> threepf_writer;
+        typedef std::function<void(integration_batcher*, const std::vector<threepf_item>&)> threepf_writer;
 
         //! Per-configuration statistics writer function
-        typedef std::function<void(generic_batcher*, const std::vector<configuration_statistics>&)> stats_writer;
+        typedef std::function<void(integration_batcher*, const std::vector<configuration_statistics>&)> stats_writer;
 
+        //! Zeta 2pf writer function
+        typedef std::function<void(postintegration_batcher*, const std::vector<zeta_twopf_item>&)> zeta_twopf_writer;
 
-				//! Aggregation of writers for a two-point function integration
-        class twopf_writer_group
-          {
-          public:
-            backg_writer backg;
-            twopf_writer twopf;
-            stats_writer stats;
-          };
+        //! Zeta 3pf writer function
+        typedef std::function<void(postintegration_batcher*, const std::vector<zeta_threepf_item>&)> zeta_threepf_writer;
 
-
-		    //! Aggregation of writers for a three-point function integration
-        class threepf_writer_group
-          {
-          public:
-            backg_writer   backg;
-            twopf_writer   twopf_re;
-            twopf_writer   twopf_im;
-            threepf_writer threepf;
-            stats_writer   stats;
-          };
+        //! fNL writer function
+        typedef std::function<void(postintegration_batcher*, const std::vector<fNL_item>&, derived_data::template_type)> fNL_writer;
 
 
 		    // data pipe, used by derived content providers to extract content from an output group
@@ -263,13 +294,16 @@ namespace transport
 
             typedef enum { flush_immediate, flush_delayed } flush_mode;
 
+
+            // CONSTRUCTOR, DESTRUCTOR
+
           public:
 
             template <typename handle_type>
-            generic_batcher(unsigned int cap, unsigned int Nf,
+            generic_batcher(unsigned int cap,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w, bool s);
+                            handle_type h, unsigned int w);
 
             virtual ~generic_batcher();
 
@@ -295,14 +329,117 @@ namespace transport
             template <typename handle_type>
             void get_manager_handle(handle_type* h) const { *h = static_cast<handle_type>(this->manager_handle); }
 
-            //! Return number of fields
-            unsigned int get_number_fields() const { return(this->Nfields); }
-
             //! Return worker numbers
             unsigned int get_worker_number() const { return(this->worker_number); }
 
+            //! Close batcher
+            virtual void close();
+
+
+            // LOGGING
+
+          public:
+
+            //! Return logger
+            boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
+
+
+            // FLUSH INTERFACE
+
+          public:
+
+            //! Get flush mode
+            flush_mode get_flush_mode() const { return(this->mode); }
+
+            //! Set flush mode
+            void set_flush_mode(flush_mode f) { this->mode = f; }
+
+          protected:
+
+            //! Compute the size of all currently-batched results
+            virtual size_t storage() const = 0;
+
+            //! Flush currently-batched results into the database, and then send to the master process
+            virtual void flush(replacement_action action) = 0;
+
+		        //! Check if the batcher is ready for flush
+		        void check_for_flush();
+
+
+            // INTERNAL DATA
+
+          protected:
+
+
+            // OTHER INTERNAL DATA
+
+            //! Capacity available
+            unsigned int                                             capacity;
+
+            //! Container path
+            boost::filesystem::path                                  container_path;
+
+            //! Log directory path
+            boost::filesystem::path                                  logdir_path;
+
+            //! Data manager handle
+            void*                                                    manager_handle;
+
+            //! Callback for dispatching a container
+            container_dispatch_function                              dispatcher;
+
+            //! Callback for obtaining a replacement container
+            container_replacement_function                           replacer;
+
+            //! Worker number associated with this batcher
+            unsigned int                                             worker_number;
+
+
+		        // FLUSH HANDLING
+
+		        //! Needs flushing at next opportunity?
+		        bool                                                     flush_due;
+
+            //! Flushing mode
+            flush_mode                                               mode;
+
+
+            // LOGGING
+
+            //! Logger source
+            boost::log::sources::severity_logger<log_severity_level> log_source;
+
+            //! Logger sink
+            boost::shared_ptr< sink_t >                              log_sink;
+
+          };
+
+
+        class integration_batcher: public generic_batcher
+          {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            template <typename handle_type>
+            integration_batcher(unsigned int cap, unsigned int Nf,
+                                const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                container_dispatch_function d, container_replacement_function r,
+                                handle_type h, unsigned int w, bool s);
+
+            virtual ~integration_batcher() = default;
+
+
+            // ADMINISTRATION
+
+          public:
+
+            //! Return number of fields
+            unsigned int get_number_fields() const { return(this->Nfields); }
+
             //! Close this batcher -- called at the end of an integration
-            void close();
+            virtual void close() override;
 
 
             // INTEGRATION MANAGEMENT
@@ -318,17 +455,17 @@ namespace transport
             //! Report a failed integration
             void report_integration_failure();
 
-		        //! Report an integration which required mesh refinement
-		        void report_refinement();
+            //! Report an integration which required mesh refinement
+            void report_refinement();
 
             //! Query whether any integrations failed
             bool integrations_failed() const { return(this->failures > 0); }
 
-		        //! Query how many refinements occurred
-		        unsigned int number_refinements() const { return(this->refinements); }
+            //! Query how many refinements occurred
+            unsigned int number_refinements() const { return(this->refinements); }
 
 
-            // STATISTICS
+            // INTEGRATION STATISTICS
 
           public:
 
@@ -361,145 +498,117 @@ namespace transport
             //! Push a background sample
             void push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values);
 
-            //! Return logger
-            boost::log::sources::severity_logger<log_severity_level>& get_log() { return(this->log_source); }
 
-
-            // FLUSH INTERFACE
+            // UNBATCH
 
           public:
 
-            //! Get flush mode
-            flush_mode get_flush_mode() const { return(this->mode); }
-
-            //! Set flush mode
-            void set_flush_mode(flush_mode f) { this->mode = f; }
-
-          protected:
-
-            //! Compute the size of all currently-batched results
-            virtual size_t storage() const = 0;
-
-            //! Flush currently-batched results into the database, and then send to the master process
-            virtual void flush(replacement_action action) = 0;
-
-		        //! Check if the batcher is ready for flush
-		        void check_for_flush();
-
-
-		        // UNBATCH
-
-          public:
-
-		        //! Unbatch a given configuration
-		        virtual void unbatch(unsigned int source_serial) = 0;
+            //! Unbatch a given configuration
+            virtual void unbatch(unsigned int source_serial) = 0;
 
 
             // INTERNAL DATA
 
           protected:
 
+
             // CACHES
 
             //! Cache of background pushes
-            std::vector<backg_item>                                  backg_batch;
+            std::vector<backg_item>               backg_batch;
 
             //! Cache of per-configuration statistics
-            std::vector<configuration_statistics>                    stats_batch;
+            std::vector<configuration_statistics> stats_batch;
 
 
             // OTHER INTERNAL DATA
 
-            //! Capacity available
-            unsigned int                                             capacity;
-
             //! Number of fields associated with this integration
-            const unsigned int                                       Nfields;
-
-            //! Container path
-            boost::filesystem::path                                  container_path;
-
-            //! Log directory path
-            boost::filesystem::path                                  logdir_path;
-
-            //! Data manager handle
-            void*                                                    manager_handle;
-
-            //! Callback for dispatching a container
-            container_dispatch_function                              dispatcher;
-
-            //! Callback for obtaining a replacement container
-            container_replacement_function                           replacer;
-
-            //! Worker number associated with this batcher
-            unsigned int                                             worker_number;
+            const unsigned int                    Nfields;
 
 
-		        // FLUSH HANDLING
-
-		        //! Needs flushing at next opportunity?
-		        bool flush_due;
-
-            //! Flushing mode
-            flush_mode                                               mode;
-
-
-            // EVENT TRACKING
+            // INTEGRATION EVENT TRACKING
 
             //! number of integrations which have failed
-            unsigned int                                             failures;
+            unsigned int                          failures;
 
-		        //! number of integrations which required refinement
-		        unsigned int                                             refinements;
+            //! number of integrations which required refinement
+            unsigned int                          refinements;
 
 
-            // STATISTICS
+            // INTEGRATION STATISTICS
 
             //! Are we collecting per-configuration statistics?
-            bool                                                     collect_statistics;
+            bool                                  collect_statistics;
 
             //! Number of integrations handled by this batcher
-            unsigned int                                             num_integrations;
+            unsigned int                          num_integrations;
 
             //! Aggregate integration time
-            boost::timer::nanosecond_type                            integration_time;
+            boost::timer::nanosecond_type         integration_time;
 
             //! Aggregate batching time
-            boost::timer::nanosecond_type                            batching_time;
+            boost::timer::nanosecond_type         batching_time;
 
             //! Longest integration time
-            boost::timer::nanosecond_type                            max_integration_time;
+            boost::timer::nanosecond_type         max_integration_time;
 
             //! Shortest integration time
-            boost::timer::nanosecond_type                            min_integration_time;
+            boost::timer::nanosecond_type         min_integration_time;
 
             //! Longest batching time
-            boost::timer::nanosecond_type                            max_batching_time;
+            boost::timer::nanosecond_type         max_batching_time;
 
             //! Shortest batching time
-            boost::timer::nanosecond_type                            min_batching_time;
-
-
-            // LOGGING
-
-            //! Logger source
-            boost::log::sources::severity_logger<log_severity_level> log_source;
-
-            //! Logger sink
-            boost::shared_ptr< sink_t >                              log_sink;
+            boost::timer::nanosecond_type         min_batching_time;
 
           };
 
 
-        class twopf_batcher: public generic_batcher
+        class postintegration_batcher: public generic_batcher
           {
+
+            // CONSTRUCTOR, DESTRUCTOR
+
+          public:
+
+            template <typename handle_type>
+            postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                    container_dispatch_function d, container_replacement_function r,
+                                    handle_type h, unsigned int w);
+
+            virtual ~postintegration_batcher() = default;
+
+
+            // MANAGEMENT
+
+          public:
+
+            //! Report finished block
+            void report_finished_block();
+
+          };
+
+
+        class twopf_batcher: public integration_batcher
+          {
+
+          public:
+
+            class writer_group
+              {
+              public:
+                backg_writer backg;
+                twopf_writer twopf;
+                stats_writer stats;
+              };
 
           public:
 
             template <typename handle_type>
             twopf_batcher(unsigned int cap, unsigned int Nf,
                           const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                          const twopf_writer_group& w,
+                          const writer_group& w,
                           container_dispatch_function d, container_replacement_function r,
                           handle_type h, unsigned int wn, bool s);
 
@@ -515,15 +624,28 @@ namespace transport
 
           protected:
 
-            const twopf_writer_group writers;
+            const writer_group writers;
 
-            std::vector<twopf_item>  twopf_batch;
+            std::vector<twopf_item> twopf_batch;
 
           };
 
 
-        class threepf_batcher: public generic_batcher
+        class threepf_batcher: public integration_batcher
           {
+
+          public:
+
+            class writer_group
+              {
+              public:
+                backg_writer   backg;
+                twopf_writer   twopf_re;
+                twopf_writer   twopf_im;
+                threepf_writer threepf;
+                stats_writer   stats;
+              };
+
           public:
 
             typedef enum { real_twopf, imag_twopf } twopf_type;
@@ -531,7 +653,7 @@ namespace transport
             template <typename handle_type>
             threepf_batcher(unsigned int cap, unsigned int Nf,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                            const threepf_writer_group& w,
+                            const writer_group& w,
                             container_dispatch_function d, container_replacement_function r,
                             handle_type h, unsigned int wn, bool s);
 
@@ -549,11 +671,126 @@ namespace transport
 
           protected:
 
-            const threepf_writer_group writers;
+            const writer_group writers;
 
             std::vector<twopf_item>    twopf_re_batch;
             std::vector<twopf_item>    twopf_im_batch;
             std::vector<threepf_item>  threepf_batch;
+
+          };
+
+
+        class zeta_twopf_batcher: public postintegration_batcher
+          {
+
+          public:
+
+            class writer_group
+              {
+              public:
+                zeta_twopf_writer twopf;
+              };
+
+          public:
+
+            template <typename handle_type>
+            zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                               const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                               handle_type h, unsigned int wn);
+
+            void push_twopf(unsigned int time_serial, unsigned int k_serial, number value);
+
+          protected:
+
+            virtual size_t storage() const override;
+
+            virtual void flush(replacement_action action) override;
+
+          protected:
+
+            const writer_group writers;
+
+            std::vector<zeta_twopf_item> twopf_batch;
+
+          };
+
+
+        class zeta_threepf_batcher: public postintegration_batcher
+          {
+
+          public:
+
+            class writer_group
+              {
+              public:
+                zeta_twopf_writer   twopf;
+                zeta_threepf_writer threepf;
+                zeta_threepf_writer redbsp;
+              };
+
+          public:
+
+            template <typename handle_type>
+            zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                 const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                                 handle_type h, unsigned int wn);
+
+            void push_twopf(unsigned int time_serial, unsigned int k_serial, number value);
+
+            void push_threepf(unsigned int time_serial, unsigned int k_serial, number value);
+
+            void push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value);
+
+          protected:
+
+            virtual size_t storage() const override;
+
+            virtual void flush(replacement_action action) override;
+
+          protected:
+
+            const writer_group writers;
+
+            std::vector<zeta_twopf_item> twopf_batch;
+            std::vector<zeta_threepf_item> threepf_batch;
+            std::vector<zeta_threepf_item> redbsp_batch;
+
+          };
+
+
+        class fNL_batcher: public postintegration_batcher
+          {
+
+          public:
+
+            class writer_group
+              {
+              public:
+                fNL_writer fNL;
+              };
+
+          public:
+
+            template <typename handle_type>
+            fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                        const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                        handle_type h, unsigned int wn, derived_data::template_type t);
+
+            void push_fNL(unsigned int time_serial, number value);
+
+          protected:
+
+            virtual size_t storage() const override;
+
+            virtual void flush(replacement_action action) override;
+
+          protected:
+
+            const writer_group writers;
+
+            std::vector<fNL_item> fNL_batch;
+
+            derived_data::template_type type;
 
           };
 
@@ -1898,18 +2135,24 @@ namespace transport
 
       public:
 
-        //! Create data files for an integration_writer object.
+        //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(typename repository<number>::integration_writer& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) = 0;
 
-        //! Close an open container integration_writer object.
-        virtual void close_writer(typename repository<number>::integration_writer& writer) = 0;
+        //! Close an integration_writer object.
+        virtual void close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) = 0;
 
-        //! Create data files for a new derived_content_writer object.
-        virtual void initialize_writer(typename repository<number>::derived_content_writer& writer) = 0;
+        //! Initialize a derived_content_writer object.
+        virtual void initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(typename repository<number>::derived_content_writer& writer) = 0;
+        virtual void close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) = 0;
+
+        //! Initialize a postintegration_writer object.
+        virtual void initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) = 0;
+
+        //! Close an open postintegration_writer object.
+        virtual void close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) = 0;
 
 
         // WRITE INDEX TABLES FOR A DATA CONTAINER
@@ -1917,24 +2160,33 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk) = 0;
+
+        //! Create tables needed for a zeta twopf container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk) = 0;
+
+        //! Create tables needed for a zeta threepf container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk) = 0;
+
+        //! Create tables needed for an fNL container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) = 0;
 
 
         // TASK FILES
 
       public:
 
-        //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue) = 0;
-
-        //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue) = 0;
-
-		    //! Create a list of task assignments, over a number of devices, for a work queue of output_task_element-s
-		    virtual void create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue) = 0;
+        //! Create a list of task assignments, over a number of devices, from a work queue.
+        //! C++ does not allow templated virtual functions, so we need to explicitly declare
+        //! each version that we need
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<twopf_kconfig>& queue) = 0;
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<threepf_kconfig>& queue) = 0;
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<twopf_kconfig>& queue) = 0;
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<threepf_kconfig>& queue) = 0;
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) = 0;
 
         //! Read a list of task assignments for a particular worker
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;
@@ -1954,11 +2206,17 @@ namespace transport
                                                               unsigned int worker, model<number>* m,
                                                               container_dispatch_function dispatcher) = 0;
 
-        //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) = 0;
+        //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
+        virtual zeta_twopf_batcher create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                                    unsigned int worker, container_dispatch_function dispatcher) = 0;
 
-        //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) = 0;
+        //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
+        virtual zeta_threepf_batcher create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                                        unsigned int worker, container_dispatch_function dispatcher) = 0;
+
+        //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
+        virtual fNL_batcher create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                      unsigned int worker, container_dispatch_function dispatcher, derived_data::template_type type) = 0;
 
 
 		    // DATA PIPES AND DATA ACCESS
@@ -2020,25 +2278,23 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    data_manager<number>::generic_batcher::generic_batcher(unsigned int cap, unsigned int Nf,
+    data_manager<number>::generic_batcher::generic_batcher(unsigned int cap,
                                                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                            typename data_manager<number>::container_dispatch_function d,
                                                            typename data_manager<number>::container_replacement_function r,
-                                                           handle_type h, unsigned int w, bool s)
-      : capacity(cap), Nfields(Nf), container_path(cp), logdir_path(lp),
-        dispatcher(d), replacer(r), worker_number(w),
+                                                           handle_type h, unsigned int w)
+      : capacity(cap),
+        container_path(cp),
+        logdir_path(lp),
+        dispatcher(d),
+        replacer(r),
+        worker_number(w),
         manager_handle(static_cast<void*>(h)),
-        num_integrations(0),
-        integration_time(0),
-        max_integration_time(0), min_integration_time(0),
-        batching_time(0),
-        max_batching_time(0), min_batching_time(0),
-        collect_statistics(s), failures(0), refinements(0),
         mode(data_manager<number>::generic_batcher::flush_immediate),
         flush_due(false)
       {
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << __CPP_TRANSPORT_BATCHER_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 
@@ -2068,13 +2324,54 @@ namespace transport
     data_manager<number>::generic_batcher::~generic_batcher()
       {
         boost::shared_ptr< boost::log::core > core = boost::log::core::get();
-
         core->remove_sink(this->log_sink);
       }
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
+    void data_manager<number>::generic_batcher::close()
+      {
+        this->flush(action_close);
+      }
+
+
+    template <typename number>
+    void data_manager<number>::generic_batcher::check_for_flush()
+      {
+        if(this->storage() > this->capacity)
+          {
+            if(this->mode == flush_immediate) this->flush(action_replace);
+            else                              this->flush_due = true;
+          }
+      }
+
+
+    // INTEGRATION BATCHER METHODS
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::integration_batcher::integration_batcher(unsigned int cap, unsigned int Nf,
+                                                                   const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                                   container_dispatch_function d, container_replacement_function r,
+                                                                   handle_type h, unsigned int w, bool s)
+      : generic_batcher(cap, cp, lp, d, r, h, w),
+        Nfields(Nf),
+        num_integrations(0),
+        integration_time(0),
+        max_integration_time(0),
+        min_integration_time(0),
+        batching_time(0),
+        max_batching_time(0),
+        min_batching_time(0),
+        collect_statistics(s),
+        failures(0),
+        refinements(0)
+      {
+      }
+
+
+    template <typename number>
+    void data_manager<number>::integration_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
       {
         this->integration_time += integration;
         this->batching_time += batching;
@@ -2089,14 +2386,14 @@ namespace transport
 
 		    if(this->flush_due)
 			    {
-				    flush_due = false;
+				    this->flush_due = false;
 				    this->flush(action_replace);
 			    }
       }
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
+    void data_manager<number>::integration_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
     unsigned int kserial)
       {
         this->report_integration_success(integration, batching);
@@ -2110,14 +2407,14 @@ namespace transport
 
 		    if(this->flush_due)
 			    {
-				    flush_due = false;
+				    this->flush_due = false;
 				    this->flush(action_replace);
 			    }
       }
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
+    void data_manager<number>::integration_batcher::push_backg(unsigned int time_serial, unsigned int source_serial, const std::vector<number>& values)
       {
         if(values.size() != 2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_BACKG);
         backg_item item;
@@ -2131,28 +2428,28 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::report_integration_failure()
+    void data_manager<number>::integration_batcher::report_integration_failure()
       {
         this->failures++;
         if(this->flush_due)
           {
-            flush_due = false;
+            this->flush_due = false;
             this->flush(action_replace);
           }
       }
 
 
 		template <typename number>
-		void data_manager<number>::generic_batcher::report_refinement()
+		void data_manager<number>::integration_batcher::report_refinement()
 			{
 				this->refinements++;
 			}
 
 
     template <typename number>
-    void data_manager<number>::generic_batcher::close()
+    void data_manager<number>::integration_batcher::close()
       {
-        this->flush(action_close);
+        this->generic_batcher::close();
 
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing batcher: final integration statistics";
@@ -2179,25 +2476,41 @@ namespace transport
       }
 
 
-		template <typename number>
-		void data_manager<number>::generic_batcher::check_for_flush()
-			{
-				if(this->storage() > this->capacity)
-					{
-						if(this->mode == flush_immediate) this->flush(action_replace);
-						else                              this->flush_due = true;
-					}
-			}
+    // POSTINTEGRATION BATCHER METHODS
 
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::postintegration_batcher::postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                                           container_dispatch_function d, container_replacement_function r,
+                                                                           handle_type h, unsigned int w)
+      : generic_batcher(cap, cp, lp, d, r, h, w)
+      {
+      }
+
+
+    template <typename number>
+    void data_manager<number>::postintegration_batcher::report_finished_block()
+      {
+        if(this->flush_due)
+          {
+            this->flush_due = false;
+            this->flush(action_replace);
+          }
+      }
+
+
+    // TWOPF BATCHER METHODS
 
 		template <typename number>
 		template <typename handle_type>
 		data_manager<number>::twopf_batcher::twopf_batcher(unsigned int cap, unsigned int Nf,
 		                                                   const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-		                                                   const twopf_writer_group& w,
+		                                                   const writer_group& w,
 		                                                   container_dispatch_function d, container_replacement_function r,
 		                                                   handle_type h, unsigned int wn, bool s)
-			: generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w)
+			: integration_batcher(cap, Nf, cp, lp, d, r, h, wn, s),
+        writers(w)
 			{
 			}
 
@@ -2275,14 +2588,17 @@ namespace transport
 	    }
 
 
+    // THREEPF BATCHER METHODS
+
     template <typename number>
     template <typename handle_type>
     data_manager<number>::threepf_batcher::threepf_batcher(unsigned int cap, unsigned int Nf,
                                                            const boost::filesystem::path& cp, const boost::filesystem::path& lp,
-                                                           const threepf_writer_group& w,
+                                                           const writer_group& w,
                                                            container_dispatch_function d, container_replacement_function r,
                                                            handle_type h, unsigned int wn, bool s)
-	    : generic_batcher(cap, Nf, cp, lp, d, r, h, wn, s), writers(w)
+	    : integration_batcher(cap, Nf, cp, lp, d, r, h, wn, s),
+        writers(w)
 	    {
 	    }
 
@@ -2323,7 +2639,8 @@ namespace transport
 
 		template <typename number>
 		size_t data_manager<number>::threepf_batcher::storage() const
-			{ return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
+			{
+        return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
 							 + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
 							 + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size());
 			}
@@ -2396,6 +2713,214 @@ namespace transport
 			}
 
 
+    // ZETA TWOPF BATCHER METHODS
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::zeta_twopf_batcher::zeta_twopf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                                 const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                                                                 handle_type h, unsigned int wn)
+      : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+        writers(w)
+      {
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_twopf_batcher::push_twopf(unsigned int time_serial, unsigned int k_serial, number value)
+      {
+        zeta_twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.value          = value;
+
+        this->twopf_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    size_t data_manager<number>::zeta_twopf_batcher::storage() const
+      {
+        return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size());
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_twopf_batcher::flush(replacement_action action)
+      {
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing zeta twopf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+        // set up a timer to measure how long it takes to flush
+        boost::timer::cpu_timer flush_timer;
+
+        this->writers.twopf(this, this->twopf_batch);
+
+        flush_timer.stop();
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+
+        this->twopf_batch.clear();
+
+        // push a message to the master node, indicating that new data is available
+        // note that the order of calls to 'dispatcher' and 'replacer' is important
+        // because 'dispatcher' needs the current path name, not the one created by
+        // 'replacer'
+        this->dispatcher(this);
+
+        // close current container, and replace with a new one if required
+        this->replacer(this, action);
+      }
+
+
+    // ZETA THREEPF BATCHER METHODS
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::zeta_threepf_batcher::zeta_threepf_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                                     const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                                                                     handle_type h, unsigned int wn)
+      : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+        writers(w)
+      {
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_threepf_batcher::push_twopf(unsigned int time_serial, unsigned int k_serial, number value)
+      {
+        zeta_twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.value          = value;
+
+        this->twopf_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_threepf_batcher::push_threepf(unsigned int time_serial, unsigned int k_serial, number value)
+      {
+        zeta_threepf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.value          = value;
+
+        this->threepf_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_threepf_batcher::push_reduced_bispectrum(unsigned int time_serial, unsigned int k_serial, number value)
+      {
+        zeta_threepf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.value          = value;
+
+        this->redbsp_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    size_t data_manager<number>::zeta_threepf_batcher::storage() const
+      {
+        return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size()
+               + (2*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
+               + (2*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
+      }
+
+
+    template <typename number>
+    void data_manager<number>::zeta_threepf_batcher::flush(replacement_action action)
+      {
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing zeta threepf batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+        // set up a timer to measure how long it takes to flush
+        boost::timer::cpu_timer flush_timer;
+
+        this->writers.twopf(this, this->twopf_batch);
+        this->writers.threepf(this, this->threepf_batch);
+        this->writers.redbsp(this, this->redbsp_batch);
+
+        flush_timer.stop();
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+
+        this->twopf_batch.clear();
+        this->threepf_batch.clear();
+        this->redbsp_batch.clear();
+
+        // push a message to the master node, indicating that new data is available
+        // note that the order of calls to 'dispatcher' and 'replacer' is important
+        // because 'dispatcher' needs the current path name, not the one created by
+        // 'replacer'
+        this->dispatcher(this);
+
+        // close current container, and replace with a new one if required
+        this->replacer(this, action);
+      }
+
+
+    // FNL BATCHER METHODS
+
+    template <typename number>
+    template <typename handle_type>
+    data_manager<number>::fNL_batcher::fNL_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
+                                                   const writer_group& w, container_dispatch_function d, container_replacement_function r,
+                                                   handle_type h, unsigned int wn, derived_data::template_type t)
+      : postintegration_batcher(cap, cp, lp, d, r, h, wn),
+        writers(w),
+        type(t)
+      {
+      }
+
+
+    template <typename number>
+    void data_manager<number>::fNL_batcher::push_fNL(unsigned int time_serial, number value)
+      {
+        fNL_item item;
+        item.time_serial = time_serial;
+        item.value       = value;
+
+        this->fNL_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
+    size_t data_manager<number>::fNL_batcher::storage() const
+      {
+        return((2*sizeof(unsigned int) + sizeof(number))*this->fNL_batch.size());
+      }
+
+
+    template <typename number>
+    void data_manager<number>::fNL_batcher::flush(replacement_action action)
+      {
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushing " << template_name(this->type) << " batcher (capacity=" << format_memory(this->capacity) << ") of size " << format_memory(this->storage());
+
+        // set up a timer to measure how long it takes to flush
+        boost::timer::cpu_timer flush_timer;
+
+        this->writers.fNL(this, this->fNL_batch, this->type);
+
+        flush_timer.stop();
+        BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
+
+        this->fNL_batch.clear();
+
+        // push a message to the master node, indicating that new data is available
+        // note that the order of calls to 'dispatcher' and 'replacer' is important
+        // because 'dispatcher' needs the current path name, not the one created by
+        // 'replacer'
+        this->dispatcher(this);
+
+        // close current container, and replace with a new one if required
+        this->replacer(this, action);
+      }
+
 
     // DATAPIPE METHODS
 
@@ -2419,13 +2944,13 @@ namespace transport
 	      twopf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(dcap),
-        zeta_cache(zcap),
+        zeta_cache(zcap),3
         attached_task(nullptr)
 	    {
         this->database_timer.stop();
 
         std::ostringstream log_file;
-        log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
+        log_file << __CPP_TRANSPORT_DATAPIPE_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
         boost::filesystem::path log_path = logdir_path / log_file.str();
 

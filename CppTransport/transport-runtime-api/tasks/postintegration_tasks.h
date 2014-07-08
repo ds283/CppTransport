@@ -72,6 +72,14 @@ namespace transport
 				virtual void serialize(serialization_writer& writer) const override;
 
 
+        // WRITE TO STREAM
+
+      public:
+
+        //! write to stream
+        void write(std::ostream& out) const;
+
+
 				// INTERNAL DATA
 
 		  protected:
@@ -80,6 +88,14 @@ namespace transport
 				integration_task<number>* tk;
 
 			};
+
+
+    template <typename number>
+    std::ostream& operator<<(std::ostream& out, const postintegration_task<number>& obj)
+      {
+        obj.write(out);
+        return(out);
+      }
 
 
 		template <typename number>
@@ -137,6 +153,13 @@ namespace transport
 				// serialize parent integration task
 				writer.write_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT, this->tk->get_name());
 			}
+
+
+    template <typename number>
+    void postintegration_task<number>::write(std::ostream& out) const
+      {
+        out << __CPP_TRANSPORT_PARENT_TASK << ": '" << this->tk->get_name() << "'" << std::endl;
+      }
 
 
 		// ZETA TWOPF TASK

@@ -17,5 +17,8 @@
 
 #define __CPP_TRANSPORT_FILTER_TAG                "Filter for work items:"
 
+#define __CPP_TRANSPORT_EXPECTED_TWOPF_TASK       "Internal error: expected postintegration parent task to be of type twopf_task, but instead found task"
+#define __CPP_TRANSPORT_EXPECTED_THREEPF_TASK     "Internal error: expected postintegration parent task to be of type threepf_task, but instead found task"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASK_MANAGER_H

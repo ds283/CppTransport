@@ -69,24 +69,30 @@ namespace transport
 
       public:
 
-        //! Create data files for a new integration_writer object, including the data container.
+        //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(typename repository<number>::integration_writer& writer) override;
+        virtual void initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) override;
 
         //! Close an open integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to use an integration_writer will lead to unsubtle errors.
-        virtual void close_writer(typename repository<number>::integration_writer& writer) override;
+        virtual void close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) override;
 
-		    //! Create data files for a new derived_content_writer object.
-		    virtual void initialize_writer(typename repository<number>::derived_content_writer& writer) override;
+		    //! Initialize a new derived_content_writer object.
+		    virtual void initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) override;
 
 		    //! Close an open derived_content_writer object.
 
 		    //! Any open sqlite3 handles are closed. Attempting to use the writer after closing
 		    //! will lead to unsubtle errors.
-		    virtual void close_writer(typename repository<number>::derived_content_writer& writer) override;
+		    virtual void close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) override;
+
+        //! Initialize a new postintegration_writer object.
+        virtual void initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) override;
+
+        //! Close an open postintegration_writer object
+        virtual void close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) override;
 
 
         // WRITE INDEX TABLES -- implements a 'data_manager' interface
@@ -94,27 +100,39 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk) override;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk) override;
+
+        //! Create tables needed for a zeta twopf container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk) override;
+
+        //! Create tables needed for a zeta threepf container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk) override;
+
+        //! Create tables needed for an fNL container
+        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) override;
 
 
         // TASK FILES -- implements a 'data_manager' interface
 
       public:
 
-        //! Create a list of task assignments, over a number of devices, from a work queue of twopf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue) override;
-
-        //! Create a list of task assignments, over a number of devices, from a work queue of threepf_kconfig-s
-        virtual void create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue) override;
-
-        //! Create a list of task assignments, over a number of devices, for a work queue of output_task_element-s
-        virtual void create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue) override;
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<twopf_kconfig>& queue)                              override { this->internal_create_taskfile(writer, queue); }
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<threepf_kconfig>& queue)                            override { this->internal_create_taskfile(writer, queue); }
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<twopf_kconfig>& queue)                          override { this->internal_create_taskfile(writer, queue); }
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<threepf_kconfig>& queue)                        override { this->internal_create_taskfile(writer, queue); }
+        virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) override { this->internal_create_taskfile(writer, queue); }
 
         //! Read a list of task assignments for a particular worker
         virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) override;
+
+      protected:
+
+        //! Create a list of task assignments, over a number of devices, from a work queue
+        template <typename WriterObject, typename WorkItem>
+        void internal_create_taskfile(std::shared_ptr<WriterObject>& writer, const work_queue<WorkItem>& queue);
 
 
         // TEMPORARY CONTAINERS  -- implements a 'data_manager' interface
@@ -133,11 +151,44 @@ namespace transport
                                                                                              unsigned int worker, model<number>* m,
                                                                                              typename data_manager<number>::container_dispatch_function dispatcher) override;
 
+        //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
+        virtual typename data_manager<number>::zeta_twopf_batcher create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir,
+                                                                                                   const boost::filesystem::path& logdir,
+                                                                                                   unsigned int worker,
+                                                                                                   typename data_manager<number>::container_dispatch_function dispatcher) override;
+
+        //! Create a temporary container for zeta threepf data. Returns a batcher which can be used for writing to the container.
+        virtual typename data_manager<number>::zeta_threepf_batcher create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir,
+                                                                                                       const boost::filesystem::path& logdir,
+                                                                                                       unsigned int worker,
+                                                                                                       typename data_manager<number>::container_dispatch_function dispatcher) override;
+
+        //! Create a temporary container for fNL data. Returns a batcher which can be used for writing to the container.
+        virtual typename data_manager<number>::fNL_batcher create_temp_fNL_container(const boost::filesystem::path& tempdir,
+                                                                                     const boost::filesystem::path& logdir,
+                                                                                     unsigned int worker,
+                                                                                     typename data_manager<number>::container_dispatch_function dispatcher,
+                                                                                     derived_data::template_type type) override;
+
+      protected:
+
         //! Aggregate a temporary twopf container into a principal container
-        virtual void aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) override;
+        bool aggregate_twopf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary threepf container into a principal container
-        virtual void aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr) override;
+        bool aggregate_threepf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+
+        //! Aggregate a derived product
+        bool aggregate_derived_product(typename repository<number>::base_writer& writer, const std::string& temp_name);
+
+        //! Aggregate a temporary zeta_twopf container
+        bool aggregate_zeta_twopf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+
+        //! Aggregate a temporary zeta_threepf container
+        bool aggregate_zeta_threepf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+
+        //! Aggregate a temporary fNL container
+        bool aggregate_fNL_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr, derived_data::template_type type);
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -215,6 +266,21 @@ namespace transport
                                             model<number>* m, typename data_manager<number>::generic_batcher* batcher,
                                             typename data_manager<number>::replacement_action action);
 
+        //! Replace a temporary zeta twopf container with a new one
+        void replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                               typename data_manager<number>::generic_batcher* batcher,
+                                               typename data_manager<number>::replacement_action action);
+
+        //! Replace a temporary zeta threepf container with a new one
+        void replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                 typename data_manager<number>::generic_batcher* batcher,
+                                                 typename data_manager<number>::replacement_action action);
+
+        //! Replace a temporary fNL container with a new one
+        void replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+                                        typename data_manager<number>::generic_batcher* batcher,
+                                        typename data_manager<number>::replacement_action action);
+
         //! Generate the name for a temporary container
         boost::filesystem::path generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker);
 
@@ -259,17 +325,16 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::integration_writer& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer)
       {
         sqlite3* db = nullptr;
         sqlite3* taskfile = nullptr;
 
         // get paths of the data container and taskfile
-        boost::filesystem::path ctr_path = writer.get_abs_container_path();
-        boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
+        boost::filesystem::path ctr_path = writer->get_abs_container_path();
+        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
 
         // open the main container
-
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
         if(status != SQLITE_OK)
@@ -295,10 +360,9 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(db);
-        writer.set_data_manager_handle(db);
+        writer->set_data_manager_handle(db);
 
         // open the taskfile associated with this container
-
         status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
         if(status != SQLITE_OK)
@@ -322,47 +386,68 @@ namespace transport
 
         // remember this connexion
         this->open_containers.push_back(taskfile);
-        writer.set_data_manager_taskfile(taskfile);
+        writer->set_data_manager_taskfile(taskfile);
+
+        // set up aggregation handlers
+        typename repository<number>::integration_task_record* rec = writer->get_record();
+        assert(rec != nullptr);
+
+        integration_task<number>* tk = rec->get_task();
+
+        twopf_task<number>* tk2 = nullptr;
+        threepf_task<number>* tk3 = nullptr;
+        if((tk2 = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
+          {
+            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
+          }
+        else if((tk3 = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
+          {
+            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
+          }
+        else
+          {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+          }
       }
 
 
     // Close data files associated with an integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(typename repository<number>::integration_writer& writer)
+    void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(db);
         sqlite3_close(db);
 
         // close sqlite3 handle to taskfile
         sqlite3* taskfile = nullptr;
-        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer->get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         this->open_containers.remove(taskfile);
         sqlite3_close(taskfile);
 
         // physically remove the taskfile from the disc; it isn't needed any more
-        boost::filesystem::remove(writer.get_abs_taskfile_path());
+        boost::filesystem::remove(writer->get_abs_taskfile_path());
 
         // physically remove the tempfiles directory
-        boost::filesystem::remove(writer.get_abs_tempdir_path());
+        boost::filesystem::remove(writer->get_abs_tempdir_path());
       }
 
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(typename repository<number>::derived_content_writer& writer)
+		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
 			{
 				sqlite3* taskfile = nullptr;
 
 				// get path to taskfile
-		    boost::filesystem::path taskfile_path = writer.get_abs_taskfile_path();
+		    boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
 
 				// open the taskfile
-
 				int status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
 
 				if(status != SQLITE_OK)
@@ -384,36 +469,154 @@ namespace transport
 
 				// remember this connexion
 				this->open_containers.push_back(taskfile);
-				writer.set_data_manager_taskfile(taskfile);
+				writer->set_data_manager_taskfile(taskfile);
+
+        // set up aggregation handler
+        writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2));
 			}
 
 
 		// Close data files for a derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::close_writer(typename repository<number>::derived_content_writer& writer)
+		void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
 			{
 				// close sqlite3 handle to taskfile
 				sqlite3* taskfile = nullptr;
-				writer.get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
+				writer->get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
 
 				this->open_containers.remove(taskfile);
 				sqlite3_close(taskfile);
 
 				// physically remove the taskfile from the disc; it isn't needed any more
-		    boost::filesystem::remove(writer.get_abs_taskfile_path());
+		    boost::filesystem::remove(writer->get_abs_taskfile_path());
 
 				// physically remove the tempfiles directory
-		    boost::filesystem::remove(writer.get_abs_tempdir_path());
+		    boost::filesystem::remove(writer->get_abs_tempdir_path());
 			}
+
+
+    // Initialize a new postintegration_writer object
+    template <typename number>
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer)
+      {
+        sqlite3* db = nullptr;
+        sqlite3* taskfile = nullptr;
+
+        // get paths to the data container and taskfile
+        boost::filesystem::path ctr_path = writer->get_abs_container_path();
+        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
+
+        // open the main container
+        int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(db != nullptr)
+              {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(db) << ")";
+                sqlite3_close(db);
+              }
+            else
+              {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+              }
+            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        sqlite3_extended_result_codes(db, 1);
+        // leave foreign keys disabled
+
+        // remember this connexion
+        this->open_containers.push_back(db);
+        writer->set_data_manager_handle(db);
+
+        // open the taskfile
+        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
+
+        if(status != SQLITE_OK)
+          {
+            std::ostringstream msg;
+            if(taskfile != nullptr)
+              {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
+                sqlite3_close(taskfile);
+              }
+            else
+              {
+                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
+              }
+            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+          }
+
+        sqlite3_extended_result_codes(taskfile, 1);
+
+        // remember this connexion
+        this->open_containers.push_back(taskfile);
+        writer->set_data_manager_taskfile(taskfile);
+
+        // set aggregation handler
+        typename repository<number>::postintegration_task_record* rec = writer->get_record();
+        assert(rec != nullptr);
+
+        postintegration_task<number>* tk = rec->get_task();
+
+        zeta_twopf_task<number>* z2pf = nullptr;
+        zeta_threepf_task<number>* z3pf = nullptr;
+        fNL_task<number>* zfNL = nullptr;
+        if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
+          {
+            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
+          }
+        else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
+          {
+            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
+          }
+        else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
+          {
+            writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
+          }
+        else
+          {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
+          }
+      }
+
+
+    // Close a postintegration_writer object
+    template <typename number>
+    void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer)
+      {
+        // close sqlite3 handle to principal database
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+
+        // close sqlite3 handle to taskfile
+        sqlite3* taskfile = nullptr;
+        writer->get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
+
+        this->open_containers.remove(taskfile);
+        sqlite3_close(taskfile);
+
+        // physically remove the taskfile from the disc; it isn't needed any more
+//        boost::filesystem::remove(writer->get_abs_taskfile_path());
+
+        // physically remove the tempfiles directory
+//        boost::filesystem::remove(writer->get_abs_tempdir_path());
+      }
 
 
     // INDEX TABLE MANAGEMENT
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& writer, twopf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
@@ -422,15 +625,15 @@ namespace transport
         sqlite3_operations::create_backg_table(db, Nfields, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
 
-        if(writer.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
+        if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(typename repository<number>::integration_writer& writer, threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
-        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         unsigned int Nfields = tk->get_model()->get_N_fields();
 
@@ -442,41 +645,56 @@ namespace transport
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::imag_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
-        if(writer.collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+        if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::no_foreign_keys);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_zeta_reduced_bispectrum_table(db, sqlite3_operations::no_foreign_keys);
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk)
+      {
+        sqlite3* db = nullptr;
+        writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::no_foreign_keys);
       }
 
 
     // TASKFILE MANAGEMENT
 
-    // Create a tasklist based on a work queue of twopf_kconfig-s
+
+    // Create a tasklist based on a work queue
     template <typename number>
-    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<twopf_kconfig>& queue)
+    template <typename WriterObject, typename WorkItem>
+    void data_manager_sqlite3<number>::internal_create_taskfile(std::shared_ptr<WriterObject>& writer, const work_queue<WorkItem>& queue)
       {
         sqlite3* taskfile = nullptr;
-        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+        writer->get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_taskfile(taskfile, queue);
       }
 
-    // Create a tasklist based on a work queue of threepf_kconfig-s
-    template <typename number>
-    void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::integration_writer& writer, const work_queue<threepf_kconfig>& queue)
-      {
-        sqlite3* taskfile = nullptr;
-        writer.get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        sqlite3_operations::create_taskfile(taskfile, queue);
-      }
-
-		// Create a tasklist based on a work queue of output_task_elements
-		template <typename number>
-		void data_manager_sqlite3<number>::create_taskfile(typename repository<number>::derived_content_writer& writer, const work_queue< output_task_element<number> >& queue)
-			{
-				sqlite3* taskfile = nullptr;
-				writer.get_data_manager_taskfile(&taskfile);  // throws an exception if the handle is unset, so the return value is guaranteed not to be nullptr
-
-		    sqlite3_operations::create_taskfile(taskfile, queue);
-			}
 
     // Read a taskfile
     template <typename number>
@@ -489,18 +707,17 @@ namespace transport
     // TEMPORARY CONTAINERS
 
     template <typename number>
-    typename data_manager<number>::twopf_batcher data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir,
-                                                                                                           const boost::filesystem::path& logdir,
-                                                                                                           unsigned int worker,
-                                                                                                           model<number>* m,
-                                                                                                           typename data_manager<number>::container_dispatch_function dispatcher)
+    typename data_manager<number>::twopf_batcher
+    data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                              unsigned int worker, model<number>* m,
+                                                              typename data_manager<number>::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
         sqlite3* db = sqlite3_operations::create_temp_twopf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
 
         // set up writers
-        typename data_manager<number>::twopf_writer_group writers;
+        typename data_manager<number>::twopf_batcher::writer_group writers;
         writers.stats = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -522,19 +739,19 @@ namespace transport
         return(batcher);
       }
 
+
     template <typename number>
-    typename data_manager<number>::threepf_batcher data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir,
-                                                                                                               const boost::filesystem::path& logdir,
-                                                                                                               unsigned int worker,
-                                                                                                               model<number>* m,
-                                                                                                               typename data_manager<number>::container_dispatch_function dispatcher)
+    typename data_manager<number>::threepf_batcher
+    data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+                                                                unsigned int worker, model<number>* m,
+                                                                typename data_manager<number>::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
         sqlite3* db = sqlite3_operations::create_temp_threepf_container(container, m->get_N_fields(), m->supports_per_configuration_statistics());
 
         // set up writers
-        typename data_manager<number>::threepf_writer_group writers;
+        typename data_manager<number>::threepf_batcher::writer_group writers;
         writers.stats    = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg    = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_re = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -560,11 +777,107 @@ namespace transport
 
 
     template <typename number>
+    typename data_manager<number>::zeta_twopf_batcher
+    data_manager_sqlite3<number>::create_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+                                                                   typename data_manager<number>::container_dispatch_function dispatcher)
+      {
+        boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+        sqlite3* db = sqlite3_operations::create_temp_zeta_twopf_container(container);
+
+        // set up writers
+        typename data_manager<number>::zeta_twopf_batcher::writer_group writers;
+        writers.twopf = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+
+        // set up replacement function
+        typename data_manager<number>::container_replacement_function replacer =
+                                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_zeta_twopf_container,
+                                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
+
+        // set up batcher
+        typename data_manager<number>::zeta_twopf_batcher batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary zeta twopf container " << container;
+
+        // add this database to our list of open connections
+        this->open_containers.push_back(db);
+
+        return(batcher);
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::zeta_threepf_batcher
+    data_manager_sqlite3<number>::create_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+                                                                     typename data_manager<number>::container_dispatch_function dispatcher)
+      {
+        boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+        sqlite3* db = sqlite3_operations::create_temp_zeta_threepf_container(container);
+
+        // set up writers
+        typename data_manager<number>::zeta_threepf_batcher::writer_group writers;
+        writers.twopf   = std::bind(&sqlite3_operations::write_zeta_twopf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.threepf = std::bind(&sqlite3_operations::write_zeta_threepf<number>, std::placeholders::_1, std::placeholders::_2);
+        writers.redbsp  = std::bind(&sqlite3_operations::write_zeta_redbsp<number>, std::placeholders::_1, std::placeholders::_2);
+
+        // set up replacement function
+        typename data_manager<number>::container_replacement_function replacer =
+                                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_zeta_threepf_container,
+                                                                                  this, tempdir, worker, std::placeholders::_1, std::placeholders::_2);
+
+        // set up batcher
+        typename data_manager<number>::zeta_threepf_batcher batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker);
+
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary zeta threepf container " << container;
+
+        // add this database to our list of open connections
+        this->open_containers.push_back(db);
+
+        return(batcher);
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::fNL_batcher
+    data_manager_sqlite3<number>::create_temp_fNL_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir, unsigned int worker,
+                                                            typename data_manager<number>::container_dispatch_function dispatcher, derived_data::template_type type)
+      {
+        boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+        sqlite3* db = sqlite3_operations::create_temp_fNL_container(container, type);
+
+        // set up writers
+        typename data_manager<number>::fNL_batcher::writer_group writers;
+        writers.fNL = std::bind(&sqlite3_operations::write_fNL<number>, std::placeholders::_1, std::placeholders::_2, type);
+
+        // set up replacement function
+        typename data_manager<number>::container_replacement_function replacer =
+                                                                        std::bind(&data_manager_sqlite3<number>::replace_temp_fNL_container,
+                                                                                  this, tempdir, worker, type, std::placeholders::_1, std::placeholders::_2);
+
+        // set up batcher
+        typename data_manager<number>::fNL_batcher batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker, type);
+
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "** Created new temporary " << derived_data::template_type(type) << " container " << container;
+
+        // add this database to our list of open connections
+        this->open_containers.push_back(db);
+
+        return(batcher);
+      }
+
+
+    template <typename number>
     void data_manager_sqlite3<number>::replace_temp_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
                                                                     model<number>* m, typename data_manager<number>::generic_batcher* batcher,
                                                                     typename data_manager<number>::replacement_action action)
       {
         sqlite3* db = nullptr;
+
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
+            << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
+            << " temporary twopf container " << batcher->get_container_path();
 
         batcher->get_manager_handle(&db);
         this->open_containers.remove(db);
@@ -618,6 +931,93 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::replace_temp_zeta_twopf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                                         typename data_manager<number>::generic_batcher* batcher,
+                                                                         typename data_manager<number>::replacement_action action)
+      {
+        sqlite3* db = nullptr;
+
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
+            << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
+            << " temporary zeta twopf container " << batcher->get_container_path();
+
+        batcher->get_manager_handle(&db);
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+
+        if(action == data_manager<number>::action_replace)
+          {
+            boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+            sqlite3* new_db = sqlite3_operations::create_temp_zeta_twopf_container(container);
+
+            batcher->set_container_path(container);
+            batcher->set_manager_handle(new_db);
+
+            this->open_containers.push_back(new_db);
+          }
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::replace_temp_zeta_threepf_container(const boost::filesystem::path& tempdir, unsigned int worker,
+                                                                           typename data_manager<number>::generic_batcher* batcher,
+                                                                           typename data_manager<number>::replacement_action action)
+      {
+        sqlite3* db = nullptr;
+
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
+            << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
+            << " temporary zeta threepf container " << batcher->get_container_path();
+
+        batcher->get_manager_handle(&db);
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+
+        if(action == data_manager<number>::action_replace)
+          {
+            boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+            sqlite3* new_db = sqlite3_operations::create_temp_zeta_threepf_container(container);
+
+            batcher->set_container_path(container);
+            batcher->set_manager_handle(new_db);
+
+            this->open_containers.push_back(new_db);
+          }
+      }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::replace_temp_fNL_container(const boost::filesystem::path& tempdir, unsigned int worker, derived_data::template_type type,
+                                                                  typename data_manager<number>::generic_batcher* batcher,
+                                                                  typename data_manager<number>::replacement_action action)
+      {
+        sqlite3* db = nullptr;
+
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal)
+            << "** " << (action == data_manager<number>::action_replace ? "Replacing" : "Closing")
+            << " temporary " << derived_data::template_name(type) << " container " << batcher->get_container_path();
+
+        batcher->get_manager_handle(&db);
+        this->open_containers.remove(db);
+        sqlite3_close(db);
+
+        if(action == data_manager<number>::action_replace)
+          {
+            boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
+
+            sqlite3* new_db = sqlite3_operations::create_temp_fNL_container(container, type);
+
+            batcher->set_container_path(container);
+            batcher->set_manager_handle(new_db);
+
+            this->open_containers.push_back(new_db);
+          }
+      }
+
+
+    template <typename number>
     boost::filesystem::path data_manager_sqlite3<number>::generate_temporary_container_path(const boost::filesystem::path& tempdir, unsigned int worker)
       {
         std::ostringstream container_name;
@@ -630,8 +1030,10 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
       {
+        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -639,12 +1041,16 @@ namespace transport
         sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
 
         if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+
+        return(true);
       }
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
       {
+        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -654,6 +1060,102 @@ namespace transport
         sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
 
         if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
+
+        return(true);
+      }
+
+
+    template <typename number>
+    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+      {
+        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
+
+        return(true);
+      }
+
+
+    template <typename number>
+    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+      {
+        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::aggregate_zeta_twopf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_zeta_threepf<number>(db, writer, temp_ctr);
+        sqlite3_operations::aggregate_zeta_reduced_bispectrum<number>(db, writer, temp_ctr);
+
+        return(true);
+      }
+
+
+    template <typename number>
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr,
+                                                           derived_data::template_type type)
+      {
+        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+
+        sqlite3* db = nullptr;
+        writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        sqlite3_operations::aggregate_fNL<number>(db, writer, temp_ctr, type);
+
+        return(true);
+      }
+
+
+    template <typename number>
+    bool data_manager_sqlite3<number>::aggregate_derived_product(typename repository<number>::base_writer& gwriter, const std::string& temp_name)
+      {
+        typename repository<number>::derived_content_writer& writer = dynamic_cast<typename repository<number>::derived_content_writer&>(gwriter);
+
+        bool success = true;
+
+        // lookup derived product from output task
+        typename repository<number>::output_task_record* rec = writer.get_record();
+        assert(rec != nullptr);
+
+        output_task<number>* tk = rec->get_task();
+        assert(tk != nullptr);
+
+        derived_data::derived_product<number>* product = tk->lookup_derived_product(temp_name);
+
+        if(product == nullptr)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
+            return(false);
+          }
+
+        // find output product in the temporary folder
+        boost::filesystem::path temp_location = writer.get_abs_tempdir_path() / product->get_filename();
+        boost::filesystem::path dest_location = writer.get_abs_output_path() / product->get_filename();
+
+        if(!boost::filesystem::exists(temp_location))
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Derived product " << temp_location << " missing; skipping this product";
+            return(false);
+          }
+
+        if(boost::filesystem::exists(dest_location))
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Destination " << dest_location << " for derived product " << temp_location << " already exists; skipping this product";
+            return(false);
+          }
+
+        boost::filesystem::rename(temp_location, dest_location);
+
+        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Emplaced derived product " << dest_location;
+
+        // commit this product to the current output group
+        writer.push_content(*product);
+
+        return(success);
       }
 
 

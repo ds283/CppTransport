@@ -14,30 +14,46 @@
 
 #define __CPP_TRANSPORT_DATAMGR_NOT_SET                             "Internal error: Attempt to access data manager when unset in 'task_manager'"
 
+#define __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET         "Internal error: Could not set aggregation handler"
+
 #define __CPP_TRANSPORT_DATACTR_NOT_CLOSED                          "Data container error: Some containers not closed when deleting 'data_manager' object"
 #define __CPP_TRANSPORT_DATACTR_CLOSE                               "Data container error: Unexpected error when closing containers on destruction of 'data_manager' object (backend code="
 #define __CPP_TRANSPORT_DATACTR_CREATE_A                            "Data container error: Could not create data container"
 #define __CPP_TRANSPORT_DATACTR_CREATE_B                            "(backend code="
 #define __CPP_TRANSPORT_DATACTR_OPEN_A                              "Data container error: Could not open data container"
 #define __CPP_TRANSPORT_DATACTR_OPEN_B                              "(backend code="
-#define __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL                        "Data container error: Failed to create time-sample table in data container (backend code="
-#define __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL                       "Data container error: Failed to create twopf-sample table in data container (backend code="
-#define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL                     "Data container error: Failed to create threepf-sample table in data container (backend code="
+
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_FAIL                       "Data container error: Failed to create tasklist table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_A                     "Data container error: Failed to open tasklist"
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_OPEN_B                     "(backend code="
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_READ_A                     "Data container error: Failed to read from tasklist"
 #define __CPP_TRANSPORT_DATACTR_TASKLIST_READ_B                     "(backend code="
+
 #define __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_A                      "Data container error: Failed to create temporary container"
 #define __CPP_TRANSPORT_DATACTR_TEMPCTR_FAIL_B                      "(backend code="
+
+#define __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL                        "Data container error: Failed to create time-sample table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL                       "Data container error: Failed to create twopf-sample table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL                     "Data container error: Failed to create threepf-sample table in data container (backend code="
+
 #define __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL                   "Data container error: Failed to create per-configuration statistics table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL                  "Data container error: Failed to create background-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL                  "Data container error: Failed to create twopf-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL                "Data container error: Failed to create threepf-value table in data container (backend code="
+
+#define __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL             "Data container error: Failed to create zeta twopf-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL           "Data container error: Failed to create zeta threepf-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ZETA_REDBSP_DATATAB_FAIL            "Data container error: Failed to create zeta reduced-bispectrum-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL                    "Data conatiner error: Failed to create fNL-value table in data container (backend code="
+
 #define __CPP_TRANSPORT_DATACTR_BACKGCOPY                           "Data container error: Failed to copy background values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPFCOPY                           "Data container error: Failed to copy twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_STATISTICSCOPY                      "Data container error: Failed to copy per-configuration statistics from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFCOPY                         "Data container error: Failed to copy threepf values from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ZETA_TWOPFCOPY                      "Data container error: Failed to copy zeta twopf values from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ZETA_THREEPFCOPY                    "Data container error: Failed to copy zeta threepf values from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_ZETA_REDBSPCOPY                     "Data container error: Failed to copy zeta reduced bispectrum values from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_FNL_COPY                            "Data container error: Failed to copy fNL values from temporary bispectrum container (backend code="
 #define __CPP_TRANSPORT_DATACTR_REMOVE_TEMP                         "Data container error: Could not remove temporary container"
 
 #define __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE                       "Data manager error: Null datapipe specifier"
@@ -63,5 +79,7 @@
 #define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW              "Data manager error: Read fewer k-configuration samples from the container than expected"
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL            "Data manager error: Failed to create temporary table of threepf configurations (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL              "Data manager error: Failed to drop temporary table of threepf configurations (backend code="
+
+#define __CPP_TRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE                "Data manager error: Unknown fNL template type"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DATA_MANAGER_H

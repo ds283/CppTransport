@@ -24,18 +24,23 @@ namespace transport
           {
 
             // MPI message tags
-            const unsigned int NEW_INTEGRATION          = 0;
-            const unsigned int FINISHED_INTEGRATION     = 1;
-            const unsigned int INTEGRATION_DATA_READY   = 2;
-		        const unsigned int INTEGRATION_FAIL         = 9;
+            const unsigned int NEW_INTEGRATION            = 0;
+            const unsigned int FINISHED_INTEGRATION       = 1;
+            const unsigned int INTEGRATION_DATA_READY     = 2;
+		        const unsigned int INTEGRATION_FAIL           = 9;
 
-		        const unsigned int NEW_DERIVED_CONTENT      = 10;
-		        const unsigned int DERIVED_CONTENT_READY    = 11;
-		        const unsigned int FINISHED_DERIVED_CONTENT = 12;
-		        const unsigned int DERIVED_CONTENT_FAIL     = 19;
+		        const unsigned int NEW_DERIVED_CONTENT        = 10;
+		        const unsigned int DERIVED_CONTENT_READY      = 11;
+		        const unsigned int FINISHED_DERIVED_CONTENT   = 12;
+		        const unsigned int DERIVED_CONTENT_FAIL       = 19;
 
-            const unsigned int SET_REPOSITORY           = 98;
-            const unsigned int TERMINATE                = 99;
+            const unsigned int NEW_POSTINTEGRATION        = 20;
+            const unsigned int FINISHED_POSTINTEGRATION   = 21;
+            const unsigned int POSTINTEGRATION_DATA_READY = 22;
+            const unsigned int POSTINTEGRATION_FAIL       = 29;
+
+            const unsigned int SET_REPOSITORY             = 98;
+            const unsigned int TERMINATE                  = 99;
 
             // MPI ranks
             const unsigned int RANK_MASTER = 0;
@@ -134,31 +139,23 @@ namespace transport
               {
               public:
 
-                typedef enum { twopf_payload, threepf_payload } payload_type;
-
                 //! Null constructor (used for receiving messages)
                 data_ready_payload()
                   {
                   }
 
                 //! Value constructor (used for sending messages)
-                data_ready_payload(const std::string& p, payload_type t)
-                : container_path(p), payload(t)
+                data_ready_payload(const std::string& p)
+                : container_path(p)
                   {
                   }
 
                 //! Get container path
                 const std::string& get_container_path() const { return(this->container_path); }
 
-                //! Get payload type
-                payload_type get_payload_type() const { return(this->payload); }
-
               private:
                 //! Path to container
                 std::string container_path;
-
-                //! Type of container
-                payload_type payload;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -167,7 +164,6 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & container_path;
-                    ar & payload;
                   }
               };
 
@@ -266,6 +262,7 @@ namespace transport
 
             class new_derived_content_payload
 	            {
+
               public:
 
                 //! Null constructor (used for receiving messages)
@@ -327,11 +324,13 @@ namespace transport
                     ar & logdir;
 		                ar & tags;
 	                }
+
 	            };
 
 
             class content_ready_payload
 	            {
+
               public:
 
                 typedef enum { twopf_payload, threepf_payload } payload_type;
@@ -363,6 +362,7 @@ namespace transport
 	                {
                     ar & product;
 	                }
+
 	            };
 
 
@@ -529,7 +529,243 @@ namespace transport
 				            ar & data_evictions;
                     ar & zeta_evictions;
 			            }
+
 			        };
+
+
+            class new_postintegration_payload
+              {
+
+              public:
+
+                //! Null constructor (used for receiving messages)
+                new_postintegration_payload()
+                  {
+                  }
+
+                //! Value constructor (used for constructing messages to send)
+                new_postintegration_payload(const std::string& tk,
+                                            const boost::filesystem::path& tk_f,
+                                            const boost::filesystem::path& tmp_d,
+                                            const boost::filesystem::path& log_d,
+                                            const std::list<std::string>& tg)
+                  : task(tk), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
+                  {
+                  }
+
+                //! Get task name
+                const std::string&            get_task_name()     const { return(this->task); }
+
+                //! Get path to taskfile, which specifies job allocations for worker processes
+                boost::filesystem::path       get_taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
+
+                //! Get path to the temporary directory
+                boost::filesystem::path       get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+
+                //! Get path to the log directory
+                boost::filesystem::path       get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+
+                //! Get tags specified on the command line, used to narrow-down the list of output groups
+                const std::list<std::string>& get_tags()          const { return(this->tags); }
+
+              private:
+
+                //! Name of task, to be looked up in repository database
+                std::string task;
+
+                //! Pathname to taskfile
+                std::string taskfile;
+
+                //! Pathname to directory for temporary files
+                std::string tempdir;
+
+                //! Pathname to directory for log files
+                std::string logdir;
+
+                //! Search tags specified on the command line
+                std::list<std::string> tags;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & task;
+                    ar & taskfile;
+                    ar & tempdir;
+                    ar & logdir;
+                    ar & tags;
+                  }
+
+              };
+
+
+            class finished_postintegration_payload
+              {
+
+              public:
+
+                //! Null constructor (used for receiving messages)
+                finished_postintegration_payload()
+                  {
+                  }
+
+
+                //! Value constructor (used for sending messages)
+                finished_postintegration_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+                                                 const unsigned int tc, const unsigned int tc_u,
+                                                 const unsigned int twopf_k, const unsigned int twopf_k_u,
+                                                 const unsigned int threepf_k, const unsigned int threepf_k_u,
+                                                 const unsigned int td, const unsigned int td_u,
+                                                 const unsigned int tz, const unsigned int tz_u,
+                                                 const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
+                                                 const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de,
+                                                 const boost::timer::nanosecond_type zeta_e)
+                  : database_time(db),
+                    cpu_time(cpu),
+                    time_config_hits(tc), time_config_unloads(tc_u),
+                    twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
+                    threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
+                    data_hits(td), data_unloads(td_u),
+                    zeta_hits(tz), zeta_unloads(tz_u),
+                    time_config_evictions(tce), twopf_kconfig_evictions(twopf_e),
+                    threepf_kconfig_evictions(threepf_e), data_evictions(de),
+                    zeta_evictions(zeta_e)
+                  {
+                  }
+
+                //! Get database time
+                boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
+
+                //! Get total CPU time
+                boost::timer::nanosecond_type  get_cpu_time()                  const { return(this->cpu_time); }
+
+                //! Get time config hits
+                unsigned int                   get_time_config_hits()          const { return(this->time_config_hits); }
+
+                //! Get twopf kconfig hits
+                unsigned int                   get_twopf_kconfig_hits()        const { return(this->twopf_kconfig_hits); }
+
+                //! Get threepf kconfig hits
+                unsigned int                   get_threepf_kconfig_hits()      const { return(this->threepf_kconfig_hits); }
+
+                //! Get data hits
+                unsigned int                   get_data_hits()                 const { return(this->data_hits); }
+
+                //! Get zeta hits
+                unsigned int                   get_zeta_hits()                 const { return(this->zeta_hits); }
+
+                //! Get time config unloads
+                unsigned int                   get_time_config_unloads()       const { return(this->time_config_unloads); }
+
+                //! Get twopf kconfig unloads
+                unsigned int                   get_twopf_kconfig_unloads()     const { return(this->twopf_kconfig_unloads); }
+
+                //! Get threepf kconfig unloads
+                unsigned int                   get_threepf_kconfig_unloads()   const { return(this->threepf_kconfig_unloads); }
+
+                //! Get data unloads
+                unsigned int                   get_data_unloads()              const { return(this->data_unloads); }
+
+                //! Get zeta unloads
+                unsigned int                   get_zeta_unloads()              const { return(this->zeta_unloads); }
+
+                //! Get time-config cache evictions
+                boost::timer::nanosecond_type  get_time_config_evictions()     const { return(this->time_config_evictions); }
+
+                //! Get twopf k-config cache evictions
+                boost::timer::nanosecond_type  get_twopf_kconfig_evictions()   const { return(this->twopf_kconfig_evictions); }
+
+                //! Get threepf k-config cache evictions
+                boost::timer::nanosecond_type  get_threepf_kconfig_evictions() const { return(this->threepf_kconfig_evictions); }
+
+                //! Get data cache evictions
+                boost::timer::nanosecond_type  get_data_evictions()            const { return(this->data_evictions); }
+
+                //! Get zeta cache evictions
+                boost::timer::nanosecond_type  get_zeta_evictions()            const { return(this->zeta_evictions); }
+
+
+              private:
+
+                //! Time spent reading database
+                boost::timer::nanosecond_type database_time;
+
+                //! Total CPU time
+                boost::timer::nanosecond_type cpu_time;
+
+                //! Number of time-config cache hits
+                unsigned int time_config_hits;
+
+                //! Number of time-config cache unloads
+                unsigned int time_config_unloads;
+
+                //! Number of twopf-kconfig cache hits
+                unsigned int twopf_kconfig_hits;
+
+                //! Number of twopf-kconfig cache unloads
+                unsigned int twopf_kconfig_unloads;
+
+                //! Number of threepf-kconfig cache hits
+                unsigned int threepf_kconfig_hits;
+
+                //! Number of threepf-kconfig cache unloads
+                unsigned int threepf_kconfig_unloads;
+
+                //! Number of data cache hits
+                unsigned int data_hits;
+
+                //! Number of data cache unloads
+                unsigned int data_unloads;
+
+                //! Number of zeta cache hits
+                unsigned int zeta_hits;
+
+                //! Number of zeta cache unloads
+                unsigned int zeta_unloads;
+
+                //! Time spent doing time-config cache evictions
+                boost::timer::nanosecond_type time_config_evictions;
+
+                //! Time spent doing twopf k-config cache evictions
+                boost::timer::nanosecond_type twopf_kconfig_evictions;
+
+                //! Time spent doing threepf k-config cache evictions
+                boost::timer::nanosecond_type threepf_kconfig_evictions;
+
+                //! Time spent doing data cache evictions
+                boost::timer::nanosecond_type data_evictions;
+
+                //! Time spetn doign zeta cache evictions
+                boost::timer::nanosecond_type zeta_evictions;
+
+                // enable boost::serialization support, and hence automated packing for transmission over MPI
+                friend class boost::serialization::access;
+
+                template <typename Archive>
+                void serialize(Archive& ar, unsigned int version)
+                  {
+                    ar & database_time;
+                    ar & cpu_time;
+                    ar & time_config_hits;
+                    ar & time_config_unloads;
+                    ar & twopf_kconfig_hits;
+                    ar & twopf_kconfig_unloads;
+                    ar & threepf_kconfig_hits;
+                    ar & threepf_kconfig_unloads;
+                    ar & data_hits;
+                    ar & data_unloads;
+                    ar & zeta_hits;
+                    ar & zeta_unloads;
+                    ar & time_config_evictions;
+                    ar & twopf_kconfig_evictions;
+                    ar & threepf_kconfig_evictions;
+                    ar & data_evictions;
+                    ar & zeta_evictions;
+                  }
+
+              };
 
 
           }   // unnamed namespace
