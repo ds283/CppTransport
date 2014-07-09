@@ -602,7 +602,7 @@ namespace transport
 
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial);";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)";
               }
             create_stmt << ");";
 
@@ -1843,7 +1843,7 @@ namespace transport
 			    {
 				    sqlite3* dest_db = nullptr;
 
-		        int status = sqlite3_open_v2(dest.string().c_str(), &dest_db, SQLITE_OPEN_READONLY, nullptr);
+		        int status = sqlite3_open_v2(dest.string().c_str(), &dest_db, SQLITE_OPEN_READWRITE, nullptr);
 
 		        if(status != SQLITE_OK)
 			        {
@@ -1878,6 +1878,8 @@ namespace transport
 					    << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << table << ";"
 					    << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 				    exec(dest_db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_POSTINTCOPY);
+
+            check_stmt(dest_db, sqlite3_close(dest_db));
 			    }
 
 

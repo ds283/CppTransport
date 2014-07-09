@@ -1537,7 +1537,7 @@ namespace transport
 
 		    // get source and destination data containers
         boost::filesystem::path source_container = writer.get_abs_container_path();
-        boost::filesystem::path dest_container   = content_record->get_payload().get_container_path();
+        boost::filesystem::path dest_container   = content_record->get_abs_repo_path() / content_record->get_payload().get_container_path();
 
 		    zeta_twopf_task<number>* z2pf = nullptr;
 		    zeta_threepf_task<number>* z3pf = nullptr;
