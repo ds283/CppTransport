@@ -1275,7 +1275,7 @@ namespace transport
             if(ptk == nullptr)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
+                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
               }
 
@@ -1284,13 +1284,13 @@ namespace transport
           }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
           {
-            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
+            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
+                msg << __CPP_TRANSPORT_EXPECTED_THREEPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
               }
 
@@ -2088,7 +2088,7 @@ namespace transport
           }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
-            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
+            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)
@@ -2150,7 +2150,7 @@ namespace transport
 
         // acquire a datapipe which we can use to stream content from the databse
         typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-                                                                                       finder, dispatcher, this->get_rank(), timer);
+                                                                                       finder, dispatcher, this->get_rank(), timer, true);
 
 
         // perform the task
@@ -2391,7 +2391,7 @@ namespace transport
         // set up cache handles
         typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
-        typename data_manager<number>::datapipe::fNL_time_data_tag tag = pipe.new_fNL_time_data_tag(tk->get_template());
+        typename data_manager<number>::datapipe::fNL_time_data_tag tag = pipe.new_fNL_time_data_tag(tk->get_template(), kconfig_sns);
         // safe to use a reference here to avoid a copy
         const std::vector<number>& fNL = z_handle.lookup_tag(tag);
 

@@ -41,7 +41,15 @@ namespace transport
 				               const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
 				               template_type ty);
 
+                handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+                       const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+                       template_type ty, const std::vector<unsigned int>& kc);
+
 						    ~handle() = default;
+
+              protected:
+
+                void validate();
 
 						    // INTERNAL DATA
 
@@ -68,6 +76,12 @@ namespace transport
 						    //! template type
 						    template_type type;
 
+                //! restrict integration to a supplied set of triangles?
+                bool restrict_triangles;
+
+                //! subset of triangles to integrate, if used
+                std::vector<unsigned int> kconfig_sns;
+
 						    friend class fNL_timeseries_compute;
 
 					    };
@@ -88,10 +102,15 @@ namespace transport
 
 		      public:
 
-				    //! make a handle
+				    //! make a handle, integrate over all triangles
 				    std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
 				                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
 				                                        unsigned int Nf, template_type ty) const;
+
+            //! make a handle, integrate over a supplied subset of triangles
+            std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+                                                const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
+                                                unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc) const;
 
 
 				    // COMPUTE FNL PRODUCT
@@ -152,28 +171,59 @@ namespace transport
 			      time_axis(taxis),
 			      t_handle(p.new_time_data_handle(tsample)),
 			      N_fields(Nf),
-			      type(ty)
+			      type(ty),
+            restrict_triangles(false)
 			    {
-		        assert(tk != nullptr);
-				    if(tk == nullptr)
-					    {
-				        std::ostringstream msg;
-						    msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF;
-				        if(t != nullptr)
-					        {
-						        msg << " " << t->get_name();
-					        }
-						    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-					    }
+            this->validate();
 
-				    assert(tk->is_integrable());
-				    if(!tk->is_integrable())
-					    {
-				        std::ostringstream msg;
-						    msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_INTEGRABLE << " " << tk->get_name();
-				        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-					    }
+            const std::vector<threepf_kconfig>& raw_kconfigs = tk->get_threepf_kconfig_list();
+
+            kconfig_sns.clear();
+            kconfig_sns.resize(raw_kconfigs.size());
+            for(unsigned int i = 0; i < raw_kconfigs.size(); i++)
+              {
+                kconfig_sns[i] = raw_kconfigs[i].serial;
+              }
 			    }
+
+
+        template <typename number>
+        fNL_timeseries_compute<number>::handle::handle(typename data_manager<number>::datapipe& p, integration_task<number>* t,
+                                                       const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
+                                                       unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc)
+          : pipe(p),
+            tk(dynamic_cast<threepf_task<number>*>(t)),
+            time_sample_sns(tsample),
+            time_axis(taxis),
+            t_handle(p.new_time_data_handle(tsample)),
+            N_fields(Nf),
+            type(ty),
+            restrict_triangles(true),
+            kconfig_sns(kc)
+          {
+            this->validate();
+          }
+
+
+        template <typename number>
+        void fNL_timeseries_compute<number>::handle::validate()
+          {
+            assert(this->tk != nullptr);
+            if(this->tk == nullptr)
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_THREEPF;
+                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+              }
+
+            assert(this->tk->is_integrable());
+            if(!this->tk->is_integrable())
+              {
+                std::ostringstream msg;
+                msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
+                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+              }
+          }
 
 
 				// IMPLEMENTATION
@@ -189,20 +239,21 @@ namespace transport
 			    }
 
 
+        template <typename number>
+        std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
+        fNL_timeseries_compute<number>::make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* t,
+                                                    const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+                                                    template_type ty, const std::vector<unsigned int>& kc) const
+          {
+            return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf, ty, kc));
+          }
+
+
 		    template <typename number>
 		    void fNL_timeseries_compute<number>::fNL(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
 			    {
-				    // get all threepf configurations from the task
-		        const std::vector<threepf_kconfig>& raw_kconfigs = h->tk->get_threepf_kconfig_list();
-
-		        std::vector<unsigned int> kserials(raw_kconfigs.size());
-		        for(unsigned int i = 0; i < raw_kconfigs.size(); i++)
-			        {
-		            kserials[i] = raw_kconfigs[i].serial;
-			        }
-
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(kserials);
+		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
 		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
 
 		        // pull 3pf k-configuration information from the database
@@ -253,11 +304,24 @@ namespace transport
 		            this->shape_function(h->type, twopf_k1, twopf_k2, twopf_k3, S_template);
 
 				        // get integration measure from task
-				        number measure = h->tk->measure(raw_kconfigs[i]);
+                threepf_kconfig kcfg;
+                kcfg.serial = k_values[i].serial;
+                kcfg.k_t_comoving = k_values[i].kt_comoving;
+                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.k1_comoving      = k_values[i].k1_comoving;
+                kcfg.k1_conventional  = k_values[i].k1_conventional;
+                kcfg.k2_comoving      = k_values[i].k2_comoving;
+                kcfg.k2_conventional  = k_values[i].k2_conventional;
+                kcfg.k3_comoving      = k_values[i].k3_comoving;
+                kcfg.k3_conventional  = k_values[i].k3_conventional;
+                kcfg.alpha            = k_values[i].alpha;
+                kcfg.beta             = k_values[i].beta;
+
+				        number measure = h->tk->measure(kcfg);
 		            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
 			            {
-		                BT_line[j] += S_bispectrum[j]*S_template[j];
-		                TT_line[j] += S_template[j]  *S_template[j];
+		                BT_line[j] += measure * S_bispectrum[j] * S_template[j];
+		                TT_line[j] += measure * S_template[j]   * S_template[j];
 			            }
 			        }
 

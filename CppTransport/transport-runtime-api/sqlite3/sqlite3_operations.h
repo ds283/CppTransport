@@ -44,6 +44,7 @@
 #define __CPP_TRANSPORT_SQLITE_TASKLIST_TABLE                      "task_list"
 #define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
 #define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE                  "threepf_search"
+#define __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
 
 #define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME                    "tempdb"
 
@@ -1244,21 +1245,40 @@ namespace transport
 
 
         // Aggregate an fNL value table from a temporary container
+        // Aggregation of fNL values is slightly different, because we want to add together results with the same
+        // tserial
         template <typename number>
         void aggregate_fNL(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr, derived_data::template_type type)
           {
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating " << derived_data::template_name(type) << " values";
 
+            std::stringstream create_stmt;
+            create_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
+              << " SELECT " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial AS tserial,"
+              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".ele + COALESCE(main." << fNL_table_name(type) << ".ele, 0.0) AS new_ele"
+              << " FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type)
+              << " LEFT JOIN " << fNL_table_name(type)
+              << " ON " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial=main." << fNL_table_name(type) << ".tserial;";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << create_stmt.str();
+            exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
+
             std::ostringstream copy_stmt;
             copy_stmt
-              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-              << " INSERT INTO " << fNL_table_name(type)
-              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ";"
+              << " INSERT OR REPLACE INTO main." << fNL_table_name(type)
+              << " SELECT tserial AS tserial,"
+              << " new_ele AS ele"
+              << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
-
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
+
+            std::stringstream drop_stmt;
+            drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+            exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
           }
 
 
@@ -1515,8 +1535,7 @@ namespace transport
 
 		        // drop temporary threepf query tables
             std::stringstream drop_stmt;
-		        drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker<< ";";
-
+		        drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE << "_" << worker << ";";
             exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL);
 
             // check that we have as many values as we expect

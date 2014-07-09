@@ -200,7 +200,7 @@ namespace transport
                                                                         const boost::filesystem::path& tempdir,
                                                                         typename data_manager<number>::datapipe::output_group_finder finder,
                                                                         typename data_manager<number>::datapipe::dispatch_function dispatcher,
-                                                                        unsigned int worker, boost::timer::cpu_timer& timer) override;
+                                                                        unsigned int worker, boost::timer::cpu_timer& timer, bool no_log=false) override;
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(typename data_manager<number>::datapipe* pipe,
@@ -1167,7 +1167,7 @@ namespace transport
 		                                                                                      const boost::filesystem::path& tempdir,
                                                                                           typename data_manager<number>::datapipe::output_group_finder finder,
                                                                                           typename data_manager<number>::datapipe::dispatch_function dispatcher,
-		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer)
+		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer, bool no_log)
 			{
 		    // set up callback API
 
@@ -1218,7 +1218,7 @@ namespace transport
 		    // set up datapipe
 		    typename data_manager<number>::datapipe pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
                                                      logdir, tempdir, worker, timer,
-		                                                 utilities, config, timeslice, kslice);
+		                                                 utilities, config, timeslice, kslice, no_log);
 
 				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, data cache capacity = " << format_memory(this->pipe_data_capacity) << ", zeta cache capacity = " << format_memory(this->pipe_zeta_capacity);
 
