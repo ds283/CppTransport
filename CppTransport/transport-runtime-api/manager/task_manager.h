@@ -2391,13 +2391,16 @@ namespace transport
         // set up cache handles
         typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
-        typename data_manager<number>::datapipe::fNL_time_data_tag tag = pipe.new_fNL_time_data_tag(tk->get_template(), kconfig_sns);
+        typename data_manager<number>::datapipe::BT_time_data_tag BT_tag = pipe.new_BT_time_data_tag(tk->get_template(), kconfig_sns);
+        typename data_manager<number>::datapipe::TT_time_data_tag TT_tag = pipe.new_TT_time_data_tag(tk->get_template(), kconfig_sns);
+
+        const std::vector<number> BT = z_handle.lookup_tag(BT_tag);
         // safe to use a reference here to avoid a copy
-        const std::vector<number>& fNL = z_handle.lookup_tag(tag);
+        const std::vector<number>& TT = z_handle.lookup_tag(TT_tag);
 
         for(unsigned int j = 0; j < time_sns.size(); j++)
           {
-            batcher.push_fNL(time_sns[j], fNL[j]);
+            batcher.push_fNL(time_sns[j], BT[j], TT[j]);
           }
 
         batcher.report_finished_block();

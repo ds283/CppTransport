@@ -117,7 +117,13 @@ namespace transport
 
 		      public:
 
-				    //! compute a timeseries
+            //! compute a timeseries for bispectrum.template inner product
+            void BT(std::shared_ptr<handle>& h, std::vector<number>& line_data) const;
+
+            //! compute a timeseries for template.template inner product
+            void TT(std::shared_ptr<handle>& h, std::vector<number>& line_data) const;
+
+				    //! compute a timeseries for fNL
 				    void fNL(std::shared_ptr<handle>& h, std::vector<number>& line_data) const;
 
 
@@ -249,61 +255,59 @@ namespace transport
           }
 
 
-		    template <typename number>
-		    void fNL_timeseries_compute<number>::fNL(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
-			    {
-		        // set up cache handles
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
-		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
+        template <typename number>
+        void fNL_timeseries_compute<number>::BT(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
+          {
+            // set up cache handles
+            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
+            typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
 
-		        // pull 3pf k-configuration information from the database
-		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
-		        const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            // pull 3pf k-configuration information from the database
+            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
+            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
-		        std::vector<number> BT_line;  // will hold <B, T>
-		        std::vector<number> TT_line;  // will hold <T, T>
-		        BT_line.assign(h->time_sample_sns.size(), 0.0);
-		        TT_line.assign(h->time_sample_sns.size(), 0.0);
+            line_data.clear();
+            line_data.resize(h->time_sample_sns.size());
 
-				    // loop over all sampled k-configurations, adding their contributions to the integral
-		        for(unsigned int i = 0; i < k_values.size(); i++)
-			        {
-		            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(k_values[i]);
+            // loop over all sampled k-configurations, adding their contributions to the integral
+            for(unsigned int i = 0; i < k_values.size(); i++)
+              {
+                typename data_manager<number>::datapipe::zeta_threepf_time_data_tag bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
-		            // pull bispectrum information for this triangle
-		            const std::vector<number> bispectrum = z_handle.lookup_tag(bsp_tag);
+                // pull bispectrum information for this triangle
+                const std::vector<number> bispectrum = z_handle.lookup_tag(bsp_tag);
 
-		            typename data_manager<number>::twopf_configuration k1;
-		            typename data_manager<number>::twopf_configuration k2;
-		            typename data_manager<number>::twopf_configuration k3;
+                typename data_manager<number>::twopf_configuration k1;
+                typename data_manager<number>::twopf_configuration k2;
+                typename data_manager<number>::twopf_configuration k3;
 
-		            k1.serial         = k_values[i].k1_serial;
-		            k1.k_comoving     = k_values[i].k1_comoving;
-		            k1.k_conventional = k_values[i].k1_conventional;
+                k1.serial         = k_values[i].k1_serial;
+                k1.k_comoving     = k_values[i].k1_comoving;
+                k1.k_conventional = k_values[i].k1_conventional;
 
-		            k2.serial         = k_values[i].k2_serial;
-		            k2.k_comoving     = k_values[i].k2_comoving;
-		            k2.k_conventional = k_values[i].k2_conventional;
+                k2.serial         = k_values[i].k2_serial;
+                k2.k_comoving     = k_values[i].k2_comoving;
+                k2.k_conventional = k_values[i].k2_conventional;
 
-		            k3.serial         = k_values[i].k3_serial;
-		            k3.k_comoving     = k_values[i].k3_comoving;
-		            k3.k_conventional = k_values[i].k3_conventional;
+                k3.serial         = k_values[i].k3_serial;
+                k3.k_comoving     = k_values[i].k3_comoving;
+                k3.k_conventional = k_values[i].k3_conventional;
 
-		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
-		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
-		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
 
-		            const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
-		            const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
-		            const std::vector<number> twopf_k3 = z_handle.lookup_tag(k3_tag);
+                const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
+                const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
+                const std::vector<number> twopf_k3 = z_handle.lookup_tag(k3_tag);
 
-				        // compute shape functions for bispectrum and template
-		            std::vector<number> S_bispectrum;
-		            std::vector<number> S_template;
-		            this->shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, S_bispectrum);
-		            this->shape_function(h->type, twopf_k1, twopf_k2, twopf_k3, S_template);
+                // compute shape functions for bispectrum and template
+                std::vector<number> S_bispectrum;
+                std::vector<number> S_template;
+                this->shape_function(bispectrum, twopf_k1, twopf_k2, twopf_k3, S_bispectrum);
+                this->shape_function(h->type, twopf_k1, twopf_k2, twopf_k3, S_template);
 
-				        // get integration measure from task
+                // get integration measure from task
                 threepf_kconfig kcfg;
                 kcfg.serial = k_values[i].serial;
                 kcfg.k_t_comoving = k_values[i].kt_comoving;
@@ -317,13 +321,91 @@ namespace transport
                 kcfg.alpha            = k_values[i].alpha;
                 kcfg.beta             = k_values[i].beta;
 
-				        number measure = h->tk->measure(kcfg);
-		            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
-			            {
-		                BT_line[j] += measure * S_bispectrum[j] * S_template[j];
-		                TT_line[j] += measure * S_template[j]   * S_template[j];
-			            }
-			        }
+                number measure = h->tk->measure(kcfg);
+                for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+                  {
+                    line_data[j] += measure * S_bispectrum[j] * S_template[j];
+                  }
+              }
+          }
+
+
+        template <typename number>
+        void fNL_timeseries_compute<number>::TT(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
+          {
+            // set up cache handles
+            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
+            typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
+
+            // pull 3pf k-configuration information from the database
+            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
+            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+
+            line_data.clear();
+            line_data.resize(h->time_sample_sns.size());
+
+            // loop over all sampled k-configurations, adding their contributions to the integral
+            for(unsigned int i = 0; i < k_values.size(); i++)
+              {
+                typename data_manager<number>::twopf_configuration k1;
+                typename data_manager<number>::twopf_configuration k2;
+                typename data_manager<number>::twopf_configuration k3;
+
+                k1.serial         = k_values[i].k1_serial;
+                k1.k_comoving     = k_values[i].k1_comoving;
+                k1.k_conventional = k_values[i].k1_conventional;
+
+                k2.serial         = k_values[i].k2_serial;
+                k2.k_comoving     = k_values[i].k2_comoving;
+                k2.k_conventional = k_values[i].k2_conventional;
+
+                k3.serial         = k_values[i].k3_serial;
+                k3.k_comoving     = k_values[i].k3_comoving;
+                k3.k_conventional = k_values[i].k3_conventional;
+
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
+                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
+
+                const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
+                const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
+                const std::vector<number> twopf_k3 = z_handle.lookup_tag(k3_tag);
+
+                // compute shape functions for bispectrum and template
+                std::vector<number> S_template;
+                this->shape_function(h->type, twopf_k1, twopf_k2, twopf_k3, S_template);
+
+                // get integration measure from task
+                threepf_kconfig kcfg;
+                kcfg.serial = k_values[i].serial;
+                kcfg.k_t_comoving = k_values[i].kt_comoving;
+                kcfg.k_t_conventional = k_values[i].kt_conventional;
+                kcfg.k1_comoving      = k_values[i].k1_comoving;
+                kcfg.k1_conventional  = k_values[i].k1_conventional;
+                kcfg.k2_comoving      = k_values[i].k2_comoving;
+                kcfg.k2_conventional  = k_values[i].k2_conventional;
+                kcfg.k3_comoving      = k_values[i].k3_comoving;
+                kcfg.k3_conventional  = k_values[i].k3_conventional;
+                kcfg.alpha            = k_values[i].alpha;
+                kcfg.beta             = k_values[i].beta;
+
+                number measure = h->tk->measure(kcfg);
+                for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+                  {
+                    line_data[j] += measure * S_template[j] * S_template[j];
+                  }
+              }
+          }
+
+
+		    template <typename number>
+		    void fNL_timeseries_compute<number>::fNL(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
+			    {
+		        std::vector<number> BT_line;  // will hold <B, T>
+		        std::vector<number> TT_line;  // will hold <T, T>
+
+            this->BT(h, BT_line);
+            this->TT(h, TT_line);
 
 				    line_data.clear();
 				    line_data.resize(h->time_sample_sns.size());

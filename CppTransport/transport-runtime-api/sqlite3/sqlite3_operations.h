@@ -595,13 +595,13 @@ namespace transport
             create_stmt
               << "CREATE TABLE " << fNL_table_name(type) << "("
               << "tserial INTEGER, "
-              << "ele DOUBLE, "
+              << "BT DOUBLE, "
+              << "TT DOUBLE, "
               << "PRIMARY KEY (tserial)";
 
             if(keys == foreign_keys)
               {
-                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
-                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE << "(serial)";
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial);";
               }
             create_stmt << ");";
 
@@ -925,7 +925,7 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << fNL_table_name(type) << " VALUES (@tserial, @ele);";
+            insert_stmt << "INSERT INTO " << fNL_table_name(type) << " VALUES (@tserial, @BT, @TT);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -935,7 +935,8 @@ namespace transport
             for(typename std::vector<typename data_manager<number>::fNL_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>((*t).value)));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>((*t).BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).TT)));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
@@ -1257,7 +1258,8 @@ namespace transport
               << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
               << " CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
               << " SELECT " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial AS tserial,"
-              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".ele + COALESCE(main." << fNL_table_name(type) << ".ele, 0.0) AS new_ele"
+              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".BT + COALESCE(main." << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
+              << " " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".TT + COALESCE(main." << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
               << " FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type)
               << " LEFT JOIN " << fNL_table_name(type)
               << " ON " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial=main." << fNL_table_name(type) << ".tserial;";
@@ -1269,7 +1271,8 @@ namespace transport
             copy_stmt
               << " INSERT OR REPLACE INTO main." << fNL_table_name(type)
               << " SELECT tserial AS tserial,"
-              << " new_ele AS ele"
+              << " new_BT AS BT,"
+              << " new_TT AS TT"
               << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 

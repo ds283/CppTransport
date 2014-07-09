@@ -231,7 +231,8 @@ namespace transport
             unsigned int time_serial;
 
             // value
-            number value;
+            number BT;
+            number TT;
           };
 
         // writer functions, used by the compute backends to store the output of each integration
@@ -775,7 +776,7 @@ namespace transport
                         const writer_group& w, container_dispatch_function d, container_replacement_function r,
                         handle_type h, unsigned int wn, derived_data::template_type t);
 
-            void push_fNL(unsigned int time_serial, number value);
+            void push_fNL(unsigned int time_serial, number BT, number TT);
 
           protected:
 
@@ -1694,18 +1695,9 @@ namespace transport
 				      public:
 
 						    fNL_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
-							    : data_tag(p), tk(t), N_fields(N), type(ty),
-                    restrict_triangles(false)
+							    : data_tag(p), tk(t), N_fields(N), type(ty)
 							    {
 							    }
-
-                fNL_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
-                                  const std::vector<unsigned int>& kc)
-                  : data_tag(p), tk(t), N_fields(N), type(ty),
-                    restrict_triangles(true),
-                    kconfig_sns(kc)
-                  {
-                  }
 
 						    virtual ~fNL_time_data_tag() = default;
 
@@ -1756,13 +1748,167 @@ namespace transport
 						    //! template type
 						    typename derived_data::template_type type;
 
+					    };
+
+
+            // bispectrum.template time-series tag
+            class BT_time_data_tag: public data_tag
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                BT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
+                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                    restrict_triangles(false)
+                  {
+                  }
+
+                BT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
+                                 const std::vector<unsigned int>& kc)
+                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                    restrict_triangles(true),
+                    kconfig_sns(kc)
+                  {
+                  }
+
+                virtual ~BT_time_data_tag() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! check for tag equality
+                virtual bool operator==(const data_tag& obj) const override;
+
+                //! pull data corresponding to this tag
+                virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+                //! identify this tag
+                virtual std::string name() const override { std::ostringstream msg; msg << "bispectrum.template, template =  " << template_name(this->type); return(msg.str()); }
+
+
+                // CLONE
+
+              public:
+
+                //! copy this object
+                data_tag* clone() const { return new BT_time_data_tag(static_cast<const BT_time_data_tag&>(*this)); }
+
+
+                // HASH
+
+              public:
+
+                //! hash
+                virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+                // INTERNAL DATA
+
+              protected:
+
+                //! compute delegate
+                derived_data::fNL_timeseries_compute<number> computer;
+
+                //! pointer to task
+                integration_task<number>* tk;
+
+                //! number of fields
+                unsigned int N_fields;
+
+                //! template type
+                typename derived_data::template_type type;
+
                 //! restrict integration to supplied set of triangles?
                 bool restrict_triangles;
 
                 //! set of kconfig serial numbers to restrict to, if used
                 std::vector<unsigned int> kconfig_sns;
 
-					    };
+              };
+
+
+            // template.template time-series tag
+            class TT_time_data_tag: public data_tag
+              {
+
+                // CONSTRUCTOR, DESTRUCTOR
+
+              public:
+
+                TT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
+                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                    restrict_triangles(false)
+                  {
+                  }
+
+                TT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
+                                 const std::vector<unsigned int>& kc)
+                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                    restrict_triangles(true),
+                    kconfig_sns(kc)
+                  {
+                  }
+
+                virtual ~TT_time_data_tag() = default;
+
+
+                // INTERFACE
+
+              public:
+
+                //! check for tag equality
+                virtual bool operator==(const data_tag& obj) const override;
+
+                //! pull data corresponding to this tag
+                virtual void pull(const std::vector<unsigned int>& sns, std::vector<number>& data) override;
+
+                //! identify this tag
+                virtual std::string name() const override { std::ostringstream msg; msg << "template.template, template =  " << template_name(this->type); return(msg.str()); }
+
+
+                // CLONE
+
+              public:
+
+                //! copy this object
+                data_tag* clone() const { return new TT_time_data_tag(static_cast<const TT_time_data_tag&>(*this)); }
+
+
+                // HASH
+
+              public:
+
+                //! hash
+                virtual unsigned int hash() const override { return((static_cast<unsigned int>(this->type)*2141) % __CPP_TRANSPORT_LINECACHE_HASH_TABLE_SIZE); }
+
+
+                // INTERNAL DATA
+
+              protected:
+
+                //! compute delegate
+                derived_data::fNL_timeseries_compute<number> computer;
+
+                //! pointer to task
+                integration_task<number>* tk;
+
+                //! number of fields
+                unsigned int N_fields;
+
+                //! template type
+                typename derived_data::template_type type;
+
+                //! restrict integration to supplied set of triangles?
+                bool restrict_triangles;
+
+                //! set of kconfig serial numbers to restrict to, if used
+                std::vector<unsigned int> kconfig_sns;
+
+              };
 
 
 				    // CONSTRUCTOR, DESTRUCTOR
@@ -1982,8 +2128,17 @@ namespace transport
 				    //! Generate a new fNL time tag
 				    fNL_time_data_tag new_fNL_time_data_tag(derived_data::template_type type);
 
-            //! Generate a new fNL time tag
-            fNL_time_data_tag new_fNL_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc);
+            //! Generate a new bispectrum.template time tag
+            BT_time_data_tag new_BT_time_data_tag(derived_data::template_type type);
+
+            //! Generate a new bispectrum.template time tag, with restriction on integral over triangles
+            BT_time_data_tag new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc);
+
+            //! Generate a new template.template time tag
+            TT_time_data_tag new_TT_time_data_tag(derived_data::template_type type);
+
+            //! Generate a new template.template time tag, with restriction on integral over triangles
+            TT_time_data_tag new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc);
 
 				    // friend sample tag classes, so they can use our data
 				    friend class time_config_tag;
@@ -2339,7 +2494,6 @@ namespace transport
           }
         else
           {
-            std::cerr << "(batcher not opening log file)" << std::endl;
             this->log_sink.reset();
           }
       }
@@ -2906,11 +3060,12 @@ namespace transport
 
 
     template <typename number>
-    void data_manager<number>::fNL_batcher::push_fNL(unsigned int time_serial, number value)
+    void data_manager<number>::fNL_batcher::push_fNL(unsigned int time_serial, number BT, number TT)
       {
         fNL_item item;
         item.time_serial = time_serial;
-        item.value       = value;
+        item.BT          = BT;
+        item.TT          = TT;
 
         this->fNL_batch.push_back(item);
         this->check_for_flush();
@@ -3004,7 +3159,6 @@ namespace transport
           }
         else
           {
-            std::cerr << "(datapipe not opening log file)" << std::endl;
             this->log_sink.reset();
           }
       }
@@ -3306,9 +3460,30 @@ namespace transport
 
 
     template <typename number>
-    typename data_manager<number>::datapipe::fNL_time_data_tag data_manager<number>::datapipe::new_fNL_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
+    typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type)
       {
-        return data_manager<number>::datapipe::fNL_time_data_tag(this, this->attached_task, this->N_fields, type, kc);
+        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type);
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
+      {
+        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, kc);
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type)
+      {
+        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type);
+      }
+
+
+    template <typename number>
+    typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
+      {
+        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, kc);
       }
 
 
@@ -3660,6 +3835,7 @@ namespace transport
         this->computer.reduced_bispectrum(handle, sample, 0);
       }
 
+
     template <typename number>
     void data_manager<number>::datapipe::fNL_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
       {
@@ -3677,15 +3853,67 @@ namespace transport
         const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
         // set up handle for compute delegate
+        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+        this->computer.fNL(handle, sample);
+      }
+
+
+    template <typename number>
+    void data_manager<number>::datapipe::BT_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
+      {
+        assert(this->pipe->validate_attached());
+        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
+#endif
+
+        // look up time values corresponding to these serial numbers
+        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+
+        // set up handle for compute delegate
         if(this->restrict_triangles)
           {
             std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
-            this->computer.fNL(handle, sample);
+            this->computer.BT(handle, sample);
           }
         else
           {
             std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-            this->computer.fNL(handle, sample);
+            this->computer.BT(handle, sample);
+          }
+      }
+
+
+    template <typename number>
+    void data_manager<number>::datapipe::TT_time_data_tag::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
+      {
+        assert(this->pipe->validate_attached());
+        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+
+#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
+#endif
+
+        // look up time values corresponding to these serial numbers
+        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+
+        // set up handle for compute delegate
+        if(this->restrict_triangles)
+          {
+            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
+            this->computer.TT(handle, sample);
+          }
+        else
+          {
+            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+            this->computer.TT(handle, sample);
           }
       }
 
@@ -3787,6 +4015,26 @@ namespace transport
 
         if(fNL_tag == nullptr) return(false);
         return(this->type == fNL_tag->type);
+      }
+
+
+    template <typename number>
+    bool data_manager<number>::datapipe::BT_time_data_tag::operator==(const data_tag& obj) const
+      {
+        const BT_time_data_tag* BT_tag = dynamic_cast<const BT_time_data_tag*>(&obj);
+
+        if(BT_tag == nullptr) return(false);
+        return(this->type == BT_tag->type);
+      }
+
+
+    template <typename number>
+    bool data_manager<number>::datapipe::TT_time_data_tag::operator==(const data_tag& obj) const
+      {
+        const TT_time_data_tag* TT_tag = dynamic_cast<const TT_time_data_tag*>(&obj);
+
+        if(TT_tag == nullptr) return(false);
+        return(this->type == TT_tag->type);
       }
 
 
