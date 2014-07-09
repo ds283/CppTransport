@@ -375,6 +375,7 @@ namespace transport
                   }
                 throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
               }
+            sqlite3_extended_result_codes(taskfile, 1);
 
             // read tasks from the database
             std::ostringstream select_stmt;
@@ -1836,7 +1837,558 @@ namespace transport
 	        }
 
 
-      }   // namespace sqlite3_operations
+		    //! Merge tables between database containers
+		    void merge_table(const boost::filesystem::path& source, const boost::filesystem::path& dest, const std::string table,
+		                     std::function<void(sqlite3*, add_foreign_keys_type)> make_tables)
+			    {
+				    sqlite3* dest_db = nullptr;
+
+		        int status = sqlite3_open_v2(dest.string().c_str(), &dest_db, SQLITE_OPEN_READONLY, nullptr);
+
+		        if(status != SQLITE_OK)
+			        {
+		            std::ostringstream msg;
+		            if(dest_db != nullptr)
+			            {
+		                msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << dest.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(dest_db) << ")";
+		                sqlite3_close(dest_db);
+			            }
+		            else
+			            {
+		                msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << dest.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
+			            }
+		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+			        }
+		        sqlite3_extended_result_codes(dest_db, 1);
+
+		        // enable foreign key constraints
+		        char* errmsg;
+		        sqlite3_exec(dest_db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+		        std::stringstream drop_stmt;
+				    drop_stmt << "DROP TABLE IF EXISTS " << table << ";";
+		        exec(dest_db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_DROP_DEST_FAIL);
+
+				    make_tables(dest_db, foreign_keys);
+
+		        std::stringstream copy_stmt;
+				    copy_stmt
+				      << "ATTACH DATABASE '" << source.string() << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+					    << " INSERT INTO " << table
+					    << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << table << ";"
+					    << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+				    exec(dest_db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_POSTINTCOPY);
+			    }
+
+
+		    //! Merge zeta twopf table
+		    void merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+			    {
+				    auto make_table = std::bind(&create_zeta_twopf_table, std::placeholders::_1, std::placeholders::_2);
+				    merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE, make_table);
+			    }
+
+
+		    //! Merge zeta threepf table
+		    void merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+			    {
+		        auto make_table = std::bind(&create_zeta_threepf_table, std::placeholders::_1, std::placeholders::_2);
+		        merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE, make_table);
+			    }
+
+
+        //! Merge zeta reduced bispectrum table
+        void merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+	        {
+            auto make_table = std::bind(&create_zeta_reduced_bispectrum_table, std::placeholders::_1, std::placeholders::_2);
+            merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE, make_table);
+	        }
+
+
+        //! Merge fNL table
+        void merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
+	        {
+            auto make_table = std::bind(&create_fNL_table, std::placeholders::_1, type, std::placeholders::_2);
+            merge_table(source, dest, fNL_table_name(type), make_table);
+	        }
+
+
+		    // Pull a sample of a zeta twopf, for a specific k-configuration and a specific set of time serial numbers
+		    template <typename number>
+		    void pull_zeta_twopf_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+		                                     unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
+			    {
+		        assert(db != nullptr);
+
+				    // set up a temporary table representing the serial numbers we want to use
+		        create_temporary_serial_table(db, t_serials, worker);
+
+				    // pull out the zeta twopf component matching serial numbers in the temporary table
+		        std::stringstream select_stmt;
+				    select_stmt
+				      << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".ele"
+					    << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE
+					    << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+					    << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+					    << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".kserial=" << k_serial
+					    << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+		        sqlite3_stmt* stmt;
+		        check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+		        sample.clear();
+		        sample.reserve(t_serials.size());
+
+		        int status;
+		        while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+			        {
+		            if(status == SQLITE_ROW)
+			            {
+		                double value = sqlite3_column_double(stmt, 0);
+		                sample.push_back(static_cast<number>(value));
+			            }
+		            else
+			            {
+		                std::ostringstream msg;
+		                msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+		                sqlite3_finalize(stmt);
+		                throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+			            }
+			        }
+
+		        check_stmt(db, sqlite3_finalize(stmt));
+
+		        // drop temporary table of serial numbers
+		        drop_temporary_timeserial_table(db, worker);
+
+		        // check that we have as many values as we expect
+		        if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+			    }
+
+
+        // Pull a sample of a zeta threepf, for a specific k-configuration and a specific set of time serial numbers
+        template <typename number>
+        void pull_zeta_threepf_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+                                           unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, t_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".ele"
+	            << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".kserial=" << k_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(t_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a zeta reduced bispectrum, for a specific k-configuration and a specific set of time serial numbers
+        template <typename number>
+        void pull_zeta_redbsp_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+                                          unsigned int k_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, t_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".ele"
+	            << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".kserial=" << k_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(t_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of an fNL, for a specific set of time serial numbers
+        template <typename number>
+        void pull_fNL_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+                                  std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, t_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT (5.0/3.0)*(" << fNL_table_name(type) << ".BT/" << fNL_table_name(type) << ".TT)"
+	            << " FROM " << fNL_table_name(type)
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << fNL_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(t_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of bispectrum.template, for a specific set of time serial numbers
+        template <typename number>
+        void pull_BT_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+                                 std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, t_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << fNL_table_name(type) << ".BT"
+	            << " FROM " << fNL_table_name(type)
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << fNL_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length() + 1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(t_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of template.template, for a specific set of time serial numbers
+        template <typename number>
+        void pull_TT_time_sample(sqlite3* db, const std::vector<unsigned int>& t_serials,
+                                 std::vector<number>& sample, unsigned int worker, derived_data::template_type type)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, t_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << fNL_table_name(type) << ".TT"
+	            << " FROM " << fNL_table_name(type)
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << fNL_table_name(type) << ".tserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length() + 1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(t_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a zeta twopf, for a specific k-configuration and a specific set of time serial numbers
+        template <typename number>
+        void pull_zeta_twopf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& k_serials,
+                                            unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, k_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".ele"
+	            << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ".tserial=" << t_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(k_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a zeta threepf, for a specific k-configuration and a specific set of time serial numbers
+        template <typename number>
+        void pull_zeta_threepf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& k_serials,
+                                              unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, k_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".ele"
+	            << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ".tserial=" << t_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(k_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+	        }
+
+
+        // Pull a sample of a zeta reduced bispectrum, for a specific k-configuration and a specific set of time serial numbers
+        template <typename number>
+        void pull_zeta_redbsp_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& k_serials,
+                                             unsigned int t_serial, std::vector<number>& sample, unsigned int worker)
+	        {
+            assert(db != nullptr);
+
+            // set up a temporary table representing the serial numbers we want to use
+            create_temporary_serial_table(db, k_serials, worker);
+
+            // pull out the zeta twopf component matching serial numbers in the temporary table
+            std::stringstream select_stmt;
+            select_stmt
+	            << "SELECT " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".ele"
+	            << " FROM " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE
+	            << " INNER JOIN temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker
+	            << " ON " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".kserial=" << "temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".serial"
+	            << " WHERE " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ".tserial=" << t_serial
+	            << " ORDER BY temp." << __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE << "_" << worker << ".ROWID;";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
+
+            sample.clear();
+            sample.reserve(k_serials.size());
+
+            int status;
+            while((status = sqlite3_step(stmt)) != SQLITE_DONE)
+	            {
+                if(status == SQLITE_ROW)
+	                {
+                    double value = sqlite3_column_double(stmt, 0);
+                    sample.push_back(static_cast<number>(value));
+	                }
+                else
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL << status << ": " << sqlite3_errmsg(db) << ")";
+                    sqlite3_finalize(stmt);
+                    throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+	                }
+	            }
+
+            check_stmt(db, sqlite3_finalize(stmt));
+
+            // drop temporary table of serial numbers
+            drop_temporary_timeserial_table(db, worker);
+
+            // check that we have as many values as we expect
+            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+	        }
+
+
+
+	    }   // namespace sqlite3_operations
 
   }   // namespace transport
 

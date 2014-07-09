@@ -841,11 +841,38 @@ namespace transport
 		        //! Extract a threepf component at fixed k-configuration for a set of time sample-point
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_time_callback;
 
+				    //! Extract the zeta twopf at fixed k-configuration for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
+
+				    //! Extract the zeta threepf at fixed k-configuration for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
+
+				    //! Extract the zeta reduced bispectrum at fixed k-configuration for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
+
+				    //! Extract an fNL for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
+
+				    //! Extract bispectrum.template data for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
+
+				    //! Extract template.template data for a set of time sample-points
+				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
+
 		        //! Extract a twopf component at fixed time for a set of k-configuration sample-points
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
 		        //! Extract a threepf component at fixed time for a set of k-configuration sample-point
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
+
+		        //! Extract the zeta twopf at fixed time for a set of k-configuration sample-points
+		        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
+
+		        //! Extract the zeta threepf at fixed time for a set of k-configuration sample-points
+		        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
+
+		        //! Extract the zeta reduced bispectrum at fixed time for a set of k-configuration sample-points
+		        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
 
 				    class utility_callbacks
 					    {
@@ -867,16 +894,25 @@ namespace transport
 				    class timeslice_cache
 					    {
 				      public:
-						    background_time_callback background;
-						    twopf_time_callback      twopf;
-						    threepf_time_callback    threepf;
+						    background_time_callback   background;
+						    twopf_time_callback        twopf;
+						    threepf_time_callback      threepf;
+						    zeta_twopf_time_callback   zeta_twopf;
+						    zeta_threepf_time_callback zeta_threepf;
+						    zeta_redbsp_time_callback  zeta_redbsp;
+						    fNL_time_callback          fNL;
+						    BT_time_callback           BT;
+						    TT_time_callback           TT;
 					    };
 
 				    class kslice_cache
 					    {
 				      public:
-						    twopf_kconfig_callback   twopf;
-						    threepf_kconfig_callback threepf;
+						    twopf_kconfig_callback        twopf;
+						    threepf_kconfig_callback      threepf;
+						    zeta_twopf_kconfig_callback   zeta_twopf;
+						    zeta_threepf_kconfig_callback zeta_threepf;
+						    zeta_redbsp_kconfig_callback  zeta_redbsp;
 					    };
 
 
@@ -1304,8 +1340,8 @@ namespace transport
 
 				      public:
 
-						    zeta_twopf_time_data_tag(datapipe* p, const twopf_configuration& k, integration_task<number>* t, unsigned int N)
-							    : kdata(k), data_tag(p), tk(t), N_fields(N)
+						    zeta_twopf_time_data_tag(datapipe* p, const twopf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+							    : kdata(k), data_tag(p), tk(t), N_fields(N), cached(c)
 							    {
 							    }
 
@@ -1346,6 +1382,9 @@ namespace transport
 
 				      protected:
 
+						    //! cached version available?
+						    bool cached;
+
 						    //! kserial - controls which k serial number is sampled
 						    const twopf_configuration kdata;
 
@@ -1369,8 +1408,8 @@ namespace transport
 
 		          public:
 
-		            zeta_threepf_time_data_tag(datapipe* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N)
-			            : kdata(k), data_tag(p), tk(t), N_fields(N)
+		            zeta_threepf_time_data_tag(datapipe* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+			            : kdata(k), data_tag(p), tk(t), N_fields(N), cached(c)
 			            {
 			            }
 
@@ -1411,6 +1450,9 @@ namespace transport
 
 		          protected:
 
+		            //! cached version available?
+		            bool cached;
+
 		            //! kserial - controls which k serial number is sampled
 		            const threepf_configuration kdata;
 
@@ -1434,8 +1476,8 @@ namespace transport
 
 		          public:
 
-		            zeta_reduced_bispectrum_time_data_tag(datapipe* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N)
-			            : kdata(k), data_tag(p), tk(t), N_fields(N)
+		            zeta_reduced_bispectrum_time_data_tag(datapipe* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+			            : kdata(k), data_tag(p), tk(t), N_fields(N), cached(c)
 			            {
 			            }
 
@@ -1476,6 +1518,9 @@ namespace transport
 
 		          protected:
 
+		            //! cached version available?
+		            bool cached;
+
 		            //! kserial - controls which k serial number is sampled
 		            const threepf_configuration kdata;
 
@@ -1499,8 +1544,8 @@ namespace transport
 
 				      public:
 
-						    zeta_twopf_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N)
-							    : tserial(ts), data_tag(p), tk(t), N_fields(N)
+						    zeta_twopf_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+							    : tserial(ts), data_tag(p), tk(t), N_fields(N), cached(c)
 							    {
 							    }
 
@@ -1541,6 +1586,9 @@ namespace transport
 
 				      protected:
 
+				        //! cached version available?
+				        bool cached;
+
 						    //! tserial - controls which t serial number is sampled
 						    const unsigned int tserial;
 
@@ -1564,8 +1612,8 @@ namespace transport
 
 		          public:
 
-		            zeta_threepf_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N)
-			            : tserial(ts), data_tag(p), tk(t), N_fields(N)
+		            zeta_threepf_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+			            : tserial(ts), data_tag(p), tk(t), N_fields(N), cached(c)
 			            {
 			            }
 
@@ -1606,6 +1654,9 @@ namespace transport
 
 		          protected:
 
+		            //! cached version available?
+		            bool cached;
+
 		            //! tserial - controls which t serial number is sampled
 		            const unsigned int tserial;
 
@@ -1629,8 +1680,8 @@ namespace transport
 
 		          public:
 
-		            zeta_reduced_bispectrum_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N)
-			            : tserial(ts), data_tag(p), tk(t), N_fields(N)
+		            zeta_reduced_bispectrum_kconfig_data_tag(datapipe* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+			            : tserial(ts), data_tag(p), tk(t), N_fields(N), cached(c)
 			            {
 			            }
 
@@ -1671,6 +1722,9 @@ namespace transport
 
 		          protected:
 
+		            //! cached version available?
+		            bool cached;
+
 		            //! tserial - controls which t serial number is sampled
 		            const unsigned int tserial;
 
@@ -1694,8 +1748,8 @@ namespace transport
 
 				      public:
 
-						    fNL_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
-							    : data_tag(p), tk(t), N_fields(N), type(ty)
+						    fNL_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+							    : data_tag(p), tk(t), N_fields(N), type(ty), cached(c)
 							    {
 							    }
 
@@ -1736,6 +1790,9 @@ namespace transport
 
 				      protected:
 
+				        //! cached version available?
+				        bool cached;
+
 						    //! compute delegate
 						    derived_data::fNL_timeseries_compute<number> computer;
 
@@ -1759,15 +1816,15 @@ namespace transport
 
               public:
 
-                BT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
-                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                BT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+                  : data_tag(p), tk(t), N_fields(N), type(ty), cached(c),
                     restrict_triangles(false)
                   {
                   }
 
                 BT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
-                                 const std::vector<unsigned int>& kc)
-                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                                 const std::vector<unsigned int>& kc, bool c)
+                  : data_tag(p), tk(t), N_fields(N), type(ty), cached(c),
                     restrict_triangles(true),
                     kconfig_sns(kc)
                   {
@@ -1813,6 +1870,9 @@ namespace transport
                 //! compute delegate
                 derived_data::fNL_timeseries_compute<number> computer;
 
+                //! cached version available?
+                bool cached;
+
                 //! pointer to task
                 integration_task<number>* tk;
 
@@ -1839,15 +1899,15 @@ namespace transport
 
               public:
 
-                TT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty)
-                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                TT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+                  : data_tag(p), tk(t), N_fields(N), type(ty), cached(c),
                     restrict_triangles(false)
                   {
                   }
 
                 TT_time_data_tag(datapipe* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
-                                 const std::vector<unsigned int>& kc)
-                  : data_tag(p), tk(t), N_fields(N), type(ty),
+                                 const std::vector<unsigned int>& kc, bool c)
+                  : data_tag(p), tk(t), N_fields(N), type(ty), cached(c),
                     restrict_triangles(true),
                     kconfig_sns(kc)
                   {
@@ -1892,6 +1952,9 @@ namespace transport
 
                 //! compute delegate
                 derived_data::fNL_timeseries_compute<number> computer;
+
+                //! cached version available?
+                bool cached;
 
                 //! pointer to task
                 integration_task<number>* tk;
@@ -2422,6 +2485,30 @@ namespace transport
         virtual void pull_threepf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
                                               unsigned int k_serial, std::vector<number>& sample) = 0;
 
+        //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
+        virtual void pull_zeta_twopf_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                                 unsigned int k_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
+        virtual void pull_zeta_threepf_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                                   unsigned int k_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
+        virtual void pull_zeta_redbsp_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                                  unsigned int k_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a sample of fNL from a datapipe
+        virtual void pull_fNL_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                          std::vector<number>& sample, derived_data::template_type type) = 0;
+
+        //! Pull a sample of bispectrum.template from a datapipe
+        virtual void pull_BT_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+
+        //! Pull a sample of template.template from a datapipe
+        virtual void pull_TT_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
+                                         std::vector<number>& sample, derived_data::template_type type) = 0;
+
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe::twopf_type type) = 0;
@@ -2429,6 +2516,18 @@ namespace transport
         //! Pull a kconfig of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
                                                  unsigned int t_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
+        virtual void pull_zeta_twopf_kconfig_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& k_serials,
+                                                    unsigned int t_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
+        virtual void pull_zeta_threepf_kconfig_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& k_serials,
+                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
+        virtual void pull_zeta_redbsp_kconfig_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& k_serials,
+                                                     unsigned int t_serial, std::vector<number>& sample) = 0;
 
         // INTERNAL DATA
 
@@ -3413,77 +3512,115 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_twopf_time_data_tag data_manager<number>::datapipe::new_zeta_twopf_time_data_tag(const twopf_configuration& kdata)
       {
-        return data_manager<number>::datapipe::zeta_twopf_time_data_tag(this, kdata, this->attached_task, this->N_fields);
+		    bool cached = this->attached_group->get_payload().get_zeta_twopf();
+        return data_manager<number>::datapipe::zeta_twopf_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::zeta_threepf_time_data_tag data_manager<number>::datapipe::new_zeta_threepf_time_data_tag(const threepf_configuration& kdata)
       {
-        return data_manager<number>::datapipe::zeta_threepf_time_data_tag(this, kdata, this->attached_task, this->N_fields);
+        bool cached = this->attached_group->get_payload().get_zeta_threepf();
+        return data_manager<number>::datapipe::zeta_threepf_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag data_manager<number>::datapipe::new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata)
       {
-        return data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag(this, kdata, this->attached_task, this->N_fields);
+        bool cached = this->attached_group->get_payload().get_zeta_redbsp();
+        return data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag data_manager<number>::datapipe::new_zeta_twopf_kconfig_data_tag(unsigned int tserial)
       {
-        return data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields);
+        bool cached = this->attached_group->get_payload().get_zeta_twopf();
+        return data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag data_manager<number>::datapipe::new_zeta_threepf_kconfig_data_tag(unsigned int tserial)
       {
-        return data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields);
+        bool cached = this->attached_group->get_payload().get_zeta_threepf();
+        return data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag data_manager<number>::datapipe::new_zeta_reduced_bispectrum_kconfig_data_tag(unsigned int tserial)
       {
-        return data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields);
+        bool cached = this->attached_group->get_payload().get_zeta_redbsp();
+        return data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
+
+
+		template <typename number>
+		bool is_cached(typename repository<number>::integration_payload& payload, derived_data::template_type type)
+			{
+				bool rval = false;
+				switch(type)
+					{
+				    case derived_data::fNLlocal:
+					    rval = payload.get_fNL_local();
+							break;
+
+				    case derived_data::fNLequi:
+					    rval = payload.get_fNL_equi();
+							break;
+
+				    case derived_data::fNLortho:
+					    rval = payload.get_fNL_ortho();
+							break;
+
+				    case derived_data::fNLDBI:
+					    rval = payload.get_fNL_DBI();
+							break;
+					}
+
+				return(rval);
+			}
 
 
     template <typename number>
     typename data_manager<number>::datapipe::fNL_time_data_tag data_manager<number>::datapipe::new_fNL_time_data_tag(derived_data::template_type type)
       {
-        return data_manager<number>::datapipe::fNL_time_data_tag(this, this->attached_task, this->N_fields, type);
+		    bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        return data_manager<number>::datapipe::fNL_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type)
       {
-        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type);
+        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
       {
-        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, kc);
+        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, kc, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type)
       {
-        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type);
+        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
 
     template <typename number>
     typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
       {
-        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, kc);
+        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, kc, cached);
       }
 
 
@@ -3705,15 +3842,24 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+		    if(this->cached)  // extract from data contanier
+			    {
+				    this->pipe->database_timer.resume();
+				    this->pipe->pull_timeslice.zeta_twopf(this->pipe, sns, this->kdata.serial, sample);
+				    this->pipe->database_timer.stop();
+			    }
+		    else              // have to compute values on the fly
+			    {
+		        // look up time values corresponding to these serial numbers
+		        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+		        time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+		        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-        this->computer.twopf(handle, sample, this->kdata);
+		        // set up handle for compute delegate
+		        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
+		        this->computer.twopf(handle, sample, this->kdata);
+			    }
       }
 
 
@@ -3727,15 +3873,24 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.zeta_threepf(this->pipe, sns, this->kdata.serial, sample);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // look up time values corresponding to these serial numbers
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-        this->computer.threepf(handle, sample, this->kdata);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
+            this->computer.threepf(handle, sample, this->kdata);
+	        }
       }
 
 
@@ -3749,15 +3904,24 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.zeta_redbsp(this->pipe, sns, this->kdata.serial, sample);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // look up time values corresponding to these serial numbers
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-        this->computer.reduced_bispectrum(handle, sample, this->kdata);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
+            this->computer.reduced_bispectrum(handle, sample, this->kdata);
+	        }
       }
 
 
@@ -3771,18 +3935,27 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        // pull information on this time-value from the database -- not efficient! but is there a better way?
-        std::vector<unsigned int> time_sn;
-        time_sn.push_back(this->tserial);
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_kslice.zeta_twopf(this->pipe, sns, this->tserial, sample);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // pull information on this time-value from the database -- not efficient! but is there a better way?
+            std::vector<unsigned int> time_sn;
+            time_sn.push_back(this->tserial);
 
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-        this->computer.twopf(handle, sample, 0);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
+            this->computer.twopf(handle, sample, 0);
+	        }
       }
 
 
@@ -3796,18 +3969,27 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        // pull information on this time-value from the database -- as above, not efficient
-        std::vector<unsigned int> time_sn;
-        time_sn.push_back(this->tserial);
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_kslice.zeta_threepf(this->pipe, sns, this->tserial, sample);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // pull information on this time-value from the database -- as above, not efficient
+            std::vector<unsigned int> time_sn;
+            time_sn.push_back(this->tserial);
 
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-        this->computer.threepf(handle, sample, 0);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
+            this->computer.threepf(handle, sample, 0);
+	        }
       }
 
 
@@ -3821,18 +4003,27 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        // pull information on this time-value from the database -- as above, not efficient
-        std::vector<unsigned int> time_sn;
-        time_sn.push_back(this->tserial);
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_kslice.zeta_redbsp(this->pipe, sns, this->tserial, sample);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // pull information on this time-value from the database -- as above, not efficient
+            std::vector<unsigned int> time_sn;
+            time_sn.push_back(this->tserial);
 
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-        this->computer.reduced_bispectrum(handle, sample, 0);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
+            this->computer.reduced_bispectrum(handle, sample, 0);
+	        }
       }
 
 
@@ -3846,15 +4037,24 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+        if(this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.fNL(this->pipe, sns, sample, this->type);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // look up time values corresponding to these serial numbers
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-        this->computer.fNL(handle, sample);
+            // set up handle for compute delegate
+            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+            this->computer.fNL(handle, sample);
+	        }
       }
 
 
@@ -3868,23 +4068,32 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+        if(!this->restrict_triangles && this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // look up time values corresponding to these serial numbers
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        if(this->restrict_triangles)
-          {
-            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
-            this->computer.BT(handle, sample);
-          }
-        else
-          {
-            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-            this->computer.BT(handle, sample);
-          }
+            // set up handle for compute delegate
+            if(this->restrict_triangles)
+	            {
+                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
+                this->computer.BT(handle, sample);
+	            }
+            else
+	            {
+                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+                this->computer.BT(handle, sample);
+	            }
+	        }
       }
 
 
@@ -3898,23 +4107,32 @@ namespace transport
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
 #endif
 
-        // look up time values corresponding to these serial numbers
-        time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-        time_config_tag tc_tag = this->pipe->new_time_config_tag();
+        if(!this->restrict_triangles && this->cached)  // extract from data contanier
+	        {
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
+            this->pipe->database_timer.stop();
+	        }
+        else              // have to compute values on the fly
+	        {
+            // look up time values corresponding to these serial numbers
+            time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
+            time_config_tag tc_tag = this->pipe->new_time_config_tag();
 
-        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        // set up handle for compute delegate
-        if(this->restrict_triangles)
-          {
-            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
-            this->computer.TT(handle, sample);
-          }
-        else
-          {
-            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-            this->computer.TT(handle, sample);
-          }
+            // set up handle for compute delegate
+            if(this->restrict_triangles)
+	            {
+                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
+                this->computer.TT(handle, sample);
+	            }
+            else
+	            {
+                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
+                this->computer.TT(handle, sample);
+	            }
+	        }
       }
 
 

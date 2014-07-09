@@ -51,6 +51,7 @@
 #define __CPP_TRANSPORT_PAYLOAD_OUTPUT_CONTENT_PATH        "filename"
 #define __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO               "Cached zeta twopf"
 #define __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE             "Cached zeta threepf"
+#define __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_REDBSP            "Cached zeta reduced bispectrum"
 #define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL              "Cached fNL_local"
 #define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI               "Cached fNL_equi"
 #define __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO              "Cached fNL_ortho"

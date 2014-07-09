@@ -333,6 +333,10 @@ namespace transport
         template <typename Payload>
         void advise_commit(typename repository<number>::template output_group_record<Payload>* group);
 
+        //! Advise that postintegration products have been committed to an output group
+        template <typename Payload>
+        void advise_commit(typename repository<number>::postintegration_task_record* rec, typename repository<number>::template output_group_record<Payload>* group);
+
         //! Commit the products from an integration to the database
         void close_integration_writer(typename repository<number>::base_writer& gwriter);
 
@@ -1418,6 +1422,20 @@ namespace transport
       }
 
 
+    template <typename number>
+    template <typename Payload>
+    void repository_unqlite<number>::advise_commit(typename repository<number>::postintegration_task_record* rec,
+                                                   typename repository<number>::template output_group_record<Payload>* group)
+	    {
+        std::ostringstream msg;
+
+        msg << __CPP_TRANSPORT_REPO_COMMITTING_POSTINT_GROUP_A << " '" << group->get_name() << "' "
+	          << __CPP_TRANSPORT_REPO_COMMITTING_POSTINT_GROUP_B << " '" << rec->get_name() << "' ('" << group->get_task_name() << "')";
+
+        this->message(msg.str());
+	    }
+
+
 		template <typename number>
 		void repository_unqlite<number>::close_integration_writer(typename repository<number>::base_writer& gwriter)
 			{
@@ -1502,8 +1520,77 @@ namespace transport
       {
         typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
 
-        std::cerr << "CLOSE POSTINTEGRATION WRITER" << std::endl;
-      }
+		    // get repository record for postintegration task
+		    typename repository<number>::postintegration_task_record* rec = writer.get_record();
+		    const std::list<std::string>& tags = writer.get_tags();
+
+		    // get repository record for parent integration task
+		    postintegration_task<number>* tk = rec->get_task();
+		    assert(tk != nullptr);
+
+		    integration_task<number>* ptk = tk->get_parent_task();
+		    assert(ptk != nullptr);
+
+				// get repository record for content group we have used to computation
+        std::shared_ptr<typename repository<number>::template output_group_record< typename repository<number>::integration_payload> >
+		      content_record = find_integration_task_output(ptk->get_name(), tags);
+
+		    // get source and destination data containers
+        boost::filesystem::path source_container = writer.get_abs_container_path();
+        boost::filesystem::path dest_container   = content_record->get_payload().get_container_path();
+
+		    zeta_twopf_task<number>* z2pf = nullptr;
+		    zeta_threepf_task<number>* z3pf = nullptr;
+		    fNL_task<number>* zfNL = nullptr;
+
+		    if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
+			    {
+				    writer.merge_zeta_twopf(source_container, dest_container);
+				    content_record->get_payload().add_zeta_twopf();
+			    }
+		    else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
+			    {
+				    writer.merge_zeta_twopf(source_container, dest_container);
+				    writer.merge_zeta_threepf(source_container, dest_container);
+				    writer.merge_zeta_redbsp(source_container, dest_container);
+				    content_record->get_payload().add_zeta_twopf();
+				    content_record->get_payload().add_zeta_threepf();
+				    content_record->get_payload().add_zeta_redbsp();
+			    }
+		    else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
+			    {
+				    writer.merge_fNL(source_container, dest_container, zfNL->get_template());
+
+				    switch(zfNL->get_template())
+					    {
+				        case derived_data::fNLlocal:
+					        content_record->get_payload().add_fNL_local();
+						      break;
+
+				        case derived_data::fNLequi:
+					        content_record->get_payload().add_fNL_equi();
+						      break;
+
+				        case derived_data::fNLortho:
+					        content_record->get_payload().add_fNL_ortho();
+						      break;
+
+				        case derived_data::fNLDBI:
+					        content_record->get_payload().add_fNL_DBI();
+						      break;
+
+				        default:
+					        assert(false);
+							    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+					    }
+			    }
+
+		    // update and commit content group record
+		    content_record->update_last_edit_time();
+		    content_record->commit();
+
+		    this->advise_commit(rec, content_record.get());
+	    }
 
 
     template <typename number>
@@ -1511,7 +1598,33 @@ namespace transport
       {
         typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
 
-        std::cerr << "ABORT POSTINTEGRATION WRITER" << std::endl;
+        boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+        if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+        if(boost::filesystem::is_directory(fail_path))
+	        {
+            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+            try
+	            {
+                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+	            }
+            catch(boost::filesystem::filesystem_error& xe)
+	            {
+                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	            }
+
+            std::ostringstream msg;
+
+            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+            msg << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
+	              << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << group_name << "' "
+	              << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C;
+
+            this->message(msg.str());
+	        }
+        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
       }
 
 

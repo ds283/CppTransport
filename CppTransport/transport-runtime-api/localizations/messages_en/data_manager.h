@@ -44,7 +44,8 @@
 #define __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL             "Data container error: Failed to create zeta twopf-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL           "Data container error: Failed to create zeta threepf-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_REDBSP_DATATAB_FAIL            "Data container error: Failed to create zeta reduced-bispectrum-value table in data container (backend code="
-#define __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL                    "Data conatiner error: Failed to create fNL-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL                    "Data container error: Failed to create fNL-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATAMGR_DROP_DEST_FAIL                      "Data container error: Failed to drop destination table prior to copying post-integration table (backend code="
 
 #define __CPP_TRANSPORT_DATACTR_BACKGCOPY                           "Data container error: Failed to copy background values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPFCOPY                           "Data container error: Failed to copy twopf values from temporary container (backend code="
@@ -54,6 +55,7 @@
 #define __CPP_TRANSPORT_DATACTR_ZETA_THREEPFCOPY                    "Data container error: Failed to copy zeta threepf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_REDBSPCOPY                     "Data container error: Failed to copy zeta reduced bispectrum values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_FNL_COPY                            "Data container error: Failed to copy fNL values from temporary bispectrum container (backend code="
+#define __CPP_TRANSPORT_DATACTR_POSTINTCOPY                         "Data container error: Failed to copy post-integration table (backend code="
 #define __CPP_TRANSPORT_DATACTR_REMOVE_TEMP                         "Data container error: Could not remove temporary container"
 
 #define __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE                       "Data manager error: Null datapipe specifier"

@@ -230,6 +230,30 @@ namespace transport
                                               const std::vector<unsigned int>& t_serials,
                                               unsigned int k_serial, std::vector<number>& sample) override;
 
+        //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
+        virtual void pull_zeta_twopf_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                 unsigned int k_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of the zeta threepf at fixed k-configuration from a datapipe
+        virtual void pull_zeta_threepf_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                   unsigned int k_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of the zeta reduced bispectrum at fixed k-configuration from a datapipe
+        virtual void pull_zeta_redbsp_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                  unsigned int k_serial, std::vector<number>& sample) override;
+
+        //! Pull a sample of fNL from a datapipe
+        virtual void pull_fNL_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                          std::vector<number>& sample, derived_data::template_type type) override;
+
+        //! Pull a sample of bispectrum.template from a datapipe
+        virtual void pull_BT_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                          std::vector<number>& sample, derived_data::template_type type) override;
+
+        //! Pull a sample of template.template from a datapipe
+        virtual void pull_TT_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                          std::vector<number>& sample, derived_data::template_type type) override;
+
         //! Pull a kconfig sample of a twopf component at fixed time from a datapipe
         virtual void pull_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                                const std::vector<unsigned int>& k_serials, unsigned int t_serial,
@@ -239,6 +263,18 @@ namespace transport
         virtual void pull_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                                  const std::vector<unsigned int>& k_serials,
                                                  unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
+        virtual void pull_zeta_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                    unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of the zeta threepf at fixed time from a datapipe
+        virtual void pull_zeta_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                      unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of the zeta reduced bispectrum at fixed time from a datapipe
+        virtual void pull_zeta_redbsp_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                     unsigned int t_serial, std::vector<number>& sample) override;
 
       protected:
 
@@ -581,6 +617,13 @@ namespace transport
             assert(false);
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
+
+		    typename repository<number>::postintegration_writer::merge_group mergers;
+		    mergers.zeta_twopf   = std::bind(&sqlite3_operations::merge_zeta_twopf, std::placeholders::_1, std::placeholders::_2);
+		    mergers.zeta_threepf = std::bind(&sqlite3_operations::merge_zeta_threepf, std::placeholders::_1, std::placeholders::_2);
+				mergers.zeta_redbsp  = std::bind(&sqlite3_operations::merge_zeta_redbsp, std::placeholders::_1, std::placeholders::_2);
+		    mergers.fNL          = std::bind(&sqlite3_operations::merge_fNL, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    writer->set_merge_handlers(mergers);
       }
 
 
@@ -603,10 +646,10 @@ namespace transport
         sqlite3_close(taskfile);
 
         // physically remove the taskfile from the disc; it isn't needed any more
-//        boost::filesystem::remove(writer->get_abs_taskfile_path());
+        boost::filesystem::remove(writer->get_abs_taskfile_path());
 
         // physically remove the tempfiles directory
-//        boost::filesystem::remove(writer->get_abs_tempdir_path());
+        boost::filesystem::remove(writer->get_abs_tempdir_path());
       }
 
 
@@ -1205,6 +1248,24 @@ namespace transport
 		                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
 		                                  std::placeholders::_4, std::placeholders::_5);
 
+		    timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
+		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_time_sample, this,
+		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample, this,
+		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.fNL = std::bind(&data_manager_sqlite3<number>::pull_fNL_time_sample, this,
+		                              std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.BT = std::bind(&data_manager_sqlite3<number>::pull_BT_time_sample, this,
+		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    timeslice.TT = std::bind(&data_manager_sqlite3<number>::pull_TT_time_sample, this,
+		                             std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
 		    typename data_manager<number>::datapipe::kslice_cache kslice;
 
 		    kslice.twopf = std::bind(&data_manager_sqlite3<number>::pull_twopf_kconfig_sample, this,
@@ -1214,6 +1275,15 @@ namespace transport
 		    kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
 		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
 		                               std::placeholders::_4, std::placeholders::_5);
+
+		    kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
+		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    kslice.zeta_threepf = std::bind(&data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample, this,
+		                                       std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+		    kslice.zeta_redbsp = std::bind(&data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample, this,
+		                                      std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
 		    // set up datapipe
 		    typename data_manager<number>::datapipe pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
@@ -1317,6 +1387,90 @@ namespace transport
 
 
     template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_twopf_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                                   unsigned int k_serial, std::vector<number>& sample)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_twopf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_threepf_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                                     unsigned int k_serial, std::vector<number>& sample)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_threepf_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                                    unsigned int k_serial, std::vector<number>& sample)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_redbsp_time_sample(db, t_serials, k_serial, sample, pipe->get_worker_number());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_fNL_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                            std::vector<number>& sample, derived_data::template_type type)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_fNL_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_BT_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                           std::vector<number>& sample, derived_data::template_type type)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_BT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_TT_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
+                                                           std::vector<number>& sample, derived_data::template_type type)
+	    {
+		    assert(pipe != nullptr);
+		    if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+		    sqlite3* db = nullptr;
+		    pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_TT_time_sample(db, t_serials, sample, pipe->get_worker_number(), type);
+	    }
+
+
+    template <typename number>
     void data_manager_sqlite3<number>::pull_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe,
                                                                  unsigned int id, const std::vector<unsigned int>& k_serials,
                                                                  unsigned int t_serial, std::vector<number>& sample,
@@ -1346,6 +1500,48 @@ namespace transport
         pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
 
         sqlite3_operations::pull_threepf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                                      unsigned int t_serial, std::vector<number>& sample)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_twopf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                                        unsigned int t_serial, std::vector<number>& sample)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_threepf_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
+	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_zeta_redbsp_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
+                                                                       unsigned int t_serial, std::vector<number>& sample)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_zeta_redbsp_kconfig_sample(db, k_serials, t_serial, sample, pipe->get_worker_number());
 	    }
 
 
@@ -1384,7 +1580,6 @@ namespace transport
 							}
 						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
 					}
-
         sqlite3_extended_result_codes(db, 1);
 
         // enable foreign key constraints

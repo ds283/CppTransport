@@ -45,6 +45,9 @@
 #define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B   "for task"
 #define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C   "tags"
 
+#define __CPP_TRANSPORT_REPO_COMMITTING_POSTINT_GROUP_A  "Committed postintegration products to output group"
+#define __CPP_TRANSPORT_REPO_COMMITTING_POSTINT_GROUP_B  "for task"
+
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Some momentum configurations failed to integrate, or other errors were encountered. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C       "moved to fail cache in repository"
@@ -52,6 +55,10 @@
 #define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A      "Task"
 #define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B      "Some derived content could not be generated, or other errors were encountered. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C      "moved to fail cache in repository"
+
+#define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_A      "Task"
+#define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed, or other errors were encountered. Failing output group"
+#define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C      "moved to fail cache in repository"
 
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
 #define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
@@ -81,6 +88,10 @@
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"
 #define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
 #define __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Repository error: Aggregator unset in writer object"
+#define __CPP_TRANSPORT_REPO_WRITER_TWOPF_MERGER_UNSET   "Repository error: zeta twopf merger unset in writer object"
+#define __CPP_TRANSPORT_REPO_WRITER_THREEPF_MERGER_UNSET "Repository error: zeta threepf merger unset in writer object"
+#define __CPP_TRANSPORT_REPO_WRITER_REDBSP_MERGER_UNSET  "Repository error: zeta reduced bispectrum merger unset in writer object"
+#define __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET     "Repository error: fNL merger unset in writer object"
 
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"

@@ -16,6 +16,8 @@
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/instance_manager.h"
 
+#include "transport-runtime-api/derived-products/template_types.h"
+
 #include "boost/filesystem/operations.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
@@ -74,6 +76,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF      "zeta-twopf"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF    "zeta-threepf"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP     "zeta-redbsp"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL       "fNL_local"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI        "fNL_equi"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO       "fNL_ortho"
@@ -1033,7 +1036,7 @@ namespace transport
             //! Create a payload
             integration_payload()
 	            : metadata(),
-                zeta_twopf(false), zeta_threepf(false),
+                zeta_twopf(false), zeta_threepf(false), zeta_redbsp(false),
                 fNL_local(false), fNL_equi(false), fNL_ortho(false), fNL_DBI(false)
 	            {
 	            }
@@ -1074,10 +1077,15 @@ namespace transport
 		        //! Add zeta_twopf availability flag
 		        void add_zeta_twopf() { this->zeta_twopf = true; }
 
-		        //! Get precomputed zeta_threepf availability (include reduced bispectrum)
+		        //! Get precomputed zeta_threepf availability
 		        bool get_zeta_threepf() const { return(this->zeta_threepf); }
 		        //! Add zeta_threepf availability flag
 		        void add_zeta_threepf() { this->zeta_threepf = true; }
+
+            //! Get precomputed zeta reduced bispectrum availability
+            bool get_zeta_redbsp() const { return(this->zeta_redbsp); }
+            //! Add zeta_threepf availability flag
+            void add_zeta_redbsp() { this->zeta_redbsp = true; }
 
 		        //! Get precomputed fNL_local availability
 		        bool get_fNL_local() const { return(this->fNL_local); }
@@ -1087,7 +1095,7 @@ namespace transport
 		        //! Get precomputed fNL_equi availability
 		        bool get_fNL_equi() const { return(this->fNL_equi); }
 		        //! Add fNL_equi availability flag
-		        void add_fNL_eqiu() { this->fNL_equi = true; }
+		        void add_fNL_equi() { this->fNL_equi = true; }
 
 		        //! Get precomputed fNL_ortho availability
 		        bool get_fNL_ortho() const { return(this->fNL_ortho); }
@@ -1129,8 +1137,11 @@ namespace transport
 		        //! group has pre-computed zeta twopf data?
 		        bool zeta_twopf;
 
-		        //! group has pre-computed zeta threepf data? (includes reduced bispectrum)
+		        //! group has pre-computed zeta threepf data?
 		        bool zeta_threepf;
+
+		        //! group had pre-computed zeta reduced bispectrum data?
+		        bool zeta_redbsp;
 
 		        //! group has pre-computed fNL_local data?
 		        bool fNL_local;
@@ -1659,6 +1670,23 @@ namespace transport
         class postintegration_writer: public generic_writer<postintegration_writer>
           {
 
+          public:
+
+		        //! Callback for merging postintegration correlation-function output between data containers
+		        typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&)> merge_callback;
+
+            //! Callback for merging postintegration fNL output between data containers
+            typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&, derived_data::template_type)> fNL_merge_callback;
+
+		        class merge_group
+			        {
+		          public:
+				        merge_callback     zeta_twopf;
+				        merge_callback     zeta_threepf;
+				        merge_callback     zeta_redbsp;
+				        fNL_merge_callback fNL;
+			        };
+
             // CONSTRUCTOR, DESTRUCTOR
 
           public:
@@ -1678,6 +1706,24 @@ namespace transport
             virtual ~postintegration_writer();
 
 
+		        // MERGE CONTAINER OUTPUT
+
+		        //! assign merge handlers
+		        void set_merge_handlers(const merge_group& d) { this->mergers = d; }
+
+		        //! merge zeta twopf
+		        void merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+
+            //! merge zeta threepf
+            void merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+
+            //! merge zeta reduced bispectrum
+            void merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest);
+
+            //! merge fNL_local
+            void merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type);
+
+
             // METADATA
 
           public:
@@ -1694,6 +1740,12 @@ namespace transport
 
             //! task associated with this integration writer
             postintegration_task_record* parent_record;
+
+
+		        // MERGE CALLBACKS
+
+		        //! merge callbacks
+		        merge_group mergers;
 
           };
 
@@ -2568,6 +2620,58 @@ namespace transport
       }
 
 
+    template <typename number>
+    void repository<number>::postintegration_writer::merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+	    {
+				if(!this->mergers.zeta_twopf)
+					{
+				    assert(false);
+				    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_TWOPF_MERGER_UNSET);
+					}
+
+		    this->mergers.zeta_twopf(source, dest);
+	    }
+
+
+    template <typename number>
+    void repository<number>::postintegration_writer::merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+	    {
+        if(!this->mergers.zeta_threepf)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_THREEPF_MERGER_UNSET);
+	        }
+
+        this->mergers.zeta_threepf(source, dest);
+	    }
+
+
+    template <typename number>
+    void repository<number>::postintegration_writer::merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest)
+	    {
+        if(!this->mergers.zeta_redbsp)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_REDBSP_MERGER_UNSET);
+	        }
+
+        this->mergers.zeta_redbsp(source, dest);
+	    }
+
+
+    template <typename number>
+    void repository<number>::postintegration_writer::merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
+	    {
+        if(!this->mergers.zeta_twopf)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET);
+	        }
+
+        this->mergers.fNL(source, dest, type);
+	    }
+
+
 		// DERIVED CONTENT WRITER METHODS
 
 
@@ -2802,6 +2906,7 @@ namespace transport
 
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
@@ -2815,6 +2920,7 @@ namespace transport
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
 		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
 		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
 		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
 		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
 		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
@@ -2831,6 +2937,7 @@ namespace transport
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
 		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
