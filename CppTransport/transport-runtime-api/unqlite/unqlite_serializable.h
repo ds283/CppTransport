@@ -82,6 +82,7 @@ namespace transport
 		    //! Write a value
 		    virtual void write_value(const std::string& name, const std::string& value) override;
 		    virtual void write_value(const std::string& name, unsigned int value) override;
+        virtual void write_value(const std::string& name, long int value) override;
 				virtual void write_value(const std::string& name, long long int value) override;
 		    virtual void write_value(const std::string& name, double value) override;
 		    virtual void write_value(const std::string& name, bool value) override;
@@ -136,6 +137,12 @@ namespace transport
 	    {
         this->stack.write_value(name, value);
 	    }
+
+
+    void unqlite_serialization_writer::write_value(const std::string& name, long int value)
+      {
+        this->stack.write_value(name, value);
+      }
 
 
 		void unqlite_serialization_writer::write_value(const std::string& name, long long int value)
@@ -225,6 +232,7 @@ namespace transport
 		    //! Read a value
 		    virtual bool read_value(const std::string& name, std::string& value) override;
 		    virtual bool read_value(const std::string& name, unsigned int& value) override;
+        virtual bool read_value(const std::string& name, long int& value) override;
 				virtual bool read_value(const std::string& name, long long int& value) override;
 		    virtual bool read_value(const std::string& name, double& value) override;
 		    virtual bool read_value(const std::string& name, bool& value) override;
@@ -248,6 +256,7 @@ namespace transport
 				//! Insert a value in the current node
 				virtual void insert_value(const std::string& name, const std::string& value) override;
 				virtual void insert_value(const std::string& name, unsigned int value) override;
+        virtual void insert_value(const std::string& name, long int value) override;
 				virtual void insert_value(const std::string& name, long long int value) override;
 				virtual void insert_value(const std::string& name, double value) override;
 				virtual void insert_value(const std::string& name, bool value) override;
@@ -507,6 +516,19 @@ namespace transport
 	    }
 
 
+    bool unqlite_serialization_reader::read_value(const std::string& name, long int& value)
+      {
+        if(!this->stack.read_value(name, value))
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_UNQLITE_READ_VALUE_FAIL << " '" << name << "'";
+            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+          }
+
+        return(true);
+      }
+
+
     bool unqlite_serialization_reader::read_value(const std::string& name, long long int& value)
 	    {
         if(!this->stack.read_value(name, value))
@@ -609,6 +631,12 @@ namespace transport
 			{
 		    this->stack.write_value(name, value, true);
 			}
+
+
+    void unqlite_serialization_reader::insert_value(const std::string& name, long int value)
+      {
+        this->stack.write_value(name, value, true);
+      }
 
 
     void unqlite_serialization_reader::insert_value(const std::string& name, long long int value)
