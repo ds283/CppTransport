@@ -137,9 +137,11 @@ namespace transport
 	        };
 
 
+        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
         threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter)
-	        : active_indices(sel), use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+	        : derived_line<number>(tk),
+	          active_indices(sel), use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 	        {
             if(active_indices.get_number_fields() != this->mdl->get_N_fields())
 	            {
@@ -168,11 +170,12 @@ namespace transport
 	        }
 
 
-		    // Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
+		    // Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 		    // because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
 		    threepf_line<number>::threepf_line(serialization_reader* reader)
-			    : active_indices(reader)
+			    : derived_line<number>(reader),
+			      active_indices(reader)
 			    {
 				    assert(reader != nullptr);
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);

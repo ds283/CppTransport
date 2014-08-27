@@ -108,8 +108,10 @@ namespace transport
 	        };
 
 
+        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
 		    wavenumber_series<number>::wavenumber_series(const integration_task<number>& tk, filter::time_filter tfilter)
+          : derived_line<number>(tk)
 			    {
 				    // set up list of serial numbers corresponding to the sample times for this derived line
             try
@@ -129,8 +131,10 @@ namespace transport
           }
 
 
+        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
 		    wavenumber_series<number>::wavenumber_series(serialization_reader* reader)
+          : derived_line<number>(reader)
 			    {
 				    assert(reader != nullptr);
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);

@@ -119,6 +119,7 @@ namespace transport
 
 		    template <typename number>
 		    time_series<number>::time_series(const integration_task<number>& tk, filter::time_filter tfilter)
+		      : derived_line<number>(tk)
 			    {
 		        // set up a list of serial numbers corresponding to the sample times for this derived line
             try
@@ -142,6 +143,7 @@ namespace transport
 				// because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
 		    time_series<number>::time_series(serialization_reader* reader)
+					: derived_line<number>(reader)
 			    {
 		        assert(reader != nullptr);
 		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);

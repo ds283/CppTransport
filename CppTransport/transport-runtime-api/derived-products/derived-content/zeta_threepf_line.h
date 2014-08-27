@@ -138,12 +138,13 @@ namespace transport
 			    };
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the constructor for
+        // note that because time_series<> inherits virtually from derived_line<>, the correct constructor for
         // derived_line<> is *not* called from time_series<>.
         // Concrete classes must call it themselves
 		    template <typename number>
 		    zeta_threepf_line<number>::zeta_threepf_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
-		      : use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+		      : derived_line<number>(tk),
+		        use_kt_label(true), use_alpha_label(false), use_beta_label(false)
 			    {
             try
               {
@@ -162,11 +163,12 @@ namespace transport
           }
 
 
-        // note that because time_series<> inherits virtually from derived_line<>, the constructor for
+        // note that because time_series<> inherits virtually from derived_line<>, the correct constructor for
         // derived_line<> is *not* called from time_series<>.
         // Concrete classes must call it themselves
 				template <typename number>
 				zeta_threepf_line<number>::zeta_threepf_line(serialization_reader* reader)
+          : derived_line<number>(reader)
 					{
 				    assert(reader != nullptr);
 				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);

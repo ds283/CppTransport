@@ -113,7 +113,6 @@ namespace transport
 				    typedef enum { conventional, comoving } klabel_type;
 
 						typedef enum { time_series, wavenumber_series, angle_series } axis_type;
-
 				    typedef enum { background_field, correlation_function, fNL } value_type;
 
 
@@ -125,8 +124,14 @@ namespace transport
 						derived_line(const integration_task<number>& tk, axis_type at, value_type vt,
 						             unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
+						//! Dummy user-facing constructor, should not be used; called only for incorrectly-constructed instances
+						derived_line(const integration_task<number>& tk);
+
 				    //! Deserialization constructor
 						derived_line(serialization_reader* reader, typename repository<number>::task_finder& finder);
+
+						//! Dummy deserialization constructor, should not be used; called only for incorrectly-constructed instances
+						derived_line(serialization_reader* reader);
 
 						// Override default copy constructor to perform a deep copy of the parent task
 						derived_line(const derived_line<number>& obj);
@@ -247,6 +252,22 @@ namespace transport
 
 				    if(parent_task == nullptr)
 					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_INTEGRATION_TASK);
+					}
+
+
+				template <typename number>
+				derived_line<number>::derived_line(const integration_task<number>& tk)
+					: parent_task(nullptr), mdl(nullptr)
+					{
+						assert(false);
+					}
+
+
+				template <typename number>
+				derived_line<number>::derived_line(serialization_reader* reader)
+					: parent_task(nullptr), mdl(nullptr)
+					{
+						assert(false);
 					}
 
 

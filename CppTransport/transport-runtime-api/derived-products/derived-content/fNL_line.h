@@ -125,18 +125,22 @@ namespace transport
           };
 
 
+        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
         fNL_line<number>::fNL_line(const threepf_task<number>& tk)
-          : type(fNLlocal)
+          : derived_line<number>(tk),
+            type(fNLlocal)
           {
             // we could store all kconfiguration numbers we're going to use, but it's
             // more space efficient to just recover them at runtime
           }
 
 
+        // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
         fNL_line<number>::fNL_line(serialization_reader* reader)
-          : type(fNLlocal)
+          : derived_line<number>(reader),
+            type(fNLlocal)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);

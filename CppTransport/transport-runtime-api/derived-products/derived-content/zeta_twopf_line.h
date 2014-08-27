@@ -106,8 +106,10 @@ namespace transport
 			    };
 
 
+		    // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
 				zeta_twopf_line<number>::zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
+		      : derived_line<number>(tk)
 					{
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
             try
@@ -127,10 +129,11 @@ namespace transport
 					}
 
 
-				// Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
+				// Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 				// because of virtual inheritance; concrete classes must call it themselves
 				template <typename number>
 				zeta_twopf_line<number>::zeta_twopf_line(serialization_reader* reader)
+					: derived_line<number>(reader)
 					{
 				    assert(reader != nullptr);
 				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
