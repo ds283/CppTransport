@@ -92,7 +92,7 @@ namespace transport
 		    std::vector<number> get_offset_vector(double N) const;
 
         //! Return relative time of horizon-crossing
-        const double get_Nstar() const { return(this->Nstar); }
+        double get_Nstar() const { return(this->Nstar); }
 
         //! Return name of this 'package'
         const std::string& get_name() const { return(this->name); }

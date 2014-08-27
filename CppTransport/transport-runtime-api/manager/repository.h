@@ -1623,7 +1623,7 @@ namespace transport
           public:
 
             //! Return whether we're collecting per-configuration statistics
-            const bool collect_statistics() const { return(this->supports_stats); }
+            bool collect_statistics() const { return(this->supports_stats); }
 
 
 		        // METADATA
