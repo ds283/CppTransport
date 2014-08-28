@@ -1455,7 +1455,7 @@ namespace transport
           }
 
         // create a new, empty output group record
-        std::unique_ptr<typename repository<number>::template output_group_record<typename repository<number>::integration_payload>>
+        std::unique_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
           output_record(this->output_group_record_factory<typename repository<number>::integration_payload>(rec->get_task()->get_name(), writer.get_relative_output_path(),
                                                                                                             false, notes, tags));
 
@@ -1638,7 +1638,7 @@ namespace transport
 				assert(rec != nullptr);
 
         // create a new, empty output group record
-        std::unique_ptr<typename repository<number>::template output_group_record<typename repository<number>::output_payload>>
+        std::unique_ptr< typename repository<number>::template output_group_record<typename repository<number>::output_payload> >
           output_record(this->output_group_record_factory<typename repository<number>::output_payload>(rec->get_task()->get_name(), writer.get_relative_output_path(),
                                                                                                        false, std::list<std::string>(), tags));
 
