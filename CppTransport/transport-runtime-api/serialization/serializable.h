@@ -63,6 +63,7 @@ namespace transport
 				virtual void write_value(const std::string& name, const std::string& value) = 0;
 		    virtual void write_value(const std::string& name, bool value) = 0;
 				virtual void write_value(const std::string& name, unsigned int value) = 0;
+        virtual void write_value(const std::string& name, long int value) = 0;
 				virtual void write_value(const std::string& name, long long int value) = 0;
 				virtual void write_value(const std::string& name, double value) = 0;
 
@@ -124,6 +125,7 @@ namespace transport
         virtual bool read_value(const std::string& name, std::string& value) = 0;
         virtual bool read_value(const std::string& name, bool& value) = 0;
         virtual bool read_value(const std::string& name, unsigned int& value) = 0;
+        virtual bool read_value(const std::string& name, long int& value) = 0;
 		    virtual bool read_value(const std::string& name, long long int& value) = 0;
         virtual bool read_value(const std::string& name, double& value) = 0;
 
@@ -147,6 +149,7 @@ namespace transport
 		    virtual void insert_value(const std::string& name, const std::string& value) = 0;
         virtual void insert_value(const std::string& name, bool value) = 0;
 		    virtual void insert_value(const std::string& name, unsigned int value) = 0;
+        virtual void insert_value(const std::string& name, long int value) = 0;
 		    virtual void insert_value(const std::string& name, long long int value) = 0;
 		    virtual void insert_value(const std::string& name, double value) = 0;
 

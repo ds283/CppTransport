@@ -746,6 +746,7 @@ namespace transport
 	              total_aggregation_time(0),
 	              total_integration_time(0),
 	              min_mean_integration_time(0),
+                max_mean_integration_time(0),
 	              global_min_integration_time(0),
 	              global_max_integration_time(0),
 	              total_batching_time(0),
