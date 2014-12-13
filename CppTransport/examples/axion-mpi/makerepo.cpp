@@ -636,7 +636,7 @@ int main(int argc, char* argv[])
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec = transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double>(tk3,
                                                                                                                                                                                  transport::derived_data::filter::time_filter(time_config_filter),
-                                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(all_squeezed));
+                                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
