@@ -28,6 +28,7 @@
 #define __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE                  "twopf_samples"
 #define __CPP_TRANSPORT_SQLITE_THREEPF_SAMPLE_TABLE                "threepf_samples"
 #define __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE                   "backg"
+#define __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE            "tensor_twopf"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_VALUE_TABLE                   "twopf"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
@@ -494,6 +495,35 @@ namespace transport
           }
 
 
+        // Create table for tensor twopf values
+        void create_tensor_twopf_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+          {
+            unsigned int num_cols = std::min(static_cast<unsigned int>(4), max_columns);
+
+            std::ostringstream create_stmt;
+            create_stmt
+              << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << "("
+              << "tserial INTEGER, "
+              << "kserial INTEGER, "
+              << "page INTEGER";
+
+            for(unsigned int i = 0; i < num_cols; i++)
+              {
+                create_stmt << ", ele" << i << " DOUBLE";
+              }
+
+            create_stmt << ", PRIMARY KEY (tserial, kserial, page)";
+            if(keys == foreign_keys)
+              {
+                create_stmt << ", FOREIGN KEY(tserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE << "(serial)"
+                  << ", FOREIGN KEY(kserial) REFERENCES " << __CPP_TRANSPORT_SQLITE_TWOPF_SAMPLE_TABLE << "(serial)";
+              }
+            create_stmt << ");";
+
+            exec(db, create_stmt.str());
+          }
+
+
         // Create table for threepf values
         void create_threepf_table(sqlite3* db, unsigned int Nfields, add_foreign_keys_type keys=no_foreign_keys)
           {
@@ -759,6 +789,62 @@ namespace transport
           }
 
 
+        // Write a batch of tensor twopf values
+        template <typename number>
+        void write_tensor_twopf(typename data_manager<number>::integration_batcher* batcher,
+                                const std::vector<typename data_manager<number>::tensor_twopf_item>& batch)
+          {
+            sqlite3* db = nullptr;
+            batcher->get_manager_handle(&db);
+
+            // work out how many columns we have, and how many pages
+            // we need to fit in our number of columns.
+            // num_pages will be 1 or greater
+            unsigned int num_cols = std::min(static_cast<unsigned int>(4), max_columns);
+            unsigned int num_pages = (4 - 1)/num_cols + 1;
+
+            std::ostringstream insert_stmt;
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << " VALUES (@tserial, @kserial, @page";
+
+            for(unsigned int i = 0; i < num_cols; i++)
+              {
+                insert_stmt << ", @ele" << i;
+              }
+            insert_stmt << ");";
+
+            sqlite3_stmt* stmt;
+            check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+            exec(db, "BEGIN TRANSACTION;");
+
+            for(typename std::vector<typename data_manager<number>::tensor_twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+              {
+                for(unsigned int page = 0; page < num_pages; page++)
+                  {
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 3, page));
+
+                    for(unsigned int i = 0; i < num_cols; i++)
+                      {
+                        unsigned int index = page*num_cols + i;
+                        number       value = index < 4 ? (*t).elements[index] : 0.0;
+
+                        check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
+                      }
+
+                    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_DATATAB_FAIL, SQLITE_DONE);
+
+                    check_stmt(db, sqlite3_clear_bindings(stmt));
+                    check_stmt(db, sqlite3_reset(stmt));
+                  }
+              }
+
+            exec(db, "END TRANSACTION;");
+            check_stmt(db, sqlite3_finalize(stmt));
+          }
+
+
         // Write a batch of threepf values
         template <typename number>
         void write_threepf(typename data_manager<number>::integration_batcher* batcher,
@@ -978,6 +1064,7 @@ namespace transport
             if(collect_stats) create_stats_table(db, no_foreign_keys);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
+            create_tensor_twopf_table(db, no_foreign_keys);
 
             return(db);
           }
@@ -1012,6 +1099,7 @@ namespace transport
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
             create_twopf_table(db, Nfields, imag_twopf, no_foreign_keys);
+            create_tensor_twopf_table(db, no_foreign_keys);
             create_threepf_table(db, Nfields, no_foreign_keys);
 
             return(db);
@@ -1148,6 +1236,25 @@ namespace transport
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
+          }
+
+
+        // Aggregate a tensor twopf value table from a temporary container into the principal container
+        template <typename number>
+        void aggregate_tensor_twopf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+          {
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
+
+            std::ostringstream copy_stmt;
+            copy_stmt
+              << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+              << " INSERT INTO " << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE
+              << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << ";"
+              << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TENSORTWOPFCOPY);
           }
 
 

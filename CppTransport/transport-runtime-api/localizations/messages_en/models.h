@@ -31,6 +31,7 @@
 
 #define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
 #define __CPP_TRANSPORT_FAILED_CONFIG         "Failed to integrate configuration"
+#define __CPP_TRANSPORT_FAILED_INTERNAL       "internal exception="
 #define __CPP_TRANSPORT_RETRY_CONFIG          "Retrying configuration"
 #define __CPP_TRANSPORT_OF                    "of"
 #define __CPP_TRANSPORT_INTEGRATION_TIME      "integration time"

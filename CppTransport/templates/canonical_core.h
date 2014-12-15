@@ -40,10 +40,15 @@ namespace transport
 
         constexpr unsigned int backg_size         = (2*$$__NUMBER_FIELDS);
         constexpr unsigned int twopf_size         = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
+        constexpr unsigned int tensor_size        = (4);
         constexpr unsigned int threepf_size       = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
      
         constexpr unsigned int backg_start        = 0;
-        constexpr unsigned int twopf_start        = backg_start + backg_size;
+        constexpr unsigned int tensor_start       = backg_start + backg_size;
+        constexpr unsigned int tensor_k1_start    = tensor_start;
+        constexpr unsigned int tensor_k2_start    = tensor_k1_start + tensor_size;
+        constexpr unsigned int tensor_k3_start    = tensor_k2_start + tensor_size;
+        constexpr unsigned int twopf_start        = tensor_k3_start + tensor_size;
         constexpr unsigned int twopf_re_k1_start  = twopf_start;
         constexpr unsigned int twopf_im_k1_start  = twopf_re_k1_start + twopf_size;
         constexpr unsigned int twopf_re_k2_start  = twopf_im_k1_start + twopf_size;
@@ -53,8 +58,8 @@ namespace transport
         constexpr unsigned int threepf_start      = twopf_im_k3_start + twopf_size;
 
         constexpr unsigned int backg_state_size   = backg_size;
-        constexpr unsigned int twopf_state_size   = backg_size + twopf_size;
-        constexpr unsigned int threepf_state_size = backg_size + 6*twopf_size + threepf_size;
+        constexpr unsigned int twopf_state_size   = backg_size + tensor_size + twopf_size;
+        constexpr unsigned int threepf_state_size = backg_size + 3*tensor_size + 6*twopf_size + threepf_size;
 
         constexpr unsigned int u2_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
         constexpr unsigned int u3_size            = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
@@ -111,6 +116,7 @@ namespace transport
         virtual unsigned int flatten(unsigned int a)                                  const override { return(a); };
         virtual unsigned int flatten(unsigned int a, unsigned int b)                  const override { return(2*$$__NUMBER_FIELDS*a + b); };
         virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const override { return(2*$$__NUMBER_FIELDS*2*$$__NUMBER_FIELDS*a + 2*$$__NUMBER_FIELDS*b + c); };
+        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)           const override { return(2*a + b); }
 
 
         // INDEX TRAITS -- implements an 'abstract_flattener' interface
@@ -180,12 +186,14 @@ namespace transport
 
       protected:
 
-        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
+        number make_twopf_re_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
 
-        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
+        number make_twopf_im_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
+
+        number make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
 
         number make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
-                               double kmode_1, double kmode_2, double kmode_3, double __Ninit, const parameters<number>& params, const std::vector<number>& __fields);
+                               double kmode_1, double kmode_2, double kmode_3, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields);
       };
 
 
@@ -526,6 +534,48 @@ namespace transport
     }
 
 
+    // set up initial conditions for the real part of the equal-time tensor two-point functioj
+    template <typename number>
+    number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields)
+      {
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto __Mp              = __params.get_Mp();
+
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+        const auto __ainit           = exp(__Ninit);
+
+        const auto __N               = log(__k/(__ainit*sqrt(__Hsq)));
+
+        number     __tpf             = 0.0;
+
+        $$__TEMP_POOL{"const auto $1 = $2;"}
+
+        if(__i == 0 && __j == 0)      // h-h correlation function
+          {
+            // LEADING-ORDER INITIAL CONDITION
+            __tpf += 1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
+          }
+        else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))
+          {
+            // LEADING ORDER INITIAL CONDITION IS EMPTY
+          }
+        else if(__i == 1 && __j == 1) // dh-dh correlation function
+          {
+            // LEADING ORDER INITIAL CONDITION
+            __tpf += __k / (__Mp*__Mp*__Hsq*__ainit*__ainit*__ainit*__ainit);
+          }
+        else
+          {
+            assert(false);
+          }
+
+        return(__tpf);
+      }
+
+
+    // set up initial conditions for the real part of the equal-time three-point function
     template <typename number>
     number $$__MODEL<number>::make_threepf_ic(unsigned int __i, unsigned int __j, unsigned int __k,
                                               double __kmode_1, double __kmode_2, double __kmode_3, double __Ninit,
@@ -827,13 +877,13 @@ namespace transport
                                const std::vector<number>& __fields, double __k, double __N,
                                std::vector< std::vector<number> >& __u2)
       {
-        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = __params.get_Mp();
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto __Mp              = __params.get_Mp();
 
-        const auto __Hsq                  = $$__HUBBLE_SQ;
-        const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N);
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+        const auto __a               = exp(__N);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
@@ -854,13 +904,13 @@ namespace transport
                                const std::vector<number>& __fields, double __km, double __kn, double __kr, double __N,
                                std::vector< std::vector< std::vector<number> > >& __u3)
       {
-        const auto $$__PARAMETER[1]       = __params.get_vector()[$$__1];
-        const auto $$__COORDINATE[A]      = __fields[$$__A];
-        const auto __Mp                   = __params.get_Mp();
+        const auto $$__PARAMETER[1]  = __params.get_vector()[$$__1];
+        const auto $$__COORDINATE[A] = __fields[$$__A];
+        const auto __Mp              = __params.get_Mp();
 
-        const auto __Hsq                  = $$__HUBBLE_SQ;
-        const auto __eps                  = $$__EPSILON;
-        const auto __a                    = exp(__N);
+        const auto __Hsq             = $$__HUBBLE_SQ;
+        const auto __eps             = $$__EPSILON;
+        const auto __a               = exp(__N);
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 

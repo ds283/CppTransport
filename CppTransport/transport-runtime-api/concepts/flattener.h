@@ -26,6 +26,7 @@ namespace transport
         virtual unsigned int flatten(unsigned int a)                                  const = 0;
         virtual unsigned int flatten(unsigned int a, unsigned int b)                  const = 0;
         virtual unsigned int flatten(unsigned int a, unsigned int b, unsigned int c)  const = 0;
+        virtual unsigned int tensor_flatten(unsigned int a, unsigned int b)           const = 0;
 
         // INTERFACE: INDEX TRAITS
 
@@ -46,6 +47,7 @@ namespace transport
         constexpr unsigned int flatten(unsigned int a)                                 const { return(a); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b)                 const { return(2*N*a + b); }
         constexpr unsigned int flatten(unsigned int a, unsigned int b, unsigned int c) const { return(2*N*2*N*a + 2*N*b + c); }
+        constexpr unsigned int tensor_flatten(unsigned int a, unsigned int b)          const { return(2*a + b); }
 
         // INTERFACE: INDEX TRAITS
 
@@ -61,6 +63,7 @@ namespace transport
 #define IS_FIELD(a)    this->is_field(a)
 #define IS_MOMENTUM(a) this->is_momentum(a)
 #define FLATTEN        this->flatten
+#define TENSOR_FLATTEN this->tensor_flatten
 
   }   // namespace transport
 

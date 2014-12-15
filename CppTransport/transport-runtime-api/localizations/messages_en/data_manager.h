@@ -11,6 +11,7 @@
 #define __CPP_TRANSPORT_NFIELDS_BACKG                               "Storage error: Unexpected number of elements when batching output of background"
 #define __CPP_TRANSPORT_NFIELDS_TWOPF                               "Storage error: Unexpected number of elements when batching output of twopf"
 #define __CPP_TRANSPORT_NFIELDS_THREEPF                             "Storage error: Unexpected number of elements when batching output of threepf"
+#define __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF                        "Storage error: Unexpected number of elements when batching output of tensor twopf"
 
 #define __CPP_TRANSPORT_DATAMGR_NOT_SET                             "Internal error: Attempt to access data manager when unset in 'task_manager'"
 
@@ -39,6 +40,7 @@
 #define __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL                   "Data container error: Failed to create per-configuration statistics table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_BACKG_DATATAB_FAIL                  "Data container error: Failed to create background-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPF_DATATAB_FAIL                  "Data container error: Failed to create twopf-value table in data container (backend code="
+#define __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_DATATAB_FAIL           "Data container error: Failed to creata tensor twopf-value table in data container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPF_DATATAB_FAIL                "Data container error: Failed to create threepf-value table in data container (backend code="
 
 #define __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL             "Data container error: Failed to create zeta twopf-value table in data container (backend code="
@@ -49,6 +51,7 @@
 
 #define __CPP_TRANSPORT_DATACTR_BACKGCOPY                           "Data container error: Failed to copy background values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_TWOPFCOPY                           "Data container error: Failed to copy twopf values from temporary container (backend code="
+#define __CPP_TRANSPORT_DATACTR_TENSORTWOPFCOPY                     "Data container error: Failed to copy tensor twopf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_STATISTICSCOPY                      "Data container error: Failed to copy per-configuration statistics from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_THREEPFCOPY                         "Data container error: Failed to copy threepf values from temporary container (backend code="
 #define __CPP_TRANSPORT_DATACTR_ZETA_TWOPFCOPY                      "Data container error: Failed to copy zeta twopf values from temporary container (backend code="

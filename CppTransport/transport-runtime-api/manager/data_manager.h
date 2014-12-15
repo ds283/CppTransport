@@ -158,6 +158,24 @@ namespace transport
 
           };
 
+        //! Stores a tensor two-point function configuration, associated with a single time-point and k-configuration
+        class tensor_twopf_item
+          {
+          public:
+
+            //! time serial number for this configuration
+            unsigned int        time_serial;
+
+            //! kconfig serial number for this configuration
+            unsigned int        kconfig_serial;
+
+            // values
+            std::vector<number> elements;
+
+            //! kconfig serial number for the integration which produced these values. Used when unwinding a batch.
+            unsigned int        source_serial;
+          };
+
 		    //! Stores a threepf configuration associated with a single time-point and k-configuration
         class threepf_item
           {
@@ -247,6 +265,9 @@ namespace transport
 
         //! Two-point function writer function
         typedef std::function<void(integration_batcher*, const std::vector<twopf_item>&)> twopf_writer;
+
+        //! Tensor two-point function writer function
+        typedef std::function<void(integration_batcher*, const std::vector<tensor_twopf_item>&)> tensor_twopf_writer;
 
         //! Three-point function writer function
         typedef std::function<void(integration_batcher*, const std::vector<threepf_item>&)> threepf_writer;
@@ -598,9 +619,10 @@ namespace transport
             class writer_group
               {
               public:
-                backg_writer backg;
-                twopf_writer twopf;
-                stats_writer stats;
+                backg_writer        backg;
+                twopf_writer        twopf;
+                tensor_twopf_writer tensor_twopf;
+                stats_writer        stats;
               };
 
           public:
@@ -613,6 +635,8 @@ namespace transport
                           handle_type h, unsigned int wn, bool s);
 
             void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+
+            void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
 		        virtual void unbatch(unsigned int source_serial) override;
 
@@ -627,6 +651,7 @@ namespace transport
             const writer_group writers;
 
             std::vector<twopf_item> twopf_batch;
+            std::vector<tensor_twopf_item> tensor_twopf_batch;
 
           };
 
@@ -639,11 +664,12 @@ namespace transport
             class writer_group
               {
               public:
-                backg_writer   backg;
-                twopf_writer   twopf_re;
-                twopf_writer   twopf_im;
-                threepf_writer threepf;
-                stats_writer   stats;
+                backg_writer        backg;
+                twopf_writer        twopf_re;
+                twopf_writer        twopf_im;
+                tensor_twopf_writer tensor_twopf;
+                threepf_writer      threepf;
+                stats_writer        stats;
               };
 
           public:
@@ -661,6 +687,8 @@ namespace transport
 
             void push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
+            void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+
 		        virtual void unbatch(unsigned int source_serial) override;
 
           protected:
@@ -673,9 +701,10 @@ namespace transport
 
             const writer_group writers;
 
-            std::vector<twopf_item>    twopf_re_batch;
-            std::vector<twopf_item>    twopf_im_batch;
-            std::vector<threepf_item>  threepf_batch;
+            std::vector<twopf_item>        twopf_re_batch;
+            std::vector<twopf_item>        twopf_im_batch;
+            std::vector<tensor_twopf_item> tensor_twopf_batch;
+            std::vector<threepf_item>      threepf_batch;
 
           };
 
@@ -2813,10 +2842,27 @@ namespace transport
 
 
     template <typename number>
+    void data_manager<number>::twopf_batcher::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                                const std::vector<number>& values)
+      {
+        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        tensor_twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = values;
+m
+        this->tensor_twopf_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
     size_t data_manager<number>::twopf_batcher::storage() const
       {
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
-          + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size());
+               + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
+               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size());
       }
 
 
@@ -2831,6 +2877,7 @@ namespace transport
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf(this, this->twopf_batch);
+        this->writers.tensor_twopf(this, this->tensor_twopf_batch);
 
         flush_timer.stop();
         BOOST_LOG_SEV(this->get_log(), normal) << "** Flushed in time " << format_time(flush_timer.elapsed().wall) << "; pushing to master process";
@@ -2838,6 +2885,7 @@ namespace transport
         this->stats_batch.clear();
         this->backg_batch.clear();
         this->twopf_batch.clear();
+        this->tensor_twopf_batch.clear();
 
         // push a message to the master node, indicating that new data is available
         // note that the order of calls to 'dispatcher' and 'replacer' is important
@@ -2866,6 +2914,13 @@ namespace transport
                                                    return (item.source_serial == source_serial);
                                                }),
                                 this->twopf_batch.end());
+
+        this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
+                                                      [ & ](const tensor_twopf_item& item) -> bool
+                                                      {
+                                                        return (item.source_serial == source_serial);
+                                                      }),
+                                       this->tensor_twopf_batch.end());
       }
 
 
@@ -2919,11 +2974,28 @@ namespace transport
 
 
     template <typename number>
+    void data_manager<number>::threepf_batcher::push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+    const std::vector<number>& values)
+      {
+        if(values.size() != 4) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TENSOR_TWOPF);
+        tensor_twopf_item item;
+        item.time_serial    = time_serial;
+        item.kconfig_serial = k_serial;
+        item.source_serial  = source_serial;
+        item.elements       = values;
+
+        this->tensor_twopf_batch.push_back(item);
+        this->check_for_flush();
+      }
+
+
+    template <typename number>
     size_t data_manager<number>::threepf_batcher::storage() const
       {
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
-          + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
-          + (2*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size());
+               + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
+               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
+               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size());
       }
 
 
@@ -2939,6 +3011,7 @@ namespace transport
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf_re(this, this->twopf_re_batch);
         this->writers.twopf_im(this, this->twopf_im_batch);
+        this->writers.tensor_twopf(this, this->tensor_twopf_batch);
         this->writers.threepf(this, this->threepf_batch);
 
         flush_timer.stop();
@@ -2948,6 +3021,7 @@ namespace transport
         this->backg_batch.clear();
         this->twopf_re_batch.clear();
         this->twopf_im_batch.clear();
+        this->tensor_twopf_batch.clear();
         this->threepf_batch.clear();
 
         // push a message to the master node, indicating that new data is available
@@ -2984,6 +3058,13 @@ namespace transport
                                                       return (item.source_serial == source_serial);
                                                   }),
                                    this->twopf_im_batch.end());
+
+        this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
+                                                      [ & ](const tensor_twopf_item& item) -> bool
+                                                      {
+                                                        return (item.source_serial == source_serial);
+                                                      }),
+                                       this->tensor_twopf_batch.end());
 
         this->threepf_batch.erase(std::remove_if(this->threepf_batch.begin(), this->threepf_batch.end(),
                                                  [ & ](const threepf_item& item) -> bool
@@ -3023,7 +3104,7 @@ namespace transport
     template <typename number>
     size_t data_manager<number>::zeta_twopf_batcher::storage() const
       {
-        return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size());
+        return((3*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size());
       }
 
 
@@ -3109,8 +3190,8 @@ namespace transport
     size_t data_manager<number>::zeta_threepf_batcher::storage() const
       {
         return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size()
-          + (2*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
-          + (2*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
+          + (3*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
+          + (3*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
       }
 
 

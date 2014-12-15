@@ -96,6 +96,9 @@ namespace transport
         void populate_twopf_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
                                const parameters<number>& p, const std::vector<number>& ic, bool imaginary = false);
 
+        void populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+                                const parameters<number>& p, const std::vector<number>& ic);
+
         void populate_threepf_ic(threepf_state<number>& x, unsigned int start, const threepf_kconfig& kconfig,
                                  double Ninit, const parameters<number>& p, const std::vector<number>& ic);
 
@@ -135,8 +138,8 @@ namespace transport
         $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
                                        const std::vector< typename integration_task<number>::time_storage_record >& l)
           : twopf_singleconfig_batch_observer<number>(b, c, l,
-                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size,
-                                                      $$__MODEL_pool::backg_start, $$__MODEL_pool::twopf_start)
+                                                      $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size, $$__MODEL_pool::twopf_size,
+                                                      $$__MODEL_pool::backg_start, $$__MODEL_pool::tensor_start, $$__MODEL_pool::twopf_start)
           {
           }
 
@@ -178,8 +181,10 @@ namespace transport
         $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
                                          const std::vector< typename integration_task<number>::time_storage_record >& l)
           : threepf_singleconfig_batch_observer<number>(b, c, l,
-                                                        $$__MODEL_pool::backg_size, $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
+                                                        $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size,
+                                                        $$__MODEL_pool::twopf_size, $$__MODEL_pool::threepf_size,
                                                         $$__MODEL_pool::backg_start,
+                                                        $$__MODEL_pool::tensor_k1_start, $$__MODEL_pool::tensor_k2_start, $$__MODEL_pool::tensor_k3_start,
                                                         $$__MODEL_pool::twopf_re_k1_start, $$__MODEL_pool::twopf_im_k1_start,
                                                         $$__MODEL_pool::twopf_re_k2_start, $$__MODEL_pool::twopf_im_k2_start,
                                                         $$__MODEL_pool::twopf_re_k3_start, $$__MODEL_pool::twopf_im_k3_start,
@@ -303,6 +308,9 @@ namespace transport
         const std::vector<number>& ics = tk->get_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + FLATTEN($$__A)] = $$// ics[$$__A];
 
+        // fix initial conditions - tensors
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_start, kconfig.k_comoving, times.front(), tk->get_params(), ics);
+
         // fix initial conditions - 2pf
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_start, kconfig.k_comoving, times.front(), tk->get_params(), ics);
 
@@ -331,6 +339,21 @@ namespace transport
         assert(x.size() >= start + $$__MODEL_pool::twopf_size);
 
         x[start + FLATTEN($$__A,$$__B)] = imaginary ? this->make_twopf_im_ic($$__A, $$__B, kmode, Ninit, p, ics) : this->make_twopf_re_ic($$__A, $$__B, kmode, Ninit, p, ics) $$// ;
+      }
+
+
+    // make initial conditions for the tensor twopf
+    template <typename number>
+    void $$__MODEL_basic<number>::populate_tensor_ic(twopf_state<number>& x, unsigned int start, double kmode, double Ninit,
+                                                     const parameters<number>& p, const std::vector<number>& ics)
+      {
+        assert(x.size() >= start);
+        assert(x.size() >= start + $$__MODEL_pool::tensor_size);
+
+        x[start + TENSOR_FLATTEN(0,0)] = this->make_twopf_tensor_ic(0, 0, kmode, Ninit, p, ics);
+        x[start + TENSOR_FLATTEN(0,1)] = this->make_twopf_tensor_ic(0, 1, kmode, Ninit, p, ics);
+        x[start + TENSOR_FLATTEN(1,0)] = this->make_twopf_tensor_ic(1, 0, kmode, Ninit, p, ics);
+        x[start + TENSOR_FLATTEN(1,1)] = this->make_twopf_tensor_ic(1, 1, kmode, Ninit, p, ics);
       }
 
 
@@ -376,9 +399,9 @@ namespace transport
                 // write the time history for this k-configuration
                 this->threepf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
-		            success = true;
+                success = true;
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
-                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
+                    << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i + 1
                     << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
                     << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
                     << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
@@ -399,10 +422,12 @@ namespace transport
               {
                 batcher.report_integration_failure();
                 batcher.unbatch(list[i].serial);
+                success = true;
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
+                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i]
+                    << " (" __CPP_TRANSPORT_FAILED_INTERNAL << xe.what() << ")";
               }
           }
       }
@@ -434,6 +459,11 @@ namespace transport
         // (don't need explicit FLATTEN since it would appear on both sides)
         const std::vector<number>& ics = tk->get_ics_vector(kconfig);
         x[$$__MODEL_pool::backg_start + $$__A] = $$// ics[$$__A];
+
+        // fix initial conditions - tensors
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k1_start, kconfig.k1_comoving, times.front(), tk->get_params(), ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k2_start, kconfig.k2_comoving, times.front(), tk->get_params(), ics);
+        this->populate_tensor_ic(x, $$__MODEL_pool::tensor_k3_start, kconfig.k3_comoving, times.front(), tk->get_params(), ics);
 
         // fix initial conditions - real 2pfs
         this->populate_twopf_ic(x, $$__MODEL_pool::twopf_re_k1_start, kconfig.k1_comoving, times.front(), tk->get_params(), ics, false);
@@ -483,17 +513,34 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
+        const auto __tensor_twopf_ff = __x[$$__MODEL_pool::tensor_start + FLATTEN(0,0)];
+        const auto __tensor_twopf_fp = __x[$$__MODEL_pool::tensor_start + FLATTEN(0,1)];
+        const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + FLATTEN(1,0)];
+        const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + FLATTEN(1,1)];
+
         const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + FLATTEN($$__A,$$__B)];
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __background
 #undef __dtwopf
-#define __background(a)   __dxdt[$$__MODEL_pool::backg_start + FLATTEN(a)]
-#define __dtwopf(a,b)     __dxdt[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
+#undef __dtwopf_tensor
+#define __background(a)      __dxdt[$$__MODEL_pool::backg_start + FLATTEN(a)]
+#define __dtwopf_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(a,b)]
+#define __dtwopf(a,b)        __dxdt[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
         // evolve the background
         __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps};
+
+        // evolve the tensor modes
+        auto __ff = 0.0;
+        auto __fp = 2.0/(__Mp*__Mp);
+        auto __pf = -__k*__k/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        auto __pp = __eps-3.0;
+        __dtwopf_tensor(0,0) = __ff*__tensor_twopf_ff + __fp*__tensor_twopf_pf + __ff*__tensor_twopf_ff + __fp*__tensor_twopf_fp;
+        __dtwopf_tensor(0,1) = __ff*__tensor_twopf_fp + __fp*__tensor_twopf_pp + __pf*__tensor_twopf_ff + __pp*__tensor_twopf_fp;
+        __dtwopf_tensor(1,0) = __pf*__tensor_twopf_ff + __pp*__tensor_twopf_pf + __ff*__tensor_twopf_pf + __fp*__tensor_twopf_pp;
+        __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
         const auto __u2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
@@ -534,6 +581,21 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
+        const auto __tensor_k1_twopf_ff = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(0,0)];
+        const auto __tensor_k1_twopf_fp = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(0,1)];
+        const auto __tensor_k1_twopf_pf = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(1,0)];
+        const auto __tensor_k1_twopf_pp = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(1,1)];
+
+        const auto __tensor_k2_twopf_ff = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(0,0)];
+        const auto __tensor_k2_twopf_fp = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(0,1)];
+        const auto __tensor_k2_twopf_pf = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(1,0)];
+        const auto __tensor_k2_twopf_pp = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(1,1)];
+
+        const auto __tensor_k3_twopf_ff = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(0,0)];
+        const auto __tensor_k3_twopf_fp = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(0,1)];
+        const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(1,0)];
+        const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(1,1)];
+
         const auto __twopf_re_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN($$__A,$$__B)];
         const auto __twopf_im_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN($$__A,$$__B)];
         const auto __twopf_re_k2_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k2_start + FLATTEN($$__A,$$__B)];
@@ -546,6 +608,9 @@ namespace transport
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __background
+#undef __dtwopf_k1_tensor
+#undef __dtwopf_k2_tensor
+#undef __dtwopf_k3_tensor
 #undef __dtwopf_re_k1
 #undef __dtwopf_im_k1
 #undef __dtwopf_re_k2
@@ -553,17 +618,43 @@ namespace transport
 #undef __dtwopf_re_k3
 #undef __dtwopf_im_k3
 #undef __dthreepf
-#define __background(a)      __dxdt[$$__MODEL_pool::backg_start       + FLATTEN(a)]
-#define __dtwopf_re_k1(a,b)  __dxdt[$$__MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
-#define __dtwopf_im_k1(a,b)  __dxdt[$$__MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
-#define __dtwopf_re_k2(a,b)  __dxdt[$$__MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
-#define __dtwopf_im_k2(a,b)  __dxdt[$$__MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
-#define __dtwopf_re_k3(a,b)  __dxdt[$$__MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
-#define __dtwopf_im_k3(a,b)  __dxdt[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
-#define __dthreepf(a,b,c)    __dxdt[$$__MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
+#define __background(a)         __dxdt[$$__MODEL_pool::backg_start       + FLATTEN(a)]
+#define __dtwopf_k1_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_k1_start   + TENSOR_FLATTEN(a,b)]
+#define __dtwopf_k2_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_k2_start   + TENSOR_FLATTEN(a,b)]
+#define __dtwopf_k3_tensor(a,b) __dxdt[$$__MODEL_pool::tensor_k3_start   + TENSOR_FLATTEN(a,b)]
+#define __dtwopf_re_k1(a,b)     __dxdt[$$__MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
+#define __dtwopf_im_k1(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
+#define __dtwopf_re_k2(a,b)     __dxdt[$$__MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
+#define __dtwopf_im_k2(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
+#define __dtwopf_re_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
+#define __dtwopf_im_k3(a,b)     __dxdt[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
+#define __dthreepf(a,b,c)       __dxdt[$$__MODEL_pool::threepf_start     + FLATTEN(a,b,c)]
 
         // evolve the background
         __background($$__A) = $$__U1_PREDEF[A]{__Hsq,__eps};
+
+        // evolve the tensor modes
+        auto __ff = 0.0;
+        auto __fp = 2.0/(__Mp*__Mp);
+        auto __pp = __eps-3.0;
+
+        auto __pf = -__k1*__k1/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        __dtwopf_k1_tensor(0,0) = __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_fp;
+        __dtwopf_k1_tensor(0,1) = __ff*__tensor_k1_twopf_fp + __fp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_fp;
+        __dtwopf_k1_tensor(1,0) = __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_pf + __fp*__tensor_k1_twopf_pp;
+        __dtwopf_k1_tensor(1,1) = __pf*__tensor_k1_twopf_fp + __pp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_pf + __pp*__tensor_k1_twopf_pp;
+
+        __pf = -__k2*__k2/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        __dtwopf_k2_tensor(0,0) = __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_fp;
+        __dtwopf_k2_tensor(0,1) = __ff*__tensor_k2_twopf_fp + __fp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_fp;
+        __dtwopf_k2_tensor(1,0) = __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_pf + __fp*__tensor_k2_twopf_pp;
+        __dtwopf_k2_tensor(1,1) = __pf*__tensor_k2_twopf_fp + __pp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_pf + __pp*__tensor_k2_twopf_pp;
+
+        __pf = -__k3*__k3/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        __dtwopf_k3_tensor(0,0) = __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_fp;
+        __dtwopf_k3_tensor(0,1) = __ff*__tensor_k3_twopf_fp + __fp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_fp;
+        __dtwopf_k3_tensor(1,0) = __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_pf + __fp*__tensor_k3_twopf_pp;
+        __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
         const auto __u2_k1_$$__A_$$__B = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
