@@ -37,7 +37,7 @@ namespace transport
 		      public:
 
 				    //! construct a tensor two-point function time series data object
-				    tensor_twopf_time_series(const twopf_task<number>& tk, index_selector<2>& sel,
+				    tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 				                             filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
 				                             unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -86,7 +86,7 @@ namespace transport
 		    // derived_line<> is not called automatically during construction of time_series<>.
 		    // We have to call it ourselves
 		    template <typename number>
-		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_task<number>& tk, index_selector<2>& sel,
+		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
 			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
             tensor_twopf_line<number>(tk, sel, kfilter),
