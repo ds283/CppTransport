@@ -51,7 +51,7 @@ namespace transport
 				//! for producing content usable in eg. a 2d plot or table.
 				//! Note that we derive virtually from derived_line<> to solve the diamond
 				//! problem -- concrete classes may inherit several derived_line<> attributes,
-				//! eg. wavenumber_series<> and zeta_two_line<>
+				//! eg. wavenumber_series<> and zeta_twopf_line<>
 				template <typename number>
 		    class zeta_twopf_line: public virtual derived_line<number>
 			    {

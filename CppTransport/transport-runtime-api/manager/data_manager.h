@@ -836,7 +836,7 @@ namespace transport
 
 				    typedef enum { time_config_group, twopf_kconfig_group, threepf_kconfig_group, time_serial_group, kconfig_serial_group } serial_group_tag;
 
-				    typedef enum { cf_twopf_re, cf_twopf_im, cf_threepf } cf_data_type;
+				    typedef enum { cf_twopf_re, cf_twopf_im, cf_threepf, cf_tensor_twopf } cf_data_type;
 
 		        typedef enum { twopf_real, twopf_imag } twopf_type;
 
@@ -870,6 +870,9 @@ namespace transport
 		        //! Extract a threepf component at fixed k-configuration for a set of time sample-point
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_time_callback;
 
+            //! Extract a tensor twopf component at fixed k-configuration for a set of time sample-points
+            typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
+
 				    //! Extract the zeta twopf at fixed k-configuration for a set of time sample-points
 				    typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
 
@@ -891,8 +894,11 @@ namespace transport
 		        //! Extract a twopf component at fixed time for a set of k-configuration sample-points
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
-		        //! Extract a threepf component at fixed time for a set of k-configuration sample-point
+		        //! Extract a threepf component at fixed time for a set of k-configuration sample-points
 		        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
+
+            //! Extract a tensor twopf component at fixed time for a set of k-configuration sample-points
+            typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
 
 		        //! Extract the zeta twopf at fixed time for a set of k-configuration sample-points
 		        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
@@ -926,6 +932,7 @@ namespace transport
 						    background_time_callback   background;
 						    twopf_time_callback        twopf;
 						    threepf_time_callback      threepf;
+                tensor_twopf_time_callback tensor_twopf;
 						    zeta_twopf_time_callback   zeta_twopf;
 						    zeta_threepf_time_callback zeta_threepf;
 						    zeta_redbsp_time_callback  zeta_redbsp;
@@ -939,6 +946,7 @@ namespace transport
 				      public:
 						    twopf_kconfig_callback        twopf;
 						    threepf_kconfig_callback      threepf;
+                tensor_twopf_kconfig_callback tensor_twopf;
 						    zeta_twopf_kconfig_callback   zeta_twopf;
 						    zeta_threepf_kconfig_callback zeta_threepf;
 						    zeta_redbsp_kconfig_callback  zeta_redbsp;
@@ -2514,6 +2522,10 @@ namespace transport
         virtual void pull_threepf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
                                               unsigned int k_serial, std::vector<number>& sample) = 0;
 
+        //! Pull a sample of a tensor twopf at fixed k-configuration from a datapipe
+        virtual void pull_tensor_twopf_time_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& t_serials,
+                                                   unsigned int k_serial, std::vector<number>& sample) = 0;
+
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
         virtual void pull_zeta_twopf_time_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& t_serials,
                                                  unsigned int k_serial, std::vector<number>& sample) = 0;
@@ -2542,9 +2554,13 @@ namespace transport
         virtual void pull_twopf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
                                                unsigned int t_serial, std::vector<number>& sample, typename datapipe::twopf_type type) = 0;
 
-        //! Pull a kconfig of a threepf at fixed time from a datapipe
+        //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
                                                  unsigned int t_serial, std::vector<number>& sample) = 0;
+
+        //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
+        virtual void pull_tensor_twopf_kconfig_sample(datapipe* pipe, unsigned int id, const std::vector<unsigned int>& k_serials,
+                                                      unsigned int t_serial, std::vector<number>& sample) = 0;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
         virtual void pull_zeta_twopf_kconfig_sample(typename data_manager<number>::datapipe*, const std::vector<unsigned int>& k_serials,
@@ -2851,7 +2867,7 @@ namespace transport
         item.kconfig_serial = k_serial;
         item.source_serial  = source_serial;
         item.elements       = values;
-m
+
         this->tensor_twopf_batch.push_back(item);
         this->check_for_flush();
       }
@@ -3795,7 +3811,7 @@ m
             this->pipe->pull_timeslice.twopf(this->pipe, this->id, sns, this->kserial, sample, twopf_imag);
             this->pipe->database_timer.stop();
           }
-        else if (this->type == cf_threepf)
+        else if(this->type == cf_threepf)
           {
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 				    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL threepf time sample request for element " << this->id << ", k-configuration " << this->kserial;
@@ -3803,6 +3819,16 @@ m
 
             this->pipe->database_timer.resume();
             this->pipe->pull_timeslice.threepf(this->pipe, this->id, sns, this->kserial, sample);
+            this->pipe->database_timer.stop();
+          }
+        else if(this->type == cf_tensor_twopf)
+          {
+#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL tensor twopf time sample request for element " << this->id << ", k-configuration " << this->kserial;
+#endif
+
+            this->pipe->database_timer.resume();
+            this->pipe->pull_timeslice.tensor_twopf(this->pipe, this->id, sns, this->kserial, sample);
             this->pipe->database_timer.stop();
           }
         else
@@ -3822,15 +3848,19 @@ m
           {
             case cf_twopf_re:
               msg << "real twopf (time series)";
-            break;
+              break;
 
             case cf_twopf_im:
               msg << "imaginary twopf (time series";
-            break;
+              break;
 
             case cf_threepf:
               msg << "threepf (time series)";
-            break;
+              break;
+
+            case cf_tensor_twopf:
+              msg << "tensor twopf (time series)";
+              break;
 
             default:
               msg << "unknown";
@@ -3867,7 +3897,7 @@ m
             this->pipe->pull_kslice.twopf(this->pipe, this->id, sns, this->tserial, sample, twopf_imag);
             this->pipe->database_timer.stop();
           }
-        else if (this->type == cf_threepf)
+        else if(this->type == cf_threepf)
           {
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
             BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL threepf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
@@ -3875,6 +3905,15 @@ m
 
             this->pipe->database_timer.resume();
             this->pipe->pull_kslice.threepf(this->pipe, this->id, sns, this->tserial, sample);
+            this->pipe->database_timer.stop();
+          }
+        else if(this->type == cf_tensor_twopf)
+          {
+#ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
+            BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL tensor twopf kconfig sample request for element " << this->id << ", t-serial " << this->tserial;
+#endif
+            this->pipe->database_timer.resume();
+            this->pipe->pull_kslice.tensor_twopf(this->pipe, this->id, sns, this->tserial, sample);
             this->pipe->database_timer.stop();
           }
         else
@@ -3894,15 +3933,19 @@ m
           {
             case cf_twopf_re:
               msg << "real twopf (kconfig series)";
-            break;
+              break;
 
             case cf_twopf_im:
               msg << "imaginary twopf (kconfig series";
-            break;
+              break;
 
             case cf_threepf:
               msg << "threepf (kconfig series)";
-            break;
+              break;
+
+            case cf_tensor_twopf:
+              msg << "tensor twopf (kconfig series)";
+              break;
 
             default:
               msg << "unknown";
@@ -3923,7 +3966,7 @@ m
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
-		    if(this->cached)  // extract from data contanier
+		    if(this->cached)  // extract from data container
 			    {
 				    this->pipe->database_timer.resume();
 				    this->pipe->pull_timeslice.zeta_twopf(this->pipe, sns, this->kdata.serial, sample);
@@ -3954,7 +3997,7 @@ m
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        if(this->cached)  // extract from data contanier
+        if(this->cached)  // extract from data container
 	        {
             this->pipe->database_timer.resume();
             this->pipe->pull_timeslice.zeta_threepf(this->pipe, sns, this->kdata.serial, sample);
@@ -3985,7 +4028,7 @@ m
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        if(this->cached)  // extract from data contanier
+        if(this->cached)  // extract from data container
 	        {
             this->pipe->database_timer.resume();
             this->pipe->pull_timeslice.zeta_redbsp(this->pipe, sns, this->kdata.serial, sample);
@@ -4016,7 +4059,7 @@ m
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        if(this->cached)  // extract from data contanier
+        if(this->cached)  // extract from data container
 	        {
             this->pipe->database_timer.resume();
             this->pipe->pull_kslice.zeta_twopf(this->pipe, sns, this->tserial, sample);
@@ -4118,7 +4161,7 @@ m
 		    BOOST_LOG_SEV(this->pipe->get_log(), data_manager<number>::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
 #endif
 
-        if(this->cached)  // extract from data contanier
+        if(this->cached)  // extract from data container
 	        {
             this->pipe->database_timer.resume();
             this->pipe->pull_timeslice.fNL(this->pipe, sns, sample, this->type);

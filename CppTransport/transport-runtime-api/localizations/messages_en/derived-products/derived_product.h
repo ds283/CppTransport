@@ -20,6 +20,8 @@
 #define __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A        "received"
 #define __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B        "expected"
 
+#define __CPP_TRANSPORT_PRODUCT_INDEX_BOUNDS            "Out-of-bounds index value"
+
 #define __CPP_TRANSPORT_DERIVED_PRODUCT_FAILED          "Error: I/O error; failed to generate derived product"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DERIVED_PRODUCT_H

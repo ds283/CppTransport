@@ -120,7 +120,7 @@ namespace transport
 		        virtual void write(std::ostream& out) override;
 
 
-		        // SERIALIZATION -- implements a 'serialzable' interface
+		        // SERIALIZATION -- implements a 'serializable' interface
 
           public:
 

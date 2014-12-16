@@ -230,6 +230,11 @@ namespace transport
                                               const std::vector<unsigned int>& t_serials,
                                               unsigned int k_serial, std::vector<number>& sample) override;
 
+        //! Pull a sample of a tensor twopf component at fixed k-configuration from a datapipe
+        virtual void pull_tensor_twopf_time_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
+                                                   const std::vector<unsigned int>& t_serials,
+                                                   unsigned int k_serial, std::vector<number>& sample) override;
+
         //! Pull a sample of the zeta twopf at fixed k-configuration from a datapipe
         virtual void pull_zeta_twopf_time_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& t_serials,
                                                  unsigned int k_serial, std::vector<number>& sample) override;
@@ -259,10 +264,15 @@ namespace transport
                                                const std::vector<unsigned int>& k_serials, unsigned int t_serial,
                                                std::vector<number>& sample, typename data_manager<number>::datapipe::twopf_type type) override;
 
-        //! Pull a kconfig of a threepf at fixed time from a datapipe
+        //! Pull a kconfig sample of a threepf at fixed time from a datapipe
         virtual void pull_threepf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
                                                  const std::vector<unsigned int>& k_serials,
                                                  unsigned int t_serial, std::vector<number>& sample) override;
+
+        //! Pull a kconfig sample of a tensor twopf component at fixed time from a datapipe
+        virtual void pull_tensor_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
+                                                      const std::vector<unsigned int>& k_serials,
+                                                      unsigned int t_serial, std::vector<number>& sample) override;
 
         //! Pull a kconfig sample of the zeta twopf at fixed time from a datapipe
         virtual void pull_zeta_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, const std::vector<unsigned int>& k_serials,
@@ -1254,6 +1264,10 @@ namespace transport
 		                                  std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
 		                                  std::placeholders::_4, std::placeholders::_5);
 
+        timeslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_time_sample, this,
+                                           std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                           std::placeholders::_4, std::placeholders::_5);
+
 		    timeslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_time_sample, this,
 		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
@@ -1281,6 +1295,10 @@ namespace transport
 		    kslice.threepf = std::bind(&data_manager_sqlite3<number>::pull_threepf_kconfig_sample, this,
 		                               std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
 		                               std::placeholders::_4, std::placeholders::_5);
+
+        kslice.tensor_twopf = std::bind(&data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample, this,
+                                        std::placeholders::_1, std::placeholders::_2, std::placeholders::_3,
+                                        std::placeholders::_4, std::placeholders::_5);
 
 		    kslice.zeta_twopf = std::bind(&data_manager_sqlite3<number>::pull_zeta_twopf_kconfig_sample, this,
 		                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
@@ -1390,6 +1408,21 @@ namespace transport
 
         sqlite3_operations::pull_threepf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
 	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_tensor_twopf_time_sample(typename data_manager<number>::datapipe* pipe,
+                                                                     unsigned int id, const std::vector<unsigned int>& t_serials,
+                                                                     unsigned int k_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_tensor_twopf_time_sample(db, id, t_serials, k_serial, sample, pipe->get_worker_number());
+      }
 
 
     template <typename number>
@@ -1507,6 +1540,21 @@ namespace transport
 
         sqlite3_operations::pull_threepf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number(), pipe->get_N_fields());
 	    }
+
+
+    template <typename number>
+    void data_manager_sqlite3<number>::pull_tensor_twopf_kconfig_sample(typename data_manager<number>::datapipe* pipe, unsigned int id,
+                                                                        const std::vector<unsigned int>& k_serials,
+                                                                        unsigned int t_serial, std::vector<number>& sample)
+      {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        sqlite3* db = nullptr;
+        pipe->get_manager_handle(&db);    // throws an exception if the handle is unset, so safe to proceed; we can't get nullptr back
+
+        sqlite3_operations::pull_tensor_twopf_kconfig_sample(db, id, k_serials, t_serial, sample, pipe->get_worker_number());
+      }
 
 
     template <typename number>

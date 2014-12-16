@@ -365,6 +365,7 @@ namespace transport
             this->detach(pipe);
 			    }
 
+
 		    // note that because time_series<> inherits virtually from derived_line<>, the write method for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
@@ -375,13 +376,14 @@ namespace transport
 		        this->time_series<number>::write(out);
 			    }
 
+
 		    // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    void twopf_time_series<number>::serialize(serialization_writer& writer) const
 			    {
 		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-		                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES));
+		                           std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES));
 
 				    this->derived_line<number>::serialize(writer);
 				    this->twopf_line<number>::serialize(writer);

@@ -11,6 +11,7 @@
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_BACKGROUND         "background line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TWOPF              "twopf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF            "threepf line group"
+#define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_TENSOR_TWOPF       "tensor twopf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF         "zeta twopf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_THREEPF       "zeta threepf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM "reduced bispectrum line group"
