@@ -44,12 +44,12 @@ namespace transport
         constexpr unsigned int threepf_size       = ((2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS)*(2*$$__NUMBER_FIELDS));
      
         constexpr unsigned int backg_start        = 0;
-        constexpr unsigned int tensor_start       = backg_start + backg_size;
-        constexpr unsigned int tensor_k1_start    = tensor_start;
+        constexpr unsigned int tensor_start       = backg_start + backg_size;         // for twopf state vector
+        constexpr unsigned int tensor_k1_start    = tensor_start;                     // for threepf state vector
         constexpr unsigned int tensor_k2_start    = tensor_k1_start + tensor_size;
         constexpr unsigned int tensor_k3_start    = tensor_k2_start + tensor_size;
-        constexpr unsigned int twopf_start        = tensor_k3_start + tensor_size;
-        constexpr unsigned int twopf_re_k1_start  = twopf_start;
+        constexpr unsigned int twopf_start        = tensor_k1_start + tensor_size;    // for twopf state vector
+        constexpr unsigned int twopf_re_k1_start  = tensor_k3_start + tensor_size;    // for threepf state vector
         constexpr unsigned int twopf_im_k1_start  = twopf_re_k1_start + twopf_size;
         constexpr unsigned int twopf_re_k2_start  = twopf_im_k1_start + twopf_size;
         constexpr unsigned int twopf_im_k2_start  = twopf_re_k2_start + twopf_size;
@@ -534,7 +534,7 @@ namespace transport
     }
 
 
-    // set up initial conditions for the real part of the equal-time tensor two-point functioj
+    // set up initial conditions for the real part of the equal-time tensor two-point function
     template <typename number>
     number $$__MODEL<number>::make_twopf_tensor_ic(unsigned int __i, unsigned int __j, double __k, double __Ninit, const parameters<number>& __params, const std::vector<number>& __fields)
       {
@@ -552,19 +552,23 @@ namespace transport
 
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
-        if(__i == 0 && __j == 0)      // h-h correlation function
+        if(__i == 0 && __j == 0)                                      // h-h correlation function
           {
             // LEADING-ORDER INITIAL CONDITION
-            __tpf += 1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
+            __tpf = 1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
+//            __tpf = 1.0 / (2.0*__k*__ainit*__ainit);
           }
-        else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))
-          {
-            // LEADING ORDER INITIAL CONDITION IS EMPTY
-          }
-        else if(__i == 1 && __j == 1) // dh-dh correlation function
+        else if((__i == 0 && __j == 1) || (__i == 1 && __j == 0))     // h-dh or dh-h corelation function
           {
             // LEADING ORDER INITIAL CONDITION
-            __tpf += __k / (__Mp*__Mp*__Hsq*__ainit*__ainit*__ainit*__ainit);
+            __tpf = -1.0 / (__Mp*__Mp*__k*__ainit*__ainit);
+//            __tpf = -1.0 / (2.0*__k*__ainit*__ainit);
+          }
+        else if(__i == 1 && __j == 1)                                 // dh-dh correlation function
+          {
+            // LEADING ORDER INITIAL CONDITION
+            __tpf = __k / (__Mp*__Mp*__Hsq*__ainit*__ainit*__ainit*__ainit);
+//            __tpf = __k / (2.0*__Hsq*__ainit*__ainit*__ainit*__ainit);
           }
         else
           {

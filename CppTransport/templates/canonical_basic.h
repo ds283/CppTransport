@@ -513,10 +513,10 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
-        const auto __tensor_twopf_ff = __x[$$__MODEL_pool::tensor_start + FLATTEN(0,0)];
-        const auto __tensor_twopf_fp = __x[$$__MODEL_pool::tensor_start + FLATTEN(0,1)];
-        const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + FLATTEN(1,0)];
-        const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + FLATTEN(1,1)];
+        const auto __tensor_twopf_ff = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_twopf_fp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
 
         const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + FLATTEN($$__A,$$__B)];
 
@@ -533,10 +533,10 @@ namespace transport
         __background($$__A) = $$__U1_PREDEF[A]{__Hsq, __eps};
 
         // evolve the tensor modes
-        auto __ff = 0.0;
-        auto __fp = 2.0/(__Mp*__Mp);
-        auto __pf = -__k*__k/(2.0*__Mp*__Mp*__a*__a*__Hsq);
-        auto __pp = __eps-3.0;
+        const auto __ff = 0.0;
+        const auto __fp = 1.0;
+        const auto __pf = -__k*__k/(__a*__a*__Hsq);
+        const auto __pp = __eps-3.0;
         __dtwopf_tensor(0,0) = __ff*__tensor_twopf_ff + __fp*__tensor_twopf_pf + __ff*__tensor_twopf_ff + __fp*__tensor_twopf_fp;
         __dtwopf_tensor(0,1) = __ff*__tensor_twopf_fp + __fp*__tensor_twopf_pp + __pf*__tensor_twopf_ff + __pp*__tensor_twopf_fp;
         __dtwopf_tensor(1,0) = __pf*__tensor_twopf_ff + __pp*__tensor_twopf_pf + __ff*__tensor_twopf_pf + __fp*__tensor_twopf_pp;
@@ -581,20 +581,20 @@ namespace transport
         const auto __Hsq             = $$__HUBBLE_SQ;
         const auto __eps             = $$__EPSILON;
 
-        const auto __tensor_k1_twopf_ff = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(0,0)];
-        const auto __tensor_k1_twopf_fp = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(0,1)];
-        const auto __tensor_k1_twopf_pf = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(1,0)];
-        const auto __tensor_k1_twopf_pp = __x[$$__MODEL_pool::tensor_k1_start + FLATTEN(1,1)];
+        const auto __tensor_k1_twopf_ff = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_k1_twopf_fp = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_k1_twopf_pf = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_k1_twopf_pp = __x[$$__MODEL_pool::tensor_k1_start + TENSOR_FLATTEN(1,1)];
 
-        const auto __tensor_k2_twopf_ff = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(0,0)];
-        const auto __tensor_k2_twopf_fp = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(0,1)];
-        const auto __tensor_k2_twopf_pf = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(1,0)];
-        const auto __tensor_k2_twopf_pp = __x[$$__MODEL_pool::tensor_k2_start + FLATTEN(1,1)];
+        const auto __tensor_k2_twopf_ff = __x[$$__MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_k2_twopf_fp = __x[$$__MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_k2_twopf_pf = __x[$$__MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_k2_twopf_pp = __x[$$__MODEL_pool::tensor_k2_start + TENSOR_FLATTEN(1,1)];
 
-        const auto __tensor_k3_twopf_ff = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(0,0)];
-        const auto __tensor_k3_twopf_fp = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(0,1)];
-        const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(1,0)];
-        const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + FLATTEN(1,1)];
+        const auto __tensor_k3_twopf_ff = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,0)];
+        const auto __tensor_k3_twopf_fp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(0,1)];
+        const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
+        const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
 
         const auto __twopf_re_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN($$__A,$$__B)];
         const auto __twopf_im_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN($$__A,$$__B)];
@@ -634,23 +634,23 @@ namespace transport
         __background($$__A) = $$__U1_PREDEF[A]{__Hsq,__eps};
 
         // evolve the tensor modes
-        auto __ff = 0.0;
-        auto __fp = 2.0/(__Mp*__Mp);
-        auto __pp = __eps-3.0;
+        const auto __ff = 0.0;
+        const auto __fp = 1.0;
+        const auto __pp = __eps-3.0;
 
-        auto __pf = -__k1*__k1/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        auto __pf = -__k1*__k1/(__a*__a*__Hsq);
         __dtwopf_k1_tensor(0,0) = __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_ff + __fp*__tensor_k1_twopf_fp;
         __dtwopf_k1_tensor(0,1) = __ff*__tensor_k1_twopf_fp + __fp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_fp;
         __dtwopf_k1_tensor(1,0) = __pf*__tensor_k1_twopf_ff + __pp*__tensor_k1_twopf_pf + __ff*__tensor_k1_twopf_pf + __fp*__tensor_k1_twopf_pp;
         __dtwopf_k1_tensor(1,1) = __pf*__tensor_k1_twopf_fp + __pp*__tensor_k1_twopf_pp + __pf*__tensor_k1_twopf_pf + __pp*__tensor_k1_twopf_pp;
 
-        __pf = -__k2*__k2/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        __pf = -__k2*__k2/(__a*__a*__Hsq);
         __dtwopf_k2_tensor(0,0) = __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_ff + __fp*__tensor_k2_twopf_fp;
         __dtwopf_k2_tensor(0,1) = __ff*__tensor_k2_twopf_fp + __fp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_fp;
         __dtwopf_k2_tensor(1,0) = __pf*__tensor_k2_twopf_ff + __pp*__tensor_k2_twopf_pf + __ff*__tensor_k2_twopf_pf + __fp*__tensor_k2_twopf_pp;
         __dtwopf_k2_tensor(1,1) = __pf*__tensor_k2_twopf_fp + __pp*__tensor_k2_twopf_pp + __pf*__tensor_k2_twopf_pf + __pp*__tensor_k2_twopf_pp;
 
-        __pf = -__k3*__k3/(2.0*__Mp*__Mp*__a*__a*__Hsq);
+        __pf = -__k3*__k3/(__a*__a*__Hsq);
         __dtwopf_k3_tensor(0,0) = __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_ff + __fp*__tensor_k3_twopf_fp;
         __dtwopf_k3_tensor(0,1) = __ff*__tensor_k3_twopf_fp + __fp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_fp;
         __dtwopf_k3_tensor(1,0) = __pf*__tensor_k3_twopf_ff + __pp*__tensor_k3_twopf_pf + __ff*__tensor_k3_twopf_pf + __fp*__tensor_k3_twopf_pp;

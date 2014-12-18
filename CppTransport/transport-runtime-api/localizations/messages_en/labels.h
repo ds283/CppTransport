@@ -84,7 +84,7 @@
 #define __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL               "zeta"
 #define __CPP_TRANSPORT_LATEX_TENSOR_SYMBOL                "h"
 #define __CPP_TRANSPORT_NONLATEX_TENSOR_SYMBOL             "h"
-#define __CPP_TRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL       "\dot{h}"
+#define __CPP_TRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL       "\\dot{h}"
 #define __CPP_TRANSPORT_NONLATEX_TENSOR_MOMENTUM_SYMBOL    "dot(h)"
 
 #define __CPP_TRANSPORT_LATEX_REDUCED_BISPECTRUM_SYMBOL    "f_{\\mathrm{NL}}(k_1, k_2, k_3)"

@@ -29,7 +29,7 @@
 #define __CPP_TRANSPORT_REL_ERR               "rel err"
 #define __CPP_TRANSPORT_STEP_SIZE             "initial step size"
 
-#define __CPP_TRANSPORT_SOLVING_CONFIG        "Solving for configuration"
+#define __CPP_TRANSPORT_SOLVING_CONFIG        "Solved for configuration"
 #define __CPP_TRANSPORT_FAILED_CONFIG         "Failed to integrate configuration"
 #define __CPP_TRANSPORT_FAILED_INTERNAL       "internal exception="
 #define __CPP_TRANSPORT_RETRY_CONFIG          "Retrying configuration"
