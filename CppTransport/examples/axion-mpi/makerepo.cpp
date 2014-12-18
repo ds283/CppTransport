@@ -156,7 +156,7 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        kmin      = exp(0.0);   // begin with the mode which crosses the horizon at N=N*
-    const double        kmax      = exp(7.0);   // end with the mode which exits the horizon at N=N*+3
+    const double        kmax      = exp(7.0);   // end with the mode which exits the horizon at N=N*+7
     const unsigned int  k_samples = 30;         // number of k-points
 
 		struct ThreepfStoragePolicy
@@ -167,8 +167,15 @@ int main(int argc, char* argv[])
 
     transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::linear);
 
+    // construct a twopf task
+    transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
+    tk2.set_fast_forward(false);
+
+    std::cout << tk2;
+
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
+
 
     // construct zeta threepf versions
     transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
@@ -179,9 +186,6 @@ int main(int argc, char* argv[])
     ztk3_fNL_ortho.set_template(transport::derived_data::fNLortho);
 
     std::cout << tk3;
-
-    // construct a twopf task
-    transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
 
     // construct a zeta twopf version
     transport::zeta_twopf_task<double> ztk2 = transport::zeta_twopf_task<double>("axion.twopf-1.zeta", tk2);
@@ -210,8 +214,10 @@ int main(int argc, char* argv[])
 
     transport::index_selector<2> twopf_fields(model->get_N_fields());
     transport::index_selector<2> twopf_cross(model->get_N_fields());
+    transport::index_selector<2> twopf_phis(model->get_N_fields());
 		twopf_fields.none();
 		twopf_cross.none();
+    twopf_phis.none();
 
 		// field-field correlations
     std::array<unsigned int, 2> index_set_a = { 0, 0 };
@@ -224,6 +230,12 @@ int main(int argc, char* argv[])
     std::array<unsigned int, 2> index_set_f = { 3, 0 };
     std::array<unsigned int, 2> index_set_g = { 3, 1 };
 
+    // phi correlation functions
+    std::array<unsigned int, 2> index_set_h = { 0, 0 };
+    std::array<unsigned int, 2> index_set_i = { 0, 2 };
+    std::array<unsigned int, 2> index_set_j = { 2, 0 };
+    std::array<unsigned int, 2> index_set_k = { 2, 2} ;
+
     twopf_fields.set_on(index_set_a);
 		twopf_fields.set_on(index_set_b);
 		twopf_fields.set_on(index_set_c);
@@ -233,18 +245,44 @@ int main(int argc, char* argv[])
     twopf_cross.set_on(index_set_f);
     twopf_cross.set_on(index_set_g);
 
-    transport::derived_data::twopf_time_series<double> tk2_twopf_real_group =
+    twopf_phis.set_on(index_set_h);
+    twopf_phis.set_on(index_set_i);
+    twopf_phis.set_on(index_set_j);
+    twopf_phis.set_on(index_set_k);
+
+    transport::index_selector<2> tensor_twopf_fields(2);
+    tensor_twopf_fields.all();
+
+    // tensor-tensor correlation function only
+    std::array<unsigned int, 2> index_set_l = { 0, 0 };
+
+    transport::index_selector<2> tensor_only(2);
+    tensor_only.none();
+    tensor_only.set_on(index_set_l);
+
+    transport::derived_data::twopf_time_series<double> tk2_twopf_group =
 	                                                     transport::derived_data::twopf_time_series<double>(tk2, twopf_fields,
 	                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
 	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-		tk2_twopf_real_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+		tk2_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
-    transport::derived_data::twopf_time_series<double> tk2_twopf_imag_group =
-	                                                     transport::derived_data::twopf_time_series<double>(tk2, twopf_cross,
-	                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
-	                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
-    tk2_twopf_imag_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
-    tk2_twopf_imag_group.set_type(transport::derived_data::twopf_line<double>::imaginary);
+    transport::derived_data::twopf_time_series<double> tk2_phis_group =
+                                                         transport::derived_data::twopf_time_series<double>(tk2, twopf_phis,
+                                                                                                            transport::derived_data::filter::time_filter(timeseries_filter),
+                                                                                                            transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+    tk2_phis_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::tensor_twopf_time_series<double> tk2_tensor_twopf_group =
+                                                                transport::derived_data::tensor_twopf_time_series<double>(tk2, tensor_twopf_fields,
+                                                                                                                            transport::derived_data::filter::time_filter(timeseries_filter),
+                                                                                                                            transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+    transport::derived_data::tensor_twopf_time_series<double> tk2_tensor_only_group =
+                                                                transport::derived_data::tensor_twopf_time_series<double>(tk2, tensor_only,
+                                                                                                                          transport::derived_data::filter::time_filter(timeseries_filter),
+                                                                                                                          transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+    tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
     transport::derived_data::twopf_time_series<double> tk3_twopf_real_group =
 	                                                     transport::derived_data::twopf_time_series<double>(tk3, twopf_fields,
@@ -272,24 +310,41 @@ int main(int argc, char* argv[])
     tk3_twopf_imag_kgp.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 		tk3_twopf_imag_kgp.set_type(transport::derived_data::twopf_line<double>::imaginary);
 
+    transport::derived_data::tensor_twopf_time_series<double> tensor_twopf_group =
+                                                                transport::derived_data::tensor_twopf_time_series<double>(tk3, tensor_twopf_fields,
+                                                                                                                          transport::derived_data::filter::time_filter(timeseries_filter),
+                                                                                                                          transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+    tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
+
+
     transport::derived_data::time_series_plot<double> tk2_twopf_real_plot =
 	                                                       transport::derived_data::time_series_plot<double>("axion.twopf-1.twopf-real", "twopf-real.pdf");
-		tk2_twopf_real_plot.add_line(tk2_twopf_real_group);
+		tk2_twopf_real_plot.add_line(tk2_twopf_group);
 		tk2_twopf_real_plot.set_title_text("Real two-point function");
 		tk2_twopf_real_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
-    transport::derived_data::time_series_plot<double> tk2_twopf_imag_plot =
-	                                                       transport::derived_data::time_series_plot<double>("axion.twopf-1.twopf-imag", "twopf-imag.pdf");
-    tk2_twopf_imag_plot.add_line(tk2_twopf_imag_group);
-    tk2_twopf_imag_plot.set_title_text("Imaginary two-point function");
-    tk2_twopf_imag_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
-
     transport::derived_data::time_series_plot<double> tk2_twopf_total_plot =
 	                                                       transport::derived_data::time_series_plot<double>("axion.twopf-1.twopf-total", "twopf-total.pdf");
-    tk2_twopf_total_plot.add_line(tk2_twopf_real_group);
-		tk2_twopf_total_plot.add_line(tk2_twopf_imag_group);
-    tk2_twopf_total_plot.set_title_text("Two-point function");
+    tk2_twopf_total_plot.add_line(tk2_twopf_group);
+		tk2_twopf_total_plot.add_line(tk2_tensor_only_group);
+    tk2_twopf_total_plot.set_title_text("Two-point functions (fields and tensors)");
     tk2_twopf_total_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+    transport::derived_data::time_series_plot<double> tk2_compare_plot =
+                                                        transport::derived_data::time_series_plot<double>("axion.twopf-1.twopf-compare", "twopf-compare.pdf");
+    tk2_compare_plot.add_line(tk2_phis_group);
+    tk2_compare_plot.add_line(tk2_tensor_twopf_group);
+    tk2_compare_plot.set_title_text("Comparison of two-point functions");
+    tk2_compare_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+    transport::derived_data::time_series_plot<double> tk2_tensor_twopf_plot =
+                                                        transport::derived_data::time_series_plot<double>("axion.twopf-1.tensor-twopf", "tensor-twopf.pdf");
+    tk2_tensor_twopf_plot.add_line(tk2_tensor_twopf_group);
+    tk2_tensor_twopf_plot.set_title_text("Tensor two-point function");
+    tk2_tensor_twopf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+
 
     transport::derived_data::time_series_plot<double> tk3_twopf_real_plot =
 	                                                       transport::derived_data::time_series_plot<double>("axion.threepf-1.twopf-real", "twopf-real.pdf");
@@ -333,6 +388,11 @@ int main(int argc, char* argv[])
 	                                                            transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.twopf-tot-spec-table", "twopf-tot-spec-table.txt");
     tk3_twopf_total_tab.add_line(tk3_twopf_real_kgp);
     tk3_twopf_total_tab.add_line(tk3_twopf_imag_kgp);
+
+    transport::derived_data::time_series_plot<double> tensor_twopf_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.tensor-twopf", "tensor-twopf.pdf");
+    tensor_twopf_plot.add_line(tensor_twopf_group);
+    tensor_twopf_plot.set_title_text("Tensor two-point function");
+    tensor_twopf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
 
     // plots of some components of the threepf
@@ -675,10 +735,11 @@ int main(int argc, char* argv[])
 
 
 		// construct output tasks
-//    transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
-//		twopf_output.add_element(tk2_twopf_real_plot);
-//		twopf_output.add_element(tk2_twopf_imag_plot);
-//		twopf_output.add_element(tk2_twopf_total_plot);
+    transport::output_task<double> twopf_output   = transport::output_task<double>("axion.twopf-1.output", tk2_bg_plot);
+		twopf_output.add_element(tk2_twopf_real_plot);
+		twopf_output.add_element(tk2_twopf_total_plot);
+    twopf_output.add_element(tk2_tensor_twopf_plot);
+    twopf_output.add_element(tk2_compare_plot);
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_bg_plot);
 		threepf_output.add_element(tk3_twopf_real_plot);
@@ -699,6 +760,7 @@ int main(int argc, char* argv[])
 //		threepf_output.add_element(tk3_mixed_plot);
 //    threepf_output.add_element(tk3_check_shift);
 //		threepf_output.add_element(tk3_check_shift_table);
+    threepf_output.add_element(tensor_twopf_plot);
     threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_equi);
 		threepf_output.add_element(tk3_zeta_equi_table);
@@ -731,6 +793,7 @@ int main(int argc, char* argv[])
     repo->commit_task(ztk3_fNL_local);
     repo->commit_task(ztk3_fNL_equi);
     repo->commit_task(ztk3_fNL_ortho);
+    repo->commit_task(twopf_output);
     repo->commit_task(threepf_output);
     repo->commit_task(fNLloc_task);
 
