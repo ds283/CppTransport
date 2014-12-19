@@ -30,7 +30,7 @@ namespace transport
 
         //! twopf wavenumber data line
         template <typename number>
-        class twopf_wavenumber_series : public wavenumber_series<number>, public twopf_line<number>
+        class twopf_wavenumber_series: public wavenumber_series<number>, public twopf_line<number>
 	        {
 
             // CONSTRUCTOR, DESTRUCTOR
@@ -48,7 +48,7 @@ namespace transport
 		        virtual ~twopf_wavenumber_series() = default;
 
 
-            // DERIVE LINES -- implements a 'time_series' interface
+            // DERIVE LINES -- implements a 'derived_line' interface
 
             //! generate data lines for plotting
             virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
@@ -155,6 +155,7 @@ namespace transport
 		        this->detach(pipe);
 			    }
 
+
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
@@ -164,6 +165,7 @@ namespace transport
             this->twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
 	        }
+
 
         // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
