@@ -284,6 +284,12 @@ int main(int argc, char* argv[])
                                                                                                                           transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
     tk2_tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
+    transport::derived_data::tensor_twopf_wavenumber_series<double> tk2_tensor_spectrum =
+                                                                      transport::derived_data::tensor_twopf_wavenumber_series<double>(tk2, tensor_twopf_fields,
+                                                                                                                                      transport::derived_data::filter::time_filter(time_config_filter),
+                                                                                                                                      transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_filter));
+    tk2_tensor_spectrum.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+
     transport::derived_data::twopf_time_series<double> tk3_twopf_real_group =
 	                                                     transport::derived_data::twopf_time_series<double>(tk3, twopf_fields,
 	                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
@@ -344,6 +350,12 @@ int main(int argc, char* argv[])
     tk2_tensor_twopf_plot.set_title_text("Tensor two-point function");
     tk2_tensor_twopf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
+    transport::derived_data::wavenumber_series_plot<double> tk2_tensor_spectrum_plot =
+    transport::derived_data::wavenumber_series_plot<double>("axion.twopf-1.tensor-spectrum", "tensor-spectrum.pdf");
+    tk2_tensor_spectrum_plot.add_line(tk2_tensor_spectrum);
+    tk2_tensor_spectrum_plot.set_title_text("Tensor power spectra");
+    tk2_tensor_spectrum_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+    tk2_tensor_spectrum_plot.set_log_x(true);
 
 
     transport::derived_data::time_series_plot<double> tk3_twopf_real_plot =
@@ -740,6 +752,7 @@ int main(int argc, char* argv[])
 		twopf_output.add_element(tk2_twopf_total_plot);
     twopf_output.add_element(tk2_tensor_twopf_plot);
     twopf_output.add_element(tk2_compare_plot);
+    twopf_output.add_element(tk2_tensor_spectrum_plot);
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_bg_plot);
 		threepf_output.add_element(tk3_twopf_real_plot);
