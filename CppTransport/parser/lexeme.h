@@ -47,7 +47,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           unary_context, binary_context
         };
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       class lexeme
         {
           public:
@@ -110,7 +110,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 
 //  IMPLEMENTATION
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       lexeme<keywords, characters>::lexeme(const std::string buffer, const enum lexeme_buffer_type t,
                                            enum lexeme_minus_context& context,
                                            const filestack* p, unsigned int u,
@@ -249,7 +249,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
             }
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       lexeme<keywords, characters>::lexeme(const lexeme<keywords, characters>& obj)
         : type(obj.type), unique(obj.unique),
           k(obj.k), s(obj.s), z(obj.z), d(obj.d), str(obj.str),
@@ -259,7 +259,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         {
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       lexeme<keywords, characters>::~lexeme()
         {
           // delete copy of filestack object
@@ -271,7 +271,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 // ******************************************************************
 
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       void lexeme<keywords, characters>::dump(std::ostream& stream)
         {
           stream << "Lexeme " << this->unique << " = ";
@@ -325,13 +325,13 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 // ******************************************************************
 
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       enum lexeme_type lexeme<keywords, characters>::get_type()
         {
           return this->type;
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_keyword(keywords& kw)
         {
           bool rval = false;
@@ -351,7 +351,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           return (rval);
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_symbol(characters& sym)
         {
           bool rval = false;
@@ -371,7 +371,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           return (rval);
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_identifier(std::string& id)
         {
           bool rval = false;
@@ -391,7 +391,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           return (rval);
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_integer(int& z)
         {
           bool rval = false;
@@ -411,7 +411,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           return (rval);
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_decimal(double& d)
         {
           bool rval = false;
@@ -431,7 +431,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
           return (rval);
         }
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       bool lexeme<keywords, characters>::get_string(std::string& str)
         {
           bool rval = false;
@@ -452,7 +452,7 @@ namespace lexeme    // package in a unique namespace to protect common words lik
         }
 
 
-      template <class keywords, class characters>
+      template <typename keywords, typename characters>
       const filestack* lexeme<keywords, characters>::get_path()
         {
           return(this->path);
