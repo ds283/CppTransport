@@ -9,6 +9,7 @@
 #define __CPP_TRANSPORT_TRANSPORT_H_
 
 #define BOOST_ALL_DYN_LINK
+#define FUSION_MAX_VECTOR_SIZE 20
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/defaults.h"
