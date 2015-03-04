@@ -325,8 +325,12 @@ namespace lexeme    // package in a unique namespace to protect common words lik
 // ******************************************************************
 
 
+			// introduce typedef to avoid writing 'enum lexeme_type' in the get_type() function definition
+			// for some reason, the Intel compiler chokes on this, although Clang is OK
+			typedef enum lexeme_type lt;
+
       template <typename keywords, typename characters>
-      enum lexeme_type lexeme<keywords, characters>::get_type()
+      lt lexeme<keywords, characters>::get_type()
         {
           return this->type;
         }
