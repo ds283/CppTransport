@@ -322,6 +322,13 @@ int main(int argc, char* argv[])
                                                                                                                           transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
     tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
+    transport::derived_data::r_time_series<double> r_group =
+	                                                   transport::derived_data::r_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter),
+	                                                                                                  transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+
+    transport::derived_data::r_wavenumber_series<double> r_spectrum_group =
+	                                                         transport::derived_data::r_wavenumber_series<double>(tk3, transport::derived_data::filter::time_filter(time_config_filter),
+	                                                                                                              transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_filter));
 
 
     transport::derived_data::time_series_plot<double> tk2_twopf_real_plot =
@@ -405,6 +412,16 @@ int main(int argc, char* argv[])
     tensor_twopf_plot.add_line(tensor_twopf_group);
     tensor_twopf_plot.set_title_text("Tensor two-point function");
     tensor_twopf_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+    transport::derived_data::time_series_plot<double> r_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.r-time", "r-time.pdf");
+		r_plot.add_line(r_group);
+		r_plot.set_title_text("Tensor-to-scalar ratio");
+		r_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+    transport::derived_data::wavenumber_series_plot<double> r_spectrum = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.r-spectrum", "r-spectrum.pdf");
+		r_spectrum.add_line(r_spectrum_group);
+		r_spectrum.set_title_text("Tensor-to-scalar ratio");
+		r_spectrum.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
 
     // plots of some components of the threepf
@@ -731,7 +748,7 @@ int main(int argc, char* argv[])
     fNL_plot.add_line(fNLloc_time_series);
     fNL_plot.add_line(fNLequi_time_series);
     fNL_plot.add_line(fNLortho_time_series);
-    fNL_plot.add_line(tk3_zeta_redbsp_sq);
+//    fNL_plot.add_line(tk3_zeta_redbsp_sq);
     fNL_plot.set_log_y(false);
     fNL_plot.set_abs_y(false);
     fNL_plot.set_title(false);
@@ -774,6 +791,8 @@ int main(int argc, char* argv[])
 //    threepf_output.add_element(tk3_check_shift);
 //		threepf_output.add_element(tk3_check_shift_table);
     threepf_output.add_element(tensor_twopf_plot);
+		threepf_output.add_element(r_plot);
+		threepf_output.add_element(r_spectrum);
     threepf_output.add_element(tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_equi);
 		threepf_output.add_element(tk3_zeta_equi_table);
