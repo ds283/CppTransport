@@ -268,7 +268,8 @@ namespace transport
 			          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
 			              << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 		                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-		                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
+			              << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+					          << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
 		          }
             catch(runtime_exception& xe)
               {
@@ -402,7 +403,7 @@ namespace transport
                 success = true;
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i + 1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
+                    << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
                     << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
                     << __CPP_TRANSPORT_BATCHING_TIME << " = " << format_time(batch_time);
               }
@@ -415,8 +416,9 @@ namespace transport
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
 		                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
-				            << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-	                  << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
+				            << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
+	                  << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+		                << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
               }
             catch(runtime_exception& xe)
               {
@@ -426,8 +428,8 @@ namespace transport
 
                 BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
-                    << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i]
-                    << " (" __CPP_TRANSPORT_FAILED_INTERNAL << xe.what() << ")";
+                    << " " << __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i]
+                    << " (" << __CPP_TRANSPORT_FAILED_INTERNAL << xe.what() << ")";
               }
           }
       }

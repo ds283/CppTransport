@@ -37,6 +37,7 @@
 #define __CPP_TRANSPORT_INTEGRATION_TIME      "integration time"
 #define __CPP_TRANSPORT_BATCHING_TIME         "batching time"
 #define __CPP_TRANSPORT_REFINEMENT_LEVEL      "mesh refinement level"
+#define __CPP_TRANSPORT_REFINEMENT_INTERNAL   "internal exception="
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_MODELS_H

@@ -261,9 +261,10 @@ namespace transport
 	                refinement_level++;
 
 	                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
-			                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
+		                << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 			                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
-			                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level;
+			                << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
+			                << " (" << __CPP_TRANSPORT_REFINEMENT_INTERNAL << xe.what() << ")";
 		            }
 	            catch(runtime_exception& xe)
 		            {
