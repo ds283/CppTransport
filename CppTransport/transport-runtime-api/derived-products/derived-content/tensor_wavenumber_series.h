@@ -47,7 +47,7 @@ namespace transport
 				    virtual ~tensor_twopf_wavenumber_series() = default;
 
 
-				    // DERIVE LINES -- implements a 'derived_lie' interface
+				    // DERIVE LINES -- implements a 'derived_line' interface
 
 				    //! generate data lines for plotting
 				    virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
