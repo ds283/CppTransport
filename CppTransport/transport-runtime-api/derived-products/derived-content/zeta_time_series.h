@@ -163,7 +163,7 @@ namespace transport
         void zeta_twopf_time_series<number>::serialize(serialization_writer& writer) const
           {
             writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES));
+                               std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_TWOPF_TIME_SERIES));
 
             this->derived_line<number>::serialize(writer);
             this->zeta_twopf_line<number>::serialize(writer);
