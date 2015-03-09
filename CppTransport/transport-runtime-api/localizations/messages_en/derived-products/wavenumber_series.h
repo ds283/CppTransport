@@ -15,6 +15,7 @@
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_TWOPF         "zeta twopf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_ZETA_THREEPF       "zeta threepf line group"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_REDUCED_BISPECTRUM "reduced bispectrum line group"
+#define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_R                  "tensor-to-scalar ratio line group"
 
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_KCONFIG_SN_LABEL         "k-configurations: including serial numbers"
 #define __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_TSAMPLE_SN_LABEL         "time sample: including serial numbers"

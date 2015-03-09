@@ -47,10 +47,13 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES                               "time-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES                                  "k-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES                              "angle-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION                        "squeezing-fraction"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE                                     "value-type"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF                                        "correlation-function"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD                                   "background-field"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL                                       "fNL"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R                                         "r"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX                            "spectral-index"
 
 
 // derived content types
@@ -69,6 +72,8 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_THREEPF_WAVENUMBER_SERIES            "zeta-threepf-k-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ZETA_REDUCED_BISPECTRUM_WAVENUMBER_SERIES "zeta-reduced-bispectrum-k-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL_TIME_SERIES                           "fNL-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_TIME_SERIES                             "r-time-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES                       "r-k-series"
 
 
 // common serialization groups used by derived products
@@ -114,8 +119,8 @@ namespace transport
 				    typedef enum { derivatives, momenta } dot_type;
 				    typedef enum { conventional, comoving } klabel_type;
 
-						typedef enum { time_series, wavenumber_series, angle_series } axis_type;
-				    typedef enum { background_field, correlation_function, fNL } value_type;
+						typedef enum { time_series, wavenumber_series, angle_series, squeezing_fraction } axis_type;
+				    typedef enum { background_field, correlation_function, fNL, r, spectral_index } value_type;
 
 
 						// CONSTRUCTOR, DESTRUCTOR
@@ -305,6 +310,7 @@ namespace transport
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
 						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = wavenumber_series;
 						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES) x_type = angle_series;
+						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION) x_type = squeezing_fraction;
 						else
 							{
 						    std::ostringstream msg;
@@ -318,6 +324,8 @@ namespace transport
 						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF) y_type = correlation_function;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD) y_type = background_field;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL) y_type = fNL;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R) y_type = r;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index;
 						else
 							{
 						    std::ostringstream msg;
@@ -444,6 +452,10 @@ namespace transport
 					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES));
 						      break;
 
+				        case squeezing_fraction:
+					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION));
+						      break;
+
 						    default:
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE);
@@ -462,6 +474,14 @@ namespace transport
 
 						    case fNL:
 							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL));
+									break;
+
+						    case r:
+							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R));
+									break;
+
+						    case spectral_index:
+							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX));
 									break;
 
 						    default:
@@ -547,6 +567,10 @@ namespace transport
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_ANGLE_SERIES_LABEL << std::endl;
 									break;
 
+						    case squeezing_fraction:
+							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION_LABEL << std::endl;
+									break;
+
 						    default:
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE);
@@ -565,6 +589,14 @@ namespace transport
 
 						    case fNL:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_FNL_LABEL << std::endl;
+									break;
+
+						    case r:
+							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_R_LABEL << std::endl;
+									break;
+
+						    case spectral_index:
+							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX_LABEL << std::endl;
 									break;
 
 						    default:

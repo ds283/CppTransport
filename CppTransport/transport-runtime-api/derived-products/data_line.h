@@ -30,9 +30,9 @@ namespace transport
 
           public:
 
-		        typedef enum { time_series, wavenumber_series, angle_series } axis_type;
+		        typedef enum { time_series, wavenumber_series, angle_series, squeezing_fraction } axis_type;
 
-		        typedef enum { background_field, correlation_function, fNL } value_type;
+		        typedef enum { background_field, correlation_function, fNL, r, spectral_index } value_type;
 
           public:
 
