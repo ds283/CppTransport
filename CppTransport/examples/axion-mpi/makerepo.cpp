@@ -178,12 +178,10 @@ int main(int argc, char* argv[])
 
 
     // construct zeta threepf versions
-    transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
-    transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", tk3);
-    transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", tk3);
-    ztk3_fNL_equi.set_template(transport::derived_data::fNLequi);
-    transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", tk3);
-    ztk3_fNL_ortho.set_template(transport::derived_data::fNLortho);
+    transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3, true);
+    transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", tk3, transport::derived_data::fNLlocal, true);
+    transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", tk3, transport::derived_data::fNLequi, true);
+    transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", tk3, transport::derived_data::fNLortho, true);
 
     std::cout << tk3;
 
