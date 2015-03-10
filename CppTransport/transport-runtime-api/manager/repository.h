@@ -2802,7 +2802,7 @@ namespace transport
     template <typename number>
     void repository<number>::postintegration_writer::merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
 	    {
-        if(!this->mergers.zeta_twopf)
+        if(!this->mergers.fNL)
 	        {
             assert(false);
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET);
