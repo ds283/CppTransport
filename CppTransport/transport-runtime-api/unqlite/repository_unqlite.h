@@ -1430,7 +1430,8 @@ namespace transport
         std::ostringstream msg;
 
         msg << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_A << " '" << group->get_name() << "' "
-	          << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B << " '" << rec->get_name() << "' ('" << group->get_task_name() << "')";
+	          << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B << " '" << rec->get_name() << "' ("
+	          << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_C << " '" << group->get_task_name() << "')";
 
         this->message(msg.str());
 	    }
