@@ -1027,6 +1027,107 @@ namespace transport
 
 
         // PAYLOADS FOR OUTPUT GROUPS
+		    class precomputed_products: public serializable
+			    {
+
+		      public:
+
+				    //! Create a precomputed products record
+		        precomputed_products()
+			        : zeta_twopf(false), zeta_threepf(false), zeta_redbsp(false),
+			          fNL_local(false), fNL_equi(false), fNL_ortho(false), fNL_DBI(false)
+			        {
+			        }
+
+				    //! Deserialization constructor
+				    precomputed_products(serialization_reader* reader);
+
+				    //! Destroy a precomputed products record
+				    ~precomputed_products() = default;
+
+
+		        // GET AND SET PROPERTIES
+
+		      public:
+
+		        //! Get precomputed zeta_twopf availability
+		        bool get_zeta_twopf() const { return(this->zeta_twopf); }
+		        //! Add zeta_twopf availability flag
+		        void add_zeta_twopf() { this->zeta_twopf = true; }
+
+		        //! Get precomputed zeta_threepf availability
+		        bool get_zeta_threepf() const { return(this->zeta_threepf); }
+		        //! Add zeta_threepf availability flag
+		        void add_zeta_threepf() { this->zeta_threepf = true; }
+
+		        //! Get precomputed zeta reduced bispectrum availability
+		        bool get_zeta_redbsp() const { return(this->zeta_redbsp); }
+		        //! Add zeta_threepf availability flag
+		        void add_zeta_redbsp() { this->zeta_redbsp = true; }
+
+		        //! Get precomputed fNL_local availability
+		        bool get_fNL_local() const { return(this->fNL_local); }
+		        //! Add fNL_local availability flag
+		        void add_fNL_local() { this->fNL_local = true; }
+
+		        //! Get precomputed fNL_equi availability
+		        bool get_fNL_equi() const { return(this->fNL_equi); }
+		        //! Add fNL_equi availability flag
+		        void add_fNL_equi() { this->fNL_equi = true; }
+
+		        //! Get precomputed fNL_ortho availability
+		        bool get_fNL_ortho() const { return(this->fNL_ortho); }
+		        //! Add fNL_ortho availability flag
+		        void add_fNL_ortho() { this->fNL_ortho = true; }
+
+		        //! Get precomputed fNL_DBI availability
+		        bool get_fNL_DBI() const { return(this->fNL_DBI); }
+		        //! Add fNL_DBI availability flag
+		        void add_fNL_DBI() { this->fNL_DBI = true; }
+
+
+		        // WRITE TO A STREAM
+
+		      public:
+
+		        void write(std::ostream& out) const;
+
+
+		        // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+		        //! Serialize this object
+		        virtual void serialize(serialization_writer& writer) const override;
+
+
+				    // INTERNAL DATA
+
+		      protected:
+
+		        //! group has pre-computed zeta twopf data?
+		        bool zeta_twopf;
+
+		        //! group has pre-computed zeta threepf data?
+		        bool zeta_threepf;
+
+		        //! group had pre-computed zeta reduced bispectrum data?
+		        bool zeta_redbsp;
+
+		        //! group has pre-computed fNL_local data?
+		        bool fNL_local;
+
+		        //! group has pre-computed fNL_equi data?
+		        bool fNL_equi;
+
+		        //! group has pre-computed fNL_ortho data?
+		        bool fNL_ortho;
+
+		        //! group has pre-computed fNL_DBI data?
+		        bool fNL_DBI;
+
+			    };
+
 
         //! Integration payload
         class integration_payload: public serializable
@@ -1037,8 +1138,7 @@ namespace transport
             //! Create a payload
             integration_payload()
 	            : metadata(),
-                zeta_twopf(false), zeta_threepf(false), zeta_redbsp(false),
-                fNL_local(false), fNL_equi(false), fNL_ortho(false), fNL_DBI(false)
+                precomputed()
 	            {
 	            }
 
@@ -1069,44 +1169,12 @@ namespace transport
             void set_metadata(const integration_metadata& data) { this->metadata = data; }
 
 
-		        // GET AND SET PROPERTIES
+            // GET AND SET PROPERTIES
 
           public:
 
-		        //! Get precomputed zeta_twopf availability
-		        bool get_zeta_twopf() const { return(this->zeta_twopf); }
-		        //! Add zeta_twopf availability flag
-		        void add_zeta_twopf() { this->zeta_twopf = true; }
-
-		        //! Get precomputed zeta_threepf availability
-		        bool get_zeta_threepf() const { return(this->zeta_threepf); }
-		        //! Add zeta_threepf availability flag
-		        void add_zeta_threepf() { this->zeta_threepf = true; }
-
-            //! Get precomputed zeta reduced bispectrum availability
-            bool get_zeta_redbsp() const { return(this->zeta_redbsp); }
-            //! Add zeta_threepf availability flag
-            void add_zeta_redbsp() { this->zeta_redbsp = true; }
-
-		        //! Get precomputed fNL_local availability
-		        bool get_fNL_local() const { return(this->fNL_local); }
-		        //! Add fNL_local availability flag
-		        void add_fNL_local() { this->fNL_local = true; }
-
-		        //! Get precomputed fNL_equi availability
-		        bool get_fNL_equi() const { return(this->fNL_equi); }
-		        //! Add fNL_equi availability flag
-		        void add_fNL_equi() { this->fNL_equi = true; }
-
-		        //! Get precomputed fNL_ortho availability
-		        bool get_fNL_ortho() const { return(this->fNL_ortho); }
-		        //! Add fNL_ortho availability flag
-		        void add_fNL_ortho() { this->fNL_ortho = true; }
-
-		        //! Get precomputed fNL_DBI availability
-		        bool get_fNL_DBI() const { return(this->fNL_DBI); }
-		        //! Add fNL_DBI availability flag
-		        void add_fNL_DBI() { this->fNL_DBI = true; }
+            //! Get precomputed products record
+            precomputed_products& get_precomputed_products() { return(this->precomputed); }
 
 
             // WRITE TO A STREAM
@@ -1117,6 +1185,8 @@ namespace transport
 
 
             // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
 
             //! Serialize this object
             virtual void serialize(serialization_writer& writer) const override;
@@ -1135,28 +1205,84 @@ namespace transport
             //! Metadata
             integration_metadata metadata;
 
-		        //! group has pre-computed zeta twopf data?
-		        bool zeta_twopf;
-
-		        //! group has pre-computed zeta threepf data?
-		        bool zeta_threepf;
-
-		        //! group had pre-computed zeta reduced bispectrum data?
-		        bool zeta_redbsp;
-
-		        //! group has pre-computed fNL_local data?
-		        bool fNL_local;
-
-		        //! group has pre-computed fNL_equi data?
-		        bool fNL_equi;
-
-		        //! group has pre-computed fNL_ortho data?
-		        bool fNL_ortho;
-
-		        //! group has pre-computed fNL_DBI data?
-		        bool fNL_DBI;
+		        //! Precomputed products
+		        precomputed_products precomputed;
 
 	        };
+
+
+        //! Postintegration payload
+		    class postintegration_payload: public serializable
+			    {
+
+		      public:
+
+				    //! Create a payload
+				    postintegration_payload()
+		          : metadata(),
+				        precomputed()
+					    {
+					    }
+
+				    //! Deserialization constructor
+				    postintegration_payload(serialization_reader* reader);
+
+				    //! Destroy a payload
+				    ~postintegration_payload() = default;
+
+
+				    // GET AND SET RECORD (META)DATA
+
+		      public:
+
+				    //! Get path of data container
+				    const boost::filesystem::path& get_container_path() const { return(this->container); }
+				    //! Set path of data container
+				    void set_container_path(const boost::filesystem::path& pt) { this->container = pt; }
+
+				    //! Get metadata
+				    const output_metadata& get_metadata() const { return(this->metadata); }
+				    //! Set metadata
+				    void set_metadata(const output_metadata& data) { this->metadata = data; }
+
+
+				    // GET AND SET PROPERTIES
+
+		      public:
+
+				    //! Get precomputed products record
+				    precomputed_products& get_precomputed_products() { return(this->precomputed); }
+
+
+		        // WRITE TO A STREAM
+
+		      public:
+
+		        void write(std::ostream& out) const;
+
+
+		        // SERIALIZATION -- implements a 'serializable' interface
+
+		      public:
+
+		        //! Serialize this object
+		        virtual void serialize(serialization_writer& writer) const override;
+
+
+		        // INTERNAL DATA
+
+		      protected:
+
+		        //! Path to data container
+		        boost::filesystem::path container;
+
+		        //! Metadata
+		        output_metadata metadata;
+
+				    //! Precomputed products
+				    precomputed_products precomputed;
+
+			    };
 
 
         //! Derived product payload
@@ -1199,6 +1325,8 @@ namespace transport
 
 
             // SERIALIZATION -- implements a 'serializable' interface
+
+          public:
 
             //! Serialize this object
             virtual void serialize(serialization_writer& writer) const override;
@@ -1732,6 +1860,12 @@ namespace transport
             //! Return task
             postintegration_task_record* get_record() const { return(this->parent_record); }
 
+		        //! Set metadata
+		        void set_metadata(const output_metadata& data) { this->metadata = data; }
+
+		        //! Get metadata
+		        const output_metadata& get_metadata() const { return(this->metadata); }
+
 
             // INTERNAL DATA
 
@@ -1741,6 +1875,9 @@ namespace transport
 
             //! task associated with this integration writer
             postintegration_task_record* parent_record;
+
+		        //! output metadata for this task
+		        output_metadata metadata;
 
 
 		        // MERGE CALLBACKS
@@ -2398,6 +2535,7 @@ namespace transport
 		    writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
 	    }
 
+
 		// INTEGRATION METADATA
 
     template <typename number>
@@ -2602,7 +2740,8 @@ namespace transport
                                                                        const typename repository<number>::generic_writer<typename repository<number>::postintegration_writer>::paths_group& p,
                                                                        unsigned int w)
       : repository<number>::generic_writer<typename repository<number>::postintegration_writer>(c, m, p, w),
-        parent_record(dynamic_cast<postintegration_task_record*>(rec->clone()))
+        parent_record(dynamic_cast<postintegration_task_record*>(rec->clone())),
+        metadata()
       {
         assert(this->parent_record != nullptr);
       }
@@ -2893,9 +3032,51 @@ namespace transport
       }   // unnamed namespace
 
 
+		template <typename number>
+		repository<number>::precomputed_products::precomputed_products(serialization_reader* reader)
+			{
+				assert(reader != nullptr);
+
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
+			}
+
+
+		template <typename number>
+		void repository<number>::precomputed_products::serialize(serialization_writer& writer) const
+			{
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
+		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
+			}
+
+
+		template <typename number>
+		void repository<number>::precomputed_products::write(std::ostream& out) const
+			{
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+		    out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+			}
+
+
     template <typename number>
     repository<number>::integration_payload::integration_payload(serialization_reader* reader)
-      : metadata(reader)
+      : metadata(reader),
+        precomputed(reader)
       {
         assert(reader != nullptr);
 
@@ -2904,14 +3085,6 @@ namespace transport
         std::string ctr_path;
         reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
         this->container = ctr_path;
-
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
-		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
       }
 
     template <typename number>
@@ -2919,15 +3092,9 @@ namespace transport
       {
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
         writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
-		    writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
 
 	      this->metadata.serialize(writer);
+		    this->precomputed.serialize(writer);
       }
 
 
@@ -2936,14 +3103,41 @@ namespace transport
       {
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
-		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_TWO << ": " << (this->zeta_twopf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_THREE << ": " << (this->zeta_threepf ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-		    out << __CPP_TRANSPORT_PAYLOAD_HAS_ZETA_REDBSP << ": " << (this->zeta_redbsp ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_LOCAL << ": " << (this->fNL_local ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_EQUI << ": " << (this->fNL_equi ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_ORTHO << ": " << (this->fNL_ortho ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
-        out << __CPP_TRANSPORT_PAYLOAD_HAS_FNL_DBI << ": " << (this->fNL_DBI ? __CPP_TRANSPORT_YES : __CPP_TRANSPORT_NO) << std::endl;
+
+		    this->precomputed.write(out);
       }
+
+
+    template <typename number>
+    repository<number>::postintegration_payload::postintegration_payload(serialization_reader* reader)
+	    : metadata(reader),
+	      precomputed(reader)
+	    {
+		    assert(reader != nullptr);
+
+        std::string ctr_path;
+		    reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
+		    this->container = ctr_path;
+	    }
+
+
+		template <typename number>
+		void repository<number>::postintegration_payload::serialize(serialization_writer& writer) const
+			{
+				writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+
+				this->metadata.serialize(writer);
+				this->precomputed.serialize(writer);
+			}
+
+
+		template <typename number>
+		void repository<number>::postintegration_payload::write(std::ostream& out) const
+			{
+				out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
+
+				this->precomputed.write(out);
+			}
 
 
     template <typename number>

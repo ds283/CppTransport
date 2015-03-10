@@ -18,13 +18,14 @@
 #include "transport-runtime-api/defaults.h"
 
 
-#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT "parent-task"
+#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
+#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK "write-back"
 
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE           "template"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL     "local"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI      "equilateral"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO     "orthogonal"
-#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI       "DBI"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE               "template"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL         "local"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI          "equilateral"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO         "orthogonal"
+#define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI           "DBI"
 
 
 namespace transport
@@ -44,7 +45,7 @@ namespace transport
 		  public:
 
 				//! Construct a named postintegration_task with supplied parent integration_task
-				postintegration_task(const std::string& nm, const integration_task<number>& t);
+				postintegration_task(const std::string& nm, const integration_task<number>& t, bool write=false);
 
 				//! deserialization constructor
 				postintegration_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -62,6 +63,12 @@ namespace transport
 
         //! Get parent integration task
         integration_task<number>* get_parent_task() const { return(this->tk); }
+
+				//! Set whether to write data back to parent
+				bool get_write_back() const { return(this->write_back); }
+
+				//! Set whether to write data back to parent
+				void set_write_back(bool write) { this->write_back = write; }
 
 
 				// SERIALIZATION (implements a 'serializable' interface)
@@ -87,6 +94,9 @@ namespace transport
 				//! Parent integration task
 				integration_task<number>* tk;
 
+				//! Write data back to parent?
+				bool write_back;
+
 			};
 
 
@@ -99,9 +109,10 @@ namespace transport
 
 
 		template <typename number>
-		postintegration_task<number>::postintegration_task(const std::string& nm, const integration_task<number>& t)
+		postintegration_task<number>::postintegration_task(const std::string& nm, const integration_task<number>& t, bool write)
 			: task<number>(nm),
-        tk(dynamic_cast<integration_task<number>*>(t.clone()))
+        tk(dynamic_cast<integration_task<number>*>(t.clone())),
+				write_back(write)
 			{
 				assert(tk != nullptr);
 			}
@@ -110,7 +121,8 @@ namespace transport
 		template <typename number>
 		postintegration_task<number>::postintegration_task(const postintegration_task<number>& obj)
 			: task<number>(obj),
-			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
+			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone())),
+				write_back(obj.write_back)
 			{
 				assert(tk != nullptr);
 			}
@@ -126,6 +138,9 @@ namespace transport
 				// deserialize and reconstruct parent integration task
 		    std::string tk_name;
 				reader->read_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT, tk_name);
+
+				// deserialize write-back status
+				reader->read_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK, write_back);
 
 		    std::unique_ptr<typename repository<number>::task_record> record(finder(tk_name));
 		    assert(record.get() != nullptr);
@@ -152,6 +167,9 @@ namespace transport
 			{
 				// serialize parent integration task
 				writer.write_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT, this->tk->get_name());
+
+				// serialize write-back status
+				writer.write_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK, this->write_back);
 			}
 
 
@@ -174,7 +192,7 @@ namespace transport
 		  public:
 
 				//! construct a zeta_twopf task
-				zeta_twopf_task(const std::string& nm, const twopf_task<number>& t);
+				zeta_twopf_task(const std::string& nm, const twopf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
 				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -200,8 +218,8 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
-      : postintegration_task<number>(nm, t)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t, bool w)
+      : postintegration_task<number>(nm, t, w)
       {
       }
 
@@ -235,7 +253,7 @@ namespace transport
 		  public:
 
 				//! construct a zeta_threepf task
-				zeta_threepf_task(const std::string& nm, const threepf_task<number>& t);
+				zeta_threepf_task(const std::string& nm, const threepf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
 				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -261,8 +279,8 @@ namespace transport
 
 
     template <typename number>
-    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
-      : postintegration_task<number>(nm, t)
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t, bool w)
+      : postintegration_task<number>(nm, t, w)
       {
       }
 
@@ -295,7 +313,7 @@ namespace transport
 		  public:
 
 				//! construct an fNL task
-				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal);
+				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal, bool w=false);
 
 				//! deserialization constructor
 				fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
@@ -339,8 +357,8 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty)
-      : postintegration_task<number>(nm, t),
+    fNL_task<number>::fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty, bool w)
+      : postintegration_task<number>(nm, t, w),
         type(ty)
       {
       }

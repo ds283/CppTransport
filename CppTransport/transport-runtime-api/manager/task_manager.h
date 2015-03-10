@@ -1165,6 +1165,7 @@ namespace transport
         writer->set_metadata(metadata);
 
         wallclock_timer.stop();
+
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ TASK COMPLETE -- FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
@@ -1423,6 +1424,8 @@ namespace transport
                   }
               }
           }
+
+		    writer->set_metadata(metadata);
 
         wallclock_timer.stop();
 

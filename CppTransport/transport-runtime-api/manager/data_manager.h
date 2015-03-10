@@ -3609,7 +3609,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_twopf_time_data_tag data_manager<number>::datapipe::new_zeta_twopf_time_data_tag(const twopf_configuration& kdata)
       {
-		    bool cached = this->attached_group->get_payload().get_zeta_twopf();
+		    bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_twopf();
         return data_manager<number>::datapipe::zeta_twopf_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
@@ -3617,7 +3617,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_threepf_time_data_tag data_manager<number>::datapipe::new_zeta_threepf_time_data_tag(const threepf_configuration& kdata)
       {
-        bool cached = this->attached_group->get_payload().get_zeta_threepf();
+        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_threepf();
         return data_manager<number>::datapipe::zeta_threepf_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
@@ -3625,7 +3625,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag data_manager<number>::datapipe::new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata)
       {
-        bool cached = this->attached_group->get_payload().get_zeta_redbsp();
+        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_redbsp();
         return data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag(this, kdata, this->attached_task, this->N_fields, cached);
       }
 
@@ -3633,7 +3633,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag data_manager<number>::datapipe::new_zeta_twopf_kconfig_data_tag(unsigned int tserial)
       {
-        bool cached = this->attached_group->get_payload().get_zeta_twopf();
+        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_twopf();
         return data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
 
@@ -3641,7 +3641,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag data_manager<number>::datapipe::new_zeta_threepf_kconfig_data_tag(unsigned int tserial)
       {
-        bool cached = this->attached_group->get_payload().get_zeta_threepf();
+        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_threepf();
         return data_manager<number>::datapipe::zeta_threepf_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
 
@@ -3649,7 +3649,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag data_manager<number>::datapipe::new_zeta_reduced_bispectrum_kconfig_data_tag(unsigned int tserial)
       {
-        bool cached = this->attached_group->get_payload().get_zeta_redbsp();
+        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_redbsp();
         return data_manager<number>::datapipe::zeta_reduced_bispectrum_kconfig_data_tag(this, tserial, this->attached_task, this->N_fields, cached);
       }
 
@@ -3661,19 +3661,19 @@ namespace transport
 				switch(type)
 					{
 				    case derived_data::fNLlocal:
-					    rval = payload.get_fNL_local();
+					    rval = payload.get_precomputed_products().get_fNL_local();
 							break;
 
 				    case derived_data::fNLequi:
-					    rval = payload.get_fNL_equi();
+					    rval = payload.get_precomputed_products().get_fNL_equi();
 							break;
 
 				    case derived_data::fNLortho:
-					    rval = payload.get_fNL_ortho();
+					    rval = payload.get_precomputed_products().get_fNL_ortho();
 							break;
 
 				    case derived_data::fNLDBI:
-					    rval = payload.get_fNL_DBI();
+					    rval = payload.get_precomputed_products().get_fNL_DBI();
 							break;
 					}
 
