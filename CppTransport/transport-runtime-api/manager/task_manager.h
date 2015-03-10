@@ -961,7 +961,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Max mean integration time = " << format_time(metadata.max_mean_integration_time) << " | global max integration time = " << format_time(metadata.global_max_integration_time);
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Total batching time       = " << format_time(metadata.total_batching_time) << " | global mean batching time = " << format_time(metadata.total_batching_time/metadata.total_configurations);
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Min mean batching time    = " << format_time(metadata.min_mean_batching_time) << " | global min batching time = " << format_time(metadata.global_min_batching_time);
-        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Max mean batching time    = " << format_time(metadata.max_mean_batching_time) << " | global max bathcing time = " << format_time(metadata.global_max_batching_time);
+        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++   Max mean batching time    = " << format_time(metadata.max_mean_batching_time) << " | global max batching time = " << format_time(metadata.global_max_batching_time);
 
         return(success);
       }
