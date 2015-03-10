@@ -75,7 +75,7 @@ int main(int argc, char* argv[])
     const double Ninit  = 0.0;  // start counting from N=0 at the beginning of the integration
     const double Ncross = 5.0;  // horizon-crossing occurs at 5 e-folds from init_values
     const double Npre   = 5.0;  // how many e-folds do we wish to track the mode prior to horizon exit?
-    const double Nmax   = 55.0; // how many e-folds to integrate after horizon crossing
+    const double Nmax   = 60.0; // how many e-folds to integrate after horizon crossing
 
     // set up initial conditions
 		const std::vector<double> init_values     = INIT_VALUE_LIST;
@@ -107,7 +107,12 @@ int main(int argc, char* argv[])
 		// construct some derived data products; first, simply plots of the background
 
     transport::index_selector<1> bg_sel(model->get_N_fields());
-		bg_sel.all();
+		bg_sel.none();
+		for(unsigned int m = 0; m < model->get_N_fields(); m++)
+			{
+		    std::array<unsigned int, 1> set = { m };
+				bg_sel.set_on(set);
+			}
 
     transport::derived_data::background_time_series<double> tk2_bg = transport::derived_data::background_time_series<double>(tk2, bg_sel, transport::derived_data::filter::time_filter(timeseries_filter));
 
@@ -115,7 +120,7 @@ int main(int argc, char* argv[])
 	                                                       transport::derived_data::time_series_plot<double>("quadratic10.twopf-1.background", "background.pdf");
 		tk2_bg_plot.add_line(tk2_bg);
     tk2_bg_plot.set_title_text("Background fields");
-
+		tk2_bg_plot.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
     transport::derived_data::zeta_twopf_time_series<double> tk2_zeta_times = transport::derived_data::zeta_twopf_time_series<double>(tk2,
                                                                                                                                      transport::derived_data::filter::time_filter(timeseries_filter),
@@ -137,11 +142,20 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk2_zeta_spectable = transport::derived_data::wavenumber_series_table<double>("quadratic10.twopf-1.zeta-spec.table", "zeta-spec-table.txt");
 		tk2_zeta_spectable.add_line(tk2_zeta_spec);
 
+    transport::derived_data::r_wavenumber_series<double> tk2_r_spec = transport::derived_data::r_wavenumber_series<double>(tk2,
+                                                                                                                           transport::derived_data::filter::time_filter(spectrum_timefilter),
+                                                                                                                           transport::derived_data::filter::twopf_kconfig_filter(all_k_modes));
+
+    transport::derived_data::wavenumber_series_plot<double> tk2_r_specplot = transport::derived_data::wavenumber_series_plot<double>("quadratic10.twopf-1.r-spec", "r-spec.pdf");
+		tk2_r_specplot.add_line(tk2_r_spec);
+		tk2_r_specplot.set_title_text("Tensor-to-scalar ratio");
+
 		// construct output tasks
     transport::output_task<double> twopf_output = transport::output_task<double>("quadratic10.twopf-1.output", tk2_bg_plot);
 		twopf_output.add_element(tk2_zeta_timeplot);
 		twopf_output.add_element(tk2_zeta_specplot);
 		twopf_output.add_element(tk2_zeta_spectable);
+		twopf_output.add_element(tk2_r_specplot);
 
 		// write output tasks to the database
 		repo->commit_task(tk2);
