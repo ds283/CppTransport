@@ -129,6 +129,14 @@ add_executable(mafalda40-mpi examples/mafalda40/main.cpp unqlite/unqlite.c jsonc
 target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
+add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
+target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+
+add_executable(quadratic10-mpi examples/quadratic10/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
+target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+
+
 cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
 target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
