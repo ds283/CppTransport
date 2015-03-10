@@ -47,6 +47,7 @@
 
 #define __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_A   "Committed write-back of post-integration products to output group"
 #define __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B   "for task"
+#define __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_C   "parent task"
 
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Some momentum configurations failed to integrate, or other errors were encountered. Failing output group"
