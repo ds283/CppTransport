@@ -18,6 +18,7 @@ namespace transport
 
     class context
       {
+
       public:
 
         class device
@@ -63,10 +64,12 @@ namespace transport
         const device& operator[](unsigned int d) const { return(this->get_device(d)); }
 
         friend class device;
+
       protected:
 
         std::vector<device> devices;
         unsigned            total_weight;
+
       };
 
 
