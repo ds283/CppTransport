@@ -208,6 +208,9 @@ namespace transport
 
 		        //! time spent batching, in nanoseconds
             boost::timer::nanosecond_type batching;
+
+		        //! number of mesh refinements needed for this configuration
+		        unsigned int                  refinements;
           };
 
         //! Stores a zeta twopf configuration
@@ -274,6 +277,9 @@ namespace transport
 
         //! Per-configuration statistics writer function
         typedef std::function<void(integration_batcher*, const std::vector<configuration_statistics>&)> stats_writer;
+
+		    //! Host information writer function
+		    typedef std::function<void(integration_batcher*)> host_info_writer;
 
         //! Zeta 2pf writer function
         typedef std::function<void(postintegration_batcher*, const std::vector<zeta_twopf_item>&)> zeta_twopf_writer;
@@ -352,6 +358,9 @@ namespace transport
 
             //! Return worker numbers
             unsigned int get_worker_number() const { return(this->worker_number); }
+
+		        //! Return host information
+		        const host_information& get_host_information() const { return(this->host_info); }
 
             //! Close batcher
             virtual void close();
@@ -473,8 +482,8 @@ namespace transport
             //! Add integration details
             void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
 
-            //! Add integration details, plus report a k-configuration serial number for storing per-configuration statistics
-            void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial);
+            //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
+            void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement);
 
             //! Report a failed integration
             void report_integration_failure();
@@ -626,6 +635,7 @@ namespace transport
                 twopf_writer        twopf;
                 tensor_twopf_writer tensor_twopf;
                 stats_writer        stats;
+		            host_info_writer    host_info;
               };
 
           public:
@@ -673,6 +683,7 @@ namespace transport
                 tensor_twopf_writer tensor_twopf;
                 threepf_writer      threepf;
                 stats_writer        stats;
+		            host_info_writer    host_info;
               };
 
           public:
@@ -2647,7 +2658,7 @@ namespace transport
           }
 
         BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "** Instantiated generic batcher on MPI host " << host_info.get_host_name()
-		        << ", OS = " << host_info.get_os_name() << ", Version = " << host_info.get_os_version() << " (Release = " << host_info.get_os_release() << ") | " << host_info.get_machine_identifier()
+		        << ", OS = " << host_info.get_os_name() << ", Version = " << host_info.get_os_version() << " (Release = " << host_info.get_os_release() << ") | " << host_info.get_architecture()
 		        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
       }
 
@@ -2729,14 +2740,15 @@ namespace transport
 
     template <typename number>
     void data_manager<number>::integration_batcher::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching,
-                                                                               unsigned int kserial)
+                                                                               unsigned int kserial, unsigned int refinements)
       {
         this->report_integration_success(integration, batching);
 
         configuration_statistics stats;
-        stats.serial     = kserial;
+        stats.serial      = kserial;
         stats.integration = integration;
         stats.batching    = batching;
+		    stats.refinements = refinements;
 
         this->stats_batch.push_back(stats);
 
@@ -2887,7 +2899,8 @@ namespace transport
       {
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
                + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
-               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size());
+               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*this->twopf_batch.size()
+               + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
       }
 
 
@@ -2899,6 +2912,7 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
+		    this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf(this, this->twopf_batch);
@@ -3020,7 +3034,8 @@ namespace transport
         return((sizeof(unsigned int) + 2*this->Nfields*sizeof(number))*this->backg_batch.size()
                + (3*sizeof(unsigned int) + 4*sizeof(number))*this->tensor_twopf_batch.size()
                + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*sizeof(number))*(this->twopf_re_batch.size() + this->twopf_im_batch.size())
-               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size());
+               + (3*sizeof(unsigned int) + 2*this->Nfields*2*this->Nfields*2*this->Nfields*sizeof(number))*this->threepf_batch.size()
+	             + (2*sizeof(unsigned int) + 2*sizeof(boost::timer::nanosecond_type))*this->stats_batch.size());
       }
 
 
@@ -3032,6 +3047,7 @@ namespace transport
         // set up a timer to measure how long it takes to flush
         boost::timer::cpu_timer flush_timer;
 
+        this->writers.host_info(this);
         if(this->collect_statistics) this->writers.stats(this, this->stats_batch);
         this->writers.backg(this, this->backg_batch);
         this->writers.twopf_re(this, this->twopf_re_batch);
@@ -3215,8 +3231,8 @@ namespace transport
     size_t data_manager<number>::zeta_threepf_batcher::storage() const
       {
         return((2*sizeof(unsigned int) + sizeof(number))*this->twopf_batch.size()
-          + (3*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
-          + (3*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
+               + (3*sizeof(unsigned int) + sizeof(number))*this->threepf_batch.size()
+               + (3*sizeof(unsigned int) + sizeof(number))*this->redbsp_batch.size());
       }
 
 

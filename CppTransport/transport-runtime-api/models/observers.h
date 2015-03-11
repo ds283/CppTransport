@@ -78,7 +78,7 @@ namespace transport
         void stop_batching();
 
         //! Stop the running timers - should only be called at the end of an integration
-        virtual void stop_timers();
+        virtual void stop_timers(unsigned int refinement);
 
         //! Get the total elapsed integration time
         boost::timer::nanosecond_type get_integration_time() const { return(this->integration_timer.elapsed().wall); }
@@ -128,28 +128,30 @@ namespace transport
 
     template <typename number>
     template <typename Level>
-    void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger<Level>& logger, Level lev)
-    {
-      std::string rval = "";
+    void timing_observer<number>::start_batching(double t, boost::log::sources::severity_logger <Level>& logger, Level lev)
+	    {
+        std::string rval = "";
 
-      this->integration_timer.stop();
-      this->batching_timer.start();
+        this->integration_timer.stop();
+        this->batching_timer.start();
 
-      // should we emit output?
-      // only do so if: not silent, and: either, first step, or enough time has elapsed
-      if(!this->silent && (this->first_step || t > this->t_last + this->t_interval))
-        {
-          this->t_last = t;
+        // should we emit output?
+        // only do so if: not silent, and: either, first step, or enough time has elapsed
+        if(!this->silent && (this->first_step || t > this->t_last + this->t_interval))
+	        {
+            this->t_last = t;
 
-          std::ostringstream msg;
-          msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
-          if(first_step){ msg << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->integration_timer.format();
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_OBSERVER_TIME << " = " << std::scientific << std::setprecision(this->precision) << t;
+            if(first_step)
+	            {
+                msg << " " << __CPP_TRANSPORT_OBSERVER_ELAPSED << " =" << this->integration_timer.format();
+	            }
+            BOOST_LOG_SEV(logger, lev) << msg.str();
 
-          }BOOST_LOG_SEV(logger, lev) << msg.str();
-
-          first_step = false;
-        }
-    }
+            first_step = false;
+	        }
+	    }
 
 
     template <typename number>
@@ -161,7 +163,7 @@ namespace transport
 
 
     template <typename number>
-    void timing_observer<number>::stop_timers()
+    void timing_observer<number>::stop_timers(unsigned int refinement)
       {
         this->batching_timer.stop();
         this->integration_timer.stop();
@@ -196,7 +198,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers() override;
+        virtual void stop_timers(unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -260,10 +262,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_singleconfig_batch_observer<number>::stop_timers()
+    void twopf_singleconfig_batch_observer<number>::stop_timers(unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers();
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+        this->timing_observer<number>::stop_timers(refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial, refinement);
       }
 
 
@@ -300,7 +302,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers() override;
+        virtual void stop_timers(unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -424,10 +426,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_singleconfig_batch_observer<number>::stop_timers()
+    void threepf_singleconfig_batch_observer<number>::stop_timers(unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers();
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial);
+        this->timing_observer<number>::stop_timers(refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), this->k_config.serial, refinement);
       }
 
 
@@ -463,7 +465,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers() override;
+        virtual void stop_timers(unsigned int refinement) override;
 
 
         // INTERNAL DATA
@@ -534,10 +536,10 @@ namespace transport
 
 
     template <typename number>
-    void twopf_groupconfig_batch_observer<number>::stop_timers()
+    void twopf_groupconfig_batch_observer<number>::stop_timers(unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers();
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time());
+        this->timing_observer<number>::stop_timers(refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), refinement);
       }
 
 
@@ -578,7 +580,7 @@ namespace transport
       public:
 
         //! Stop timers and report timing details to the batcher
-        virtual void stop_timers() override;
+        virtual void stop_timers(unsigned int refinement) override;
 
 
         // INTERAL DATA
@@ -711,10 +713,10 @@ namespace transport
 
 
     template <typename number>
-    void threepf_groupconfig_batch_observer<number>::stop_timers()
+    void threepf_groupconfig_batch_observer<number>::stop_timers(unsigned int refinement)
       {
-        this->timing_observer<number>::stop_timers();
-        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time());
+        this->timing_observer<number>::stop_timers(refinement);
+        this->batcher.report_integration_success(this->get_integration_time(), this->get_batching_time(), refinement);
       }
 
 

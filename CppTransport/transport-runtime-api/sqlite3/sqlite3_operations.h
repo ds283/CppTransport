@@ -33,7 +33,8 @@
 #define __CPP_TRANSPORT_SQLITE_TWOPF_REAL_TAG                      "re"
 #define __CPP_TRANSPORT_SQLITE_TWOPF_IMAGINARY_TAG                 "im"
 #define __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE                 "threepf"
-#define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "statistics"
+#define __CPP_TRANSPORT_SQLITE_WORKERS_TABLE                       "worker_data"
+#define __CPP_TRANSPORT_SQLITE_STATS_TABLE                         "integration_statistics"
 #define __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE              "zeta_twopf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE            "zeta_threepf"
 #define __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE "zeta_redbsp"
@@ -409,16 +410,35 @@ namespace transport
           }
 
 
+		    // Create table documenting workers
+		    void create_worker_info_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys)
+			    {
+		        std::ostringstream create_stmt;
+				    create_stmt
+				      << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "("
+				      << "worker        INTEGER PRIMARY KEY, "
+				      << "hostname      TEXT, "
+				      << "os_name       TEXT, "
+				      << "os_version    TEXT, "
+				      << "os_release    TEXT, "
+				      << "architecture  TEXT, "
+				      << "cpu_vendor_id TEXT)";
+
+				    exec(db, create_stmt.str());
+			    }
+
+
         // Create table for statistics, if they are being collected
         void create_stats_table(sqlite3* db, add_foreign_keys_type keys=no_foreign_keys, statistics_configuration_type type=twopf_configs)
           {
             std::ostringstream create_stmt;
             create_stmt
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << "("
-              << "kserial INTEGER, "
-              << "integration_time DOUBLE, "
-              << "batch_time DOUBLE, "
-              << "worker INTEGER";
+              << "kserial           INTEGER PRIMARY KEY, "
+              << "integration_time  DOUBLE, "
+              << "batch_time        DOUBLE, "
+	            << "refinements       INTEGER, "
+              << "worker            INTEGER";
 
             if(keys == foreign_keys)
               {
@@ -437,6 +457,8 @@ namespace transport
                       assert(false);
                   }
                 create_stmt << "(serial)";
+
+		            create_stmt << ", FOREIGN KEY(worker) REFERENCES " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "(worker)";
               }
             create_stmt << ");";
 
@@ -453,7 +475,7 @@ namespace transport
             create_stmt
 	            << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << "("
               << "tserial INTEGER PRIMARY KEY, "
-	            << "page INTEGER";
+	            << "page    INTEGER";
 
             for(unsigned int i = 0; i < num_cols; i++)
               {
@@ -476,7 +498,7 @@ namespace transport
 	            << "CREATE TABLE " << twopf_table_name(type) << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-	            << "page INTEGER";
+	            << "page    INTEGER";
 
             for(unsigned int i = 0; i < num_cols; i++)
               {
@@ -505,7 +527,7 @@ namespace transport
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-              << "page INTEGER";
+              << "page    INTEGER";
 
             for(unsigned int i = 0; i < num_cols; i++)
               {
@@ -534,7 +556,7 @@ namespace transport
 	            << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-	            << "page INTEGER";
+	            << "page    INTEGER";
 
             for(unsigned int i = 0; i < num_cols; i++)
               {
@@ -561,7 +583,7 @@ namespace transport
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-              << "ele DOUBLE, "
+              << "ele     DOUBLE, "
               << "PRIMARY KEY (tserial, kserial)";
 
             if(keys == foreign_keys)
@@ -583,7 +605,7 @@ namespace transport
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-              << "ele DOUBLE, "
+              << "ele     DOUBLE, "
               << "PRIMARY KEY (tserial, kserial)";
 
             if(keys == foreign_keys)
@@ -605,7 +627,7 @@ namespace transport
               << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << "("
               << "tserial INTEGER, "
               << "kserial INTEGER, "
-              << "ele DOUBLE, "
+              << "ele     DOUBLE, "
               << "PRIMARY KEY (tserial, kserial)";
 
             if(keys == foreign_keys)
@@ -626,8 +648,8 @@ namespace transport
             create_stmt
               << "CREATE TABLE " << fNL_table_name(type) << "("
               << "tserial INTEGER, "
-              << "BT DOUBLE, "
-              << "TT DOUBLE, "
+              << "BT      DOUBLE, "
+              << "TT      DOUBLE, "
               << "PRIMARY KEY (tserial)";
 
             if(keys == foreign_keys)
@@ -640,6 +662,39 @@ namespace transport
           }
 
 
+		    // Write host information
+		    template <typename number>
+		    void write_host_info(typename data_manager<number>::generic_batcher* batcher)
+			    {
+				    sqlite3* db = nullptr;
+				    batcher->get_manager_handle(&db);
+
+				    const host_information& host = batcher->get_host_information();
+
+		        std::ostringstream insert_stmt;
+				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@worker, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
+
+				    sqlite3_stmt* stmt;
+				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
+
+				    exec(db, "BEGIN TRANSACTION");
+
+				    check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_number()));
+				    check_stmt(db, sqlite3_bind_text(stmt, 2, host.get_host_name().c_str(), host.get_host_name().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 3, host.get_os_name().c_str(), host.get_os_name().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_os_version().c_str(), host.get_os_version().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_release().c_str(), host.get_os_release().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_architecture().c_str(), host.get_architecture().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length()+1, SQLITE_STATIC));
+
+				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
+
+				    exec(db, "END TRANSACTION");
+
+				    check_stmt(db, sqlite3_clear_bindings(stmt));
+				    check_stmt(db, sqlite3_finalize(stmt));
+			    }
+
         // Write a batch of per-configuration statistics values
         template <typename number>
         void write_stats(typename data_manager<number>::generic_batcher* batcher,
@@ -649,7 +704,7 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @worker);";
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @refinements, @worker);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -661,7 +716,8 @@ namespace transport
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).integration));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).batching));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, batcher->get_worker_number()));
+		            check_stmt(db, sqlite3_bind_int(stmt, 4, (*t).refinements));
+                check_stmt(db, sqlite3_bind_int(stmt, 5, batcher->get_worker_number()));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
 
@@ -1061,6 +1117,7 @@ namespace transport
               }
 
             // create the necessary tables
+		        create_worker_info_table(db, no_foreign_keys);
             if(collect_stats) create_stats_table(db, no_foreign_keys);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
@@ -1095,6 +1152,7 @@ namespace transport
               }
 
             // create the necessary tables
+		        create_worker_info_table(db, no_foreign_keys);
             if(collect_stats) create_stats_table(db, no_foreign_keys);
             create_backg_table(db, Nfields, no_foreign_keys);
             create_twopf_table(db, Nfields, real_twopf, no_foreign_keys);
@@ -1216,7 +1274,7 @@ namespace transport
 
 		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGCOPY);
+		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGROUND_COPY);
           }
 
 
@@ -1235,7 +1293,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPFCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPF_COPY);
           }
 
 
@@ -1254,7 +1312,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TENSORTWOPFCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_COPY);
           }
 
 
@@ -1273,8 +1331,27 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPFCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPF_COPY);
           }
+
+
+		    // Aggregate a worker info table from a temporary container into the principal container
+		    template <typename number>
+		    void aggregate_workers(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+			    {
+				    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating worker information";
+
+		        std::ostringstream copy_stmt;
+				    copy_stmt
+				      << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
+				      << " INSERT OR IGNORE INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE
+				      << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ";"
+				      << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
+
+				    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+
+				    exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_WORKERS_COPY);
+			    }
 
 
         // Aggregate a statistics value table from a temporary container into the principal container
@@ -1292,7 +1369,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICSCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICS_COPY);
           }
 
 
@@ -1311,7 +1388,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_TWOPFCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_COPY);
           }
 
 
@@ -1330,7 +1407,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_THREEPFCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_COPY);
           }
 
 
@@ -1349,7 +1426,7 @@ namespace transport
 
             BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
-            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_REDBSPCOPY);
+            exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_REDUCED_BISPECTRUM_COPY);
           }
 
 
@@ -2100,7 +2177,7 @@ namespace transport
 					    << " INSERT INTO " << table
 					    << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << table << ";"
 					    << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
-				    exec(dest_db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_POSTINTCOPY);
+				    exec(dest_db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_POST_INTEGRATION_COPY);
 
             check_stmt(dest_db, sqlite3_close(dest_db));
 			    }

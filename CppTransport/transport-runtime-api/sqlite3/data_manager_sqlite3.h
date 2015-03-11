@@ -679,6 +679,7 @@ namespace transport
         sqlite3_operations::create_twopf_table(db, Nfields, sqlite3_operations::real_twopf, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
 
+        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::twopf_configs);
       }
 
@@ -700,6 +701,7 @@ namespace transport
         sqlite3_operations::create_tensor_twopf_table(db, sqlite3_operations::foreign_keys);
         sqlite3_operations::create_threepf_table(db, Nfields, sqlite3_operations::foreign_keys);
 
+        sqlite3_operations::create_worker_info_table(db, sqlite3_operations::foreign_keys);
         if(writer->collect_statistics()) sqlite3_operations::create_stats_table(db, sqlite3_operations::foreign_keys, sqlite3_operations::threepf_configs);
       }
 
@@ -773,6 +775,7 @@ namespace transport
 
         // set up writers
         typename data_manager<number>::twopf_batcher::writer_group writers;
+        writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf        = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -808,6 +811,7 @@ namespace transport
 
         // set up writers
         typename data_manager<number>::threepf_batcher::writer_group writers;
+		    writers.host_info    = std::bind(&sqlite3_operations::write_host_info<number>, std::placeholders::_1);
         writers.stats        = std::bind(&sqlite3_operations::write_stats<number>, std::placeholders::_1, std::placeholders::_2);
         writers.backg        = std::bind(&sqlite3_operations::write_backg<number>, std::placeholders::_1, std::placeholders::_2);
         writers.twopf_re     = std::bind(&sqlite3_operations::write_twopf<number>, sqlite3_operations::real_twopf, std::placeholders::_1, std::placeholders::_2);
@@ -1098,6 +1102,7 @@ namespace transport
         sqlite3_operations::aggregate_twopf<number>(db, writer, temp_ctr, sqlite3_operations::real_twopf);
         sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
 
+        sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
         return(true);
@@ -1118,6 +1123,7 @@ namespace transport
         sqlite3_operations::aggregate_tensor_twopf<number>(db, writer, temp_ctr);
         sqlite3_operations::aggregate_threepf<number>(db, writer, temp_ctr);
 
+        sqlite3_operations::aggregate_workers<number>(db, writer, temp_ctr);
         if(writer.collect_statistics()) sqlite3_operations::aggregate_statistics<number>(db, writer, temp_ctr);
 
         return(true);
