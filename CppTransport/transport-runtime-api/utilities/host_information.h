@@ -85,7 +85,7 @@ namespace transport
         const std::string& get_os_release() const { return(this->os_release); }
 
         //! get machine identifier
-        const std::string& get_machine_identifier() const { return(this->machine); }
+        const std::string& get_architecture() const { return(this->machine); }
 
         // INTERNAL DATA
 
