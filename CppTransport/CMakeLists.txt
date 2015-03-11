@@ -7,8 +7,8 @@ SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
-find_package(CUDA REQUIRED)
-find_package(OpenCL REQUIRED)
+#find_package(CUDA REQUIRED)
+#find_package(OpenCL REQUIRED)
 
 SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast -mavx" CACHE STRING "compile flags" FORCE )
 #SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
@@ -137,9 +137,9 @@ add_executable(quadratic10-mpi examples/quadratic10/main.cpp unqlite/unqlite.c j
 target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
 
 
-cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
+# cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
+# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
 
-add_executable(dquad-opencl examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})
+# add_executable(dquad-opencl examples/dquad-vexcl/main.cpp unqlite/unqlite.c jsoncpp/jsoncpp.cpp)
+# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})
