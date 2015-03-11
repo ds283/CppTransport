@@ -21,6 +21,7 @@
 
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/linecache.h"
+#include "transport-runtime-api/utilities/host_information.h"
 
 #include "transport-runtime-api/derived-products/template_types.h"
 
@@ -39,7 +40,6 @@
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
 #include "boost/phoenix/bind/bind_function_object.hpp"
-
 
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
@@ -391,6 +391,12 @@ namespace transport
 
           protected:
 
+            //! Host information
+            host_information                                         host_info;
+
+            //! Worker number associated with this batcher
+            unsigned int                                             worker_number;
+
 
             // OTHER INTERNAL DATA
 
@@ -411,9 +417,6 @@ namespace transport
 
             //! Callback for obtaining a replacement container
             container_replacement_function                           replacer;
-
-            //! Worker number associated with this batcher
-            unsigned int                                             worker_number;
 
 
 		        // FLUSH HANDLING
@@ -2609,6 +2612,8 @@ namespace transport
         mode(data_manager<number>::generic_batcher::flush_immediate),
         flush_due(false)
       {
+		    // set up logging
+
         std::ostringstream log_file;
         log_file << __CPP_TRANSPORT_LOG_FILENAME_A << worker_number << __CPP_TRANSPORT_LOG_FILENAME_B;
 
@@ -2640,6 +2645,10 @@ namespace transport
           {
             this->log_sink.reset();
           }
+
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "** Instantiated generic batcher on MPI host " << host_info.get_host_name()
+		        << ", OS = " << host_info.get_os_name() << ", Version = " << host_info.get_os_version() << " (Release = " << host_info.get_os_release() << ") | " << host_info.get_machine_identifier()
+		        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
       }
 
 
