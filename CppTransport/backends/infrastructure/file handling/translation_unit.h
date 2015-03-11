@@ -21,9 +21,12 @@
 // data structure for tracking input scripts as they progress through the pipeline
 class translation_unit
   {
+
   public:
+
     translation_unit(std::string file, finder* p,
-                     std::string core_out="", std::string implementation_out="", bool cse=true);
+                     std::string core_out="", std::string implementation_out="", bool cse=true, bool v=false);
+
     ~translation_unit();
 
     unsigned int do_replacement();
@@ -66,9 +69,14 @@ class translation_unit
     output_stack*                                      get_stack();
     translator*                                        get_translator();
 
+    void                                               print_advisory(const std::string& msg);
+
   protected:
+
     std::string                                        mangle_output_name(std::string input, std::string tag);
     std::string                                        get_template_suffix(std::string input);
+
+  private:
 
     lexstream<enum keyword_type, enum character_type>* stream;
     y::y_lexer*                                        lexer;
@@ -77,6 +85,7 @@ class translation_unit
 
     std::string                                        name;                    // name of input script
     bool                                               do_cse;
+		bool                                               verbose;
 
     finder*                                            path;
     output_stack*                                      stack;

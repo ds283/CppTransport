@@ -11,6 +11,8 @@
 
 #include "C_style_printer.h"
 
+#define CPP_COMMENT_SEPARATOR "//"
+
 
 namespace cpp
   {

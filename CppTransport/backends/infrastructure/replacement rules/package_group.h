@@ -22,8 +22,10 @@ class translation_unit;
 
 class package_group
   {
+
   public:
-    package_group(translation_unit* u);
+
+    package_group(translation_unit* u, const std::string& cmnt);
     virtual ~package_group();
 
     void                                                 error              (const std::string msg);
@@ -35,12 +37,21 @@ class package_group
     std::vector<macro_packages::simple_rule>&            get_post_ruleset   ();
     std::vector<macro_packages::index_rule>&             get_index_ruleset  ();
 
+		// make a comment appropriate for this backend
+		const std::string&                                   get_comment_separator() const { return(this->comment_string); }
+
   protected:
+
     void                                                 push_back          (macro_packages::replacement_rule_package* package);
 
     void                                                 build_pre_ruleset  ();
     void                                                 build_post_ruleset ();
     void                                                 build_index_ruleset();
+
+
+		// INTERNAL DATA
+
+  protected:
 
     translation_unit*                                    unit;
     u_tensor_factory*                                    u_factory;
@@ -48,6 +59,7 @@ class package_group
     flattener*                                           fl;
 
     std::list<macro_packages::replacement_rule_package*> packages;
+		std::string                                          comment_string;
 
     std::vector<macro_packages::simple_rule>             pre_ruleset;
     std::vector<macro_packages::simple_rule>             post_ruleset;

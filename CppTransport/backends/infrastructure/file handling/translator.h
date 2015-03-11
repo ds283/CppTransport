@@ -15,11 +15,14 @@
 // need forward reference to avoid circularity
 class translation_unit;
 
-typedef std::function<std::string(std::string&)> filter_function;
+typedef std::function<std::string(const std::string&)> filter_function;
 
 class translator
   {
+
   public:
+
+		// constructor
     translator(translation_unit* tu);
 
     // translate, using the data in the supplied translation_unit, from
@@ -31,6 +34,7 @@ class translator
     unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter=nullptr);
 
   protected:
+
     // internal API to process a file
     unsigned int process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter);
 
@@ -40,6 +44,12 @@ class translator
     // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
     void parse_header_line(const std::string in, const std::string line, std::string& backend, double& minver);
 
+
+		// INTERNAL DATA
+
+  private:
+
+		//! parent translation unit
     translation_unit* unit;
   };
 

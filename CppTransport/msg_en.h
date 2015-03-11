@@ -101,6 +101,9 @@
 #define MESSAGE_PROCESSING_PLURAL             "files"
 #define MESSAGE_PROCESSING_COMPLETE_B         "in time"
 
+#define MESSAGE_TRANSLATING                   "Translating"
+#define MESSAGE_EXPANSION_OF_LINE             "expansion of template line"
+
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
 
 // output strings

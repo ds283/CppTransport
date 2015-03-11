@@ -6,6 +6,8 @@
 
 #include <assert.h>
 
+#include <vector>
+
 #include "boost/algorithm/string.hpp"
 #include "boost/range/algorithm/remove_if.hpp"
 #include "boost/lexical_cast.hpp"
@@ -67,8 +69,12 @@ unsigned int translator::translate(const std::string in, const std::string out, 
 
 unsigned int translator::process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
   {
-    unsigned int  rval = 0;
+    unsigned int replacements = 0;
     std::ifstream inf;
+
+    std::ostringstream translation_msg;
+		translation_msg << MESSAGE_TRANSLATING << " '" << in << "' to '" << out << "'";
+		this->unit->print_advisory(translation_msg.str());
 
     inf.open(in.c_str());
     if(inf.is_open() && !inf.fail())
@@ -100,16 +106,29 @@ unsigned int translator::process(const std::string in, const std::string out, en
                 while(inf.eof() == false && inf.fail() == false)
                   {
                     std::getline(inf, line);
-                    rval += ms->apply(line);
 
-                    if(filter != nullptr)
-                      {
-                        buf->write_to_end((*filter)(line));
-                      }
-                    else
-                      {
-                        buf->write_to_end(line);
-                      }
+		                unsigned int new_replacements;
+
+                    std::shared_ptr< std::vector<std::string> > line_list = ms->apply(line, new_replacements);
+		                replacements += new_replacements;
+
+                    std::ostringstream continuation_tag;
+		                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
+
+		                unsigned int c = 0;
+                    for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); l++, c++)
+	                    {
+		                    std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
+                        if(filter != nullptr)
+	                        {
+                            buf->write_to_end((*filter)(out_line));
+	                        }
+                        else
+	                        {
+                            buf->write_to_end(out_line);
+	                        }
+	                    }
+
                     os->increment_line();
                   }
 
@@ -149,7 +168,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
 
     inf.close();
 
-    return(rval);
+    return(replacements);
   }
 
 

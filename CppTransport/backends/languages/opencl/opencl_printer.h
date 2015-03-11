@@ -1,4 +1,3 @@
-//
 // Created by David Seery on 11/12/2013.
 // Copyright (c) 2013 University of Sussex. All rights reserved.
 //
@@ -9,6 +8,8 @@
 
 
 #include "C_style_printer.h"
+
+#define OPENCL_COMMENT_SEPARATOR "//"
 
 
 namespace opencl

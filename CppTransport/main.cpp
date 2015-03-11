@@ -27,12 +27,13 @@ int main(int argc, const char *argv[])
     // set up the initial search path to consist only of CWD
     finder path;
 
-    std::string                         current_core = "";
-    std::string                         current_implementation = "";
-    bool                                cse = true;
+    std::string current_core           = "";
+    std::string current_implementation = "";
+    bool        cse                    = true;
+		bool        verbose                = false;
 
-    unsigned int                        files_processed = 0;
-    unsigned int                        replacements = 0;
+    unsigned int files_processed = 0;
+    unsigned int replacements    = 0;
 
     for(int i = 1; i < argc; i++)
       {
@@ -68,6 +69,7 @@ int main(int argc, const char *argv[])
           }
         else if(strcmp(argv[i], "--cse") == 0)    cse = true;
         else if(strcmp(argv[i], "--no-cse") == 0) cse = false;
+        else if((strcmp(argv[i], "--verbose") == 0) || (strcmp(argv[i], "-v") == 0)) verbose = true;
         else if((argv[i])[0] == '-')  // assume to be a switch we don't know about
           {
             std::ostringstream msg;
@@ -76,7 +78,7 @@ int main(int argc, const char *argv[])
           }
         else // assume to be an input file we are processing
           {
-            translation_unit unit((std::string)argv[i], &path, current_core, current_implementation, cse);
+            translation_unit unit((std::string)argv[i], &path, current_core, current_implementation, cse, verbose);
 
             replacements += unit.do_replacement();
             files_processed++;

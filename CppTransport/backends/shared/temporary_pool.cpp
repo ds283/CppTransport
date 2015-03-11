@@ -124,13 +124,19 @@ namespace macro_packages
             else
               {
                 std::string temps = this->cse_worker->temporaries(this->pool_template);
-                ms->apply(temps);
+
+		            unsigned int replacements;
+                std::shared_ptr< std::vector<std::string> > r_list = ms->apply(temps, replacements);
 
                 // write to current tagged position, but don't move it - we might need to write again later
                 std::ostringstream label;
                 label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
                 buf->write_to_tag(this->printer.comment(label.str()));
-                if(temps != "") buf->write_to_tag(temps);
+
+		            for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); l++)
+			            {
+		                if(temps != "") buf->write_to_tag(*l);
+			            }
 
                 // clear worker object; if we don't we might duplicate temporaries we've already written out
                 this->cse_worker->clear();
@@ -152,7 +158,7 @@ namespace macro_packages
         // to update its location
 
         // get buffer and macro package from the top of the stack
-        buffer*        buf = this->unit->get_stack()->top_buffer();
+        buffer* buf = this->unit->get_stack()->top_buffer();
 
         if(buf == nullptr)
           {

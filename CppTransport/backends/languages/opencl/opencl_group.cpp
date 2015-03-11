@@ -10,7 +10,7 @@
 
 
 opencl_group::opencl_group(translation_unit* u)
-  : package_group(u), printer()
+  : package_group(u, OPENCL_COMMENT_SEPARATOR), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,

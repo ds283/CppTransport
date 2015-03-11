@@ -9,11 +9,9 @@
 #include <assert.h>
 #include <ctype.h>
 
-#include <boost/algorithm/string.hpp>
+#include "boost/algorithm/string.hpp"
 
 #include "macro.h"
-
-#include "package_group.h"
 
 
 // **************************************************************************************
@@ -36,13 +34,16 @@ macro_package::macro_package(translation_unit* u, package_group* pkg, std::strin
   }
 
 
-unsigned int macro_package::apply(std::string& line)
+std::shared_ptr< std::vector<std::string> > macro_package::apply(std::string& line, unsigned int& replacements)
   {
-    unsigned int rval = 0;
+		// set up CPU timer to measure how long execution takes
+    boost::timer::cpu_timer timer;
+
+    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
     if(++this->recursion_depth < this->recursion_max)
       {
-        rval = this->apply_line(line);
+        r_list = this->apply_line(line, replacements, timer);
         --this->recursion_depth;
       }
     else
@@ -52,15 +53,18 @@ unsigned int macro_package::apply(std::string& line)
         this->package->warn(msg.str());
       }
 
-    return(rval);
+    return(r_list);
   }
 
 
-unsigned int macro_package::apply_line(std::string& line)
+std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::string& line, unsigned int& replacements, boost::timer::cpu_timer& timer)
   {
     unsigned int rval = 0;
+
     std::string line_prefix = "";
     std::string new_line = "";
+
+    std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
     // apply all pre- macros
     rval += this->apply_simple(line, this->pre_rule_cache);
@@ -117,6 +121,8 @@ unsigned int macro_package::apply_line(std::string& line)
 
 		if(lvalue_assignments.size() > 0)
 			{
+				unsigned int replacement_counter = 0;
+
 		    for(int i = 0; i < lvalue_assignments.size(); i++)
 			    {
 		        assert(lvalue_assignments[i].size() == lhs_indices.size());
@@ -130,23 +136,21 @@ unsigned int macro_package::apply_line(std::string& line)
 		            lhs_indices[j].assignment = (lvalue_assignments[i])[j];
 			        }
 
-		        rval += this->apply_index(cur_line, lhs_indices, semicolon, comma, line_prefix != "", this->index_rule_cache);
+		        replacement_counter += this->apply_index(cur_line, lhs_indices, semicolon, comma, line_prefix != "", this->index_rule_cache);
 
-		        if(i > 0) new_line += NEWLINE_CHAR;
-		        new_line += cur_line_prefix + cur_line;
+				    r_list->push_back(cur_line_prefix  + cur_line);
 			    }
 
-		    line = new_line;
-
-		    rval += this->apply_simple(line, this->post_rule_cache);
+		    replacement_counter += this->apply_simple(line, this->post_rule_cache);
+				replacements = replacement_counter;
 			}
 		else
 			{
 				line = "// Skipped: empty index range (LHS index set is empty)";
-				rval = 0;
+				replacements = 0;
 			}
 
-    return(rval);
+    return(r_list);
 	}
 
 

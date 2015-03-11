@@ -10,6 +10,7 @@
 
 #include "C_style_printer.h"
 
+#define CUDA_COMMENT_SEPARATOR "//"
 
 namespace cuda
   {

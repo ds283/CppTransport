@@ -11,8 +11,8 @@
 #include "error.h"
 
 
-package_group::package_group(translation_unit* u)
-  : unit(u), cse_worker(nullptr)
+package_group::package_group(translation_unit* u, const std::string& cmnt)
+  : unit(u), cse_worker(nullptr), comment_string(cmnt)
   {
     assert(unit != nullptr);
 

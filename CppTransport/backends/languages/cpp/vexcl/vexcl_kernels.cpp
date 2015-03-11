@@ -109,7 +109,7 @@ namespace cpp
                     // also, filter to printable strings. The bound arguments here are:
                     // * 'false' disables quoting by to_printable())
                     // * 'true' allows newlines to pass through
-                    std::function<std::string(std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
+                    std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
                     unsigned int replacements = t->translate(kernel_file, "", type, buf, &filter);
 
                     // restore previous state prior to switching back to original input file

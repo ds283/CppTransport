@@ -85,8 +85,8 @@ static std::string  strip_dot_h(const std::string& pathname);
 static std::string  leafname   (const std::string& pathname);
 
 
-translation_unit::translation_unit(std::string file, finder* p, std::string core_out, std::string implementation_out, bool cse)
-  : name(file), do_cse(cse), path(p)
+translation_unit::translation_unit(std::string file, finder* p, std::string core_out, std::string implementation_out, bool cse, bool v)
+  : name(file), do_cse(cse), verbose(v), path(p)
   {
     // lexicalize this input file
     stream = new lexstream<keyword_type, character_type>(name, path,
@@ -377,6 +377,15 @@ std::string translation_unit::get_template_suffix(std::string input)
 
     return(output);
   }
+
+
+void translation_unit::print_advisory(const std::string& msg)
+	{
+		if(this->verbose)
+			{
+		    std::cout << CPPTRANSPORT_NAME << ": " << msg << std::endl;
+			}
+	}
 
 
 static std::string strip_dot_h(const std::string& pathname)
