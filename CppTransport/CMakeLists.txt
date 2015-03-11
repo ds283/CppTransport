@@ -10,9 +10,9 @@ find_package(GiNaC REQUIRED)
 find_package(CUDA REQUIRED)
 find_package(OpenCL REQUIRED)
 
-SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast -mavx -ipo" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_CXX_FLAGS "-std=c++11 -Ofast -mavx" CACHE STRING "compile flags" FORCE )
 #SET ( CMAKE_CXX_FLAGS "-std=c++11 -O1" CACHE STRING "compile flags" FORCE )
-SET ( CMAKE_C_FLAGS "-Ofast -mavx -ipo" CACHE STRING "compile flags" FORCE )
+SET ( CMAKE_C_FLAGS "-Ofast -mavx" CACHE STRING "compile flags" FORCE )
 
 include_directories(./ backends
 					   backends/infrastructure
