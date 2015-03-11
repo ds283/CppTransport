@@ -86,12 +86,12 @@ int main(int argc, const char *argv[])
       }
 
     timer.stop();
-    std::cout << MESSAGE_PROCESSING_COMPLETE_A
+    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
               << " " << files_processed << " "
               << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
               << " " << MESSAGE_PROCESSING_COMPLETE_B;
     timer.report();
-    std::cout << replacements << " macro replacements" << std::endl;
+    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " macro replacements" << std::endl;
 
     return 0;
   }
