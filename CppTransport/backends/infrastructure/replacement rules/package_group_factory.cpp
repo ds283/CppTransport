@@ -15,7 +15,8 @@
 #include "cuda_group.h"
 
 
-package_group* package_group_factory(std::string backend, translation_unit* unit, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+package_group* package_group_factory(std::string backend, translation_unit* unit,
+                                     ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   {
     package_group* rval = nullptr;
 

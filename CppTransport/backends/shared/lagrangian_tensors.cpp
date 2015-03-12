@@ -113,10 +113,12 @@ namespace macro_packages
       {
         assert(args.size() == 4);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a(args.size() >= 4 ? args[3] : this->default_a);
+		    symbol_factory& sym_factory = this->unit->get_symbol_factory();
+
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_A(k1, k2, k3, a, *container, this->fl);
@@ -131,13 +133,15 @@ namespace macro_packages
       {
         assert(args.size() == 6);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol  a(args.size() >= 4 ? args[3] : this->default_a);
+        symbol_factory& sym_factory = this->unit->get_symbol_factory();
 
-        GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 
@@ -157,10 +161,12 @@ namespace macro_packages
       {
         assert(args.size() == 4);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
+        symbol_factory& sym_factory = this->unit->get_symbol_factory();
+
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_B(k1, k2, k3, a, *container, this->fl);
@@ -175,10 +181,12 @@ namespace macro_packages
       {
         assert(args.size() == 6);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
+        symbol_factory& sym_factory = this->unit->get_symbol_factory();
+
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
         GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
         GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
@@ -201,10 +209,12 @@ namespace macro_packages
       {
         assert(args.size() == 4);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
+        symbol_factory& sym_factory = this->unit->get_symbol_factory();
+
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
 
         std::vector<GiNaC::ex>* container = new std::vector<GiNaC::ex>;
         this->u_factory->compute_C(k1, k2, k3, a, *container, this->fl);
@@ -219,13 +229,15 @@ namespace macro_packages
       {
         assert(args.size() == 6);
 
-        GiNaC::symbol k1(args.size() >= 1 ? args[0] : this->default_k1);
-        GiNaC::symbol k2(args.size() >= 2 ? args[1] : this->default_k2);
-        GiNaC::symbol k3(args.size() >= 3 ? args[2] : this->default_k3);
-        GiNaC::symbol a(args.size() >= 4 ? args[3] : this->default_a);
+        symbol_factory& sym_factory = this->unit->get_symbol_factory();
 
-        GiNaC::symbol Hsq_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
-        GiNaC::symbol eps_symbol(args.size() >= 6 ? args[5] : this->default_eps);
+        GiNaC::symbol k1 = sym_factory.get_symbol(args.size() >= 1 ? args[0] : this->default_k1);
+        GiNaC::symbol k2 = sym_factory.get_symbol(args.size() >= 2 ? args[1] : this->default_k2);
+        GiNaC::symbol k3 = sym_factory.get_symbol(args.size() >= 3 ? args[2] : this->default_k3);
+        GiNaC::symbol  a = sym_factory.get_symbol(args.size() >= 4 ? args[3] : this->default_a);
+
+        GiNaC::symbol Hsq_symbol = sym_factory.get_symbol(args.size() >= 5 ? args[4] : this->default_Hsq);
+        GiNaC::symbol eps_symbol = sym_factory.get_symbol(args.size() >= 6 ? args[5] : this->default_eps);
         GiNaC::ex     Hsq = Hsq_symbol;
         GiNaC::ex     eps = eps_symbol;
 

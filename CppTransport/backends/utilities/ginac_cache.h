@@ -130,8 +130,6 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 		if(this->index != i) return(false);
 		if(this->args.size() != a.size()) return(false);
 
-    std::cout << "-- testing potential match" << std::endl;
-
     std::vector<GiNaC::ex>::const_iterator m;
     std::vector<GiNaC::ex>::const_iterator n;
 		for(m = this->args.begin(), n = a.begin(); m != this->args.end() && n != a.end(); m++, n++)
@@ -139,11 +137,8 @@ bool ginac_cache<ExpressionType, HashSize>::cache_element::compare(ExpressionTyp
 		    GiNaC::ex test = ((*m) - (*n)).eval();
 				bool equal = static_cast<bool>((test == 0));
 				bool not_equal = static_cast<bool>((test != 0));
-		    std::cout << "    cache argument '" << *m << "', query argument '" << *n << "', difference '" << test << "', equality test gives " << equal << ", inequality test gives " << not_equal << std::endl;
 				if(!equal) return(false);
 			}
-
-    std::cout << "    !! match" << std::endl;
 
 		if(m != this->args.end() || n != a.end()) return(false);
 

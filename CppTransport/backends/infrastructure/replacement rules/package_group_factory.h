@@ -14,10 +14,13 @@
 #include "translation_unit.h"
 #include "package_group.h"
 #include "buffer.h"
+
+#include "symbol_factory.h"
 #include "ginac_cache.h"
 
 
-package_group* package_group_factory(std::string backend, translation_unit* unit, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+package_group* package_group_factory(std::string backend, translation_unit* unit,
+                                     ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 
 #endif //__package_group_factory_H_
