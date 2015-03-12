@@ -495,8 +495,5 @@ void token_list::index_macro_token::evaluate(const std::vector<index_assignment>
 					}
 			}
 
-		void* state = (this->rule.pre != nullptr) ? (this->rule.pre)(this->args) : nullptr;
-		this->conversion = (this->rule.rule)(this->args, index_values, state);
-
-		if(this->rule.post != nullptr) (this->rule.post)(state);
+		this->conversion = (this->rule.rule)(this->args, index_values, this->state);
 	}

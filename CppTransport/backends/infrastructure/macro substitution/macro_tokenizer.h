@@ -158,11 +158,22 @@ class token_list
 			      name(m),
 			      args(a),
 			      indices(i),
-			      rule(r)
+			      rule(r),
+		        state(nullptr)
 			    {
+				    if(rule.pre != nullptr)
+					    {
+						    state = (rule.pre)(args);
+					    }
 			    }
 
-				virtual ~index_macro_token() = default;
+				virtual ~index_macro_token()
+					{
+						if(this->rule.post != nullptr)
+							{
+						    (this->rule.post)(this->state);
+							}
+					}
 
 
 		    // INTERFACE
@@ -181,6 +192,8 @@ class token_list
 				const std::vector<std::string> args;
 				const std::vector<index_abstract> indices;
 				macro_packages::index_rule rule;
+
+				void* state;
 
 			};
 
