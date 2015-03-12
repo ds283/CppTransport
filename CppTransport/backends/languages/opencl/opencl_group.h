@@ -24,7 +24,7 @@
 class opencl_group: public package_group
   {
   public:
-    opencl_group(translation_unit* u);
+    opencl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~opencl_group();
 
   protected:

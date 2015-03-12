@@ -9,8 +9,8 @@
 #include "cpp_cse.h"
 
 
-cuda_group::cuda_group(translation_unit* u)
-  : package_group(u, CUDA_COMMENT_SEPARATOR), printer()
+cuda_group::cuda_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
+  : package_group(u, CUDA_COMMENT_SEPARATOR, cache), printer()
   {
     // set up cse worker instance
     // this has to happen before setting up the individual macro packages,

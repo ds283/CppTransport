@@ -12,6 +12,15 @@
 #include "output_stack.h"
 
 
+#include "ginac_cache.h"
+
+
+enum expression_item_types
+	{
+    sr_U_item, U1_item, U2_item, U3_item, A_item, B_item, C_item, M_item, zxfm1_item, zxfm2_item, dN1_item, dN2_item
+	};
+
+
 // need forward reference to avoid circularity
 class translation_unit;
 
@@ -25,6 +34,19 @@ class translator
 		// constructor
     translator(translation_unit* tu);
 
+		// destructor
+    ~translator()
+	    {
+        std::ostringstream msg;
+        msg << this->cache.get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS << ", " << this->cache.get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES;
+        this->print_advisory(msg.str());
+	    }
+
+
+		// INTERFACE
+
+  public:
+
     // translate, using the data in the supplied translation_unit, from
     // the template 'in' to the template 'out'
     // sometimes we want to supply a buffer, because we share buffers
@@ -32,6 +54,8 @@ class translator
     // otherwise, translate() creates a suitable buffer internally
     unsigned int translate(const std::string in, const std::string out, enum process_type type, filter_function* filter=nullptr);
     unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter=nullptr);
+
+		void print_advisory(const std::string& msg);
 
   protected:
 
@@ -51,6 +75,10 @@ class translator
 
 		//! parent translation unit
     translation_unit* unit;
+
+		//! expression cache for this translation unit
+		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE> cache;
+
   };
 
 

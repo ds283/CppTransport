@@ -11,8 +11,10 @@
 #include <iostream>
 
 #include "flatten.h"
+#include "ginac_cache.h"
 
 #include "ginac/ginac.h"
+#include "translation_unit.h"
 
 
 // need a forward reference to avoid circularity
@@ -116,11 +118,18 @@ class u_tensor_factory
   };
 
 
-class canonical_u_tensor_factory : public u_tensor_factory
+class canonical_u_tensor_factory: public u_tensor_factory
   {
 
+  private:
+
+
+		// CONSTRUCTOR
+
   public:
-    canonical_u_tensor_factory(translation_unit* u) : u_tensor_factory(u)
+
+    canonical_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
+	    : u_tensor_factory(u), cache(c)
       {
       }
 
@@ -144,6 +153,7 @@ class canonical_u_tensor_factory : public u_tensor_factory
     // scalar field fluctuations [see written notes]
     // actually, these compute A/H^2, B/H and C
     // all of these have mass dimension -1
+
     virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_A(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
@@ -156,11 +166,13 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
     virtual void compute_C(GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
+
     // compute M tensor
 
     virtual void compute_M(std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
+
 
     //  CALCULATE GAUGE TRANSFORMATIONS
 
@@ -176,6 +188,9 @@ class canonical_u_tensor_factory : public u_tensor_factory
 
     virtual GiNaC::ex compute_eps() override;
 
+
+		// INTERNAL API
+
   protected:
 
     //! Compute field-field part of the 2nd-order gauge xfm
@@ -185,24 +200,32 @@ class canonical_u_tensor_factory : public u_tensor_factory
     GiNaC::ex compute_zeta_xfm_2_fp(unsigned int m, unsigned int n, GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
     // compute A/H^2 [in the notation of the written notes]
-    GiNaC::ex compute_A_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+    GiNaC::ex compute_A_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl);
 
     // compute B/H [in the notation of the written notes]
-    GiNaC::ex compute_B_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+    GiNaC::ex compute_B_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl);
 
     // compute C [in the notation of the written notes]
-    GiNaC::ex compute_C_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps);
+    GiNaC::ex compute_C_component(unsigned int i, GiNaC::symbol& k1, unsigned int j, GiNaC::symbol& k2, unsigned int k, GiNaC::symbol& k3, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl);
 
     // compute xi/H^2 [in the notation of the written notes]
     GiNaC::ex compute_xi(unsigned int i, GiNaC::ex& Hsq, GiNaC::ex& eps);
 
     // compute M-tensor component
-    GiNaC::ex compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps);
+    GiNaC::ex compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl);
+
+
+		// INTERNAL DATA
+
+  private:
+
+		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache;
+
   };
 
 
 // factory function to manufacture a u_tensor_factory instance
-u_tensor_factory* make_u_tensor_factory(translation_unit* u);
+u_tensor_factory* make_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 
 #endif //__u_tensor_factory_H_

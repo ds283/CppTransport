@@ -24,7 +24,7 @@
 class cuda_group : public package_group
   {
   public:
-    cuda_group(translation_unit* u);
+    cuda_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~cuda_group();
 
   protected:

@@ -28,6 +28,7 @@ include_directories(./ backends
 					   backends/languages/opencl
 					   backends/languages/shared
 					   backends/shared
+					   backends/utilities
 					   concepts
 					   parser
 					   parser/bison

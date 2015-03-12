@@ -11,12 +11,12 @@
 #include "error.h"
 
 
-package_group::package_group(translation_unit* u, const std::string& cmnt)
+package_group::package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   : unit(u), cse_worker(nullptr), comment_string(cmnt)
   {
     assert(unit != nullptr);
 
-    u_factory = make_u_tensor_factory(unit);
+    u_factory = make_u_tensor_factory(unit, cache);
     fl        = new flattener(1);
   }
 

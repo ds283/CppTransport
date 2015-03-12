@@ -41,6 +41,12 @@ unsigned int translator::translate(const std::string in, const std::string out, 
   }
 
 
+void translator::print_advisory(const std::string& msg)
+	{
+		this->unit->print_advisory(msg);
+	}
+
+
 unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
   {
     unsigned int rval = 0;
@@ -95,7 +101,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
             os->push(out, in, buf, type);  // current line number is automatically set to 1
 
             // generate an appropriate backend
-            package_group* package = package_group_factory(backend, this->unit);
+            package_group* package = package_group_factory(backend, this->unit, this->cache);
 
             if(package != nullptr)
               {

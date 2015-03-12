@@ -10,6 +10,7 @@
 
 
 #include "macro.h"
+#include "ginac_cache.h"
 #include "replacement_rule_package.h"
 #include "u_tensor_factory.h"
 #include "buffer.h"
@@ -25,7 +26,7 @@ class package_group
 
   public:
 
-    package_group(translation_unit* u, const std::string& cmnt);
+    package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     virtual ~package_group();
 
     void                                                 error              (const std::string msg);

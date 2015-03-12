@@ -24,8 +24,8 @@ u_tensor_factory::u_tensor_factory(translation_unit* u)
   }
 
 
-u_tensor_factory* make_u_tensor_factory(translation_unit* u)
+u_tensor_factory* make_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   {
     // at the moment, nothing to do - only canonical models implemented
-    return(new canonical_u_tensor_factory(u));
+    return(new canonical_u_tensor_factory(u, cache));
   }

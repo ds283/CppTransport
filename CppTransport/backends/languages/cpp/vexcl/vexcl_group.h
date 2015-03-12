@@ -26,7 +26,7 @@
 class vexcl_group: public package_group
   {
   public:
-    vexcl_group(translation_unit* u);
+    vexcl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~vexcl_group();
 
   protected:

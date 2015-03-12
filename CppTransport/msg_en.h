@@ -102,6 +102,9 @@
 
 #define WARNING_PARSING_FAILED                "Failed to parse file"
 
+#define MESSAGE_EXPRESSION_CACHE_HITS         "expression cache hits"
+#define MESSAGE_EXPRESSION_CACHE_MISSES       "misses"
+
 #define MESSAGE_PROCESSING_COMPLETE_A         "Processed"
 #define MESSAGE_PROCESSING_SINGULAR           "file"
 #define MESSAGE_PROCESSING_PLURAL             "files"

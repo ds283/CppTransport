@@ -10,6 +10,7 @@
 
 
 #include "package_group.h"
+#include "ginac_cache.h"
 
 #include "fundamental.h"
 #include "flow_tensors.h"
@@ -24,11 +25,14 @@
 
 class core_group: public package_group
   {
+
   public:
-    core_group(translation_unit* u);
+
+    core_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~core_group();
 
   protected:
+
     cpp::cpp_printer                    printer;
 
     macro_packages::fundamental*        f;
