@@ -567,7 +567,7 @@ namespace transport
         $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __tpf
-#define __tpf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
+#define __twopf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
 
 #undef __background
 #undef __dtwopf
@@ -603,8 +603,8 @@ namespace transport
 
 						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
 							    {
-								    __dtwopf(__i,__j) += this->u2[__i][__k]*__tpf[__k][__j];
-								    __dtwopf(__i,__j) += this->u2[__j][__k]*__tpf[__i][__k];
+								    __dtwopf(__i,__j) += this->u2[__i][__k]*__twopf(__k,__j);
+								    __dtwopf(__i,__j) += this->u2[__j][__k]*__twopf(__i,__k);
 							    }
 					    }
 			    }
@@ -749,23 +749,23 @@ namespace transport
 
 						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
 							    {
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1[__k][__j];
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1[__i][__k];
+								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1(__k,__j);
+								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1(__i,__k);
 
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1[__k][__j];
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1[__i][__k];
+								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1(__k,__j);
+								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1(__i,__k);
 
-						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2[__k][__j];
-						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2[__i][__k];
+						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2(__k,__j);
+						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2(__i,__k);
 
-						        __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2[__k][__j];
-						        __dtwopf_im_k1(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2[__i][__k];
+						        __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2(__k,__j);
+						        __dtwopf_im_k1(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2(__i,__k);
 
-						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3[__k][__j];
-						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3[__i][__k];
+						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3(__k,__j);
+						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3(__i,__k);
 
-						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3[__k][__j];
-						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3[__i][__k];
+						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3(__k,__j);
+						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3(__i,__k);
 							    }
 					    }
 			    }
@@ -784,20 +784,20 @@ namespace transport
 
 								    for(unsigned int __m = 0; __m < 2*$$__NUMBER_FIELDS; __m++)
 									    {
-										    __dthreepf(__i,__j,__k) += this->u2_k1[__i][__m]*__threepf[__m][__j][__k];
-										    __dthreepf(__i,__j,__k) += this->u2_k2[__j][__m]*__threepf[__i][__m][__k];
-										    __dthreepf(__i,__j,__k) += this->u2_k3[__k][__m]*__threepf[__i][__j][__m];
+										    __dthreepf(__i,__j,__k) += this->u2_k1[__i][__m]*__threepf(__m,__j,__k);
+										    __dthreepf(__i,__j,__k) += this->u2_k2[__j][__m]*__threepf(__i,__m,__k);
+										    __dthreepf(__i,__j,__k) += this->u2_k3[__k][__m]*__threepf(__i,__j,__m);
 
 										    for(unsigned int __n = 0; __n < 2*$$__NUMBER_FIELDS; __n++)
 											    {
-												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_re_k2[__m][__j]*__twopf_re_k3[__n][__k];
-												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_im_k2[__m][__j]*__twopf_im_k3[__n][__k];
+												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_re_k2(__m,__j)*__twopf_re_k3(__n,__k);
+												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_im_k2(__m,__j)*__twopf_im_k3(__n,__k);
 
-										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_re_k1[__i][__m]*__twopf_re_k3[__n][__k];
-										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_im_k1[__i][__m]*__twopf_im_k3[__n][__k];
+										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_re_k1(__i,__m)*__twopf_re_k3(__n,__k);
+										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_im_k1(__i,__m)*__twopf_im_k3(__n,__k);
 
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k2[__i][__m]*__twopf_re_k3[__k][__n];
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k2[__i][__m]*__twopf_im_k3[__k][__n];
+										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k2(__i,__m)*__twopf_re_k3(__k,__n);
+										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k2(__i,__m)*__twopf_im_k3(__k,__n);
 											    }
 									    }
 							    }
