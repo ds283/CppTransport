@@ -96,7 +96,7 @@ translation_unit::translation_unit(std::string file, finder* p, std::string core
 
     // now pass to the parser for syntactic analysis
     lexer  = new y::y_lexer(stream);
-    driver = new y::y_driver();
+    driver = new y::y_driver(sym_factory);
     parser = new y::y_parser(lexer, driver);
 
     if(parser->parse() == FAIL) warn(WARNING_PARSING_FAILED + (std::string)(" '") + name + (std::string)("'"));
@@ -347,6 +347,12 @@ translator* translation_unit::get_translator()
   {
     return(this->outstream);
   }
+
+
+symbol_factory& translation_unit::get_symbol_factory()
+	{
+		return(this->sym_factory);
+	}
 
 
 // ******************************************************************

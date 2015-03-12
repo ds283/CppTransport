@@ -77,6 +77,7 @@ add_executable(CppTransport main.cpp
 							backends/shared/summation.cpp
 							backends/shared/temporary_pool.cpp
 							backends/shared/utensors.cpp
+							backends/utilities/symbol_factory.cpp
 							concepts/filestack.cpp
 							parser/bison/y_parser.tab.cc
 							parser/input_stack.cpp

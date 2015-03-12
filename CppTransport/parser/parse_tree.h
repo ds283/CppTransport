@@ -10,6 +10,7 @@
 #ifndef __parse_tree_H_
 #define __parse_tree_H_
 
+
 #include <iostream>
 
 #include "stepper.h"
@@ -19,6 +20,7 @@
 #include "symbol_table.h"
 #include "filestack.h"
 
+#include "symbol_factory.h"
 #include "ginac/ginac.h"
 
 
@@ -26,39 +28,43 @@
 // the filestack* object used here is inherited from the parent lexeme,
 // so we don't have to keep track of its deletion -- it will be deleted
 // automatically when the parent lexeme is destroyed
+
 class declaration
-  {
-    public:
-      declaration(const quantity& o, const filestack* p); // constructor needed for const members
+	{
+  public:
+    declaration(const quantity& o, const filestack* p); // constructor needed for const members
 
-      // return pointer to the symbol table object this declaration corresponds to
-      quantity*        get_quantity() const;
-      virtual void     print       (std::ostream& stream) const = 0;
+    // return pointer to the symbol table object this declaration corresponds to
+    quantity* get_quantity() const;
 
-    protected:
-      quantity*        obj;
-      const filestack* path;
-  };
+    virtual void print(std::ostream& stream) const = 0;
 
-
-class field_declaration: public declaration
-  {
-    public:
-      field_declaration(const quantity& o, const filestack* p);
-      ~field_declaration();
-
-      void print(std::ostream& stream) const;
-  };
+  protected:
+    quantity       * obj;
+    const filestack* path;
+	};
 
 
-class parameter_declaration: public declaration
-  {
-    public:
-      parameter_declaration(const quantity& o, const filestack* p);
-      ~parameter_declaration();
+class field_declaration : public declaration
+	{
+  public:
+    field_declaration(const quantity& o, const filestack* p);
 
-      void print(std::ostream& stream) const;
-  };
+    ~field_declaration();
+
+    void print(std::ostream& stream) const;
+	};
+
+
+class parameter_declaration : public declaration
+	{
+  public:
+    parameter_declaration(const quantity& o, const filestack* p);
+
+    ~parameter_declaration();
+
+    void print(std::ostream& stream) const;
+	};
 
 
 #define DEFAULT_ABS_ERR   (1E-6)
@@ -68,94 +74,130 @@ class parameter_declaration: public declaration
 
 #define SYMBOL_TABLE_SIZE (1024)
 
+
 class script
-  {
-    public:
-      script();
-      ~script();
+	{
 
-      void                               print                    (std::ostream& stream) const;
+    // CONSTRUCTOR, DESTRUCTOR
 
-      bool                               add_field                (field_declaration* d);
-      bool                               add_parameter            (parameter_declaration* d);
+  public:
 
-      void                               set_background_stepper   (stepper* s);
-      void                               set_perturbations_stepper(stepper* s);
+    script(symbol_factory& s);
 
-      const struct stepper&              get_background_stepper   () const;
-      const struct stepper&              get_perturbations_stepper() const;
+    ~script();
 
-      bool                               lookup_symbol            (std::string id, quantity*& s) const;
 
-      unsigned int                       get_number_fields        () const;
-      unsigned int                       get_number_params        () const;
+    // INTERFACE
 
-      std::vector<std::string>           get_field_list           () const;
-      std::vector<std::string>           get_latex_list           () const;
-      std::vector<std::string>           get_param_list           () const;
-      std::vector<std::string>           get_platx_list           () const;
+  public:
 
-      std::vector<GiNaC::symbol>         get_field_symbols        () const;
-      std::vector<GiNaC::symbol>         get_deriv_symbols        () const;
-      std::vector<GiNaC::symbol>         get_param_symbols        () const;
+    void print(std::ostream& stream) const;
 
-      const GiNaC::symbol&               get_Mp_symbol            () const;
+    bool add_field(field_declaration* d);
 
-      void                               set_name                 (const std::string n);
-      const std::string&                 get_name                 () const;
+    bool add_parameter(parameter_declaration* d);
 
-      void                               set_author               (const std::string a);
-      const std::string&                 get_author               () const;
+    void set_background_stepper(stepper* s);
 
-      void                               set_tag                  (const std::string t);
-      const std::string&                 get_tag                  () const;
+    void set_perturbations_stepper(stepper* s);
 
-      void                               set_core                 (const std::string c);
-      const std::string&                 get_core                 () const;
+    const struct stepper& get_background_stepper() const;
 
-      void                               set_implementation       (const std::string i);
-      const std::string&                 get_implementation       () const;
+    const struct stepper& get_perturbations_stepper() const;
 
-      void                               set_model                (const std::string m);
-      const std::string&                 get_model                () const;
+    bool lookup_symbol(std::string id, quantity*& s) const;
 
-      void                               set_indexorder           (enum indexorder o);
-      enum indexorder                    get_indexorder           () const;
+    unsigned int get_number_fields() const;
 
-      void                               set_potential            (GiNaC::ex* V);
-      GiNaC::ex                          get_potential            () const;
-      void                               unset_potential          ();
+    unsigned int get_number_params() const;
 
-    private:
-      // blank out copying options, to avoid multiple aliasing of the
-      // symbol_table<> and deque<declaration*> objects contained within
-      script(const script& other);              // non copy-constructible
-      script& operator=(const script& rhs);     // non copyable
+    std::vector<std::string> get_field_list() const;
 
-      std::string                        name;
-      std::string                        author;
-      std::string                        tag;
-      std::string                        core;
-      std::string                        implementation;
-      std::string                        model;
+    std::vector<std::string> get_latex_list() const;
 
-      enum indexorder                    order;
+    std::vector<std::string> get_param_list() const;
 
-      struct stepper                     background_stepper;
-      struct stepper                     perturbations_stepper;
+    std::vector<std::string> get_platx_list() const;
 
-      std::deque<field_declaration*>     fields;
-      std::deque<parameter_declaration*> parameters;
+    std::vector<GiNaC::symbol> get_field_symbols() const;
 
-      bool                               potential_set;
-      GiNaC::ex*                         potential;
+    std::vector<GiNaC::symbol> get_deriv_symbols() const;
 
-      // reserved symbols
-      GiNaC::symbol                      M_Planck;
-      std::vector<GiNaC::symbol>         deriv_symbols;
+    std::vector<GiNaC::symbol> get_param_symbols() const;
 
-      symbol_table<quantity>*            table;
-  };
+    const GiNaC::symbol& get_Mp_symbol() const;
+
+    void set_name(const std::string n);
+
+    const std::string& get_name() const;
+
+    void set_author(const std::string a);
+
+    const std::string& get_author() const;
+
+    void set_tag(const std::string t);
+
+    const std::string& get_tag() const;
+
+    void set_core(const std::string c);
+
+    const std::string& get_core() const;
+
+    void set_implementation(const std::string i);
+
+    const std::string& get_implementation() const;
+
+    void set_model(const std::string m);
+
+    const std::string& get_model() const;
+
+    void set_indexorder(enum indexorder o);
+
+    enum indexorder get_indexorder() const;
+
+    void set_potential(GiNaC::ex V);
+
+    GiNaC::ex get_potential() const;
+
+    void unset_potential();
+
+
+		// INTERNAL DATA
+
+  private:
+
+    // blank out copying options, to avoid multiple aliasing of the
+    // symbol_table<> and deque<declaration*> objects contained within
+    script(const script& other);              // non copy-constructible
+    script& operator=(const script& rhs);     // non copyable
+
+    std::string name;
+    std::string author;
+    std::string tag;
+    std::string core;
+    std::string implementation;
+    std::string model;
+
+    enum indexorder order;
+
+    struct stepper background_stepper;
+    struct stepper perturbations_stepper;
+
+    std::deque<field_declaration*>     fields;
+    std::deque<parameter_declaration*> parameters;
+
+    bool      potential_set;
+    GiNaC::ex potential;
+
+    // symbols, reserved quantities
+
+		symbol_factory             sym_factory;
+
+    GiNaC::symbol              M_Planck;
+    std::vector<GiNaC::symbol> deriv_symbols;
+
+    symbol_table<quantity>* table;
+	};
 
 
 #endif //__parse_tree_H_

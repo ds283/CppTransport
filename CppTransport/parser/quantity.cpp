@@ -25,58 +25,29 @@ attributes::~attributes()
     return;
   }
 
-bool attributes::get_latex(std::string& l) const
+const std::string& attributes::get_latex() const
   {
-    if(this->latex_set)
-      {
-        l = this->latex;
-      }
-    return(this->latex_set);
+		return(this->latex);
   }
 
 void attributes::set_latex(const std::string l)
   {
     this->latex_set = true;
-    this->latex     = l;
+    this->latex = l;
   }
 
 void attributes::unset_latex()
   {
     this->latex_set = false;
-    this->latex     = "";
+    this->latex.clear();
   }
 
 
 // ******************************************************************
 
 
-quantity::quantity(std::string n, const filestack* p)
-  : name(n), path(p)
-  {
-    assert(path != nullptr);
-    ginac_symbol = GiNaC::symbol(n);
-  }
-
-quantity::quantity(std::string n, attributes& a, const filestack* p)
-  : name(n), attrs(a), path(p)
-  {
-    assert(path != nullptr);
-
-    std::string latex_name;
-    bool        latex_set = attrs.get_latex(latex_name);
-
-    if(latex_set)
-      {
-        ginac_symbol = GiNaC::symbol(n, latex_name);
-      }
-    else
-      {
-        ginac_symbol = GiNaC::symbol(n);
-      }
-  }
-
-quantity::quantity(std::string n, attributes&a, GiNaC::symbol&s)
-  : name(n), attrs(a), path(nullptr), ginac_symbol(s)
+quantity::quantity(std::string n, attributes& a, const filestack* p, GiNaC::symbol& s)
+  : name(n), attrs(a), path(p), ginac_symbol(s)
   {
   }
 
@@ -90,10 +61,9 @@ void quantity::print(std::ostream& stream) const
 
     stream << "  GiNaC symbol = '" << this->ginac_symbol << "'" << std::endl;
 
-    std::string latex_name;
-    bool        latex_set = this->attrs.get_latex(latex_name);
+    std::string latex_name = this->attrs.get_latex();
 
-    if(latex_set)
+    if(latex_name.length() > 0)
       {
         stream << "  LaTeX name = '" << latex_name << "'" << std::endl;
       }
@@ -111,18 +81,14 @@ const std::string quantity::get_name() const
 
 const std::string quantity::get_latex_name() const
   {
-    std::string latex_name;
-    bool        ok = this->attrs.get_latex(latex_name);
-
-    if(!ok)
-      {
-        latex_name = this->name;
-      }
+    std::string latex_name = this->attrs.get_latex();
+ 
+    if(latex_name.length() == 0) latex_name = this->name;
 
     return(latex_name);
   }
 
-const GiNaC::symbol* quantity::get_ginac_symbol() const
+const GiNaC::symbol& quantity::get_ginac_symbol() const
   {
-    return(&this->ginac_symbol);
+    return(this->ginac_symbol);
   }

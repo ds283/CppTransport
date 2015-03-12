@@ -47,7 +47,7 @@ field_declaration::~field_declaration()
 void field_declaration::print(std::ostream& stream) const
   {
     stream << "Field declaration for symbol '" << this->obj->get_name()
-           << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
+           << "', GiNaC symbol '" << this->obj->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << this->path->write();
   }
@@ -70,7 +70,7 @@ parameter_declaration::~parameter_declaration()
 void parameter_declaration::print(std::ostream& stream) const
   {
     stream << "Parameter declaration for symbol '" << this->obj->get_name()
-      << "', GiNaC symbol '" << *this->obj->get_ginac_symbol() << "'" << std::endl;
+      << "', GiNaC symbol '" << this->obj->get_ginac_symbol() << "'" << std::endl;
 
     stream << "  defined at line " << this->path->write();
   }
@@ -79,8 +79,11 @@ void parameter_declaration::print(std::ostream& stream) const
 // ******************************************************************
 
 
-script::script()
-  : potential_set(false), potential(nullptr), model(DEFAULT_MODEL_NAME), M_Planck(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL), order(indexorder_right)
+script::script(symbol_factory& s)
+  : potential_set(false),
+    model(DEFAULT_MODEL_NAME),
+    order(indexorder_right),
+		sym_factory(s)
   {
     this->table = new symbol_table<quantity>(SYMBOL_TABLE_SIZE);
 
@@ -88,7 +91,8 @@ script::script()
     attributes attrs;
     attrs.set_latex(MPLANCK_LATEX_SYMBOL);
 
-    quantity Mp(MPLANCK_TEXT_NAME, attrs, M_Planck);
+    M_Planck = sym_factory.get_symbol(MPLANCK_SYMBOL, MPLANCK_LATEX_SYMBOL);
+    quantity Mp(MPLANCK_TEXT_NAME, attrs, nullptr, M_Planck);
 
     this->table->insert(&Mp);
 
@@ -116,16 +120,6 @@ script::~script()
 
     // delete symbol table
     delete this->table;
-
-    // delete potential
-    if(this->potential_set)
-      {
-        assert(this->potential != nullptr);
-        if(this->potential != nullptr)
-          {
-            delete this->potential;
-          }
-      }
   }
 
 
@@ -250,8 +244,7 @@ void script::print(std::ostream& stream) const
 
     if(this->potential_set)
       {
-        assert(this->potential != nullptr);
-        stream << "** Potential = " << *this->potential << std::endl;
+        stream << "** Potential = " << this->potential << std::endl;
       }
     else
       {
@@ -283,7 +276,7 @@ bool script::add_field(field_declaration* d)
         this->fields.push_back(d);
 
         // also need to generate a symbol for the momentum corresponding to this field
-        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d->get_quantity()->get_ginac_symbol()->get_name());
+        GiNaC::symbol deriv_symbol(DERIV_PREFIX + d->get_quantity()->get_ginac_symbol().get_name());
         this->deriv_symbols.push_back(deriv_symbol);
       }
 
@@ -417,7 +410,7 @@ std::vector<GiNaC::symbol> script::get_field_symbols() const
 
     for(int i = 0; i < this->fields.size(); i++)
       {
-        rval.push_back(*(this->fields[i]->get_quantity()->get_ginac_symbol()));
+        rval.push_back(this->fields[i]->get_quantity()->get_ginac_symbol());
       }
 
     return(rval);
@@ -436,7 +429,7 @@ std::vector<GiNaC::symbol> script::get_param_symbols() const
 
     for(int i = 0; i < this->parameters.size(); i++)
       {
-        rval.push_back(*(this->parameters[i]->get_quantity()->get_ginac_symbol()));
+        rval.push_back(this->parameters[i]->get_quantity()->get_ginac_symbol());
       }
 
     return(rval);
@@ -449,13 +442,8 @@ const GiNaC::symbol& script::get_Mp_symbol() const
   }
 
 
-void script::set_potential(GiNaC::ex* V)
+void script::set_potential(GiNaC::ex V)
   {
-    if(this->potential_set)
-      {
-        assert(this->potential != nullptr);
-        delete this->potential;
-      }
     this->potential     = V;
     this->potential_set = true;
 
@@ -469,7 +457,7 @@ GiNaC::ex script::get_potential() const
 
     if(this->potential_set)
       {
-        V = *this->potential;
+        V = this->potential;
       }
 
     return(V);
@@ -478,11 +466,6 @@ GiNaC::ex script::get_potential() const
 
 void script::unset_potential()
   {
-    if(this->potential_set)
-      {
-        assert(this->potential != nullptr);
-        delete this->potential;
-      }
-    this->potential     = nullptr;
+    this->potential     = GiNaC::numeric(0);
     this->potential_set = false;
   }

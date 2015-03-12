@@ -18,6 +18,8 @@
 #include "output_stack.h"
 #include "translator.h"
 
+#include "symbol_factory.h"
+
 // data structure for tracking input scripts as they progress through the pipeline
 class translation_unit
   {
@@ -69,6 +71,8 @@ class translation_unit
     output_stack*                                      get_stack();
     translator*                                        get_translator();
 
+		symbol_factory&                                    get_symbol_factory();
+
     void                                               print_advisory(const std::string& msg);
 
   protected:
@@ -82,6 +86,9 @@ class translation_unit
     y::y_lexer*                                        lexer;
     y::y_driver*                                       driver;
     y::y_parser*                                       parser;
+
+		// GiNaC symbol factory
+		symbol_factory                                     sym_factory;
 
     std::string                                        name;                    // name of input script
     bool                                               do_cse;

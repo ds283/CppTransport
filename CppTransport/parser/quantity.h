@@ -10,6 +10,7 @@
 #ifndef __symbol_H_
 #define __symbol_H_
 
+
 #include <iostream>
 #include <string>
 #include "filestack.h"
@@ -18,47 +19,64 @@
 
 #include "ginac/ginac.h"
 
+
 class attributes
-  {
-    public:
-      attributes();
-      ~attributes();
+	{
+  public:
+    attributes();
 
-      bool get_latex  (std::string& l) const;
-      void set_latex  (const std::string l);
-      void unset_latex();
+    ~attributes();
 
-    private:
-      bool        latex_set;
-      std::string latex;
-  };
+    const std::string& get_latex() const;
+
+    void set_latex(const std::string l);
+
+    void unset_latex();
+
+  private:
+    bool        latex_set;
+    std::string latex;
+	};
 
 
 class quantity
-  {
-    public:
-      quantity(std::string n, const filestack* p);                    // basic constructor
-      quantity(std::string n, attributes& a, const filestack* p);     // constructor with attributes
-      quantity(std::string n, attributes& a, GiNaC::symbol& s);       // constructor with GiNaC symbol, but no filestack data
-      ~quantity();
+	{
 
-      void                                print(std::ostream& stream) const;
+    // CONSTRUCTOR, DESTRUCTOR
 
-      const std::string                   get_name() const;
-      const std::string                   get_latex_name() const;
+  public:
 
-      const GiNaC::symbol*                get_ginac_symbol() const;
+    quantity(std::string n, attributes& a, const filestack* p, GiNaC::symbol& s);
+    ~quantity();
 
-      const filestack*                    get_path() const;
 
-    protected:
-      std::string                         name;
+    // INTERFACE
 
-      const filestack*                    path;
+  public:
 
-      attributes                          attrs;
-      GiNaC::symbol                       ginac_symbol;
-  };
+    void print(std::ostream& stream) const;
+
+    const std::string get_name() const;
+
+    const std::string get_latex_name() const;
+
+    const GiNaC::symbol& get_ginac_symbol() const;
+
+    const filestack* get_path() const;
+
+
+    // INTERNAL DATA
+
+  protected:
+
+    std::string name;
+
+    const filestack* path;
+
+    attributes attrs;
+    GiNaC::symbol ginac_symbol;
+
+	};
 
 
 #endif //__symbol_H_
