@@ -115,12 +115,6 @@ namespace transport
         $$__MODEL_basic_twopf_functor(const parameters<number>& p, double k)
           : params(p), k_mode(k)
           {
-		        this->u2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
-			        {
-				        this->u2[i].resize(2*$$__NUMBER_FIELDS);
-			        }
           }
 
         void operator ()(const twopf_state<number>& __x, twopf_state<number>& __dxdt, double __t);
@@ -130,8 +124,6 @@ namespace transport
         const parameters<number>& params;
 
         const double k_mode;
-
-		    std::vector< std::vector<number> > u2;
 
       };
 
@@ -165,34 +157,6 @@ namespace transport
         $$__MODEL_basic_threepf_functor(const parameters<number>& p, double k1, double k2, double k3)
           : params(p), kmode_1(k1), kmode_2(k2), kmode_3(k3)
           {
-		        this->u2_k1.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k2.resize(2*$$__NUMBER_FIELDS);
-		        this->u2_k3.resize(2*$$__NUMBER_FIELDS);
-
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
-			        {
-				        this->u2_k1[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k2[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u2_k3[i].resize(2*$$__NUMBER_FIELDS);
-			        }
-
-		        this->u3_k1k2k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS);
-		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS);
-
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
-			        {
-				        this->u3_k1k2k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k2k1k3[i].resize(2*$$__NUMBER_FIELDS);
-				        this->u3_k3k1k2[i].resize(2*$$__NUMBER_FIELDS);
-
-				        for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
-					        {
-						        this->u3_k1k2k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k2k1k3[i][j].resize(2*$$__NUMBER_FIELDS);
-						        this->u3_k3k1k2[i][j].resize(2*$$__NUMBER_FIELDS);
-					        }
-			        }
           }
 
         void operator ()(const threepf_state<number>& __x, threepf_state<number>& __dxdt, double __dt);
@@ -204,14 +168,6 @@ namespace transport
         const double kmode_1;
         const double kmode_2;
         const double kmode_3;
-
-		    std::vector< std::vector<number> > u2_k1;
-		    std::vector< std::vector<number> > u2_k2;
-		    std::vector< std::vector<number> > u2_k3;
-
-		    std::vector< std::vector< std::vector<number> > > u3_k1k2k3;
-		    std::vector< std::vector< std::vector<number> > > u3_k2k1k3;
-		    std::vector< std::vector< std::vector<number> > > u3_k3k1k2;
 
       };
 
@@ -564,10 +520,9 @@ namespace transport
         const auto __tensor_twopf_pf = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_twopf_pp = __x[$$__MODEL_pool::tensor_start + TENSOR_FLATTEN(1,1)];
 
-        $$__TEMP_POOL{"const auto $1 = $2;"}
+        const auto __tpf_$$__A_$$__B = $$// __x[$$__MODEL_pool::twopf_start + FLATTEN($$__A,$$__B)];
 
-#undef __tpf
-#define __tpf(a,b) __x[$$__MODEL_pool::twopf_start + FLATTEN(a,b)]
+        $$__TEMP_POOL{"const auto $1 = $2;"}
 
 #undef __background
 #undef __dtwopf
@@ -590,24 +545,13 @@ namespace transport
         __dtwopf_tensor(1,1) = __pf*__tensor_twopf_fp + __pp*__tensor_twopf_pp + __pf*__tensor_twopf_pf + __pp*__tensor_twopf_pp;
 
         // set up components of the u2 tensor
-        this->u2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
+        const auto __u2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k, __a, __Hsq, __eps};
 
         // evolve the 2pf
         // here, we are dealing only with the real part - which is symmetric.
         // so the index placement is not important
-		    for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
-			    {
-				    for(unsigned int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
-					    {
-						    __dtwopf(__i,__j) = 0;
-
-						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
-							    {
-								    __dtwopf(__i,__j) += this->u2[__i][__k]*__tpf[__k][__j];
-								    __dtwopf(__i,__j) += this->u2[__j][__k]*__tpf[__i][__k];
-							    }
-					    }
-			    }
+        __dtwopf($$__A, $$__B) = 0 $$// + $$__SUM_COORDS[C] __u2_$$__A_$$__C*__tpf_$$__C_$$__B;
+        __dtwopf($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_$$__B_$$__C*__tpf_$$__A_$$__C;
       }
 
 
@@ -654,25 +598,16 @@ namespace transport
         const auto __tensor_k3_twopf_pf = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,0)];
         const auto __tensor_k3_twopf_pp = __x[$$__MODEL_pool::tensor_k3_start + TENSOR_FLATTEN(1,1)];
 
+        const auto __twopf_re_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN($$__A,$$__B)];
+        const auto __twopf_im_k1_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN($$__A,$$__B)];
+        const auto __twopf_re_k2_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k2_start + FLATTEN($$__A,$$__B)];
+        const auto __twopf_im_k2_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k2_start + FLATTEN($$__A,$$__B)];
+        const auto __twopf_re_k3_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_re_k3_start + FLATTEN($$__A,$$__B)];
+        const auto __twopf_im_k3_$$__A_$$__B   = $$// __x[$$__MODEL_pool::twopf_im_k3_start + FLATTEN($$__A,$$__B)];
+
+        const auto __threepf_$$__A_$$__B_$$__C = $$// __x[$$__MODEL_pool::threepf_start     + FLATTEN($$__A,$$__B,$$__C)];
+
         $$__TEMP_POOL{"const auto $1 = $2;"}
-
-#undef __twopf_re_k1
-#undef __twopf_re_k2
-#undef __twopf_re_k3
-#undef __twopf_im_k1
-#undef __twopf_im_k2
-#undef __twopf_im_k3
-
-#undef __threepf
-
-#define __twopf_re_k1(a,b) __x[$$__MODEL_pool::twopf_re_k1_start + FLATTEN(a,b)]
-#define __twopf_im_k1(a,b) __x[$$__MODEL_pool::twopf_im_k1_start + FLATTEN(a,b)]
-#define __twopf_re_k2(a,b) __x[$$__MODEL_pool::twopf_re_k2_start + FLATTEN(a,b)]
-#define __twopf_im_k2(a,b) __x[$$__MODEL_pool::twopf_im_k2_start + FLATTEN(a,b)]
-#define __twopf_re_k3(a,b) __x[$$__MODEL_pool::twopf_re_k3_start + FLATTEN(a,b)]
-#define __twopf_im_k3(a,b) __x[$$__MODEL_pool::twopf_im_k3_start + FLATTEN(a,b)]
-
-#define __threepf(a,b,c)	 __x[$$__MODEL_pool::threepf_start  + FLATTEN(a,b,c)]
 
 #undef __background
 #undef __dtwopf_k1_tensor
@@ -724,85 +659,50 @@ namespace transport
         __dtwopf_k3_tensor(1,1) = __pf*__tensor_k3_twopf_fp + __pp*__tensor_k3_twopf_pp + __pf*__tensor_k3_twopf_pf + __pp*__tensor_k3_twopf_pp;
 
         // set up components of the u2 tensor for k1, k2, k3
-        this->u2_k1[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
-        this->u2_k2[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
-        this->u2_k3[$$__A][$$__B] = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
+        const auto __u2_k1_$$__A_$$__B = $$__U2_PREDEF[AB]{__k1, __a, __Hsq, __eps};
+        const auto __u2_k2_$$__A_$$__B = $$__U2_PREDEF[AB]{__k2, __a, __Hsq, __eps};
+        const auto __u2_k3_$$__A_$$__B = $$__U2_PREDEF[AB]{__k3, __a, __Hsq, __eps};
 
         // set up components of the u3 tensor
-        this->u3_k1k2k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
-        this->u3_k2k1k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
-        this->u3_k3k1k2[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
+        const auto __u3_k1k2k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k1, __k2, __k3, __a, __Hsq, __eps};
+        const auto __u3_k2k1k3_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
+        const auto __u3_k3k1k2_$$__A_$$__B_$$__C = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
         // evolve the real and imaginary components of the 2pf
         // for the imaginary parts, index placement *does* matter so we must take care
-		    for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
-			    {
-				    for(unsigned int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
-					    {
-						    __dtwopf_re_k1(__i,__j) = 0;
-						    __dtwopf_re_k2(__i,__j) = 0;
-						    __dtwopf_re_k3(__i,__j) = 0;
+        __dtwopf_re_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_re_k1_$$__C_$$__B;
+        __dtwopf_re_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_re_k1_$$__A_$$__C;
 
-				        __dtwopf_im_k1(__i,__j) = 0;
-				        __dtwopf_im_k2(__i,__j) = 0;
-				        __dtwopf_im_k3(__i,__j) = 0;
+        __dtwopf_im_k1($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__A_$$__C*__twopf_im_k1_$$__C_$$__B;
+        __dtwopf_im_k1($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k1_$$__B_$$__C*__twopf_im_k1_$$__A_$$__C;
 
-						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
-							    {
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1[__k][__j];
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1[__i][__k];
+        __dtwopf_re_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_re_k2_$$__C_$$__B;
+        __dtwopf_re_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_re_k2_$$__A_$$__C;
 
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1[__k][__j];
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1[__i][__k];
+        __dtwopf_im_k2($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__A_$$__C*__twopf_im_k2_$$__C_$$__B;
+        __dtwopf_im_k2($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k2_$$__B_$$__C*__twopf_im_k2_$$__A_$$__C;
 
-						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2[__k][__j];
-						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2[__i][__k];
+        __dtwopf_re_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_re_k3_$$__C_$$__B;
+        __dtwopf_re_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_re_k3_$$__A_$$__C;
 
-						        __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2[__k][__j];
-						        __dtwopf_im_k1(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2[__i][__k];
-
-						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3[__k][__j];
-						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3[__i][__k];
-
-						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3[__k][__j];
-						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3[__i][__k];
-							    }
-					    }
-			    }
+        __dtwopf_im_k3($$__A, $$__B)  = 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__A_$$__C*__twopf_im_k3_$$__C_$$__B;
+        __dtwopf_im_k3($$__A, $$__B) += 0 $$// + $$__SUM_COORDS[C] __u2_k3_$$__B_$$__C*__twopf_im_k3_$$__A_$$__C;
 
         // evolve the components of the 3pf
         // index placement matters, partly because of the k-dependence
         // but also in the source terms from the imaginary components of the 2pf
 
-        for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
-			    {
-				    for(unsigned int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
-					    {
-						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
-							    {
-								    __dthreepf(__i,__j,__k) = 0;
+        __dthreepf($$__A, $$__B, $$__C)  = 0 $$// + $$__SUM_COORDS[M] __u2_k1_$$__A_$$__M*__threepf_$$__M_$$__B_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_re_k2_$$__M_$$__B*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k1k2k3_$$__A_$$__M_$$__N*__twopf_im_k2_$$__M_$$__B*__twopf_im_k3_$$__N_$$__C;
 
-								    for(unsigned int __m = 0; __m < 2*$$__NUMBER_FIELDS; __m++)
-									    {
-										    __dthreepf(__i,__j,__k) += this->u2_k1[__i][__m]*__threepf[__m][__j][__k];
-										    __dthreepf(__i,__j,__k) += this->u2_k2[__j][__m]*__threepf[__i][__m][__k];
-										    __dthreepf(__i,__j,__k) += this->u2_k3[__k][__m]*__threepf[__i][__j][__m];
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k2_$$__B_$$__M*__threepf_$$__A_$$__M_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k3_$$__N_$$__C;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k2k1k3_$$__B_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k3_$$__N_$$__C;
 
-										    for(unsigned int __n = 0; __n < 2*$$__NUMBER_FIELDS; __n++)
-											    {
-												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_re_k2[__m][__j]*__twopf_re_k3[__n][__k];
-												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_im_k2[__m][__j]*__twopf_im_k3[__n][__k];
-
-										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_re_k1[__i][__m]*__twopf_re_k3[__n][__k];
-										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_im_k1[__i][__m]*__twopf_im_k3[__n][__k];
-
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k2[__i][__m]*__twopf_re_k3[__k][__n];
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k2[__i][__m]*__twopf_im_k3[__k][__n];
-											    }
-									    }
-							    }
-					    }
-			    }
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_COORDS[M] __u2_k3_$$__C_$$__M*__threepf_$$__A_$$__B_$$__M;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// + $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_re_k1_$$__A_$$__M*__twopf_re_k2_$$__B_$$__N;
+        __dthreepf($$__A, $$__B, $$__C) += 0 $$// - $$__SUM_2COORDS[MN] __u3_k3k1k2_$$__C_$$__M_$$__N*__twopf_im_k1_$$__A_$$__M*__twopf_im_k2_$$__B_$$__N;
       }
 
 
