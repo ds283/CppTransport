@@ -28,10 +28,7 @@ class token_list
 
       public:
 
-		    generic_token(const std::string& c)
-			    : conversion(c)
-			    {
-			    }
+		    generic_token(const std::string& c);
 
         virtual ~generic_token() = default;
 
@@ -58,10 +55,7 @@ class token_list
 
       public:
 
-        text_token(const std::string& v)
-          : generic_token(v)
-	        {
-	        }
+        text_token(const std::string& l);
 
         virtual ~text_token() = default;
 
@@ -72,11 +66,7 @@ class token_list
 
       public:
 
-        free_index_token(const struct index_abstract& i)
-	        : generic_token(std::string(1, i.label)),
-	          index(i)
-	        {
-	        }
+        free_index_token(const struct index_abstract& i);
 
 		    free_index_token(char label)
 		      : generic_token(std::string(1, label))
@@ -113,14 +103,7 @@ class token_list
 
       public:
 
-        simple_macro_token(const std::string& m, const std::vector<std::string>& a, const macro_packages::simple_rule& r, macro_type t)
-	        : generic_token(m),
-	          name(m),
-	          args(a),
-		        rule(r),
-            type(t)
-	        {
-	        }
+        simple_macro_token(const std::string& m, const std::vector<std::string>& a, const macro_packages::simple_rule& r, macro_type t);
 
 		    virtual ~simple_macro_token() = default;
 
@@ -153,27 +136,9 @@ class token_list
 
 		  public:
 
-		    index_macro_token(const std::string& m, const std::vector<index_abstract>& i, const std::vector<std::string>& a, const macro_packages::index_rule& r)
-			    : generic_token(m),
-			      name(m),
-			      args(a),
-			      indices(i),
-			      rule(r),
-		        state(nullptr)
-			    {
-				    if(rule.pre != nullptr)
-					    {
-						    state = (rule.pre)(args);
-					    }
-			    }
+		    index_macro_token(const std::string& m, const std::vector<index_abstract>& i, const std::vector<std::string>& a, const macro_packages::index_rule& r);
 
-				virtual ~index_macro_token()
-					{
-						if(this->rule.post != nullptr)
-							{
-						    (this->rule.post)(this->state);
-							}
-					}
+				virtual ~index_macro_token();
 
 
 		    // INTERFACE

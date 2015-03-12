@@ -444,6 +444,61 @@ std::string token_list::to_string()
 	}
 
 
+// TOKEN IMPLEMENTATION
+
+
+token_list::generic_token::generic_token(const std::string& c)
+	: conversion(c)
+	{
+	}
+
+
+token_list::text_token::text_token(const std::string& l)
+	: generic_token(l)
+	{
+	}
+
+
+token_list::free_index_token::free_index_token(const struct index_abstract& i)
+	: generic_token(std::string(1, i.label)),
+    index(i)
+	{
+	}
+
+
+void token_list::free_index_token::evaluate(const std::vector<index_assignment>& a)
+	{
+    bool found = false;
+
+    for(std::vector<index_assignment>::const_iterator t = a.begin(); !found && t != a.end(); t++)
+	    {
+        if((*t).label == this->index.label)
+	        {
+            std::ostringstream cnv;
+            cnv << index_numeric(*t);
+            this->conversion = cnv.str();
+            found = true;
+	        }
+	    }
+
+    if(!found)
+	    {
+        throw std::runtime_error("Missing index assignment!");
+	    }
+	}
+
+
+token_list::simple_macro_token::simple_macro_token(const std::string& m, const std::vector<std::string>& a,
+                                                   const macro_packages::simple_rule& r, token_list::simple_macro_token::macro_type t)
+	: generic_token(m),
+    name(m),
+    args(a),
+    rule(r),
+    type(t)
+	{
+	}
+
+
 void token_list::simple_macro_token::evaluate()
 	{
 		// evaluate the macro, and cache the result
@@ -451,25 +506,27 @@ void token_list::simple_macro_token::evaluate()
 	}
 
 
-void token_list::free_index_token::evaluate(const std::vector<index_assignment>& a)
+token_list::index_macro_token::index_macro_token(const std::string& m, const std::vector<index_abstract>& i, const std::vector<std::string>& a, const macro_packages::index_rule& r)
+	: generic_token(m),
+    name(m),
+    args(a),
+    indices(i),
+    rule(r),
+    state(nullptr)
 	{
-		bool found = false;
+    if(rule.pre != nullptr)
+	    {
+        state = (rule.pre)(args);
+	    }
+	}
 
-		for(std::vector<index_assignment>::const_iterator t = a.begin(); !found && t != a.end(); t++)
-			{
-				if((*t).label == this->index.label)
-					{
-				    std::ostringstream cnv;
-						cnv << index_numeric(*t);
-						this->conversion = cnv.str();
-						found = true;
-					}
-			}
 
-		if(!found)
-			{
-				throw std::runtime_error("Missing index assignment!");
-			}
+token_list::index_macro_token::~index_macro_token()
+	{
+    if(this->rule.post != nullptr)
+	    {
+        (this->rule.post)(this->state);
+	    }
 	}
 
 
