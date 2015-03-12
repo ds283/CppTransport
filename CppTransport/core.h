@@ -15,7 +15,7 @@
 #define CPPTRANSPORT_NAME            "CppTransport"
 #define CPPTRANSPORT_VERSION         "0.09"
 #define CPPTRANSPORT_NUMERIC_VERSION (0.09)
-#define CPPTRANSPORT_COPYRIGHT       "(c) University of Sussex 2013-14"
+#define CPPTRANSPORT_COPYRIGHT       "(c) University of Sussex 2013-15"
 
 #define MODEL_SCRIPT_SUFFIX          ".model"
 #define MODEL_SCRIPT_SUFFIX_LENGTH   (6)

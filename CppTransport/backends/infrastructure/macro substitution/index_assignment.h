@@ -24,6 +24,7 @@
 #define INDEX_RANGE_UNKNOWN   (0)
 #define INDEX_RANGE_PARAMETER (1000)
 
+
 enum index_trait
   {
     index_field, index_momentum, index_parameter, index_unknown
@@ -46,31 +47,40 @@ struct index_abstract
     char                    label;       // index label
     unsigned int            range;       // how many values does this index assume? this is a multiplier for the total number of fields
                                          // UNLESS it is INDEX_RANGE_PARAMETER, in which case this is a parameter index
-
-    bool                    assign;      // should this index be included when generating assignments?
-    struct index_assignment assignment;  // if assign = false, use this fixed assignment instead
   };
 
 
 class assignment_package
   {
-    public:
-      assignment_package(unsigned int f, unsigned int p, enum indexorder o=indexorder_right)
-      : num_fields(f), num_parameters(p), order(o) {}
 
-      std::vector< std::vector<struct index_assignment> > assign(const std::vector<struct index_abstract>& indices);
+  public:
+
+    assignment_package(unsigned int f, unsigned int p, enum indexorder o = indexorder_right)
+	    : num_fields(f), num_parameters(p), order(o)
+	    {
+	    }
+
+      std::vector< std::vector<index_assignment> > assign(const std::vector<index_abstract>& indices);
+
+			std::vector<index_assignment> merge(const std::vector<index_assignment>& l, const std::vector<index_assignment>& r);
+
+			std::vector<index_abstract> difference(const std::vector<index_abstract>& l, const std::vector<index_abstract>& r);
 
       unsigned int value(struct index_assignment& v);
 
     private:
+
       const unsigned int     num_fields;
       const unsigned int     num_parameters;
       const enum indexorder  order;
+
   };
 
 
 std::string  index_stringize(const struct index_assignment& index);
 unsigned int index_numeric  (const struct index_assignment& index);
+
+unsigned int identify_index (char label);
 
 
 #endif //__index_assignment_H_

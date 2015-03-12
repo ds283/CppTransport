@@ -114,7 +114,6 @@ namespace shared
         struct index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
-        A.assign = true;
         indices.push_back(A);
 
         assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());
@@ -146,12 +145,10 @@ namespace shared
         struct index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
-        A.assign = true;
         indices.push_back(A);
         struct index_abstract B;
         B.label  = 'B';
         B.range  = INDEX_RANGE_ALL;
-        B.assign = true;
         indices.push_back(B);
 
         assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());
@@ -183,17 +180,14 @@ namespace shared
         struct index_abstract A;
         A.label  = 'A';
         A.range  = INDEX_RANGE_ALL;
-        A.assign = true;
         indices.push_back(A);
         struct index_abstract B;
         B.label  = 'B';
         B.range  = INDEX_RANGE_ALL;
-        B.assign = true;
         indices.push_back(B);
         struct index_abstract C;
         C.label  = 'C';
         C.range  = INDEX_RANGE_ALL;
-        C.assign = true;
         indices.push_back(C);
 
         assignment_package assigner(this->unit->get_number_fields(), this->unit->get_number_parameters(), this->unit->get_index_order());

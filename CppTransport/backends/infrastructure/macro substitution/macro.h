@@ -6,7 +6,6 @@
 //
 
 
-
 #ifndef __macro_H_
 #define __macro_H_
 
@@ -30,12 +29,14 @@
 
 class package_group;
 
+
 namespace macro_packages
 	{
     class simple_rule;
 
     class index_rule;
 	}
+
 
 class macro_package
 	{
@@ -95,11 +96,11 @@ class macro_package
     unsigned int recursion_max;
 
     translation_unit* unit;
-    package_group   * package;
+    package_group*    package;
 
     std::vector<macro_packages::simple_rule>& pre_rule_cache;
     std::vector<macro_packages::simple_rule>& post_rule_cache;
-    std::vector<macro_packages::index_rule> & index_rule_cache;
+    std::vector<macro_packages::index_rule>&  index_rule_cache;
 
     const std::string prefix;
     const std::string split;

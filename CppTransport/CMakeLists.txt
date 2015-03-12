@@ -52,6 +52,7 @@ add_executable(CppTransport main.cpp
 							"backends/infrastructure/language concepts/cse.cpp"
 							"backends/infrastructure/macro substitution/index_assignment.cpp"
 							"backends/infrastructure/macro substitution/macro.cpp"
+							"backends/infrastructure/macro substitution/macro_tokenizer.cpp"
 							"backends/infrastructure/replacement rules/package_group.cpp"
 							"backends/infrastructure/replacement rules/package_group_factory.cpp"
 							"backends/infrastructure/replacement rules/replacement_rule_package.cpp"
