@@ -796,8 +796,8 @@ namespace transport
 										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_re_k1(__i,__m)*__twopf_re_k3(__n,__k);
 										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_im_k1(__i,__m)*__twopf_im_k3(__n,__k);
 
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k2(__i,__m)*__twopf_re_k3(__k,__n);
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k2(__i,__m)*__twopf_im_k3(__k,__n);
+										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k1(__i,__m)*__twopf_re_k2(__k,__n);
+										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k1(__i,__m)*__twopf_im_k2(__k,__n);
 											    }
 									    }
 							    }
