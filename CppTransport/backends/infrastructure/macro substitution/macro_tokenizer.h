@@ -57,8 +57,6 @@ class token_list
 
         text_token(const std::string& l);
 
-        virtual ~text_token() = default;
-
 	    };
 
     class free_index_token: public generic_token
@@ -74,8 +72,6 @@ class token_list
 				    index.label = label;
 				    index.range = identify_index(label);
 			    }
-
-		    virtual ~free_index_token() = default;
 
 
         // INTERFACE
@@ -104,8 +100,6 @@ class token_list
       public:
 
         simple_macro_token(const std::string& m, const std::vector<std::string>& a, const macro_packages::simple_rule& r, macro_type t);
-
-		    virtual ~simple_macro_token() = default;
 
 
 		    // INTERFACE
