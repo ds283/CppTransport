@@ -194,15 +194,15 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 		                // factor of 2 from definition of 2nd order term in transport eq: dX/dN = u2.X + (1/2) u3.X.X + ...
 		                if(this->is_field(i) && this->is_field(j) && this->is_field(k))
 			                {
-		                    c = -this->compute_B_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps, fl);
+		                    c = -this->compute_B_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps);
 			                }
 		                else if(this->is_field(i) && this->is_field(j) && this->is_momentum(k))
 			                {
-		                    c = -this->compute_C_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps, fl);
+		                    c = -this->compute_C_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps);
 			                }
 		                else if(this->is_field(i) && this->is_momentum(j) && this->is_field(k))
 			                {
-		                    c = -this->compute_C_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps, fl);
+		                    c = -this->compute_C_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps);
 			                }
 		                else if(this->is_field(i) && this->is_momentum(j) && this->is_momentum(k))
 			                {
@@ -210,19 +210,19 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 			                }
 		                else if(this->is_momentum(i) && this->is_field(j) && this->is_field(k))
 			                {
-		                    c = 3*this->compute_A_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps, fl);
+		                    c = 3*this->compute_A_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps);
 			                }
 		                else if(this->is_momentum(i) && this->is_field(j) && this->is_momentum(k))
 			                {
-		                    c = this->compute_B_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps, fl);
+		                    c = this->compute_B_component(this->species(i), k1, this->species(j), k2, this->species(k), k3, a, Hsq, eps);
 			                }
 		                else if(this->is_momentum(i) && this->is_momentum(j) && this->is_field(k))
 			                {
-		                    c = this->compute_B_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps, fl);
+		                    c = this->compute_B_component(this->species(i), k1, this->species(k), k3, this->species(j), k2, a, Hsq, eps);
 			                }
 		                else if(this->is_momentum(i) && this->is_momentum(j) && this->is_momentum(k))
 			                {
-		                    c = this->compute_C_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps, fl);
+		                    c = this->compute_C_component(this->species(j), k2, this->species(k), k3, this->species(i), k1, a, Hsq, eps);
 			                }
 		                else
 			                {
@@ -266,7 +266,7 @@ void canonical_u_tensor_factory::compute_A(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl->flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps, fl);
+                v[fl->flatten(i,j,k)] = this->compute_A_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -298,7 +298,7 @@ void canonical_u_tensor_factory::compute_B(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl->flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps, fl);
+                v[fl->flatten(i,j,k)] = this->compute_B_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -330,7 +330,7 @@ void canonical_u_tensor_factory::compute_C(GiNaC::symbol& k1,
           {
             for(int k = 0; k < this->num_fields; k++)
               {
-                v[fl->flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps, fl);
+                v[fl->flatten(i,j,k)] = this->compute_C_component(i, k1, j, k2, k, k3, a, Hsq, eps);
               }
           }
       }
@@ -357,7 +357,7 @@ void canonical_u_tensor_factory::compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::
       {
         for(int j = 0; j < this->num_fields; j++)
           {
-            v[fl->flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps, fl);
+            v[fl->flatten(i,j)] = this->compute_M_component(i, j, Hsq, eps);
           }
       }
   }
@@ -628,7 +628,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_eps()
 GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -642,7 +642,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
     args.push_back(Hsq);
     args.push_back(eps);
 
-		unsigned int index = fl->flatten(i,j,k);
+    unsigned int index = this->num_fields*this->num_fields*i + this->num_fields*j + k;
 
     GiNaC::ex c = 0;
 
@@ -692,7 +692,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -706,7 +706,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
     args.push_back(Hsq);
     args.push_back(eps);
 
-    unsigned int index = fl->flatten(i,j,k);
+    unsigned int index = this->num_fields*this->num_fields*i + this->num_fields*j + k;
 
     GiNaC::ex c = 0;
 
@@ -738,7 +738,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC::symbol& k1,
                                                           unsigned int j, GiNaC::symbol& k2,
                                                           unsigned int k, GiNaC::symbol& k3,
-                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl)
+                                                          GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -752,8 +752,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
     args.push_back(Hsq);
     args.push_back(eps);
 
-    unsigned int index = fl->flatten(i,j,k);
-
+    unsigned int index = this->num_fields*this->num_fields*i + this->num_fields*j + k;
+		
     GiNaC::ex c = 0;
 
     if(!this->cache.query(C_item, index, args, c))
@@ -789,7 +789,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_xi(unsigned int i, GiNaC::ex& Hsq,
 
 
 // compute M tensor
-GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps, flattener* fl)
+GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps)
   {
     assert(i < this->num_fields);
     assert(j < this->num_fields);
@@ -798,7 +798,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
     args.push_back(Hsq);
     args.push_back(eps);
 
-		unsigned int index = fl->flatten(i,j);
+		unsigned int index = this->num_fields*i + j;
 
     GiNaC::ex v;
 
