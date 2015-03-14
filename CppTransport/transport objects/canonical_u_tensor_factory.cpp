@@ -644,7 +644,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
 		unsigned int index = fl->flatten(i,j,k);
 
-    GiNaC::ex c;
+    GiNaC::ex c = 0;
 
 		if(!this->cache.query(A_item, index, args, c))
 			{
@@ -708,7 +708,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
     unsigned int index = fl->flatten(i,j,k);
 
-    GiNaC::ex c;
+    GiNaC::ex c = 0;
 
 		if(!this->cache.query(B_item, index, args, c))
 			{
@@ -754,15 +754,13 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     unsigned int index = fl->flatten(i,j,k);
 
-    GiNaC::ex c;
+    GiNaC::ex c = 0;
 
     if(!this->cache.query(C_item, index, args, c))
 	    {
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
         GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3)/2;
-
-        GiNaC::ex c = 0;
 
         if (i == j) c += - this->deriv_list[k] / (2*pow(this->M_Planck,2));
 
@@ -803,6 +801,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 		unsigned int index = fl->flatten(i,j);
 
     GiNaC::ex v;
+
 		if(!this->cache.query(M_item, index, args, v))
 			{
 
