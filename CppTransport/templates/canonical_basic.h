@@ -117,7 +117,7 @@ namespace transport
           {
 		        this->u2.resize(2*$$__NUMBER_FIELDS);
 
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
 			        {
 				        this->u2[i].resize(2*$$__NUMBER_FIELDS);
 			        }
@@ -169,7 +169,7 @@ namespace transport
 		        this->u2_k2.resize(2*$$__NUMBER_FIELDS);
 		        this->u2_k3.resize(2*$$__NUMBER_FIELDS);
 
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
 			        {
 				        this->u2_k1[i].resize(2*$$__NUMBER_FIELDS);
 				        this->u2_k2[i].resize(2*$$__NUMBER_FIELDS);
@@ -180,13 +180,13 @@ namespace transport
 		        this->u3_k2k1k3.resize(2*$$__NUMBER_FIELDS);
 		        this->u3_k3k1k2.resize(2*$$__NUMBER_FIELDS);
 
-		        for(int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
+		        for(unsigned int i = 0; i < 2*$$__NUMBER_FIELDS; i++)
 			        {
 				        this->u3_k1k2k3[i].resize(2*$$__NUMBER_FIELDS);
 				        this->u3_k2k1k3[i].resize(2*$$__NUMBER_FIELDS);
 				        this->u3_k3k1k2[i].resize(2*$$__NUMBER_FIELDS);
 
-				        for(int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
+				        for(unsigned int j = 0; j < 2*$$__NUMBER_FIELDS; j++)
 					        {
 						        this->u3_k1k2k3[i][j].resize(2*$$__NUMBER_FIELDS);
 						        this->u3_k2k1k3[i][j].resize(2*$$__NUMBER_FIELDS);
