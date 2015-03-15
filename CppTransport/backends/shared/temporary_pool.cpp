@@ -123,8 +123,10 @@ namespace macro_packages
               }
             else
               {
+                // get temporaries which need to be deposited
                 std::string temps = this->cse_worker->temporaries(this->pool_template);
 
+                // apply macro replacement to them, in case this is required
 		            unsigned int replacements;
                 std::shared_ptr< std::vector<std::string> > r_list = ms->apply(temps, replacements);
 

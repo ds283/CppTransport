@@ -111,10 +111,11 @@ unsigned int translator::process(const std::string in, const std::string out, en
 
                 while(inf.eof() == false && inf.fail() == false)
                   {
+                    // read in a line from the template
                     std::getline(inf, line);
 
-		                unsigned int new_replacements;
-
+                    // apply macro replacement to this line, keeping track of how many replacements are performed
+		                unsigned int new_replacements = 0;
                     std::shared_ptr< std::vector<std::string> > line_list = ms->apply(line, new_replacements);
 		                replacements += new_replacements;
 

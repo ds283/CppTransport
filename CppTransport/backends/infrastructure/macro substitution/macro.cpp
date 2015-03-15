@@ -100,6 +100,7 @@ std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::strin
 		token_list left_tokens(left, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
 		token_list right_tokens(right, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
 
+    // running total of number of macro replacements
     unsigned int counter = 0;
 
     // evaluate pre macros and cache the results
@@ -180,6 +181,8 @@ std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::strin
 			{
 				r_list->push_back(std::string("// Skipped: empty index range (LHS index set is empty)"));
 			}
+
+    replacements = counter;
 
     return(r_list);
 	}
