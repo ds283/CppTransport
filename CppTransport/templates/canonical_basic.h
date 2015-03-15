@@ -759,7 +759,7 @@ namespace transport
 						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2(__i,__k);
 
 						        __dtwopf_im_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_im_k2(__k,__j);
-						        __dtwopf_im_k1(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2(__i,__k);
+						        __dtwopf_im_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_im_k2(__i,__k);
 
 						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_re_k3(__k,__j);
 						        __dtwopf_re_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_re_k3(__i,__k);
