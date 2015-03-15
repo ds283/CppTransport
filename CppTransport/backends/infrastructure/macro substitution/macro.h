@@ -60,7 +60,7 @@ class macro_package
   protected:
 
     // do the heavy lifting of applying macro substitution to a line
-    std::shared_ptr< std::vector<std::string> > apply_line(std::string& line, unsigned int& replacements, boost::timer::cpu_timer& timer);
+    std::shared_ptr< std::vector<std::string> > apply_line(std::string& line, unsigned int& replacements);
 
     // apply a ruleset of simple macros to a line
     unsigned int apply_simple(std::string& line, std::vector<macro_packages::simple_rule>& ruleset, bool blank = false);

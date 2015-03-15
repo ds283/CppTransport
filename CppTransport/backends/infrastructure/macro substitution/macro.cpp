@@ -37,14 +37,14 @@ macro_package::macro_package(translation_unit* u, package_group* pkg, std::strin
 
 std::shared_ptr< std::vector<std::string> > macro_package::apply(std::string& line, unsigned int& replacements)
   {
-		// set up CPU timer to measure how long execution takes
-    boost::timer::cpu_timer timer;
+//		// set up CPU timer to measure how long execution takes
+//    boost::timer::cpu_timer timer;
 
     std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
     if(++this->recursion_depth < this->recursion_max)
       {
-        r_list = this->apply_line(line, replacements, timer);
+        r_list = this->apply_line(line, replacements);
         --this->recursion_depth;
       }
     else
@@ -58,7 +58,7 @@ std::shared_ptr< std::vector<std::string> > macro_package::apply(std::string& li
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::string& line, unsigned int& replacements, boost::timer::cpu_timer& timer)
+std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::string& line, unsigned int& replacements)
   {
     std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
