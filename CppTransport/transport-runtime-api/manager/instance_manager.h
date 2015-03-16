@@ -150,7 +150,7 @@ namespace transport
           {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_OLD_RUNTIMEAPI_A << " (" << __CPP_TRANSPORT_RUNTIME_API_VERSION << ") "
-              << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " (" << m->get_name() << " " << version << ")";
+                << __CPP_TRANSPORT_OLD_RUNTIMEAPI_B << " " << uid << " " __CPP_TRANSPORT_OLD_RUNTIMEAPI_C << " " << version;
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
           }
 
