@@ -15,7 +15,7 @@
 #include <boost/timer/timer.hpp>
 #include <boost/filesystem/operations.hpp>
 
-#include "quadratic10_basic_twopf.h"
+#include "quadratic10_basic.h"
 
 
 // ****************************************************************************
