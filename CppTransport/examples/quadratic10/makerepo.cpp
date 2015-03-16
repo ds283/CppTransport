@@ -86,7 +86,7 @@ int main(int argc, char* argv[])
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 10) == 0); }
       };
 
     struct ThreepfStoragePolicy
