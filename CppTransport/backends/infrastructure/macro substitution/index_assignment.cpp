@@ -9,6 +9,7 @@
 #include <assert.h>
 #include <sstream>
 #include <stdexcept>
+#include <ctype.h>
 
 #include "index_assignment.h"
 
