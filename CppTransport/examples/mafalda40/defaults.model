@@ -1,9 +1,9 @@
-author         "Mafalda Dias and others 2013";
+author         "Mafalda Dias and others 2013-15";
 tag            "please cite arXiv:XXXX.YYYY";
 
 % specify which class template should be used with this model
-core           "canonical_core_twopf";
-implementation "canonical_basic_twopf";
+core           "canonical_core";
+implementation "canonical_basic";
 
 % fix properties of the steppers
 background
