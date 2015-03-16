@@ -172,7 +172,7 @@ int main(int argc, char* argv[])
     fNL_plot.set_title(false);
 
 		// construct output tasks
-    transport::output_task<double> threepf_output("quadratic10.twopf-1.output", tk3_bg_plot);
+    transport::output_task<double> threepf_output("quadratic10.threepf-1.output", tk3_bg_plot);
 		threepf_output.add_element(tk3_zeta_timeplot);
 		threepf_output.add_element(tk3_zeta_specplot);
 		threepf_output.add_element(tk3_r_specplot);
