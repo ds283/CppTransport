@@ -137,7 +137,7 @@ unsigned int identify_index(char label)
 			{
 				range = INDEX_RANGE_ALL;
 			}
-		else if(isnumber(label))  // numeric indices label parameters
+		else if(isdigit(label))  // numeric indices label parameters
 			{
 				range = INDEX_RANGE_PARAMETER;
 			}
