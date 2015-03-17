@@ -601,11 +601,8 @@ namespace transport
 					    {
 						    __dtwopf(__i,__j) = 0;
 
-						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
-							    {
-								    __dtwopf(__i,__j) += this->u2[__i][__k]*__twopf(__k,__j);
-								    __dtwopf(__i,__j) += this->u2[__j][__k]*__twopf(__i,__k);
-							    }
+				        __dtwopf(__i,__j) += this->u2[__i][$$__K]*__twopf($$__K,__j);
+				        __dtwopf(__i,__j) += this->u2[__j][$$__K]*__twopf(__i,$$__K);
 					    }
 			    }
       }
@@ -733,15 +730,13 @@ namespace transport
         this->u3_k2k1k3[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k2, __k1, __k3, __a, __Hsq, __eps};
         this->u3_k3k1k2[$$__A][$$__B][$$__C] = $$__U3_PREDEF[ABC]{__k3, __k1, __k2, __a, __Hsq, __eps};
 
-        // evolve the real and imaginary components of the 2pf
-        // for the imaginary parts, index placement *does* matter so we must take care
-		    for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
+        for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
 			    {
 				    for(unsigned int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
 					    {
-						    __dtwopf_re_k1(__i,__j) = 0;
-						    __dtwopf_re_k2(__i,__j) = 0;
-						    __dtwopf_re_k3(__i,__j) = 0;
+				        __dtwopf_re_k1(__i,__j) = 0;
+				        __dtwopf_re_k2(__i,__j) = 0;
+				        __dtwopf_re_k3(__i,__j) = 0;
 
 				        __dtwopf_im_k1(__i,__j) = 0;
 				        __dtwopf_im_k2(__i,__j) = 0;
@@ -749,11 +744,14 @@ namespace transport
 
 						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
 							    {
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1(__k,__j);
-								    __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1(__i,__k);
+						        // evolve the real and imaginary components of the 2pf
+						        // for the imaginary parts, index placement *does* matter so we must take care
 
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1(__k,__j);
-								    __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1(__i,__k);
+						        __dtwopf_re_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_re_k1(__k,__j);
+						        __dtwopf_re_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_re_k1(__i,__k);
+
+						        __dtwopf_im_k1(__i,__j) += this->u2_k1[__i][__k]*__twopf_im_k1(__k,__j);
+						        __dtwopf_im_k1(__i,__j) += this->u2_k1[__j][__k]*__twopf_im_k1(__i,__k);
 
 						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__i][__k]*__twopf_re_k2(__k,__j);
 						        __dtwopf_re_k2(__i,__j) += this->u2_k2[__j][__k]*__twopf_re_k2(__i,__k);
@@ -766,20 +764,11 @@ namespace transport
 
 						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__i][__k]*__twopf_im_k3(__k,__j);
 						        __dtwopf_im_k3(__i,__j) += this->u2_k3[__j][__k]*__twopf_im_k3(__i,__k);
-							    }
-					    }
-			    }
 
-        // evolve the components of the 3pf
-        // index placement matters, partly because of the k-dependence
-        // but also in the source terms from the imaginary components of the 2pf
+						        // evolve the components of the 3pf
+						        // index placement matters, partly because of the k-dependence
+						        // but also in the source terms from the imaginary components of the 2pf
 
-        for(unsigned int __i = 0; __i < 2*$$__NUMBER_FIELDS; __i++)
-			    {
-				    for(unsigned int __j = 0; __j < 2*$$__NUMBER_FIELDS; __j++)
-					    {
-						    for(unsigned int __k = 0; __k < 2*$$__NUMBER_FIELDS; __k++)
-							    {
 								    __dthreepf(__i,__j,__k) = 0;
 
 								    __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[__i][$$__M]*__threepf($$__M,__j,__k);
