@@ -782,24 +782,18 @@ namespace transport
 							    {
 								    __dthreepf(__i,__j,__k) = 0;
 
-								    for(unsigned int __m = 0; __m < 2*$$__NUMBER_FIELDS; __m++)
-									    {
-										    __dthreepf(__i,__j,__k) += this->u2_k1[__i][__m]*__threepf(__m,__j,__k);
-										    __dthreepf(__i,__j,__k) += this->u2_k2[__j][__m]*__threepf(__i,__m,__k);
-										    __dthreepf(__i,__j,__k) += this->u2_k3[__k][__m]*__threepf(__i,__j,__m);
+								    __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k1[__i][$$__M]*__threepf($$__M,__j,__k);
+								    __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k2[__j][$$__M]*__threepf(__i,$$__M,__k);
+								    __dthreepf(__i,__j,__k) += 0 $$// + this->u2_k3[__k][$$__M]*__threepf(__i,__j,$$__M);
 
-										    for(unsigned int __n = 0; __n < 2*$$__NUMBER_FIELDS; __n++)
-											    {
-												    __dthreepf(__i,__j,__k) += this->u3_k1k2k3[__i][__m][__n]*__twopf_re_k2(__m,__j)*__twopf_re_k3(__n,__k);
-												    __dthreepf(__i,__j,__k) -= this->u3_k1k2k3[__i][__m][__n]*__twopf_im_k2(__m,__j)*__twopf_im_k3(__n,__k);
+						        __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_re_k2($$__M,__j)*__twopf_re_k3($$__N,__k);
+						        __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k1k2k3[__i][$$__M][$$__N]*__twopf_im_k2($$__M,__j)*__twopf_im_k3($$__N,__k);
 
-										        __dthreepf(__i,__j,__k) += this->u3_k2k1k3[__j][__m][__n]*__twopf_re_k1(__i,__m)*__twopf_re_k3(__n,__k);
-										        __dthreepf(__i,__j,__k) -= this->u3_k2k1k3[__j][__m][__n]*__twopf_im_k1(__i,__m)*__twopf_im_k3(__n,__k);
+						        __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k3($$__N,__k);
+						        __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k2k1k3[__j][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k3($$__N,__k);
 
-										        __dthreepf(__i,__j,__k) += this->u3_k3k1k2[__k][__m][__n]*__twopf_re_k1(__i,__m)*__twopf_re_k2(__j,__n);
-										        __dthreepf(__i,__j,__k) -= this->u3_k3k1k2[__k][__m][__n]*__twopf_im_k1(__i,__m)*__twopf_im_k2(__j,__n);
-											    }
-									    }
+						        __dthreepf(__i,__j,__k) += 0 $$// + this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_re_k1(__i,$$__M)*__twopf_re_k2(__j,$$__N);
+						        __dthreepf(__i,__j,__k) += 0 $$// - this->u3_k3k1k2[__k][$$__M][$$__N]*__twopf_im_k1(__i,$$__M)*__twopf_im_k2(__j,$$__N);
 							    }
 					    }
 			    }
