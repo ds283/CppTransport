@@ -21,8 +21,6 @@
 
 int main(int argc, const char *argv[])
   {
-    std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
-
     boost::timer::auto_cpu_timer timer;
 
     // set up the initial search path to consist only of CWD
@@ -70,7 +68,14 @@ int main(int argc, const char *argv[])
           }
         else if(strcmp(argv[i], "--cse") == 0)    cse = true;
         else if(strcmp(argv[i], "--no-cse") == 0) cse = false;
-        else if((strcmp(argv[i], "--verbose") == 0) || (strcmp(argv[i], "-v") == 0)) verbose = true;
+        else if((strcmp(argv[i], "--verbose") == 0) || (strcmp(argv[i], "-v") == 0))
+	        {
+		        if(!verbose)
+			        {
+		            std::cout << CPPTRANSPORT_NAME << " " << CPPTRANSPORT_VERSION << " " << CPPTRANSPORT_COPYRIGHT << std::endl;
+			        }
+            verbose = true;
+	        }
         else if((argv[i])[0] == '-')  // assume to be a switch we don't know about
           {
             std::ostringstream msg;
@@ -87,13 +92,14 @@ int main(int argc, const char *argv[])
       }
 
     timer.stop();
-    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
-              << " " << files_processed << " "
-              << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
-              << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << std::endl;
 
 		if(verbose)
 			{
+		    std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
+			    << " " << files_processed << " "
+			    << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
+			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << std::endl;
+
 		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " macro replacements" << std::endl;
 			}
 
