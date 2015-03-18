@@ -90,55 +90,51 @@ namespace cpp
 
             if(os != nullptr && t != nullptr)
               {
-                buffer* buf            = os->top_buffer();
+                buffer& buf = os->top_buffer();
                 enum process_type type = os->top_process_type();
 
-                if(buf != nullptr)
+                // set up a new in-memory buffer to hold the translated kernel
+                buffer kernel_buffer;
+
+		            // inherit current decoration (line prefixes, skipping blank lines) from parent buffer
+		            kernel_buffer.inherit_decoration(buf);
+
+                // the lines of the kernel have to be quoted with ", so ask buffer to set up new delimiters
+                // also skip blank lines, which [usually] don't help in stringized kernels
+                kernel_buffer.push_delimiter(OUTPUT_VEXCL_KERNEL_LINE_PRE, OUTPUT_VEXCL_KERNEL_LINE_POST);
+                kernel_buffer.push_skip_blank(true);
+
+		            // set up a filter to ensure we emit only printable strings.
+		            // The bound arguments here are:
+                // * 'false' disables quoting by to_printable())
+                // * 'true' allows newlines to pass through
+                std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
+
+		            // translate into our new in-memory buffer, preserving the type of translation (ie. core or implementation)
+                unsigned int replacements = t->translate(kernel_file, kernel_buffer, type, &filter);
+
+		            // merge new buffer into old one
+		            buf.merge(kernel_buffer);
+
+                // output kernel name string
+                if(args.size() >= 2)
                   {
-                    // safely switch input to the supplied kernel file:
-                    // first, flush anything waiting to be written to the buffer on top of the output stack
-                    buf->flush();
-
-                    // the lines of the kernel have to be quoted with ", so ask buffer to set up new delimiters
-                    // also skip blank lines, which [usually] don't help in stringized kernels
-                    buf->push_delimiter(OUTPUT_VEXCL_KERNEL_LINE_PRE, OUTPUT_VEXCL_KERNEL_LINE_POST);
-                    buf->push_skip_blank(true);
-
-                    // translate the contents of 'kernel_file' into the current output buffer, but do not emit any output (yet)
-                    // preserve the type of translation (core/implementation)
-                    // also, filter to printable strings. The bound arguments here are:
-                    // * 'false' disables quoting by to_printable())
-                    // * 'true' allows newlines to pass through
-                    std::function<std::string(const std::string&)> filter = std::bind(to_printable, std::placeholders::_1, false, true);
-                    unsigned int replacements = t->translate(kernel_file, "", type, buf, &filter);
-
-                    // restore previous state prior to switching back to original input file
-                    buf->pop_skip_blank();
-                    buf->pop_delimiter();
-
-                    // output kernel name string
-                    if(args.size() >= 2)
-                      {
-                        buf->write_to_end(OUTPUT_VEXCL_KERNEL_PRE + args[1] + OUTPUT_VEXCL_KERNEL_POST);
-                      }
-                    else
-                      {
-                        buf->write_to_end(OUTPUT_VEXCL_UNKNOWN_KERNEL);
-                      }
-
-                    // output trailing content, which must appear *before* the location of the new pool, if required
-                    if(args.size() >= 3)
-                      {
-                        buf->write_to_end(args[2]);
-                        buf->write_to_end("");  // skip a line to avoid collisions with the new pool (set below)
-                      }
-
-                    // reset tag pointer on buffer to after the lines we have written
-                    buf->set_tag_to_end();
-
-                    // mark this point as the beginning of a new pool
-                    rval = this->printer.comment(OUTPUT_KERNEL_LOCATION);
+                    buf.write_to_end(OUTPUT_VEXCL_KERNEL_PRE + args[1] + OUTPUT_VEXCL_KERNEL_POST);
                   }
+                else
+                  {
+                    buf.write_to_end(OUTPUT_VEXCL_UNKNOWN_KERNEL);
+                  }
+
+                // output trailing content, which must appear *before* the location of the new pool, if required
+                if(args.size() >= 3)
+                  {
+                    buf.write_to_end(args[2]);
+                    buf.write_to_end("");  // skip a line to avoid collisions with the new pool (set below)
+                  }
+
+                // mark this point as the beginning of a new pool
+                rval = this->printer.comment(OUTPUT_KERNEL_LOCATION);
               }
           }
 

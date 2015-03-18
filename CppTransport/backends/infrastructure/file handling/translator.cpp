@@ -38,37 +38,37 @@ translator::~translator()
 	}
 
 
+void translator::print_advisory(const std::string& msg)
+	{
+    this->unit->print_advisory(msg);
+	}
 
-unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, filter_function* filter)
+
+unsigned int translator::translate(const std::string& in, const std::string& out, enum process_type type, filter_function* filter)
   {
-    buffer* buf = new buffer;
-    unsigned int rval = this->translate(in, out, type, buf, filter);
-    delete buf;
+		buffer buf(out);
+
+    unsigned int rval = this->translate(in, buf, type, filter);
 
     return(rval);
   }
 
 
-void translator::print_advisory(const std::string& msg)
-	{
-		this->unit->print_advisory(msg);
-	}
-
-
-unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
+unsigned int translator::translate(const std::string& in, buffer& buf, enum process_type type, filter_function* filter)
   {
     unsigned int rval = 0;
     std::string  template_in;
 
     finder* path = this->unit->get_finder();
 
-    if(path->fqpn(in + ".h", template_in) == true)    // leaves fully qualified pathname in template_in if it exists
+		// try to find a template corresponding to the input filename
+    if(path->fqpn(in + ".h", template_in))    // leaves fully qualified pathname in template_in if it exists
       {
-        rval += this->process(template_in, out, type, buf, filter);
+        rval += this->process(template_in, buf, type, filter);
       }
-    else if(path->fqpn(in, template_in) == true)
+    else if(path->fqpn(in, template_in))
       {
-        rval += this->process(template_in, out, type, buf, filter);
+        rval += this->process(template_in, buf, type, filter);
       }
     else
       {
@@ -81,7 +81,7 @@ unsigned int translator::translate(const std::string in, const std::string out, 
   }
 
 
-unsigned int translator::process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter)
+unsigned int translator::process(const std::string in, buffer& buf, enum process_type type, filter_function* filter)
   {
     unsigned int replacements = 0;
     std::ifstream inf;
@@ -94,108 +94,80 @@ unsigned int translator::process(const std::string in, const std::string out, en
         double minver;
 
 		    // emit advisory that translation is underway
-		    if(out != "")
+        std::ostringstream translation_msg;
+        translation_msg << MESSAGE_TRANSLATING << " '" << in << "'";
+		    if(!buf.is_memory())
 			    {
-		        std::ostringstream translation_msg;
-		        translation_msg << MESSAGE_TRANSLATING << " '" << in << "' to '" << out << "'";
-		        this->unit->print_advisory(translation_msg.str());
+		        translation_msg << " " << MESSAGE_TRANSLATING_TO << " '" << buf.get_filename() << "'";
 			    }
+        this->unit->print_advisory(translation_msg.str());
 
+		    // decide which backend and API version are required
         std::getline(inf, line);
         this->parse_header_line(in, line, backend, minver);
 
         if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
           {
-            // want to generate an object on the stack *before* we call package_group,
-            // because the constructors of replacement_rule_package objects may depend
-            // on it being there
-            output_stack* os  = this->unit->get_stack();
-            os->push(out, in, buf, type);  // current line number is automatically set to 1
-
             // generate an appropriate backend
 		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'
-            package_group* package = package_group_factory(backend, this->unit, this->cache);
+            std::shared_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
 
-            if(package != nullptr)
+            // generate a macro replacement agent based on this package group
+            macro_agent agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+
+            // push this input file to the top of the filestack
+            output_stack* os  = this->unit->get_stack();
+            os->push(in, buf, agent, type);  // current line number is automatically set to 1
+
+            while(!inf.eof() && !inf.fail())
               {
-		            // generate a macro replacement agent based on this package group
-                macro_agent* ms = new macro_agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+                // read in a line from the template
+                std::getline(inf, line);
 
-                os->push_top_data(ms, package);
+                // apply macro replacement to this line, keeping track of how many replacements are performed
+                unsigned int new_replacements = 0;
+                std::shared_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
+                replacements += new_replacements;
 
-                while(inf.eof() == false && inf.fail() == false)
+                std::ostringstream continuation_tag;
+                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
+
+                unsigned int c = 0;
+                for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); l++, c++)
                   {
-                    // read in a line from the template
-                    std::getline(inf, line);
+                    std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
 
-                    // apply macro replacement to this line, keeping track of how many replacements are performed
-		                unsigned int new_replacements = 0;
-                    std::shared_ptr< std::vector<std::string> > line_list = ms->apply(line, new_replacements);
-		                replacements += new_replacements;
-
-                    std::ostringstream continuation_tag;
-		                continuation_tag << " " << package->get_comment_separator() << " " << MESSAGE_EXPANSION_OF_LINE << " " << os->get_line();
-
-		                unsigned int c = 0;
-                    for(std::vector<std::string>::const_iterator l = line_list->begin(); l != line_list->end(); l++, c++)
-	                    {
-		                    std::string out_line = *l + (c > 0 ? continuation_tag.str() : "");
-                        if(filter != nullptr)
-	                        {
-                            buf->write_to_end((*filter)(out_line));
-	                        }
-                        else
-	                        {
-                            buf->write_to_end(out_line);
-	                        }
-	                    }
-
-                    os->increment_line();
+                    if(filter != nullptr) buf.write_to_end((*filter)(out_line));
+                    else                  buf.write_to_end(out_line);
                   }
 
-                // if we are required to output the buffer, do so.
-                // any temporaries will be automatically flushed.
-                // if we are not required to output, temporaries
-                // will be flushed when the package_group is destroyed
-                // below
-                if(out != "")
-	                {
-                    buf->emit(out);
-
-                    // emit advisory that translation has finished
-                    std::ostringstream finished_msg;
-                    finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
-                    this->unit->print_advisory(finished_msg.str());
-	                }
-
-		            // report time spent doing macro replacement
-		            package->report_macro_metadata(ms->get_total_time(), ms->get_tokenization_time());
-
-		            // clean up: destroy macro_agent
-//		            delete ms;
-              }
-            else  // didn't find a package_group matching the requested backend
-              {
-                std::ostringstream msg;
-                msg << ERROR_TEMPLATE_BACKEND_A << " '" << in << "' " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";
-                error(msg.str());
+                os->increment_line();
               }
 
-		        // clean up: destroy package_group
-            // note that destruction of the package_group must happen
-            // before the output stack is adjusted, because replacement_rule_packages
-            // may depend on the stack contents
-            delete package;
+		        // report end of input to the backend;
+		        // this enables it to do any tidying-up which may be required,
+		        // such as depositing temporaries to a temporary pool
+		        package->report_end_of_input();
             os->pop();
+
+            // emit advisory that translation is complete
+            std::ostringstream finished_msg;
+            finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+            this->unit->print_advisory(finished_msg.str());
+
+            // report time spent doing macro replacement
+            package->report_macro_metadata(agent.get_total_time(), agent.get_tokenization_time());
+
+		        // package will report on time and memory use when it goes out of scope and is destroyed
           }
-        else
+        else  // we can't handle this template -- the API version required is too new
           {
             std::ostringstream msg;
             msg << ERROR_TEMPLATE_TOO_RECENT_A << " '" << in << "' " << ERROR_TEMPLATE_TOO_RECENT_B << minver << ")";
             error(msg.str());
           }
       }
-    else
+    else  // failed to open the input file
       {
         std::ostringstream msg;
         msg << ERROR_READING_TEMPLATE << " '" << in << "'";

@@ -28,55 +28,10 @@ void output_stack::push(const std::string name)
   }
 
 
-void output_stack::push(const std::string out, const std::string in, buffer* buf, enum process_type type)
+void output_stack::push(const std::string& in, buffer& buf, macro_agent& agent, enum process_type type)
   {
-    assert(buf != nullptr);
-
-    struct inclusion incl;
-
-    incl.line    = 1;
-    incl.in      = in;
-    incl.out     = out;
-    incl.buf     = buf;
-    incl.ms      = nullptr;   // these elements should be updated with push_top_data(), below - can't see a simple way round this
-    incl.package = nullptr;
-    incl.type    = type;
-
-    this->inclusions.push_front(incl);
-  }
-
-
-void output_stack::push_top_data(macro_agent* ms, package_group* pkg)
-  {
-    assert(ms != nullptr);
-    assert(pkg != nullptr);
-
-    if(inclusions.size() == 0)
-      {
-        basic_error(ERROR_FILESTACK_EMPTY);
-      }
-    else
-      {
-        assert(this->inclusions[0].ms == nullptr);
-        assert(this->inclusions[0].package == nullptr);
-
-        if(this->inclusions[0].ms == nullptr)
-          {
-            this->inclusions[0].ms = ms;
-          }
-        else
-          {
-            basic_error(ERROR_FILESTACK_OVERWRITE);
-          }
-        if(this->inclusions[0].package == nullptr)
-          {
-            this->inclusions[0].package = pkg;
-          }
-        else
-          {
-            basic_error(ERROR_FILESTACK_OVERWRITE);
-          }
-      }
+		// NOTE ms and package elements shoul dbe updated later with push_top_data()
+    this->inclusions.push_front(inclusion(in, 1, buf, agent, type));
   }
 
 
@@ -169,52 +124,32 @@ std::string output_stack::write(size_t level) const
   }
 
 
-buffer* output_stack::top_buffer() const
+buffer& output_stack::top_buffer()
   {
-    buffer* rval = nullptr;
-
     if(inclusions.size() > 0)
       {
-        rval = this->inclusions[0].buf;
-      }
-    else
-      {
-        basic_error(ERROR_FILESTACK_EMPTY);
+        return this->inclusions[0].buf;
       }
 
-    return(rval);
+    throw std::runtime_error(ERROR_FILESTACK_EMPTY);
   }
 
 
-macro_agent* output_stack::top_macro_package() const
+macro_agent& output_stack::top_macro_package()
   {
-    macro_agent* rval = nullptr;
-
     if(inclusions.size() > 0)
       {
-        rval = this->inclusions[0].ms;
+        return this->inclusions[0].agent;
       }
-    else
-      {
-        basic_error(ERROR_FILESTACK_EMPTY);
-      }
-
-    return(rval);
+    throw std::runtime_error(ERROR_FILESTACK_EMPTY);
   }
 
 
 enum process_type output_stack::top_process_type() const
   {
-    enum process_type rval = process_core;
-
     if(inclusions.size() > 0)
       {
-        rval = this->inclusions[0].type;
+        return this->inclusions[0].type;
       }
-    else
-      {
-        basic_error(ERROR_FILESTACK_EMPTY);
-      }
-
-    return(rval);
+    basic_error(ERROR_FILESTACK_EMPTY);
   }

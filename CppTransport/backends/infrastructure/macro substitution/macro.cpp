@@ -7,7 +7,6 @@
 
 
 #include <assert.h>
-#include <ctype.h>
 
 #include "boost/algorithm/string.hpp"
 
@@ -18,9 +17,8 @@
 // **************************************************************************************
 
 
-macro_agent::macro_agent(translation_unit* u, package_group* pkg, std::string pf, std::string sp, unsigned int dm)
+macro_agent::macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg, std::string pf, std::string sp, unsigned int dm)
   : unit(u),
-    package(pkg),
     prefix(pf),
     split(sp),
     recursion_max(dm),
@@ -30,7 +28,6 @@ macro_agent::macro_agent(translation_unit* u, package_group* pkg, std::string pf
     index_rule_cache(pkg->get_index_ruleset())
   {
     assert(unit != nullptr);
-    assert(package != nullptr);
     assert(recursion_max > 0);
 
 		// pause timers
@@ -62,7 +59,7 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
       {
         std::ostringstream msg;
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
-        this->package->warn(msg.str());
+        this->unit->warn(msg.str());
       }
 
 		// if timer was stopped, stop it again

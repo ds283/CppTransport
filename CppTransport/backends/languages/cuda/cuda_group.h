@@ -27,6 +27,8 @@ class cuda_group : public package_group
     cuda_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~cuda_group();
 
+    virtual void report_end_of_input() override;
+
   protected:
     cuda::cuda_printer                  printer;
 

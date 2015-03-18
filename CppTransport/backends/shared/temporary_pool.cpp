@@ -21,28 +21,13 @@ namespace macro_packages
   {
 
     temporary_pool::temporary_pool(translation_unit* u, language_printer& p, std::string t)
-     : pool_template(t), unique(0), tag_set(false), replacement_rule_package(u, p)
-      {
-        // bind ourselves to the buffer on top of the stack, and remember which buffer that was
-        // so we can deregister later
-        registered_buf     = unit->get_stack()->top_buffer();
-        registered_handler = std::bind(&temporary_pool::deposit_temporaries, this);
-
-        if(registered_buf != nullptr)
-          {
-            registered_buf->register_closure_handler(registered_handler, this);
-          }
-      }
+	    : pool_template(t), unique(0), tag_set(false), replacement_rule_package(u, p)
+	    {
+	    }
 
 
     temporary_pool::~temporary_pool()
       {
-        if(!tag_set) this->warn(WARNING_TEMPORARY_NO_TAG_SET);
-        this->deposit_temporaries();
-        if(this->registered_buf != nullptr)
-          {
-            this->registered_buf->deregister_closure_handler(registered_handler, this);
-          }
       }
 
 
@@ -96,6 +81,13 @@ namespace macro_packages
       }
 
 
+		void temporary_pool::report_end_of_input()
+			{
+		    if(!this->tag_set) this->warn(WARNING_TEMPORARY_NO_TAG_SET);
+		    this->deposit_temporaries();
+			}
+
+
     // *******************************************************************
 
 
@@ -110,39 +102,28 @@ namespace macro_packages
         if(tag_set)
           {
             // get buffer and macro package from the top of the stack
-            buffer*        buf = this->unit->get_stack()->top_buffer();
-            macro_agent* ms  = this->unit->get_stack()->top_macro_package();
+            buffer&      buf = this->unit->get_stack()->top_buffer();
+            macro_agent& ms  = this->unit->get_stack()->top_macro_package();
 
-            if(buf == nullptr)
-              {
-                error(ERROR_NO_BUFFER_REGISTERED);
-              }
-            else if(ms == nullptr)
-              {
-                error(ERROR_NO_MACROS_REGISTERED);
-              }
-            else
-              {
-                // get temporaries which need to be deposited
-                std::string temps = this->cse_worker->temporaries(this->pool_template);
+            // get temporaries which need to be deposited
+            std::string temps = this->cse_worker->temporaries(this->pool_template);
 
-                // apply macro replacement to them, in case this is required
-		            unsigned int replacements;
-                std::shared_ptr< std::vector<std::string> > r_list = ms->apply(temps, replacements);
+            // apply macro replacement to them, in case this is required
+            unsigned int replacements;
+            std::shared_ptr< std::vector<std::string> > r_list = ms.apply(temps, replacements);
 
-                // write to current tagged position, but don't move it - we might need to write again later
-                std::ostringstream label;
-                label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
-                buf->write_to_tag(this->printer.comment(label.str()));
+            // write to current tagged position, but don't move it - we might need to write again later
+            std::ostringstream label;
+            label << OUTPUT_TEMPORARY_POOL_START << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique++ << ")";
+            buf.write_to_tag(this->printer.comment(label.str()));
 
-		            for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); l++)
-			            {
-		                if(temps != "") buf->write_to_tag(*l);
-			            }
+            for(std::vector<std::string>::const_iterator l = r_list->begin(); l != r_list->end(); l++)
+	            {
+                if(temps != "") buf.write_to_tag(*l);
+	            }
 
-                // clear worker object; if we don't we might duplicate temporaries we've already written out
-                this->cse_worker->clear();
-              }
+            // clear worker object; if we don't we might duplicate temporaries we've already written out
+            this->cse_worker->clear();
           }
        }
 
@@ -160,29 +141,22 @@ namespace macro_packages
         // to update its location
 
         // get buffer and macro package from the top of the stack
-        buffer* buf = this->unit->get_stack()->top_buffer();
+        buffer& buf = this->unit->get_stack()->top_buffer();
 
-        if(buf == nullptr)
-          {
-            error(ERROR_NO_BUFFER_REGISTERED);
-          }
-        else
-          {
-            // flush any existing temporaries to the preceding pool, if one exists
-            if(this->tag_set) this->deposit_temporaries();
+        // flush any existing temporaries to the preceding pool, if one exists
+        if(this->tag_set) this->deposit_temporaries();
 
-            // remember new template
-            this->pool_template = t;
+        // remember new template
+        this->pool_template = t;
 
-            // mark current endpoint in the buffer as the new insertion point
-            buf->set_tag_to_end();
-            this->tag_set = true;
+        // mark current endpoint in the buffer as the new insertion point
+        buf.set_tag_to_end();
+        this->tag_set = true;
 
-            // temporary pool will be inserted *before* the line corresponding to this macro
-            std::ostringstream label;
-            label << OUTPUT_TEMPORARY_POOL_END << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique << ")";
-            rval = this->printer.comment(label.str());
-          }
+        // temporary pool will be inserted *before* the line corresponding to this macro
+        std::ostringstream label;
+        label << OUTPUT_TEMPORARY_POOL_END << " (" << OUTPUT_TEMPORARY_POOL_SEQUENCE << "=" << this->unique << ")";
+        rval = this->printer.comment(label.str());
 
         return(rval);
       }

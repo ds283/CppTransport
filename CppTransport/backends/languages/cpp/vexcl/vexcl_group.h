@@ -29,6 +29,8 @@ class vexcl_group: public package_group
     vexcl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~vexcl_group();
 
+    virtual void report_end_of_input() override;
+
   protected:
     cpp::cpp_printer                    printer;
 

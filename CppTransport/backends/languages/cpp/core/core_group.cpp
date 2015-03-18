@@ -52,3 +52,11 @@ core_group::~core_group()
 
 		// cse_worker gets deleted by base
   }
+
+
+void core_group::report_end_of_input()
+	{
+		assert(this->tp != nullptr);
+
+		this->tp->report_end_of_input();
+	}

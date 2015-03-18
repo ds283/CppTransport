@@ -11,7 +11,6 @@
 #include "buffer.h"
 #include "output_stack.h"
 
-
 #include "ginac_cache.h"
 #include "formatter.h"
 
@@ -39,17 +38,21 @@ class translator
     ~translator();
 
 
-		// INTERFACE
+		// INTERFACE - TRANSLATION
 
   public:
 
-    // translate, using the data in the supplied translation_unit, from
-    // the template 'in' to the template 'out'
-    // sometimes we want to supply a buffer, because we share buffers
-    // across different input sources
-    // otherwise, translate() creates a suitable buffer internally
-    unsigned int translate(const std::string in, const std::string out, enum process_type type, filter_function* filter=nullptr);
-    unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter=nullptr);
+    // translate from template 'in', depositing output in the file 'out'
+		// implemented internally by constructed a buffer and calling the next variant
+    unsigned int translate(const std::string& in, const std::string& out, enum process_type type, filter_function* filter=nullptr);
+
+		// translate from template 'in', depositing output in the supplied buffer 'buf'
+    unsigned int translate(const std::string& in, buffer& buf, enum process_type type, filter_function* filter=nullptr);
+
+
+		// INTERFACE - UTILITY FUNCTIONS
+
+  public:
 
 		// print an advisory message to standard output
 		// whether the message is actually printing can depend on the current verbosity setting
@@ -62,7 +65,7 @@ class translator
   protected:
 
     // internal API to process a file
-    unsigned int process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter);
+    unsigned int process(const std::string in, buffer& buf, enum process_type type, filter_function* filter);
 
     // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
     void parse_header_line(const std::string in, const std::string line, std::string& backend, double& minver);

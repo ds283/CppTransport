@@ -10,6 +10,7 @@
 
 
 #include <string>
+#include <memory>
 
 #include "translation_unit.h"
 #include "package_group.h"
@@ -19,8 +20,8 @@
 #include "ginac_cache.h"
 
 
-package_group* package_group_factory(std::string backend, translation_unit* unit,
-                                     ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+std::shared_ptr<package_group> package_group_factory(const std::string& in, const std::string& backend, translation_unit* unit,
+                                                     ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
 
 
 #endif //__package_group_factory_H_

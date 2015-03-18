@@ -86,7 +86,7 @@ int main(int argc, const char *argv[])
           {
             translation_unit unit((std::string)argv[i], &path, current_core, current_implementation, cse, verbose);
 
-            replacements += unit.do_replacement();
+            replacements += unit.apply();
             files_processed++;
           }
       }

@@ -155,7 +155,7 @@ translation_unit::~translation_unit()
 // ******************************************************************
 
 
-unsigned int translation_unit::do_replacement()
+unsigned int translation_unit::apply()
   {
     unsigned int rval = 0;
 
@@ -391,6 +391,18 @@ void translation_unit::print_advisory(const std::string& msg)
 			{
 		    std::cout << CPPTRANSPORT_NAME << ": " << msg << std::endl;
 			}
+	}
+
+
+void translation_unit::error(const std::string& msg)
+	{
+		::error(msg, this->stack);
+	}
+
+
+void translation_unit::warn(const std::string& msg)
+	{
+		::warn(msg, this->stack);
 	}
 
 

@@ -23,7 +23,7 @@
 
 #define ERROR_MISSING_PATHNAME                "Too few arguments: expected pathname following"
 
-#define ERROR_CPP_BUFFER_WRITE                "Error writing to output file"
+#define ERROR_CPP_BUFFER_WRITE                "Error opening output file"
 
 #define ERROR_CSE_POWER_ARGUMENTS             "Unexpected number of arguments to pow() during common subexpression elimination"
 
@@ -111,13 +111,16 @@
 #define MESSAGE_MACRO_TIME                    "macro replacement took"
 #define MESSAGE_TOKENIZATION_TIME             "of which time spent tokenizing"
 
-#define MESSAGE_PROCESSING_COMPLETE_A         "Processed"
+#define MESSAGE_PROCESSING_COMPLETE_A         "processed"
 #define MESSAGE_PROCESSING_SINGULAR           "model"
 #define MESSAGE_PROCESSING_PLURAL             "models"
 #define MESSAGE_PROCESSING_COMPLETE_B         "in time"
 
 #define MESSAGE_TRANSLATING                   "translating"
+#define MESSAGE_TRANSLATING_TO                "into"
 #define MESSAGE_EXPANSION_OF_LINE             "expansion of template line"
+
+#define MESSAGE_OPENED_BUFFER                 "opened output file"
 
 #define MESSAGE_TRANSLATION_RESULT            "translation succeeded with"
 #define MESSAGE_MACRO_REPLACEMENTS            "macro replacements"
@@ -160,7 +163,7 @@
 #define OUTPUT_TEMPORARY_POOL_START           "-- START -- temporary pool"
 #define OUTPUT_TEMPORARY_POOL_END             "-- END -- temporary pool"
 #define OUTPUT_TEMPORARY_POOL_SEQUENCE        "sequence"
-#define OUTPUT_KERNEL_LOCATION                "-- KERNEL INSERTION - closed temporary pool"
+#define OUTPUT_KERNEL_LOCATION                "-- VEXCL KERNEL INSERTION"
 
 #define OUTPUT_VEXCL_KERNEL_PRE               ", \""
 #define OUTPUT_VEXCL_KERNEL_POST              "\""

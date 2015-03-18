@@ -54,3 +54,11 @@ vexcl_group::~vexcl_group()
 
     // cse_worker gets deleted by base
   }
+
+
+void vexcl_group::report_end_of_input()
+	{
+    assert(this->tp != nullptr);
+
+    this->tp->report_end_of_input();
+	}

@@ -42,18 +42,6 @@ package_group::~package_group()
   }
 
 
-void package_group::error(const std::string msg)
-  {
-    ::error(msg, this->unit->get_stack());
-  }
-
-
-void package_group::warn(const std::string msg)
-  {
-    ::warn(msg, this->unit->get_stack());
-  }
-
-
 void package_group::push_back(macro_packages::replacement_rule_package* package)
   {
     assert(this->u_factory != nullptr);

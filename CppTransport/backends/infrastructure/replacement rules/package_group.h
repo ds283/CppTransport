@@ -33,19 +33,18 @@ class package_group
     virtual ~package_group();
 
 
-		// INTERFACE - ERRORS AND WARNINGS
+		// INTERFACE - REPORT END OF INPUT
 
   public:
 
-    void                                                 error              (const std::string msg);
-    void                                                 warn               (const std::string msg);
+		virtual void report_end_of_input() = 0;
 
 
 		// INTERFACE - GET RULES ASSOCIATED WITH THIS GROUP OF MACRO PACKAGES
 
   public:
 
-    // return references to our internal ruleset caches
+    // return references to our ruleset caches
     // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
     std::vector<macro_packages::simple_rule>&            get_pre_ruleset    ();
     std::vector<macro_packages::simple_rule>&            get_post_ruleset   ();

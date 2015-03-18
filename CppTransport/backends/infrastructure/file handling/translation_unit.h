@@ -31,7 +31,32 @@ class translation_unit
 
     ~translation_unit();
 
-    unsigned int do_replacement();
+
+		// INTERFACE
+
+  public:
+
+		// perform translation
+    unsigned int apply();
+
+
+		// UTILITIES
+
+  public:
+
+		// print an advisory message, if the current verbosity level is set sufficiently high
+    void print_advisory(const std::string& msg);
+
+		// print a warning message
+		void warn(const std::string& msg);
+
+		// print an error message
+		void error(const std::string& msg);
+
+
+		// INTERFACE - EXTRACT INFORMATION ABOUT THIS TRANSLATION UNIT
+
+  public:
 
     const std::string&                                 get_model_input() const;
 
@@ -72,8 +97,6 @@ class translation_unit
     translator*                                        get_translator();
 
 		symbol_factory&                                    get_symbol_factory();
-
-    void                                               print_advisory(const std::string& msg);
 
   protected:
 

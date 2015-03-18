@@ -50,3 +50,11 @@ opencl_group::~opencl_group()
 
     // cse_worker gets deleted by base
   }
+
+
+void opencl_group::report_end_of_input()
+	{
+    assert(this->tp != nullptr);
+
+    this->tp->report_end_of_input();
+	}

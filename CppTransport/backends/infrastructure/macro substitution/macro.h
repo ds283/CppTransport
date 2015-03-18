@@ -44,7 +44,7 @@ class macro_agent
   public:
 
 		// constructor
-		macro_agent(translation_unit* u, package_group* pkg, std::string pf, std::string sp,
+		macro_agent(translation_unit* u, std::shared_ptr<package_group> pkg, std::string pf, std::string sp,
 		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
 
@@ -109,7 +109,6 @@ class macro_agent
     unsigned int recursion_max;
 
     translation_unit* unit;
-    package_group*    package;
 
     std::vector<macro_packages::simple_rule>& pre_rule_cache;
     std::vector<macro_packages::simple_rule>& post_rule_cache;

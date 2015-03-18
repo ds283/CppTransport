@@ -31,6 +31,8 @@ class core_group: public package_group
     core_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~core_group();
 
+		virtual void report_end_of_input() override;
+
   protected:
 
     cpp::cpp_printer                    printer;

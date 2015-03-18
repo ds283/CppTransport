@@ -27,6 +27,8 @@ class opencl_group: public package_group
     opencl_group(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
     ~opencl_group();
 
+    virtual void report_end_of_input() override;
+
   protected:
     opencl::opencl_printer              printer;
 

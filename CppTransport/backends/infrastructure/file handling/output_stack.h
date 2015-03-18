@@ -26,49 +26,83 @@ enum process_type { process_core, process_implementation };
 
 class output_stack: public filestack_derivation_helper<output_stack>
   {
+
   public:
 
-    struct inclusion
+    class inclusion
       {
-        std::string       out;    // name of file being *written*
-        std::string       in;     // name of file being read from
+
+      public:
+
+		    inclusion(const std::string& i, unsigned int l, buffer& b, macro_agent& a, enum process_type t)
+			    : in(i),
+			      line(l),
+			      buf(b),
+			      agent(a),
+			      type(t)
+			    {
+			    }
+
+      public:
+
+        std::string       in;
         unsigned int      line;
-        buffer*           buf;
-        macro_agent*    ms;
-        package_group*    package;
+        buffer&           buf;
+		    macro_agent&      agent;
         enum process_type type;
+
       };
 
+
+		// CONSTRUCTOR, DESTRUCOTR
+
+  public:
+
     ~output_stack();
+
+
+		// INTERFACE - implements a 'filestack' interface
+
+  public:
+
+		// PUSH AND POP
 
     // we are forced to have the basic push method inherited from filestack, even though we don't want it,
     // because otherwise it makes output_stack abstract
     void              push              (const std::string name);
 
     // push an object to the top of the stack
-    void              push              (const std::string out, const std::string in, buffer* buf, enum process_type type);
+    void              push              (const std::string& in, buffer& buf, macro_agent& agent, enum process_type type);
 
-    // really, we want the macro_agent* and package_group* information as part of the push() method above,
-    // but constructors for the replacement_package_data objects may depend on there being objects
-    // on the stack - eg. temporary_pool, which uses this mechanism to claim buffer emit notifications.
-    // so, allow this data to be updated afterwards
-    void              push_top_data     (macro_agent* ms, package_group* pkg);
+    void              pop               ();
+
+		// HANDLE LINE NUMBERS
 
     void              set_line          (unsigned int line);
     unsigned int      increment_line    ();
     unsigned int      get_line          () const;
 
-    void              pop               ();
+		// STRINGIZE
 
     std::string       write             (size_t level) const;
     std::string       write             () const;
 
-    buffer*           top_buffer        () const;
-    macro_agent       *    top_macro_package () const;
+
+		// INTERFACE - specific to output_stack
+
+  public:
+
+    buffer&           top_buffer        ();
+    macro_agent&      top_macro_package ();
     enum process_type top_process_type  () const;
 
+
+		// INTERNAL DATA
+
   protected:
+
     std::deque<struct inclusion> inclusions;
+
   };
 
 
