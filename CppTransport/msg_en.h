@@ -106,12 +106,15 @@
 #define MESSAGE_EXPRESSION_CACHE_MISSES       "misses"
 
 #define MESSAGE_PROCESSING_COMPLETE_A         "Processed"
-#define MESSAGE_PROCESSING_SINGULAR           "file"
-#define MESSAGE_PROCESSING_PLURAL             "files"
+#define MESSAGE_PROCESSING_SINGULAR           "model"
+#define MESSAGE_PROCESSING_PLURAL             "models"
 #define MESSAGE_PROCESSING_COMPLETE_B         "in time"
 
-#define MESSAGE_TRANSLATING                   "Translating"
+#define MESSAGE_TRANSLATING                   "translating"
 #define MESSAGE_EXPANSION_OF_LINE             "expansion of template line"
+
+#define MESSAGE_TRANSLATION_RESULT            "translation succeeded with"
+#define MESSAGE_MACRO_REPLACEMENTS            "macro replacements"
 
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
 

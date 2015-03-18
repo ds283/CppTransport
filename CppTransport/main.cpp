@@ -100,7 +100,7 @@ int main(int argc, const char *argv[])
 			    << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
 			    << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << std::endl;
 
-		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " macro replacements" << std::endl;
+//		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS << std::endl;
 			}
 
     return 0;

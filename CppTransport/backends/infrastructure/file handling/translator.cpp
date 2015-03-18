@@ -175,6 +175,10 @@ unsigned int translator::process(const std::string in, const std::string out, en
 
     inf.close();
 
+    std::ostringstream finished_msg;
+		finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+		this->unit->print_advisory(finished_msg.str());
+
     return(replacements);
   }
 
