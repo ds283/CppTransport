@@ -168,6 +168,9 @@ unsigned int translator::process(const std::string in, const std::string out, en
                     this->unit->print_advisory(finished_msg.str());
 	                }
 
+		            // report time spent doing macro replacement
+		            package->report_macro_metadata(ms->get_total_time(), ms->get_tokenization_time());
+
 		            // clean up: destroy macro_agent
 //		            delete ms;
               }

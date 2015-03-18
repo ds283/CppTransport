@@ -33,6 +33,10 @@ macro_agent::macro_agent(translation_unit* u, package_group* pkg, std::string pf
     assert(package != nullptr);
     assert(recursion_max > 0);
 
+		// pause timers
+		timer.stop();
+		tokenization_timer.stop();
+
     if(recursion_max == 0) recursion_max = 1;
 
     fields     = unit->get_number_fields();
@@ -43,8 +47,9 @@ macro_agent::macro_agent(translation_unit* u, package_group* pkg, std::string pf
 
 std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
-//		// set up CPU timer to measure how long execution takes
-//    boost::timer::cpu_timer timer;
+		// if timer is stopped, restart it
+		bool stopped = this->timer.is_stopped();
+		if(stopped) timer.resume();
 
     std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
@@ -59,6 +64,9 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
         msg << WARNING_RECURSION_DEPTH << "=" << this->recursion_max << ")";
         this->package->warn(msg.str());
       }
+
+		// if timer was stopped, stop it again
+		if(stopped) timer.stop();
 
     return(r_list);
   }
@@ -103,8 +111,10 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string&
         right.pop_back();
 	    }
 
+		tokenization_timer.resume();
 		token_list left_tokens(left, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
 		token_list right_tokens(right, this->prefix, this->pre_rule_cache, this->post_rule_cache, this->index_rule_cache);
+		tokenization_timer.stop();
 
     // running total of number of macro replacements
     unsigned int counter = 0;

@@ -12,7 +12,8 @@
 package_group::package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
   : unit(u),
     cse_worker(nullptr),    // should be set to a sensible value in the derived class constructor
-    comment_string(cmnt)
+    comment_string(cmnt),
+		statistics_reported(false)
   {
     assert(unit != nullptr);
 
@@ -23,11 +24,17 @@ package_group::package_group(translation_unit* u, const std::string& cmnt, ginac
 
 package_group::~package_group()
   {
-    std::ostringstream msg;
-		msg << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory->get_symbolic_compute_time())
-				<< ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time());
+		if(this->statistics_reported)
+			{
+		    std::ostringstream msg;
 
-		this->unit->print_advisory(msg.str());
+				msg << MESSAGE_MACRO_TIME << " " << format_time(this->macro_replacement_time)
+						<< ", " << MESSAGE_TOKENIZATION_TIME << " " << format_time(this->macro_tokenization_time)
+						<< " (" << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory->get_symbolic_compute_time())
+			      << ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time()) << ")";
+
+		    this->unit->print_advisory(msg.str());
+			}
 
     delete this->u_factory;
     delete this->fl;

@@ -60,6 +60,14 @@ class package_group
 		const std::string&                                   get_comment_separator() const { return(this->comment_string); }
 
 
+		// INTERFACE - STATISTICS
+
+  public:
+
+		// report macro replacement time data
+		void report_macro_metadata(boost::timer::nanosecond_type m, boost::timer::nanosecond_type t) { this->statistics_reported = true; this->macro_replacement_time = m; this->macro_tokenization_time = t; }
+
+
 		// INTERNAL API
 
   protected:
@@ -86,6 +94,12 @@ class package_group
     std::vector<macro_packages::simple_rule>             pre_ruleset;
     std::vector<macro_packages::simple_rule>             post_ruleset;
     std::vector<macro_packages::index_rule>              index_ruleset;
+
+		// statistics
+		bool statistics_reported;
+		boost::timer::nanosecond_type macro_replacement_time;
+		boost::timer::nanosecond_type macro_tokenization_time;
+
   };
 
 

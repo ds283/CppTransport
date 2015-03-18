@@ -24,7 +24,7 @@
 #include "translation_unit.h"
 #include "replacement_rule_definitions.h"
 
-#include "boost/timer/timer.hpp"
+#include <boost/timer/timer.hpp>
 
 
 class package_group;
@@ -50,9 +50,22 @@ class macro_agent
 
 		// INTERFACE
 
+  public:
+
     // apply macro substitution to a line, provided this does not bring the total number
     // of recursive applications above the maximum
     std::shared_ptr< std::vector<std::string> > apply(std::string& line, unsigned int& replacements);
+
+
+		// INTERFACE - STATISTICS
+
+  public:
+
+		// get total time spent doing macro replacement
+		boost::timer::nanosecond_type get_total_time() const { return(this->timer.elapsed().wall); }
+
+		// get time spent doing tokenization
+		boost::timer::nanosecond_type get_tokenization_time() const { return(this->tokenization_timer.elapsed().wall); }
 
 
 		// INTERNAL API
@@ -104,6 +117,12 @@ class macro_agent
 
     const std::string prefix;
     const std::string split;
+
+		// timer to measure performance during macro replacement
+		boost::timer::cpu_timer timer;
+
+		// measure time spent tokenizing
+		boost::timer::cpu_timer tokenization_timer;
 
 	};
 
