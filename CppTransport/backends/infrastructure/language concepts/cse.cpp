@@ -197,7 +197,8 @@ cse_map::cse_map(std::vector<GiNaC::ex>* l, cse* c)
     assert(l != nullptr);
     assert(c != nullptr);
 
-    if(cse_worker->get_do_cse())
+		// if doing CSE, parse the whole vector of expressions
+    if(cse_worker->get_perform_cse())
       {
         // parse each component of the container
         for(int i = 0; i < list->size(); i++)
@@ -220,7 +221,7 @@ std::string cse_map::operator[](unsigned int index)
 
     if(index < this->list->size())
       {
-        if(this->cse_worker->get_do_cse())
+        if(this->cse_worker->get_perform_cse())
           {
             rval = this->cse_worker->get_symbol_and_tag((*this->list)[index]);
           }

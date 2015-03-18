@@ -118,7 +118,7 @@ class cse
   public:
 
     cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
-      : serial_number(s), printer(p), do_cse(d), temporary_name_kernel(k), symbol_counter(0)
+      : serial_number(s), printer(p), perform_cse(d), temporary_name_kernel(k), symbol_counter(0)
       {
 		    // pause timer
 		    timer.stop();
@@ -156,6 +156,10 @@ class cse
 
   public:
 
+		// build a 'CSE map' from a vector of GiNaC expressions
+		// The 'CSE map' is a container object which can be indexed to return
+		// either the CSE temporary representing a particular expression in the vector,
+		// or (if we are not performing CSE) the expression itself
     cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this)); }
 
 
@@ -163,16 +167,21 @@ class cse
 
   public:
 
-    bool               get_do_cse()                           { return(this->do_cse); }
-    void               set_do_cse(bool d)                     { this->do_cse = d; }
+		// get CSE active flag
+    bool               get_perform_cse() const { return(this->perform_cse); }
 
-    language_printer&  get_ginac_printer()                    { return(this->printer); }
+		// set CSE active flag
+    void               set_perform_cse(bool d) { this->perform_cse = d; }
+
+		// get raw GiNaC printer associated with this CSE worker
+    language_printer&  get_ginac_printer() { return(this->printer); }
 
 
 		// INTERFACE - STATISTICS
 
   public:
 
+		// get time spent performing CSE
 		boost::timer::nanosecond_type get_cse_time() const { return(this->timer.elapsed().wall); }
 
 
@@ -187,6 +196,7 @@ class cse
 
     std::string get_symbol_no_tag(const GiNaC::ex& expr);
 
+		// make a temporary symbol
     std::string make_symbol();
 
 
@@ -195,8 +205,7 @@ class cse
   protected:
 
     language_printer& printer;
-    bool              do_cse;
-
+    bool perform_cse;
 
     unsigned int serial_number;
     unsigned int symbol_counter;
