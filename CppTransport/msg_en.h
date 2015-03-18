@@ -135,7 +135,7 @@
 #define OUTPUT_TIME_FORMAT                    "%X on %d %m %Y"
 #define OUTPUT_DEFAULT_POOL_TEMPLATE          "auto $1 = $2;"
 
-#define OUTPUT_DEFAULT_CPP_KERNEL_NAME        "__temp"
+#define OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME "__temp"
 
 #define OUTPUT_DEFAULT_U2_NAME                "__u2"
 #define OUTPUT_DEFAULT_U3_NAME                "__u3"
@@ -164,8 +164,8 @@
 #define OUTPUT_VEXCL_KERNEL_POST              "\""
 #define OUTPUT_VEXCL_UNKNOWN_KERNEL           (OUTPUT_VEXCL_KERNEL_PRE "<UNKNOWN_KERNEL_NAME>" OUTPUT_VEXCL_KERNEL_POST)
 
-#define OUTPUT_VEXCL_KERNELLINE_PRE           "\""
-#define OUTPUT_VEXCL_KERNELLINE_POST          "\\n\""
+#define OUTPUT_VEXCL_KERNEL_LINE_PRE          "\""
+#define OUTPUT_VEXCL_KERNEL_LINE_POST         "\\n\""
 
 #define OUTPUT_OPENCL_DEFAULT_LABEL           "idx"
 

@@ -117,8 +117,8 @@ class cse
 
   public:
 
-    cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
-      : serial_number(s), printer(p), do_cse(d), kernel_name(k), symbol_counter(0)
+    cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
+      : serial_number(s), printer(p), do_cse(d), temporary_name_kernel(k), symbol_counter(0)
       {
 		    // pause timer
 		    timer.stop();
@@ -143,8 +143,13 @@ class cse
 
     void               clear();
 
-    const std::string& get_kernel_name()                      { return(this->kernel_name); }
-    void               set_kernel_name(const std::string& k)  { this->kernel_name = k; }
+
+		// INTERFACE - GET/SET NAME USED FOR TEMPORARIES
+
+  public:
+
+    const std::string& get_temporary_name() const                { return(this->temporary_name_kernel); }
+    void               set_temporary_name(const std::string& k)  { this->temporary_name_kernel = k; }
 
 
 		// INTERFACE - CSE MAPS
@@ -196,7 +201,7 @@ class cse
     unsigned int serial_number;
     unsigned int symbol_counter;
 
-    std::string  kernel_name;
+    std::string temporary_name_kernel;
 
     std::map<std::string, symbol_record>              symbols;
     std::vector<std::pair<std::string, std::string> > decls;

@@ -101,7 +101,7 @@ namespace cpp
 
                     // the lines of the kernel have to be quoted with ", so ask buffer to set up new delimiters
                     // also skip blank lines, which [usually] don't help in stringized kernels
-                    buf->push_delimiter(OUTPUT_VEXCL_KERNELLINE_PRE, OUTPUT_VEXCL_KERNELLINE_POST);
+                    buf->push_delimiter(OUTPUT_VEXCL_KERNEL_LINE_PRE, OUTPUT_VEXCL_KERNEL_LINE_POST);
                     buf->push_skip_blank(true);
 
                     // translate the contents of 'kernel_file' into the current output buffer, but do not emit any output (yet)

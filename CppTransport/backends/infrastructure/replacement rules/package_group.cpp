@@ -31,7 +31,7 @@ package_group::~package_group()
 
     delete this->u_factory;
     delete this->fl;
-		delete this->cse_worker;
+		delete this->cse_worker;   // ! warning: assumes cse_worker has been set by the derived class constructor
   }
 
 

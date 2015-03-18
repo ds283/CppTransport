@@ -181,7 +181,7 @@ std::string cse::make_symbol()
   {
     std::ostringstream s;
 
-    s << this->kernel_name << "_" << serial_number << "_" << symbol_counter;
+    s << this->temporary_name_kernel << "_" << serial_number << "_" << symbol_counter;
     symbol_counter++;
 
     return(s.str());

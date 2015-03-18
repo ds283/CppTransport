@@ -21,7 +21,7 @@ namespace cpp
 
       public:
 
-        cpp_cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
+        cpp_cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_CSE_TEMPORARY_NAME)
           : cse(s, p, d, k)
           {
           }
