@@ -113,11 +113,13 @@ unsigned int translator::process(const std::string in, const std::string out, en
             os->push(out, in, buf, type);  // current line number is automatically set to 1
 
             // generate an appropriate backend
+		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'
             package_group* package = package_group_factory(backend, this->unit, this->cache);
 
             if(package != nullptr)
               {
-                macro_package* ms = new macro_package(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
+		            // generate a macro replacement agent based on this package group
+                macro_agent* ms = new macro_agent(this->unit, package, BACKEND_MACRO_PREFIX, BACKEND_LINE_SPLIT);
 
                 os->push_top_data(ms, package);
 
@@ -166,10 +168,10 @@ unsigned int translator::process(const std::string in, const std::string out, en
                     this->unit->print_advisory(finished_msg.str());
 	                }
 
-		            // clean up: destroy macro_package
+		            // clean up: destroy macro_agent
 //		            delete ms;
               }
-            else
+            else  // didn't find a package_group matching the requested backend
               {
                 std::ostringstream msg;
                 msg << ERROR_TEMPLATE_BACKEND_A << " '" << in << "' " << ERROR_TEMPLATE_BACKEND_B << " '" << backend << "'";

@@ -17,7 +17,7 @@
 
 
 // forward reference to avoid circularity
-class macro_package;
+class macro_agent;
 class package_group;
 
 
@@ -34,7 +34,7 @@ class output_stack: public filestack_derivation_helper<output_stack>
         std::string       in;     // name of file being read from
         unsigned int      line;
         buffer*           buf;
-        macro_package*    ms;
+        macro_agent*    ms;
         package_group*    package;
         enum process_type type;
       };
@@ -48,11 +48,11 @@ class output_stack: public filestack_derivation_helper<output_stack>
     // push an object to the top of the stack
     void              push              (const std::string out, const std::string in, buffer* buf, enum process_type type);
 
-    // really, we want the macro_package* and package_group* information as part of the push() method above,
+    // really, we want the macro_agent* and package_group* information as part of the push() method above,
     // but constructors for the replacement_package_data objects may depend on there being objects
     // on the stack - eg. temporary_pool, which uses this mechanism to claim buffer emit notifications.
     // so, allow this data to be updated afterwards
-    void              push_top_data     (macro_package* ms, package_group* pkg);
+    void              push_top_data     (macro_agent* ms, package_group* pkg);
 
     void              set_line          (unsigned int line);
     unsigned int      increment_line    ();
@@ -64,7 +64,7 @@ class output_stack: public filestack_derivation_helper<output_stack>
     std::string       write             () const;
 
     buffer*           top_buffer        () const;
-    macro_package*    top_macro_package () const;
+    macro_agent       *    top_macro_package () const;
     enum process_type top_process_type  () const;
 
   protected:

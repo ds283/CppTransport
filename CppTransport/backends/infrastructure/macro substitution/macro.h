@@ -38,14 +38,14 @@ namespace macro_packages
 	}
 
 
-class macro_package
+class macro_agent
 	{
 
   public:
 
 		// constructor
-    macro_package(translation_unit* u, package_group* pkg, std::string pf, std::string sp,
-                  unsigned int dm = DEFAULT_RECURSION_DEPTH);
+		macro_agent(translation_unit* u, package_group* pkg, std::string pf, std::string sp,
+		            unsigned int dm = DEFAULT_RECURSION_DEPTH);
 
 
 		// INTERFACE

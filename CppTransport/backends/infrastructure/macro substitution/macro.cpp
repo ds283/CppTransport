@@ -18,7 +18,7 @@
 // **************************************************************************************
 
 
-macro_package::macro_package(translation_unit* u, package_group* pkg, std::string pf, std::string sp, unsigned int dm)
+macro_agent::macro_agent(translation_unit* u, package_group* pkg, std::string pf, std::string sp, unsigned int dm)
   : unit(u),
     package(pkg),
     prefix(pf),
@@ -41,7 +41,7 @@ macro_package::macro_package(translation_unit* u, package_group* pkg, std::strin
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_package::apply(std::string& line, unsigned int& replacements)
+std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line, unsigned int& replacements)
   {
 //		// set up CPU timer to measure how long execution takes
 //    boost::timer::cpu_timer timer;
@@ -64,7 +64,7 @@ std::shared_ptr< std::vector<std::string> > macro_package::apply(std::string& li
   }
 
 
-std::shared_ptr< std::vector<std::string> > macro_package::apply_line(std::string& line, unsigned int& replacements)
+std::shared_ptr< std::vector<std::string> > macro_agent::apply_line(std::string& line, unsigned int& replacements)
   {
     std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 

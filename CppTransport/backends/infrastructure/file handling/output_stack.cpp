@@ -46,7 +46,7 @@ void output_stack::push(const std::string out, const std::string in, buffer* buf
   }
 
 
-void output_stack::push_top_data(macro_package* ms, package_group* pkg)
+void output_stack::push_top_data(macro_agent* ms, package_group* pkg)
   {
     assert(ms != nullptr);
     assert(pkg != nullptr);
@@ -186,9 +186,9 @@ buffer* output_stack::top_buffer() const
   }
 
 
-macro_package* output_stack::top_macro_package() const
+macro_agent* output_stack::top_macro_package() const
   {
-    macro_package* rval = nullptr;
+    macro_agent* rval = nullptr;
 
     if(inclusions.size() > 0)
       {

@@ -111,7 +111,7 @@ namespace macro_packages
           {
             // get buffer and macro package from the top of the stack
             buffer*        buf = this->unit->get_stack()->top_buffer();
-            macro_package* ms  = this->unit->get_stack()->top_macro_package();
+            macro_agent* ms  = this->unit->get_stack()->top_macro_package();
 
             if(buf == nullptr)
               {
