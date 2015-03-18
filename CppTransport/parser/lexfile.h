@@ -1,6 +1,6 @@
 //
 // Created by David Seery on 14/06/2013.
-// Copyright (c) 2013 University of Sussex. All rights reserved.
+// Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 // To change the template use AppCode | Preferences | File Templates.
 //

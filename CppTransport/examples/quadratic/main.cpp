@@ -3,7 +3,7 @@
 //  quadratic
 //
 //  Created by David Seery on 29/05/2014.
-//  Copyright (c) 2013 University of Sussex. All rights reserved.
+//  Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
 
 #ifndef __has_attribute
