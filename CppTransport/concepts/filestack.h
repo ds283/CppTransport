@@ -16,8 +16,17 @@
 
 class filestack
   {
+
+		// CONSTRUCTOR, DESTRUCTOR
+
   public:
+
     virtual ~filestack();
+
+
+		// INTERFACE
+
+  public:
 
     // push a new filename to the top of the stack, included from line current_line
     // of the file which is *currently* on top of the stack
@@ -42,8 +51,13 @@ class filestack
 
     virtual filestack* clone() const = 0;
 
+
+		// INTERNAL DATA
+
   protected:
+
     bool                         locked;
+
   };
 
 
@@ -54,11 +68,14 @@ class filestack
 template <class Derived>
 class filestack_derivation_helper : public filestack
   {
+
   public:
+
     virtual filestack* clone() const
       {
         return new Derived(static_cast<const Derived&>(*this)); // call the copy ctor.
       }
+
   };
 
 

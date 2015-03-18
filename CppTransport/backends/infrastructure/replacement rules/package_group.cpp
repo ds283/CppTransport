@@ -6,13 +6,13 @@
 
 #include "package_group.h"
 
-#include "u_tensor_factory.h"
-#include "flatten.h"
-#include "error.h"
+#include "formatter.h"
 
 
 package_group::package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache)
-  : unit(u), cse_worker(nullptr), comment_string(cmnt)
+  : unit(u),
+    cse_worker(nullptr),    // should be set to a sensible value in the derived class constructor
+    comment_string(cmnt)
   {
     assert(unit != nullptr);
 
@@ -23,8 +23,15 @@ package_group::package_group(translation_unit* u, const std::string& cmnt, ginac
 
 package_group::~package_group()
   {
-    delete u_factory;
-    delete fl;
+    std::ostringstream msg;
+		msg << MESSAGE_SYMBOLIC_COMPUTE_TIME << " " << format_time(this->u_factory->get_symbolic_compute_time())
+				<< ", " << MESSAGE_CSE_TIME << " " << format_time(this->cse_worker->get_cse_time());
+
+		this->unit->print_advisory(msg.str());
+
+    delete this->u_factory;
+    delete this->fl;
+		delete this->cse_worker;
   }
 
 

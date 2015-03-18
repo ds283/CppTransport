@@ -27,7 +27,9 @@ void canonical_u_tensor_factory::compute_sr_u(std::vector<GiNaC::ex>& v, flatten
 
 		    if(!this->cache.query(sr_U_item, index, v[index]))
 			    {
+				    this->compute_timer.resume();
 		        v[index] = - GiNaC::diff(this->V, this->field_list[i]) * GiNaC::pow(this->M_Planck, 2) / (this->V);
+		        this->compute_timer.stop();
 				    this->cache.store(sr_U_item, index, v[index]);
 			    }
       }
@@ -60,6 +62,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 
 		    if(!this->cache.query(U1_item, index, args, v[index]))
 			    {
+				    this->compute_timer.resume();
 		        if(this->is_field(i))
 			        {
 		            v[index] = this->deriv_list[this->species(i)];
@@ -72,6 +75,7 @@ void canonical_u_tensor_factory::compute_u1(GiNaC::ex& Hsq, GiNaC::ex& eps, std:
 			        {
 		            assert(false);
 			        }
+		        this->compute_timer.stop();
 				    this->cache.store(U1_item, index, args, v[index]);
 			    }
       }
@@ -109,6 +113,8 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 
 		        if(!this->cache.query(U2_item, index, args, v[index]))
 			        {
+				        this->compute_timer.resume();
+
 		            GiNaC::ex c = 0;
 
 		            if(this->is_field(i) && this->is_field(j))
@@ -141,6 +147,7 @@ void canonical_u_tensor_factory::compute_u2(GiNaC::symbol& k, GiNaC::symbol& a,
 			            }
 
 		            v[index] = c;
+		            this->compute_timer.stop();
 				        this->cache.store(U2_item, index, args, v[index]);
 			        }
           }
@@ -185,6 +192,8 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 
 		            if(!this->cache.query(U3_item, index, args, v[index]))
 			            {
+				            this->compute_timer.resume();
+
 		                GiNaC::ex c = 0;
 
 		                // note that we flip the sign of momenta attached to the i, j, k components compared to the
@@ -230,7 +239,8 @@ void canonical_u_tensor_factory::compute_u3(GiNaC::symbol& k1,
 			                }
 
 		                v[index] = c;
-				            this->cache.store(U3_item, index, args, v[index]);
+		                this->compute_timer.stop();
+		                this->cache.store(U3_item, index, args, v[index]);
 			            }
               }
           }
@@ -385,6 +395,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 
 		    if(!this->cache.query(zxfm1_item, index, args, v[index]))
 			    {
+				    this->compute_timer.resume();
 		        if(this->is_field(i))
 			        {
 		            v[index] = -this->deriv_list[i] / (2*pow(this->M_Planck,2)*eps);
@@ -397,6 +408,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& e
 			        {
 		            assert(false);
 			        }
+				    this->compute_timer.stop();
 				    this->cache.store(zxfm1_item, index, args, v[index]);
 			    }
       }
@@ -427,6 +439,8 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 
 		        if(!this->cache.query(zxfm2_item, index, args, v[index]))
 			        {
+				        this->compute_timer.resume();
+
 		            GiNaC::ex c = 0;
 
 		            if(this->is_field(i) && this->is_field(j))
@@ -451,6 +465,7 @@ void canonical_u_tensor_factory::compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::sym
 			            }
 
 		            v[index] = c;
+				        this->compute_timer.stop();
 				        this->cache.store(zxfm2_item, index, args, v[index]);
 			        }
 
@@ -529,6 +544,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 
 		    if(!this->cache.query(dN1_item, index, v[index]))
 			    {
+				    this->compute_timer.resume();
 		        if(this->is_field(i))
 			        {
 		            v[index] = -(1/(2*dotH)) * diff(Hsq, this->field_list[this->species(i)]);
@@ -541,7 +557,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_1(std::vector<GiNaC::ex>& v,
 			        {
 		            assert(false);
 			        }
-
+						this->compute_timer.stop();
 				    this->cache.store(dN1_item, index, v[index]);
 			    }
 	    }
@@ -561,6 +577,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 
     // formulae from arXiv:1302.3842, Eqs. (6.4) and (6.5)
 
+		this->compute_timer.resume();
     GiNaC::ex p_sum(0);
     for(int i = 0; i < this->num_fields; i++)
 	    {
@@ -571,6 +588,7 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
         GiNaC::ex dXdN  = (eps-3)*this->deriv_list[i] - diff(this->V, this->field_list[i])/Hsq;
         p_sum          += diff(1/(2*dotH), this->deriv_list[i]) * dXdN;
 	    }
+		this->compute_timer.stop();
 
 #pragma omp parallel for schedule(dynamic)
     for(int i = 0; i < 2*this->num_fields; i++)
@@ -581,11 +599,12 @@ void canonical_u_tensor_factory::compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v,
 
 		        if(!this->cache.query(dN2_item, index, v[index]))
 			        {
+				        this->compute_timer.resume();
 		            v[index] = -1/(2*dotH) * diff(diff(Hsq, this->coordinate(i)), this->coordinate(j))
 			            - diff(1/(2*dotH), this->coordinate(i)) * diff(Hsq, this->coordinate(j))
 			            - diff(1/(2*dotH), this->coordinate(j)) * diff(Hsq, this->coordinate(i))
 			            + 1/(2*dotH) * p_sum * diff(Hsq, this->coordinate(i)) * diff(Hsq, this->coordinate(j));
-
+				        this->compute_timer.stop();
 				        this->cache.store(dN2_item, index, v[index]);
 			        }
 	        }
@@ -648,6 +667,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 
 		if(!this->cache.query(A_item, index, args, c))
 			{
+				this->compute_timer.resume();
+
 		    GiNaC::ex Vijk = GiNaC::diff(GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]), this->field_list[k]);
 		    GiNaC::ex Vij  = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]);
 		    GiNaC::ex Vik  = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[k]);
@@ -681,6 +702,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_A_component(unsigned int i, GiNaC:
 		    if(i == k) c += ((this->deriv_list[j]/(2*pow(this->M_Planck,2))) * k1dotk3/(pow(a,2)*Hsq))/3;
 		    if(i == j) c += ((this->deriv_list[k]/(2*pow(this->M_Planck,2))) * k1dotk2/(pow(a,2)*Hsq))/3;
 
+				this->compute_timer.stop();
+
 				this->cache.store(A_item, index, args, c);
 			}
 
@@ -712,6 +735,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
 		if(!this->cache.query(B_item, index, args, c))
 			{
+				this->compute_timer.resume();
+
 		    GiNaC::ex xi_i = this->compute_xi(i, Hsq, eps);
 		    GiNaC::ex xi_j = this->compute_xi(j, Hsq, eps);
 
@@ -726,6 +751,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_B_component(unsigned int i, GiNaC:
 
 		    if(j == k) c += - (xi_i / (2*pow(this->M_Planck,2))) * k1dotk2 / (k1*k1) /2;
 		    if(i == k) c += - (xi_j / (2*pow(this->M_Planck,2))) * k1dotk2 / (k2*k2) /2;
+
+				this->compute_timer.stop();
 
 				this->cache.store(B_item, index, args, c);
 			}
@@ -758,6 +785,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
     if(!this->cache.query(C_item, index, args, c))
 	    {
+		    this->compute_timer.resume();
+
         GiNaC::ex k1dotk2 = (k3*k3 - k1*k1 - k2*k2)/2;
         GiNaC::ex k1dotk3 = (k2*k2 - k1*k1 - k3*k3)/2;
         GiNaC::ex k2dotk3 = (k1*k1 - k2*k2 - k3*k3)/2;
@@ -768,6 +797,8 @@ GiNaC::ex canonical_u_tensor_factory::compute_C_component(unsigned int i, GiNaC:
 
         if (j == k) c += (this->deriv_list[i] / pow(this->M_Planck, 2)) * (k1dotk3 / (k1*k1)) /2;
         if (i == k) c += (this->deriv_list[j] / pow(this->M_Planck, 2)) * (k2dotk3 / (k2*k2)) /2;
+
+		    this->compute_timer.stop();
 
 		    this->cache.store(C_item, index, args, c);
 	    }
@@ -804,6 +835,7 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 
 		if(!this->cache.query(M_item, index, args, v))
 			{
+				this->compute_timer.resume();
 
 		    GiNaC::ex Vab = GiNaC::diff(GiNaC::diff(this->V, this->field_list[i]), this->field_list[j]);
 		    GiNaC::ex Va  = GiNaC::diff(this->V, this->field_list[i]);
@@ -816,6 +848,9 @@ GiNaC::ex canonical_u_tensor_factory::compute_M_component(unsigned int i, unsign
 		    u -= 1/(pow(this->M_Planck,2)*Hsq)*(this->deriv_list[i]*Vb + this->deriv_list[j]*Va);
 
 				v = c+u/3;
+
+				this->compute_timer.stop();
+
 				this->cache.store(M_item, index, args, v);
 			}
 

@@ -16,19 +16,29 @@
 #include "ginac/ginac.h"
 #include "translation_unit.h"
 
+#include <boost/timer/timer.hpp>
+
 
 // need a forward reference to avoid circularity
 class translation_unit;
 
 
+// abstract u-tensor factory class
 class u_tensor_factory
   {
 
+		// CONSTRUCTOR, DESTRUCTOR
+
   public:
 
-    u_tensor_factory(translation_unit* u);
+    u_tensor_factory(translation_unit* u,  ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c);
 
     virtual ~u_tensor_factory() = default;
+
+
+		// INTERFACE - COMPUTE FLOW TENSORS AND RELATIVES
+
+  public:
 
     virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
@@ -67,7 +77,10 @@ class u_tensor_factory
 
     virtual void compute_M(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
-    //  CALCULATE GAUGE TRANSFORMATIONS
+
+    // INTERFACE - CALCULATE GAUGE TRANSFORMATIONS
+
+  public:
 
     virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
@@ -77,11 +90,20 @@ class u_tensor_factory
 
 		virtual void compute_deltaN_xfm_2(std::vector<GiNaC::ex>& v, flattener* fl) = 0;
 
+
+		// INTERFACE - COMPUTE BACKGROUND OBJECTS
+
+  public:
+
     virtual GiNaC::ex compute_Hsq() = 0;
 
     virtual GiNaC::ex compute_eps() = 0;
 
+
+		// INTERFACE - UTILITY FUNCTIONS
+
   protected:
+
     unsigned int species(unsigned int z)
       {
         return (z >= this->num_fields ? z - this->num_fields : z);
@@ -107,14 +129,38 @@ class u_tensor_factory
         return (z >= this->num_fields && z < 2 * this->num_fields);
       }
 
+
+		// INTERFACE - STATISTICS
+
+  public:
+
+		// get total time spent doing symbolic computations
+		boost::timer::nanosecond_type get_symbolic_compute_time() const { return(this->compute_timer.elapsed().wall); }
+
+
+		// INTERNAL DATA
+
+  protected:
+
+		// parent translation unit
     translation_unit* unit;
 
+		// basic model details
     const unsigned int num_fields;
     const GiNaC::symbol& M_Planck;
     const GiNaC::ex V;
 
+		// list of symbols representing fields and momenta in the model
     const std::vector<GiNaC::symbol> field_list;
     const std::vector<GiNaC::symbol> deriv_list;
+
+    // reference to GiNaC expression cache, used to cache the output from our calculations.
+    // the cache is intended to avoid expensive recomputation where possible
+    ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache;
+
+		// timer
+		boost::timer::cpu_timer compute_timer;
+
   };
 
 
@@ -129,11 +175,13 @@ class canonical_u_tensor_factory: public u_tensor_factory
   public:
 
     canonical_u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
-	    : u_tensor_factory(u), cache(c)
+	    : u_tensor_factory(u, c)
       {
       }
 
     //  CALCULATE DERIVED QUANTITIES
+
+  public:
 
     virtual void compute_sr_u(std::vector<GiNaC::ex>& v, flattener* fl) override;
 
@@ -176,6 +224,8 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
     //  CALCULATE GAUGE TRANSFORMATIONS
 
+  public:
+
     virtual void compute_zeta_xfm_1(GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
 
     virtual void compute_zeta_xfm_2(GiNaC::symbol& k, GiNaC::symbol& k1, GiNaC::symbol& k2, GiNaC::symbol& a, GiNaC::ex& Hsq, GiNaC::ex& eps, std::vector<GiNaC::ex>& v, flattener* fl) override;
@@ -213,13 +263,6 @@ class canonical_u_tensor_factory: public u_tensor_factory
 
     // compute M-tensor component
     GiNaC::ex compute_M_component(unsigned int i, unsigned int j, GiNaC::ex& Hsq, GiNaC::ex& eps);
-
-
-		// INTERNAL DATA
-
-  private:
-
-		ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache;
 
   };
 

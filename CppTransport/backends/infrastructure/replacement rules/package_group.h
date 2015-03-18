@@ -24,13 +24,26 @@ class translation_unit;
 class package_group
   {
 
+		// CONSTRUCTOR, DESTRUCTOR
+
   public:
 
     package_group(translation_unit* u, const std::string& cmnt, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& cache);
+
     virtual ~package_group();
+
+
+		// INTERFACE - ERRORS AND WARNINGS
+
+  public:
 
     void                                                 error              (const std::string msg);
     void                                                 warn               (const std::string msg);
+
+
+		// INTERFACE - GET RULES ASSOCIATED WITH THIS GROUP OF MACRO PACKAGES
+
+  public:
 
     // return references to our internal ruleset caches
     // TODO find some way to prevent them being changed explicitly - they can change *indirectly* by rebuilding the cache, so is it ok to use const?
@@ -38,8 +51,16 @@ class package_group
     std::vector<macro_packages::simple_rule>&            get_post_ruleset   ();
     std::vector<macro_packages::index_rule>&             get_index_ruleset  ();
 
+
+		// INTERFACE - QUERY DATA ABOUT THE BACKEND
+
+  public:
+
 		// make a comment appropriate for this backend
 		const std::string&                                   get_comment_separator() const { return(this->comment_string); }
+
+
+		// INTERNAL API
 
   protected:
 

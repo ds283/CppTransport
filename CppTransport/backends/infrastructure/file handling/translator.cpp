@@ -14,10 +14,6 @@
 
 #include "buffer.h"
 #include "package_group_factory.h"
-#include "msg_en.h"
-
-#include "translator.h"
-#include "translation_unit.h"
 
 
 #define BACKEND_TOKEN "backend"
@@ -29,6 +25,18 @@ translator::translator(translation_unit* tu)
   {
     assert(unit != nullptr);
   }
+
+
+translator::~translator()
+	{
+    std::ostringstream msg;
+    msg << this->cache.get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS
+		    << ", " << this->cache.get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES
+		    << " (" << MESSAGE_EXPRESSION_CACHE_QUERY_TIME << " " << format_time(this->cache.get_query_time()) << ")";
+
+    this->print_advisory(msg.str());
+	}
+
 
 
 unsigned int translator::translate(const std::string in, const std::string out, enum process_type type, filter_function* filter)
@@ -78,16 +86,20 @@ unsigned int translator::process(const std::string in, const std::string out, en
     unsigned int replacements = 0;
     std::ifstream inf;
 
-    std::ostringstream translation_msg;
-		translation_msg << MESSAGE_TRANSLATING << " '" << in << "' to '" << out << "'";
-		this->unit->print_advisory(translation_msg.str());
-
     inf.open(in.c_str());
     if(inf.is_open() && !inf.fail())
       {
         std::string line;
         std::string backend;
         double minver;
+
+		    // emit advisory that translation is underway
+		    if(out != "")
+			    {
+		        std::ostringstream translation_msg;
+		        translation_msg << MESSAGE_TRANSLATING << " '" << in << "' to '" << out << "'";
+		        this->unit->print_advisory(translation_msg.str());
+			    }
 
         std::getline(inf, line);
         this->parse_header_line(in, line, backend, minver);
@@ -144,7 +156,18 @@ unsigned int translator::process(const std::string in, const std::string out, en
                 // if we are not required to output, temporaries
                 // will be flushed when the package_group is destroyed
                 // below
-                if(out != "") buf->emit(out);
+                if(out != "")
+	                {
+                    buf->emit(out);
+
+                    // emit advisory that translation has finished
+                    std::ostringstream finished_msg;
+                    finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
+                    this->unit->print_advisory(finished_msg.str());
+	                }
+
+		            // clean up: destroy macro_package
+//		            delete ms;
               }
             else
               {
@@ -153,6 +176,7 @@ unsigned int translator::process(const std::string in, const std::string out, en
                 error(msg.str());
               }
 
+		        // clean up: destroy package_group
             // note that destruction of the package_group must happen
             // before the output stack is adjusted, because replacement_rule_packages
             // may depend on the stack contents
@@ -174,10 +198,6 @@ unsigned int translator::process(const std::string in, const std::string out, en
       }
 
     inf.close();
-
-    std::ostringstream finished_msg;
-		finished_msg << MESSAGE_TRANSLATION_RESULT << " " << replacements << " " << MESSAGE_MACRO_REPLACEMENTS;
-		this->unit->print_advisory(finished_msg.str());
 
     return(replacements);
   }

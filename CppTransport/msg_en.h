@@ -104,6 +104,10 @@
 
 #define MESSAGE_EXPRESSION_CACHE_HITS         "expression cache hits"
 #define MESSAGE_EXPRESSION_CACHE_MISSES       "misses"
+#define MESSAGE_EXPRESSION_CACHE_QUERY_TIME   "time spent performing queries"
+
+#define MESSAGE_SYMBOLIC_COMPUTE_TIME         "symbolic computation:"
+#define MESSAGE_CSE_TIME                      "common sub-expression elimination:"
 
 #define MESSAGE_PROCESSING_COMPLETE_A         "Processed"
 #define MESSAGE_PROCESSING_SINGULAR           "model"

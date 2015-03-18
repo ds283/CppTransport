@@ -52,5 +52,5 @@ vexcl_group::~vexcl_group()
     delete vs;
     delete vk;
 
-    delete cse_worker;
+    // cse_worker gets deleted by base
   }

@@ -104,6 +104,7 @@ class macro_package
 
     const std::string prefix;
     const std::string split;
+
 	};
 
 

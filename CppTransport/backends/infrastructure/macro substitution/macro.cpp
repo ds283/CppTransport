@@ -19,9 +19,15 @@
 
 
 macro_package::macro_package(translation_unit* u, package_group* pkg, std::string pf, std::string sp, unsigned int dm)
-  : unit(u), package(pkg), prefix(pf), split(sp),
-    recursion_max(dm), recursion_depth(0),
-    pre_rule_cache(pkg->get_pre_ruleset()), post_rule_cache(pkg->get_post_ruleset()), index_rule_cache(pkg->get_index_ruleset())
+  : unit(u),
+    package(pkg),
+    prefix(pf),
+    split(sp),
+    recursion_max(dm),
+    recursion_depth(0),
+    pre_rule_cache(pkg->get_pre_ruleset()),
+    post_rule_cache(pkg->get_post_ruleset()),
+    index_rule_cache(pkg->get_index_ruleset())
   {
     assert(unit != nullptr);
     assert(package != nullptr);

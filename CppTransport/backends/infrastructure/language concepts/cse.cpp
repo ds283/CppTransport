@@ -69,6 +69,8 @@ void cse::clear()
 
 void cse::parse(const GiNaC::ex& expr)
   {
+		timer.resume();
+
     for(GiNaC::const_postorder_iterator it = expr.postorder_begin(); it != expr.postorder_end(); it++)
       {
         symbol_f symf = std::bind(&cse::get_symbol_no_tag, this, std::placeholders::_1);
@@ -83,6 +85,8 @@ void cse::parse(const GiNaC::ex& expr)
             record.target = e;
           }
       }
+
+		timer.stop();
   }
 
 

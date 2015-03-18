@@ -13,6 +13,7 @@
 
 
 #include "ginac_cache.h"
+#include "formatter.h"
 
 
 enum expression_item_types
@@ -35,12 +36,7 @@ class translator
     translator(translation_unit* tu);
 
 		// destructor
-    ~translator()
-	    {
-        std::ostringstream msg;
-        msg << this->cache.get_hits() << " " << MESSAGE_EXPRESSION_CACHE_HITS << ", " << this->cache.get_misses() << " " << MESSAGE_EXPRESSION_CACHE_MISSES;
-        this->print_advisory(msg.str());
-	    }
+    ~translator();
 
 
 		// INTERFACE
@@ -55,15 +51,18 @@ class translator
     unsigned int translate(const std::string in, const std::string out, enum process_type type, filter_function* filter=nullptr);
     unsigned int translate(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter=nullptr);
 
+		// print an advisory message to standard output
+		// whether the message is actually printing can depend on the current verbosity setting
+		// (and maybe other things in future)
 		void print_advisory(const std::string& msg);
+
+
+		// INTERNAL API
 
   protected:
 
     // internal API to process a file
     unsigned int process(const std::string in, const std::string out, enum process_type type, buffer* buf, filter_function* filter);
-
-    // do the heavy lifting of actual processing
-    unsigned int apply();
 
     // parse the header line from a template, tokenizing it into 'backend' and 'minimum version' data
     void parse_header_line(const std::string in, const std::string line, std::string& backend, double& minver);
@@ -73,7 +72,7 @@ class translator
 
   private:
 
-		//! parent translation unit
+		//! point back to parent translation unit
     translation_unit* unit;
 
 		//! expression cache for this translation unit

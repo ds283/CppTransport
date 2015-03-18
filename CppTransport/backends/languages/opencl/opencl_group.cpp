@@ -48,5 +48,5 @@ opencl_group::~opencl_group()
     delete su;
     delete ka;
 
-    delete cse_worker;
+    // cse_worker gets deleted by base
   }

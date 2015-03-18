@@ -50,5 +50,5 @@ core_group::~core_group()
     delete su;
     delete cm;
 
-    delete cse_worker;
+		// cse_worker gets deleted by base
   }

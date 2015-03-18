@@ -16,16 +16,24 @@ namespace cpp
 
     class cpp_cse: public cse
       {
+
+	      // CONSTRUCTOR, DESTRUCTOR
+
       public:
+
         cpp_cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
           : cse(s, p, d, k)
           {
           }
 
+
+		    // INTERNAL API
+
       protected:
-        std::string print         (const GiNaC::ex& expr, symbol_f symf);
-        std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf);
-        std::string print_power   (const GiNaC::ex& expr, symbol_f symf);
+
+        virtual std::string print         (const GiNaC::ex& expr, symbol_f symf) override;
+        virtual std::string print_operands(const GiNaC::ex& expr, std::string op, symbol_f symf) override;
+        std::string print_power           (const GiNaC::ex& expr, symbol_f symf);
 
       };
 

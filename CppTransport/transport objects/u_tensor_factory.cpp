@@ -15,12 +15,19 @@
 // Constructor for parent (virtual) class
 
 
-u_tensor_factory::u_tensor_factory(translation_unit* u)
-  : unit(u), num_fields(u->get_number_fields()), V(u->get_potential()), M_Planck(u->get_Mp_symbol()),
-    field_list(u->get_field_symbols()), deriv_list(u->get_deriv_symbols())
+u_tensor_factory::u_tensor_factory(translation_unit* u, ginac_cache<expression_item_types, DEFAULT_GINAC_CACHE_SIZE>& c)
+  : unit(u),
+    num_fields(u->get_number_fields()),
+    V(u->get_potential()), M_Planck(u->get_Mp_symbol()),
+    field_list(u->get_field_symbols()),
+    deriv_list(u->get_deriv_symbols()),
+		cache(c)
   {
     assert(field_list.size() == num_fields);
     assert(deriv_list.size() == num_fields);
+
+		// pause compute timer
+		compute_timer.stop();
   }
 
 

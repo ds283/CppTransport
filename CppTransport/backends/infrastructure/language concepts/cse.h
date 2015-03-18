@@ -52,6 +52,8 @@
 #include "language_printer.h"
 #include "msg_en.h"
 
+#include <boost/timer/timer.hpp>
+
 // to be defined below; need a forward reference here
 class cse;
 
@@ -60,17 +62,31 @@ class cse;
 // and can be indexed in the same order to produce the equivalent CSE get_symbol
 class cse_map
   {
+
+		// CONSTRUCTOR, DESTRUCTOR
+
   public:
+
     cse_map(std::vector<GiNaC::ex>* l, cse* c);
     ~cse_map();
+
+
+		// INTERFACE
+
+  public:
 
     // not returning a reference disallows using [] as an lvalue
     std::string operator[](unsigned int index);
 
+
+		// INTERNAL DATA
+
   protected:
-    cse*                    cse_worker;
+
+    cse* cse_worker;
 
     std::vector<GiNaC::ex>* list;
+
   };
 
 
@@ -79,6 +95,7 @@ typedef std::function<std::string(const GiNaC::ex&)> symbol_f;
 
 class cse
   {
+
   public:
 
     class symbol_record
@@ -95,13 +112,24 @@ class cse
         bool        filled;
       };
 
+
+		// CONSTRUCTOR, DESTRUCTOR
+
+  public:
+
     cse(unsigned int s, language_printer& p, bool d=true, std::string k=OUTPUT_DEFAULT_CPP_KERNEL_NAME)
       : serial_number(s), printer(p), do_cse(d), kernel_name(k), symbol_counter(0)
       {
+		    // pause timer
+		    timer.stop();
       }
-    virtual ~cse()
-      {
-      }
+
+    virtual ~cse() = default;
+
+
+		// INTERFACE - COMMON SUBEXPRESSION ELIMINATION
+
+  public:
 
     void               parse(const GiNaC::ex& expr);
 
@@ -109,8 +137,8 @@ class cse
 
     // two methods for getting the symbol corresponding to a GiNaC expression
     // get_symbol_no_tag() just returns the symbol and is used during the parsing phase
-    // get_symbol_and_tag() marks each temporary as 'used', and injects it into the declarations
-    // it is used when actually outputting symbols
+    // get_symbol_and_tag() marks each temporary as 'used', and injects it into the declarations.
+    // This method is used when actually outputting symbols
     std::string        get_symbol_and_tag(const GiNaC::ex &expr);
 
     void               clear();
@@ -118,33 +146,64 @@ class cse
     const std::string& get_kernel_name()                      { return(this->kernel_name); }
     void               set_kernel_name(const std::string& k)  { this->kernel_name = k; }
 
+
+		// INTERFACE - CSE MAPS
+
+  public:
+
     cse_map*           map_factory(std::vector<GiNaC::ex>* l) { return(new cse_map(l, this)); }
+
+
+		// INTERFACE - METADATA
+
+  public:
 
     bool               get_do_cse()                           { return(this->do_cse); }
     void               set_do_cse(bool d)                     { this->do_cse = d; }
 
     language_printer&  get_ginac_printer()                    { return(this->printer); }
 
+
+		// INTERFACE - STATISTICS
+
+  public:
+
+		boost::timer::nanosecond_type get_cse_time() const { return(this->timer.elapsed().wall); }
+
+
+		// INTERNAL API
+
   protected:
-    language_printer& printer;
-    bool              do_cse;
 
     // these functions are abstract and must be implemented by any derived classes
     // typically they will vary depending on the target language
     virtual std::string print           (const GiNaC::ex& expr, symbol_f symf) = 0;
     virtual std::string print_operands  (const GiNaC::ex& expr, std::string op, symbol_f symf) = 0;
 
-    std::string        get_symbol_no_tag(const GiNaC::ex &expr);
+    std::string get_symbol_no_tag(const GiNaC::ex& expr);
 
-    std::string        make_symbol      ();
+    std::string make_symbol();
+
+
+		// INTERNAL DATA
+
+  protected:
+
+    language_printer& printer;
+    bool              do_cse;
+
 
     unsigned int serial_number;
     unsigned int symbol_counter;
 
     std::string  kernel_name;
 
-    std::map<std::string, symbol_record>               symbols;
-    std::vector< std::pair<std::string, std::string> > decls;
+    std::map<std::string, symbol_record>              symbols;
+    std::vector<std::pair<std::string, std::string> > decls;
+
+		// timer
+		boost::timer::cpu_timer timer;
+
   };
 
 
