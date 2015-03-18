@@ -91,6 +91,7 @@ add_executable(CppTransport main.cpp
 							utilities/basic_error.cpp
 							utilities/error.cpp
 							utilities/finder.cpp
+							utilities/formatter.cpp
 							utilities/to_printable.cpp)
 
 target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})

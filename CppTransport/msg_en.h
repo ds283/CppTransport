@@ -115,6 +115,10 @@
 
 #define ERROR_UNKNOWN_STEPPER                 "Unknown or unimplemented odeint-v2 stepper"
 
+#define MESSAGE_HOUR_LABEL                    "h"
+#define MESSAGE_MINUTE_LABEL                  "m"
+#define MESSAGE_SECOND_LABEL                  "s"
+
 // output strings
 
 #define BACKEND_MACRO_PREFIX                  "$$__"

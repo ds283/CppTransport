@@ -13,6 +13,7 @@
 
 #include "core.h"
 #include "translation_unit.h"
+#include "formatter.h"
 
 
 // ******************************************************************
@@ -89,9 +90,12 @@ int main(int argc, const char *argv[])
     std::cout << CPPTRANSPORT_NAME << ": " << MESSAGE_PROCESSING_COMPLETE_A
               << " " << files_processed << " "
               << (files_processed != 1 ? MESSAGE_PROCESSING_PLURAL : MESSAGE_PROCESSING_SINGULAR)
-              << " " << MESSAGE_PROCESSING_COMPLETE_B;
-    timer.report();
-    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " macro replacements" << std::endl;
+              << " " << MESSAGE_PROCESSING_COMPLETE_B << " " << format_time(timer.elapsed().wall) << std::endl;
+
+		if(verbose)
+			{
+		    std::cout << CPPTRANSPORT_NAME << ": " << replacements << " macro replacements" << std::endl;
+			}
 
     return 0;
   }
