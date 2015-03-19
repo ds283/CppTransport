@@ -5,6 +5,7 @@
 
 #include <assert.h>
 #include <sstream>
+#include <stdexcept>
 
 #include "macro_tokenizer.h"
 
