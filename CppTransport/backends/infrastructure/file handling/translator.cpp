@@ -109,7 +109,8 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
         if(minver <= CPPTRANSPORT_NUMERIC_VERSION)
           {
             // generate an appropriate backend
-		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'
+		        // this consists of a set of macro replacement rules which collectively comprise a 'package group'.
+		        // The result is returned as a managed pointer, using std::shared_ptr<>
             std::shared_ptr<package_group> package = package_group_factory(in, backend, this->unit, this->cache);
 
             // generate a macro replacement agent based on this package group
@@ -125,6 +126,8 @@ unsigned int translator::process(const std::string in, buffer& buf, enum process
                 std::getline(inf, line);
 
                 // apply macro replacement to this line, keeping track of how many replacements are performed
+		            // result is supplied as a std::shared_ptr<> because we don't want to have to take copies
+		            // of a large array of strings
                 unsigned int new_replacements = 0;
                 std::shared_ptr< std::vector<std::string> > line_list = agent.apply(line, new_replacements);
                 replacements += new_replacements;

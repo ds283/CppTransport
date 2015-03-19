@@ -48,6 +48,9 @@ std::shared_ptr< std::vector<std::string> > macro_agent::apply(std::string& line
 		bool stopped = this->timer.is_stopped();
 		if(stopped) timer.resume();
 
+		// the result of macro substitution is potentially large, and we'd rather not copy
+		// a very large array of strings while moving the result around.
+		// So, use a std::shared_ptr<> to manage the result object
     std::shared_ptr< std::vector<std::string> > r_list(new std::vector<std::string>());
 
     if(++this->recursion_depth < this->recursion_max)
