@@ -1488,7 +1488,7 @@ namespace transport
 
 		    if(this->repo != nullptr)
 			    {
-		        MPI::data_request_payload payload(this->repo->get_root_path());
+		        MPI::data_request_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_data_capacity, this->pipe_zeta_capacity);
 
 		        for(unsigned int i = 0; i < this->world.size()-1; i++)
 			        {

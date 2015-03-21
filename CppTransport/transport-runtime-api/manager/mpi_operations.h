@@ -56,17 +56,39 @@ namespace transport
                   }
 
                 //! Value constructor (used for constructing messages to send)
-                data_request_payload(const boost::filesystem::path& rp)
-                : repository(rp.string())
+                data_request_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                  : repository(rp.string()),
+                    batcher_capacity(bcp),
+                    data_capacity(pcp),
+                    zeta_capacity(zcp)
                   {
                   }
 
 		            //! Get path to repository
                 boost::filesystem::path get_repository_path() const { return(boost::filesystem::path(this->repository)); }
 
+		            //! Get batcher capacity
+		            unsigned int get_batcher_capacity() const { return(this->batcher_capacity); }
+
+		            //! Get datapipe main cache capacity
+		            unsigned int get_data_capacity() const { return(this->data_capacity); }
+
+		            //! Get datapipe zeta cache capacity
+		            unsigned int get_zeta_capacity() const { return(this->zeta_capacity); }
+
               private:
+
                 //! Pathname to repository
                 std::string repository;
+
+		            //! Batcher capacity
+		            unsigned int batcher_capacity;
+
+		            //! Datapipe main cache capacity
+		            unsigned int data_capacity;
+
+		            //! Datapipe zeta cache capacity
+		            unsigned int zeta_capacity;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -75,6 +97,9 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & repository;
+		                ar & batcher_capacity;
+		                ar & data_capacity;
+		                ar & zeta_capacity;
                   }
               };
 

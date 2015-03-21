@@ -318,13 +318,17 @@ namespace transport
     template <typename number>
     void slave_controller<number>::set_repository(const MPI::data_request_payload& payload)
 	    {
-        boost::filesystem::path repo_path = payload.get_repository_path();
-
         try
 	        {
+            boost::filesystem::path repo_path = payload.get_repository_path();
+
             this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly,
                                                     this->error_handler, this->warning_handler, this->message_handler);
             this->repo->set_model_finder(this->model_finder);
+
+		        this->data_mgr->set_batcher_capacity(payload.get_batcher_capacity());
+		        this->data_mgr->set_data_capacity(payload.get_data_capacity());
+		        this->data_mgr->set_zeta_capacity(payload.get_zeta_capacity());
 	        }
         catch (runtime_exception& xe)
 	        {
