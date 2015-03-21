@@ -86,13 +86,16 @@ namespace transport
     template <typename number>
     class instance_manager
       {
+
       public:
+
         typedef std::function< model<number>*(const std::string&) > model_finder;
 
         // CONSTRUCTOR, DESTRUCTOR
         // ensure destructor is declared virtual so that derived types are destroyed
 
       public:
+
         //! Destroy an instance manager
         virtual ~instance_manager();
 
@@ -104,16 +107,19 @@ namespace transport
         //! This function checks the version of the translator used to produce this model.
         //! It should be no later than the version of the runtime api we are running, otherwise an exception is thrown
         void register_model(model<number>* m, const std::string& uid, unsigned int version);
+
         //! Deregister an instance of a model.
         void deregister_model(model<number>* m, const std::string& uid, unsigned int version);
 
         // INTERFACE -- MODEL ACCESS
 
       protected:
+
         //! Search for a model by uid
         model<number>* find_model(const std::string& i);
 
       public:
+
         //! Construct a model_finder function for this instance manager
         model_finder model_finder_factory()
           {
@@ -123,7 +129,9 @@ namespace transport
         // INTERNAL DATA
 
       protected:
+
         std::list< model_instance<number> > models;
+
       };
 
 

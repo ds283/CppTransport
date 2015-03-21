@@ -4,13 +4,15 @@
 //
 
 
-#ifndef __task_manager_slave_H_
-#define __task_manager_slave_H_
+#ifndef __slave_controller_H_
+#define __slave_controller_H_
 
 
 #include <list>
 #include <set>
 #include <vector>
+#include <memory>
+#include <functional>
 
 #include "transport-runtime-api/models/model.h"
 #include "transport-runtime-api/manager/instance_manager.h"
@@ -46,13 +48,220 @@ namespace transport
 
     // SLAVE FUNCTIONS
 
+		template <typename number>
+		class slave_controller
+			{
+
+		  public:
+
+		    //! Error-reporting callback object
+		    typedef std::function<void(const std::string&)> error_callback;
+
+		    //! Warning callback object
+		    typedef std::function<void(const std::string&)> warning_callback;
+
+		    //! Message callback object
+		    typedef std::function<void(const std::string&)> message_callback;
+
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+		    //! construct a slave controller object
+		    //! unlike a master controller, there is no option to supply a repository;
+		    //! one has to be provided by a master controller over MPI later
+		    slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+		                     const typename instance_manager<number>::model_finder& f,
+		                     error_callback err, warning_callback warn, message_callback msg,
+		                     unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
+		                     unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
+		                     unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+
+		    //! destroy a slave manager object
+		    ~slave_controller();
+
+
+				// INTERFACE
+
+		  public:
+
+		    //! poll for instructions to perform work
+		    void wait_for_tasks(void);
+
+
+				// MPI FUNCTIONS
+
+		  protected:
+
+		    //! Get worker number
+		    unsigned int worker_number() { return(static_cast<unsigned int>(this->world.rank()-1)); }
+
+		    //! Return MPI rank of this process
+		    unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
+
+
+		    // SLAVE JOB HANDLING
+
+		  protected:
+
+		    //! Slave node: set repository
+		    void set_repository(const MPI::data_request_payload& payload);
+
+
+		    // SLAVE INTEGRATION TASKS
+
+		  protected:
+
+		    //! Slave node: Process a new integration task instruction
+		    void process_task(const MPI::new_integration_payload& payload);
+
+		    //! Slave node: process an integration task
+		    void dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload);
+
+		    //! Slave node: process an integration queue
+		    template <typename TaskObject, typename QueueObject, typename BatchObject>
+		    void dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
+		                                    const MPI::new_integration_payload& payload, BatchObject& batcher);
+
+		    //! Push a temporary container to the master process
+		    void push_temp_container(typename data_manager<number>::generic_batcher* batcher, unsigned int message, std::string log_message);
+
+
+		    // SLAVE POSTINTEGRATION TASKS
+
+		  protected:
+
+		    //! Slave node: Process a new postintegration task instruction
+		    void process_task(const MPI::new_postintegration_payload& payload);
+
+		    //! Slave node: Process a postintegration task
+		    void dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload);
+
+		    //! Slave node: process a postintegration queue
+		    template <typename TaskObject, typename ParentTaskObject, typename QueueObject, typename BatchObject>
+		    void dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
+		                                        const MPI::new_postintegration_payload& payload, BatchObject& batcher);
+
+		    //! No-op push content for connexion to datapipe
+		    void disallow_push_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
+
+		    //! Handler: zeta twopf task
+		    void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
+		                                 typename data_manager<number>::zeta_twopf_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+
+		    //! Handler: zeta threepf task
+		    void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+		                                 typename data_manager<number>::zeta_threepf_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+
+		    //! Handler: fNL task
+		    void postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+		                                 typename data_manager<number>::fNL_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+
+		    // SLAVE OUTPUT TASKS
+
+		  protected:
+
+		    //! Slave node: Process a new output task instruction
+		    void process_task(const MPI::new_derived_content_payload& payload);
+
+		    //! Slave node: Process an output task
+		    void dispatch_output_task(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
+
+		    //! Push new derived content to the master process
+		    void push_derived_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
+
+
+		    // INTERNAL DATA
+
+		  protected:
+
+
+		    // MPI ENVIRONMENT
+
+		    //! BOOST::MPI environment
+		    boost::mpi::environment& environment;
+
+		    //! BOOST::MPI world communicator
+		    boost::mpi::communicator& world;
+
+
+				// MODEL FINDER REFERENCE
+		    const typename instance_manager<number>::model_finder model_finder;
+
+		    // RUNTIME AGENTS
+
+		    //! Repository manager instance
+		    json_interface_repository<number>* repo;
+
+		    //! Data manager instance
+		    data_manager<number>* data_mgr;
+
+
+		    // DATA AND STATE
+
+		    //! Storage capacity per batcher
+		    unsigned int batcher_capacity;
+
+		    //! Data cache capacity per datapipe
+		    unsigned int pipe_data_capacity;
+
+		    //! Zeta cache capacity per datapipe
+		    unsigned int pipe_zeta_capacity;
+
+
+				// ERROR CALLBACKS
+
+				//! error callback
+				error_callback error_handler;
+
+				//! warning callback
+				warning_callback warning_handler;
+
+				//! message callback
+				message_callback message_handler;
+
+			};
+
 
     template <typename number>
-    void task_manager<number>::wait_for_tasks(void)
+    slave_controller<number>::slave_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                                               const typename instance_manager<number>::model_finder& f,
+                                               error_callback err, warning_callback warn, message_callback msg,
+                                               unsigned int bcp, unsigned int pcp, unsigned int zcp)
+	    : environment(e),
+	      world(w),
+	      model_finder(f),
+	      repo(nullptr),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      batcher_capacity(bcp),
+	      pipe_data_capacity(pcp),
+	      pipe_zeta_capacity(zcp),
+	      error_handler(err),
+	      warning_handler(warn),
+	      message_handler(msg)
 	    {
-        if(this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
+	    }
+
+
+		template <typename number>
+		slave_controller<number>::~slave_controller()
+			{
+				// delete repository instance, if it is set
+				if(this->repo != nullptr)
+					{
+						delete this->repo;
+					}
+			}
+
+
+    template <typename number>
+    void slave_controller<number>::wait_for_tasks(void)
+	    {
+        if(this->get_rank() == 0) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_WAIT_MASTER);
 
         bool finished = false;
+
         while(!finished)
 	        {
             // wait until a message is available from master
@@ -64,7 +273,7 @@ namespace transport
 	                {
                     MPI::new_integration_payload payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::NEW_INTEGRATION, payload);
-                    this->slave_process_task(payload);
+                    this->process_task(payload);
                     break;
 	                }
 
@@ -72,7 +281,7 @@ namespace transport
 	                {
                     MPI::new_derived_content_payload payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::NEW_DERIVED_CONTENT, payload);
-                    this->slave_process_task(payload);
+                    this->process_task(payload);
                     break;
 	                }
 
@@ -80,15 +289,15 @@ namespace transport
 	                {
                     MPI::new_postintegration_payload payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::NEW_POSTINTEGRATION, payload);
-                    this->slave_process_task(payload);
+                    this->process_task(payload);
                     break;
 	                }
 
                 case MPI::SET_REPOSITORY:
 	                {
-                    MPI::set_repository_payload payload;
+                    MPI::data_request_payload payload;
                     this->world.recv(MPI::RANK_MASTER, MPI::SET_REPOSITORY, payload);
-                    this->slave_set_repository(payload);
+                    this->set_repository(payload);
                     break;
 	                }
 
@@ -107,23 +316,21 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_set_repository(const MPI::set_repository_payload& payload)
+    void slave_controller<number>::set_repository(const MPI::data_request_payload& payload)
 	    {
         boost::filesystem::path repo_path = payload.get_repository_path();
 
         try
 	        {
             this->repo = repository_factory<number>(repo_path.string(), repository<number>::access_type::readonly,
-                                                    std::bind(&task_manager<number>::error, this, std::placeholders::_1),
-                                                    std::bind(&task_manager<number>::warn, this, std::placeholders::_1),
-                                                    std::bind(&task_manager<number>::message, this, std::placeholders::_1));
-            this->repo->set_model_finder(this->model_finder_factory());
+                                                    this->error_handler, this->warning_handler, this->message_handler);
+            this->repo->set_model_finder(this->model_finder);
 	        }
         catch (runtime_exception& xe)
 	        {
             if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
 	            {
-                this->error(xe.what());
+                this->error_handler(xe.what());
                 repo = nullptr;
 	            }
             else
@@ -135,7 +342,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_process_task(const MPI::new_integration_payload& payload)
+    void slave_controller<number>::process_task(const MPI::new_integration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
         if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
@@ -158,7 +365,7 @@ namespace transport
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     integration_task<number>* tk = int_rec->get_task();
-                    this->slave_dispatch_integration_task(tk, payload);
+                    this->dispatch_integration_task(tk, payload);
                     break;
 	                }
 
@@ -192,14 +399,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else
 	            {
@@ -210,7 +417,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload)
+    void slave_controller<number>::dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload)
 	    {
         assert(tk != nullptr);
 
@@ -232,7 +439,7 @@ namespace transport
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&task_manager<number>::slave_push_temp_container, this, std::placeholders::_1,
+	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
 	                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
@@ -240,7 +447,7 @@ namespace transport
 	                                                         this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                     this->get_rank(), m, dispatcher);
 
-            this->slave_dispatch_integration_queue(tka, m, work, payload, batcher);
+            this->dispatch_integration_queue(tka, m, work, payload, batcher);
 	        }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
 	        {
@@ -254,7 +461,7 @@ namespace transport
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&task_manager<number>::slave_push_temp_container, this, std::placeholders::_1,
+	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
 	                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
@@ -262,7 +469,7 @@ namespace transport
 	                                                           this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                         this->get_rank(), m, dispatcher);
 
-            this->slave_dispatch_integration_queue(tkb, m, work, payload, batcher);
+            this->dispatch_integration_queue(tkb, m, work, payload, batcher);
 	        }
         else
 	        {
@@ -275,8 +482,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename QueueObject, typename BatchObject>
-    void task_manager<number>::slave_dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
-                                                                const MPI::new_integration_payload& payload, BatchObject& batcher)
+    void slave_controller<number>::dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
+                                                           const MPI::new_integration_payload& payload, BatchObject& batcher)
 	    {
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
@@ -327,7 +534,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_process_task(const MPI::new_derived_content_payload& payload)
+    void slave_controller<number>::process_task(const MPI::new_derived_content_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
         if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
@@ -357,7 +564,7 @@ namespace transport
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     output_task<number>* tk = out_rec->get_task();
-                    this->slave_dispatch_output_task(tk, payload);
+                    this->dispatch_output_task(tk, payload);
                     break;
 	                }
 
@@ -385,14 +592,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else
 	            {
@@ -403,7 +610,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_output_task(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
+    void slave_controller<number>::dispatch_output_task(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
 	    {
         assert(tk != nullptr);  // should be guaranteed
 
@@ -427,7 +634,7 @@ namespace transport
 
         // set up content-dispatch function
         typename data_manager<number>::datapipe::dispatch_function dispatcher =
-	                                                                   std::bind(&task_manager<number>::slave_push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
+	                                                                   std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
         typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
@@ -513,7 +720,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_process_task(const MPI::new_postintegration_payload& payload)
+    void slave_controller<number>::process_task(const MPI::new_postintegration_payload& payload)
 	    {
         // ensure that a valid repository object has been constructed
         if(this->repo == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NOT_SET);
@@ -548,7 +755,7 @@ namespace transport
                     if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     postintegration_task<number>* tk = pint_rec->get_task();
-                    this->slave_dispatch_postintegration_task(tk, payload);
+                    this->dispatch_postintegration_task(tk, payload);
                     break;
 	                }
 
@@ -568,14 +775,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	                  || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
                 msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << payload.get_task_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else
 	            {
@@ -586,7 +793,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload)
+    void slave_controller<number>::dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload)
 	    {
         assert(tk != nullptr);
 
@@ -618,7 +825,7 @@ namespace transport
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&task_manager<number>::slave_push_temp_container, this, std::placeholders::_1,
+	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
 	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
@@ -626,7 +833,7 @@ namespace transport
 	                                                              this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                               this->get_rank(), dispatcher);
 
-            this->slave_dispatch_postintegration_queue(z2pf, ptk, work, payload, batcher);
+            this->dispatch_postintegration_queue(z2pf, ptk, work, payload, batcher);
 	        }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
 	        {
@@ -647,7 +854,7 @@ namespace transport
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&task_manager<number>::slave_push_temp_container, this, std::placeholders::_1,
+	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
 	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
@@ -655,7 +862,7 @@ namespace transport
 	                                                                this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                                   this->get_rank(), dispatcher);
 
-            this->slave_dispatch_postintegration_queue(z3pf, ptk, work, payload, batcher);
+            this->dispatch_postintegration_queue(z3pf, ptk, work, payload, batcher);
 	        }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
 	        {
@@ -676,7 +883,7 @@ namespace transport
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&task_manager<number>::slave_push_temp_container, this, std::placeholders::_1,
+	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
 	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
@@ -684,7 +891,7 @@ namespace transport
 	                                                       this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                 this->get_rank(), dispatcher, zfNL->get_template());
 
-            this->slave_dispatch_postintegration_queue(zfNL, ptk, work, payload, batcher);
+            this->dispatch_postintegration_queue(zfNL, ptk, work, payload, batcher);
 	        }
         else
 	        {
@@ -697,8 +904,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject, typename QueueObject, typename BatchObject>
-    void task_manager<number>::slave_dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
-                                                                    const MPI::new_postintegration_payload& payload, BatchObject& batcher)
+    void slave_controller<number>::dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
+                                                               const MPI::new_postintegration_payload& payload, BatchObject& batcher)
 	    {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
@@ -719,7 +926,7 @@ namespace transport
 
         // set up empty content-dispatch function -- this datapipe is not used to produce content
         typename data_manager<number>::datapipe::dispatch_function dispatcher =
-	                                                                   std::bind(&task_manager<number>::slave_disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
+	                                                                   std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
         typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
@@ -730,7 +937,7 @@ namespace transport
         try
 	        {
             pipe.attach(ptk, ptk->get_model()->get_N_fields(), payload.get_tags());
-            this->slave_postintegration_handler(tk, ptk, work, batcher, pipe);
+            this->postintegration_handler(tk, ptk, work, batcher, pipe);
             pipe.detach();
 	        }
         catch(runtime_exception& xe)
@@ -765,9 +972,9 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
-                                                             typename data_manager<number>::zeta_twopf_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+    void slave_controller<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
+                                                        typename data_manager<number>::zeta_twopf_batcher& batcher,
+                                                        typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -817,9 +1024,9 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                             typename data_manager<number>::zeta_threepf_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+    void slave_controller<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+                                                        typename data_manager<number>::zeta_threepf_batcher& batcher,
+                                                        typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -933,9 +1140,9 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::slave_postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                             typename data_manager<number>::fNL_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+    void slave_controller<number>::postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+                                                        typename data_manager<number>::fNL_batcher& batcher,
+                                                        typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -980,7 +1187,56 @@ namespace transport
         batcher.report_finished_block();
 	    }
 
+
+    template <typename number>
+    void slave_controller<number>::push_temp_container(typename data_manager<number>::generic_batcher* batcher, unsigned int message, std::string log_message)
+	    {
+        assert(batcher != nullptr);
+        if(batcher == nullptr) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_BATCHER);
+
+        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Sending " << log_message << " message for container " << batcher->get_container_path();
+
+        MPI::data_ready_payload payload(batcher->get_container_path().string());
+
+        // advise master process that data is available in the named container
+        this->world.isend(MPI::RANK_MASTER, message, payload);
+	    }
+
+
+    template <typename number>
+    void slave_controller<number>::push_derived_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product)
+	    {
+        assert(pipe != nullptr);
+        assert(product != nullptr);
+
+        // FIXME: error message tag is possibly in the wrong namespace (but error message namespaces are totally confused anyway)
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+        if(product == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT);
+
+        BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "-- Sending DERIVED_CONTENT_READY message for derived product '" << product->get_name() << "'";
+
+        boost::filesystem::path product_filename = pipe->get_abs_tempdir_path() / product->get_filename();
+        if(boost::filesystem::exists(product_filename))
+	        {
+            MPI::content_ready_payload payload(product->get_name());
+            this->world.isend(MPI::RANK_MASTER, MPI::DERIVED_CONTENT_READY, payload);
+	        }
+        else
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_DATAMGR_DERIVED_PRODUCT_MISSING << " " << product_filename;
+            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
+	        }
+	    }
+
+
+    template <typename number>
+    void slave_controller<number>::disallow_push_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product)
+	    {
+        assert(false);
+	    }
+
 	}
 
 
-#endif //__task_manager_slave_H_
+#endif //__slave_controller_H_

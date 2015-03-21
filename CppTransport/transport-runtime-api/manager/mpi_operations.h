@@ -47,16 +47,16 @@ namespace transport
 
             // MPI message payloads
 
-            class set_repository_payload
+            class data_request_payload
               {
               public:
                 //! Null constructor (used for receiving messages)
-                set_repository_payload()
+                data_request_payload()
                   {
                   }
 
                 //! Value constructor (used for constructing messages to send)
-                set_repository_payload(const boost::filesystem::path& rp)
+                data_request_payload(const boost::filesystem::path& rp)
                 : repository(rp.string())
                   {
                   }

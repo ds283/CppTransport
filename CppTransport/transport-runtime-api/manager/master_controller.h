@@ -4,13 +4,15 @@
 //
 
 
-#ifndef __task_manager_master_H_
-#define __task_manager_master_H_
+#ifndef __master_controller_H_
+#define __master_controller_H_
 
 
 #include <list>
 #include <set>
 #include <vector>
+#include <memory>
+#include <functional>
 
 #include "transport-runtime-api/models/model.h"
 #include "transport-runtime-api/manager/instance_manager.h"
@@ -40,30 +42,588 @@
 #include "boost/lexical_cast.hpp"
 
 
+
+#define __CPP_TRANSPORT_SWITCH_REPO              "-repo"
+#define __CPP_TRANSPORT_SWITCH_TAG               "-tag"
+#define __CPP_TRANSPORT_SWITCH_CAPACITY          "-caches"
+#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "-batch-cache"
+#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "-data-cache"
+#define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "-zeta-cache"
+
+#define __CPP_TRANSPORT_VERB_TASK                "task"
+#define __CPP_TRANSPORT_VERB_GET                 "get"
+
+#define __CPP_TRANSPORT_NOUN_TASK                "task"
+#define __CPP_TRANSPORT_NOUN_PACKAGE             "package"
+#define __CPP_TRANSPORT_NOUN_PRODUCT             "product"
+#define __CPP_TRANSPORT_NOUN_CONTENT             "content"
+
+// name for worker devices
+#define __CPP_TRANSPORT_WORKER_NAME              "mpi-worker-"
+
+
+
 namespace transport
 	{
 
     // MASTER FUNCTIONS
 
 
-    template <typename number>
-    void task_manager<number>::execute_tasks(void)
-	    {
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+		template <typename number>
+		class master_controller
+			{
 
-        if(this->repo == nullptr) this->error(__CPP_TRANSPORT_REPO_NONE);
+		  public:
+
+		    //! Error-reporting callback object
+		    typedef std::function<void(const std::string&)> error_callback;
+
+		    //! Warning callback object
+		    typedef std::function<void(const std::string&)> warning_callback;
+
+		    //! Message callback object
+		    typedef std::function<void(const std::string&)> message_callback;
+
+				//! Labels for types of job
+		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
+
+				//! Job descriptor class
+		    class job_descriptor
+			    {
+
+		      public:
+
+		        job_descriptor(job_type t, const std::string& n, const std::list<std::string>& tg, const std::string& o)
+			        : type(t),
+			          name(n),
+			          tags(tg),
+			          output(o)
+			        {
+			        }
+
+		        job_descriptor(job_type t, const std::string& n, const std::list<std::string>& tg)
+			        : type(t),
+			          name(n),
+			          tags(tg)
+			        {
+			        }
+
+
+		        // INTERFACE
+
+		      public:
+
+		        job_type get_type() const { return(this->type); }
+
+		        const std::string& get_name() const { return(this->name); }
+
+		        const std::list<std::string>& get_tags() const { return(this->tags); }
+
+		        const std::string& get_output() const { return(this->output); }
+
+
+		        // INTERNAL DATA
+
+		      private:
+
+		        //! job type
+		        job_type               type;
+
+		        //! job name
+		        std::string            name;
+
+		        //! tags associated with job
+		        std::list<std::string> tags;
+
+		        //! output destination, if needed
+		        std::string            output;
+
+			    };
+
+				//! Labels for types of workers
+		    typedef enum { cpu, gpu } worker_type;
+
+				//! Worker information class
+		    class worker_information
+			    {
+
+		      public:
+
+		        worker_information(worker_type t, unsigned int c, unsigned int p, unsigned int n)
+			        : type(t),
+			          capacity(c),
+			          priority(p),
+			          mpi_number(n)
+			        {
+			        }
+
+		      private:
+
+		        //! capacity type -- are integrations on this worker limited by memory?
+		        worker_type type;
+
+		        //! worker's memory capacity (for integrations only)
+		        unsigned int capacity;
+
+		        //! worker's priority
+		        unsigned int priority;
+
+		        //! MPI worker number
+		        unsigned int mpi_number;
+
+			    };
+
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+				//! construct a master controller object with no supplied repository
+				//! (one has to be provided in the command line arguments later)
+				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+				                  error_callback err, warning_callback warn, message_callback msg,
+				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
+				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
+				                  unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+
+				//! construct a master controller object with a supplied repository
+				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+				                  json_interface_repository<number>* r,
+				                  error_callback err, warning_callback warn, message_callback msg,
+				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
+				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
+				                  unsigned int zcp = __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
+
+				//! destroy a master manager object
+				~master_controller();
+
+
+				// INTERFACE
+
+		  public:
+
+				//! interpret command-line arguments
+				void process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder);
+				
+		    //! execute any queued tasks
+		    void execute_tasks(void);
+
+
+		    // MPI FUNCTIONS
+
+		  protected:
+
+		    //! Get worker number
+		    unsigned int worker_number() { return(static_cast<unsigned int>(this->world.rank()-1)); }
+
+		    //! Return MPI rank of this process
+		    unsigned int get_rank(void) const { return(static_cast<unsigned int>(this->world.rank())); }
+
+		    //! Map worker number to communicator rank
+		    constexpr unsigned int worker_rank(unsigned int worker_number) const { return(worker_number+1); }
+
+		    //! Map communicator rank to worker number
+		    constexpr unsigned int worker_number(unsigned int worker_rank) const { return(worker_rank-1); }
+
+
+		    // MASTER JOB HANDLING
+
+		  protected:
+
+		    //! Master node: Process a 'get' job
+		    void process_get(const job_descriptor& job);
+
+		    //! Master node: Process a 'task' job.
+		    //! Some tasks are integrations, others process the numerical output from an integration to product
+		    //! a derived data product (like fNL).
+		    //! This function schedules workers to process the task.
+		    void process_task(const job_descriptor& job);
+
+		    //! Master node: Terminate all worker processes
+		    void terminate_workers(void);
+
+		    //! Master node: Collect data on workers
+		    void collect_worker_data(void);
+
+		    //! Make a 'device context' for the MPI worker processes
+		    context make_workers_context(void);
+
+
+		    // MASTER INTEGRATION TASKS
+
+		  protected:
+
+		    //! Master node: Dispatch an integration task to the worker processes.
+		    //! Makes a queue then invokes master_dispatch_integration_queue()
+		    void dispatch_integration_task(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags);
+
+		    //! Master node: Dispatch an integration queue to the worker processes.
+		    template <typename TaskObject, typename QueueObject>
+		    void dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
+		                                    TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags);
+
+		    //! Master node: Pass new integration task to the workers
+		    bool integration_task_to_workers(std::shared_ptr<typename repository<number>::integration_writer>& writer);
+
+		    //! Master node: respond to an aggregation request
+		    void aggregate_batch(std::shared_ptr<typename repository<number>::integration_writer>& writer, int source,
+		                         typename repository<number>::integration_metadata& metadata);
+
+		    //! Master node: update integration metadata after a worker has finished its tasks
+		    void update_integration_metadata(MPI::finished_integration_payload& payload, typename repository<number>::integration_metadata& metadata);
+
+
+		    // MASTER POSTINTEGRATION TASKS
+
+		  protected:
+
+		    //! Master node: Dispatch a postintegration task to the worker processes.
+		    void dispatch_postintegration_task(typename repository<number>::postintegration_task_record* rec, const std::list<std::string>& tags);
+
+		    //! Master node: Dispatch a postintegration queue to the worker processes
+		    template <typename TaskObject, typename ParentTaskObject, typename QueueObject>
+		    void dispatch_postintegration_queue(typename repository<number>::postintegration_task_record* rec,
+		                                        TaskObject* tk, ParentTaskObject* ptk, QueueObject& queue, const std::list<std::string>& tags);
+
+		    //! Master node: Pass new postintegration task to workers
+		    bool postintegration_task_to_workers(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const std::list<std::string>& tags);
+
+		    //! Master node: respond to an aggregation request
+		    void aggregate_postprocess(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, int source,
+		                               typename repository<number>::output_metadata& metadata);
+
+
+		    // MASTER OUTPUT TASKS
+
+		  protected:
+
+		    //! Master node: Dispatch an output 'task' (ie., generation of derived data products) to the worker processes
+		    void dispatch_output_task(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags);
+
+		    //! Master node: Pass new output task to the workers
+		    bool output_task_to_workers(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const std::list<std::string>& tags);
+
+		    //! Master node: respond to a notification of new derived content
+		    bool aggregate_content(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, int source,
+		                           typename repository<number>::output_metadata& metadata);
+
+		    //! Master node: update output metadata after a worker has finished its tasks
+		    template <typename PayloadObject>
+		    void update_output_metadata(PayloadObject& payload, typename repository<number>::output_metadata& metadata);
+
+
+		    // INTERNAL DATA
+
+		  protected:
+
+
+		    // MPI ENVIRONMENT
+
+		    //! BOOST::MPI environment
+		    boost::mpi::environment& environment;
+
+		    //! BOOST::MPI world communicator
+		    boost::mpi::communicator& world;
+
+
+		    // RUNTIME AGENTS
+
+		    //! Repository manager instance
+		    json_interface_repository<number>* repo;
+
+		    //! Data manager instance
+		    data_manager<number>* data_mgr;
+
+
+		    // DATA AND STATE
+
+		    //! Information about workers
+		    std::list<worker_information> worker_data;
+
+		    //! Queue of tasks to process
+		    std::list<job_descriptor> job_queue;
+
+		    //! Storage capacity per batcher
+		    unsigned int batcher_capacity;
+
+		    //! Data cache capacity per datapipe
+		    unsigned int pipe_data_capacity;
+
+		    //! Zeta cache capacity per datapipe
+		    unsigned int pipe_zeta_capacity;
+
+
+		    // ERROR CALLBACKS
+
+		    //! error callback
+		    error_callback error_handler;
+
+		    //! warning callback
+		    warning_callback warning_handler;
+
+		    //! message callback
+		    message_callback message_handler;
+
+			};
+
+
+    template <typename number>
+    master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                                           error_callback err, warning_callback warn, message_callback msg,
+                                           unsigned int bcp, unsigned int pcp, unsigned int zcp)
+	    : environment(e),
+	      world(w),
+	      repo(nullptr),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      batcher_capacity(bcp),
+	      pipe_data_capacity(pcp),
+	      pipe_zeta_capacity(zcp),
+	      error_handler(err),
+	      warning_handler(warn),
+	      message_handler(msg)
+	    {
+	    }
+
+
+    template <typename number>
+    master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
+                                           json_interface_repository<number>* r,
+                                           error_callback err, warning_callback warn, message_callback msg,
+                                           unsigned int bcp, unsigned int pcp, unsigned int zcp)
+	    : environment(e),
+	      world(w),
+	      repo(r),
+	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      batcher_capacity(bcp),
+	      pipe_data_capacity(pcp),
+	      pipe_zeta_capacity(zcp),
+	      error_handler(err),
+	      warning_handler(warn),
+	      message_handler(msg)
+	    {
+		    assert(repo != nullptr);
+	    }
+
+		
+    template <typename number>
+    master_controller<number>::~master_controller()
+	    {
+		    // delete repository instance, if it is set
+        if(this->repo != nullptr)
+	        {
+            delete this->repo;
+	        }
+	    }
+		
+		
+		template <typename number>
+		void master_controller<number>::process_arguments(int argc, char* argv[], const typename instance_manager<number>::model_finder& finder)
+			{
+		    bool multiple_repo_warn = false;
+
+		    std::list<std::string> tags;
+
+		    for(unsigned int i = 1; i < argc; i++)
+			    {
+		        if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
+			        {
+		            if(repo != nullptr)
+			            {
+		                ++i;
+		                if(!multiple_repo_warn)
+			                {
+		                    this->warning_handler(__CPP_TRANSPORT_MULTIPLE_SET_REPO);
+		                    multiple_repo_warn = true;
+			                }
+			            }
+		            else if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_REPO);
+		            else
+			            {
+		                ++i;
+		                std::string repo_path = static_cast<std::string>(argv[i]);
+		                try
+			                {
+		                    repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
+		                                                      this->error_handler, this->warning_handler, this->message_handler);
+		                    this->repo->set_model_finder(finder);
+			                }
+		                catch (runtime_exception& xe)
+			                {
+		                    if(xe.get_exception_code() == runtime_exception::REPO_NOT_FOUND)
+			                    {
+		                        this->error_handler(xe.what());
+		                        repo = nullptr;
+			                    }
+		                    else
+			                    {
+		                        throw xe;
+			                    }
+			                }
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TAG);
+		            else            tags.push_back(std::string(argv[++i]));
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            else
+			            {
+		                ++i;
+		                std::string capacity_str(argv[i]);
+		                int capacity = boost::lexical_cast<int>(capacity_str);
+		                capacity = capacity * 1024*1024;
+		                if(capacity > 0)
+			                {
+		                    this->batcher_capacity = this->pipe_data_capacity = static_cast<unsigned int>(capacity);
+		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+		                    this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+			                }
+		                else
+			                {
+		                    std::ostringstream msg;
+		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CAPACITY;
+		                    this->error_handler(msg.str());
+			                }
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            else
+			            {
+		                ++i;
+		                std::string capacity_str(argv[i]);
+		                int capacity = boost::lexical_cast<int>(capacity_str);
+		                capacity = capacity * 1024*1024;
+		                if(capacity > 0)
+			                {
+		                    this->batcher_capacity = static_cast<unsigned int>(capacity);
+		                    this->data_mgr->set_batcher_capacity(this->batcher_capacity);
+			                }
+		                else
+			                {
+		                    std::ostringstream msg;
+		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY;
+		                    this->error_handler(msg.str());
+			                }
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            else
+			            {
+		                ++i;
+		                std::string capacity_str(argv[i]);
+		                int capacity = boost::lexical_cast<int>(capacity_str);
+		                capacity = capacity * 1024*1024;
+		                if(capacity > 0)
+			                {
+		                    this->pipe_data_capacity = static_cast<unsigned int>(capacity);
+		                    this->data_mgr->set_data_capacity(this->pipe_data_capacity);
+			                }
+		                else
+			                {
+		                    std::ostringstream msg;
+		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY;
+		                    this->error_handler(msg.str());
+			                }
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
+		            else
+			            {
+		                ++i;
+		                std::string capacity_str(argv[i]);
+		                int capacity = boost::lexical_cast<int>(capacity_str);
+		                capacity = capacity * 1024*1024;
+		                if(capacity > 0)
+			                {
+		                    this->pipe_zeta_capacity = static_cast<unsigned int>(capacity);
+		                    this->data_mgr->set_zeta_capacity(this->pipe_zeta_capacity);
+			                }
+		                else
+			                {
+		                    std::ostringstream msg;
+		                    msg << __CPP_TRANSPORT_EXPECTED_POSITIVE << " " << __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY;
+		                    this->error_handler(msg.str());
+			                }
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
+		            else
+			            {
+		                ++i;
+		                job_queue.push_back(job_descriptor(job_task, argv[i], tags));
+		                tags.clear();
+			            }
+			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_GET)
+			        {
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
+		            ++i;
+
+		            job_type type;
+		            if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
+		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
+		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
+		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
+		            else
+			            {
+		                std::ostringstream msg;
+		                msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
+		                this->error_handler(msg.str());
+			            }
+
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_NAME);
+		            ++i;
+		            std::string name = argv[i];
+
+		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
+		            ++i;
+		            std::string output = argv[i];
+
+		            job_queue.push_back(job_descriptor(type, name, tags, output));
+		            tags.clear();
+			        }
+		        else
+			        {
+		            std::ostringstream msg;
+		            msg << __CPP_TRANSPORT_UNKNOWN_SWITCH << " '" << argv[i] << "'";
+		            this->error_handler(msg.str());
+			        }
+			    }
+			}
+		
+
+    template <typename number>
+    void master_controller<number>::execute_tasks(void)
+	    {
+        if(!(this->get_rank() == 0)) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
+
+        if(this->repo == nullptr)
+	        {
+            this->error_handler(__CPP_TRANSPORT_REPO_NONE);
+	        }
         else
 	        {
-            // push repository information to all workers
-            this->master_push_repository();
+		        // set up workers
+		        this->collect_worker_data();
 
             for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
 	            {
-                switch((*t).type)
+                switch((*t).get_type())
 	                {
                     case job_task:
 	                    {
-                        this->master_process_task(*t);
+                        this->process_task(*t);
                         break;
 	                    }
 
@@ -72,7 +632,7 @@ namespace transport
                     case job_get_package:
                     case job_get_content:
 	                    {
-                        this->master_process_get(*t);
+                        this->process_get(*t);
                         break;
 	                    }
 
@@ -84,40 +644,40 @@ namespace transport
 
         // there is no more work, so ask all workers to shut down
         // and then exit ourselves
-        this->master_terminate_workers();
+        this->terminate_workers();
 	    }
 
 
     template <typename number>
-    void task_manager<number>::master_process_get(const job_descriptor& job)
+    void master_controller<number>::process_get(const job_descriptor& job)
 	    {
         try
 	        {
             std::string document;
 
-            switch(job.type)
+            switch(job.get_type())
 	            {
                 case job_get_package:
 	                {
-                    document = this->repo->export_JSON_package_record(job.name);
+                    document = this->repo->export_JSON_package_record(job.get_name());
                     break;
 	                }
 
                 case job_get_task:
 	                {
-                    document = this->repo->export_JSON_task_record(job.name);
+                    document = this->repo->export_JSON_task_record(job.get_name());
                     break;
 	                }
 
                 case job_get_product:
 	                {
-                    document = this->repo->export_JSON_product_record(job.name);
+                    document = this->repo->export_JSON_product_record(job.get_name());
                     break;
 	                }
 
                 case job_get_content:
 	                {
-                    document = this->repo->export_JSON_content_record(job.name);
+                    document = this->repo->export_JSON_content_record(job.get_name());
                     break;
 	                }
 
@@ -126,7 +686,7 @@ namespace transport
 	            }
 
             std::ofstream out;
-            out.open(job.output);
+            out.open(job.get_output().c_str());
             if(out.is_open() && !out.fail())
 	            {
                 out << document;
@@ -134,25 +694,25 @@ namespace transport
             else
 	            {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.output << "'";
+                msg << __CPP_TRANSPORT_OPEN_OUTPUT_FAIL << " '" << job.get_output() << "'";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
             out.close();
 	        }
         catch(runtime_exception& xe)
 	        {
-            this->error(xe.what());
+            this->error_handler(xe.what());
 	        }
 	    }
 
 
     template <typename number>
-    void task_manager<number>::master_process_task(const job_descriptor& job)
+    void master_controller<number>::process_task(const job_descriptor& job)
 	    {
         try
 	        {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(job.name));
+            std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(job.get_name()));
 
             switch(record->get_type())
 	            {
@@ -163,7 +723,7 @@ namespace transport
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    this->master_dispatch_integration_task(int_rec, job.tags);
+                    this->dispatch_integration_task(int_rec, job.get_tags());
                     break;
 	                }
 
@@ -174,7 +734,7 @@ namespace transport
                     assert(out_rec != nullptr);
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    this->master_dispatch_output_task(out_rec, job.tags);
+                    this->dispatch_output_task(out_rec, job.get_tags());
                     break;
 	                }
 
@@ -185,7 +745,7 @@ namespace transport
                     assert(pint_rec != nullptr);
                     if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
-                    this->master_dispatch_postintegration_task(pint_rec, job.tags);
+                    this->dispatch_postintegration_task(pint_rec, job.get_tags());
                     break;
 	                }
 
@@ -194,7 +754,7 @@ namespace transport
                     assert(false);
 
                     std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << job.name << "'";
+                    msg << __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE << " '" << job.get_name() << "'";
                     throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	                }
 	            }
@@ -205,14 +765,14 @@ namespace transport
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_REPO_MISSING_RECORD << " '" << xe.what() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                this->error_handler(msg.str());
 	            }
             else if(xe.get_exception_code() == runtime_exception::MISSING_MODEL_INSTANCE
 	            || xe.get_exception_code() == runtime_exception::REPOSITORY_BACKEND_ERROR)
 	            {
                 std::ostringstream msg;
-                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.name << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
-                this->error(msg.str());
+                msg << xe.what() << " " << __CPP_TRANSPORT_REPO_FOR_TASK << " '" << job.get_name() << "'" << __CPP_TRANSPORT_REPO_SKIPPING_TASK;
+                this->error_handler(msg.str());
 	            }
             else throw xe;
 	        }
@@ -220,7 +780,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_integration_task(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_integration_task(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -240,12 +800,12 @@ namespace transport
         if((tka = dynamic_cast< twopf_task<number>* >(tk)) != nullptr)
 	        {
             work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tka);
-            this->master_dispatch_integration_queue(rec, tka, queue, tags);
+            this->dispatch_integration_queue(rec, tka, queue, tags);
 	        }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
 	        {
             work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tkb);
-            this->master_dispatch_integration_queue(rec, tkb, queue, tags);
+            this->dispatch_integration_queue(rec, tkb, queue, tags);
 	        }
         else
 	        {
@@ -258,8 +818,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename QueueObject>
-    void task_manager<number>::master_dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
-                                                                 TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
+                                                            TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -280,7 +840,7 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        bool success = this->master_integration_task_to_workers(writer);
+        bool success = this->integration_task_to_workers(writer);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -291,10 +851,9 @@ namespace transport
 
 
     template <typename number>
-    bool task_manager<number>::master_integration_task_to_workers(std::shared_ptr<typename repository<number>::integration_writer>& writer)
+    bool master_controller<number>::integration_task_to_workers(std::shared_ptr<typename repository<number>::integration_writer>& writer)
 	    {
         assert(this->repo != nullptr);
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
         bool success = true;
 
@@ -402,8 +961,8 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::aggregate_batch(std::shared_ptr<typename repository<number>::integration_writer>& writer, int source,
-                                               typename repository<number>::integration_metadata& metadata)
+    void master_controller<number>::aggregate_batch(std::shared_ptr<typename repository<number>::integration_writer>& writer, int source,
+                                                 typename repository<number>::integration_metadata& metadata)
 	    {
         MPI::data_ready_payload payload;
         this->world.recv(source, MPI::INTEGRATION_DATA_READY, payload);
@@ -424,13 +983,13 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error(msg.str());
+            this->error_handler(msg.str());
 	        }
 	    }
 
 
     template <typename number>
-    void task_manager<number>::update_integration_metadata(MPI::finished_integration_payload& payload, typename repository<number>::integration_metadata& metadata)
+    void master_controller<number>::update_integration_metadata(MPI::finished_integration_payload& payload, typename repository<number>::integration_metadata& metadata)
 	    {
         metadata.total_wallclock_time += payload.get_wallclock_time();
 
@@ -455,7 +1014,7 @@ namespace transport
 
 
     template <typename number>
-    context task_manager<number>::make_workers_context(void)
+    context master_controller<number>::make_workers_context(void)
 	    {
         context ctx;
 
@@ -475,7 +1034,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_output_task(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_output_task(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags)
 	    {
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
@@ -500,7 +1059,7 @@ namespace transport
         this->data_mgr->create_taskfile(writer, queue);
 
         // instruct workers to carry out their tasks
-        bool success = this->master_output_task_to_workers(writer, tags);
+        bool success = this->output_task_to_workers(writer, tags);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -511,10 +1070,9 @@ namespace transport
 
 
     template <typename number>
-    bool task_manager<number>::master_output_task_to_workers(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const std::list<std::string>& tags)
+    bool master_controller<number>::output_task_to_workers(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const std::list<std::string>& tags)
 	    {
         assert(this->repo != nullptr);
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
         bool success = true;
 
@@ -628,8 +1186,8 @@ namespace transport
 
 
     template <typename number>
-    bool task_manager<number>::aggregate_content(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, int source,
-                                                 typename repository<number>::output_metadata& metadata)
+    bool master_controller<number>::aggregate_content(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, int source,
+                                                   typename repository<number>::output_metadata& metadata)
 	    {
         MPI::content_ready_payload payload;
         this->world.recv(source, MPI::DERIVED_CONTENT_READY, payload);
@@ -643,13 +1201,13 @@ namespace transport
         aggregate_timer.stop();
         metadata.aggregation_time += aggregate_timer.elapsed().wall;
 
-        return(success);
+        return (success);
 	    }
 
 
     template <typename number>
     template <typename PayloadObject>
-    void task_manager<number>::update_output_metadata(PayloadObject& payload, typename repository<number>::output_metadata& metadata)
+    void master_controller<number>::update_output_metadata(PayloadObject& payload, typename repository<number>::output_metadata& metadata)
 	    {
         metadata.work_time                 += payload.get_cpu_time();
         metadata.db_time                   += payload.get_database_time();
@@ -672,7 +1230,7 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::master_dispatch_postintegration_task(typename repository<number>::postintegration_task_record* rec, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_postintegration_task(typename repository<number>::postintegration_task_record* rec, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -702,7 +1260,7 @@ namespace transport
 	            }
 
             work_queue<twopf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->master_dispatch_postintegration_queue(rec, z2pf, ptk, queue, tags);
+            this->dispatch_postintegration_queue(rec, z2pf, ptk, queue, tags);
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
 	        {
@@ -717,7 +1275,7 @@ namespace transport
 	            }
 
             work_queue<threepf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->master_dispatch_postintegration_queue(rec, z3pf, ptk, queue, tags);
+            this->dispatch_postintegration_queue(rec, z3pf, ptk, queue, tags);
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
 	        {
@@ -732,7 +1290,7 @@ namespace transport
 	            }
 
             work_queue<threepf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->master_dispatch_postintegration_queue(rec, zfNL, ptk, queue, tags);
+            this->dispatch_postintegration_queue(rec, zfNL, ptk, queue, tags);
 	        }
         else
 	        {
@@ -745,8 +1303,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject, typename QueueObject>
-    void task_manager<number>::master_dispatch_postintegration_queue(typename repository<number>::postintegration_task_record* rec,
-                                                                     TaskObject* tk, ParentTaskObject* ptk, QueueObject& queue, const std::list<std::string>& tags)
+    void master_controller<number>::dispatch_postintegration_queue(typename repository<number>::postintegration_task_record* rec,
+                                                                TaskObject* tk, ParentTaskObject* ptk, QueueObject& queue, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -765,7 +1323,7 @@ namespace transport
         this->data_mgr->create_tables(writer, tk);
 
         // instruct workers to carry out the calculation
-        bool success = this->master_postintegration_task_to_workers(writer, tags);
+        bool success = this->postintegration_task_to_workers(writer, tags);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -776,10 +1334,9 @@ namespace transport
 
 
     template <typename number>
-    bool task_manager<number>::master_postintegration_task_to_workers(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const std::list<std::string>& tags)
+    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const std::list<std::string>& tags)
 	    {
         assert(this->repo != nullptr);
-        if(!this->is_master()) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_EXEC_SLAVE);
 
         bool success = true;
 
@@ -893,8 +1450,8 @@ namespace transport
 
 
     template <typename number>
-    void task_manager<number>::aggregate_postprocess(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, int source,
-                                                     typename repository<number>::output_metadata& metadata)
+    void master_controller<number>::aggregate_postprocess(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, int source,
+                                                       typename repository<number>::output_metadata& metadata)
 	    {
         MPI::data_ready_payload payload;
         this->world.recv(source, MPI::POSTINTEGRATION_DATA_READY, payload);
@@ -915,11 +1472,50 @@ namespace transport
 	        {
             std::ostringstream msg;
             msg << __CPP_TRANSPORT_DATACTR_REMOVE_TEMP << " '" << payload.get_container_path() << "'";
-            this->error(msg.str());
+            this->error_handler(msg.str());
 	        }
+	    }
+
+
+    template <typename number>
+    void master_controller<number>::collect_worker_data(void)
+	    {
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        // we require this->repo not to be null,
+        // but don't throw an exception since this condition should have been checked before calling
+        assert(this->repo != nullptr);
+
+		    if(this->repo != nullptr)
+			    {
+		        MPI::data_request_payload payload(this->repo->get_root_path());
+
+		        for(unsigned int i = 0; i < this->world.size()-1; i++)
+			        {
+		            requests[i] = this->world.isend(this->worker_rank(i), MPI::SET_REPOSITORY, payload);
+			        }
+
+		        // wait for all messages to be received, then return
+		        boost::mpi::wait_all(requests.begin(), requests.end());
+			    }
+	    }
+
+
+    template <typename number>
+    void master_controller<number>::terminate_workers(void)
+	    {
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+	        {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::TERMINATE);
+	        }
+
+        // wait for all messages to be received, then exit ourselves
+        boost::mpi::wait_all(requests.begin(), requests.end());
 	    }
 
 	}   // namespace transport
 
 
-#endif //__task_manager_master_H_
+#endif //__master_controller_H_
