@@ -36,8 +36,7 @@ int main(int argc, char* argv[])
     // using doubles, with given parameter choices
     transport::quadratic10_basic<double>* model = new transport::quadratic10_basic<double>(mgr);
 
-    if(mgr->is_master()) mgr->execute_tasks();
-    else                 mgr->wait_for_tasks();
+		mgr->process();
 
     // models must all be destroyed before the corresponding manager
     delete mgr;   // task manager adopts and destroys its repository, and any registered models

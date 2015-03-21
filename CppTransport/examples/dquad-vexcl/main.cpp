@@ -38,8 +38,7 @@ int main(int argc, char* argv[])
 	// (if necessary) the backend can select an appropriate GPU
     transport::dquad_vexcl<double>* model = new transport::dquad_vexcl<double>(mgr, mgr->get_rank());
 
-    if(mgr->is_master()) mgr->execute_tasks();
-    else                 mgr->wait_for_tasks();
+		mgr->process();
 
     if(mgr->is_master())
       {
