@@ -1320,8 +1320,6 @@ namespace transport
                                                      logdir, tempdir, worker, timer,
 		                                                 utilities, config, timeslice, kslice, no_log);
 
-				BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "** Created new datapipe, data cache capacity = " << format_memory(this->pipe_data_capacity) << ", zeta cache capacity = " << format_memory(this->pipe_zeta_capacity);
-
 				return(pipe);
 			}
 

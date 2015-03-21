@@ -2273,6 +2273,9 @@ namespace transport
 
 		      private:
 
+		        //! Host information
+		        host_information host_info;
+
 
 				    // CACHES
 
@@ -2657,8 +2660,12 @@ namespace transport
             this->log_sink.reset();
           }
 
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "** Instantiated generic batcher on MPI host " << host_info.get_host_name()
-		        << ", OS = " << host_info.get_os_name() << ", Version = " << host_info.get_os_version() << " (Release = " << host_info.get_os_release() << ") | " << host_info.get_architecture()
+        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "** Instantiated batcher (capacity " << format_memory(capacity) << ")"
+            << " on MPI host " << host_info.get_host_name()
+		        << ", OS = " << host_info.get_os_name()
+		        << ", Version = " << host_info.get_os_version()
+		        << " (Release = " << host_info.get_os_release()
+		        << ") | " << host_info.get_architecture()
 		        << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
       }
 
@@ -3382,6 +3389,14 @@ namespace transport
           {
             this->log_sink.reset();
           }
+
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "** Instantiated datapipe (main cache " << format_memory(dcap) << ", zeta cache " << format_memory(zcap) << ")"
+				    << " on MPI host " << host_info.get_host_name()
+				    << ", OS = " << host_info.get_os_name()
+				    << ", Version = " << host_info.get_os_version()
+				    << " (Release = " << host_info.get_os_release()
+				    << ") | " << host_info.get_architecture()
+				    << " | CPU vendor = " << host_info.get_cpu_vendor_id() << std::endl;
       }
 
 
