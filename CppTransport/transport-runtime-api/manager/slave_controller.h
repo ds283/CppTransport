@@ -105,8 +105,14 @@ namespace transport
 
 		  protected:
 
-		    //! Slave node: set repository
-		    void set_repository(const MPI::data_request_payload& payload);
+		    //! Slave node: initialize ourselves
+		    void initialize(const MPI::slave_setup_payload& payload);
+
+				//! Slave node: Pass scheduling data to the master node
+				void send_worker_data(model<number>* m);
+
+				//! Slave node: Pass scheduling data to the master node
+				void send_worker_data(void);
 
 
 		    // SLAVE INTEGRATION TASKS
@@ -293,11 +299,11 @@ namespace transport
                     break;
 	                }
 
-                case MPI::SET_REPOSITORY:
+                case MPI::INFORMATION_REQUEST:
 	                {
-                    MPI::data_request_payload payload;
-                    this->world.recv(MPI::RANK_MASTER, MPI::SET_REPOSITORY, payload);
-                    this->set_repository(payload);
+                    MPI::slave_setup_payload payload;
+                    this->world.recv(MPI::RANK_MASTER, MPI::INFORMATION_REQUEST, payload);
+                    this->initialize(payload);
                     break;
 	                }
 
@@ -316,7 +322,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::set_repository(const MPI::data_request_payload& payload)
+    void slave_controller<number>::initialize(const MPI::slave_setup_payload& payload)
 	    {
         try
 	        {
@@ -343,6 +349,32 @@ namespace transport
 	            }
 	        }
 	    }
+
+
+		template <typename number>
+		void slave_controller<number>::send_worker_data(model<number>* m)
+			{
+				assert(m != nullptr);
+
+				typename model<number>::backend_type btype = m->get_backend_type();
+		    MPI::slave_information_payload::worker_type wtype;
+
+				if(btype == model<number>::cpu) wtype = MPI::slave_information_payload::cpu;
+				else if(btype == model<number>::gpu) wtype = MPI::slave_information_payload::gpu;
+
+		    MPI::slave_information_payload payload(wtype, m->get_backend_memory(), m->get_backend_priority());
+
+				this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+			}
+
+
+		template <typename number>
+		void slave_controller<number>::send_worker_data(void)
+			{
+		    MPI::slave_information_payload payload(MPI::slave_information_payload::cpu, 0, 1);
+
+		    this->world.isend(MPI::RANK_MASTER, MPI::INFORMATION_RESPONSE, payload);
+			}
 
 
     template <typename number>
@@ -428,6 +460,9 @@ namespace transport
         model<number>* m = tk->get_model();
         assert(m != nullptr);
 
+		    // send scheduling information to the master process
+		    this->send_worker_data(m);
+
         twopf_task<number>* tka = nullptr;
         threepf_task<number>* tkb = nullptr;
 
@@ -487,7 +522,7 @@ namespace transport
     template <typename number>
     template <typename TaskObject, typename QueueObject, typename BatchObject>
     void slave_controller<number>::dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
-                                                           const MPI::new_integration_payload& payload, BatchObject& batcher)
+                                                              const MPI::new_integration_payload& payload, BatchObject& batcher)
 	    {
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
@@ -620,6 +655,9 @@ namespace transport
 
         std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
         work_item_filter< output_task_element<number> > filter(work_items);
+
+        // send scheduling information to the master process
+        this->send_worker_data();
 
         // create a context and queue
         context ctx = context();
@@ -801,6 +839,9 @@ namespace transport
 	    {
         assert(tk != nullptr);
 
+        // send scheduling information to the master process
+        this->send_worker_data();
+
         // create a context and work queue
         context ctx  = context();
         ctx.add_device("CPU");
@@ -909,7 +950,7 @@ namespace transport
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject, typename QueueObject, typename BatchObject>
     void slave_controller<number>::dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
-                                                               const MPI::new_postintegration_payload& payload, BatchObject& batcher)
+                                                                  const MPI::new_postintegration_payload& payload, BatchObject& batcher)
 	    {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed

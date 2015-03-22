@@ -39,7 +39,8 @@ namespace transport
             const unsigned int POSTINTEGRATION_DATA_READY = 22;
             const unsigned int POSTINTEGRATION_FAIL       = 29;
 
-            const unsigned int SET_REPOSITORY             = 98;
+            const unsigned int INFORMATION_REQUEST        = 90;
+		        const unsigned int INFORMATION_RESPONSE       = 91;
             const unsigned int TERMINATE                  = 99;
 
             // MPI ranks
@@ -47,16 +48,18 @@ namespace transport
 
             // MPI message payloads
 
-            class data_request_payload
+            class slave_setup_payload
               {
+
               public:
+
                 //! Null constructor (used for receiving messages)
-                data_request_payload()
+                slave_setup_payload()
                   {
                   }
 
                 //! Value constructor (used for constructing messages to send)
-                data_request_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int zcp)
+                slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int zcp)
                   : repository(rp.string()),
                     batcher_capacity(bcp),
                     data_capacity(pcp),
@@ -101,7 +104,64 @@ namespace transport
 		                ar & data_capacity;
 		                ar & zeta_capacity;
                   }
+
               };
+
+
+		        class slave_information_payload
+			        {
+
+		          public:
+
+			          typedef enum { cpu, gpu } worker_type;
+
+		          public:
+
+				        //! Null constructor (used for receiving messages)
+				        slave_information_payload()
+					        {
+					        }
+
+				        //! Value constructor (used for constructing messages to send)
+				        slave_information_payload(worker_type t, unsigned int c, unsigned int p)
+				          : type(t),
+		                capacity(c),
+		                priority(p)
+					        {
+					        }
+
+				        //! Get worker type
+				        worker_type get_type() const { return(this->type); }
+
+				        //! Get worker capacity
+				        unsigned int get_capacity() const { return(this->capacity); }
+
+				        //! Get worker priority
+				        unsigned int get_priority() const { return(this->priority); }
+
+		          private:
+
+				        //! Worker type
+				        worker_type type;
+
+				        //! Worker memory capacity (integrations only)
+				        unsigned int capacity;
+
+				        //! Worker priority
+				        unsigned int priority;
+
+		            // enable boost::serialization support, and hence automated packing for transmission over MPI
+		            friend class boost::serialization::access;
+
+		            template <typename Archive>
+		            void serialize(Archive& ar, unsigned int version)
+			            {
+		                ar & type;
+		                ar & capacity;
+		                ar & priority;
+			            }
+
+			        };
 
 
             class new_integration_payload

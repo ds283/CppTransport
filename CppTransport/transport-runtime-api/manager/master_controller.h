@@ -149,13 +149,36 @@ namespace transport
 
 		      public:
 
-		        worker_information(worker_type t, unsigned int c, unsigned int p, unsigned int n)
-			        : type(t),
-			          capacity(c),
-			          priority(p),
-			          mpi_number(n)
+				    //! construct a worker information record
+		        worker_information()
+			        : type(cpu),
+			          capacity(0),
+			          priority(0),
+				        initialized(false)
 			        {
 			        }
+
+				    // INTERFACE
+
+		      public:
+
+				    //! get worker type
+				    worker_type get_type() const { return(this->type); }
+
+				    //! get worker capacity
+				    unsigned int get_capacity() const { return(this->capacity); }
+
+				    //! get worker priority
+				    unsigned int get_priority() const { return(this->priority); }
+
+				    //! get initialization status
+				    bool get_initialization_status() const { return(this->initialized); }
+
+				    //! set data
+				    void set_data(worker_type t, unsigned int c, unsigned int p) { this->type = t; this->capacity = c; this->priority = p; this->initialized = true; }
+
+
+				    // INTERNAL DATA
 
 		      private:
 
@@ -168,8 +191,8 @@ namespace transport
 		        //! worker's priority
 		        unsigned int priority;
 
-		        //! MPI worker number
-		        unsigned int mpi_number;
+				    //! received initialization data from this worker?
+				    bool initialized;
 
 			    };
 
@@ -243,7 +266,15 @@ namespace transport
 		    void terminate_workers(void);
 
 		    //! Master node: Collect data on workers
-		    void collect_worker_data(void);
+		    void initialize_workers(void);
+
+				//! Master node: Initialize a worker
+				template <typename WorkerObject>
+				unsigned int initialize_worker(WorkerObject& writer, unsigned int worker_number, MPI::slave_information_payload& payload);
+
+				//! Master node: set up worker data
+				template <typename WriterObject>
+				void set_up_workers(WriterObject& writer);
 
 		    //! Make a 'device context' for the MPI worker processes
 		    context make_workers_context(void);
@@ -338,7 +369,7 @@ namespace transport
 		    // DATA AND STATE
 
 		    //! Information about workers
-		    std::list<worker_information> worker_data;
+		    std::vector<worker_information> worker_data;
 
 		    //! Queue of tasks to process
 		    std::list<job_descriptor> job_queue;
@@ -615,7 +646,7 @@ namespace transport
         else
 	        {
 		        // set up workers
-		        this->collect_worker_data();
+		        this->initialize_workers();
 
             for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
 	            {
@@ -887,6 +918,9 @@ namespace transport
 
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_INTEGRATION instruction";
 
+		    // wait for workers to indicate their characteristics
+		    this->set_up_workers(writer);
+
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
@@ -1105,6 +1139,9 @@ namespace transport
         boost::mpi::wait_all(requests.begin(), requests.end());
 
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+
+        // wait for workers to indicate their characteristics
+        this->set_up_workers(writer);
 
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
@@ -1370,6 +1407,9 @@ namespace transport
 
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
 
+        // wait for workers to indicate their characteristics
+        this->set_up_workers(writer);
+
         // poll workers, receiving data until workers are exhausted
         std::set<unsigned int> workers;
         for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
@@ -1478,27 +1518,94 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::collect_worker_data(void)
+    void master_controller<number>::initialize_workers(void)
 	    {
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
-        // we require this->repo not to be null,
-        // but don't throw an exception since this condition should have been checked before calling
+        // we require this->repo not to be null
         assert(this->repo != nullptr);
+		    if(this->repo == nullptr) throw std::runtime_error(__CPP_TRANSPORT_REPO_NOT_SET);
 
-		    if(this->repo != nullptr)
+		    // request information from each worker, and pass all necessary setup details
+        MPI::slave_setup_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_data_capacity, this->pipe_zeta_capacity);
+
+        for(unsigned int i = 0; i < this->world.size()-1; i++)
+	        {
+            requests[i] = this->world.isend(this->worker_rank(i), MPI::INFORMATION_REQUEST, payload);
+	        }
+
+        // wait for all messages to be received, then return
+        boost::mpi::wait_all(requests.begin(), requests.end());
+	    }
+
+
+		template <typename number>
+		template <typename WriterObject>
+    void master_controller<number>::set_up_workers(WriterObject& writer)
+			{
+		    // build information about our workers; this information is held in the worker_data vector
+				// it is updated whenever we start a new task, because the details can vary
+				// between model instances
+		    this->worker_data.clear();
+		    this->worker_data.resize(this->world.size()-1);
+
+		    // wait for responses to arrive
+		    unsigned int to_be_setup = this->world.size()-1;
+		    while(to_be_setup > 0)
 			    {
-		        MPI::data_request_payload payload(this->repo->get_root_path(), this->batcher_capacity, this->pipe_data_capacity, this->pipe_zeta_capacity);
+		        boost::mpi::status stat = this->world.probe();
 
-		        for(unsigned int i = 0; i < this->world.size()-1; i++)
-			        {
-		            requests[i] = this->world.isend(this->worker_rank(i), MPI::SET_REPOSITORY, payload);
-			        }
+				    switch(stat.tag())
+					    {
+				        case MPI::INFORMATION_RESPONSE:
+					        {
+				            MPI::slave_information_payload payload;
+						        this->world.recv(stat.source(), MPI::INFORMATION_RESPONSE, payload);
 
-		        // wait for all messages to be received, then return
-		        boost::mpi::wait_all(requests.begin(), requests.end());
+						        to_be_setup -= this->initialize_worker(writer, this->worker_number(stat.source()), payload);
+						        break;
+					        }
+
+				        default:
+					        {
+						        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source();
+						        break;
+					        }
+					    };
 			    }
 	    }
+
+
+		template <typename number>
+		template <typename WriterObject>
+		unsigned int master_controller<number>::initialize_worker(WriterObject& writer, unsigned int worker_number, MPI::slave_information_payload& payload)
+			{
+				unsigned int rval = 0;
+
+				if(!(this->worker_data[worker_number].get_initialization_status()))
+					{
+						worker_type type = cpu;
+						if(payload.get_type() == MPI::slave_information_payload::cpu) type = cpu;
+						else if(payload.get_type() == MPI::slave_information_payload::gpu) type = gpu;
+
+						this->worker_data[worker_number].set_data(type, payload.get_capacity(), payload.get_priority());
+				    rval = 1;
+
+				    std::ostringstream msg;
+						msg << "** Worker " << worker_number << " identified as ";
+						if(type == cpu) msg << "CPU";
+						else if(type == gpu) msg << "GPU";
+						msg << " of capacity " << format_memory(payload.get_capacity()) << " and priority " << payload.get_priority();
+
+						BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << msg.str();
+					}
+				else
+					{
+						BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "!! Unexpected double identification for worker  " << worker_number;
+					}
+
+				return(rval);
+			}
 
 
     template <typename number>

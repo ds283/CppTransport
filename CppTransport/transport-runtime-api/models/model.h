@@ -54,6 +54,8 @@ namespace transport
 
         typedef std::vector< std::vector<number> > backg_history;
 
+		    typedef enum { cpu, gpu } backend_type;
+
 
         // CONSTRUCTORS, DESTRUCTORS
 
@@ -169,12 +171,21 @@ namespace transport
         // obtain the compute context for this calculation
         // this method must be over-ridden by a derived implementation class, and should
         // supply a suitable context for whatever compute backend is in use
-        virtual context      backend_get_context() = 0;
+        virtual context backend_get_context(void) = 0;
+
+		    // obtain backend type
+		    virtual backend_type get_backend_type(void) = 0;
+
+		    // obtain backend memory capacity
+		    virtual unsigned int get_backend_memory(void) = 0;
+
+		    // obtain backend priority
+		    virtual unsigned int get_backend_priority(void) = 0;
 
         // process a background computation
         // unlike the twopf and threepf cases, we assume this can be done in memory
         // suitable storage is passed in soln
-        virtual void         backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
+        virtual void backend_process_backg(const background_task<number>* tk, std::vector< std::vector<number> >& solution, bool silent=false) = 0;
 
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
