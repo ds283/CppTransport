@@ -63,6 +63,15 @@ namespace transport
         // Set up a context
         virtual context backend_get_context() override;
 
+        // Get backend type
+        virtual typename model<number>::backend_type get_backend_type() override;
+
+        //! Get backend memory capacity
+        virtual unsigned int get_backend_memory() override;
+
+        //! Get backend priority
+        virtual unsigned int get_backend_priority() override;
+
         // Integrate background and 2-point function on the CPU
         virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
                                            typename data_manager<number>::twopf_batcher& batcher,
@@ -255,6 +264,28 @@ namespace transport
 
         return(ctx);
       }
+
+
+		template <typename number>
+		typename model<number>::backend_type $$__MODEL_basic<number>::get_backend_type(void)
+			{
+				return(model<number>::cpu);
+			}
+
+
+		template <typename number>
+		unsigned int $$__MODEL_basic<number>::get_backend_memory(void)
+			{
+				return(0);
+			}
+
+
+		template <typename number>
+		unsigned int $$__MODEL_basic<number>::get_backend_priority(void)
+			{
+				return(1);
+			}
+
 
     // process work queue for twopf
     template <typename number>
