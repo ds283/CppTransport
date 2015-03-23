@@ -208,15 +208,28 @@ namespace transport
 		    //! This function schedules workers to process the task.
 		    void process_task(const job_descriptor& job);
 
+
+				// WORKER HANDLING
+
+		  protected:
+
 		    //! Master node: Terminate all worker processes
 		    void terminate_workers(void);
 
 		    //! Master node: Collect data on workers
 		    void initialize_workers(void);
 
-				//! Master node: set up worker data
+				//! Master node: set up workers in preparation for a new task
 				template <typename WriterObject>
 				void set_up_workers(WriterObject& writer);
+
+				//! Master node: close down workers after completion of a task
+				template <typename WriterObject>
+				void close_down_workers(WriterObject& writer);
+
+				//! Master node: generate new work assignments for workers
+				template <typename WriterObject>
+				void assign_work_to_workers(WriterObject& writer);
 
 		    //! Make a 'device context' for the MPI worker processes
 		    context make_workers_context(void);
@@ -231,9 +244,9 @@ namespace transport
 		    void dispatch_integration_task(typename repository<number>::integration_task_record* rec, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch an integration queue to the worker processes.
-		    template <typename TaskObject, typename QueueObject>
-		    void dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
-		                                    TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags);
+		    template <typename TaskObject>
+		    void schedule_integration(typename repository<number>::integration_task_record* rec,
+		                              TaskObject* tk, const std::list<std::string>& tags);
 
 		    //! Master node: Pass new integration task to the workers
 		    bool integration_task_to_workers(std::shared_ptr<typename repository<number>::integration_writer>& writer);
@@ -760,10 +773,6 @@ namespace transport
         // can't process a task if there are no workers
         if(this->world.size() == 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
-        // set up a work queue representing our workers
-        context ctx = this->make_workers_context();
-        scheduler sch = scheduler(ctx);
-
         integration_task<number>* tk = rec->get_task();
         model<number>* m = rec->get_task()->get_model();
 
@@ -772,13 +781,15 @@ namespace transport
 
         if((tka = dynamic_cast< twopf_task<number>* >(tk)) != nullptr)
 	        {
-            work_queue<twopf_kconfig> queue = sch.make_queue(m->backend_twopf_state_size(), *tka);
-            this->dispatch_integration_queue(rec, tka, queue, tags);
+		        this->work_scheduler.set_state_size(m->backend_twopf_state_size());
+		        this->work_scheduler.prepare_queue(*tka);
+            this->schedule_integration(rec, tka, tags);
 	        }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
 	        {
-            work_queue<threepf_kconfig> queue = sch.make_queue(m->backend_threepf_state_size(), *tkb);
-            this->dispatch_integration_queue(rec, tkb, queue, tags);
+		        this->work_scheduler.set_state_size(m->backend_threepf_state_size());
+            this->work_scheduler.prepare_queue(*tkb);
+            this->schedule_integration(rec, tkb, tags);
 	        }
         else
 	        {
@@ -790,9 +801,9 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename QueueObject>
-    void master_controller<number>::dispatch_integration_queue(typename repository<number>::integration_task_record* rec,
-                                                            TaskObject* tk, QueueObject& queue, const std::list<std::string>& tags)
+    template <typename TaskObject>
+    void master_controller<number>::schedule_integration(typename repository<number>::integration_task_record* rec,
+                                                         TaskObject* tk, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -806,7 +817,7 @@ namespace transport
 
         // write the task distribution list -- this is subsequently read by the worker processes,
         // to find out which work items they should process
-        this->data_mgr->create_taskfile(writer, queue);
+//        this->data_mgr->create_taskfile(writer, queue);
 
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
@@ -830,8 +841,6 @@ namespace transport
 
         bool success = true;
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ NEW INTEGRATION TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
@@ -844,11 +853,11 @@ namespace transport
         typename repository<number>::integration_metadata metadata;
 
         // get paths the workers will need
-        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
         boost::filesystem::path tempdir_path  = writer->get_abs_tempdir_path();
         boost::filesystem::path logdir_path   = writer->get_abs_logdir_path();
 
-        MPI::new_integration_payload payload(writer->get_record()->get_name(), taskfile_path, tempdir_path, logdir_path);
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
 	        {
@@ -857,18 +866,26 @@ namespace transport
 
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
-
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_INTEGRATION instruction";
 
-		    // wait for workers to indicate their characteristics
+		    // wait for workers to report their characteristics
 		    this->set_up_workers(writer);
 
-        // poll workers, receiving data until workers are exhausted
-        std::set<unsigned int> workers;
-        for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
-        while(workers.size() > 0)
+        // poll workers, scattering work and receiving data until work items are exhausted
+		    bool sent_closedown = false;
+		    while(!this->work_scheduler.all_inactive())
 	        {
-            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) <<  "++ Master polling for INTEGRATION_DATA_READY messages";
+		        // send closedown instruction if no more work
+		        if(this->work_scheduler.finished() && !sent_closedown)
+			        {
+				        sent_closedown = true;
+				        this->close_down_workers(writer);
+			        }
+
+		        // generate new work assignments if needed
+		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+
+//            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) <<  "++ Polling for MPI messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
@@ -884,11 +901,12 @@ namespace transport
 	                {
                     MPI::finished_integration_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished task in wallclock time " << format_time(payload.get_wallclock_time());
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
 
+		                // mark this worker as unassigned, and update its mean time per work item
+		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
                     this->update_integration_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     break;
 	                }
 
@@ -898,21 +916,30 @@ namespace transport
                     this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
                     BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising integration failure (successful tasks consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
+										this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
                     this->update_integration_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     success = false;
                     break;
 	                }
 
+                case MPI::WORKER_CLOSE_DOWN:
+	                {
+		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
+		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
+		                BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
+		                break;
+	                }
+
                 default:
 	                {
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue";
                     break;
 	                }
-	            }
+	            };
 	        }
 
+		    // push task metadata we have collected to the writer
         writer->set_metadata(metadata);
 
         wallclock_timer.stop();
@@ -1082,7 +1109,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
 
-        // wait for workers to indicate their characteristics
+        // wait for workers to report their characteristics
         this->set_up_workers(writer);
 
         // poll workers, receiving data until workers are exhausted
@@ -1349,7 +1376,7 @@ namespace transport
 
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
 
-        // wait for workers to indicate their characteristics
+        // wait for workers to report their characteristics
         this->set_up_workers(writer);
 
         // poll workers, receiving data until workers are exhausted
@@ -1512,6 +1539,50 @@ namespace transport
 					    };
 			    }
 	    }
+
+
+		template <typename number>
+		template <typename WriterObject>
+		void master_controller<number>::close_down_workers(WriterObject& writer)
+			{
+		    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Notifying workers of end-of-work";
+
+				for(unsigned int i = 0; i < this->world.size()-1; i++)
+					{
+						this->world.isend(this->worker_rank(i), MPI::END_OF_WORK);
+					}
+			}
+
+
+		template <typename number>
+		template <typename WriterObject>
+		void master_controller<number>::assign_work_to_workers(WriterObject& writer)
+			{
+        // generate a list of work assignments
+        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work();
+
+        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Generating new work assignments for " << work.size() << " workers (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
+
+        // push assignments to workers
+        std::vector<boost::mpi::request> msg_status(work.size());
+
+        unsigned int c = 0;
+        for(std::list<master_scheduler::work_assignment>::const_iterator t = work.begin(); t != work.end(); t++, c++)
+	        {
+            MPI::work_assignment_payload payload(t->get_items());
+
+		        // send message to worker with new assignment information
+            msg_status[c] = this->world.isend(this->worker_rank(t->get_worker()), MPI::NEW_WORK_ASSIGNMENT, payload);
+
+		        // mark this worker, and these work items, as assigned
+            this->work_scheduler.mark_assigned(*t);
+		        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
+	        }
+
+        // wait for all assignments to be received
+        boost::mpi::wait_all(msg_status.begin(), msg_status.end());
+		    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers accepted new assignments";
+			}
 
 
     template <typename number>

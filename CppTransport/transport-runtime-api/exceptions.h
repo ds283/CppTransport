@@ -22,6 +22,7 @@ namespace transport
       public:
 
         typedef enum { RUNTIME_ERROR,                                     // generic runtime error
+		                   SCHEDULING_ERROR,                                  // error while scheduling a task
                        TASK_STRUCTURE_ERROR,                              // disallowed configuration while building task hierarchy
                        MPI_ERROR,                                         // error associated with MPI message passing
                        RECORD_NOT_FOUND, REPO_NOT_FOUND,                  // missing items in the repository

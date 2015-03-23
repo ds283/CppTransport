@@ -497,6 +497,12 @@ namespace transport
             //! Query how many refinements occurred
             unsigned int number_refinements() const { return(this->refinements); }
 
+            //! Prepare for new work assignment
+            void begin_assignment();
+
+		        //! Tidy up after a work assignment
+		        void end_assignment();
+
 
             // INTEGRATION STATISTICS
 
@@ -2471,8 +2477,6 @@ namespace transport
         //! Create a list of task assignments, over a number of devices, from a work queue.
         //! C++ does not allow templated virtual functions, so we need to explicitly declare
         //! each version that we need
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<twopf_kconfig>& queue) = 0;
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::integration_writer>& writer, const work_queue<threepf_kconfig>& queue) = 0;
         virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<twopf_kconfig>& queue) = 0;
         virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<threepf_kconfig>& queue) = 0;
         virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) = 0;
@@ -2800,33 +2804,54 @@ namespace transport
       }
 
 
+		template <typename number>
+    void data_manager<number>::integration_batcher::begin_assignment()
+			{
+				this->num_integrations = 0;
+				this->integration_time = 0;
+				this->batching_time = 0;
+				this->max_integration_time = 0;
+				this->min_integration_time = 0;
+				this->max_batching_time = 0;
+				this->min_batching_time = 0;
+
+				this->failures = 0;
+				this->refinements = 0;
+			}
+
+
+		template <typename number>
+		void data_manager<number>::integration_batcher::end_assignment()
+			{
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Finished assignment: final integration statistics";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->num_integrations << " individual integrations";
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total integration time          = " << format_time(this->integration_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean integration time           = " << format_time(this->integration_time/this->num_integrations);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total batching time             = " << format_time(this->batching_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean batching time              = " << format_time(this->batching_time/this->num_integrations);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
+
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+
+		    if(this->refinements > 0)
+			    {
+		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->refinements << " triangles required mesh refinement";
+			    }
+		    if(this->failures > 0)
+			    {
+		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->failures << " triangles failed to integrate";
+			    }
+			}
+
+
     template <typename number>
     void data_manager<number>::integration_batcher::close()
       {
         this->generic_batcher::close();
-
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Closing batcher: final integration statistics";
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->num_integrations << " individual integrations";
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total integration time          = " << format_time(this->integration_time);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean integration time           = " << format_time(this->integration_time/this->num_integrations);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total batching time             = " << format_time(this->batching_time);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean batching time              = " << format_time(this->batching_time/this->num_integrations);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
-
-        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
-
-        if(this->refinements > 0)
-          {
-            BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->refinements << " triangles required mesh refinement";
-          }
-        if(this->failures > 0)
-          {
-            BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->failures << " triangles failed to integrate";
-          }
       }
 
 

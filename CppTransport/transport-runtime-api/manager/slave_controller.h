@@ -126,12 +126,18 @@ namespace transport
 		    void dispatch_integration_task(integration_task<number>* tk, const MPI::new_integration_payload& payload);
 
 		    //! Slave node: process an integration queue
-		    template <typename TaskObject, typename QueueObject, typename BatchObject>
-		    void dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
-		                                    const MPI::new_integration_payload& payload, BatchObject& batcher);
+		    template <typename TaskObject, typename BatchObject>
+		    void schedule_integration(TaskObject* tk, model<number>* m, const MPI::new_integration_payload& payload,
+		                              BatchObject& batcher, unsigned int state_size);
 
 		    //! Push a temporary container to the master process
 		    void push_temp_container(typename data_manager<number>::generic_batcher* batcher, unsigned int message, std::string log_message);
+
+				//! Construct a work item filter for a twopf task
+				work_item_filter<twopf_kconfig> work_item_filter_factory(twopf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<twopf_kconfig>(items); }
+
+		    //! Construct a work item filter for a threepf task
+		    work_item_filter<threepf_kconfig> work_item_filter_factory(threepf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<threepf_kconfig>(items); }
 
 
 		    // SLAVE POSTINTEGRATION TASKS
@@ -468,14 +474,6 @@ namespace transport
 
         if((tka = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
 	        {
-            std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-            work_item_filter<twopf_kconfig> filter(work_items);
-
-            // create queues based on whatever devices are relevant for the backend
-            context                   ctx  = m->backend_get_context();
-            scheduler                 sch  = scheduler(ctx);
-            work_queue<twopf_kconfig> work = sch.make_queue(m->backend_twopf_state_size(), *tka, filter);
-
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
 	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
@@ -486,18 +484,10 @@ namespace transport
 	                                                         this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                     this->get_rank(), m, dispatcher);
 
-            this->dispatch_integration_queue(tka, m, work, payload, batcher);
+            this->schedule_integration(tka, m, payload, batcher, m->backend_twopf_state_size());
 	        }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
 	        {
-            std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-            work_item_filter<threepf_kconfig> filter(work_items);
-
-            // create queues based on whatever devices are relevant for the backend
-            context                     ctx  = m->backend_get_context();
-            scheduler                   sch  = scheduler(ctx);
-            work_queue<threepf_kconfig> work = sch.make_queue(m->backend_threepf_state_size(), *tkb, filter);
-
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
 	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
@@ -508,7 +498,7 @@ namespace transport
 	                                                           this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                         this->get_rank(), m, dispatcher);
 
-            this->dispatch_integration_queue(tkb, m, work, payload, batcher);
+            this->schedule_integration(tkb, m, payload, batcher, m->backend_threepf_state_size());
 	        }
         else
 	        {
@@ -520,55 +510,105 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename QueueObject, typename BatchObject>
-    void slave_controller<number>::dispatch_integration_queue(TaskObject* tk, model<number>* m, QueueObject& queue,
-                                                              const MPI::new_integration_payload& payload, BatchObject& batcher)
+    template <typename TaskObject, typename BatchObject>
+    void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, const MPI::new_integration_payload& payload,
+                                                        BatchObject& batcher, unsigned int state_size)
 	    {
         // dispatch integration to the underlying model
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
 
-        bool success = true;
-
-        // keep track of wallclock time
-        boost::timer::cpu_timer timer;
-
-		    // write log header
+        // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
-        // perform the integration
-        try
-	        {
-            m->backend_process_queue(queue, tk, batcher, true);    // 'true' = work silently
-	        }
-        catch(runtime_exception& xe)
-	        {
-            success = false;
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
-	        }
+		    bool complete = false;
+		    while(!complete)
+			    {
+				    // wait for messages from scheduler
+		        boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
-        // close the batcher
-        batcher.close();
-        if(batcher.integrations_failed()) success = false;
+				    switch(stat.tag())
+					    {
+				        case MPI::NEW_WORK_ASSIGNMENT:
+					        {
+				            MPI::work_assignment_payload payload;
+						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, payload);
 
-        // all work is now done - stop the wallclock timer
-        timer.stop();
+				            std::list<unsigned int> work_items = payload.get_items();
+						        auto filter = this->work_item_filter_factory(tk, work_items);
 
-        // notify master process that all work has been finished (temporary containers will be deleted by the master node)
-        now = boost::posix_time::second_clock::universal_time();
-        if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-        else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+						        // create work queues based on whatever devices are relevant for our backend
+						        context ctx = m->backend_get_context();
+						        scheduler sch = scheduler(ctx);
+						        auto work = sch.make_queue(state_size, *tk, filter);
 
-        MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
-                                                           batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-                                                           batcher.get_batching_time(),
-                                                           batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-                                                           timer.elapsed().wall,
-                                                           batcher.get_reported_integrations());
+				            bool success = true;
+						        batcher.begin_assignment();
 
-        this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+				            // keep track of wallclock time
+				            boost::timer::cpu_timer timer;
+
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW WORK ASSIGNMENT";
+
+				            // perform the integration
+				            try
+					            {
+				                m->backend_process_queue(work, tk, batcher, true);    // 'true' = work silently
+					            }
+				            catch(runtime_exception& xe)
+					            {
+				                success = false;
+				                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+					            }
+				            if(batcher.integrations_failed()) success = false;
+
+				            // all work is now done - stop the wallclock timer
+						        batcher.end_assignment();
+				            timer.stop();
+
+				            // notify master process that all work has been finished (temporary containers will be deleted by the master node)
+				            now = boost::posix_time::second_clock::universal_time();
+				            if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+
+				            MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
+				                                                               batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+				                                                               batcher.get_batching_time(),
+				                                                               batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+				                                                               timer.elapsed().wall,
+				                                                               batcher.get_reported_integrations());
+
+				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
+
+						        break;
+					        };
+
+				        case MPI::END_OF_WORK:
+					        {
+						        this->world.recv(stat.source(), MPI::END_OF_WORK);
+						        complete = true;
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+
+				            // close the batcher, flushing the current container to the master node if needed
+				            batcher.close();
+
+						        // send close-down acknowledgment to master
+				            now = boost::posix_time::second_clock::universal_time();
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+						        this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+
+						        break;
+					        };
+
+				        default:
+					        {
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node";
+						        break;
+					        }
+					    }
+			    }
 	    }
 
 

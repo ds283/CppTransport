@@ -41,6 +41,9 @@ namespace transport
 
             const unsigned int INFORMATION_REQUEST        = 90;
 		        const unsigned int INFORMATION_RESPONSE       = 91;
+		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
+		        const unsigned int END_OF_WORK                = 93;
+		        const unsigned int WORKER_CLOSE_DOWN          = 94;
             const unsigned int TERMINATE                  = 99;
 
             // MPI ranks
@@ -53,10 +56,8 @@ namespace transport
 
               public:
 
-                //! Null constructor (used for receiving messages)
-                slave_setup_payload()
-                  {
-                  }
+                //! Default constructor (used for receiving messages)
+                slave_setup_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
                 slave_setup_payload(const boost::filesystem::path& rp, unsigned int bcp, unsigned int pcp, unsigned int zcp)
@@ -117,10 +118,8 @@ namespace transport
 
 		          public:
 
-				        //! Null constructor (used for receiving messages)
-				        slave_information_payload()
-					        {
-					        }
+				        //! Default constructor (used for receiving messages)
+				        slave_information_payload() = default;
 
 				        //! Value constructor (used for constructing messages to send)
 				        slave_information_payload(worker_type t, unsigned int c, unsigned int p)
@@ -164,28 +163,54 @@ namespace transport
 			        };
 
 
+		        class work_assignment_payload
+			        {
+		          public:
+				        //! Default constructor (used for receiving messages)
+				        work_assignment_payload() = default;
+
+				        //! Value constructor (used for constructing messages to send)
+				        work_assignment_payload(const std::list<unsigned int>& i)
+		              : items(i)
+					        {
+					        }
+
+				        //! Get items
+				        const std::list<unsigned int>& get_items() const { return(this->items); }
+
+		          private:
+
+				        //! work items
+				        std::list<unsigned int> items;
+
+		            // enable boost::serialization support, and hence automated packing for transmission over MPI
+		            friend class boost::serialization::access;
+
+		            template <typename Archive>
+		            void serialize(Archive& ar, unsigned int version)
+			            {
+		                ar & items;
+			            }
+
+			        };
+
+
             class new_integration_payload
               {
               public:
-                //! Null constructor (used for receiving messages)
-                new_integration_payload()
-                  {
-                  }
+                //! Default constructor (used for receiving messages)
+                new_integration_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
                 new_integration_payload(const std::string& tk,
-                                        const boost::filesystem::path& tk_f,
                                         const boost::filesystem::path& tmp_d,
                                         const boost::filesystem::path& log_d)
-                : task(tk), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string())
+                : task(tk), tempdir(tmp_d.string()), logdir(log_d.string())
                   {
                   }
 
 		            //! Get task name
                 const std::string&      get_task_name()     const { return(this->task); }
-
-		            //! Get path to taskfile, which specifies job allocations for the worker processes
-                boost::filesystem::path get_taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
 
 		            //! Get path to temporary directory
                 boost::filesystem::path get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
@@ -196,9 +221,6 @@ namespace transport
               private:
                 //! Name of task, to be looked up in repository database
                 std::string task;
-
-                //! Pathname to taskfile
-                std::string taskfile;
 
                 //! Pathname to directory for temporary files
                 std::string tempdir;
@@ -213,10 +235,10 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & task;
-                    ar & taskfile;
                     ar & tempdir;
                     ar & logdir;
                   }
+
               };
 
 
@@ -224,10 +246,8 @@ namespace transport
               {
               public:
 
-                //! Null constructor (used for receiving messages)
-                data_ready_payload()
-                  {
-                  }
+                //! Default constructor (used for receiving messages)
+                data_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
                 data_ready_payload(const std::string& p)
@@ -257,10 +277,8 @@ namespace transport
               {
               public:
 
-                //! Null constructor (used for receiving messages)
-                finished_integration_payload()
-                  {
-                  }
+                //! Default constructor (used for receiving messages)
+                finished_integration_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
                 finished_integration_payload(const boost::timer::nanosecond_type& i,
@@ -350,10 +368,8 @@ namespace transport
 
               public:
 
-                //! Null constructor (used for receiving messages)
-                new_derived_content_payload()
-	                {
-	                }
+                //! Default constructor (used for receiving messages)
+                new_derived_content_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
                 new_derived_content_payload(const std::string& tk,
@@ -420,10 +436,8 @@ namespace transport
 
                 typedef enum { twopf_payload, threepf_payload } payload_type;
 
-                //! Null constructor (used for receiving messages)
-                content_ready_payload()
-	                {
-	                }
+                //! Default constructor (used for receiving messages)
+                content_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
                 content_ready_payload(const std::string& dp)
@@ -456,11 +470,8 @@ namespace transport
 
 		          public:
 
-		            //! Null constructor (used for receiving messages)
-		            finished_derived_payload()
-			            {
-			            }
-
+		            //! Default constructor (used for receiving messages)
+		            finished_derived_payload() = default;
 
 		            //! Value constructor (used for sending messages)
 		            finished_derived_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
@@ -623,10 +634,8 @@ namespace transport
 
               public:
 
-                //! Null constructor (used for receiving messages)
-                new_postintegration_payload()
-                  {
-                  }
+                //! Default constructor (used for receiving messages)
+                new_postintegration_payload() = default;
 
                 //! Value constructor (used for constructing messages to send)
                 new_postintegration_payload(const std::string& tk,
@@ -691,11 +700,8 @@ namespace transport
 
               public:
 
-                //! Null constructor (used for receiving messages)
-                finished_postintegration_payload()
-                  {
-                  }
-
+                //! Default constructor (used for receiving messages)
+                finished_postintegration_payload() = default;
 
                 //! Value constructor (used for sending messages)
                 finished_postintegration_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,

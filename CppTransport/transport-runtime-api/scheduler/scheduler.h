@@ -62,10 +62,17 @@ namespace transport
           }
 
         //! Construct a filter from a predefined set of items
+		    // TODO: DEPRECATED, REMOVE WHEN NO LONGER REQUIRED
         work_item_filter(const std::set<unsigned int>& filter_set)
           : items(filter_set)
           {
           }
+
+		    work_item_filter(const std::list<unsigned int>& filter_set)
+			    {
+				    items.clear();
+		        std::copy(filter_set.begin(), filter_set.end(), std::inserter(items, items.begin()));
+			    }
 
         //! Add an item to the list of work-items included in this filter
         void add_work_item(unsigned int serial) { this->items.insert(serial); }
@@ -80,6 +87,7 @@ namespace transport
 
         //! std::set holding the serial number for each items we are supposed to process
         std::set<unsigned int> items;
+
       };
 
 
