@@ -639,19 +639,15 @@ namespace transport
 
                 //! Value constructor (used for constructing messages to send)
                 new_postintegration_payload(const std::string& tk,
-                                            const boost::filesystem::path& tk_f,
                                             const boost::filesystem::path& tmp_d,
                                             const boost::filesystem::path& log_d,
                                             const std::list<std::string>& tg)
-                  : task(tk), taskfile(tk_f.string()), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
+                  : task(tk), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
                   {
                   }
 
                 //! Get task name
                 const std::string&            get_task_name()     const { return(this->task); }
-
-                //! Get path to taskfile, which specifies job allocations for worker processes
-                boost::filesystem::path       get_taskfile_path() const { return(boost::filesystem::path(this->taskfile)); }
 
                 //! Get path to the temporary directory
                 boost::filesystem::path       get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
@@ -666,9 +662,6 @@ namespace transport
 
                 //! Name of task, to be looked up in repository database
                 std::string task;
-
-                //! Pathname to taskfile
-                std::string taskfile;
 
                 //! Pathname to directory for temporary files
                 std::string tempdir;
@@ -686,7 +679,6 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
                   {
                     ar & task;
-                    ar & taskfile;
                     ar & tempdir;
                     ar & logdir;
                     ar & tags;
@@ -705,6 +697,8 @@ namespace transport
 
                 //! Value constructor (used for sending messages)
                 finished_postintegration_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+                                                 unsigned int ip, boost::timer::nanosecond_type tp,
+                                                 boost::timer::nanosecond_type max_tp, boost::timer::nanosecond_type min_tp,
                                                  const unsigned int tc, const unsigned int tc_u,
                                                  const unsigned int twopf_k, const unsigned int twopf_k_u,
                                                  const unsigned int threepf_k, const unsigned int threepf_k_u,
@@ -715,6 +709,10 @@ namespace transport
                                                  const boost::timer::nanosecond_type zeta_e)
                   : database_time(db),
                     cpu_time(cpu),
+                    items_processed(ip),
+                    processing_time(tp),
+                    max_processing_time(max_tp),
+                    min_processing_time(min_tp),
                     time_config_hits(tc), time_config_unloads(tc_u),
                     twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
                     threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
@@ -731,6 +729,18 @@ namespace transport
 
                 //! Get total CPU time
                 boost::timer::nanosecond_type  get_cpu_time()                  const { return(this->cpu_time); }
+
+		            //! Get total number of items processed
+		            unsigned int                   get_items_processed()           const { return(this->items_processed); }
+
+		            //! Get total processing time
+		            boost::timer::nanosecond_type  get_processing_time()           const { return(this->processing_time); }
+
+		            //! Get max individual processing time
+		            boost::timer::nanosecond_type  get_max_processing_time()       const { return(this->max_processing_time); }
+
+		            //! Get min individual processing time
+		            boost::timer::nanosecond_type  get_min_processing_time()       const { return(this->min_processing_time); }
 
                 //! Get time config hits
                 unsigned int                   get_time_config_hits()          const { return(this->time_config_hits); }
@@ -786,6 +796,18 @@ namespace transport
                 //! Total CPU time
                 boost::timer::nanosecond_type cpu_time;
 
+		            //! Total number of items processed
+		            unsigned int items_processed;
+
+		            //! Total processing time
+		            boost::timer::nanosecond_type processing_time;
+
+		            //! Max individual processing time
+		            boost::timer::nanosecond_type max_processing_time;
+
+		            //! Min individual processing time
+		            boost::timer::nanosecond_type min_processing_time;
+
                 //! Number of time-config cache hits
                 unsigned int time_config_hits;
 
@@ -839,6 +861,10 @@ namespace transport
                   {
                     ar & database_time;
                     ar & cpu_time;
+		                ar & items_processed;
+		                ar & processing_time;
+		                ar & max_processing_time;
+		                ar & min_processing_time;
                     ar & time_config_hits;
                     ar & time_config_unloads;
                     ar & twopf_kconfig_hits;

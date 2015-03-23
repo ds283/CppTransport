@@ -151,9 +151,9 @@ namespace transport
 		    void dispatch_postintegration_task(postintegration_task<number>* tk, const MPI::new_postintegration_payload& payload);
 
 		    //! Slave node: process a postintegration queue
-		    template <typename TaskObject, typename ParentTaskObject, typename QueueObject, typename BatchObject>
-		    void dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
-		                                        const MPI::new_postintegration_payload& payload, BatchObject& batcher);
+		    template <typename TaskObject, typename ParentTaskObject, typename BatchObject>
+		    void schedule_postintegration(TaskObject* tk, ParentTaskObject* ptk,
+		                                  const MPI::new_postintegration_payload& payload, BatchObject& batcher);
 
 		    //! No-op push content for connexion to datapipe
 		    void disallow_push_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
@@ -515,6 +515,7 @@ namespace transport
                                                         BatchObject& batcher, unsigned int state_size)
 	    {
         // dispatch integration to the underlying model
+
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
 
@@ -536,12 +537,12 @@ namespace transport
 				            MPI::work_assignment_payload payload;
 						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, payload);
 
-				            std::list<unsigned int> work_items = payload.get_items();
+				            const std::list<unsigned int>& work_items = payload.get_items();
 						        auto filter = this->work_item_filter_factory(tk, work_items);
 
 						        // create work queues based on whatever devices are relevant for our backend
 						        context ctx = m->backend_get_context();
-						        scheduler sch = scheduler(ctx);
+						        scheduler sch(ctx);
 						        auto work = sch.make_queue(state_size, *tk, filter);
 
 				            bool success = true;
@@ -604,7 +605,8 @@ namespace transport
 
 				        default:
 					        {
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node";
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+						        this->world.recv(stat.source(), stat.tag());
 						        break;
 					        }
 					    }
@@ -882,17 +884,13 @@ namespace transport
         // send scheduling information to the master process
         this->send_worker_data();
 
-        // create a context and work queue
-        context ctx  = context();
-        ctx.add_device("CPU");
-        scheduler sch = scheduler(ctx);
-
         zeta_twopf_task<number>* z2pf = nullptr;
         zeta_threepf_task<number>* z3pf = nullptr;
         fNL_task<number>* zfNL = nullptr;
 
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
 	        {
+		        // get parent task
             twopf_task<number>* ptk = dynamic_cast<twopf_task<number>*>(z2pf->get_parent_task());
 
             assert(ptk != nullptr);
@@ -902,11 +900,6 @@ namespace transport
                 msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z2pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
-
-            std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-            work_item_filter<twopf_kconfig> filter(work_items);
-
-            work_queue<twopf_kconfig> work = sch.make_queue(sizeof(number), *ptk, filter);
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
@@ -918,10 +911,11 @@ namespace transport
 	                                                              this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                               this->get_rank(), dispatcher);
 
-            this->dispatch_postintegration_queue(z2pf, ptk, work, payload, batcher);
+            this->schedule_postintegration(z2pf, ptk, payload, batcher);
 	        }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
 	        {
+		        // get parent task
             threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(z3pf->get_parent_task());
 
             assert(ptk != nullptr);
@@ -931,11 +925,6 @@ namespace transport
                 msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << z3pf->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
-
-            std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-            work_item_filter<threepf_kconfig> filter(work_items);
-
-            work_queue<threepf_kconfig> work = sch.make_queue(sizeof(number), *ptk, filter);
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
@@ -947,10 +936,11 @@ namespace transport
 	                                                                this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                                   this->get_rank(), dispatcher);
 
-            this->dispatch_postintegration_queue(z3pf, ptk, work, payload, batcher);
+            this->schedule_postintegration(z3pf, ptk, payload, batcher);
 	        }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
 	        {
+		        // get parent task
             threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
@@ -960,11 +950,6 @@ namespace transport
                 msg << __CPP_TRANSPORT_EXPECTED_TWOPF_TASK << " '" << zfNL->get_parent_task()->get_name() << "'";
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
-
-            std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-            work_item_filter<threepf_kconfig> filter(work_items);
-
-            work_queue<threepf_kconfig> work = sch.make_queue(sizeof(number), *ptk, filter);
 
             // construct a callback for the integrator to push new batches to the master
             typename data_manager<number>::container_dispatch_function dispatcher =
@@ -976,7 +961,7 @@ namespace transport
 	                                                       this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(),
 	                                                                                                 this->get_rank(), dispatcher, zfNL->get_template());
 
-            this->dispatch_postintegration_queue(zfNL, ptk, work, payload, batcher);
+            this->schedule_postintegration(zfNL, ptk, payload, batcher);
 	        }
         else
 	        {
@@ -988,78 +973,133 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename ParentTaskObject, typename QueueObject, typename BatchObject>
-    void slave_controller<number>::dispatch_postintegration_queue(TaskObject* tk, ParentTaskObject* ptk, QueueObject& work,
-                                                                  const MPI::new_postintegration_payload& payload, BatchObject& batcher)
+    template <typename TaskObject, typename ParentTaskObject, typename BatchObject>
+    void slave_controller<number>::schedule_postintegration(TaskObject* tk, ParentTaskObject* ptk,
+                                                            const MPI::new_postintegration_payload& payload, BatchObject& batcher)
 	    {
         assert(tk != nullptr);    // should be guaranteed
         assert(ptk != nullptr);   // should be guaranteed
 
-        bool success = true;
-
-        // keep track of wallclock time
-        boost::timer::cpu_timer timer;
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
         BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
 
-        // set up output-group finder function
-        typename data_manager<number>::datapipe::output_group_finder finder =
-	                                                                     std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+		    bool complete = false;
+		    while(!complete)
+			    {
+				    // wait for messages from scheduler
+		        boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
-        // set up empty content-dispatch function -- this datapipe is not used to produce content
-        typename data_manager<number>::datapipe::dispatch_function dispatcher =
-	                                                                   std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
+				    switch(stat.tag())
+					    {
+				        case MPI::NEW_WORK_ASSIGNMENT:
+					        {
+				            MPI::work_assignment_payload assignment_payload;
+						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, assignment_payload);
 
-        // acquire a datapipe which we can use to stream content from the databse
-        typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-                                                                                       finder, dispatcher, this->get_rank(), timer, true);
+				            const std::list<unsigned int>& work_items = assignment_payload.get_items();
+						        auto filter = this->work_item_filter_factory(ptk, work_items);
 
+						        // create work queues
+						        context ctx;
+				            ctx.add_device("CPU");
+						        scheduler sch(ctx);
+						        auto work = sch.make_queue(sizeof(number), *ptk, filter);
 
-        // perform the task
-        try
-	        {
-            pipe.attach(ptk, ptk->get_model()->get_N_fields(), payload.get_tags());
-            this->postintegration_handler(tk, ptk, work, batcher, pipe);
-            pipe.detach();
-	        }
-        catch(runtime_exception& xe)
-	        {
-            success = false;
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
-	        }
+				            bool success = true;
+						        batcher.begin_assignment();
 
-        // close the batcher
-        batcher.close();
+				            // keep track of wallclock time
+				            boost::timer::cpu_timer timer;
 
-        // all work is now done - stop the wallclock timer
-        timer.stop();
+				            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW WORK ASSIGNMENT";
 
-        // notify master process that all work has been finished (temporary containers will be deleted by the master node)
-        now = boost::posix_time::second_clock::universal_time();
-        if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-        else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				            // set up output-group finder function
+				            typename data_manager<number>::datapipe::output_group_finder finder =
+					                                                                         std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
-        MPI::finished_postintegration_payload outgoing_payload(pipe.get_database_time(), timer.elapsed().wall,
-                                                               pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
-                                                               pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
-                                                               pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-                                                               pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-                                                               pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
-                                                               pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-                                                               pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
-                                                               pipe.get_zeta_cache_evictions());
+				            // set up empty content-dispatch function -- this datapipe is not used to produce content
+				            typename data_manager<number>::datapipe::dispatch_function dispatcher =
+					                                                                       std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
 
-        this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+				            // acquire a datapipe which we can use to stream content from the databse
+				            typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
+				                                                                                           finder, dispatcher, this->get_rank(), timer, true);
+
+				            // perform the task
+				            try
+					            {
+				                pipe.attach(ptk, ptk->get_model()->get_N_fields(), payload.get_tags());
+				                this->postintegration_handler(tk, ptk, work, batcher, pipe);
+				                pipe.detach();
+					            }
+				            catch(runtime_exception& xe)
+					            {
+				                success = false;
+				                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+					            }
+
+				            // close the batcher
+				            batcher.end_assignment();
+
+				            // all work is now done - stop the wallclock timer
+				            timer.stop();
+
+				            // notify master process that all work has been finished (temporary containers will be deleted by the master node)
+				            now = boost::posix_time::second_clock::universal_time();
+				            if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+
+				            MPI::finished_postintegration_payload outgoing_payload(pipe.get_database_time(), timer.elapsed().wall,
+				                                                                   batcher.get_items_processed(), batcher.get_processing_time(),
+				                                                                   batcher.get_max_processing_time(), batcher.get_min_processing_time(),
+				                                                                   pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
+				                                                                   pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
+				                                                                   pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+				                                                                   pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
+				                                                                   pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
+				                                                                   pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
+				                                                                   pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
+				                                                                   pipe.get_zeta_cache_evictions());
+
+				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_POSTINTEGRATION : MPI::POSTINTEGRATION_FAIL, outgoing_payload);
+
+						        break;
+					        }
+
+				        case MPI::END_OF_WORK:
+					        {
+						        this->world.recv(stat.source(), MPI::END_OF_WORK);
+						        complete = true;
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+
+						        // close the batcher, flushing the current container to the master node if required
+						        batcher.close();
+
+						        // send close-down acknowledgment to master
+						        now = boost::posix_time::second_clock::universal_time();
+						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+						        this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+
+						        break;
+					        }
+
+				        default:
+					        {
+				            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+				            this->world.recv(stat.source(), stat.tag());
+				            break;
+					        }
+					    };
+			    }
 	    }
 
 
     template <typename number>
     void slave_controller<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
-                                                        typename data_manager<number>::zeta_twopf_batcher& batcher,
-                                                        typename data_manager<number>::datapipe& pipe)
+                                                           typename data_manager<number>::zeta_twopf_batcher& batcher,
+                                                           typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -1095,6 +1135,8 @@ namespace transport
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
+            boost::timer::cpu_timer timer;
+
             typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
             // safe to use a reference here to avoid a copy
             const std::vector<number>& twopf = z_handle.lookup_tag(tag);
@@ -1103,15 +1145,20 @@ namespace transport
 	            {
                 batcher.push_twopf(time_sns[j], kconfig_sns[i], twopf[j]);
 	            }
-            batcher.report_finished_block();
+
+		        timer.stop();
+            batcher.report_finished_item(timer.elapsed().wall);
+
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
 
 
     template <typename number>
     void slave_controller<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                        typename data_manager<number>::zeta_threepf_batcher& batcher,
-                                                        typename data_manager<number>::datapipe& pipe)
+                                                           typename data_manager<number>::zeta_threepf_batcher& batcher,
+                                                           typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -1147,6 +1194,8 @@ namespace transport
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
+            boost::timer::cpu_timer timer;
+
             typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tpf_tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
             // safe to use a reference here to avoid a copy
             const std::vector<number>& threepf = z_handle.lookup_tag(tpf_tag);
@@ -1219,15 +1268,19 @@ namespace transport
 	                }
 	            }
 
-            batcher.report_finished_block();
+		        timer.stop();
+            batcher.report_finished_item(timer.elapsed().wall);
+
+            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
 
 
     template <typename number>
     void slave_controller<number>::postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                        typename data_manager<number>::fNL_batcher& batcher,
-                                                        typename data_manager<number>::datapipe& pipe)
+                                                           typename data_manager<number>::fNL_batcher& batcher,
+                                                           typename data_manager<number>::datapipe& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -1236,6 +1289,8 @@ namespace transport
         assert(queues.size() == 1);
 
         const typename work_queue<threepf_kconfig>::device_work_list list = queues[0];
+
+        boost::timer::cpu_timer timer;
 
         // get list of time values at which to sample
         const std::vector<time_config> time_list = ptk->get_time_config_list();
@@ -1269,7 +1324,8 @@ namespace transport
             batcher.push_fNL(time_sns[j], BT[j], TT[j]);
 	        }
 
-        batcher.report_finished_block();
+		    timer.stop();
+        batcher.report_finished_item(timer.elapsed().wall);
 	    }
 
 

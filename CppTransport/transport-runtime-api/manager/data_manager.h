@@ -624,7 +624,46 @@ namespace transport
           public:
 
             //! Report finished block
-            void report_finished_block();
+            void report_finished_item(boost::timer::nanosecond_type time);
+
+            //! Prepare for new work assignment
+            void begin_assignment();
+
+            //! Tidy up after a work assignment
+            void end_assignment();
+
+
+            // STATISTICS
+
+          public:
+
+            //! Get aggregate processing time
+            boost::timer::nanosecond_type get_processing_time() const { return(this->total_time); }
+
+            //! Get longest item processing time
+            boost::timer::nanosecond_type get_max_processing_time() const { return(this->longest_time); }
+
+            //! Get shortest item processing time
+            boost::timer::nanosecond_type get_min_processing_time() const { return(this->shortest_time); }
+
+		        //! Get number of items processed
+		        unsigned int get_items_processed() const { return(this->items_processed); }
+
+		        // INTERNAL DATA
+
+          private:
+
+		        //! Number of work items processed
+		        unsigned int items_processed;
+
+		        //! Aggregate processing time
+		        boost::timer::nanosecond_type total_time;
+
+		        //! Longest individual processing time
+		        boost::timer::nanosecond_type longest_time;
+
+		        //! Shortest individual processing time
+		        boost::timer::nanosecond_type shortest_time;
 
           };
 
@@ -2477,8 +2516,6 @@ namespace transport
         //! Create a list of task assignments, over a number of devices, from a work queue.
         //! C++ does not allow templated virtual functions, so we need to explicitly declare
         //! each version that we need
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<twopf_kconfig>& queue) = 0;
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<threepf_kconfig>& queue) = 0;
         virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) = 0;
 
         //! Read a list of task assignments for a particular worker
@@ -2789,6 +2826,8 @@ namespace transport
     void data_manager<number>::integration_batcher::report_integration_failure()
       {
         this->failures++;
+		    this->check_for_flush();
+
         if(this->flush_due)
           {
             this->flush_due = false;
@@ -2825,8 +2864,7 @@ namespace transport
 			{
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Finished assignment: final integration statistics";
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->num_integrations << " individual integrations";
-		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   total integration time          = " << format_time(this->integration_time);
+		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean integration time           = " << format_time(this->integration_time/this->num_integrations);
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
 		    BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
@@ -2839,11 +2877,11 @@ namespace transport
 
 		    if(this->refinements > 0)
 			    {
-		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->refinements << " triangles required mesh refinement";
+		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->refinements << " work items required mesh refinement";
 			    }
 		    if(this->failures > 0)
 			    {
-		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->failures << " triangles failed to integrate";
+		        BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- " << this->failures << " work items failed to integrate";
 			    }
 			}
 
@@ -2863,20 +2901,48 @@ namespace transport
     data_manager<number>::postintegration_batcher::postintegration_batcher(unsigned int cap, const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                                            container_dispatch_function d, container_replacement_function r,
                                                                            handle_type h, unsigned int w)
-      : generic_batcher(cap, cp, lp, d, r, h, w)
+      : generic_batcher(cap, cp, lp, d, r, h, w),
+        items_processed(0),
+        total_time(0),
+        longest_time(0),
+        shortest_time(0)
       {
       }
 
 
     template <typename number>
-    void data_manager<number>::postintegration_batcher::report_finished_block()
+    void data_manager<number>::postintegration_batcher::report_finished_item(boost::timer::nanosecond_type time)
       {
-        if(this->flush_due)
-          {
-            this->flush_due = false;
-            this->flush(action_replace);
-          }
+		    this->items_processed++;
+		    this->total_time += time;
+
+		    if(this->longest_time == 0 || time > this->longest_time) this->longest_time = time;
+		    if(this->shortest_time == 0 || time < this->shortest_time) this->shortest_time = time;
       }
+
+
+		template <typename number>
+		void data_manager<number>::postintegration_batcher::begin_assignment()
+			{
+				this->items_processed = 0;
+				this->total_time = 0;
+				this->longest_time = 0;
+				this->shortest_time = 0;
+			}
+
+
+		template <typename number>
+		void data_manager<number>::postintegration_batcher::end_assignment()
+			{
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "-- Finished assignment: final statistics";
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   mean processing time                = " << format_time(this->total_time/this->items_processed);
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
+
+				BOOST_LOG_SEV(this->log_source, data_manager<number>::normal) << "";
+			}
 
 
     // TWOPF BATCHER METHODS

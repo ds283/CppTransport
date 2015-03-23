@@ -267,9 +267,9 @@ namespace transport
 		    void dispatch_postintegration_task(typename repository<number>::postintegration_task_record* rec, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch a postintegration queue to the worker processes
-		    template <typename TaskObject, typename ParentTaskObject, typename QueueObject>
-		    void dispatch_postintegration_queue(typename repository<number>::postintegration_task_record* rec,
-		                                        TaskObject* tk, ParentTaskObject* ptk, QueueObject& queue, const std::list<std::string>& tags);
+		    template <typename TaskObject, typename ParentTaskObject>
+		    void schedule_postintegration(typename repository<number>::postintegration_task_record* rec,
+		                                  TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags);
 
 		    //! Master node: Pass new postintegration task to workers
 		    bool postintegration_task_to_workers(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const std::list<std::string>& tags);
@@ -814,7 +814,7 @@ namespace transport
 
         // initialize the writer
         this->data_mgr->initialize_writer(writer);
-		    
+
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
@@ -910,7 +910,7 @@ namespace transport
 	                {
                     MPI::finished_integration_payload payload;
                     this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising integration failure (successful tasks consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
 										this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
                     this->update_integration_metadata(payload, metadata);
@@ -1035,6 +1035,8 @@ namespace transport
     template <typename number>
     void master_controller<number>::dispatch_output_task(typename repository<number>::output_task_record* rec, const std::list<std::string>& tags)
 	    {
+		    assert(rec != nullptr);
+
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
@@ -1239,10 +1241,6 @@ namespace transport
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
-        // set up a work queue representing our workers
-        context ctx = this->make_workers_context();
-        scheduler sch = scheduler(ctx);
-
         postintegration_task<number>* tk = rec->get_task();
 
         zeta_twopf_task<number>*   z2pf = nullptr;
@@ -1261,8 +1259,9 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-            work_queue<twopf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->dispatch_postintegration_queue(rec, z2pf, ptk, queue, tags);
+		        this->work_scheduler.set_state_size(sizeof(number));
+		        this->work_scheduler.prepare_queue(*ptk);
+            this->schedule_postintegration(rec, z2pf, ptk, tags);
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
 	        {
@@ -1276,8 +1275,9 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-            work_queue<threepf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->dispatch_postintegration_queue(rec, z3pf, ptk, queue, tags);
+		        this->work_scheduler.set_state_size(sizeof(number));
+		        this->work_scheduler.prepare_queue(*ptk);
+            this->schedule_postintegration(rec, z3pf, ptk, tags);
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
 	        {
@@ -1291,8 +1291,9 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-            work_queue<threepf_kconfig> queue = sch.make_queue(sizeof(number), *ptk);
-            this->dispatch_postintegration_queue(rec, zfNL, ptk, queue, tags);
+		        this->work_scheduler.set_state_size(sizeof(number));
+		        this->work_scheduler.prepare_queue(*ptk);
+            this->schedule_postintegration(rec, zfNL, ptk, tags);
 	        }
         else
 	        {
@@ -1304,9 +1305,9 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename ParentTaskObject, typename QueueObject>
-    void master_controller<number>::dispatch_postintegration_queue(typename repository<number>::postintegration_task_record* rec,
-                                                                TaskObject* tk, ParentTaskObject* ptk, QueueObject& queue, const std::list<std::string>& tags)
+    template <typename TaskObject, typename ParentTaskObject>
+    void master_controller<number>::schedule_postintegration(typename repository<number>::postintegration_task_record* rec,
+                                                             TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags)
 	    {
         assert(rec != nullptr);
 
@@ -1318,8 +1319,8 @@ namespace transport
         // initialize the writer
         this->data_mgr->initialize_writer(writer);
 
-        // write the task distribution list
-        this->data_mgr->create_taskfile(writer, queue);
+//        // write the task distribution list
+//        this->data_mgr->create_taskfile(writer, queue);
 
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
@@ -1342,8 +1343,6 @@ namespace transport
 
         bool success = true;
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ NEW POSTINTEGRATION TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
@@ -1356,11 +1355,11 @@ namespace transport
         typename repository<number>::output_metadata metadata;
 
         // get paths the workers will need
-        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
         boost::filesystem::path tempdir_path  = writer->get_abs_tempdir_path();
         boost::filesystem::path logdir_path   = writer->get_abs_logdir_path();
 
-        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
 	        {
@@ -1369,18 +1368,26 @@ namespace transport
 
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
-
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
 
         // wait for workers to report their characteristics
         this->set_up_workers(writer);
 
         // poll workers, receiving data until workers are exhausted
-        std::set<unsigned int> workers;
-        for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
-        while(workers.size() > 0)
+		    bool sent_closedown = false;
+        while(!this->work_scheduler.all_inactive())
 	        {
-            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) <<  "++ Master polling for POSTINTEGRATION_DATA_READY messages";
+		        // send closedown instruction if no more work
+		        if(this->work_scheduler.finished() && !sent_closedown)
+			        {
+				        sent_closedown = true;
+				        this->close_down_workers(writer);
+			        }
+
+		        // generate new work assignments if needed
+		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+
+//            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) <<  "++ Master polling for POSTINTEGRATION_DATA_READY messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
@@ -1396,11 +1403,12 @@ namespace transport
 	                {
                     MPI::finished_postintegration_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_POSTINTEGRATION, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished postintegration processing in wallclock time " << format_time(payload.get_cpu_time());
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
 
+		                // mark this worker as unassigned, and update its mean time per work item
+		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
                     this->update_output_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     break;
 	                }
 
@@ -1408,13 +1416,22 @@ namespace transport
 	                {
                     MPI::finished_postintegration_payload payload;
                     this->world.recv(stat.source(), MPI::POSTINTEGRATION_FAIL, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising failure to complete postintegration processing (successful tasks consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
+		                // mark this worker as unassigned, and update its mean time per work item
+		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
                     this->update_output_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     success = false;
                     break;
+	                }
+
+                case MPI::WORKER_CLOSE_DOWN:
+	                {
+		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
+		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
+		                BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
+		                break;
 	                }
 
                 default:
@@ -1422,7 +1439,7 @@ namespace transport
                     BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
                     break;
 	                }
-	            }
+	            };
 	        }
 
         writer->set_metadata(metadata);

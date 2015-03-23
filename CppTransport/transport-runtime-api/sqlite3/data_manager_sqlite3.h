@@ -119,8 +119,6 @@ namespace transport
 
       public:
 
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<twopf_kconfig>& queue)                 override { this->internal_create_taskfile(writer, queue); }
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, const work_queue<threepf_kconfig>& queue)               override { this->internal_create_taskfile(writer, queue); }
         virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) override { this->internal_create_taskfile(writer, queue); }
 
         //! Read a list of task assignments for a particular worker
