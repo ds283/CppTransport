@@ -715,7 +715,7 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
         BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
 
 		    bool complete = false;
