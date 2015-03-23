@@ -814,11 +814,7 @@ namespace transport
 
         // initialize the writer
         this->data_mgr->initialize_writer(writer);
-
-        // write the task distribution list -- this is subsequently read by the worker processes,
-        // to find out which work items they should process
-//        this->data_mgr->create_taskfile(writer, queue);
-
+		    
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
