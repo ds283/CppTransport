@@ -62,12 +62,6 @@ namespace transport
           }
 
         //! Construct a filter from a predefined set of items
-		    // TODO: DEPRECATED, REMOVE WHEN NO LONGER REQUIRED
-        work_item_filter(const std::set<unsigned int>& filter_set)
-          : items(filter_set)
-          {
-          }
-
 		    work_item_filter(const std::list<unsigned int>& filter_set)
 			    {
 				    items.clear();
