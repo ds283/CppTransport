@@ -929,7 +929,8 @@ namespace transport
 
                 default:
 	                {
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue; discarding";
+		                this->world.recv(stat.source(), stat.tag());
                     break;
 	                }
 	            };
@@ -1040,12 +1041,10 @@ namespace transport
         // can't process a task if there are no workers
         if(this->world.size() <= 1) throw runtime_exception(runtime_exception::MPI_ERROR, __CPP_TRANSPORT_TOO_FEW_WORKERS);
 
-        // set up a work queue representing our workers
-        context ctx = this->make_workers_context();
-        scheduler sch = scheduler(ctx);
-
         output_task<number>* tk = rec->get_task();
-        work_queue< output_task_element<number> > queue = sch.make_queue(*tk);
+
+		    this->work_scheduler.set_state_size(sizeof(number));
+		    this->work_scheduler.prepare_queue(*tk);
 
         // set up an derived_content_writer object to coordinate logging, output destination and commits into the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
@@ -1054,10 +1053,6 @@ namespace transport
 
         // set up the writer for us
         this->data_mgr->initialize_writer(writer);
-
-        // write a task distribution list -- subsequently read by the worker processes
-        // to find out which work items they should process
-        this->data_mgr->create_taskfile(writer, queue);
 
         // instruct workers to carry out their tasks
         bool success = this->output_task_to_workers(writer, tags);
@@ -1077,8 +1072,6 @@ namespace transport
 
         bool success = true;
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ NEW OUTPUT TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
@@ -1091,11 +1084,11 @@ namespace transport
         typename repository<number>::output_metadata metadata;
 
         // get paths the workers will need
-        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
-        boost::filesystem::path tempdir_path  = writer->get_abs_tempdir_path();
-        boost::filesystem::path logdir_path   = writer->get_abs_logdir_path();
+        boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
+        boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
 
-        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), taskfile_path, tempdir_path, logdir_path, tags);
+        std::vector<boost::mpi::request> requests(this->world.size()-1);
+        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
 	        {
@@ -1104,18 +1097,26 @@ namespace transport
 
         // wait for all messages to be received
         boost::mpi::wait_all(requests.begin(), requests.end());
-
         BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
 
         // wait for workers to report their characteristics
         this->set_up_workers(writer);
 
         // poll workers, receiving data until workers are exhausted
-        std::set<unsigned int> workers;
-        for(unsigned int i = 0; i < this->world.size()-1; i++) workers.insert(i);
-        while(workers.size() > 0)
+		    bool sent_closedown = false;
+        while(!this->work_scheduler.all_inactive())
 	        {
-            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
+		        // send closedown instruction if no more work
+		        if(this->work_scheduler.finished() && !sent_closedown)
+			        {
+				        sent_closedown = true;
+				        this->close_down_workers(writer);
+			        }
+
+		        // generate new work assignments if needed
+		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+
+//            BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
             // wait until a message is available from a worker
             boost::mpi::status stat = this->world.probe();
 
@@ -1131,11 +1132,12 @@ namespace transport
 	                {
                     MPI::finished_derived_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished producing derived content in CPU time " << format_time(payload.get_cpu_time());
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
 
+		                // mark this scheduler as unassigned, and update its mean time per work item
+		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
                     this->update_output_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     break;
 	                }
 
@@ -1143,21 +1145,32 @@ namespace transport
 	                {
                     MPI::finished_derived_payload payload;
                     this->world.recv(stat.source(), MPI::DERIVED_CONTENT_FAIL, payload);
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising failure to produce derived content (successful tasks consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
+                    // mark this scheduler as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
                     this->update_output_metadata(payload, metadata);
 
-                    workers.erase(this->worker_number(stat.source()));
                     success = false;
                     break;
 	                }
 
+
+                case MPI::WORKER_CLOSE_DOWN:
+	                {
+		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
+		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
+		                break;
+	                }
+
                 default:
 	                {
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue; discarding";
+		                this->world.recv(stat.source(), stat.tag());
                     break;
 	                }
-	            }
+	            };
 	        }
 
         writer->set_metadata(metadata);
@@ -1319,9 +1332,6 @@ namespace transport
         // initialize the writer
         this->data_mgr->initialize_writer(writer);
 
-//        // write the task distribution list
-//        this->data_mgr->create_taskfile(writer, queue);
-
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
@@ -1355,8 +1365,8 @@ namespace transport
         typename repository<number>::output_metadata metadata;
 
         // get paths the workers will need
-        boost::filesystem::path tempdir_path  = writer->get_abs_tempdir_path();
-        boost::filesystem::path logdir_path   = writer->get_abs_logdir_path();
+        boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
+        boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
         MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
@@ -1436,7 +1446,8 @@ namespace transport
 
                 default:
 	                {
-                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue";
+                    BOOST_LOG_SEV(writer->get_log(), repository<number>::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue; discarding";
+		                this->world.recv(stat.source(), stat.tag());
                     break;
 	                }
 	            };
@@ -1546,7 +1557,8 @@ namespace transport
 
 				        default:
 					        {
-						        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source();
+						        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
+						        this->world.recv(stat.source(), stat.tag());
 						        break;
 					        }
 					    };

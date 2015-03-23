@@ -115,22 +115,6 @@ namespace transport
         virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) override;
 
 
-        // TASK FILES -- implements a 'data_manager' interface
-
-      public:
-
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) override { this->internal_create_taskfile(writer, queue); }
-
-        //! Read a list of task assignments for a particular worker
-        virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) override;
-
-      protected:
-
-        //! Create a list of task assignments, over a number of devices, from a work queue
-        template <typename WriterObject, typename WorkItem>
-        void internal_create_taskfile(std::shared_ptr<WriterObject>& writer, const work_queue<WorkItem>& queue);
-
-
         // TEMPORARY CONTAINERS  -- implements a 'data_manager' interface
 
       public:
@@ -196,7 +180,7 @@ namespace transport
                                                                         const boost::filesystem::path& tempdir,
                                                                         typename data_manager<number>::datapipe::output_group_finder finder,
                                                                         typename data_manager<number>::datapipe::dispatch_function dispatcher,
-                                                                        unsigned int worker, boost::timer::cpu_timer& timer, bool no_log=false) override;
+                                                                        unsigned int worker, bool no_log=false) override;
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(typename data_manager<number>::datapipe* pipe,
@@ -370,11 +354,9 @@ namespace transport
     void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer)
       {
         sqlite3* db = nullptr;
-        sqlite3* taskfile = nullptr;
 
-        // get paths of the data container and taskfile
+        // get paths of the data container
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
-        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
 
         // open the main container
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
@@ -403,32 +385,6 @@ namespace transport
         // remember this connexion
         this->open_containers.push_back(db);
         writer->set_data_manager_handle(db);
-
-        // open the taskfile associated with this container
-        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
-
-        if(status != SQLITE_OK)
-	        {
-            sqlite3_close(db);
-
-            std::ostringstream msg;
-            if(taskfile != nullptr)
-	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
-                sqlite3_close(taskfile);
-	            }
-            else
-	            {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
-	            }
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-	        }
-
-        sqlite3_extended_result_codes(taskfile, 1);
-
-        // remember this connexion
-        this->open_containers.push_back(taskfile);
-        writer->set_data_manager_taskfile(taskfile);
 
         // set up aggregation handlers
         typename repository<number>::integration_task_record* rec = writer->get_record();
@@ -465,16 +421,6 @@ namespace transport
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        // close sqlite3 handle to taskfile
-        sqlite3* taskfile = nullptr;
-        writer->get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        this->open_containers.remove(taskfile);
-        sqlite3_close(taskfile);
-
-        // physically remove the taskfile from the disc; it isn't needed any more
-        boost::filesystem::remove(writer->get_abs_taskfile_path());
-
         // physically remove the tempfiles directory
         boost::filesystem::remove(writer->get_abs_tempdir_path());
       }
@@ -484,35 +430,6 @@ namespace transport
 		template <typename number>
 		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
 			{
-				sqlite3* taskfile = nullptr;
-
-				// get path to taskfile
-		    boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
-
-				// open the taskfile
-				int status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
-
-				if(status != SQLITE_OK)
-					{
-				    std::ostringstream msg;
-						if(taskfile != nullptr)
-							{
-								msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
-								sqlite3_close(taskfile);
-							}
-						else
-							{
-								msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
-							}
-						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-					}
-
-		    sqlite3_extended_result_codes(taskfile, 1);
-
-				// remember this connexion
-				this->open_containers.push_back(taskfile);
-				writer->set_data_manager_taskfile(taskfile);
-
         // set up aggregation handler
         writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2));
 			}
@@ -522,16 +439,6 @@ namespace transport
 		template <typename number>
 		void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
 			{
-				// close sqlite3 handle to taskfile
-				sqlite3* taskfile = nullptr;
-				writer->get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
-
-				this->open_containers.remove(taskfile);
-				sqlite3_close(taskfile);
-
-				// physically remove the taskfile from the disc; it isn't needed any more
-		    boost::filesystem::remove(writer->get_abs_taskfile_path());
-
 				// physically remove the tempfiles directory
 		    boost::filesystem::remove(writer->get_abs_tempdir_path());
 			}
@@ -542,11 +449,9 @@ namespace transport
     void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer)
       {
         sqlite3* db = nullptr;
-        sqlite3* taskfile = nullptr;
 
-        // get paths to the data container and taskfile
+        // get paths to the data container
         boost::filesystem::path ctr_path = writer->get_abs_container_path();
-        boost::filesystem::path taskfile_path = writer->get_abs_taskfile_path();
 
         // open the main container
         int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
@@ -572,30 +477,6 @@ namespace transport
         // remember this connexion
         this->open_containers.push_back(db);
         writer->set_data_manager_handle(db);
-
-        // open the taskfile
-        status = sqlite3_open_v2(taskfile_path.string().c_str(), &taskfile, SQLITE_OPEN_READWRITE | SQLITE_OPEN_CREATE, nullptr);
-
-        if(status != SQLITE_OK)
-          {
-            std::ostringstream msg;
-            if(taskfile != nullptr)
-              {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ": " << sqlite3_errmsg(taskfile) << ")";
-                sqlite3_close(taskfile);
-              }
-            else
-              {
-                msg << __CPP_TRANSPORT_DATACTR_CREATE_A << " '" << taskfile_path.string() << "' " << __CPP_TRANSPORT_DATACTR_CREATE_B << status << ")";
-              }
-            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-          }
-
-        sqlite3_extended_result_codes(taskfile, 1);
-
-        // remember this connexion
-        this->open_containers.push_back(taskfile);
-        writer->set_data_manager_taskfile(taskfile);
 
         // set aggregation handler
         typename repository<number>::postintegration_task_record* rec = writer->get_record();
@@ -643,16 +524,6 @@ namespace transport
 
         this->open_containers.remove(db);
         sqlite3_close(db);
-
-        // close sqlite3 handle to taskfile
-        sqlite3* taskfile = nullptr;
-        writer->get_data_manager_taskfile(&taskfile);   // throws an exception if handle is unset, so this return value is guaranteed not to be nullptr
-
-        this->open_containers.remove(taskfile);
-        sqlite3_close(taskfile);
-
-        // physically remove the taskfile from the disc; it isn't needed any more
-        boost::filesystem::remove(writer->get_abs_taskfile_path());
 
         // physically remove the tempfiles directory
         boost::filesystem::remove(writer->get_abs_tempdir_path());
@@ -731,29 +602,6 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::no_foreign_keys);
-      }
-
-
-    // TASKFILE MANAGEMENT
-
-
-    // Create a tasklist based on a work queue
-    template <typename number>
-    template <typename WriterObject, typename WorkItem>
-    void data_manager_sqlite3<number>::internal_create_taskfile(std::shared_ptr<WriterObject>& writer, const work_queue<WorkItem>& queue)
-      {
-        sqlite3* taskfile = nullptr;
-        writer->get_data_manager_taskfile(&taskfile); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
-
-        sqlite3_operations::create_taskfile(taskfile, queue);
-      }
-
-
-    // Read a taskfile
-    template <typename number>
-    std::set<unsigned int> data_manager_sqlite3<number>::read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker)
-      {
-        return sqlite3_operations::read_taskfile(taskfile.string(), worker);
       }
 
 
@@ -1228,7 +1076,7 @@ namespace transport
 		                                                                                      const boost::filesystem::path& tempdir,
                                                                                           typename data_manager<number>::datapipe::output_group_finder finder,
                                                                                           typename data_manager<number>::datapipe::dispatch_function dispatcher,
-		                                                                                      unsigned int worker, boost::timer::cpu_timer& timer, bool no_log)
+		                                                                                      unsigned int worker, bool no_log)
 			{
 		    // set up callback API
 
@@ -1313,7 +1161,7 @@ namespace transport
 
 		    // set up datapipe
 		    typename data_manager<number>::datapipe pipe(this->pipe_data_capacity, this->pipe_zeta_capacity,
-                                                     logdir, tempdir, worker, timer,
+                                                     logdir, tempdir, worker,
 		                                                 utilities, config, timeslice, kslice, no_log);
 
 				return(pipe);

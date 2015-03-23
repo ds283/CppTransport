@@ -139,6 +139,9 @@ namespace transport
 		    //! Construct a work item filter for a threepf task
 		    work_item_filter<threepf_kconfig> work_item_filter_factory(threepf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<threepf_kconfig>(items); }
 
+				//! Construct a work item filter factory for an output task
+				work_item_filter< output_task_element<number> > work_item_filter_factory(output_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter< output_task_element<number> >(items); }
+
 
 		    // SLAVE POSTINTEGRATION TASKS
 
@@ -178,7 +181,7 @@ namespace transport
 		    void process_task(const MPI::new_derived_content_payload& payload);
 
 		    //! Slave node: Process an output task
-		    void dispatch_output_task(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
+		    void schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
 
 		    //! Push new derived content to the master process
 		    void push_derived_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
@@ -645,7 +648,7 @@ namespace transport
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
 
                     output_task<number>* tk = out_rec->get_task();
-                    this->dispatch_output_task(tk, payload);
+                    this->schedule_output(tk, payload);
                     break;
 	                }
 
@@ -691,26 +694,12 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::dispatch_output_task(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
+    void slave_controller<number>::schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload)
 	    {
         assert(tk != nullptr);  // should be guaranteed
 
-        std::set<unsigned int> work_items = this->data_mgr->read_taskfile(payload.get_taskfile_path(), this->worker_number());
-        work_item_filter< output_task_element<number> > filter(work_items);
-
         // send scheduling information to the master process
         this->send_worker_data();
-
-        // create a context and queue
-        context ctx = context();
-        ctx.add_device("CPU");
-        scheduler sch = scheduler(ctx);
-        work_queue< output_task_element<number> > work = sch.make_queue(*tk, filter);
-
-        bool success = true;
-
-        // keep track of CPU time
-        boost::timer::cpu_timer timer;
 
         // set up output-group finder function
         typename data_manager<number>::datapipe::output_group_finder finder =
@@ -722,84 +711,148 @@ namespace transport
 
         // acquire a datapipe which we can use to stream content from the databse
         typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-                                                                                       finder, dispatcher, this->get_rank(), timer);
+                                                                                       finder, dispatcher, this->get_rank());
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
         BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
 
-        std::ostringstream work_msg;
-        work_msg << work;
-        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
+		    bool complete = false;
+		    while(!complete)
+			    {
+				    // wait for messages from scheduler
+		        boost::mpi::status stat = this->world.probe(MPI::RANK_MASTER);
 
-        const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
-        assert(queues.size() == 1);
+				    switch(stat.tag())
+					    {
+				        case MPI::NEW_WORK_ASSIGNMENT:
+					        {
+				            MPI::work_assignment_payload assignment_payload;
+						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, assignment_payload);
 
-        const typename work_queue< output_task_element<number> >::device_work_list list = queues[0];
+						        const std::list<unsigned int>& work_items = assignment_payload.get_items();
+						        auto filter = this->work_item_filter_factory(tk, work_items);
 
-        for(unsigned int i = 0; i < list.size(); i++)
-	        {
-            typename derived_data::derived_product<number>* product = list[i].get_product();
+						        // create work queues
+						        context ctx;
+						        ctx.add_device("CPU");
+						        scheduler sch(ctx);
+						        auto work = sch.make_queue(*tk, filter);
 
-            assert(product != nullptr);
-            if(product == nullptr)
-	            {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
-	            }
+				            bool success = true;
 
-            // merge command-line supplied tags with tags specified in the task
-            std::list<std::string> task_tags = list[i].get_tags();
-            std::list<std::string> command_line_tags = payload.get_tags();
+				            // keep track of wallclock time
+				            boost::timer::cpu_timer timer;
+				            boost::timer::nanosecond_type processing_time = 0;
+				            boost::timer::nanosecond_type min_processing_time = 0;
+				            boost::timer::nanosecond_type max_processing_time = 0;
 
-            task_tags.splice(task_tags.end(), command_line_tags);
+				            std::ostringstream work_msg;
+				            work_msg << work;
+				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
 
-            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
+				            const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
+				            assert(queues.size() == 1);
 
-            try
-	            {
-                product->derive(pipe, task_tags);
-	            }
-            catch(runtime_exception& xe)
-	            {
-                success = false;
-                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Exception reported while processing: code=" << xe.get_exception_code() << ": " << xe.what();
-	            }
+				            const typename work_queue< output_task_element<number> >::device_work_list list = queues[0];
 
-            // check that the datapipe was correctly detached
-            if(pipe.is_attached())
-	            {
-                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
-                pipe.detach();
-	            }
+				            for(unsigned int i = 0; i < list.size(); i++)
+					            {
+				                typename derived_data::derived_product<number>* product = list[i].get_product();
 
-            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "";
-	        }
+				                assert(product != nullptr);
+				                if(product == nullptr)
+					                {
+				                    std::ostringstream msg;
+				                    msg << __CPP_TRANSPORT_TASK_NULL_DERIVED_PRODUCT << " '" << tk->get_name() << "'";
+				                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
+					                }
 
-        // close the datapipe
-        pipe.close();
+				                // merge command-line supplied tags with tags specified in the task
+				                std::list<std::string> task_tags = list[i].get_tags();
+				                std::list<std::string> command_line_tags = payload.get_tags();
 
-        // all work now done - stop the timer
-        timer.stop();
+				                task_tags.splice(task_tags.end(), command_line_tags);
 
-        // notify master process that all work has been finished
-        now = boost::posix_time::second_clock::universal_time();
-        if(success) BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
-        else        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
 
-        MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
-                                                     pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
-                                                     pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
-                                                     pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
-                                                     pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
-                                                     pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
-                                                     pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
-                                                     pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
-                                                     pipe.get_zeta_cache_evictions());
+				                try
+					                {
+				                    boost::timer::cpu_timer derive_timer;
+				                    product->derive(pipe, task_tags);
+						                derive_timer.stop();
+						                processing_time += derive_timer.elapsed().wall;
+						                if(max_processing_time == 0 || derive_timer.elapsed().wall > max_processing_time) max_processing_time = derive_timer.elapsed().wall;
+						                if(min_processing_time == 0 || derive_timer.elapsed().wall < min_processing_time) min_processing_time = derive_timer.elapsed().wall;
+					                }
+				                catch(runtime_exception& xe)
+					                {
+				                    success = false;
+				                    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Exception reported while processing: code=" << xe.get_exception_code() << ": " << xe.what();
+					                }
 
-        this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+				                // check that the datapipe was correctly detached
+				                if(pipe.is_attached())
+					                {
+				                    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
+				                    pipe.detach();
+					                }
+
+				                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "";
+					            }
+
+				            // all work now done - stop the timer
+				            timer.stop();
+
+				            // notify master process that all work has been finished
+				            now = boost::posix_time::second_clock::universal_time();
+				            if(success) BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+
+				            MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
+				                                                         processing_time, list.size(),
+				                                                         min_processing_time, max_processing_time,
+				                                                         pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
+				                                                         pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
+				                                                         pipe.get_threepf_kconfig_cache_hits(), pipe.get_threepf_kconfig_cache_unloads(),
+				                                                         pipe.get_data_cache_hits(), pipe.get_data_cache_unloads(),
+				                                                         pipe.get_zeta_cache_hits(), pipe.get_zeta_cache_unloads(),
+				                                                         pipe.get_time_config_cache_evictions(), pipe.get_twopf_kconfig_cache_evictions(),
+				                                                         pipe.get_threepf_kconfig_cache_evictions(), pipe.get_data_cache_evictions(),
+				                                                         pipe.get_zeta_cache_evictions());
+
+				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_DERIVED_CONTENT : MPI::DERIVED_CONTENT_FAIL, finish_payload);
+
+						        break;
+					        }
+
+				        case MPI::END_OF_WORK:
+					        {
+				            this->world.recv(stat.source(), MPI::END_OF_WORK);
+				            complete = true;
+				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+
+				            // close the datapipe
+				            pipe.close();
+
+				            // send close-down acknowledgment to master
+				            now = boost::posix_time::second_clock::universal_time();
+				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+				            this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
+
+				            break;
+					        }
+
+				        default:
+					        {
+				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+				            this->world.recv(stat.source(), stat.tag());
+				            break;
+					        }
+					    };
+			    }
+
 	    }
 
 
@@ -1025,7 +1078,7 @@ namespace transport
 
 				            // acquire a datapipe which we can use to stream content from the databse
 				            typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-				                                                                                           finder, dispatcher, this->get_rank(), timer, true);
+				                                                                                           finder, dispatcher, this->get_rank(), true);
 
 				            // perform the task
 				            try
@@ -1040,7 +1093,7 @@ namespace transport
 				                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
 					            }
 
-				            // close the batcher
+				            // inform the batcher we are at the end of this assignment
 				            batcher.end_assignment();
 
 				            // all work is now done - stop the wallclock timer

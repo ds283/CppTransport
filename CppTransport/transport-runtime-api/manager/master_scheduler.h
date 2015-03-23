@@ -211,6 +211,10 @@ namespace transport
 		    template <typename number>
 		    void prepare_queue(threepf_task<number>& task);
 
+		    //! build a work queue for an output task
+		    template <typename number>
+		    void prepare_queue(output_task<number>& task);
+
 		    //! current queue exhausted? ie., finished all current work?
 //		    bool finished() const { return(this->queue.size() == 0 && this->unassigned == this->worker_data.size()); }
 		    bool finished() const { return(this->queue.size() == 0); }
@@ -335,6 +339,13 @@ namespace transport
 		void master_scheduler::prepare_queue(threepf_task<number>& task)
 			{
 				this->build_queue(task.get_threepf_kconfig_list());
+			}
+
+
+		template <typename number>
+		void master_scheduler::prepare_queue(output_task<number>& task)
+			{
+				this->build_queue(task.get_elements());
 			}
 
 

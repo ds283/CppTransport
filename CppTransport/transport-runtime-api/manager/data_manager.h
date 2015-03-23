@@ -2076,8 +2076,7 @@ namespace transport
 
             //! Construct a datapipe
             datapipe(unsigned int dcap, unsigned int zcap,
-                     const boost::filesystem::path& lp, const boost::filesystem::path& tp,
-                     unsigned int w, boost::timer::cpu_timer& tm,
+                     const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                      utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, bool no_log=false);
 
 				    //! Destroy a datapipe
@@ -2396,9 +2395,6 @@ namespace transport
 		        //! Database access timer
 		        boost::timer::cpu_timer database_timer;
 
-		        //! Timer, used to track how long the datapipe is kept open
-		        boost::timer::cpu_timer& timer;
-
 
 				    // LOGGING
 
@@ -2509,19 +2505,6 @@ namespace transport
         virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) = 0;
 
 
-        // TASK FILES
-
-      public:
-
-        //! Create a list of task assignments, over a number of devices, from a work queue.
-        //! C++ does not allow templated virtual functions, so we need to explicitly declare
-        //! each version that we need
-        virtual void create_taskfile(std::shared_ptr<typename repository<number>::derived_content_writer>& writer, const work_queue< output_task_element<number> >& queue) = 0;
-
-        //! Read a list of task assignments for a particular worker
-        virtual std::set<unsigned int> read_taskfile(const boost::filesystem::path& taskfile, unsigned int worker) = 0;
-
-
         // TEMPORARY CONTAINERS
 
       public:
@@ -2556,7 +2539,7 @@ namespace transport
 		    //! Create a datapipe
 		    virtual datapipe create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
                                          typename datapipe::output_group_finder finder, typename datapipe::dispatch_function dispatcher,
-		                                     unsigned int worker, boost::timer::cpu_timer& timer, bool no_log=false) = 0;
+		                                     unsigned int worker, bool no_log=false) = 0;
 
         //! Pull a set of time sample-points from a datapipe
         virtual void pull_time_config(datapipe* pipe, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample) = 0;
@@ -3429,13 +3412,12 @@ namespace transport
 
     template <typename number>
     data_manager<number>::datapipe::datapipe(unsigned int dcap, unsigned int zcap,
-                                             const boost::filesystem::path& lp, const boost::filesystem::path& tp,
-                                             unsigned int w, boost::timer::cpu_timer& tm,
+                                             const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                                              typename data_manager<number>::datapipe::utility_callbacks& u,
                                              typename data_manager<number>::datapipe::config_cache& cf,
                                              typename data_manager<number>::datapipe::timeslice_cache& t,
                                              typename data_manager<number>::datapipe::kslice_cache& k, bool no_log)
-      : logdir_path(lp), temporary_path(tp), worker_number(w), timer(tm),
+      : logdir_path(lp), temporary_path(tp), worker_number(w),
         utilities(u), pull_config(cf), pull_timeslice(t), pull_kslice(k),
         time_config_cache_table(nullptr),
         twopf_kconfig_cache_table(nullptr),

@@ -1602,16 +1602,6 @@ namespace transport
             template <typename data_manager_type>
             void get_data_manager_handle(data_manager_type* data);
 
-            //! Set data_manager handle for taskfile
-            template <typename data_manager_type>
-            void set_data_manager_taskfile(data_manager_type data);
-
-            //! Return data_manager handle for taskfile
-
-            //! Throws a REPOSITORY_ERROR exception if the handle is unset
-            template <typename data_manager_type>
-            void get_data_manager_taskfile(data_manager_type* data);
-
 
             // METADATA
 
@@ -1636,9 +1626,6 @@ namespace transport
 
             //! Return path to log directory
             boost::filesystem::path get_abs_logdir_path() const { return(this->paths.root/this->paths.log); }
-
-            //! Return path to task-data container
-            boost::filesystem::path get_abs_taskfile_path() const { return(this->paths.root/this->paths.task); }
 
             //! Return path to directory for temporary files
             boost::filesystem::path get_abs_tempdir_path() const { return(this->paths.root/this->paths.temp); }
@@ -1703,9 +1690,6 @@ namespace transport
 
             //! internal handle used by data_manager to associate this writer with an integration database
             void* data_manager_handle;
-
-            //! internal handle used by data_manager to associate this writer with a task database
-            void* data_manager_taskfile;
 
 
             // LOGGING
@@ -2597,7 +2581,6 @@ namespace transport
         paths(p),
         worker_number(w),
         data_manager_handle(nullptr),
-        data_manager_taskfile(nullptr),
         committed(false)
       {
         // set up logging
@@ -2667,25 +2650,6 @@ namespace transport
       {
         if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
         *data = static_cast<data_manager_type>(this->data_manager_handle);
-      }
-
-
-    template <typename number>
-    template <typename WriterObject>
-    template <typename data_manager_type>
-    void repository<number>::generic_writer<WriterObject>::set_data_manager_taskfile(data_manager_type data)
-      {
-        this->data_manager_taskfile = static_cast<void*>(data);   // will fail if data_manager_type not (static)-castable to void*
-      }
-
-
-    template <typename number>
-    template <typename WriterObject>
-    template <typename data_manager_type>
-    void repository<number>::generic_writer<WriterObject>::get_data_manager_taskfile(data_manager_type* data)
-      {
-        if(this->data_manager_taskfile == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK);
-        *data = static_cast<data_manager_type>(this->data_manager_taskfile);
       }
 
 
