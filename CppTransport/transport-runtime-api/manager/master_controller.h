@@ -1563,6 +1563,9 @@ namespace transport
 					        }
 					    };
 			    }
+
+				// now all data is available, ask scheduler to fix maximum unit of allocation
+				this->work_scheduler.compute_max_allocation();
 	    }
 
 

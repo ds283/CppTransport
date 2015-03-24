@@ -242,6 +242,9 @@ namespace transport
 		    //! get remaining queue size
 		    unsigned int get_queue_size() const { return(this->queue.size()); }
 
+		    //! compute maximum work allocation; should be called before generating work assignments
+		    void compute_max_allocation();
+
 
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
 
@@ -419,9 +422,22 @@ namespace transport
 				// (note duplicate removal using unique() requires a sorted list)
 				this->queue.sort();
 				this->queue.unique();
+			}
 
-				// set maximum work allocation to be 5% of the queue size
-				this->max_work_allocation = std::max(static_cast<unsigned int>(this->queue.size() / 20), static_cast<unsigned int>(1));
+
+		void master_scheduler::compute_max_allocation()
+			{
+				// set maximum work allocation to be an equitable share of the queue size
+				if(this->worker_data.size() > 0)
+					{
+						unsigned int share_per_worker = std::max(static_cast<unsigned int>(this->queue.size() / this->worker_data.size()), static_cast<unsigned int>(1));
+						unsigned int five_percent = std::max(static_cast<unsigned int>(this->queue.size() / 20), static_cast<unsigned int>(1));
+				    this->max_work_allocation = std::min(share_per_worker, five_percent);
+					}
+				else
+					{
+						this->max_work_allocation = 1;
+					}
 			}
 
 
