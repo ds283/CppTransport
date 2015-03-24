@@ -23,6 +23,14 @@
 #include <boost/timer/timer.hpp>
 
 
+// target work assignment of 1 minute's worth of work, expressed in nanosecond
+// 1 microsecond = 1000 nanosecond
+// 1 millisecond = 1000 microsecond
+// 1 second = 1000 milisecond
+// 1 minute = 60 seconds
+#define __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
+
+
 namespace transport
 	{
 
@@ -127,6 +135,15 @@ namespace transport
 		        //! update timing data
 		        void update_timing_data(boost::timer::nanosecond_type t, unsigned int n) { this->time += t; this->items += n; }
 
+		        // get total time for this worker
+		        boost::timer::nanosecond_type get_total_time() const { return(this->time); }
+
+		        //! get running mean time per work item for this workers
+		        boost::timer::nanosecond_type get_mean_time_per_work_item() const { return(this->items == 0 ? this->time : this->time / this->items); }
+
+		        // get total number of items processed
+		        unsigned int get_number_items() const { return(this->items); }
+
 
             // INTERNAL DATA
 
@@ -171,7 +188,10 @@ namespace transport
 		      : waiting_for_setup(0),
 		        state_size(0),
 		        unassigned(0),
-		        active(0)
+		        active(0),
+		        has_cpus(false),
+		        has_gpus(false),
+		        max_work_allocation(1)
 			    {
 			    }
 
@@ -255,6 +275,20 @@ namespace transport
 		    void build_queue(const std::vector<WorkItem>& q);
 
 
+		    // SCHEDULING STRATEGIES
+
+      protected:
+
+		    //! schedule work for a pool of CPU only workers
+		    std::list<work_assignment> assign_work_cpu_only_strategy();
+
+		    //! schedule work for a pool of GPU only workers
+		    std::list<work_assignment> assign_work_gpu_only_strategy();
+
+		    //! schedule work for a mixed pool of CPU and GPU workers
+		    std::list<work_assignment> assign_work_mixed_strategy();
+
+
 		    // INTERNAL DATA
 
       private:
@@ -277,6 +311,15 @@ namespace transport
 		    //! Queue of work items
 		    std::list<unsigned int> queue;
 
+		    //! Maximum number of work items to be allocated in one shot
+		    unsigned int max_work_allocation;
+
+		    //! CPUs in our pool of workers?
+		    bool has_cpus;
+
+		    //! GPUs in our list of workers?
+		    bool has_gpus;
+
 	    };
 
 
@@ -287,6 +330,10 @@ namespace transport
 
 				this->waiting_for_setup = workers;
 				this->unassigned = 0;
+				this->active = 0;
+
+				this->has_cpus = false;
+				this->has_gpus = false;
 			}
 
 
@@ -296,8 +343,16 @@ namespace transport
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
 		        worker_type type = cpu;
-		        if(payload.get_type() == MPI::slave_information_payload::cpu) type = cpu;
-		        else if(payload.get_type() == MPI::slave_information_payload::gpu) type = gpu;
+		        if(payload.get_type() == MPI::slave_information_payload::cpu)
+			        {
+		            type = cpu;
+				        this->has_cpus = true;
+			        }
+		        else if(payload.get_type() == MPI::slave_information_payload::gpu)
+			        {
+		            type = gpu;
+				        this->has_gpus = true;
+			        }
 
 		        this->worker_data[worker].set_data(worker, type, payload.get_capacity(), payload.get_priority());
 				    this->waiting_for_setup--;
@@ -364,6 +419,9 @@ namespace transport
 				// (note duplicate removal using unique() requires a sorted list)
 				this->queue.sort();
 				this->queue.unique();
+
+				// set maximum work allocation to be 5% of the queue size
+				this->max_work_allocation = std::max(static_cast<unsigned int>(this->queue.size() / 20), static_cast<unsigned int>(1));
 			}
 
 
@@ -429,17 +487,123 @@ namespace transport
 
 		std::list<master_scheduler::work_assignment> master_scheduler::assign_work()
 			{
-				// generate a work assignment
+		    // generate a work assignment
 
-		    std::list< std::reference_wrapper<master_scheduler::worker_information> > workers;
+		    if(this->has_cpus && !this->has_gpus)
+			    {
+		        // CPU only scheduling strategy
+		        return this->assign_work_cpu_only_strategy();
+			    }
+		    else if(this->has_gpus && !this->has_cpus)
+			    {
+		        // GPU only scheduling strategy
+		        return this->assign_work_gpu_only_strategy();
+			    }
+		    else
+			    {
+		        // mixed CPU & GPU scheduling strategy
+		        return this->assign_work_mixed_strategy();
+			    }
+			}
+
+
+		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_cpu_only_strategy()
+			{
+				// schedule work for a CPU only pool
+				// the strategy is to avoid cores becoming idle because they have run out of work
+
+		    // build a list of workers requiring assignments
+		    // storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
+		    // but we won't be amending it within this function
+		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
+
+		    for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); t++)
+			    {
+		        if(!t->is_assigned()) workers.push_back(t);
+			    }
+
+				// sort into ascending order of mean time per item
+				struct MeanTimeComparator
+					{
+						bool operator()(const std::vector<master_scheduler::worker_information>::iterator& A, const std::vector<master_scheduler::worker_information>::iterator& B)
+							{
+								if(A->get_total_time() == 0) return(true);
+								if(B->get_total_time() == 0) return(false);
+
+								// at this stage, getting mean time per worker should be safe -- no divide by zero possibility
+						    return(A->get_mean_time_per_work_item() < B->get_mean_time_per_work_item());
+							}
+					};
+				workers.sort(MeanTimeComparator());
+
+				// step through list of workers requiring assignments, assigning work to the fastest first
+				// workers who have not yet had any assignments will be at the top of the queue
+		    std::list<work_assignment> assignment_list;
+
+				// if we allocated work equally, what would be the mean allocation per worker?
+				assert(workers.size() > 0);
+				unsigned int mean_allocation_per_worker = static_cast<unsigned int>(this->queue.size() / workers.size());
+				if(mean_allocation_per_worker == 0) mean_allocation_per_worker = 1;
+
+				// set up an iterator to point at the next item of work
+		    std::list<unsigned int>::iterator next_item = this->queue.begin();
+				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++)
+					{
+				    std::list<unsigned int> items;
+
+						// is this a worker which has not yet had any assignment?
+						if((*t)->get_total_time() == 0)
+							{
+								// if so, assign just a single work item to get a sense of how long it takes this worker to process
+								items.push_back(*next_item);
+								next_item++;
+							}
+						else
+							{
+								// allocate up to __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
+								// or the mean allocation per worker, whichever is smaller
+						    boost::timer::nanosecond_type mean_time_per_item = (*t)->get_mean_time_per_work_item();
+								if(mean_time_per_item == 0) mean_time_per_item = 1000*1000*1000;
+
+						    boost::timer::nanosecond_type granularity = __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY / (*t)->get_mean_time_per_work_item();
+
+								unsigned int unit_of_work = std::min(this->max_work_allocation, static_cast<unsigned int>(granularity));
+								if(unit_of_work == 0) unit_of_work = 1;
+
+								unsigned int num_work_items = std::min(unit_of_work, mean_allocation_per_worker);
+
+								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; i++)
+									{
+										items.push_back(*next_item);
+										next_item++;
+									}
+							}
+
+						assignment_list.push_back(master_scheduler::work_assignment((*t)->get_number(), items));
+					}
+
+				return(assignment_list);
+			}
+
+
+		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_gpu_only_strategy()
+			{
+				// currently we schedule work just by breaking it up between all workers
+				// TODO: in future, this should be replaced by a more intelligent scheduler
+
+				// build a list of workers requiring assignments
+				// storing a list of iterators is OK here; they would be invalidated by operations on this->worker_data,
+				// but we won't be amending it within this function
+		    std::list< std::vector<master_scheduler::worker_information>::iterator > workers;
 
 				for(std::vector<master_scheduler::worker_information>::iterator t = this->worker_data.begin(); t != this->worker_data.end(); t++)
 					{
-						if(!t->is_assigned()) workers.push_back(std::ref(*t));
+						if(!t->is_assigned()) workers.push_back(t);
 					}
 
 				if(workers.size() != this->unassigned) throw runtime_exception(runtime_exception::SCHEDULING_ERROR, __CPP_TRANSPORT_SCHEDULING_UNASSIGNED_MISMATCH);
 
+				// divide available work items between all unassigned workers
 				unsigned int items_per_worker = this->queue.size() / workers.size();
 				unsigned int items_left_over  = this->queue.size() % workers.size();
 
@@ -448,22 +612,27 @@ namespace transport
 				unsigned int c = 0;
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
-				for(typename std::list< std::reference_wrapper<master_scheduler::worker_information> >::iterator t = workers.begin(); t != workers.end(); t++, c++)
+				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++, c++)
 					{
 				    std::list<unsigned int> items;
 
-						for(unsigned int i = 0; i < items_per_worker + (c < items_left_over ? 1 : 0); i++)
+						for(unsigned int i = 0; next_item != this->queue.end() && i < items_per_worker + (c < items_left_over ? 1 : 0); i++)
 							{
-								if(next_item == this->queue.end()) assert(false);
 								items.push_back(*next_item);
 								next_item++;
 							}
 
-						assignment_list.push_back(master_scheduler::work_assignment(t->get().get_number(), items));
+						assignment_list.push_back(master_scheduler::work_assignment((*t)->get_number(), items));
 					}
 
 				return(assignment_list);
 			}
+
+
+    std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy()
+	    {
+				throw runtime_exception(runtime_exception::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
+	    }
 
 
 	}   // namespace transport

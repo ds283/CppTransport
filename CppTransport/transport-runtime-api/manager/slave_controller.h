@@ -804,7 +804,7 @@ namespace transport
 				            else        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
 				            MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
-				                                                         processing_time, list.size(),
+				                                                         list.size(), processing_time,
 				                                                         min_processing_time, max_processing_time,
 				                                                         pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
 				                                                         pipe.get_twopf_kconfig_cache_hits(), pipe.get_twopf_kconfig_cache_unloads(),
