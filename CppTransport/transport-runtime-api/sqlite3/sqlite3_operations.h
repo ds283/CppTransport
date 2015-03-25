@@ -50,6 +50,14 @@
 
 #define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME                    "tempdb"
 
+// sqlite defaults to a maximum number of columns of 2000
+#define __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN                  2000
+// sqlite defaults to a maximum number of host parameters of 999
+#define __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER         999
+
+// overhead on number of columns per page
+// 50 is extremely conservative
+#define __CPP_TRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD             50
 
 namespace transport
   {
@@ -64,10 +72,11 @@ namespace transport
         typedef enum { twopf_configs, threepf_configs } statistics_configuration_type;
 
 
-		    // sqlite has a default maximum number of columns equal to 2000.
-		    // These columns can rapidly be used up where we have a large number of fields,
-		    // so we need to take care
-		    constexpr unsigned int max_columns = 2000 - 4;
+		    // sqlite has a default maximum number of columns, and a maximum number of
+        // host parameters
+        // with a large number of fields we can easily exceed those, so need
+        // to set a limit on the number of columns per row
+        constexpr unsigned int max_columns = (__CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER < __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN ? __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_VARIABLE_NUMBER : __CPP_TRANSPORT_DEFAULT_SQLITE_MAX_COLUMN) - __CPP_TRANSPORT_DEFAULT_SQLITE_COLUMN_OVERHEAD;
 
 
         // Utility functions
