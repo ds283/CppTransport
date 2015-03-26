@@ -317,7 +317,7 @@ namespace transport
         // WRITER CALLBACKS
 
       protected:
-		    
+
         //! Advise that an output group has been committed
         template <typename Payload>
         void advise_commit(output_group_record<Payload>* group);
