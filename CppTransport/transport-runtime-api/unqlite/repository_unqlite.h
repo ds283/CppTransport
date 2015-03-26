@@ -332,22 +332,22 @@ namespace transport
         void advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group);
 
         //! Commit the products from an integration to the database
-        void close_integration_writer(base_writer& gwriter);
+        void close_integration_writer(integration_writer<number>& writer);
 
         //! Rollback a failed integration
-        void abort_integration_writer(base_writer& gwriter);
+        void abort_integration_writer(integration_writer<number>& writer);
 
         //! Commit hte products from a postintegration to the database
-        void close_postintegration_writer(base_writer& gwriter);
+        void close_postintegration_writer(postintegration_writer<number>& writer);
 
         //! Rollback a failed postintegration
-        void abort_postintegration_writer(base_writer& gwriter);
+        void abort_postintegration_writer(postintegration_writer<number>& writer);
 
         //! Commit the products from an output task to the database
-        void close_derived_content_writer(base_writer& gwriter);
+        void close_derived_content_writer(derived_content_writer<number>& writer);
 
         //! Rollback a failed integration
-        void abort_derived_content_writer(base_writer& gwriter);
+        void abort_derived_content_writer(derived_content_writer<number>& writer);
 
 
         // COMMIT CALLBACK METHODS FOR REPOSITORY RECORDS
@@ -1427,10 +1427,8 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::close_integration_writer(base_writer& gwriter)
+		void repository_unqlite<number>::close_integration_writer(integration_writer<number>& writer)
 			{
-        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
-
 				integration_task_record<number>* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 		    assert(rec != nullptr);
@@ -1470,10 +1468,8 @@ namespace transport
 
 
     template <typename number>
-    void repository_unqlite<number>::abort_integration_writer(base_writer& gwriter)
+    void repository_unqlite<number>::abort_integration_writer(integration_writer<number>& writer)
       {
-        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
-
         boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
@@ -1505,10 +1501,8 @@ namespace transport
 
 
     template <typename number>
-    void repository_unqlite<number>::close_postintegration_writer(base_writer& gwriter)
+    void repository_unqlite<number>::close_postintegration_writer(postintegration_writer<number>& writer)
       {
-        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
-
 		    // get repository record for postintegration task
 		    postintegration_task_record<number>* rec = writer.get_record();
 		    const std::list<std::string>& tags = writer.get_tags();
@@ -1609,10 +1603,8 @@ namespace transport
 
 
     template <typename number>
-    void repository_unqlite<number>::abort_postintegration_writer(base_writer& gwriter)
+    void repository_unqlite<number>::abort_postintegration_writer(postintegration_writer<number>& writer)
       {
-        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
-
         boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
         if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
@@ -1644,10 +1636,8 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::close_derived_content_writer(base_writer& gwriter)
+		void repository_unqlite<number>::close_derived_content_writer(derived_content_writer<number>& writer)
 			{
-        derived_content_writer<number>& writer = dynamic_cast< derived_content_writer<number>& >(gwriter);
-
 				output_task_record<number>* rec = writer.get_record();
 				const std::list<std::string>& tags = writer.get_tags();
 				assert(rec != nullptr);
@@ -1681,10 +1671,8 @@ namespace transport
 
 
 		template <typename number>
-		void repository_unqlite<number>::abort_derived_content_writer(base_writer& gwriter)
+		void repository_unqlite<number>::abort_derived_content_writer(derived_content_writer<number>& writer)
 			{
-        derived_content_writer<number>& writer = dynamic_cast< derived_content_writer<number>& >(gwriter);
-
 		    boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
 
 		    if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);

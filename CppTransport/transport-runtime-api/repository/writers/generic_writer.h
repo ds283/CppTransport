@@ -81,13 +81,13 @@ namespace transport
         // and the problem can be solved using traits classes.
 
         //! Define a commit callback object. Used to commit data products to the repository
-        typedef std::function<void(base_writer&)> commit_callback;
+        typedef std::function<void(WriterObject&)> commit_callback;
 
         //! Define an abort callback object. Used to abort storage of data products
-        typedef std::function<void(base_writer&)> abort_callback;
+        typedef std::function<void(WriterObject&)> abort_callback;
 
         //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(base_writer&, const std::string&)> aggregate_callback;
+        typedef std::function<bool(WriterObject&, const std::string&)> aggregate_callback;
 
         class callback_group
 	        {
