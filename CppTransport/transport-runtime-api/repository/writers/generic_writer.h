@@ -69,17 +69,6 @@ namespace transport
 
       public:
 
-        // In these callbacks, we would ideally like them to take an argument of type WriterObject&.
-        // However, that can't be done because when the WriterObject template is instantiated,
-        // causing instantiation of generic_writer<WriterObject>, WriterObject itself will be
-        // an incomplete type. That doesn't matter inside method declarations (they are only
-        // instantiated when they are used), but it *does* matter for typedefs inside generic_writer<>
-        // which must be resolved when instantiated.
-
-        // The ultimate solution might be to extract the *_writer classes from within repository<number>
-        // and declare at namespace scope. That allows forward declarations and explicit specializations,
-        // and the problem can be solved using traits classes.
-
         //! Define a commit callback object. Used to commit data products to the repository
         typedef std::function<void(WriterObject&)> commit_callback;
 

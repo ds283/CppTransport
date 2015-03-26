@@ -317,12 +317,7 @@ namespace transport
         // WRITER CALLBACKS
 
       protected:
-
-        // The interface here isn't very satisfactory, because we'd prefer that these callbacks take a reference of
-        // the correct type (integration_writer, postintegration_writer, derived_content_writer).
-        // The problem is incomplete types at instantiation of repository<number>; see comments in
-        // repository.h near declaration of generic_writer for details
-
+		    
         //! Advise that an output group has been committed
         template <typename Payload>
         void advise_commit(output_group_record<Payload>* group);
