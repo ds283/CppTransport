@@ -19,7 +19,7 @@
 
 // need data_manager in order to get the details of a data_manager<number>::datapipe
 // (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
 #include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"

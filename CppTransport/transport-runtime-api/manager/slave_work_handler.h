@@ -18,7 +18,7 @@
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/output_tasks.h"
 
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 #include "boost/timer/timer.hpp"
 

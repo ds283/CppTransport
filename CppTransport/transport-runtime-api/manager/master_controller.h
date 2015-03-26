@@ -23,7 +23,7 @@
 #include "transport-runtime-api/manager/mpi_operations.h"
 
 #include "transport-runtime-api/repository/json_repository_interface.h"
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/manager/master_scheduler.h"
 

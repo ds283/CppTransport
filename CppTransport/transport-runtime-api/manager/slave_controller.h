@@ -22,7 +22,7 @@
 #include "transport-runtime-api/manager/mpi_operations.h"
 
 #include "transport-runtime-api/repository/repository.h"
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/manager/slave_work_handler.h"
 
 #include "transport-runtime-api/scheduler/context.h"

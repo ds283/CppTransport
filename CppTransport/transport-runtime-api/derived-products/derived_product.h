@@ -15,7 +15,7 @@
 
 // need data_manager in order to get the details of a data_manager<number>>data_pipe
 // (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 

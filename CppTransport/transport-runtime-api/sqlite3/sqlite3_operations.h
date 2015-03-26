@@ -21,7 +21,7 @@
 #include "boost/lexical_cast.hpp"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 
 #define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   "time_samples"

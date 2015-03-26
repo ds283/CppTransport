@@ -14,7 +14,7 @@
 #include <vector>
 
 #include "transport-runtime-api/repository/repository.h"
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/models/model.h"
 

@@ -10,7 +10,7 @@
 
 #include <assert.h>
 
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 
 namespace transport

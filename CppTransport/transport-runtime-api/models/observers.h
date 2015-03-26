@@ -13,7 +13,7 @@
 #include <sstream>
 
 #include "transport-runtime-api/messages.h"
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
 #include <boost/timer/timer.hpp>

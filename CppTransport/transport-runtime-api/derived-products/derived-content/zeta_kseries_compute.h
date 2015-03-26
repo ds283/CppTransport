@@ -13,7 +13,7 @@
 
 
 // need data_manager for datapipe
-#include "transport-runtime-api/manager/data_manager.h"
+#include "transport-runtime-api/data/data_manager.h"
 
 // need 3pf shifter
 #include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"
