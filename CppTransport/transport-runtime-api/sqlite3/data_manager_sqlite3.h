@@ -13,7 +13,7 @@
 #include <string>
 #include <vector>
 
-#include "transport-runtime-api/manager/repository.h"
+#include "transport-runtime-api/repository/repository.h"
 #include "transport-runtime-api/manager/data_manager.h"
 
 #include "transport-runtime-api/models/model.h"
@@ -71,28 +71,28 @@ namespace transport
 
         //! Initialize a new integration_writer object, including the data container.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) override;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer) override;
 
         //! Close an open integration_writer object.
 
         //! Any open sqlite3 handles are closed, meaning that any integration_writer objects will be invalidated.
         //! After closing, attempting to use an integration_writer will lead to unsubtle errors.
-        virtual void close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) override;
+        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) override;
 
 		    //! Initialize a new derived_content_writer object.
-		    virtual void initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) override;
+		    virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
 
 		    //! Close an open derived_content_writer object.
 
 		    //! Any open sqlite3 handles are closed. Attempting to use the writer after closing
 		    //! will lead to unsubtle errors.
-		    virtual void close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) override;
+		    virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) override;
 
         //! Initialize a new postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) override;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
 
         //! Close an open postintegration_writer object
-        virtual void close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) override;
+        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) override;
 
 
         // WRITE INDEX TABLES -- implements a 'data_manager' interface
@@ -100,19 +100,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) override;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) override;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) override;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) override;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) override;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) override;
 
 
         // TEMPORARY CONTAINERS  -- implements a 'data_manager' interface
@@ -153,22 +153,22 @@ namespace transport
       protected:
 
         //! Aggregate a temporary twopf container into a principal container
-        bool aggregate_twopf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_twopf_batch(base_writer& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary threepf container into a principal container
-        bool aggregate_threepf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_threepf_batch(base_writer& writer, const std::string& temp_ctr);
 
         //! Aggregate a derived product
-        bool aggregate_derived_product(typename repository<number>::base_writer& writer, const std::string& temp_name);
+        bool aggregate_derived_product(base_writer& writer, const std::string& temp_name);
 
         //! Aggregate a temporary zeta_twopf container
-        bool aggregate_zeta_twopf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_twopf_batch(base_writer& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary zeta_threepf container
-        bool aggregate_zeta_threepf_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_threepf_batch(base_writer& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary fNL container
-        bool aggregate_fNL_batch(typename repository<number>::base_writer& writer, const std::string& temp_ctr, derived_data::template_type type);
+        bool aggregate_fNL_batch(base_writer& writer, const std::string& temp_ctr, derived_data::template_type type);
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -269,7 +269,7 @@ namespace transport
       protected:
 
         //! Attach an output_group_record to a pipe
-        std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
+        std::shared_ptr< output_group_record<integration_payload> >
           datapipe_attach(typename data_manager<number>::datapipe* pipe,
                           typename data_manager<number>::datapipe::output_group_finder& finder,
                           const std::string& name, const std::list<std::string>& tags);
@@ -351,7 +351,7 @@ namespace transport
 
     // Create data files for a new integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< integration_writer<number> >& writer)
       {
         sqlite3* db = nullptr;
 
@@ -387,7 +387,7 @@ namespace transport
         writer->set_data_manager_handle(db);
 
         // set up aggregation handlers
-        typename repository<number>::integration_task_record* rec = writer->get_record();
+        integration_task_record<number>* rec = writer->get_record();
         assert(rec != nullptr);
 
         integration_task<number>* tk = rec->get_task();
@@ -412,7 +412,7 @@ namespace transport
 
     // Close data files associated with an integration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer)
+    void data_manager_sqlite3<number>::close_writer(std::shared_ptr< integration_writer<number> >& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -428,7 +428,7 @@ namespace transport
 
 		// Create data files for a new derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
+		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer)
 			{
         // set up aggregation handler
         writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2));
@@ -437,7 +437,7 @@ namespace transport
 
 		// Close data files for a derived_content_writer object
 		template <typename number>
-		void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer)
+		void data_manager_sqlite3<number>::close_writer(std::shared_ptr< derived_content_writer<number> >& writer)
 			{
 				// physically remove the tempfiles directory
 		    boost::filesystem::remove(writer->get_abs_tempdir_path());
@@ -446,7 +446,7 @@ namespace transport
 
     // Initialize a new postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer)
+    void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer)
       {
         sqlite3* db = nullptr;
 
@@ -479,7 +479,7 @@ namespace transport
         writer->set_data_manager_handle(db);
 
         // set aggregation handler
-        typename repository<number>::postintegration_task_record* rec = writer->get_record();
+        postintegration_task_record<number> * rec = writer->get_record();
         assert(rec != nullptr);
 
         postintegration_task<number>* tk = rec->get_task();
@@ -505,7 +505,7 @@ namespace transport
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
 
-		    typename repository<number>::postintegration_writer::merge_group mergers;
+		    typename postintegration_writer<number>::merge_group mergers;
 		    mergers.zeta_twopf   = std::bind(&sqlite3_operations::merge_zeta_twopf, std::placeholders::_1, std::placeholders::_2);
 		    mergers.zeta_threepf = std::bind(&sqlite3_operations::merge_zeta_threepf, std::placeholders::_1, std::placeholders::_2);
 				mergers.zeta_redbsp  = std::bind(&sqlite3_operations::merge_zeta_redbsp, std::placeholders::_1, std::placeholders::_2);
@@ -516,7 +516,7 @@ namespace transport
 
     // Close a postintegration_writer object
     template <typename number>
-    void data_manager_sqlite3<number>::close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer)
+    void data_manager_sqlite3<number>::close_writer(std::shared_ptr< postintegration_writer<number> >& writer)
       {
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
@@ -533,7 +533,7 @@ namespace transport
     // INDEX TABLE MANAGEMENT
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -552,7 +552,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -574,7 +574,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk)
       {
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -584,7 +584,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk)
       {
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -596,7 +596,7 @@ namespace transport
 
 
     template <typename number>
-    void data_manager_sqlite3<number>::create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk)
+    void data_manager_sqlite3<number>::create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk)
       {
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -935,9 +935,9 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_twopf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_twopf_batch(base_writer& gwriter, const std::string& temp_ctr)
       {
-        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
 
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -954,9 +954,9 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_threepf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_threepf_batch(base_writer& gwriter, const std::string& temp_ctr)
       {
-        typename repository<number>::integration_writer& writer = dynamic_cast<typename repository<number>::integration_writer&>(gwriter);
+        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
 
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -975,9 +975,9 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(base_writer& gwriter, const std::string& temp_ctr)
       {
-        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
 
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -989,9 +989,9 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(base_writer& gwriter, const std::string& temp_ctr)
       {
-        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
 
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -1005,10 +1005,9 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_fNL_batch(typename repository<number>::base_writer& gwriter, const std::string& temp_ctr,
-                                                           derived_data::template_type type)
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(base_writer& gwriter, const std::string& temp_ctr, derived_data::template_type type)
       {
-        typename repository<number>::postintegration_writer& writer = dynamic_cast<typename repository<number>::postintegration_writer&>(gwriter);
+        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
 
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
@@ -1020,14 +1019,14 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_derived_product(typename repository<number>::base_writer& gwriter, const std::string& temp_name)
+    bool data_manager_sqlite3<number>::aggregate_derived_product(base_writer& gwriter, const std::string& temp_name)
       {
-        typename repository<number>::derived_content_writer& writer = dynamic_cast<typename repository<number>::derived_content_writer&>(gwriter);
+        derived_content_writer<number>& writer = dynamic_cast< derived_content_writer<number>& >(gwriter);
 
         bool success = true;
 
         // lookup derived product from output task
-        typename repository<number>::output_task_record* rec = writer.get_record();
+        output_task_record<number>* rec = writer.get_record();
         assert(rec != nullptr);
 
         output_task<number>* tk = rec->get_task();
@@ -1037,7 +1036,7 @@ namespace transport
 
         if(product == nullptr)
           {
-            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Failed to lookup derived product '" << temp_name << "'; skipping this product";
             return(false);
           }
 
@@ -1047,19 +1046,19 @@ namespace transport
 
         if(!boost::filesystem::exists(temp_location))
           {
-            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Derived product " << temp_location << " missing; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Derived product " << temp_location << " missing; skipping this product";
             return(false);
           }
 
         if(boost::filesystem::exists(dest_location))
           {
-            BOOST_LOG_SEV(writer.get_log(), repository<number>::error) << "!! Destination " << dest_location << " for derived product " << temp_location << " already exists; skipping this product";
+            BOOST_LOG_SEV(writer.get_log(), base_writer::error) << "!! Destination " << dest_location << " for derived product " << temp_location << " already exists; skipping this product";
             return(false);
           }
 
         boost::filesystem::rename(temp_location, dest_location);
 
-        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "++ Emplaced derived product " << dest_location;
+        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "++ Emplaced derived product " << dest_location;
 
         // commit this product to the current output group
         writer.push_content(*product);
@@ -1448,7 +1447,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> >
+    std::shared_ptr< output_group_record<integration_payload> >
     data_manager_sqlite3<number>::datapipe_attach(typename data_manager<number>::datapipe* pipe,
                                                   typename data_manager<number>::datapipe::output_group_finder& finder,
                                                   const std::string& name, const std::list<std::string>& tags)
@@ -1459,9 +1458,9 @@ namespace transport
 				sqlite3* db = nullptr;
 
         // find a suitable output group for this task
-        std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > group = finder(name, tags);
+        std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
 
-        typename repository<number>::integration_payload& payload = group->get_payload();
+        integration_payload& payload = group->get_payload();
 
 				// get path to the output group data container
 		    boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();

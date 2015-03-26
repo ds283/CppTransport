@@ -22,8 +22,7 @@ namespace transport
           {
 
             template <typename number>
-            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader,
-                                                               typename repository<number>::task_finder finder)
+            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
               {
                 assert(reader != nullptr);
 

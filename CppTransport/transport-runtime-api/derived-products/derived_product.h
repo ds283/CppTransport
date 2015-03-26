@@ -13,15 +13,20 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need repository in order to get the details of a repository<number>::output_group_record
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/manager/repository.h"
-
 // need data_manager in order to get the details of a data_manager<number>>data_pipe
 // (can't forward-declare because it is a nested class)
 #include "transport-runtime-api/manager/data_manager.h"
 
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
+
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
+// forward-declare tasks if needed
+#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+
+// forward-declare repository records if needed
+#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
 #include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
@@ -40,15 +45,6 @@
 
 namespace transport
 	{
-
-		// forward-declare model class
-    template <typename number> class model;
-
-		// forward-declare class task.
-		// task.h includes this header, so we cannot include task.h otherwise we create a circular dependency.
-		template <typename number> class task;
-		template <typename number> class integration_task;
-		template <typename number> class twopf_list_task;
 
 		namespace derived_data
 			{
@@ -94,8 +90,7 @@ namespace transport
 				    //! Get filename associated with this derived data product
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
-		        //! Apply the analysis represented by this derived product to a given
-		        //! output group
+		        //! Apply the analysis represented by this derived product to a given output group
 		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) = 0;
 
 

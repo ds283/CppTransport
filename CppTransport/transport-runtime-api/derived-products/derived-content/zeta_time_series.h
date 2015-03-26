@@ -43,7 +43,7 @@ namespace transport
                                    unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            zeta_twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+            zeta_twopf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
             virtual ~zeta_twopf_time_series() = default;
 
@@ -98,7 +98,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_twopf_time_series<number>::zeta_twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+        zeta_twopf_time_series<number>::zeta_twopf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
           : derived_line<number>(reader, finder),
             zeta_twopf_line<number>(reader),
             time_series<number>(reader)
@@ -185,7 +185,7 @@ namespace transport
                                      unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            zeta_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+            zeta_threepf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
             virtual ~zeta_threepf_time_series() = default;
 
@@ -234,7 +234,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_threepf_time_series<number>::zeta_threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+        zeta_threepf_time_series<number>::zeta_threepf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
           : derived_line<number>(reader, finder),
             zeta_threepf_line<number>(reader),
             time_series<number>(reader)
@@ -324,7 +324,7 @@ namespace transport
                                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
             //! deserialization constructor
-            zeta_reduced_bispectrum_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+            zeta_reduced_bispectrum_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
             virtual ~zeta_reduced_bispectrum_time_series() = default;
 
@@ -374,7 +374,7 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+        zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
           : derived_line<number>(reader, finder),
             zeta_reduced_bispectrum_line<number>(reader),
             time_series<number>(reader)

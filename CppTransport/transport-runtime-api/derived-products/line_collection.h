@@ -150,7 +150,7 @@ namespace transport
 						line_collection(const line_collection<number>& obj);
 
 						//! Deserialization constructor
-						line_collection(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder);
+						line_collection(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder);
 
 						virtual ~line_collection();
 
@@ -258,7 +258,7 @@ namespace transport
 
 
 				template <typename number>
-				line_collection<number>::line_collection(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
+				line_collection<number>::line_collection(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder)
 					: derived_product<number>(name, reader)
 					{
 						// extract data from reader

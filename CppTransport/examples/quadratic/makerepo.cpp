@@ -6,7 +6,7 @@
 
 #include "quad_basic.h"
 
-#include "transport-runtime-api/manager/repository_creation_key.h"
+#include "transport-runtime-api/repository/repository_creation_key.h"
 
 
 // ****************************************************************************

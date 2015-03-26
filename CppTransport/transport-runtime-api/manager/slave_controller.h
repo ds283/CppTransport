@@ -21,8 +21,7 @@
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
-#include "transport-runtime-api/manager/repository.h"
-#include "transport-runtime-api/manager/json_repository_interface.h"
+#include "transport-runtime-api/repository/repository.h"
 #include "transport-runtime-api/manager/data_manager.h"
 #include "transport-runtime-api/manager/slave_work_handler.h"
 
@@ -390,13 +389,13 @@ namespace transport
         try
 	        {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(payload.get_task_name()));
+            std::unique_ptr< task_record<number> > record(this->repo->query_task(payload.get_task_name()));
 
             switch(record->get_type())
 	            {
-                case repository<number>::task_record::integration:
+                case task_record<number>::integration:
 	                {
-                    typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record.get());
+                    integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 
                     assert(int_rec != nullptr);
                     if(int_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -406,14 +405,14 @@ namespace transport
                     break;
 	                }
 
-                case repository<number>::task_record::output:
+                case task_record<number>::output:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
 	                }
 
-                case repository<number>::task_record::postintegration:
+                case task_record<number>::postintegration:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
@@ -621,20 +620,20 @@ namespace transport
         try
 	        {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(payload.get_task_name()));
+            std::unique_ptr< task_record<number> > record(this->repo->query_task(payload.get_task_name()));
 
             switch(record->get_type())
 	            {
-                case repository<number>::task_record::integration:
+                case task_record<number>::integration:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
 	                }
 
-                case repository<number>::task_record::output:
+                case task_record<number>::output:
 	                {
-                    typename repository<number>::output_task_record* out_rec = dynamic_cast<typename repository<number>::output_task_record*>(record.get());
+                    output_task_record<number>* out_rec = dynamic_cast< output_task_record<number>* >(record.get());
 
                     assert(out_rec != nullptr);
                     if(out_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
@@ -644,7 +643,7 @@ namespace transport
                     break;
 	                }
 
-                case repository<number>::task_record::postintegration:
+                case task_record<number>::postintegration:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
@@ -859,27 +858,27 @@ namespace transport
         try
 	        {
             // query a task record with the name we're looking for from the database
-            std::unique_ptr<typename repository<number>::task_record> record(this->repo->query_task(payload.get_task_name()));
+            std::unique_ptr< task_record<number> > record(this->repo->query_task(payload.get_task_name()));
 
             switch(record->get_type())
 	            {
-                case repository<number>::task_record::integration:
+                case task_record<number>::integration:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
 	                }
 
-                case repository<number>::task_record::output:
+                case task_record<number>::output:
 	                {
                     std::ostringstream msg;
                     msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
 	                }
 
-                case repository<number>::task_record::postintegration:
+                case task_record<number>::postintegration:
 	                {
-                    typename repository<number>::postintegration_task_record* pint_rec = dynamic_cast<typename repository<number>::postintegration_task_record*>(record.get());
+                    postintegration_task_record<number>* pint_rec = dynamic_cast< postintegration_task_record<number>* >(record.get());
 
                     assert(pint_rec != nullptr);
                     if(pint_rec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);

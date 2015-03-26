@@ -19,8 +19,8 @@
 #include <functional>
 
 
-// need repository to get repository::derived_product_finder
-#include "transport-runtime-api/manager/repository.h"
+// need repository records to get derived_product_finder
+#include "transport-runtime-api/repository/records/repository_records.h"
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/derived-products/derived_product.h"
@@ -85,7 +85,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_task(const std::string& nm, serialization_reader* reader, typename repository<number>::derived_product_finder& pfinder);
+        output_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder);
 
 
         //! Destroy an output task
@@ -161,8 +161,7 @@ namespace transport
 
 
     template <typename number>
-    output_task<number>::output_task(const std::string& nm, serialization_reader* reader,
-                                     typename repository<number>::derived_product_finder& pfinder)
+    output_task<number>::output_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder)
       : task<number>(nm, reader),
         serial(0)
       {
@@ -196,7 +195,7 @@ namespace transport
 
             reader->end_array_element();
 
-            std::unique_ptr<typename repository<number>::derived_product_record> product_record(pfinder(product_name));
+            std::unique_ptr< derived_product_record<number> > product_record(pfinder(product_name));
             assert(product_record.get() != nullptr);
             derived_data::derived_product<number>* dp = product_record->get_product();
 

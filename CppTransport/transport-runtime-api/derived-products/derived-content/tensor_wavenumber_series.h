@@ -42,7 +42,7 @@ namespace transport
 				                                   unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    tensor_twopf_wavenumber_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+				    tensor_twopf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 				    virtual ~tensor_twopf_wavenumber_series() = default;
 
@@ -93,7 +93,7 @@ namespace transport
         // derived_line<> is not called automatically during construction of time_series<>.
         // We have to call it ourselves
         template <typename number>
-				tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+				tensor_twopf_wavenumber_series<number>::tensor_twopf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 					: derived_line<number>(reader, finder),
             tensor_twopf_line<number>(reader),
             wavenumber_series<number>(reader)

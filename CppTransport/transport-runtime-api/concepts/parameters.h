@@ -19,6 +19,9 @@
 
 #include "transport-runtime-api/utilities/named_list.h"
 
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
 #include "boost/lexical_cast.hpp"
 
 
@@ -31,9 +34,6 @@
 
 namespace transport
   {
-
-		// forward-declare model class
-		template <typename number> class model;
 
     template <typename number> class parameters;
 

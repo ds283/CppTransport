@@ -29,7 +29,7 @@ namespace transport
       {
 
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::package_finder& f)
+        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::package_finder& f)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
@@ -42,7 +42,7 @@ namespace transport
             // extract initial conditions
             std::string pkg_name;
             reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, pkg_name);
-            std::unique_ptr<typename repository<number>::package_record> record(f(pkg_name));
+            std::unique_ptr< package_record<number> > record(f(pkg_name));
             initial_conditions<number> ics = record->get_ics();
 
             if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF) rval = new twopf_task<number>(nm, reader, ics);
@@ -64,7 +64,7 @@ namespace transport
       {
 
         template <typename number>
-        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::derived_product_finder& pfinder)
+        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
@@ -91,7 +91,7 @@ namespace transport
       {
 
         template <typename number>
-        postintegration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& f)
+        postintegration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& f)
           {
             assert(reader != nullptr);
             if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);

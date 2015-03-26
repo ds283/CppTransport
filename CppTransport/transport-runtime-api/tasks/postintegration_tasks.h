@@ -48,7 +48,7 @@ namespace transport
 				postintegration_task(const std::string& nm, const integration_task<number>& t, bool write=false);
 
 				//! deserialization constructor
-				postintegration_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
+				postintegration_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 				//! override copy constructor to perform a deep copy
 				postintegration_task(const postintegration_task<number>& obj);
@@ -129,7 +129,7 @@ namespace transport
 
 
 		template <typename number>
-		postintegration_task<number>::postintegration_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+		postintegration_task<number>::postintegration_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 			: task<number>(nm, reader),
 				tk(nullptr)
 			{
@@ -142,13 +142,13 @@ namespace transport
 				// deserialize write-back status
 				reader->read_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK, write_back);
 
-		    std::unique_ptr<typename repository<number>::task_record> record(finder(tk_name));
+		    std::unique_ptr< task_record<number> > record(finder(tk_name));
 		    assert(record.get() != nullptr);
 
-		    if(record->get_type() != repository<number>::task_record::integration)
+		    if(record->get_type() != task_record<number>::integration)
 			    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_INTGRTN);
 
-				typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(record.get());
+				integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
 				assert(int_rec != nullptr);
 
 				tk = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());
@@ -195,7 +195,7 @@ namespace transport
 				zeta_twopf_task(const std::string& nm, const twopf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
-				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
+				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_twopf_task() = default;
@@ -225,7 +225,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
       }
@@ -256,7 +256,7 @@ namespace transport
 				zeta_threepf_task(const std::string& nm, const threepf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
-				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
+				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_threepf_task() = default;
@@ -286,7 +286,7 @@ namespace transport
 
 
     template <typename number>
-    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
       }
@@ -316,7 +316,7 @@ namespace transport
 				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal, bool w=false);
 
 				//! deserialization constructor
-				fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder);
+				fNL_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~fNL_task() = default;
@@ -365,7 +365,7 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, serialization_reader* reader, typename repository<number>::task_finder& finder)
+    fNL_task<number>::fNL_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
         assert(reader != nullptr);

@@ -20,6 +20,12 @@
 #include "transport-runtime-api/utilities/named_list.h"
 #include "transport-runtime-api/utilities/random_string.h"
 
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
+// forward-declare initial conditions class
+#include "transport-runtime-api/concepts/initial_conditions_forward_declare.h"
+
 
 #define __CPP_TRANSPORT_NODE_ICS_VALUE     "value"
 #define __CPP_TRANSPORT_NODE_ICS_MODEL_UID "ics-model-uid"
@@ -30,14 +36,6 @@
 
 namespace transport
   {
-
-		// forward-declare model class
-		template <typename number> class model;
-
-    template <typename number> class initial_conditions;
-
-    template <typename number>
-    std::ostream& operator<<(std::ostream& out, const initial_conditions<number>& obj);
 
     template <typename number>
     class initial_conditions: public serializable

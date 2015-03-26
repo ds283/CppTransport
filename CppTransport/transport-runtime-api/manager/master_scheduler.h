@@ -13,8 +13,6 @@
 #include <functional>
 #include <algorithm>
 
-
-#include "transport-runtime-api/manager/repository.h"
 #include "transport-runtime-api/manager/mpi_operations.h"
 
 #include "transport-runtime-api/exceptions.h"
@@ -373,14 +371,14 @@ namespace transport
 
 		        msg << " and priority " << payload.get_priority();
 
-		        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << msg.str();
+		        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << msg.str();
 
 				    this->unassigned++;
 				    this->active++;
 			    }
 		    else
 			    {
-		        BOOST_LOG_SEV(writer->get_log(), repository<number>::normal) << "!! Unexpected double identification for worker  " << worker;
+		        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "!! Unexpected double identification for worker  " << worker;
 			    }
 
 			}

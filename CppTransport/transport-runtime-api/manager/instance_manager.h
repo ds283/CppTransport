@@ -20,12 +20,12 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
 
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
 
 namespace transport
   {
-
-    // avoid circular references
-    template <typename number> class model;
 
     // set up equality operator for model_instance record
     template <typename number> class model_instance;

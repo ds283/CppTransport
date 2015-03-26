@@ -44,7 +44,7 @@ namespace transport
                                    filter::time_filter tfilter, unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        background_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+		        background_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~background_time_series() = default;
 
@@ -118,7 +118,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    background_time_series<number>::background_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+		    background_time_series<number>::background_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 			    : active_indices(reader),
 			      derived_line<number>(reader, finder),
 			      time_series<number>(reader)
@@ -252,7 +252,7 @@ namespace transport
 		                          unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constuctor.
-		        twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+		        twopf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~twopf_time_series() = default;
 
@@ -302,7 +302,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    twopf_time_series<number>::twopf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+		    twopf_time_series<number>::twopf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
 			      twopf_line<number>(reader),
 			      time_series<number>(reader)
@@ -406,7 +406,7 @@ namespace transport
                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor.
-		        threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+		        threepf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~threepf_time_series() = default;
 
@@ -470,7 +470,7 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    threepf_time_series<number>::threepf_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+		    threepf_time_series<number>::threepf_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
 		        threepf_line<number>(reader),
 		        time_series<number>(reader)

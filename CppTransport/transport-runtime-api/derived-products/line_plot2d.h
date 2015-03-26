@@ -96,7 +96,7 @@ namespace transport
 			        }
 
 				    //! Deserialization constructor
-		        line_plot2d(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder);
+		        line_plot2d(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder);
 
 		        virtual ~line_plot2d() = default;
 
@@ -293,7 +293,7 @@ namespace transport
 
 
 				template <typename number>
-		    line_plot2d<number>::line_plot2d(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
+		    line_plot2d<number>::line_plot2d(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder)
 			    : line_collection<number>(name, reader, finder)
 			    {
 		        // extract data from reader

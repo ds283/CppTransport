@@ -63,7 +63,7 @@ namespace transport
 					    }
 
 				    //! Deserialization constructor
-				    line_asciitable(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder);
+				    line_asciitable(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder);
 
 				    virtual ~line_asciitable() = default;
 
@@ -124,7 +124,7 @@ namespace transport
 
 
 				template <typename number>
-				line_asciitable<number>::line_asciitable(const std::string& name, serialization_reader* reader, typename repository<number>::task_finder finder)
+				line_asciitable<number>::line_asciitable(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder)
 					: line_collection<number>(name, reader, finder)
 					{
 						assert(reader != nullptr);

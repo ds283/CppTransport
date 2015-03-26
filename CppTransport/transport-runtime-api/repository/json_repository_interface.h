@@ -10,7 +10,7 @@
 
 #include <string>
 
-#include "transport-runtime-api/manager/repository.h"
+#include "transport-runtime-api/repository/repository.h"
 
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"

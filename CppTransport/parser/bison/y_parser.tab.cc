@@ -1,51 +1,55 @@
-/* A Bison parser, made by GNU Bison 2.7.12-4996.  */
+// A Bison parser, made by GNU Bison 3.0.4.
 
-/* Skeleton implementation for Bison LALR(1) parsers in C++
-   
-      Copyright (C) 2002-2013 Free Software Foundation, Inc.
-   
-   This program is free software: you can redistribute it and/or modify
-   it under the terms of the GNU General Public License as published by
-   the Free Software Foundation, either version 3 of the License, or
-   (at your option) any later version.
-   
-   This program is distributed in the hope that it will be useful,
-   but WITHOUT ANY WARRANTY; without even the implied warranty of
-   MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-   GNU General Public License for more details.
-   
-   You should have received a copy of the GNU General Public License
-   along with this program.  If not, see <http://www.gnu.org/licenses/>.  */
+// Skeleton implementation for Bison LALR(1) parsers in C++
 
-/* As a special exception, you may create a larger work that contains
-   part or all of the Bison parser skeleton and distribute that work
-   under terms of your choice, so long as that work isn't itself a
-   parser generator using the skeleton or a modified version thereof
-   as a parser skeleton.  Alternatively, if you modify or redistribute
-   the parser skeleton itself, you may (at your option) remove this
-   special exception, which will cause the skeleton and the resulting
-   Bison output files to be licensed under the GNU General Public
-   License without this special exception.
-   
-   This special exception was added by the Free Software Foundation in
-   version 2.2 of Bison.  */
+// Copyright (C) 2002-2015 Free Software Foundation, Inc.
+
+// This program is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+
+// This program is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+
+// You should have received a copy of the GNU General Public License
+// along with this program.  If not, see <http://www.gnu.org/licenses/>.
+
+// As a special exception, you may create a larger work that contains
+// part or all of the Bison parser skeleton and distribute that work
+// under terms of your choice, so long as that work isn't itself a
+// parser generator using the skeleton or a modified version thereof
+// as a parser skeleton.  Alternatively, if you modify or redistribute
+// the parser skeleton itself, you may (at your option) remove this
+// special exception, which will cause the skeleton and the resulting
+// Bison output files to be licensed under the GNU General Public
+// License without this special exception.
+
+// This special exception was added by the Free Software Foundation in
+// version 2.2 of Bison.
 
 
-/* First part of user declarations.  */
+// First part of user declarations.
 
-/* Line 283 of lalr1.cc  */
-#line 38 "y_parser.tab.cc"
+#line 37 "y_parser.tab.cc" // lalr1.cc:404
 
+# ifndef YY_NULLPTR
+#  if defined __cplusplus && 201103L <= __cplusplus
+#   define YY_NULLPTR nullptr
+#  else
+#   define YY_NULLPTR 0
+#  endif
+# endif
 
 #include "y_parser.tab.hh"
 
-/* User implementation prologue.  */
+// User implementation prologue.
 
-/* Line 289 of lalr1.cc  */
-#line 46 "y_parser.tab.cc"
-/* Unqualified %code blocks.  */
-/* Line 290 of lalr1.cc  */
-#line 27 "y_parser.yy"
+#line 51 "y_parser.tab.cc" // lalr1.cc:412
+// Unqualified %code blocks.
+#line 27 "y_parser.yy" // lalr1.cc:413
 
     #include <iostream>
     #include <cstdlib>
@@ -64,23 +68,13 @@
         return(lexer->yylex(yylval));
       }
 
+#line 72 "y_parser.tab.cc" // lalr1.cc:413
 
-/* Line 290 of lalr1.cc  */
-#line 70 "y_parser.tab.cc"
-
-
-# ifndef YY_NULL
-#  if defined __cplusplus && 201103L <= __cplusplus
-#   define YY_NULL nullptr
-#  else
-#   define YY_NULL 0
-#  endif
-# endif
 
 #ifndef YY_
 # if defined YYENABLE_NLS && YYENABLE_NLS
 #  if ENABLE_NLS
-#   include <libintl.h> /* FIXME: INFRINGES ON USER NAME SPACE */
+#   include <libintl.h> // FIXME: INFRINGES ON USER NAME SPACE.
 #   define YY_(msgid) dgettext ("bison-runtime", msgid)
 #  endif
 # endif
@@ -89,80 +83,59 @@
 # endif
 #endif
 
-#define YYRHSLOC(Rhs, K) ((Rhs)[K])
-/* YYLLOC_DEFAULT -- Set CURRENT to span from RHS[1] to RHS[N].
-   If N is 0, then set CURRENT to the empty location which ends
-   the previous symbol: RHS[0] (always defined).  */
-
-# ifndef YYLLOC_DEFAULT
-#  define YYLLOC_DEFAULT(Current, Rhs, N)                               \
-    do                                                                  \
-      if (N)                                                            \
-        {                                                               \
-          (Current).begin  = YYRHSLOC (Rhs, 1).begin;                   \
-          (Current).end    = YYRHSLOC (Rhs, N).end;                     \
-        }                                                               \
-      else                                                              \
-        {                                                               \
-          (Current).begin = (Current).end = YYRHSLOC (Rhs, 0).end;      \
-        }                                                               \
-    while (/*CONSTCOND*/ false)
-# endif
 
 
-/* Suppress unused-variable warnings by "using" E.  */
-#define YYUSE(e) ((void) (e))
+// Suppress unused-variable warnings by "using" E.
+#define YYUSE(E) ((void) (E))
 
-/* Enable debugging if requested.  */
+// Enable debugging if requested.
 #if YYDEBUG
 
-/* A pseudo ostream that takes yydebug_ into account.  */
+// A pseudo ostream that takes yydebug_ into account.
 # define YYCDEBUG if (yydebug_) (*yycdebug_)
 
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location)	\
-do {							\
-  if (yydebug_)						\
-    {							\
-      *yycdebug_ << Title << ' ';			\
-      yy_symbol_print_ ((Type), (Value), (Location));	\
-      *yycdebug_ << std::endl;				\
-    }							\
-} while (false)
+# define YY_SYMBOL_PRINT(Title, Symbol)         \
+  do {                                          \
+    if (yydebug_)                               \
+    {                                           \
+      *yycdebug_ << Title << ' ';               \
+      yy_print_ (*yycdebug_, Symbol);           \
+      *yycdebug_ << std::endl;                  \
+    }                                           \
+  } while (false)
 
-# define YY_REDUCE_PRINT(Rule)		\
-do {					\
-  if (yydebug_)				\
-    yy_reduce_print_ (Rule);		\
-} while (false)
+# define YY_REDUCE_PRINT(Rule)          \
+  do {                                  \
+    if (yydebug_)                       \
+      yy_reduce_print_ (Rule);          \
+  } while (false)
 
-# define YY_STACK_PRINT()		\
-do {					\
-  if (yydebug_)				\
-    yystack_print_ ();			\
-} while (false)
+# define YY_STACK_PRINT()               \
+  do {                                  \
+    if (yydebug_)                       \
+      yystack_print_ ();                \
+  } while (false)
 
-#else /* !YYDEBUG */
+#else // !YYDEBUG
 
 # define YYCDEBUG if (false) std::cerr
-# define YY_SYMBOL_PRINT(Title, Type, Value, Location) YYUSE(Type)
-# define YY_REDUCE_PRINT(Rule)        static_cast<void>(0)
-# define YY_STACK_PRINT()             static_cast<void>(0)
+# define YY_SYMBOL_PRINT(Title, Symbol)  YYUSE(Symbol)
+# define YY_REDUCE_PRINT(Rule)           static_cast<void>(0)
+# define YY_STACK_PRINT()                static_cast<void>(0)
 
-#endif /* !YYDEBUG */
+#endif // !YYDEBUG
 
-#define yyerrok		(yyerrstatus_ = 0)
-#define yyclearin	(yychar = yyempty_)
+#define yyerrok         (yyerrstatus_ = 0)
+#define yyclearin       (yyla.clear ())
 
-#define YYACCEPT	goto yyacceptlab
-#define YYABORT		goto yyabortlab
-#define YYERROR		goto yyerrorlab
+#define YYACCEPT        goto yyacceptlab
+#define YYABORT         goto yyabortlab
+#define YYERROR         goto yyerrorlab
 #define YYRECOVERING()  (!!yyerrstatus_)
 
-/* Line 357 of lalr1.cc  */
-#line 5 "y_parser.yy"
+#line 5 "y_parser.yy" // lalr1.cc:479
 namespace y {
-/* Line 357 of lalr1.cc  */
-#line 166 "y_parser.tab.cc"
+#line 139 "y_parser.tab.cc" // lalr1.cc:479
 
   /// Build a parser object.
   y_parser::y_parser (y_lexer*  lexer_yyarg, y_driver* driver_yyarg)
@@ -173,63 +146,244 @@ namespace y {
 #endif
       lexer (lexer_yyarg),
       driver (driver_yyarg)
-  {
-  }
+  {}
 
   y_parser::~y_parser ()
+  {}
+
+
+  /*---------------.
+  | Symbol types.  |
+  `---------------*/
+
+  inline
+  y_parser::syntax_error::syntax_error (const std::string& m)
+    : std::runtime_error (m)
+  {}
+
+  // basic_symbol.
+  template <typename Base>
+  inline
+  y_parser::basic_symbol<Base>::basic_symbol ()
+    : value ()
+  {}
+
+  template <typename Base>
+  inline
+  y_parser::basic_symbol<Base>::basic_symbol (const basic_symbol& other)
+    : Base (other)
+    , value ()
   {
+    value = other.value;
+  }
+
+
+  template <typename Base>
+  inline
+  y_parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t, const semantic_type& v)
+    : Base (t)
+    , value (v)
+  {}
+
+
+  /// Constructor for valueless symbols.
+  template <typename Base>
+  inline
+  y_parser::basic_symbol<Base>::basic_symbol (typename Base::kind_type t)
+    : Base (t)
+    , value ()
+  {}
+
+  template <typename Base>
+  inline
+  y_parser::basic_symbol<Base>::~basic_symbol ()
+  {
+    clear ();
+  }
+
+  template <typename Base>
+  inline
+  void
+  y_parser::basic_symbol<Base>::clear ()
+  {
+    Base::clear ();
+  }
+
+  template <typename Base>
+  inline
+  bool
+  y_parser::basic_symbol<Base>::empty () const
+  {
+    return Base::type_get () == empty_symbol;
+  }
+
+  template <typename Base>
+  inline
+  void
+  y_parser::basic_symbol<Base>::move (basic_symbol& s)
+  {
+    super_type::move(s);
+    value = s.value;
+  }
+
+  // by_type.
+  inline
+  y_parser::by_type::by_type ()
+    : type (empty_symbol)
+  {}
+
+  inline
+  y_parser::by_type::by_type (const by_type& other)
+    : type (other.type)
+  {}
+
+  inline
+  y_parser::by_type::by_type (token_type t)
+    : type (yytranslate_ (t))
+  {}
+
+  inline
+  void
+  y_parser::by_type::clear ()
+  {
+    type = empty_symbol;
+  }
+
+  inline
+  void
+  y_parser::by_type::move (by_type& that)
+  {
+    type = that.type;
+    that.clear ();
+  }
+
+  inline
+  int
+  y_parser::by_type::type_get () const
+  {
+    return type;
+  }
+
+
+  // by_state.
+  inline
+  y_parser::by_state::by_state ()
+    : state (empty_state)
+  {}
+
+  inline
+  y_parser::by_state::by_state (const by_state& other)
+    : state (other.state)
+  {}
+
+  inline
+  void
+  y_parser::by_state::clear ()
+  {
+    state = empty_state;
+  }
+
+  inline
+  void
+  y_parser::by_state::move (by_state& that)
+  {
+    state = that.state;
+    that.clear ();
+  }
+
+  inline
+  y_parser::by_state::by_state (state_type s)
+    : state (s)
+  {}
+
+  inline
+  y_parser::symbol_number_type
+  y_parser::by_state::type_get () const
+  {
+    if (state == empty_state)
+      return empty_symbol;
+    else
+      return yystos_[state];
+  }
+
+  inline
+  y_parser::stack_symbol_type::stack_symbol_type ()
+  {}
+
+
+  inline
+  y_parser::stack_symbol_type::stack_symbol_type (state_type s, symbol_type& that)
+    : super_type (s)
+  {
+    value = that.value;
+    // that is emptied.
+    that.type = empty_symbol;
+  }
+
+  inline
+  y_parser::stack_symbol_type&
+  y_parser::stack_symbol_type::operator= (const stack_symbol_type& that)
+  {
+    state = that.state;
+    value = that.value;
+    return *this;
+  }
+
+
+  template <typename Base>
+  inline
+  void
+  y_parser::yy_destroy_ (const char* yymsg, basic_symbol<Base>& yysym) const
+  {
+    if (yymsg)
+      YY_SYMBOL_PRINT (yymsg, yysym);
+
+    // User destructor.
+    YYUSE (yysym.type_get ());
   }
 
 #if YYDEBUG
-  /*--------------------------------.
-  | Print this symbol on YYOUTPUT.  |
-  `--------------------------------*/
-
-  inline void
-  y_parser::yy_symbol_value_print_ (int yytype,
-			   const semantic_type* yyvaluep, const location_type* yylocationp)
+  template <typename Base>
+  void
+  y_parser::yy_print_ (std::ostream& yyo,
+                                     const basic_symbol<Base>& yysym) const
   {
-    YYUSE (yylocationp);
-    YYUSE (yyvaluep);
-    std::ostream& yyo = debug_stream ();
     std::ostream& yyoutput = yyo;
     YYUSE (yyoutput);
+    symbol_number_type yytype = yysym.type_get ();
+    // Avoid a (spurious) G++ 4.8 warning about "array subscript is
+    // below array bounds".
+    if (yysym.empty ())
+      std::abort ();
+    yyo << (yytype < yyntokens_ ? "token" : "nterm")
+        << ' ' << yytname_[yytype] << " (";
     YYUSE (yytype);
-  }
-
-
-  void
-  y_parser::yy_symbol_print_ (int yytype,
-			   const semantic_type* yyvaluep, const location_type* yylocationp)
-  {
-    *yycdebug_ << (yytype < yyntokens_ ? "token" : "nterm")
-	       << ' ' << yytname_[yytype] << " ("
-	       << *yylocationp << ": ";
-    yy_symbol_value_print_ (yytype, yyvaluep, yylocationp);
-    *yycdebug_ << ')';
+    yyo << ')';
   }
 #endif
 
+  inline
   void
-  y_parser::yydestruct_ (const char* yymsg,
-			   int yytype, semantic_type* yyvaluep, location_type* yylocationp)
+  y_parser::yypush_ (const char* m, state_type s, symbol_type& sym)
   {
-    YYUSE (yylocationp);
-    YYUSE (yymsg);
-    YYUSE (yyvaluep);
-
-    if (yymsg)
-      YY_SYMBOL_PRINT (yymsg, yytype, yyvaluep, yylocationp);
-
-    YYUSE (yytype);
+    stack_symbol_type t (s, sym);
+    yypush_ (m, t);
   }
 
+  inline
+  void
+  y_parser::yypush_ (const char* m, stack_symbol_type& s)
+  {
+    if (m)
+      YY_SYMBOL_PRINT (m, s);
+    yystack_.push (s);
+  }
+
+  inline
   void
   y_parser::yypop_ (unsigned int n)
   {
-    yystate_stack_.pop (n);
-    yysemantic_stack_.pop (n);
-    yylocation_stack_.pop (n);
+    yystack_.pop (n);
   }
 
 #if YYDEBUG
@@ -257,7 +411,17 @@ namespace y {
   {
     yydebug_ = l;
   }
-#endif
+#endif // YYDEBUG
+
+  inline y_parser::state_type
+  y_parser::yy_lr_goto_state_ (state_type yystate, int yysym)
+  {
+    int yyr = yypgoto_[yysym - yyntokens_] + yystate;
+    if (0 <= yyr && yyr <= yylast_ && yycheck_[yyr] == yystate)
+      return yytable_[yyr];
+    else
+      return yydefgoto_[yysym - yyntokens_];
+  }
 
   inline bool
   y_parser::yy_pact_value_is_default_ (int yyvalue)
@@ -274,32 +438,19 @@ namespace y {
   int
   y_parser::parse ()
   {
-    /// Lookahead and lookahead in internal form.
-    int yychar = yyempty_;
-    int yytoken = 0;
-
     // State.
     int yyn;
+    /// Length of the RHS of the rule being reduced.
     int yylen = 0;
-    int yystate = 0;
 
     // Error handling.
     int yynerrs_ = 0;
     int yyerrstatus_ = 0;
 
-    /// Semantic value of the lookahead.
-    static semantic_type yyval_default;
-    semantic_type yylval = yyval_default;
-    /// Location of the lookahead.
-    location_type yylloc;
-    /// The locations where the error started and ended.
-    location_type yyerror_range[3];
+    /// The lookahead symbol.
+    symbol_type yyla;
 
-    /// $$.
-    semantic_type yyval;
-    /// @$.
-    location_type yyloc;
-
+    /// The return value of parse ().
     int yyresult;
 
     // FIXME: This shoud be completely indented.  It is not yet to
@@ -309,92 +460,76 @@ namespace y {
     YYCDEBUG << "Starting parse" << std::endl;
 
 
-    /* Initialize the stacks.  The initial state will be pushed in
+    /* Initialize the stack.  The initial state will be set in
        yynewstate, since the latter expects the semantical and the
        location values to have been already stored, initialize these
        stacks with a primary value.  */
-    yystate_stack_.clear ();
-    yysemantic_stack_.clear ();
-    yylocation_stack_.clear ();
-    yysemantic_stack_.push (yylval);
-    yylocation_stack_.push (yylloc);
+    yystack_.clear ();
+    yypush_ (YY_NULLPTR, 0, yyla);
 
-    /* New state.  */
+    // A new symbol was pushed on the stack.
   yynewstate:
-    yystate_stack_.push (yystate);
-    YYCDEBUG << "Entering state " << yystate << std::endl;
+    YYCDEBUG << "Entering state " << yystack_[0].state << std::endl;
 
-    /* Accept?  */
-    if (yystate == yyfinal_)
+    // Accept?
+    if (yystack_[0].state == yyfinal_)
       goto yyacceptlab;
 
     goto yybackup;
 
-    /* Backup.  */
+    // Backup.
   yybackup:
 
-    /* Try to take a decision without lookahead.  */
-    yyn = yypact_[yystate];
+    // Try to take a decision without lookahead.
+    yyn = yypact_[yystack_[0].state];
     if (yy_pact_value_is_default_ (yyn))
       goto yydefault;
 
-    /* Read a lookahead token.  */
-    if (yychar == yyempty_)
+    // Read a lookahead token.
+    if (yyla.empty ())
       {
         YYCDEBUG << "Reading a token: ";
-        yychar = yylex (&yylval, lexer, driver);
+        try
+          {
+            yyla.type = yytranslate_ (yylex (&yyla.value, lexer, driver));
+          }
+        catch (const syntax_error& yyexc)
+          {
+            error (yyexc);
+            goto yyerrlab1;
+          }
       }
+    YY_SYMBOL_PRINT ("Next token is", yyla);
 
-    /* Convert token to internal form.  */
-    if (yychar <= yyeof_)
-      {
-	yychar = yytoken = yyeof_;
-	YYCDEBUG << "Now at end of input." << std::endl;
-      }
-    else
-      {
-	yytoken = yytranslate_ (yychar);
-	YY_SYMBOL_PRINT ("Next token is", yytoken, &yylval, &yylloc);
-      }
-
-    /* If the proper action on seeing token YYTOKEN is to reduce or to
-       detect an error, take that action.  */
-    yyn += yytoken;
-    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yytoken)
+    /* If the proper action on seeing token YYLA.TYPE is to reduce or
+       to detect an error, take that action.  */
+    yyn += yyla.type_get ();
+    if (yyn < 0 || yylast_ < yyn || yycheck_[yyn] != yyla.type_get ())
       goto yydefault;
 
-    /* Reduce or error.  */
+    // Reduce or error.
     yyn = yytable_[yyn];
     if (yyn <= 0)
       {
-	if (yy_table_value_is_error_ (yyn))
-	  goto yyerrlab;
-	yyn = -yyn;
-	goto yyreduce;
+        if (yy_table_value_is_error_ (yyn))
+          goto yyerrlab;
+        yyn = -yyn;
+        goto yyreduce;
       }
 
-    /* Shift the lookahead token.  */
-    YY_SYMBOL_PRINT ("Shifting", yytoken, &yylval, &yylloc);
-
-    /* Discard the token being shifted.  */
-    yychar = yyempty_;
-
-    yysemantic_stack_.push (yylval);
-    yylocation_stack_.push (yylloc);
-
-    /* Count tokens shifted since error; after three, turn off error
-       status.  */
+    // Count tokens shifted since error; after three, turn off error status.
     if (yyerrstatus_)
       --yyerrstatus_;
 
-    yystate = yyn;
+    // Shift the lookahead token.
+    yypush_ ("Shifting", yyn, yyla);
     goto yynewstate;
 
   /*-----------------------------------------------------------.
   | yydefault -- do the default action for the current state.  |
   `-----------------------------------------------------------*/
   yydefault:
-    yyn = yydefact_[yystate];
+    yyn = yydefact_[yystack_[0].state];
     if (yyn == 0)
       goto yyerrlab;
     goto yyreduce;
@@ -404,533 +539,508 @@ namespace y {
   `-----------------------------*/
   yyreduce:
     yylen = yyr2_[yyn];
-    /* If YYLEN is nonzero, implement the default value of the action:
-       `$$ = $1'.  Otherwise, use the top of the stack.
-
-       Otherwise, the following line sets YYVAL to garbage.
-       This behavior is undocumented and Bison
-       users should not rely upon it.  */
-    if (yylen)
-      yyval = yysemantic_stack_[yylen - 1];
-    else
-      yyval = yysemantic_stack_[0];
-
-    // Compute the default @$.
     {
-      slice<location_type, location_stack_type> slice (yylocation_stack_, yylen);
-      YYLLOC_DEFAULT (yyloc, slice, yylen);
-    }
+      stack_symbol_type yylhs;
+      yylhs.state = yy_lr_goto_state_(yystack_[yylen].state, yyr1_[yyn]);
+      /* If YYLEN is nonzero, implement the default value of the
+         action: '$$ = $1'.  Otherwise, use the top of the stack.
 
-    // Perform the reduction.
-    YY_REDUCE_PRINT (yyn);
-    switch (yyn)
-      {
-          case 3:
-/* Line 664 of lalr1.cc  */
-#line 147 "y_parser.yy"
-    { driver->set_potential((yysemantic_stack_[(4) - (3)].x)); }
+         Otherwise, the following line sets YYLHS.VALUE to garbage.
+         This behavior is undocumented and Bison users should not rely
+         upon it.  */
+      if (yylen)
+        yylhs.value = yystack_[yylen - 1].value;
+      else
+        yylhs.value = yystack_[0].value;
+
+
+      // Perform the reduction.
+      YY_REDUCE_PRINT (yyn);
+      try
+        {
+          switch (yyn)
+            {
+  case 3:
+#line 147 "y_parser.yy" // lalr1.cc:859
+    { driver->set_potential((yystack_[1].value.x)); }
+#line 567 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 4:
-/* Line 664 of lalr1.cc  */
-#line 148 "y_parser.yy"
-    { driver->set_name((yysemantic_stack_[(4) - (3)].lex)); }
+#line 148 "y_parser.yy" // lalr1.cc:859
+    { driver->set_name((yystack_[1].value.lex)); }
+#line 573 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 5:
-/* Line 664 of lalr1.cc  */
-#line 149 "y_parser.yy"
-    { driver->set_author((yysemantic_stack_[(4) - (3)].lex)); }
+#line 149 "y_parser.yy" // lalr1.cc:859
+    { driver->set_author((yystack_[1].value.lex)); }
+#line 579 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 6:
-/* Line 664 of lalr1.cc  */
-#line 150 "y_parser.yy"
-    { driver->set_tag((yysemantic_stack_[(4) - (3)].lex)); }
+#line 150 "y_parser.yy" // lalr1.cc:859
+    { driver->set_tag((yystack_[1].value.lex)); }
+#line 585 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 7:
-/* Line 664 of lalr1.cc  */
-#line 151 "y_parser.yy"
-    { driver->set_core((yysemantic_stack_[(4) - (3)].lex)); }
+#line 151 "y_parser.yy" // lalr1.cc:859
+    { driver->set_core((yystack_[1].value.lex)); }
+#line 591 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 8:
-/* Line 664 of lalr1.cc  */
-#line 152 "y_parser.yy"
-    { driver->set_implementation((yysemantic_stack_[(4) - (3)].lex)); }
+#line 152 "y_parser.yy" // lalr1.cc:859
+    { driver->set_implementation((yystack_[1].value.lex)); }
+#line 597 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 9:
-/* Line 664 of lalr1.cc  */
-#line 153 "y_parser.yy"
-    { driver->set_model((yysemantic_stack_[(4) - (3)].lex)); }
+#line 153 "y_parser.yy" // lalr1.cc:859
+    { driver->set_model((yystack_[1].value.lex)); }
+#line 603 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 10:
-/* Line 664 of lalr1.cc  */
-#line 154 "y_parser.yy"
+#line 154 "y_parser.yy" // lalr1.cc:859
     { driver->set_indexorder_left(); }
+#line 609 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 11:
-/* Line 664 of lalr1.cc  */
-#line 155 "y_parser.yy"
+#line 155 "y_parser.yy" // lalr1.cc:859
     { driver->set_indexorder_right(); }
+#line 615 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 12:
-/* Line 664 of lalr1.cc  */
-#line 156 "y_parser.yy"
-    { driver->add_field((yysemantic_stack_[(5) - (4)].lex), (yysemantic_stack_[(5) - (3)].a)); }
+#line 156 "y_parser.yy" // lalr1.cc:859
+    { driver->add_field((yystack_[1].value.lex), (yystack_[2].value.a)); }
+#line 621 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 13:
-/* Line 664 of lalr1.cc  */
-#line 157 "y_parser.yy"
-    { driver->add_parameter((yysemantic_stack_[(5) - (4)].lex), (yysemantic_stack_[(5) - (3)].a)); }
+#line 157 "y_parser.yy" // lalr1.cc:859
+    { driver->add_parameter((yystack_[1].value.lex), (yystack_[2].value.a)); }
+#line 627 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 14:
-/* Line 664 of lalr1.cc  */
-#line 158 "y_parser.yy"
-    { driver->set_background_stepper((yysemantic_stack_[(4) - (3)].s)); }
+#line 158 "y_parser.yy" // lalr1.cc:859
+    { driver->set_background_stepper((yystack_[1].value.s)); }
+#line 633 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 15:
-/* Line 664 of lalr1.cc  */
-#line 159 "y_parser.yy"
-    { driver->set_perturbations_stepper((yysemantic_stack_[(4) - (3)].s)); }
+#line 159 "y_parser.yy" // lalr1.cc:859
+    { driver->set_perturbations_stepper((yystack_[1].value.s)); }
+#line 639 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 17:
-/* Line 664 of lalr1.cc  */
-#line 163 "y_parser.yy"
-    { (yyval.a) = (yysemantic_stack_[(3) - (2)].a); }
+#line 163 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.a) = (yystack_[1].value.a); }
+#line 645 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 18:
-/* Line 664 of lalr1.cc  */
-#line 164 "y_parser.yy"
-    { (yyval.a) = new attributes; }
+#line 164 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.a) = new attributes; }
+#line 651 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 19:
-/* Line 664 of lalr1.cc  */
-#line 167 "y_parser.yy"
-    { driver->add_latex_attribute((yysemantic_stack_[(4) - (1)].a), (yysemantic_stack_[(4) - (3)].lex)); (yyval.a) = (yysemantic_stack_[(4) - (1)].a); }
+#line 167 "y_parser.yy" // lalr1.cc:859
+    { driver->add_latex_attribute((yystack_[3].value.a), (yystack_[1].value.lex)); (yylhs.value.a) = (yystack_[3].value.a); }
+#line 657 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 20:
-/* Line 664 of lalr1.cc  */
-#line 168 "y_parser.yy"
-    { (yyval.a) = new attributes; }
+#line 168 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.a) = new attributes; }
+#line 663 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 21:
-/* Line 664 of lalr1.cc  */
-#line 171 "y_parser.yy"
-    { (yyval.s) = (yysemantic_stack_[(3) - (2)].s); }
+#line 171 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.s) = (yystack_[1].value.s); }
+#line 669 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 22:
-/* Line 664 of lalr1.cc  */
-#line 173 "y_parser.yy"
-    { driver->set_abserr((yysemantic_stack_[(5) - (1)].s), (yysemantic_stack_[(5) - (4)].lex)); (yyval.s) = (yysemantic_stack_[(5) - (1)].s); }
+#line 173 "y_parser.yy" // lalr1.cc:859
+    { driver->set_abserr((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
+#line 675 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 23:
-/* Line 664 of lalr1.cc  */
-#line 174 "y_parser.yy"
-    { driver->set_relerr((yysemantic_stack_[(5) - (1)].s), (yysemantic_stack_[(5) - (4)].lex)); (yyval.s) = (yysemantic_stack_[(5) - (1)].s); }
+#line 174 "y_parser.yy" // lalr1.cc:859
+    { driver->set_relerr((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
+#line 681 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 24:
-/* Line 664 of lalr1.cc  */
-#line 175 "y_parser.yy"
-    { driver->set_stepper((yysemantic_stack_[(5) - (1)].s), (yysemantic_stack_[(5) - (4)].lex)); (yyval.s) = (yysemantic_stack_[(5) - (1)].s); }
+#line 175 "y_parser.yy" // lalr1.cc:859
+    { driver->set_stepper((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
+#line 687 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 25:
-/* Line 664 of lalr1.cc  */
-#line 176 "y_parser.yy"
-    { driver->set_stepsize((yysemantic_stack_[(5) - (1)].s), (yysemantic_stack_[(5) - (4)].lex)); (yyval.s) = (yysemantic_stack_[(5) - (1)].s); }
+#line 176 "y_parser.yy" // lalr1.cc:859
+    { driver->set_stepsize((yystack_[4].value.s), (yystack_[1].value.lex)); (yylhs.value.s) = (yystack_[4].value.s); }
+#line 693 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 26:
-/* Line 664 of lalr1.cc  */
-#line 177 "y_parser.yy"
-    { (yyval.s) = new stepper; }
+#line 177 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.s) = new stepper; }
+#line 699 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 27:
-/* Line 664 of lalr1.cc  */
-#line 180 "y_parser.yy"
-    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+#line 180 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = (yystack_[0].value.x); }
+#line 705 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 28:
-/* Line 664 of lalr1.cc  */
-#line 181 "y_parser.yy"
-    { (yyval.x) = driver->add((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+#line 181 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->add((yystack_[2].value.x), (yystack_[0].value.x)); }
+#line 711 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 29:
-/* Line 664 of lalr1.cc  */
-#line 182 "y_parser.yy"
-    { (yyval.x) = driver->sub((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+#line 182 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->sub((yystack_[2].value.x), (yystack_[0].value.x)); }
+#line 717 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 30:
-/* Line 664 of lalr1.cc  */
-#line 185 "y_parser.yy"
-    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+#line 185 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = (yystack_[0].value.x); }
+#line 723 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 31:
-/* Line 664 of lalr1.cc  */
-#line 186 "y_parser.yy"
-    { (yyval.x) = driver->mul((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+#line 186 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->mul((yystack_[2].value.x), (yystack_[0].value.x)); }
+#line 729 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 32:
-/* Line 664 of lalr1.cc  */
-#line 187 "y_parser.yy"
-    { (yyval.x) = driver->div((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+#line 187 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->div((yystack_[2].value.x), (yystack_[0].value.x)); }
+#line 735 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 33:
-/* Line 664 of lalr1.cc  */
-#line 190 "y_parser.yy"
-    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+#line 190 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = (yystack_[0].value.x); }
+#line 741 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 34:
-/* Line 664 of lalr1.cc  */
-#line 191 "y_parser.yy"
-    { (yyval.x) = driver->pow((yysemantic_stack_[(3) - (1)].x), (yysemantic_stack_[(3) - (3)].x)); }
+#line 191 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->pow((yystack_[2].value.x), (yystack_[0].value.x)); }
+#line 747 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 35:
-/* Line 664 of lalr1.cc  */
-#line 194 "y_parser.yy"
-    { (yyval.x) = driver->get_integer((yysemantic_stack_[(1) - (1)].lex)); }
+#line 194 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->get_integer((yystack_[0].value.lex)); }
+#line 753 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 36:
-/* Line 664 of lalr1.cc  */
-#line 195 "y_parser.yy"
-    { (yyval.x) = driver->get_decimal((yysemantic_stack_[(1) - (1)].lex)); }
+#line 195 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->get_decimal((yystack_[0].value.lex)); }
+#line 759 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 37:
-/* Line 664 of lalr1.cc  */
-#line 196 "y_parser.yy"
-    { (yyval.x) = driver->get_identifier((yysemantic_stack_[(1) - (1)].lex)); }
+#line 196 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->get_identifier((yystack_[0].value.lex)); }
+#line 765 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 38:
-/* Line 664 of lalr1.cc  */
-#line 197 "y_parser.yy"
-    { (yyval.x) = (yysemantic_stack_[(1) - (1)].x); }
+#line 197 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = (yystack_[0].value.x); }
+#line 771 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 39:
-/* Line 664 of lalr1.cc  */
-#line 198 "y_parser.yy"
-    { (yyval.x) = (yysemantic_stack_[(3) - (2)].x); }
+#line 198 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = (yystack_[1].value.x); }
+#line 777 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 40:
-/* Line 664 of lalr1.cc  */
-#line 199 "y_parser.yy"
-    { (yyval.x) = driver->unary_minus((yysemantic_stack_[(2) - (2)].x)); }
+#line 199 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->unary_minus((yystack_[0].value.x)); }
+#line 783 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 41:
-/* Line 664 of lalr1.cc  */
-#line 202 "y_parser.yy"
-    { (yyval.x) = driver->abs((yysemantic_stack_[(4) - (3)].x)); }
+#line 202 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->abs((yystack_[1].value.x)); }
+#line 789 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 42:
-/* Line 664 of lalr1.cc  */
-#line 203 "y_parser.yy"
-    { (yyval.x) = driver->step((yysemantic_stack_[(4) - (3)].x)); }
+#line 203 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->step((yystack_[1].value.x)); }
+#line 795 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 43:
-/* Line 664 of lalr1.cc  */
-#line 204 "y_parser.yy"
-    { (yyval.x) = driver->sqrt((yysemantic_stack_[(4) - (3)].x)); }
+#line 204 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->sqrt((yystack_[1].value.x)); }
+#line 801 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 44:
-/* Line 664 of lalr1.cc  */
-#line 205 "y_parser.yy"
-    { (yyval.x) = driver->sin((yysemantic_stack_[(4) - (3)].x)); }
+#line 205 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->sin((yystack_[1].value.x)); }
+#line 807 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 45:
-/* Line 664 of lalr1.cc  */
-#line 206 "y_parser.yy"
-    { (yyval.x) = driver->cos((yysemantic_stack_[(4) - (3)].x)); }
+#line 206 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->cos((yystack_[1].value.x)); }
+#line 813 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 46:
-/* Line 664 of lalr1.cc  */
-#line 207 "y_parser.yy"
-    { (yyval.x) = driver->tan((yysemantic_stack_[(4) - (3)].x)); }
+#line 207 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->tan((yystack_[1].value.x)); }
+#line 819 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 47:
-/* Line 664 of lalr1.cc  */
-#line 208 "y_parser.yy"
-    { (yyval.x) = driver->asin((yysemantic_stack_[(4) - (3)].x)); }
+#line 208 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->asin((yystack_[1].value.x)); }
+#line 825 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 48:
-/* Line 664 of lalr1.cc  */
-#line 209 "y_parser.yy"
-    { (yyval.x) = driver->acos((yysemantic_stack_[(4) - (3)].x)); }
+#line 209 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->acos((yystack_[1].value.x)); }
+#line 831 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 49:
-/* Line 664 of lalr1.cc  */
-#line 210 "y_parser.yy"
-    { (yyval.x) = driver->atan((yysemantic_stack_[(4) - (3)].x)); }
+#line 210 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->atan((yystack_[1].value.x)); }
+#line 837 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 50:
-/* Line 664 of lalr1.cc  */
-#line 211 "y_parser.yy"
-    { (yyval.x) = driver->atan2((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 211 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->atan2((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 843 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 51:
-/* Line 664 of lalr1.cc  */
-#line 212 "y_parser.yy"
-    { (yyval.x) = driver->sinh((yysemantic_stack_[(4) - (3)].x)); }
+#line 212 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->sinh((yystack_[1].value.x)); }
+#line 849 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 52:
-/* Line 664 of lalr1.cc  */
-#line 213 "y_parser.yy"
-    { (yyval.x) = driver->cosh((yysemantic_stack_[(4) - (3)].x)); }
+#line 213 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->cosh((yystack_[1].value.x)); }
+#line 855 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 53:
-/* Line 664 of lalr1.cc  */
-#line 214 "y_parser.yy"
-    { (yyval.x) = driver->tanh((yysemantic_stack_[(4) - (3)].x)); }
+#line 214 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->tanh((yystack_[1].value.x)); }
+#line 861 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 54:
-/* Line 664 of lalr1.cc  */
-#line 215 "y_parser.yy"
-    { (yyval.x) = driver->asinh((yysemantic_stack_[(4) - (3)].x)); }
+#line 215 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->asinh((yystack_[1].value.x)); }
+#line 867 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 55:
-/* Line 664 of lalr1.cc  */
-#line 216 "y_parser.yy"
-    { (yyval.x) = driver->acosh((yysemantic_stack_[(4) - (3)].x)); }
+#line 216 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->acosh((yystack_[1].value.x)); }
+#line 873 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 56:
-/* Line 664 of lalr1.cc  */
-#line 217 "y_parser.yy"
-    { (yyval.x) = driver->atanh((yysemantic_stack_[(4) - (3)].x)); }
+#line 217 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->atanh((yystack_[1].value.x)); }
+#line 879 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 57:
-/* Line 664 of lalr1.cc  */
-#line 218 "y_parser.yy"
-    { (yyval.x) = driver->exp((yysemantic_stack_[(4) - (3)].x)); }
+#line 218 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->exp((yystack_[1].value.x)); }
+#line 885 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 58:
-/* Line 664 of lalr1.cc  */
-#line 219 "y_parser.yy"
-    { (yyval.x) = driver->log((yysemantic_stack_[(4) - (3)].x)); }
+#line 219 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->log((yystack_[1].value.x)); }
+#line 891 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 59:
-/* Line 664 of lalr1.cc  */
-#line 220 "y_parser.yy"
-    { (yyval.x) = driver->pow((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 220 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->pow((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 897 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 60:
-/* Line 664 of lalr1.cc  */
-#line 221 "y_parser.yy"
-    { (yyval.x) = driver->Li2((yysemantic_stack_[(4) - (3)].x)); }
+#line 221 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->Li2((yystack_[1].value.x)); }
+#line 903 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 61:
-/* Line 664 of lalr1.cc  */
-#line 222 "y_parser.yy"
-    { (yyval.x) = driver->Li((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 222 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->Li((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 909 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 62:
-/* Line 664 of lalr1.cc  */
-#line 223 "y_parser.yy"
-    { (yyval.x) = driver->G((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 223 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->G((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 915 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 63:
-/* Line 664 of lalr1.cc  */
-#line 224 "y_parser.yy"
-    { (yyval.x) = driver->G((yysemantic_stack_[(8) - (3)].x), (yysemantic_stack_[(8) - (5)].x), (yysemantic_stack_[(8) - (7)].x)); }
+#line 224 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->G((yystack_[5].value.x), (yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 921 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 64:
-/* Line 664 of lalr1.cc  */
-#line 225 "y_parser.yy"
-    { (yyval.x) = driver->S((yysemantic_stack_[(8) - (3)].x), (yysemantic_stack_[(8) - (5)].x), (yysemantic_stack_[(8) - (7)].x)); }
+#line 225 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->S((yystack_[5].value.x), (yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 927 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 65:
-/* Line 664 of lalr1.cc  */
-#line 226 "y_parser.yy"
-    { (yyval.x) = driver->H((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 226 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->H((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 933 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 66:
-/* Line 664 of lalr1.cc  */
-#line 227 "y_parser.yy"
-    { (yyval.x) = driver->zeta((yysemantic_stack_[(4) - (3)].x)); }
+#line 227 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->zeta((yystack_[1].value.x)); }
+#line 939 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 67:
-/* Line 664 of lalr1.cc  */
-#line 228 "y_parser.yy"
-    { (yyval.x) = driver->zeta((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 228 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->zeta((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 945 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 68:
-/* Line 664 of lalr1.cc  */
-#line 229 "y_parser.yy"
-    { (yyval.x) = driver->zetaderiv((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 229 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->zetaderiv((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 951 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 69:
-/* Line 664 of lalr1.cc  */
-#line 230 "y_parser.yy"
-    { (yyval.x) = driver->tgamma((yysemantic_stack_[(4) - (3)].x)); }
+#line 230 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->tgamma((yystack_[1].value.x)); }
+#line 957 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 70:
-/* Line 664 of lalr1.cc  */
-#line 231 "y_parser.yy"
-    { (yyval.x) = driver->lgamma((yysemantic_stack_[(4) - (3)].x)); }
+#line 231 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->lgamma((yystack_[1].value.x)); }
+#line 963 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 71:
-/* Line 664 of lalr1.cc  */
-#line 232 "y_parser.yy"
-    { (yyval.x) = driver->beta((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 232 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->beta((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 969 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 72:
-/* Line 664 of lalr1.cc  */
-#line 233 "y_parser.yy"
-    { (yyval.x) = driver->psi((yysemantic_stack_[(4) - (3)].x)); }
+#line 233 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->psi((yystack_[1].value.x)); }
+#line 975 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 73:
-/* Line 664 of lalr1.cc  */
-#line 234 "y_parser.yy"
-    { (yyval.x) = driver->psi((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 234 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->psi((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 981 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 74:
-/* Line 664 of lalr1.cc  */
-#line 235 "y_parser.yy"
-    { (yyval.x) = driver->factorial((yysemantic_stack_[(4) - (3)].x)); }
+#line 235 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->factorial((yystack_[1].value.x)); }
+#line 987 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
   case 75:
-/* Line 664 of lalr1.cc  */
-#line 236 "y_parser.yy"
-    { (yyval.x) = driver->binomial((yysemantic_stack_[(6) - (3)].x), (yysemantic_stack_[(6) - (5)].x)); }
+#line 236 "y_parser.yy" // lalr1.cc:859
+    { (yylhs.value.x) = driver->binomial((yystack_[3].value.x), (yystack_[1].value.x)); }
+#line 993 "y_parser.tab.cc" // lalr1.cc:859
     break;
 
 
-/* Line 664 of lalr1.cc  */
-#line 863 "y_parser.tab.cc"
-      default:
-        break;
-      }
+#line 997 "y_parser.tab.cc" // lalr1.cc:859
+            default:
+              break;
+            }
+        }
+      catch (const syntax_error& yyexc)
+        {
+          error (yyexc);
+          YYERROR;
+        }
+      YY_SYMBOL_PRINT ("-> $$ =", yylhs);
+      yypop_ (yylen);
+      yylen = 0;
+      YY_STACK_PRINT ();
 
-    /* User semantic actions sometimes alter yychar, and that requires
-       that yytoken be updated with the new translation.  We take the
-       approach of translating immediately before every use of yytoken.
-       One alternative is translating here after every semantic action,
-       but that translation would be missed if the semantic action
-       invokes YYABORT, YYACCEPT, or YYERROR immediately after altering
-       yychar.  In the case of YYABORT or YYACCEPT, an incorrect
-       destructor might then be invoked immediately.  In the case of
-       YYERROR, subsequent parser actions might lead to an incorrect
-       destructor call or verbose syntax error message before the
-       lookahead is translated.  */
-    YY_SYMBOL_PRINT ("-> $$ =", yyr1_[yyn], &yyval, &yyloc);
-
-    yypop_ (yylen);
-    yylen = 0;
-    YY_STACK_PRINT ();
-
-    yysemantic_stack_.push (yyval);
-    yylocation_stack_.push (yyloc);
-
-    /* Shift the result of the reduction.  */
-    yyn = yyr1_[yyn];
-    yystate = yypgoto_[yyn - yyntokens_] + yystate_stack_[0];
-    if (0 <= yystate && yystate <= yylast_
-	&& yycheck_[yystate] == yystate_stack_[0])
-      yystate = yytable_[yystate];
-    else
-      yystate = yydefgoto_[yyn - yyntokens_];
+      // Shift the result of the reduction.
+      yypush_ (YY_NULLPTR, yylhs);
+    }
     goto yynewstate;
 
-  /*------------------------------------.
-  | yyerrlab -- here on detecting error |
-  `------------------------------------*/
+  /*--------------------------------------.
+  | yyerrlab -- here on detecting error.  |
+  `--------------------------------------*/
   yyerrlab:
-    /* Make sure we have latest lookahead translation.  See comments at
-       user semantic actions for why this is necessary.  */
-    yytoken = yytranslate_ (yychar);
-
-    /* If not already recovering from an error, report this error.  */
+    // If not already recovering from an error, report this error.
     if (!yyerrstatus_)
       {
-	++yynerrs_;
-	if (yychar == yyempty_)
-	  yytoken = yyempty_;
-	error (yylloc, yysyntax_error_ (yystate, yytoken));
+        ++yynerrs_;
+        error (yysyntax_error_ (yystack_[0].state, yyla));
       }
 
-    yyerror_range[1] = yylloc;
+
     if (yyerrstatus_ == 3)
       {
         /* If just tried and failed to reuse lookahead token after an
            error, discard it.  */
-        if (yychar <= yyeof_)
+
+        // Return failure if at end of input.
+        if (yyla.type_get () == yyeof_)
+          YYABORT;
+        else if (!yyla.empty ())
           {
-            /* Return failure if at end of input.  */
-            if (yychar == yyeof_)
-              YYABORT;
-          }
-        else
-          {
-            yydestruct_ ("Error: discarding", yytoken, &yylval, &yylloc);
-            yychar = yyempty_;
+            yy_destroy_ ("Error: discarding", yyla);
+            yyla.clear ();
           }
       }
 
-    /* Else will try to reuse lookahead token after shifting the error
-       token.  */
+    // Else will try to reuse lookahead token after shifting the error token.
     goto yyerrlab1;
 
 
@@ -944,138 +1054,114 @@ namespace y {
        code.  */
     if (false)
       goto yyerrorlab;
-
-    yyerror_range[1] = yylocation_stack_[yylen - 1];
-    /* Do not reclaim the symbols of the rule which action triggered
+    /* Do not reclaim the symbols of the rule whose action triggered
        this YYERROR.  */
     yypop_ (yylen);
     yylen = 0;
-    yystate = yystate_stack_[0];
     goto yyerrlab1;
 
   /*-------------------------------------------------------------.
   | yyerrlab1 -- common code for both syntax error and YYERROR.  |
   `-------------------------------------------------------------*/
   yyerrlab1:
-    yyerrstatus_ = 3;	/* Each real token shifted decrements this.  */
+    yyerrstatus_ = 3;   // Each real token shifted decrements this.
+    {
+      stack_symbol_type error_token;
+      for (;;)
+        {
+          yyn = yypact_[yystack_[0].state];
+          if (!yy_pact_value_is_default_ (yyn))
+            {
+              yyn += yyterror_;
+              if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
+                {
+                  yyn = yytable_[yyn];
+                  if (0 < yyn)
+                    break;
+                }
+            }
 
-    for (;;)
-      {
-	yyn = yypact_[yystate];
-	if (!yy_pact_value_is_default_ (yyn))
-	{
-	  yyn += yyterror_;
-	  if (0 <= yyn && yyn <= yylast_ && yycheck_[yyn] == yyterror_)
-	    {
-	      yyn = yytable_[yyn];
-	      if (0 < yyn)
-		break;
-	    }
-	}
+          // Pop the current state because it cannot handle the error token.
+          if (yystack_.size () == 1)
+            YYABORT;
 
-	/* Pop the current state because it cannot handle the error token.  */
-	if (yystate_stack_.height () == 1)
-	  YYABORT;
+          yy_destroy_ ("Error: popping", yystack_[0]);
+          yypop_ ();
+          YY_STACK_PRINT ();
+        }
 
-	yyerror_range[1] = yylocation_stack_[0];
-	yydestruct_ ("Error: popping",
-		     yystos_[yystate],
-		     &yysemantic_stack_[0], &yylocation_stack_[0]);
-	yypop_ ();
-	yystate = yystate_stack_[0];
-	YY_STACK_PRINT ();
-      }
 
-    yyerror_range[2] = yylloc;
-    // Using YYLLOC is tempting, but would change the location of
-    // the lookahead.  YYLOC is available though.
-    YYLLOC_DEFAULT (yyloc, yyerror_range, 2);
-    yysemantic_stack_.push (yylval);
-    yylocation_stack_.push (yyloc);
-
-    /* Shift the error token.  */
-    YY_SYMBOL_PRINT ("Shifting", yystos_[yyn],
-		     &yysemantic_stack_[0], &yylocation_stack_[0]);
-
-    yystate = yyn;
+      // Shift the error token.
+      error_token.state = yyn;
+      yypush_ ("Shifting", error_token);
+    }
     goto yynewstate;
 
-    /* Accept.  */
+    // Accept.
   yyacceptlab:
     yyresult = 0;
     goto yyreturn;
 
-    /* Abort.  */
+    // Abort.
   yyabortlab:
     yyresult = 1;
     goto yyreturn;
 
   yyreturn:
-    if (yychar != yyempty_)
-      {
-        /* Make sure we have latest lookahead translation.  See comments
-           at user semantic actions for why this is necessary.  */
-        yytoken = yytranslate_ (yychar);
-        yydestruct_ ("Cleanup: discarding lookahead", yytoken, &yylval,
-                     &yylloc);
-      }
+    if (!yyla.empty ())
+      yy_destroy_ ("Cleanup: discarding lookahead", yyla);
 
-    /* Do not reclaim the symbols of the rule which action triggered
+    /* Do not reclaim the symbols of the rule whose action triggered
        this YYABORT or YYACCEPT.  */
     yypop_ (yylen);
-    while (1 < yystate_stack_.height ())
+    while (1 < yystack_.size ())
       {
-        yydestruct_ ("Cleanup: popping",
-                     yystos_[yystate_stack_[0]],
-                     &yysemantic_stack_[0],
-                     &yylocation_stack_[0]);
+        yy_destroy_ ("Cleanup: popping", yystack_[0]);
         yypop_ ();
       }
 
     return yyresult;
-    }
+  }
     catch (...)
       {
         YYCDEBUG << "Exception caught: cleaning lookahead and stack"
                  << std::endl;
         // Do not try to display the values of the reclaimed symbols,
         // as their printer might throw an exception.
-        if (yychar != yyempty_)
-          {
-            /* Make sure we have latest lookahead translation.  See
-               comments at user semantic actions for why this is
-               necessary.  */
-            yytoken = yytranslate_ (yychar);
-            yydestruct_ (YY_NULL, yytoken, &yylval, &yylloc);
-          }
+        if (!yyla.empty ())
+          yy_destroy_ (YY_NULLPTR, yyla);
 
-        while (1 < yystate_stack_.height ())
+        while (1 < yystack_.size ())
           {
-            yydestruct_ (YY_NULL,
-                         yystos_[yystate_stack_[0]],
-                         &yysemantic_stack_[0],
-                         &yylocation_stack_[0]);
+            yy_destroy_ (YY_NULLPTR, yystack_[0]);
             yypop_ ();
           }
         throw;
       }
   }
 
+  void
+  y_parser::error (const syntax_error& yyexc)
+  {
+    error (yyexc.what());
+  }
+
   // Generate an error message.
   std::string
-  y_parser::yysyntax_error_ (int, int)
+  y_parser::yysyntax_error_ (state_type, const symbol_type&) const
   {
     return YY_("syntax error");
   }
 
 
-  /* YYPACT[STATE-NUM] -- Index in YYTABLE of the portion describing
-     STATE-NUM.  */
   const signed char y_parser::yypact_ninf_ = -67;
+
+  const signed char y_parser::yytable_ninf_ = -1;
+
   const short int
   y_parser::yypact_[] =
   {
-       -67,     8,    -1,   -67,   -66,   -57,    11,    48,    34,    48,
+     -67,     8,    -1,   -67,   -66,   -57,    11,    48,    34,    48,
       26,    51,    82,    82,    -8,    65,    93,    95,   109,   -67,
       91,   118,   134,   150,   166,   182,   196,   204,   206,   215,
      217,   226,   228,   236,   239,   240,   241,   242,   243,   244,
@@ -1102,13 +1188,10 @@ namespace y {
      -67,   -67,   -67,   -67,   190,   192,   -67,   -67
   };
 
-  /* YYDEFACT[S] -- default reduction number in state S.  Performed when
-     YYTABLE doesn't specify something else to do.  Zero means the
-     default is an error.  */
   const unsigned char
   y_parser::yydefact_[] =
   {
-        16,     0,     2,     1,     0,     0,     0,    18,     0,    18,
+      16,     0,     2,     1,     0,     0,     0,    18,     0,    18,
        0,     0,     0,     0,     0,     0,     0,     0,     0,    20,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
        0,     0,     0,     0,     0,     0,     0,     0,     0,     0,
@@ -1135,30 +1218,24 @@ namespace y {
       22,    23,    24,    25,     0,     0,    63,    64
   };
 
-  /* YYPGOTO[NTERM-NUM].  */
   const short int
   y_parser::yypgoto_[] =
   {
-       -67,   -67,   -67,   306,   -67,   304,   -67,   -53,   138,   179,
+     -67,   -67,   -67,   306,   -67,   304,   -67,   -53,   138,   179,
      205,   -67
   };
 
-  /* YYDEFGOTO[NTERM-NUM].  */
   const signed char
   y_parser::yydefgoto_[] =
   {
-        -1,     1,     2,    20,    75,    67,   120,    58,    59,    60,
+      -1,     1,     2,    20,    75,    67,   120,    58,    59,    60,
       61,    62
   };
 
-  /* YYTABLE[YYPACT[STATE-NUM]].  What to do in state STATE-NUM.  If
-     positive, shift that token.  If negative, reduce the rule which
-     number is the opposite.  If YYTABLE_NINF_, syntax error.  */
-  const signed char y_parser::yytable_ninf_ = -1;
   const unsigned char
   y_parser::yytable_[] =
   {
-       109,   110,     4,     5,     6,     7,     8,     9,     3,    10,
+     109,   110,     4,     5,     6,     7,     8,     9,     3,    10,
       11,    69,    70,   161,    16,    12,    13,    14,   114,   115,
       15,   112,   113,    17,   129,   130,   131,   132,   133,   134,
      135,   136,   137,   138,   139,   140,   141,   142,   143,   144,
@@ -1195,11 +1272,10 @@ namespace y {
        0,   227
   };
 
-  /* YYCHECK.  */
   const short int
   y_parser::yycheck_[] =
   {
-        53,    54,     3,     4,     5,     6,     7,     8,     0,    10,
+      53,    54,     3,     4,     5,     6,     7,     8,     0,    10,
       11,    19,    20,    57,    80,    16,    17,    18,    68,    69,
       21,    65,    66,    80,    77,    78,    79,    80,    81,    82,
       83,    84,    85,    86,    87,    88,    89,    90,    91,    92,
@@ -1236,12 +1312,10 @@ namespace y {
       -1,    79
   };
 
-  /* STOS_[STATE-NUM] -- The (internal number of the) accessing
-     symbol of state STATE-NUM.  */
   const unsigned char
   y_parser::yystos_[] =
   {
-         0,    82,    83,     0,     3,     4,     5,     6,     7,     8,
+       0,    82,    83,     0,     3,     4,     5,     6,     7,     8,
       10,    11,    16,    17,    18,    21,    80,    80,    80,    54,
       84,    22,    23,    24,    25,    26,    27,    28,    29,    30,
       31,    32,    33,    34,    35,    36,    37,    38,    39,    40,
@@ -1268,29 +1342,10 @@ namespace y {
       63,    63,    63,    63,    88,    88,    57,    57
   };
 
-#if YYDEBUG
-  /* TOKEN_NUMBER_[YYLEX-NUM] -- Internal symbol number corresponding
-     to YYLEX-NUM.  */
-  const unsigned short int
-  y_parser::yytoken_number_[] =
-  {
-         0,   256,   257,   258,   259,   260,   261,   262,   263,   264,
-     265,   266,   267,   268,   269,   270,   271,   272,   273,   274,
-     275,   276,   277,   278,   279,   280,   281,   282,   283,   284,
-     285,   286,   287,   288,   289,   290,   291,   292,   293,   294,
-     295,   296,   297,   298,   299,   300,   301,   302,   303,   304,
-     305,   306,   307,   308,   309,   310,   311,   312,   313,   314,
-     315,   316,   317,   318,   319,   320,   321,   322,   323,   324,
-     325,   326,   327,   328,   329,   330,   331,   332,   333,   334,
-     335
-  };
-#endif
-
-  /* YYR1[YYN] -- Symbol number of symbol that rule YYN derives.  */
   const unsigned char
   y_parser::yyr1_[] =
   {
-         0,    81,    82,    83,    83,    83,    83,    83,    83,    83,
+       0,    81,    82,    83,    83,    83,    83,    83,    83,    83,
       83,    83,    83,    83,    83,    83,    83,    84,    84,    85,
       85,    86,    87,    87,    87,    87,    87,    88,    88,    88,
       89,    89,    89,    90,    90,    91,    91,    91,    91,    91,
@@ -1300,11 +1355,10 @@ namespace y {
       92,    92,    92,    92,    92,    92
   };
 
-  /* YYR2[YYN] -- Number of symbols composing right hand side of rule YYN.  */
   const unsigned char
   y_parser::yyr2_[] =
   {
-         0,     2,     1,     4,     4,     4,     4,     4,     4,     4,
+       0,     2,     1,     4,     4,     4,     4,     4,     4,     4,
        4,     4,     5,     5,     4,     4,     0,     3,     0,     4,
        0,     3,     5,     5,     5,     5,     0,     1,     3,     3,
        1,     3,     3,     1,     3,     1,     1,     1,     1,     3,
@@ -1314,13 +1368,14 @@ namespace y {
        4,     6,     4,     6,     4,     6
   };
 
+
 #if YYDEBUG
-  /* YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
-     First, the terminals, then, starting at \a yyntokens_, nonterminals.  */
+  // YYTNAME[SYMBOL-NUM] -- String name of the symbol SYMBOL-NUM.
+  // First, the terminals, then, starting at \a yyntokens_, nonterminals.
   const char*
   const y_parser::yytname_[] =
   {
-    "$end", "error", "$undefined", "name", "author", "tag", "field",
+  "$end", "error", "$undefined", "name", "author", "tag", "field",
   "potential", "parameter", "latex", "core", "implementation", "abserr",
   "relerr", "stepper", "stepsize", "background", "perturbations",
   "indexorder", "left", "right", "model", "abs", "step", "sqrt", "sin",
@@ -1334,72 +1389,14 @@ namespace y {
   "rightarrow", "identifier", "integer", "decimal", "string", "$accept",
   "program", "script", "attribute_block", "attributes", "stepper_block",
   "stepper_attributes", "expression", "term", "factor", "leaf",
-  "built_in_function", YY_NULL
+  "built_in_function", YY_NULLPTR
   };
 
 
-  /* YYRHS -- A `-1'-separated list of the rules' RHS.  */
-  const y_parser::rhs_number_type
-  y_parser::yyrhs_[] =
-  {
-        82,     0,    -1,    83,    -1,    83,     7,    88,    63,    -1,
-      83,     3,    80,    63,    -1,    83,     4,    80,    63,    -1,
-      83,     5,    80,    63,    -1,    83,    10,    80,    63,    -1,
-      83,    11,    80,    63,    -1,    83,    21,    80,    63,    -1,
-      83,    18,    19,    63,    -1,    83,    18,    20,    63,    -1,
-      83,     6,    84,    77,    63,    -1,    83,     8,    84,    77,
-      63,    -1,    83,    16,    86,    63,    -1,    83,    17,    86,
-      63,    -1,    -1,    54,    85,    55,    -1,    -1,    85,     9,
-      80,    63,    -1,    -1,    54,    87,    55,    -1,    87,    12,
-      64,    79,    63,    -1,    87,    13,    64,    79,    63,    -1,
-      87,    14,    64,    80,    63,    -1,    87,    15,    64,    79,
-      63,    -1,    -1,    89,    -1,    88,    65,    89,    -1,    88,
-      66,    89,    -1,    90,    -1,    89,    68,    90,    -1,    89,
-      69,    90,    -1,    91,    -1,    91,    73,    91,    -1,    78,
-      -1,    79,    -1,    77,    -1,    92,    -1,    56,    88,    57,
-      -1,    67,    88,    -1,    22,    56,    88,    57,    -1,    23,
-      56,    88,    57,    -1,    24,    56,    88,    57,    -1,    25,
-      56,    88,    57,    -1,    26,    56,    88,    57,    -1,    27,
-      56,    88,    57,    -1,    28,    56,    88,    57,    -1,    29,
-      56,    88,    57,    -1,    30,    56,    88,    57,    -1,    31,
-      56,    88,    60,    88,    57,    -1,    32,    56,    88,    57,
-      -1,    33,    56,    88,    57,    -1,    34,    56,    88,    57,
-      -1,    35,    56,    88,    57,    -1,    36,    56,    88,    57,
-      -1,    37,    56,    88,    57,    -1,    38,    56,    88,    57,
-      -1,    39,    56,    88,    57,    -1,    40,    56,    88,    60,
-      88,    57,    -1,    41,    56,    88,    57,    -1,    42,    56,
-      88,    60,    88,    57,    -1,    43,    56,    88,    60,    88,
-      57,    -1,    43,    56,    88,    60,    88,    60,    88,    57,
-      -1,    44,    56,    88,    60,    88,    60,    88,    57,    -1,
-      45,    56,    88,    60,    88,    57,    -1,    46,    56,    88,
-      57,    -1,    46,    56,    88,    60,    88,    57,    -1,    47,
-      56,    88,    60,    88,    57,    -1,    48,    56,    88,    57,
-      -1,    49,    56,    88,    57,    -1,    50,    56,    88,    60,
-      88,    57,    -1,    51,    56,    88,    57,    -1,    51,    56,
-      88,    60,    88,    57,    -1,    52,    56,    88,    57,    -1,
-      53,    56,    88,    60,    88,    57,    -1
-  };
-
-  /* YYPRHS[YYN] -- Index of the first RHS symbol of rule number YYN in
-     YYRHS.  */
-  const unsigned short int
-  y_parser::yyprhs_[] =
-  {
-         0,     0,     3,     5,    10,    15,    20,    25,    30,    35,
-      40,    45,    50,    56,    62,    67,    72,    73,    77,    78,
-      83,    84,    88,    94,   100,   106,   112,   113,   115,   119,
-     123,   125,   129,   133,   135,   139,   141,   143,   145,   147,
-     151,   154,   159,   164,   169,   174,   179,   184,   189,   194,
-     199,   206,   211,   216,   221,   226,   231,   236,   241,   246,
-     253,   258,   265,   272,   281,   290,   297,   302,   309,   316,
-     321,   326,   333,   338,   345,   350
-  };
-
-  /* YYRLINE[YYN] -- Source line where rule number YYN was defined.  */
   const unsigned char
   y_parser::yyrline_[] =
   {
-         0,   144,   144,   147,   148,   149,   150,   151,   152,   153,
+       0,   144,   144,   147,   148,   149,   150,   151,   152,   153,
      154,   155,   156,   157,   158,   159,   160,   163,   164,   167,
      168,   171,   173,   174,   175,   176,   177,   180,   181,   182,
      185,   186,   187,   190,   191,   194,   195,   196,   197,   198,
@@ -1414,9 +1411,11 @@ namespace y {
   y_parser::yystack_print_ ()
   {
     *yycdebug_ << "Stack now";
-    for (state_stack_type::const_iterator i = yystate_stack_.begin ();
-	 i != yystate_stack_.end (); ++i)
-      *yycdebug_ << ' ' << *i;
+    for (stack_type::const_iterator
+           i = yystack_.begin (),
+           i_end = yystack_.end ();
+         i != i_end; ++i)
+      *yycdebug_ << ' ' << i->state;
     *yycdebug_ << std::endl;
   }
 
@@ -1426,19 +1425,18 @@ namespace y {
   {
     unsigned int yylno = yyrline_[yyrule];
     int yynrhs = yyr2_[yyrule];
-    /* Print the symbols being reduced, and their result.  */
+    // Print the symbols being reduced, and their result.
     *yycdebug_ << "Reducing stack by rule " << yyrule - 1
-	       << " (line " << yylno << "):" << std::endl;
-    /* The symbols being reduced.  */
+               << " (line " << yylno << "):" << std::endl;
+    // The symbols being reduced.
     for (int yyi = 0; yyi < yynrhs; yyi++)
       YY_SYMBOL_PRINT ("   $" << yyi + 1 << " =",
-		       yyrhs_[yyprhs_[yyrule] + yyi],
-		       &(yysemantic_stack_[(yynrhs) - (yyi + 1)]),
-		       &(yylocation_stack_[(yynrhs) - (yyi + 1)]));
+                       yystack_[(yynrhs) - (yyi + 1)]);
   }
 #endif // YYDEBUG
 
-  /* YYTRANSLATE(YYLEX) -- Bison symbol number corresponding to YYLEX.  */
+  // Symbol number corresponding to token number t.
+  inline
   y_parser::token_number_type
   y_parser::yytranslate_ (int t)
   {
@@ -1446,7 +1444,7 @@ namespace y {
     const token_number_type
     translate_table[] =
     {
-           0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
+     0,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
        2,     2,     2,     2,     2,     2,     2,     2,     2,     2,
@@ -1481,31 +1479,21 @@ namespace y {
       65,    66,    67,    68,    69,    70,    71,    72,    73,    74,
       75,    76,    77,    78,    79,    80
     };
-    if ((unsigned int) t <= yyuser_token_number_max_)
+    const unsigned int user_token_number_max_ = 335;
+    const token_number_type undef_token_ = 2;
+
+    if (static_cast<int>(t) <= yyeof_)
+      return yyeof_;
+    else if (static_cast<unsigned int> (t) <= user_token_number_max_)
       return translate_table[t];
     else
-      return yyundef_token_;
+      return undef_token_;
   }
 
-  const int y_parser::yyeof_ = 0;
-  const int y_parser::yylast_ = 341;
-  const int y_parser::yynnts_ = 12;
-  const int y_parser::yyempty_ = -2;
-  const int y_parser::yyfinal_ = 3;
-  const int y_parser::yyterror_ = 1;
-  const int y_parser::yyerrcode_ = 256;
-  const int y_parser::yyntokens_ = 81;
-
-  const unsigned int y_parser::yyuser_token_number_max_ = 335;
-  const y_parser::token_number_type y_parser::yyundef_token_ = 2;
-
-/* Line 1135 of lalr1.cc  */
-#line 5 "y_parser.yy"
+#line 5 "y_parser.yy" // lalr1.cc:1167
 } // y
-/* Line 1135 of lalr1.cc  */
-#line 1507 "y_parser.tab.cc"
-/* Line 1136 of lalr1.cc  */
-#line 238 "y_parser.yy"
+#line 1496 "y_parser.tab.cc" // lalr1.cc:1167
+#line 238 "y_parser.yy" // lalr1.cc:1168
 
 
 void y::y_parser::error(const y::y_parser::location_type &l,

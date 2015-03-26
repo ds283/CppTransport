@@ -16,9 +16,15 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/serialization/serializable.h"
-// need repository in order to get the details of a repository<number>::output_group_record
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/manager/repository.h"
+
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
+// forward-declare repository records if needed
+#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+
+// forward-declare tasks if needed
+#include "transport-runtime-api/tasks/tasks_forward_declare.h"
 
 // need data_manager in order to get the details of a data_manager<number>::datapipe
 // (can't forward-declare because it is a nested class)
@@ -95,17 +101,6 @@
 namespace transport
 	{
 
-    // forward-declare model class
-    template <typename number> class model;
-
-    // forward-declare class task.
-    // task.h includes this header, so we cannot include task.h otherwise we create
-    // a circular dependency.
-    template <typename number> class task;
-    template <typename number> class integration_task;
-    template <typename number> class twopf_list_task;
-
-
 		namespace derived_data
 			{
 
@@ -135,7 +130,7 @@ namespace transport
 						derived_line(const integration_task<number>& tk);
 
 				    //! Deserialization constructor
-						derived_line(serialization_reader* reader, typename repository<number>::task_finder& finder);
+						derived_line(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
 						//! Dummy deserialization constructor, should not be used; called only for incorrectly-constructed instances
 						derived_line(serialization_reader* reader);
@@ -279,7 +274,7 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(serialization_reader* reader, typename repository<number>::task_finder& finder)
+				derived_line<number>::derived_line(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
 					: parent_task(nullptr), mdl(nullptr)
 					{
 						assert(reader != nullptr);
@@ -292,13 +287,13 @@ namespace transport
 				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME, parent_task_name);
 
 				    // extract parent task and model
-            std::unique_ptr<typename repository<number>::task_record> task_record(finder(parent_task_name));
-            assert(task_record.get() != nullptr);
+            std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
+            assert(tk_rec.get() != nullptr);
             
-            if(task_record->get_type() != repository<number>::task_record::integration)
+            if(tk_rec->get_type() != task_record<number>::integration)
               throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
             
-            typename repository<number>::integration_task_record* int_rec = dynamic_cast<typename repository<number>::integration_task_record*>(task_record.get());
+            integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(tk_rec.get());
             assert(int_rec != nullptr);
             
             parent_task = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());

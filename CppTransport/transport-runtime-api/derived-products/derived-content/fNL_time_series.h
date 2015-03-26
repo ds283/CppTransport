@@ -40,7 +40,7 @@ namespace transport
             fNL_time_series(const threepf_task<number>& tk, filter::time_filter tfilter);
 
             //! deserialization constructor
-            fNL_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder);
+            fNL_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
 
             virtual ~fNL_time_series() = default;
 
@@ -102,7 +102,7 @@ namespace transport
         // derived_line<> is not called automatically when constructing time_series<>, so we
         // have to call it explicitly.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(serialization_reader* reader, typename repository<number>::task_finder& finder)
+        fNL_time_series<number>::fNL_time_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
           : derived_line<number>(reader, finder),
             fNL_line<number>(reader),
             time_series<number>(reader)

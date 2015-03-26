@@ -16,9 +16,6 @@
 #include <stdexcept>
 
 #include "transport-runtime-api/serialization/serializable.h"
-// need repository in order to get the details of a repository<number>::output_group_record
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/manager/repository.h"
 
 // need data_manager in order to get the details of a data_manager<number>::datapipe
 // (can't forward-declare because it is a nested class)
@@ -26,6 +23,15 @@
 
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
 #include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"
+
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
+// forward-declare tasks if needed
+#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+
+// forward-declare repository records if needed
+#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
 
 #include "transport-runtime-api/derived-products/utilities/index_selector.h"
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
@@ -36,16 +42,6 @@
 
 namespace transport
 	{
-
-		// forward-declare model class
-		template <typename number> class model;
-
-		// forward-declare task classes
-		// task.h includes this header, so we cannot include task.h without
-		// creating a circular dependency
-		template <typename number> class task;
-		template <typename number> class integration_task;
-
 
     namespace derived_data
 	    {

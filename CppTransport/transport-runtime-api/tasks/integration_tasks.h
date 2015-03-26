@@ -19,8 +19,8 @@
 #include <functional>
 
 
-// need repository to get repository::package_finder
-#include "transport-runtime-api/manager/repository.h"
+// need rpackage_finder
+#include "transport-runtime-api/repository/records/record_finder.h"
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"

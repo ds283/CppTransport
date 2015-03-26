@@ -17,7 +17,10 @@
 #include <math.h>
 
 #include "transport-runtime-api/scheduler/work_queue.h"
-#include "transport-runtime-api/manager/repository.h"
+
+// need repository definitions
+#include "transport-runtime-api/repository/records/repository_records.h"
+#include "transport-runtime-api/repository/writers/writers.h"
 
 #include "transport-runtime-api/utilities/formatter.h"
 #include "transport-runtime-api/utilities/linecache.h"
@@ -27,6 +30,17 @@
 
 #include "transport-runtime-api/defaults.h"
 
+// forward-declare model class if needed
+#include "transport-runtime-api/models/model_forward_declare.h"
+
+// forward-declare tasks if needed
+#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+
+// forward-declare task configuration elements if needed
+#include "transport-runtime-api/tasks/task_configurations_forward_declare.h"
+
+// forward-declare compute gadgets if needed
+#include "transport-runtime-api/derived-products/derived-content/compute_forward_declare.h"
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
@@ -54,35 +68,6 @@
 
 namespace transport
   {
-
-    // forward-declare model to avoid circular references:
-		// model.h includes data_manager.h, and conversely
-		// data_manager needs to know about model objects.
-		// The compromise is that data_manager.h should be included before model.h
-    template <typename number> class model;
-
-		// forward-declare task types
-		template <typename number> class task;
-		template <typename number> class integration_task;
-		template <typename number> class twopf_task;
-		template <typename number> class threepf_task;
-		template <typename number> class output_task;
-
-		// forward-declare task elements
-		class twopf_kconfig;
-		class threepf_kconfig;
-		template <typename number> class output_task_element;
-
-		// forward declare compute gadgets
-		namespace derived_data
-			{
-
-				template <typename number> class zeta_timeseries_compute;
-				template <typename number> class zeta_kseries_compute;
-				template <typename number> class fNL_timeseries_compute;
-
-			}   // derived_data
-
 
     template <typename number>
     class data_manager
@@ -900,10 +885,10 @@ namespace transport
 		        typedef enum { twopf_real, twopf_imag } twopf_type;
 
 		        //! Output-group finder function -- serivce provided by a repository implementation
-		        typedef std::function<std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >(const std::string& name, const std::list<std::string>&)> output_group_finder;
+		        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string& name, const std::list<std::string>&)> output_group_finder;
 
 		        //! Attach function for a datapipe
-		        typedef std::function<std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >(datapipe*, output_group_finder&, const std::string&, const std::list<std::string>&)> attach_callback;
+		        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(datapipe*, output_group_finder&, const std::string&, const std::list<std::string>&)> attach_callback;
 
 		        //! Detach function for a datapipe
 		        typedef std::function<void(datapipe*)> detach_callback;
@@ -2206,8 +2191,7 @@ namespace transport
 		      public:
 
 				    //! Get attached output group
-				    std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > >
-              get_attached_output_group(void) const;
+				    std::shared_ptr< output_group_record<integration_payload> > get_attached_output_group(void) const;
 
 				    //! Get number of fields associated with currently attached group.
 				    //! Output is meaningful only when a group is attached.
@@ -2372,7 +2356,7 @@ namespace transport
 				    // CURRENTLY ATTACHED OUTPUT GROUP
 
 		        //! Currently-attached output group; null if no group is attached
-		        std::shared_ptr< typename repository<number>::template output_group_record<typename repository<number>::integration_payload> > attached_group;
+		        std::shared_ptr< output_group_record<integration_payload> > attached_group;
 
 				    //! Currently attached task
 				    integration_task<number>* attached_task;
@@ -2467,22 +2451,22 @@ namespace transport
 
         //! Initialize an integration_writer object.
         //! Never overwrites existing data; if the container already exists, an exception is thrown
-        virtual void initialize_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
 
         //! Close an integration_writer object.
-        virtual void close_writer(std::shared_ptr<typename repository<number>::integration_writer>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< integration_writer<number> >& writer) = 0;
 
         //! Initialize a derived_content_writer object.
-        virtual void initialize_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
 
         //! Close an open derived_content_writer object.
-        virtual void close_writer(std::shared_ptr<typename repository<number>::derived_content_writer>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< derived_content_writer<number> >& writer) = 0;
 
         //! Initialize a postintegration_writer object.
-        virtual void initialize_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) = 0;
+        virtual void initialize_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
 
         //! Close an open postintegration_writer object.
-        virtual void close_writer(std::shared_ptr<typename repository<number>::postintegration_writer>& writer) = 0;
+        virtual void close_writer(std::shared_ptr< postintegration_writer<number> >& writer) = 0;
 
 
         // WRITE INDEX TABLES FOR A DATA CONTAINER
@@ -2490,19 +2474,19 @@ namespace transport
       public:
 
         //! Create tables needed for a twopf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, twopf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a threepf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::integration_writer>& writer, threepf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< integration_writer<number> >& writer, threepf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta twopf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_twopf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_twopf_task<number>* tk) = 0;
 
         //! Create tables needed for a zeta threepf container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, zeta_threepf_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, zeta_threepf_task<number>* tk) = 0;
 
         //! Create tables needed for an fNL container
-        virtual void create_tables(std::shared_ptr<typename repository<number>::postintegration_writer>& writer, fNL_task<number>* tk) = 0;
+        virtual void create_tables(std::shared_ptr< postintegration_writer<number> >& writer, fNL_task<number>* tk) = 0;
 
 
         // TEMPORARY CONTAINERS
@@ -3547,7 +3531,7 @@ namespace transport
         this->attached_group = this->utilities.attach(this, this->utilities.finder, tk->get_name(), tags);
         this->attached_task  = tk;
 
-        typename repository<number>::integration_payload& payload = this->attached_group->get_payload();
+        integration_payload& payload = this->attached_group->get_payload();
 
         BOOST_LOG_SEV(this->get_log(), data_manager<number>::normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
             << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
@@ -3586,7 +3570,7 @@ namespace transport
 
 
     template <typename number>
-    std::shared_ptr< typename repository<number>::template output_group_record< typename repository<number>::integration_payload > > data_manager<number>::datapipe::get_attached_output_group(void) const
+    std::shared_ptr< output_group_record<integration_payload> > data_manager<number>::datapipe::get_attached_output_group(void) const
       {
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
@@ -3767,8 +3751,7 @@ namespace transport
       }
 
 
-		template <typename number>
-		bool is_cached(typename repository<number>::integration_payload& payload, derived_data::template_type type)
+		bool is_cached(integration_payload& payload, derived_data::template_type type)
 			{
 				bool rval = false;
 				switch(type)
@@ -3797,7 +3780,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::fNL_time_data_tag data_manager<number>::datapipe::new_fNL_time_data_tag(derived_data::template_type type)
       {
-		    bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+		    bool cached = is_cached(this->attached_group->get_payload(), type);
         return data_manager<number>::datapipe::fNL_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
@@ -3805,7 +3788,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type)
       {
-        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        bool cached = is_cached(this->attached_group->get_payload(), type);
         return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
@@ -3813,7 +3796,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::BT_time_data_tag data_manager<number>::datapipe::new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
       {
-        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        bool cached = is_cached(this->attached_group->get_payload(), type);
         return data_manager<number>::datapipe::BT_time_data_tag(this, this->attached_task, this->N_fields, type, kc, cached);
       }
 
@@ -3821,7 +3804,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type)
       {
-        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        bool cached = is_cached(this->attached_group->get_payload(), type);
         return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, cached);
       }
 
@@ -3829,7 +3812,7 @@ namespace transport
     template <typename number>
     typename data_manager<number>::datapipe::TT_time_data_tag data_manager<number>::datapipe::new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
       {
-        bool cached = is_cached<number>(this->attached_group->get_payload(), type);
+        bool cached = is_cached(this->attached_group->get_payload(), type);
         return data_manager<number>::datapipe::TT_time_data_tag(this, this->attached_task, this->N_fields, type, kc, cached);
       }
 

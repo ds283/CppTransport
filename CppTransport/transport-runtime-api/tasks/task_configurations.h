@@ -12,6 +12,9 @@
 
 #include "transport-runtime-api/messages.h"
 
+// forward-declare derived products if needed
+#include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
+
 
 #define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
 #define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
@@ -140,11 +143,6 @@ namespace transport
 
     // OUTPUT DATA
 
-    // forward-declare derived_product
-    namespace derived_data
-      {
-        template <typename number> class derived_product;
-      }
 
     template <typename number> class output_task_element;
 

@@ -41,7 +41,7 @@ namespace transport
 			        {
 
 		            template <typename number>
-		            derived_line<number>* deserialize(serialization_reader* reader, typename repository<number>::task_finder finder)
+		            derived_line<number>* deserialize(serialization_reader* reader, typename repository_finder<number>::task_finder finder)
 			            {
 		                assert(reader != nullptr);
 		                if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_READER);

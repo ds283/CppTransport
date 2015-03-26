@@ -1164,9 +1164,9 @@ namespace transport
 
         // Aggregate the background value table from a temporary container into a principal container
         template <typename number>
-        void aggregate_backg(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+        void aggregate_backg(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating background values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating background values";
 
             std::ostringstream copy_stmt;
 		        copy_stmt
@@ -1175,7 +1175,7 @@ namespace transport
 			        << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_BACKG_VALUE_TABLE << ";"
 			        << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//		        BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//		        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
 		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_BACKGROUND_COPY);
           }
@@ -1183,9 +1183,9 @@ namespace transport
 
         // Aggregate a twopf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_twopf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr, twopf_value_type type)
+        void aggregate_twopf(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr, twopf_value_type type)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1194,7 +1194,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << twopf_table_name(type) << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TWOPF_COPY);
           }
@@ -1202,9 +1202,9 @@ namespace transport
 
         // Aggregate a tensor twopf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_tensor_twopf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+        void aggregate_tensor_twopf(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating twopf values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1213,7 +1213,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_TENSOR_TWOPF_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_TENSOR_TWOPF_COPY);
           }
@@ -1221,9 +1221,9 @@ namespace transport
 
         // Aggregate a threepf value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_threepf(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+        void aggregate_threepf(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating threepf values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating threepf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1232,7 +1232,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_THREEPF_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_THREEPF_COPY);
           }
@@ -1240,9 +1240,9 @@ namespace transport
 
 		    // Aggregate a worker info table from a temporary container into the principal container
 		    template <typename number>
-		    void aggregate_workers(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+		    void aggregate_workers(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
 			    {
-//				    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating worker information";
+//				    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating worker information";
 
 		        std::ostringstream copy_stmt;
 				    copy_stmt
@@ -1251,7 +1251,7 @@ namespace transport
 				      << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << ";"
 				      << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//				    BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//				    BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
 				    exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_WORKERS_COPY);
 			    }
@@ -1259,9 +1259,9 @@ namespace transport
 
         // Aggregate a statistics value table from a temporary container into the principal container
         template <typename number>
-        void aggregate_statistics(sqlite3* db, typename repository<number>::integration_writer& writer, const std::string& temp_ctr)
+        void aggregate_statistics(sqlite3* db, integration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating per-configuration statistics";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating per-configuration statistics";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1270,7 +1270,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_STATS_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_STATISTICS_COPY);
           }
@@ -1278,9 +1278,9 @@ namespace transport
 
         // Aggregate a zeta twopf value table from a temporary container
         template <typename number>
-        void aggregate_zeta_twopf(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+        void aggregate_zeta_twopf(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta twopf values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating zeta twopf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1289,7 +1289,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_COPY);
           }
@@ -1297,9 +1297,9 @@ namespace transport
 
         // Aggregate a zeta threepf value table from a temporary container
         template <typename number>
-        void aggregate_zeta_threepf(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+        void aggregate_zeta_threepf(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta threepf values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating zeta threepf values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1308,7 +1308,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_COPY);
           }
@@ -1316,9 +1316,9 @@ namespace transport
 
         // Aggregate a zeta reduced bispectrum value table from a temporary container
         template <typename number>
-        void aggregate_zeta_reduced_bispectrum(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr)
+        void aggregate_zeta_reduced_bispectrum(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating zeta reduced bispectrum values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating zeta reduced bispectrum values";
 
             std::ostringstream copy_stmt;
             copy_stmt
@@ -1327,7 +1327,7 @@ namespace transport
               << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
 
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_ZETA_REDUCED_BISPECTRUM_COPY);
           }
@@ -1337,9 +1337,9 @@ namespace transport
         // Aggregation of fNL values is slightly different, because we want to add together results with the same
         // tserial
         template <typename number>
-        void aggregate_fNL(sqlite3* db, typename repository<number>::postintegration_writer& writer, const std::string& temp_ctr, derived_data::template_type type)
+        void aggregate_fNL(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
           {
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Aggregating " << derived_data::template_name(type) << " values";
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating " << derived_data::template_name(type) << " values";
 
             std::stringstream create_stmt;
             create_stmt
@@ -1352,7 +1352,7 @@ namespace transport
               << " LEFT JOIN " << fNL_table_name(type)
               << " ON " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << fNL_table_name(type) << ".tserial=main." << fNL_table_name(type) << ".tserial;";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << create_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << create_stmt.str();
             exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
 
             std::ostringstream copy_stmt;
@@ -1364,7 +1364,7 @@ namespace transport
               << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";"
               << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
 
-//            BOOST_LOG_SEV(writer.get_log(), repository<number>::normal) << "   && Executing SQL statement: " << copy_stmt.str();
+//            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Executing SQL statement: " << copy_stmt.str();
             exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_COPY);
 
             std::stringstream drop_stmt;

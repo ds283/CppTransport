@@ -11,7 +11,7 @@
 
 #include "transport-runtime-api/manager/instance_manager.h"
 
-#include "transport-runtime-api/manager/json_repository_interface.h"
+#include "transport-runtime-api/repository/json_repository_interface.h"
 
 #include "master_controller.h"
 #include "slave_controller.h"
