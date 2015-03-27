@@ -1,9 +1,9 @@
 %skeleton "lalr1.cc"
-%require "2.5"
-%debug
+%require "3.0.4"
+%locations
 %defines
-%define namespace "y"
-%define parser_class_name "y_parser"
+%define api.namespace{y}
+%define parser_class_name{y_parser}
 
 %code requires {
     #include "lexeme.h"
@@ -36,6 +36,7 @@
     #include "ginac/ginac.h"
 
     static int yylex(y::y_parser::semantic_type* yylval,
+                     y::y_parser::location_type* yyloc,
                      y::y_lexer* lexer,
                      y::y_driver* driver)
       {
