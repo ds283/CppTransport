@@ -45,23 +45,22 @@ namespace transport
 
         //! Handler: zeta twopf task
         void postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
-                                     typename data_manager<number>::zeta_twopf_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+                                     zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: zeta threepf task
         void postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                     typename data_manager<number>::zeta_threepf_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+                                     zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: fNL task
         void postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                     typename data_manager<number>::fNL_batcher& batcher, typename data_manager<number>::datapipe& pipe);
+                                     fNL_batcher<number>& batcher, datapipe<number>& pipe);
 
 	    };
 
 
     template <typename number>
     void slave_work_handler<number>::postintegration_handler(zeta_twopf_task<number>* tk, twopf_task<number>* ptk, work_queue<twopf_kconfig>& work,
-                                                             typename data_manager<number>::zeta_twopf_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+                                                             zeta_twopf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -89,17 +88,17 @@ namespace transport
 	        }
 
         // set up cache handles
-        typename data_manager<number>::datapipe::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(kconfig_sns);
-        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
+        typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(kconfig_sns);
+        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
-        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
-        const std::vector< typename data_manager<number>::twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
+        const std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
             boost::timer::cpu_timer timer;
 
-            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
+            zeta_twopf_time_data_tag<number> tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
             // safe to use a reference here to avoid a copy
             const std::vector<number>& twopf = z_handle.lookup_tag(tag);
 
@@ -111,7 +110,7 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
@@ -119,8 +118,7 @@ namespace transport
 
     template <typename number>
     void slave_work_handler<number>::postintegration_handler(zeta_threepf_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                             typename data_manager<number>::zeta_threepf_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+                                                             zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -148,17 +146,17 @@ namespace transport
 	        }
 
         // set up cache handles
-        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(kconfig_sns);
-        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
+        typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(kconfig_sns);
+        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
-        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-        const std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
+        const std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
             boost::timer::cpu_timer timer;
 
-            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tpf_tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
+            zeta_threepf_time_data_tag<number> tpf_tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
             // safe to use a reference here to avoid a copy
             const std::vector<number>& threepf = z_handle.lookup_tag(tpf_tag);
 
@@ -167,7 +165,7 @@ namespace transport
                 batcher.push_threepf(time_sns[j], kconfig_sns[i], threepf[j]);
 	            }
 
-            typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag rbs_tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
+            zeta_reduced_bispectrum_time_data_tag<number> rbs_tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
             // safe to use a reference here to avoid a copy
             const std::vector<number>& redbsp = z_handle.lookup_tag(rbs_tag);
 
@@ -178,13 +176,13 @@ namespace transport
 
             if(list[i].store_twopf_k1)
 	            {
-                typename data_manager<number>::twopf_configuration k1;
+                twopf_configuration k1;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
                 k1.k_conventional = k_values[i].k1_conventional;
 
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = pipe.new_zeta_twopf_time_data_tag(k1);
+                zeta_twopf_time_data_tag<number> k1_tag = pipe.new_zeta_twopf_time_data_tag(k1);
                 // safe to use a reference here to avoid a copy
                 const std::vector<number>& k1_twopf = z_handle.lookup_tag(k1_tag);
 
@@ -196,13 +194,13 @@ namespace transport
 
             if(list[i].store_twopf_k2)
 	            {
-                typename data_manager<number>::twopf_configuration k2;
+                twopf_configuration k2;
 
                 k2.serial         = k_values[i].k2_serial;
                 k2.k_comoving     = k_values[i].k2_comoving;
                 k2.k_conventional = k_values[i].k2_conventional;
 
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = pipe.new_zeta_twopf_time_data_tag(k2);
+                zeta_twopf_time_data_tag<number> k2_tag = pipe.new_zeta_twopf_time_data_tag(k2);
                 // safe to use a reference here to avoid a copy
                 const std::vector<number>& k2_twopf = z_handle.lookup_tag(k2_tag);
 
@@ -214,13 +212,13 @@ namespace transport
 
             if(list[i].store_twopf_k3)
 	            {
-                typename data_manager<number>::twopf_configuration k3;
+                twopf_configuration k3;
 
                 k3.serial         = k_values[i].k3_serial;
                 k3.k_comoving     = k_values[i].k3_comoving;
                 k3.k_conventional = k_values[i].k3_conventional;
 
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = pipe.new_zeta_twopf_time_data_tag(k3);
+                zeta_twopf_time_data_tag<number> k3_tag = pipe.new_zeta_twopf_time_data_tag(k3);
                 // safe to use a reference here to avoid a copy
                 const std::vector<number>& k3_twopf = z_handle.lookup_tag(k3_tag);
 
@@ -233,7 +231,7 @@ namespace transport
             timer.stop();
             batcher.report_finished_item(timer.elapsed().wall);
 
-            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed configuration " << list[i].serial << " (" << i+1
 		            << " of " << list.size() << "), processing time = " << format_time(timer.elapsed().wall);
 	        }
 	    }
@@ -241,8 +239,7 @@ namespace transport
 
     template <typename number>
     void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
-                                                             typename data_manager<number>::fNL_batcher& batcher,
-                                                             typename data_manager<number>::datapipe& pipe)
+                                                             fNL_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
         assert(ptk != nullptr);
@@ -272,10 +269,10 @@ namespace transport
 	        }
 
         // set up cache handles
-        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
+        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
-        typename data_manager<number>::datapipe::BT_time_data_tag BT_tag = pipe.new_BT_time_data_tag(tk->get_template(), kconfig_sns);
-        typename data_manager<number>::datapipe::TT_time_data_tag TT_tag = pipe.new_TT_time_data_tag(tk->get_template(), kconfig_sns);
+        BT_time_data_tag<number> BT_tag = pipe.new_BT_time_data_tag(tk->get_template(), kconfig_sns);
+        TT_time_data_tag<number> TT_tag = pipe.new_TT_time_data_tag(tk->get_template(), kconfig_sns);
 
         const std::vector<number> BT = z_handle.lookup_tag(BT_tag);
         // safe to use a reference here to avoid a copy

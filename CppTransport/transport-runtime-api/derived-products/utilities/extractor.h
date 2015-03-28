@@ -25,7 +25,7 @@ namespace transport
 
 		      public:
 
-		        extractor(unsigned int n, const typename data_manager<number>::threepf_configuration& c)
+		        extractor(unsigned int n, const threepf_configuration& c)
 			        : num(n), config(c)
 			        {
 		            if(this->num < 1) this->num = 1;
@@ -73,7 +73,7 @@ namespace transport
 
 		        unsigned int num;
 
-		        const typename data_manager<number>::threepf_configuration& config;
+		        const threepf_configuration& config;
 
 			    };
 

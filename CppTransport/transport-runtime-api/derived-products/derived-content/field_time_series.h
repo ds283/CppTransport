@@ -52,7 +52,7 @@ namespace transport
 		        // DERIVE LINES -- implements a 'time_series' interface
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -156,7 +156,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void background_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+		    void background_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                      const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
@@ -166,14 +166,14 @@ namespace transport
 
             // loop through all the fields, pulling data from the database for those which are enabled
 
-		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
 
             for(unsigned int m = 0; m < 2 * this->mdl->get_N_fields(); m++)
               {
                 std::array<unsigned int, 1> index_set = {m};
                 if(this->active_indices.is_on(index_set))
                   {
-										typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(this->mdl->flatten(m));
+										background_time_data_tag<number> tag = pipe.new_background_time_data_tag(this->mdl->flatten(m));
 
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
@@ -260,7 +260,7 @@ namespace transport
 		        // DERIVE LINES -- implements a 'time_series' interface
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -313,7 +313,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
+		    void twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                                 const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output group
@@ -323,13 +323,13 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
 		        // pull k-configuration information from the database
-		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
+		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
-		        const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each k-configuration we use,
 		        // pulling data from the database
@@ -342,9 +342,9 @@ namespace transport
 		                    std::array<unsigned int, 2> index_set = { m, n };
 		                    if(this->active_indices.is_on(index_set))
 			                    {
-				                    typename data_manager<number>::datapipe::cf_time_data_tag tag =
-					                                                                              pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_manager<number>::datapipe::cf_twopf_re : data_manager<number>::datapipe::cf_twopf_im,
-					                                                                                                        this->mdl->flatten(m,n), this->kconfig_sample_sns[i]);
+		                        cf_time_data_tag<number> tag =
+			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
+			                                                                           this->mdl->flatten(m, n), this->kconfig_sample_sns[i]);
 
                             // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
@@ -416,7 +416,7 @@ namespace transport
 		      public:
 
 		        //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -481,7 +481,7 @@ namespace transport
 
 
         template <typename number>
-        void threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
+        void threepf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                                      const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output group
@@ -491,13 +491,13 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
 		        // pull k-configuration information from the database
-		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
+		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
 
-		        const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< threepf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the threepf, for each k-configuration we use,
 		        // pulling data from the database
@@ -513,7 +513,7 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-				                        typename data_manager<number>::datapipe::cf_time_data_tag tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
+				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 

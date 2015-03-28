@@ -33,4 +33,9 @@
 // default size of the zeta cache - 100 Mb
 #define __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE (100*1024*1024)
 
+// log file name
+#define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
+#define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"
+
+
 #endif //__defaults_H_

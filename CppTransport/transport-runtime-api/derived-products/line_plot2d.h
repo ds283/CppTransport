@@ -106,12 +106,12 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags);
+				    virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
 
 		      protected:
 
 				    //! Make plot
-				    bool make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
+				    bool make_plot(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
 
 
 		        // GET AND SET BASIC PLOT ATTRIBUTES
@@ -338,7 +338,7 @@ namespace transport
 
 
 				template <typename number>
-				void line_plot2d<number>::derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags)
+				void line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -361,7 +361,7 @@ namespace transport
 
 
 				template <typename number>
-				bool line_plot2d<number>::make_plot(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
+				bool line_plot2d<number>::make_plot(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
 					{
 						// extract paths from the datapipe
             boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();

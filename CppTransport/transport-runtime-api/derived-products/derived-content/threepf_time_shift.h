@@ -17,11 +17,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
-
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -68,18 +65,18 @@ namespace transport
             //! shift a threepf timeline for coordinate labels (l,m,n)
             //! and supplied 2pf k-configuration serial numbers
             void shift(integration_task<number>* tk, model<number>* mdl,
-                       typename data_manager<number>::datapipe& pipe,
+                       datapipe<number>& pipe,
                        const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                        const std::vector<double>& time_axis,
                        unsigned int l, unsigned int m, unsigned int n,
-                       const typename data_manager<number>::threepf_configuration& config) const;
+                       const threepf_configuration& config) const;
 
           protected:
 
             //! apply the derivative shift to a threepf-timeline for a specific
             //! configuration
             void make_shift(integration_task<number>* tk, model<number>* mdl,
-                            typename data_manager<number>::datapipe& pipe,
+                            datapipe<number>& pipe,
                             const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                             const std::vector<double>& time_axis,
                             const std::vector<typename std::vector<number> >& background,
@@ -100,18 +97,18 @@ namespace transport
 
         template <typename number>
         void threepf_time_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
-                                               typename data_manager<number>::datapipe& pipe,
+                                               datapipe<number>& pipe,
                                                const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                const std::vector<double>& time_axis,
                                                unsigned int l, unsigned int m, unsigned int n,
-                                               const typename data_manager<number>::threepf_configuration& config) const
+                                               const threepf_configuration& config) const
 			    {
 						assert(mdl != nullptr);
 		        assert(tk != nullptr);
 
 		        unsigned int N_fields = mdl->get_N_fields();
 
-		        typename data_manager<number>::datapipe::time_data_handle& handle = pipe.new_time_data_handle(time_sample);
+		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(time_sample);
 
 		        // pull the background time evolution from the database for the time_sample we are using.
 		        // for future convenience we want this to be a vector of vectors-representing-field-components,
@@ -120,7 +117,7 @@ namespace transport
 
 		        for(unsigned int i = 0; i < 2*N_fields; i++)
 			        {
-		            typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
+		            background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i); // DON'T flatten i, because we want to give the background to the model instance in the order it expects
                 // safe to take a reference here and avoid a copy
 		            const std::vector<number>& bg_line = handle.lookup_tag(tag);
 
@@ -139,7 +136,7 @@ namespace transport
 
         template <typename number>
         void threepf_time_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
-                                                    typename data_manager<number>::datapipe& pipe,
+                                                    datapipe<number>& pipe,
                                                     const std::vector<unsigned int>& time_sample, std::vector<number>& line_data,
                                                     const std::vector<double>& time_axis, const std::vector<std::vector<number> >& background,
                                                     unsigned int p, const extractor<number>& p_config,
@@ -193,7 +190,7 @@ namespace transport
 			            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_UNKNOWN_OPPOS);
 			        }
 
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(time_sample);
 
 		        // pull out components of the two-pf that we need
 		        for(unsigned int i = 0; i < N_fields; i++)
@@ -203,15 +200,15 @@ namespace transport
 		            unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
 		            unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
 
-		            typename data_manager<number>::datapipe::cf_time_data_tag q_re_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id,     q_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag q_im_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id,     q_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag mom_q_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_q_id, q_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag mom_q_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_q_id, q_config.serial());
+		            cf_time_data_tag<number> q_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, q_id,     q_config.serial());
+		            cf_time_data_tag<number> q_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, q_id,     q_config.serial());
+		            cf_time_data_tag<number> mom_q_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, q_config.serial());
+		            cf_time_data_tag<number> mom_q_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, q_config.serial());
 
-		            typename data_manager<number>::datapipe::cf_time_data_tag r_re_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, r_id,     r_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag r_im_tag     = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, r_id,     r_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_re_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_r_id, r_config.serial());
-		            typename data_manager<number>::datapipe::cf_time_data_tag mom_r_im_tag = pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_r_id, r_config.serial());
+		            cf_time_data_tag<number> r_re_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, r_id,     r_config.serial());
+		            cf_time_data_tag<number> r_im_tag     = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, r_id,     r_config.serial());
+		            cf_time_data_tag<number> mom_r_re_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, r_config.serial());
+		            cf_time_data_tag<number> mom_r_im_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, r_config.serial());
 
 		            const std::vector<number> q_line_re     = t_handle.lookup_tag(q_re_tag);
 		            const std::vector<number> q_line_im     = t_handle.lookup_tag(q_im_tag);

@@ -50,7 +50,7 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -113,7 +113,7 @@ namespace transport
 
 
         template <typename number>
-        void fNL_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void fNL_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                    const std::list<std::string>& tags) const
           {
             // attach datapipe to an output group
@@ -122,10 +122,10 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
+		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
 		        // set up tag for our fNL template
-		        typename data_manager<number>::datapipe::fNL_time_data_tag tag = pipe.new_fNL_time_data_tag(this->type);
+		        fNL_time_data_tag<number> tag = pipe.new_fNL_time_data_tag(this->type);
 
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);

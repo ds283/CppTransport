@@ -15,6 +15,7 @@
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/data/data_manager.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
+#include "transport-runtime-api/scheduler/work_queue.h"
 
 #include <boost/timer/timer.hpp>
 
@@ -179,7 +180,7 @@ namespace transport
 
       public:
 
-        twopf_singleconfig_batch_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
+        twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
                                           const std::vector< typename integration_task<number>::time_storage_record >& l,
                                           unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
@@ -190,7 +191,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -206,7 +207,7 @@ namespace transport
       private:
 
         const twopf_kconfig&                          k_config;
-        typename data_manager<number>::twopf_batcher& batcher;
+        twopf_batcher<number>& batcher;
 
         unsigned int                                  backg_size;
         unsigned int                                  tensor_size;
@@ -220,7 +221,7 @@ namespace transport
 
 
     template <typename number>
-    twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
+    twopf_singleconfig_batch_observer<number>::twopf_singleconfig_batch_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
                                                                                  const std::vector< typename integration_task<number>::time_storage_record >& l,
                                                                                  unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                                                                  unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
@@ -278,7 +279,7 @@ namespace transport
 
       public:
 
-        threepf_singleconfig_batch_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
+        threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
                                             const std::vector< typename integration_task<number>::time_storage_record >& l,
                                             unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                             unsigned int bg_st,
@@ -294,7 +295,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
 
         // STOP TIMERS - OVERRIDES A 'timing observer' interface
@@ -311,7 +312,7 @@ namespace transport
       private:
 
         const threepf_kconfig&                          k_config;
-        typename data_manager<number>::threepf_batcher& batcher;
+        threepf_batcher<number>& batcher;
 
         unsigned int                                    backg_size;
         unsigned int                                    tensor_size;
@@ -334,7 +335,7 @@ namespace transport
 
 
     template <typename number>
-    threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
+    threepf_singleconfig_batch_observer<number>::threepf_singleconfig_batch_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
                                                                                      const std::vector< typename integration_task<number>::time_storage_record >& l,
                                                                                      unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
                                                                                      unsigned int bg_st,
@@ -380,10 +381,10 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k1_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k1_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k2)
@@ -395,10 +396,10 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k2_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k2_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k3)
@@ -410,10 +411,10 @@ namespace transport
                 std::vector<number> tpf_x(this->twopf_size);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k3_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k3_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
               }
 
             std::vector<number> thpf_x(this->threepf_size);
@@ -442,7 +443,7 @@ namespace transport
 
       public:
 
-        twopf_groupconfig_batch_observer(typename data_manager<number>::twopf_batcher& b,
+        twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                          const work_queue<twopf_kconfig>::device_work_list& c,
                                          const std::vector< typename integration_task<number>::time_storage_record >& l,
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
@@ -454,7 +455,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }
@@ -473,7 +474,7 @@ namespace transport
       private:
 
         const work_queue<twopf_kconfig>::device_work_list& work_list;
-        typename data_manager<number>::twopf_batcher&      batcher;
+        twopf_batcher<number>&      batcher;
 
         unsigned int                                       backg_size;
         unsigned int                                       tensor_size;
@@ -487,7 +488,7 @@ namespace transport
 
 
     template <typename number>
-    twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(typename data_manager<number>::twopf_batcher& b,
+    twopf_groupconfig_batch_observer<number>::twopf_groupconfig_batch_observer(twopf_batcher<number>& b,
                                                                                const work_queue<twopf_kconfig>::device_work_list& c,
                                                                                const std::vector< typename integration_task<number>::time_storage_record >& l,
                                                                                unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
@@ -552,7 +553,7 @@ namespace transport
 
       public:
 
-        threepf_groupconfig_batch_observer(typename data_manager<number>::threepf_batcher& b,
+        threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                    const work_queue<threepf_kconfig>::device_work_list& c,
                                                    const std::vector< typename integration_task<number>::time_storage_record >& l,
                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
@@ -569,7 +570,7 @@ namespace transport
         void push(const State& x);
 
         //! Return logger
-        boost::log::sources::severity_logger<typename data_manager<number>::log_severity_level>& get_log() { return(this->batcher.get_log()); }
+        boost::log::sources::severity_logger<generic_batcher::log_severity_level>& get_log() { return(this->batcher.get_log()); }
 
         //! Return number of k-configurations in this group
         unsigned int group_size() const { return(this->work_list.size()); }
@@ -588,7 +589,7 @@ namespace transport
       private:
 
         const work_queue<threepf_kconfig>::device_work_list& work_list;
-        typename data_manager<number>::threepf_batcher&      batcher;
+        threepf_batcher<number>&      batcher;
 
         unsigned int                                         backg_size;
         unsigned int                                         tensor_size;
@@ -611,7 +612,7 @@ namespace transport
 
 
     template <typename number>
-    threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(typename data_manager<number>::threepf_batcher& b,
+    threepf_groupconfig_batch_observer<number>::threepf_groupconfig_batch_observer(threepf_batcher<number>& b,
                                                                                    const work_queue<threepf_kconfig>::device_work_list& c,
                                                                                    const std::vector< typename integration_task<number>::time_storage_record >& l,
                                                                                    unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz, unsigned int th_sz,
@@ -664,10 +665,10 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k2)
@@ -680,10 +681,10 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k3)
@@ -696,10 +697,10 @@ namespace transport
                     std::vector<number> tpf_x(this->twopf_size);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
 
                     for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, data_manager<number>::threepf_batcher::imag_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
                   }
 
                 std::vector<number> thpf_x(this->threepf_size);

@@ -91,7 +91,7 @@ namespace transport
 				    const boost::filesystem::path& get_filename() const { return(this->filename); }
 
 		        //! Apply the analysis represented by this derived product to a given output group
-		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) = 0;
+		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags) = 0;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS

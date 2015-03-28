@@ -53,7 +53,7 @@ namespace transport
           public:
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -109,7 +109,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void zeta_twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                           const std::list<std::string>& tags) const
           {
             // attach datapipe to an output group
@@ -118,16 +118,16 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
-		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
+            const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-		            typename data_manager<number>::datapipe::zeta_twopf_time_data_tag tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
+		            zeta_twopf_time_data_tag<number> tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
@@ -193,7 +193,7 @@ namespace transport
             // DERIVE LINES -- implements a 'derived_line' interface
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list< data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -245,7 +245,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_threepf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void zeta_threepf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                             const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
@@ -254,18 +254,18 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
+		        typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
-		        typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+		        threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
+            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
+                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-		            typename data_manager<number>::datapipe::zeta_threepf_time_data_tag tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
+		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
@@ -332,7 +332,7 @@ namespace transport
             // DERIVE LINES -- implements a 'derived line' interface
 
             //! generate data lines for plotting
-            virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+            virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
 
@@ -385,7 +385,7 @@ namespace transport
 
 
         template <typename number>
-        void zeta_reduced_bispectrum_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void zeta_reduced_bispectrum_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                                        const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
@@ -394,18 +394,18 @@ namespace transport
             const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
             // set up cache handles
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
             // pull k-configuration information from the database
-            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
+            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
+                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
 
-		            typename data_manager<number>::datapipe::zeta_reduced_bispectrum_time_data_tag tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
+		            zeta_reduced_bispectrum_time_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);

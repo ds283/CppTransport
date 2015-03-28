@@ -165,10 +165,10 @@ namespace transport
 				  protected:
 
 				    //! Merge axes and value data into a single series
-				    void merge_lines(typename data_manager<number>::datapipe& pipe, const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& data) const;
+				    void merge_lines(datapipe<number>& pipe, const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& data) const;
 
 						//! Obtain output from our lines
-				    void obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const;
+				    void obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const;
 
 
             // DERIVED PRODUCTS -- AGGREGATE CONSTITUENT TASKS -- implements a 'derived_product' interface
@@ -350,7 +350,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::obtain_output(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
+		    void line_collection<number>::obtain_output(datapipe<number>& pipe, const std::list<std::string>& tags, std::list< data_line<number> >& derived_lines) const
 			    {
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
 			        {
@@ -360,7 +360,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::merge_lines(typename data_manager<number>::datapipe& pipe,
+		    void line_collection<number>::merge_lines(datapipe<number>& pipe,
 		                                              const std::list< data_line<number> >& input, std::deque<double>& axis, std::vector<output_line>& output) const
 			    {
 		        // step through our plot lines, merging axis data and excluding any lines which are unplottable
@@ -389,9 +389,9 @@ namespace transport
 
 		                // issue warnings if required
 		                if(need_abs_y && !this->abs_y && nonzero_values)        // can plot the line, but have to abs() it
-			                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
 		                else if(need_abs_y && !this->abs_y && !nonzero_values)  // can't plot the line
-			                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
 			            }
 
 				        bool nonzero_axis = true;
@@ -404,7 +404,7 @@ namespace transport
 
 						        // warn if line can't be plotted
 						        if(!nonzero_axis)
-							        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
+							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
 					        }
 
 		            // if we can plot the line, push it onto the queue to be processed.
@@ -479,7 +479,7 @@ namespace transport
 			                }
 		                else
 			                {
-		                    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << ":: Error: failed to find new axis point to merge; giving up";
+		                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << ":: Error: failed to find new axis point to merge; giving up";
 		                    finished = true;
 			                }
 			            }

@@ -39,7 +39,7 @@ namespace transport
 
               public:
 
-                handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+                handle(datapipe<number>& pipe, integration_task<number>* tk,
                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf);
 
                 ~handle() = default;
@@ -49,7 +49,7 @@ namespace transport
               protected:
 
                 //! datapipe object
-                typename data_manager<number>::datapipe& pipe;
+                datapipe<number>& pipe;
 
                 //! model pointer
                 model<number>* mdl;
@@ -64,7 +64,7 @@ namespace transport
                 const std::vector<double>& time_axis;
 
                 //! datapipe handle for this set of serial numbers
-                typename data_manager<number>::datapipe::time_data_handle& t_handle;
+                typename datapipe<number>::time_data_handle& t_handle;
 
                 //! number of fields
                 unsigned int N_fields;
@@ -95,7 +95,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
                                                 const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const;
 
 
@@ -104,13 +104,13 @@ namespace transport
           public:
 
             //! compute a time series for the zeta two-point function
-            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const typename data_manager<number>::twopf_configuration& k) const;
+            void twopf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const twopf_configuration& k) const;
 
             //! compute a time series for the zeta three-point function
-            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const;
+            void threepf(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
 
             //! compute a time series for the zeta reduced bispectrum
-            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const;
+            void reduced_bispectrum(std::shared_ptr<handle>& h, std::vector<number>& line_data, const threepf_configuration& k) const;
 
 
             // INTERNAL DATA
@@ -126,7 +126,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_timeseries_compute<number>::handle::handle(typename data_manager<number>::datapipe& p, integration_task<number>* t,
+        zeta_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
                                                         const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf)
           : pipe(p),
             tk(t),
@@ -147,7 +147,7 @@ namespace transport
 
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
-                typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
+                background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i);
 
                 // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
@@ -174,7 +174,7 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename zeta_timeseries_compute<number>::handle>
-        zeta_timeseries_compute<number>::make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* t,
+        zeta_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
                                                      const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf) const
           {
             return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf));
@@ -183,7 +183,7 @@ namespace transport
 
         template <typename number>
         void zeta_timeseries_compute<number>::twopf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                    std::vector<number>& line_data, const typename data_manager<number>::twopf_configuration& k) const
+                                                    std::vector<number>& line_data, const twopf_configuration& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -199,8 +199,8 @@ namespace transport
               {
                 for(unsigned int n = 0; n < 2*N_fields; n++)
                   {
-                    typename data_manager<number>::datapipe::cf_time_data_tag tag =
-                      h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
+                    cf_time_data_tag<number> tag =
+                      h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), k.serial);
 
                     // pull twopf data for this component
                     const std::vector<number>& sigma_line = h->t_handle.lookup_tag(tag);
@@ -229,14 +229,14 @@ namespace transport
 
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta twopf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), data_manager<number>::normal) << msg.str();
+            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
 
         template <typename number>
         void zeta_timeseries_compute<number>::threepf(std::shared_ptr<typename zeta_timeseries_compute<number>::handle>& h,
-                                                      std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const
+                                                      std::vector<number>& line_data, const threepf_configuration& k) const
           {
             unsigned int N_fields = h->N_fields;
 
@@ -271,7 +271,7 @@ namespace transport
                     for(unsigned int n = 0; n < 2*N_fields; n++)
                       {
                         // pull threepf data for this component
-                        typename data_manager<number>::datapipe::cf_time_data_tag tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_threepf, h->mdl->flatten(l,m,n), k.serial);
+                        cf_time_data_tag<number> tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(l,m,n), k.serial);
 
                         // have to take a copy of the data line, rather than use a reference, because shifting the derivative will modify it in place
                         std::vector<number> threepf_line = h->t_handle.lookup_tag(tag);
@@ -303,17 +303,17 @@ namespace transport
                             // the indices are N_lm, N_p, N_q, so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            typename data_manager<number>::datapipe::cf_time_data_tag k1_re_lp_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(l,p), k.k1_serial);
-                            typename data_manager<number>::datapipe::cf_time_data_tag k1_im_lp_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), k.k1_serial);
+                            cf_time_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), k.k1_serial);
 
-                            typename data_manager<number>::datapipe::cf_time_data_tag k2_re_lp_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(l,p), k.k2_serial);
-                            typename data_manager<number>::datapipe::cf_time_data_tag k2_im_lp_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), k.k2_serial);
 
-                            typename data_manager<number>::datapipe::cf_time_data_tag k2_re_mq_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,q), k.k2_serial);
-                            typename data_manager<number>::datapipe::cf_time_data_tag k2_im_mq_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), k.k2_serial);
+                            cf_time_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), k.k2_serial);
 
-                            typename data_manager<number>::datapipe::cf_time_data_tag k3_re_mq_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,q), k.k3_serial);
-                            typename data_manager<number>::datapipe::cf_time_data_tag k3_im_mq_tag = h->pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), k.k3_serial);
+                            cf_time_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_time_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), k.k3_serial);
 
                             const std::vector<number>& k1_re_lp = h->t_handle.lookup_tag(k1_re_lp_tag);
                             const std::vector<number>& k1_im_lp = h->t_handle.lookup_tag(k1_im_lp_tag);
@@ -359,14 +359,14 @@ namespace transport
 
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta threepf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), data_manager<number>::normal) << msg.str();
+            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
 
         template <typename number>
         void zeta_timeseries_compute<number>::reduced_bispectrum(std::shared_ptr<typename zeta_timeseries_compute::handle>& h,
-                                                                 std::vector<number>& line_data, const typename data_manager<number>::threepf_configuration& k) const
+                                                                 std::vector<number>& line_data, const threepf_configuration& k) const
           {
             line_data.clear();
             line_data.assign(h->time_sample_sns.size(), 0.0);
@@ -380,17 +380,17 @@ namespace transport
             std::vector<number> twopf_k2;
             std::vector<number> twopf_k3;
 
-            typename data_manager<number>::twopf_configuration k1;
+            twopf_configuration k1;
             k1.serial         = k.k1_serial;
             k1.k_comoving     = k.k1_comoving;
             k1.k_conventional = k.k1_conventional;
 
-            typename data_manager<number>::twopf_configuration k2;
+            twopf_configuration k2;
             k2.serial         = k.k2_serial;
             k2.k_comoving     = k.k2_comoving;
             k2.k_conventional = k.k2_conventional;
 
-            typename data_manager<number>::twopf_configuration k3;
+            twopf_configuration k3;
             k3.serial         = k.k3_serial;
             k3.k_comoving     = k.k3_comoving;
             k3.k_conventional = k.k3_conventional;

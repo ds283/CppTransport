@@ -74,12 +74,12 @@ namespace transport
 
         // Integrate background and 2-point function on the CPU
         virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           twopf_batcher<number>& batcher,
                                            bool silent = false) override;
 
         // Integrate background, 2-point function and 3-point function on the CPU
         virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           threepf_batcher<number>& batcher,
                                            bool silent = false) override;
 
         virtual unsigned int backend_twopf_state_size(void)   const override { return($$__MODEL_pool::twopf_state_size); }
@@ -93,12 +93,12 @@ namespace transport
       protected:
 
         void twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
-                         typename data_manager<number>::twopf_batcher& batcher,
+                         twopf_batcher<number>& batcher,
                          boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                          unsigned int refinement_level);
 
         void threepf_kmode(const threepf_kconfig&, const integration_task<number>* tk,
-                           typename data_manager<number>::threepf_batcher& batcher,
+                           threepf_batcher<number>& batcher,
                            boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                            unsigned int refinement_level);
 
@@ -144,7 +144,7 @@ namespace transport
 
       public:
 
-        $$__MODEL_basic_twopf_observer(typename data_manager<number>::twopf_batcher& b, const twopf_kconfig& c,
+        $$__MODEL_basic_twopf_observer(twopf_batcher<number>& b, const twopf_kconfig& c,
                                        const std::vector< typename integration_task<number>::time_storage_record >& l)
           : twopf_singleconfig_batch_observer<number>(b, c, l,
                                                       $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size, $$__MODEL_pool::twopf_size,
@@ -187,7 +187,7 @@ namespace transport
       {
 
       public:
-        $$__MODEL_basic_threepf_observer(typename data_manager<number>::threepf_batcher& b, const threepf_kconfig& c,
+        $$__MODEL_basic_threepf_observer(threepf_batcher<number>& b, const threepf_kconfig& c,
                                          const std::vector< typename integration_task<number>::time_storage_record >& l)
           : threepf_singleconfig_batch_observer<number>(b, c, l,
                                                         $$__MODEL_pool::backg_size, $$__MODEL_pool::tensor_size,
@@ -246,17 +246,17 @@ namespace transport
     // process work queue for twopf
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                                        typename data_manager<number>::twopf_batcher& batcher,
+                                                        twopf_batcher<number>& batcher,
                                                         bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(data_manager<number>::generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
             << "** MPI compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -283,7 +283,7 @@ namespace transport
                 this->twopf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
 		            success = true;
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
                     << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i+1
                     << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
                     << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
@@ -296,7 +296,7 @@ namespace transport
 			          batcher.unbatch(list[i].serial);
 			          refinement_level++;
 
-			          BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
+			          BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
 			              << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 		                << " " __CPP_TRANSPORT_OF << " " << list.size() << "), "
 			              << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
@@ -307,7 +307,7 @@ namespace transport
                 batcher.report_integration_failure();
 		            batcher.unbatch(list[i].serial);
 
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
                     << " " __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i];
               }
@@ -317,7 +317,7 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::twopf_kmode(const twopf_kconfig& kconfig, const integration_task<number>* tk,
-                                              typename data_manager<number>::twopf_batcher& batcher,
+                                              twopf_batcher<number>& batcher,
                                               boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                                               unsigned int refinement_level)
       {
@@ -394,17 +394,17 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                                        typename data_manager<number>::threepf_batcher& batcher,
+                                                        threepf_batcher<number>& batcher,
                                                         bool silent)
       {
         // set batcher to delayed flushing mode so that we have a chance to unwind failed integrations
-        batcher.set_flush_mode(data_manager<number>::generic_batcher::flush_delayed);
+        batcher.set_flush_mode(generic_batcher::flush_delayed);
 
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
           << "** MPI compute backend processing threepf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
 //        std::cerr << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -432,7 +432,7 @@ namespace transport
                 this->threepf_kmode(list[i], tk, batcher, int_time, batch_time, refinement_level);
 
                 success = true;
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
                     << "** " << __CPP_TRANSPORT_SOLVING_CONFIG << " " << list[i].serial << " (" << i + 1
                     << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
                     << __CPP_TRANSPORT_INTEGRATION_TIME << " = " << format_time(int_time) << " | "
@@ -445,7 +445,7 @@ namespace transport
 		            batcher.unbatch(list[i].serial);
 		            refinement_level++;
 
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::warning)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::warning)
 		                << "** " << __CPP_TRANSPORT_RETRY_CONFIG << " " << list[i].serial << " (" << i+1
 				            << " " << __CPP_TRANSPORT_OF << " " << list.size() << "), "
 	                  << __CPP_TRANSPORT_REFINEMENT_LEVEL << " = " << refinement_level
@@ -457,7 +457,7 @@ namespace transport
                 batcher.unbatch(list[i].serial);
                 success = true;
 
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
                     << "!! " __CPP_TRANSPORT_FAILED_CONFIG << " " << list[i].serial << " (" << i+1
                     << " " << __CPP_TRANSPORT_OF << " " << list.size() << ") | " << list[i]
                     << " (" << __CPP_TRANSPORT_FAILED_INTERNAL << xe.what() << ")";
@@ -468,7 +468,7 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_basic<number>::threepf_kmode(const threepf_kconfig& kconfig, const integration_task<number>* tk,
-                                                typename data_manager<number>::threepf_batcher& batcher,
+                                                threepf_batcher<number>& batcher,
                                                 boost::timer::nanosecond_type& int_time, boost::timer::nanosecond_type& batch_time,
                                                 unsigned int refinement_level)
       {
@@ -592,7 +592,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_twopf_observer<number>::operator()(const twopf_state<number>& x, double t)
       {
-        this->start_batching(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::normal);
         this->push(x);
         this->stop_batching();
       }
@@ -743,7 +743,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_basic_threepf_observer<number>::operator()(const threepf_state<number>& x, double t)
       {
-        this->start_batching(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::normal);
         this->push(x);
         this->stop_batching();
       }

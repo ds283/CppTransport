@@ -17,11 +17,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
-
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -69,8 +66,8 @@ namespace transport
 		        //! shift a threepf kconfig-line for coordinate labels (l,m,n)
 		        //! and supplied time configuration
 		        void shift(integration_task<number>* tk, model<number>* mdl,
-		                   typename data_manager<number>::datapipe& pipe,
-		                   const std::vector<number>& background, std::vector< typename data_manager<number>::threepf_configuration>& configs,
+		                   datapipe<number>& pipe,
+		                   const std::vector<number>& background, std::vector< threepf_configuration>& configs,
 		                   std::vector<number>& line_data,
 		                   unsigned int l, unsigned int m, unsigned int n,
 		                   unsigned int t_serial, double t_value) const;
@@ -79,8 +76,8 @@ namespace transport
 
 		        //! apply the derivative shift to a particular operator
 		        void make_shift(integration_task<number>* tk, model<number>* mdl,
-		                        typename data_manager<number>::datapipe& pipe,
-		                        const std::vector< typename data_manager<number>::threepf_configuration >& configs,
+		                        datapipe<number>& pipe,
+		                        const std::vector< threepf_configuration >& configs,
 		                        std::vector< std::array<extractor<number>, 3> >& extractors,
 		                        std::vector<number>& line_data,
 		                        unsigned int t_serial, double t_value,
@@ -92,8 +89,8 @@ namespace transport
 
 				template <typename number>
 				void threepf_kconfig_shift<number>::shift(integration_task<number>* tk, model<number>* mdl,
-				                                          typename data_manager<number>::datapipe& pipe,
-				                                          const std::vector<number>& background, std::vector< typename data_manager<number>::threepf_configuration>& configs,
+				                                          datapipe<number>& pipe,
+				                                          const std::vector<number>& background, std::vector< threepf_configuration>& configs,
 				                                          std::vector<number>& line_data,
 				                                          unsigned int l, unsigned int m, unsigned int n,
 				                                          unsigned int t_serial, double t_value) const
@@ -108,7 +105,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<typename data_manager<number>::threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(1, *t), extractor<number>(2, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -122,7 +119,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<typename data_manager<number>::threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(2, *t), extractor<number>(1, *t), extractor<number>(3, *t) };
 						        extractors.push_back(elt);
@@ -136,7 +133,7 @@ namespace transport
 						    // set up array of k-value extractors for the first operator
 						    std::vector< std::array<extractor<number>, 3> > extractors;
 
-						    for(typename std::vector<typename data_manager<number>::threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
+						    for(typename std::vector<threepf_configuration>::iterator t = configs.begin(); t != configs.end(); t++)
 							    {
 						        std::array<extractor<number>, 3> elt = { extractor<number>(3, *t), extractor<number>(1, *t), extractor<number>(2, *t) };
 						        extractors.push_back(elt);
@@ -149,8 +146,8 @@ namespace transport
 
 		    template <typename number>
 		    void threepf_kconfig_shift<number>::make_shift(integration_task<number>* tk, model<number>* mdl,
-		                                                   typename data_manager<number>::datapipe& pipe,
-		                                                   const std::vector<typename data_manager<number>::threepf_configuration>& configs,
+		                                                   datapipe<number>& pipe,
+		                                                   const std::vector<threepf_configuration>& configs,
 		                                                   std::vector< std::array<extractor<number>, 3> >& extractors,
 		                                                   std::vector<number>& line_data,
 		                                                   unsigned int t_serial, double t_value,
@@ -212,8 +209,8 @@ namespace transport
 					    }
 
 				    // pull out the components of the twopf which we will need
-				    typename data_manager<number>::datapipe::kconfig_data_handle& q_handle = pipe.new_kconfig_data_handle(q_serials);
-				    typename data_manager<number>::datapipe::kconfig_data_handle& r_handle = pipe.new_kconfig_data_handle(r_serials);
+				    typename datapipe<number>::kconfig_data_handle& q_handle = pipe.new_kconfig_data_handle(q_serials);
+				    typename datapipe<number>::kconfig_data_handle& r_handle = pipe.new_kconfig_data_handle(r_serials);
 
 				    for(unsigned int i = 0; i < N_fields; i++)
 					    {
@@ -222,15 +219,15 @@ namespace transport
 				        unsigned int mom_q_id = mdl->flatten((q_fixed == first_index ? q : mdl->momentum(i)), (q_fixed == second_index ? q : mdl->momentum(i)));
 				        unsigned int mom_r_id = mdl->flatten((r_fixed == first_index ? r : mdl->momentum(i)), (r_fixed == second_index ? r : mdl->momentum(i)));
 
-						    typename data_manager<number>::datapipe::cf_kconfig_data_tag q_re_tag     = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, q_id,     t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag q_im_tag     = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, q_id,     t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag mom_q_re_tag = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_q_id, t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag mom_q_im_tag = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_q_id, t_serial);
+						    cf_kconfig_data_tag<number> q_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, q_id,     t_serial);
+				        cf_kconfig_data_tag<number> q_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, q_id,     t_serial);
+				        cf_kconfig_data_tag<number> mom_q_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_q_id, t_serial);
+				        cf_kconfig_data_tag<number> mom_q_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_q_id, t_serial);
 
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag r_re_tag     = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, r_id,     t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag r_im_tag     = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, r_id,     t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag mom_r_re_tag = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, mom_r_id, t_serial);
-				        typename data_manager<number>::datapipe::cf_kconfig_data_tag mom_r_im_tag = pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, mom_r_id, t_serial);
+				        cf_kconfig_data_tag<number> r_re_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, r_id,     t_serial);
+				        cf_kconfig_data_tag<number> r_im_tag     = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, r_id,     t_serial);
+				        cf_kconfig_data_tag<number> mom_r_re_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, mom_r_id, t_serial);
+				        cf_kconfig_data_tag<number> mom_r_im_tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, mom_r_id, t_serial);
 
 				        const std::vector<number>& q_line_re     = q_handle.lookup_tag(q_re_tag);
 				        const std::vector<number>& q_line_im     = q_handle.lookup_tag(q_im_tag);

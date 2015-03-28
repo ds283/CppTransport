@@ -17,11 +17,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
-
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -37,7 +34,6 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/utilities/latex_output.h"
-
 
 
 namespace transport
@@ -73,7 +69,7 @@ namespace transport
 		      public:
 
 		        //! extract axis data, corresponding to our sample times, from datapipe
-		        const std::vector<double> pull_time_axis(typename data_manager<number>::datapipe& pipe) const;
+		        const std::vector<double> pull_time_axis(datapipe<number>& pipe) const;
 
 
 				    // LABELLING SERVICES
@@ -81,17 +77,17 @@ namespace transport
 		      public:
 
 				    //! make a LaTeX label tag for a twopf k-configuration
-				    std::string make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const;
+				    std::string make_LaTeX_tag(const twopf_configuration& config) const;
 
 				    //! make a non-LaTeX label tag for a twopf k-configuration
-				    std::string make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const;
+				    std::string make_non_LaTeX_tag(const twopf_configuration& config) const;
 
 		        //! make a LaTeX label tag for a threepf k-configuration
-		        std::string make_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+		        std::string make_LaTeX_tag(const threepf_configuration& config,
 		                                   bool use_kt, bool use_alpha, bool use_beta) const;
 
 				    //! make a non-LaTeX label tag for a threepf k-configuration
-				    std::string make_non_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+				    std::string make_non_LaTeX_tag(const threepf_configuration& config,
 				                                   bool use_kt, bool use_alpha, bool use_beta) const;
 
 
@@ -147,20 +143,20 @@ namespace transport
 
 
 		    template <typename number>
-		    const std::vector<double> time_series<number>::pull_time_axis(typename data_manager<number>::datapipe& pipe) const
+		    const std::vector<double> time_series<number>::pull_time_axis(datapipe<number>& pipe) const
 			    {
 		        if(!pipe.validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_DATAPIPE);
 
 		        // set-up time sample data
-				    typename data_manager<number>::datapipe::time_config_handle& handle = pipe.new_time_config_handle(this->time_sample_sns);
-				    typename data_manager<number>::datapipe::time_config_tag tag = pipe.new_time_config_tag();
+				    typename datapipe<number>::time_config_handle& handle = pipe.new_time_config_handle(this->time_sample_sns);
+				    time_config_tag<number> tag = pipe.new_time_config_tag();
 
 				    return handle.lookup_tag(tag);
 			    }
 
 
 				template <typename number>
-				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+				std::string time_series<number>::make_non_LaTeX_tag(const twopf_configuration& config) const
 					{
 				    std::ostringstream label;
 
@@ -175,7 +171,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::twopf_configuration& config) const
+				std::string time_series<number>::make_LaTeX_tag(const twopf_configuration& config) const
 					{
 				    std::ostringstream label;
 
@@ -188,7 +184,7 @@ namespace transport
 
 
 		    template <typename number>
-		    std::string time_series<number>::make_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+		    std::string time_series<number>::make_LaTeX_tag(const threepf_configuration& config,
 		                                                    bool use_kt, bool use_alpha, bool use_beta) const
 			    {
 		        std::ostringstream label;
@@ -217,7 +213,7 @@ namespace transport
 
 
 				template <typename number>
-				std::string time_series<number>::make_non_LaTeX_tag(const typename data_manager<number>::threepf_configuration& config,
+				std::string time_series<number>::make_non_LaTeX_tag(const threepf_configuration& config,
 				                                                    bool use_kt, bool use_alpha, bool use_beta) const
 					{
 				    std::ostringstream label;

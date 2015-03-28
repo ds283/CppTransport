@@ -17,9 +17,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 #include "transport-runtime-api/derived-products/derived-content/derived_line.h"
 

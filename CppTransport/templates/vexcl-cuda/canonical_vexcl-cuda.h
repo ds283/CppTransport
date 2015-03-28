@@ -126,12 +126,12 @@ namespace transport
 
         // Integrate background and 2-point function on a CUDA device
         virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           twopf_batcher<number>& batcher,
                                            bool silent = false) override;
 
         // Integrate background, 2-point function and 3-point function on a CUDA device
         virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           threepf_batcher<number>& batcher,
                                            bool silent = false) override;
 
         virtual unsigned int backend_twopf_state_size(void)   const override { return($$__MODEL_pool::twopf_state_size); }
@@ -197,7 +197,7 @@ namespace transport
 
         public:
 
-          $$__MODEL_vexcl_twopf_observer(typename data_manager<number>::twopf_batcher& b,
+          $$__MODEL_vexcl_twopf_observer(twopf_batcher<number>& b,
                                          const work_queue<twopf_kconfig>::device_work_list& c,
                                          const std::vector<time_config>& l,
                                          double t_int=1.0, bool s=false, unsigned int p=3)
@@ -247,7 +247,7 @@ namespace transport
 
       public:
 
-        $$__MODEL_vexcl_threepf_observer(typename data_manager<number>::threepf_batcher& b,
+        $$__MODEL_vexcl_threepf_observer(threepf_batcher<number>& b,
                                          const work_queue<threepf_kconfig>::device_work_list& c,
                                          const std::vector<time_config>& l,
                                          double t_int=1.0, bool s=false, unsigned int p=3)
@@ -290,14 +290,14 @@ namespace transport
     // process work queue for twopf
     template <typename number>
     void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                                        typename data_manager<number>::twopf_batcher& batcher,
+                                                        twopf_batcher<number>& batcher,
                                                         bool silent)
       {
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
             << "** VexCL/CUDA compute backend processing twopf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
         std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -368,7 +368,7 @@ namespace transport
               {
                 batcher.report_integration_failure();
 
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "!! Integration failure in work list " << i;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "!! Integration failure in work list " << i;
               }
           }
       }
@@ -403,14 +403,14 @@ namespace transport
 
     template <typename number>
     void $$__MODEL_vexcl<number>::backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                                        typename data_manager<number>::threepf_batcher& batcher,
+                                                        threepf_batcher<number>& batcher,
                                                         bool silent)
       {
         std::ostringstream work_msg;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
             << "** VexCL/CUDA compute backend processing threepf task";
         work_msg << work;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << work_msg.str();
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << work_msg.str();
         std::cout << work_msg.str();
         if(!silent) this->write_task_data(tk, batcher, $$__PERT_ABS_ERR, $$__PERT_REL_ERR, $$__PERT_STEP_SIZE, "$$__PERT_STEPPER");
 
@@ -435,9 +435,9 @@ namespace transport
                 $$__MODEL_vexcl_threepf_observer<number> obs(batcher, list, slist);
 
                 // integrate all items on this work list
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
                     << "** VexCL/CUDA compute backend: integrating triangles from work list " << i;
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
                     << "**   " << list.size() << " items in this work list, GPU memory for state vector = " << format_memory($$__MODEL_pool::threepf_state_size*list.size());
 
                 // initialize the device's copy of the k-modes
@@ -511,7 +511,7 @@ namespace transport
               {
                 batcher.report_integration_failure();
 
-                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "!! Integration failure in work list " << i;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "!! Integration failure in work list " << i;
               }
           }
       }
@@ -579,7 +579,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_twopf_observer<number>::operator()(const twopf_state& x, double t)
       {
-        this->start_batching(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::normal);
 
         // allocate storage for state, then copy device vector
         std::vector<double> hst_x($$__MODEL_pool::twopf_state_size*this->group_size());
@@ -642,7 +642,7 @@ namespace transport
     template <typename number>
     void $$__MODEL_vexcl_threepf_observer<number>::operator()(const threepf_state& x, double t)
       {
-        this->start_batching(t, this->get_log(), data_manager<number>::normal);
+        this->start_batching(t, this->get_log(), generic_batcher::normal);
 
         // allocate storage, then copy device vector to host in one shot
         std::vector<double> hst_x($$__MODEL_pool::threepf_state_size*this->group_size());

@@ -26,9 +26,8 @@
 // forward-declare tasks if needed
 #include "transport-runtime-api/tasks/tasks_forward_declare.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 #include "transport-runtime-api/derived-products/data_line.h"
 
@@ -167,16 +166,16 @@ namespace transport
 				  public:
 
 				    //! attach datapipe to output group
-				    void attach(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) const;
+				    void attach(datapipe<number>& pipe, const std::list<std::string>& tags) const;
 
 				    //! detach datapipe from output group
-				    void detach(typename data_manager<number>::datapipe& detach) const;
+				    void detach(datapipe<number>& detach) const;
 
 
 				    // DERIVE LINES
 
 				    //! generate data lines for plotting
-				    virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 				                              const std::list<std::string>& tags) const = 0;
 
 
@@ -412,14 +411,14 @@ namespace transport
 
 
 		    template <typename number>
-		    void derived_line<number>::attach(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags) const
+		    void derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags) const
 			    {
 		        pipe.attach(this->parent_task, this->mdl->get_N_fields(), tags);
 			    }
 
 
 		    template <typename number>
-		    void derived_line<number>::detach(typename data_manager<number>::datapipe& pipe) const
+		    void derived_line<number>::detach(datapipe<number>& pipe) const
 			    {
 		        pipe.detach();
 			    }

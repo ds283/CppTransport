@@ -52,7 +52,7 @@ namespace transport
 		      public:
 
 		        //! generate data lines for plotting
-		        virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
 
 
@@ -110,7 +110,7 @@ namespace transport
 
 
         template <typename number>
-        void tensor_twopf_time_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+        void tensor_twopf_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                                             const std::list<std::string>& tags) const
 	        {
             // attach our datapipe to an output group
@@ -120,13 +120,13 @@ namespace transport
 		        const std::vector<double> time_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
-		        typename data_manager<number>::datapipe::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 
 		        // pull k-configuration information from the database
-		        typename data_manager<number>::datapipe::twopf_kconfig_tag k_tag = pipe.new_twopf_kconfig_tag();
+		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
 
-		        const typename std::vector< typename data_manager<number>::twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
+		        const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
 		        // for each k-configuration, loop through all components of the tensor twopf and pull data from the database
 		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
@@ -138,8 +138,8 @@ namespace transport
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            typename data_manager<number>::datapipe::cf_time_data_tag tag =
-									                                                                      pipe.new_cf_time_data_tag(data_manager<number>::datapipe::cf_tensor_twopf, this->mdl->tensor_flatten(m, n), this->kconfig_sample_sns[i]);
+								            cf_time_data_tag<number> tag =
+									                                                                      pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->mdl->tensor_flatten(m, n), this->kconfig_sample_sns[i]);
 
 								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);

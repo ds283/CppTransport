@@ -39,7 +39,7 @@ namespace transport
 
               public:
 
-                handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+                handle(datapipe<number>& pipe, integration_task<number>* tk,
                        const std::vector<unsigned int>& ksample, const std::vector<unsigned int>& tsample,
                        const std::vector<double>& tv, unsigned int Nf);
 
@@ -50,7 +50,7 @@ namespace transport
               protected:
 
                 //! datapipe object
-                typename data_manager<number>::datapipe& pipe;
+                datapipe<number>& pipe;
 
                 //! model pointer
                 model<number>* mdl;
@@ -65,13 +65,13 @@ namespace transport
                 const std::vector<double>& time_values;
 
                 //! datapipe handle for this set of time serial numbers
-                typename data_manager<number>::datapipe::time_data_handle& t_handle;
+                typename datapipe<number>::time_data_handle& t_handle;
 
                 //! set of kconfig serial numbers for which we are computing
                 const std::vector<unsigned int>& kconfig_sample_sns;
 
                 //! datapipe handle for this set of kconfig serial numbers
-                typename data_manager<number>::datapipe::kconfig_data_handle& k_handle;
+                typename datapipe<number>::kconfig_data_handle& k_handle;
 
                 //! number of fields
                 unsigned int N_fields;
@@ -99,7 +99,7 @@ namespace transport
           public:
 
             //! make a handle
-            std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
                                                 const std::vector<unsigned int>& ksample, const std::vector<unsigned int>& tsample,
                                                 const std::vector<double>& tv, unsigned int Nf) const;
 
@@ -131,7 +131,7 @@ namespace transport
 
 
         template <typename number>
-        zeta_kseries_compute<number>::handle::handle(typename data_manager<number>::datapipe& p, integration_task<number>* t,
+        zeta_kseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
                                                      const std::vector<unsigned int>& ksample, const std::vector<unsigned int>& tsample,
                                                      const std::vector<double>& tv, unsigned int Nf)
           : pipe(p),
@@ -154,7 +154,7 @@ namespace transport
 
             for(unsigned int i = 0; i < 2*N_fields; i++)
               {
-                typename data_manager<number>::datapipe::background_time_data_tag tag = pipe.new_background_time_data_tag(i);
+                background_time_data_tag<number> tag = pipe.new_background_time_data_tag(i);
                 // safe to take a reference here and avoid a copy
                 const std::vector<number>& bg_line = t_handle.lookup_tag(tag);
                 assert(bg_line.size() == tsample.size());
@@ -172,7 +172,7 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename zeta_kseries_compute<number>::handle>
-        zeta_kseries_compute<number>::make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* t,
+        zeta_kseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
                                                   const std::vector<unsigned int>& ksample, const std::vector<unsigned int>& tsample,
                                                   const std::vector<double>& tv, unsigned int Nf) const
           {
@@ -202,8 +202,8 @@ namespace transport
               {
                 for(unsigned int n = 0; n < 2*N_fields; n++)
                   {
-                    typename data_manager<number>::datapipe::cf_kconfig_data_tag tag =
-                      h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,n), h->time_sample_sns[tindex]);
+                    cf_kconfig_data_tag<number> tag =
+                      h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,n), h->time_sample_sns[tindex]);
 
                     const std::vector<number>& sigma_line = h->k_handle.lookup_tag(tag);
 
@@ -231,7 +231,7 @@ namespace transport
 
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), data_manager<number>::normal) << msg.str();
+            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
@@ -250,18 +250,18 @@ namespace transport
             h->mdl->compute_gauge_xfm_1(h->tk->get_params(), h->background[tindex], dN);
 
             // set up cache handle for 3pf configuration data
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sample_sns);
 
             // extract k-configuration data
-            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
-            std::vector< typename data_manager<number>::threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
+            std::vector< threepf_configuration > configs = kc_handle.lookup_tag(k_tag);
 
             // zip lists of serial numbers for each of the k1, k2, k3 configurations
             std::vector<unsigned int> k1_serials;
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< typename data_manager<number>::threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);
@@ -269,9 +269,9 @@ namespace transport
               }
 
             // set up cache handles for each of these serial-number lists
-            typename data_manager<number>::datapipe::kconfig_data_handle& k1_handle = h->pipe.new_kconfig_data_handle(k1_serials);
-            typename data_manager<number>::datapipe::kconfig_data_handle& k2_handle = h->pipe.new_kconfig_data_handle(k2_serials);
-            typename data_manager<number>::datapipe::kconfig_data_handle& k3_handle = h->pipe.new_kconfig_data_handle(k3_serials);
+            typename datapipe<number>::kconfig_data_handle& k1_handle = h->pipe.new_kconfig_data_handle(k1_serials);
+            typename datapipe<number>::kconfig_data_handle& k2_handle = h->pipe.new_kconfig_data_handle(k2_serials);
+            typename datapipe<number>::kconfig_data_handle& k3_handle = h->pipe.new_kconfig_data_handle(k3_serials);
 
             // cache gauge transformation coefficients
             // these have to be recomputed for each k-configuration, because they are time and shape-dependent
@@ -298,7 +298,7 @@ namespace transport
                   {
                     for(unsigned int n = 0; n < 2*N_fields; n++)
                       {
-                        typename data_manager<number>::datapipe::cf_kconfig_data_tag tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
+                        cf_kconfig_data_tag<number> tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, h->mdl->flatten(l,m,n), h->time_sample_sns[tindex]);
 
                         std::vector<number> threepf_line = h->k_handle.lookup_tag(tag);
 
@@ -329,17 +329,17 @@ namespace transport
                             // the indices are N_lm, N_p, N_q so the 2pfs we sum over are
                             // sigma_lp(k2)*sigma_mq(k3) etc.
 
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k1_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k1_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k1_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k1_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
 
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k2_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k2_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_re_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_im_lp_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(l,p), h->time_sample_sns[tindex]);
 
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k2_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k2_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k2_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
 
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k3_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
-                            typename data_manager<number>::datapipe::cf_kconfig_data_tag k3_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k3_re_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_re, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
+                            cf_kconfig_data_tag<number> k3_im_mq_tag = h->pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_twopf_im, h->mdl->flatten(m,q), h->time_sample_sns[tindex]);
 
                             const std::vector<number> k1_re_lp = k1_handle.lookup_tag(k1_re_lp_tag);
                             const std::vector<number> k1_im_lp = k1_handle.lookup_tag(k1_im_lp_tag);
@@ -385,7 +385,7 @@ namespace transport
 
             std::ostringstream msg;
             msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), data_manager<number>::normal) << msg.str();
+            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
@@ -405,19 +405,19 @@ namespace transport
             // TODO: this isn't as efficient as the timeseries implementation. Maybe worth revisiting.
 
             // set up cache handle for 3pf configuration data
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sample_sns);
 
             // extract k-configuration data
-            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
+            threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
             // safe to take a reference here and avoid a copy
-            const std::vector< typename data_manager<number>::threepf_configuration >& configs = kc_handle.lookup_tag(k_tag);
+            const std::vector< threepf_configuration >& configs = kc_handle.lookup_tag(k_tag);
 
             // zip lists of serial numbers for each of the k1, k2, k3 configurations
             std::vector<unsigned int> k1_serials;
             std::vector<unsigned int> k2_serials;
             std::vector<unsigned int> k3_serials;
 
-            for(typename std::vector< typename data_manager<number>::threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+            for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
               {
                 k1_serials.push_back((*t).k1_serial);
                 k2_serials.push_back((*t).k2_serial);

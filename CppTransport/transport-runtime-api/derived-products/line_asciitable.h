@@ -73,12 +73,12 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual void derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags);
+		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
 
 		      protected:
 
 				    //! Make table
-		        void make_table(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
+		        void make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const;
 
 
 		        // GET AND SET BASIC TABLE ATTRIBUTES
@@ -135,7 +135,7 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::derive(typename data_manager<number>::datapipe& pipe, const std::list<std::string>& tags)
+				void line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -155,7 +155,7 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::make_table(typename data_manager<number>::datapipe& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
+				void line_asciitable<number>::make_table(datapipe<number>& pipe, const std::deque<double>& axis, const typename std::vector< typename line_collection<number>::output_line >& data) const
 					{
 						// extract paths from the datapipe
 				    boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();

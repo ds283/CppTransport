@@ -37,11 +37,11 @@ namespace transport
 
 				      public:
 
-				        handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+				        handle(datapipe<number>& pipe, integration_task<number>* tk,
 				               const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
 				               template_type ty);
 
-                handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+                handle(datapipe<number>& pipe, integration_task<number>* tk,
                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
                        template_type ty, const std::vector<unsigned int>& kc);
 
@@ -56,7 +56,7 @@ namespace transport
 				      protected:
 
 						    //! datapipe object
-						    typename data_manager<number>::datapipe& pipe;
+						    datapipe<number>& pipe;
 
 						    //! task pointer
 						    threepf_task<number>* tk;
@@ -68,7 +68,7 @@ namespace transport
 						    const std::vector<double>& time_axis;
 
 						    //! datapipe handle for this set of serial numbers
-						    typename data_manager<number>::datapipe::time_data_handle& t_handle;
+						    typename datapipe<number>::time_data_handle& t_handle;
 
 						    //! number of fields
 						    unsigned int N_fields;
@@ -103,12 +103,12 @@ namespace transport
 		      public:
 
 				    //! make a handle, integrate over all triangles
-				    std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+				    std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
 				                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
 				                                        unsigned int Nf, template_type ty) const;
 
             //! make a handle, integrate over a supplied subset of triangles
-            std::shared_ptr<handle> make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
                                                 const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
                                                 unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc) const;
 
@@ -168,7 +168,7 @@ namespace transport
 
 
 		    template <typename number>
-		    fNL_timeseries_compute<number>::handle::handle(typename data_manager<number>::datapipe& p, integration_task<number>* t,
+		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
 		                                                   const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
 		                                                   unsigned int Nf, template_type ty)
 			    : pipe(p),
@@ -194,7 +194,7 @@ namespace transport
 
 
         template <typename number>
-        fNL_timeseries_compute<number>::handle::handle(typename data_manager<number>::datapipe& p, integration_task<number>* t,
+        fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
                                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
                                                        unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc)
           : pipe(p),
@@ -237,7 +237,7 @@ namespace transport
 
 		    template <typename number>
 		    std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
-		    fNL_timeseries_compute<number>::make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* t,
+		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
 		                                                const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
 		                                                template_type ty) const
 			    {
@@ -247,7 +247,7 @@ namespace transport
 
         template <typename number>
         std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
-        fNL_timeseries_compute<number>::make_handle(typename data_manager<number>::datapipe& pipe, integration_task<number>* t,
+        fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
                                                     const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
                                                     template_type ty, const std::vector<unsigned int>& kc) const
           {
@@ -259,12 +259,12 @@ namespace transport
         void fNL_timeseries_compute<number>::BT(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
           {
             // set up cache handles
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
-            typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
+            typename datapipe<number>::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
 
             // pull 3pf k-configuration information from the database
-            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
+            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             line_data.clear();
             line_data.resize(h->time_sample_sns.size());
@@ -272,14 +272,14 @@ namespace transport
             // loop over all sampled k-configurations, adding their contributions to the integral
             for(unsigned int i = 0; i < k_values.size(); i++)
               {
-                typename data_manager<number>::datapipe::zeta_threepf_time_data_tag bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(k_values[i]);
+                zeta_threepf_time_data_tag<number> bsp_tag = h->pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
                 // pull bispectrum information for this triangle
                 const std::vector<number> bispectrum = z_handle.lookup_tag(bsp_tag);
 
-                typename data_manager<number>::twopf_configuration k1;
-                typename data_manager<number>::twopf_configuration k2;
-                typename data_manager<number>::twopf_configuration k3;
+                twopf_configuration k1;
+                twopf_configuration k2;
+                twopf_configuration k3;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
@@ -293,9 +293,9 @@ namespace transport
                 k3.k_comoving     = k_values[i].k3_comoving;
                 k3.k_conventional = k_values[i].k3_conventional;
 
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
+                zeta_twopf_time_data_tag<number> k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
+                zeta_twopf_time_data_tag<number> k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
+                zeta_twopf_time_data_tag<number> k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
 
                 const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
                 const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);
@@ -334,12 +334,12 @@ namespace transport
         void fNL_timeseries_compute<number>::TT(std::shared_ptr<typename fNL_timeseries_compute<number>::handle>& h, std::vector<number>& line_data) const
           {
             // set up cache handles
-            typename data_manager<number>::datapipe::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
-            typename data_manager<number>::datapipe::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
+            typename datapipe<number>::threepf_kconfig_handle& kc_handle = h->pipe.new_threepf_kconfig_handle(h->kconfig_sns);
+            typename datapipe<number>::time_zeta_handle& z_handle = h->pipe.new_time_zeta_handle(h->time_sample_sns);
 
             // pull 3pf k-configuration information from the database
-            typename data_manager<number>::datapipe::threepf_kconfig_tag k_tag = h->pipe.new_threepf_kconfig_tag();
-            const typename std::vector< typename data_manager<number>::threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+            threepf_kconfig_tag<number> k_tag = h->pipe.new_threepf_kconfig_tag();
+            const typename std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
             line_data.clear();
             line_data.resize(h->time_sample_sns.size());
@@ -347,9 +347,9 @@ namespace transport
             // loop over all sampled k-configurations, adding their contributions to the integral
             for(unsigned int i = 0; i < k_values.size(); i++)
               {
-                typename data_manager<number>::twopf_configuration k1;
-                typename data_manager<number>::twopf_configuration k2;
-                typename data_manager<number>::twopf_configuration k3;
+                twopf_configuration k1;
+                twopf_configuration k2;
+                twopf_configuration k3;
 
                 k1.serial         = k_values[i].k1_serial;
                 k1.k_comoving     = k_values[i].k1_comoving;
@@ -363,9 +363,9 @@ namespace transport
                 k3.k_comoving     = k_values[i].k3_comoving;
                 k3.k_conventional = k_values[i].k3_conventional;
 
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
-                typename data_manager<number>::datapipe::zeta_twopf_time_data_tag k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
+                zeta_twopf_time_data_tag<number> k1_tag = h->pipe.new_zeta_twopf_time_data_tag(k1);
+                zeta_twopf_time_data_tag<number> k2_tag = h->pipe.new_zeta_twopf_time_data_tag(k2);
+                zeta_twopf_time_data_tag<number> k3_tag = h->pipe.new_zeta_twopf_time_data_tag(k3);
 
                 const std::vector<number> twopf_k1 = z_handle.lookup_tag(k1_tag);
                 const std::vector<number> twopf_k2 = z_handle.lookup_tag(k2_tag);

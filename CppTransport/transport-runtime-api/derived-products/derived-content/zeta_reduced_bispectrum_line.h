@@ -17,11 +17,8 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>::datapipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
-
-#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+// get details of datapipe<number>
+#include "transport-runtime-api/data/datapipe/datapipe.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"
@@ -99,7 +96,7 @@ namespace transport
 		      public:
 
 		        //! lookup wavenumber axis data
-		        void pull_wavenumber_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const;
+		        void pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const;
 
 
 		        // WRITE TO A STREAM
@@ -188,16 +185,16 @@ namespace transport
 
 
 		    template <typename number>
-		    void zeta_reduced_bispectrum_line<number>::pull_wavenumber_axis(typename data_manager<number>::datapipe& pipe, std::vector<double>& axis) const
+		    void zeta_reduced_bispectrum_line<number>::pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const
 			    {
-		        typename data_manager<number>::datapipe::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-		        typename data_manager<number>::datapipe::threepf_kconfig_tag tag = pipe.new_threepf_kconfig_tag();
+		        typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+		        threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
 
             // safe to take a reference here and avoid a copy
-		        const std::vector< typename data_manager<number>::threepf_configuration >& configs = handle.lookup_tag(tag);
+		        const std::vector< threepf_configuration >& configs = handle.lookup_tag(tag);
 
 		        axis.clear();
-		        for(typename std::vector< typename data_manager<number>::threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+		        for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
 			        {
 		            if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).kt_comoving);
 		            else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).kt_conventional);

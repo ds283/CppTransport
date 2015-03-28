@@ -49,7 +49,7 @@ namespace transport
 		        // DERIVE LINES -- implements a 'derived_line' interface
 
 		        //! generate data lines for plotting
-		        virtual void derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
 
 
@@ -103,7 +103,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void r_wavenumber_series<number>::derive_lines(typename data_manager<number>::datapipe& pipe, std::list<data_line<number> >& lines,
+		    void r_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                                   const std::list<std::string>& tags) const
 			    {
 						// attach our datapipe to an output group
@@ -114,24 +114,24 @@ namespace transport
 				    this->pull_wavenumber_axis(pipe, wavenumber_axis);
 
 				    // set up cache handles
-				    typename data_manager<number>::datapipe::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-				    typename data_manager<number>::datapipe::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
-				    typename data_manager<number>::datapipe::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
+				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
+				    typename datapipe<number>::kconfig_data_handle& k_handle = pipe.new_kconfig_data_handle(this->kconfig_sample_sns);
+				    typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
 				    // pull time-configuration data from the database
-				    typename data_manager<number>::datapipe::time_config_tag t_tag = pipe.new_time_config_tag();
+				    time_config_tag<number> t_tag = pipe.new_time_config_tag();
 				    const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
 
 				    // for each t-configuration, pull data from the database
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 					    {
-						    typename data_manager<number>::datapipe::cf_kconfig_data_tag tensor_tag =
-							    pipe.new_cf_kconfig_data_tag(data_manager<number>::datapipe::cf_tensor_twopf, this->mdl->tensor_flatten(0,0), this->time_sample_sns[i]);
+						    cf_kconfig_data_tag<number> tensor_tag =
+							    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->mdl->tensor_flatten(0,0), this->time_sample_sns[i]);
 
 						    // must copy this, becaue we will call lookup_tag() again
 						    const std::vector<number> tensor_data = k_handle.lookup_tag(tensor_tag);
 
-						    typename data_manager<number>::datapipe::zeta_twopf_kconfig_data_tag zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
+						    zeta_twopf_kconfig_data_tag<number> zeta_tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
 						    // this time we can take a reference
 						    const std::vector<number>& zeta_data = z_handle.lookup_tag(zeta_tag);

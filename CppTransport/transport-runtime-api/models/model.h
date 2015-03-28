@@ -190,13 +190,13 @@ namespace transport
         // process a work list of twopf items
         // must be over-ridden by a derived implementation class
         virtual void backend_process_queue(work_queue<twopf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::twopf_batcher& batcher,
+                                           twopf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 
         // process a work list of threepf items
         // must be over-ridden by a derived implementation class
         virtual void backend_process_queue(work_queue<threepf_kconfig>& work, const integration_task<number>* tk,
-                                           typename data_manager<number>::threepf_batcher& batcher,
+                                           threepf_batcher<number>& batcher,
                                            bool silent = false) = 0;
 
         // return size of state vectors
@@ -212,7 +212,7 @@ namespace transport
       protected:
 
         //! Write information about the task we are processing
-        void write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
+        void write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                              double abs_err, double rel_err, double step_size, std::string stepper_name);
 
 
@@ -304,14 +304,14 @@ namespace transport
 
 
     template <typename number>
-    void model<number>::write_task_data(const integration_task<number>* task, typename data_manager<number>::generic_batcher& batcher,
+    void model<number>::write_task_data(const integration_task<number>* task, generic_batcher& batcher,
                                         double abs_err, double rel_err, double step_size, std::string stepper_name)
       {
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << __CPP_TRANSPORT_SOLVING_ICS_MESSAGE;
 
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *task;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *task;
 
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal)
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal)
           << __CPP_TRANSPORT_STEPPER_MESSAGE    << " '"  << stepper_name
           << "', " << __CPP_TRANSPORT_ABS_ERR   << " = " << abs_err
           << ", "  << __CPP_TRANSPORT_REL_ERR   << " = " << rel_err

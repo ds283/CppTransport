@@ -18,10 +18,13 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
 
+#include "transport-runtime-api/repository/writers/writers.h"
+#include "transport-runtime-api/data/datapipe/configurations.h"
+#include "transport-runtime-api/data/batchers/batchers.h"
+
 #include "boost/lexical_cast.hpp"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/data/data_manager.h"
 
 
 #define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   "time_samples"
@@ -567,7 +570,7 @@ namespace transport
 
 		    // Write host information
 		    template <typename number>
-		    void write_host_info(typename data_manager<number>::generic_batcher* batcher)
+		    void write_host_info(generic_batcher* batcher)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -600,8 +603,8 @@ namespace transport
 
         // Write a batch of per-configuration statistics values
         template <typename number>
-        void write_stats(typename data_manager<number>::generic_batcher* batcher,
-                         const std::vector<typename data_manager<number>::configuration_statistics>& batch)
+        void write_stats(generic_batcher* batcher,
+                         const std::vector< typename integration_items<number>::configuration_statistics >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -614,7 +617,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::configuration_statistics>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector<typename integration_items<number>::configuration_statistics >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).integration));
@@ -635,8 +638,7 @@ namespace transport
 
         // Write a batch of background values
         template <typename number>
-        void write_backg(typename data_manager<number>::integration_batcher* batcher,
-                         const std::vector<typename data_manager<number>::backg_item>& batch)
+        void write_backg(integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::backg_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -663,7 +665,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::backg_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename integration_items<number>::backg_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 for(unsigned int page = 0; page < num_pages; page++)
 	                {
@@ -692,8 +694,7 @@ namespace transport
 
         // Write a batch of twopf values
         template <typename number>
-        void write_twopf(twopf_value_type type, typename data_manager<number>::integration_batcher* batcher,
-                         const std::vector<typename data_manager<number>::twopf_item>& batch)
+        void write_twopf(twopf_value_type type, integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::twopf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -720,7 +721,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename integration_items<number>::twopf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
 		            for(unsigned int page = 0; page < num_pages; page++)
 			            {
@@ -750,8 +751,7 @@ namespace transport
 
         // Write a batch of tensor twopf values
         template <typename number>
-        void write_tensor_twopf(typename data_manager<number>::integration_batcher* batcher,
-                                const std::vector<typename data_manager<number>::tensor_twopf_item>& batch)
+        void write_tensor_twopf(integration_batcher<number>* batcher, const std::vector< typename integration_items<number>::tensor_twopf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -776,7 +776,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::tensor_twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename integration_items<number>::tensor_twopf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 for(unsigned int page = 0; page < num_pages; page++)
                   {
@@ -806,8 +806,7 @@ namespace transport
 
         // Write a batch of threepf values
         template <typename number>
-        void write_threepf(typename data_manager<number>::integration_batcher* batcher,
-                           const std::vector<typename data_manager<number>::threepf_item>& batch)
+        void write_threepf(integration_batcher<number>* batcher, const std::vector<typename integration_items<number>::threepf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -834,9 +833,9 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector<typename integration_items<number>::threepf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-		            for(unsigned int page = 0; page < num_pages; page++)
+		            for(unsigned int page  = 0; page < num_pages; page++)
 			            {
 		                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
@@ -864,8 +863,7 @@ namespace transport
 
         // Write a batch of zeta twopf values
         template <typename number>
-        void write_zeta_twopf(typename data_manager<number>::postintegration_batcher* batcher,
-                              const std::vector<typename data_manager<number>::zeta_twopf_item>& batch)
+        void write_zeta_twopf(postintegration_batcher* batcher, const std::vector< typename postintegration_items<number>::zeta_twopf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -878,7 +876,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::zeta_twopf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename postintegration_items<number>::zeta_twopf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
@@ -897,8 +895,7 @@ namespace transport
 
         // Write a batch of zeta threepf values
         template <typename number>
-        void write_zeta_threepf(typename data_manager<number>::postintegration_batcher* batcher,
-                                const std::vector<typename data_manager<number>::zeta_threepf_item>& batch)
+        void write_zeta_threepf(postintegration_batcher* batcher, const std::vector< typename postintegration_items<number>::zeta_threepf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -911,7 +908,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::zeta_threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename postintegration_items<number>::zeta_threepf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
@@ -930,8 +927,7 @@ namespace transport
 
         // Write a batch of zeta threepf values
         template <typename number>
-        void write_zeta_redbsp(typename data_manager<number>::postintegration_batcher* batcher,
-                               const std::vector<typename data_manager<number>::zeta_threepf_item>& batch)
+        void write_zeta_redbsp(postintegration_batcher* batcher, const std::vector< typename postintegration_items<number>::zeta_threepf_item >& batch)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
@@ -944,7 +940,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::zeta_threepf_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector<typename postintegration_items<number>::zeta_threepf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
                 check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
@@ -963,8 +959,7 @@ namespace transport
 
         // Write a batch of zeta threepf values
         template <typename number>
-        void write_fNL(typename data_manager<number>::postintegration_batcher* batcher,
-                       const std::vector<typename data_manager<number>::fNL_item>& batch,
+        void write_fNL(postintegration_batcher* batcher, const std::vector< typename postintegration_items<number>::fNL_item >& batch,
                        derived_data::template_type type)
           {
             sqlite3* db = nullptr;
@@ -978,7 +973,7 @@ namespace transport
 
             exec(db, "BEGIN TRANSACTION;");
 
-            for(typename std::vector<typename data_manager<number>::fNL_item>::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::vector< typename postintegration_items<number>::fNL_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
                 check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
                 check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>((*t).BT)));
@@ -1474,8 +1469,7 @@ namespace transport
         // Pull a set of twopf k-configuration sample points, identified by their serial numbers
         template <typename number>
         void pull_twopf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers,
-                                       std::vector<typename data_manager<number>::twopf_configuration>& sample,
-                                       unsigned int worker)
+                                       std::vector<twopf_configuration>& sample, unsigned int worker)
 	        {
             assert(db != nullptr);
 
@@ -1504,7 +1498,7 @@ namespace transport
 	            {
                 if(status == SQLITE_ROW)
 	                {
-		                typename data_manager<number>::twopf_configuration value;
+		                twopf_configuration value;
 
 		                value.serial         = *t;
 		                value.k_conventional = sqlite3_column_double(stmt, 0);
@@ -1535,7 +1529,7 @@ namespace transport
         // Pull a set of threepf k-configuration sample points, identified by their serial numbers
         template <typename number>
         void pull_threepf_kconfig_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers,
-                                         std::vector<typename data_manager<number>::threepf_configuration>& sample, unsigned int worker)
+                                         std::vector<threepf_configuration>& sample, unsigned int worker)
 	        {
             assert(db != nullptr);
 
@@ -1590,7 +1584,7 @@ namespace transport
 	            {
                 if(status == SQLITE_ROW)
 	                {
-                    typename data_manager<number>::threepf_configuration value;
+                    threepf_configuration value;
 
 		                value.serial          = *t;
                     value.kt_conventional = sqlite3_column_double(stmt, 0);

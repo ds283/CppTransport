@@ -130,7 +130,7 @@ namespace transport
 		                              BatchObject& batcher, unsigned int state_size);
 
 		    //! Push a temporary container to the master process
-		    void push_temp_container(typename data_manager<number>::generic_batcher* batcher, unsigned int message, std::string log_message);
+		    void push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message);
 
 				//! Construct a work item filter for a twopf task
 				work_item_filter<twopf_kconfig> work_item_filter_factory(twopf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<twopf_kconfig>(items); }
@@ -158,7 +158,7 @@ namespace transport
 		                                  const MPI::new_postintegration_payload& payload, BatchObject& batcher);
 
 		    //! No-op push content for connexion to datapipe
-		    void disallow_push_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
+		    void disallow_push_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product);
 
 
 		    // SLAVE OUTPUT TASKS
@@ -172,7 +172,7 @@ namespace transport
 		    void schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
 
 		    //! Push new derived content to the master process
-		    void push_derived_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product);
+		    void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product);
 
 
 		    // INTERNAL DATA
@@ -469,28 +469,23 @@ namespace transport
         if((tka = dynamic_cast<twopf_task<number>*>(tk)) != nullptr)
 	        {
             // construct a callback for the integrator to push new batches to the master
-            typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-	                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
-            typename data_manager<number>::twopf_batcher batcher =
-	                                                         this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                     this->get_rank(), m, dispatcher);
+            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
 
             this->schedule_integration(tka, m, payload, batcher, m->backend_twopf_state_size());
 	        }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
 	        {
             // construct a callback for the integrator to push new batches to the master
-            typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-	                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
-            typename data_manager<number>::threepf_batcher batcher =
-	                                                           this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                         this->get_rank(), m, dispatcher);
+            threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                                                            this->get_rank(), m, dispatcher);
 
             this->schedule_integration(tkb, m, payload, batcher, m->backend_threepf_state_size());
 	        }
@@ -515,8 +510,8 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
 
 		    bool complete = false;
 		    while(!complete)
@@ -545,7 +540,7 @@ namespace transport
 				            // keep track of wallclock time
 				            boost::timer::cpu_timer timer;
 
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW WORK ASSIGNMENT";
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- NEW WORK ASSIGNMENT";
 
 				            // perform the integration
 				            try
@@ -555,7 +550,7 @@ namespace transport
 				            catch(runtime_exception& xe)
 					            {
 				                success = false;
-				                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
 					            }
 				            if(batcher.integrations_failed()) success = false;
 
@@ -565,8 +560,8 @@ namespace transport
 
 				            // notify master process that all work has been finished (temporary containers will be deleted by the master node)
 				            now = boost::posix_time::second_clock::universal_time();
-				            if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-				            else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
 				            MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
 				                                                               batcher.get_max_integration_time(), batcher.get_min_integration_time(),
@@ -584,14 +579,14 @@ namespace transport
 					        {
 						        this->world.recv(stat.source(), MPI::END_OF_WORK);
 						        complete = true;
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
 
 				            // close the batcher, flushing the current container to the master node if needed
 				            batcher.close();
 
 						        // send close-down acknowledgment to master
 				            now = boost::posix_time::second_clock::universal_time();
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
 						        this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
 
 						        break;
@@ -599,7 +594,7 @@ namespace transport
 
 				        default:
 					        {
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
 						        this->world.recv(stat.source(), stat.tag());
 						        break;
 					        }
@@ -694,21 +689,18 @@ namespace transport
         this->send_worker_data();
 
         // set up output-group finder function
-        typename data_manager<number>::datapipe::output_group_finder finder =
-	                                                                     std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::output_group_finder finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
         // set up content-dispatch function
-        typename data_manager<number>::datapipe::dispatch_function dispatcher =
-	                                                                   std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
-        typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-                                                                                       finder, dispatcher, this->get_rank());
+        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), finder, dispatcher, this->get_rank());
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << *tk;
+        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << *tk;
 
 		    bool complete = false;
 		    while(!complete)
@@ -742,7 +734,7 @@ namespace transport
 
 				            std::ostringstream work_msg;
 				            work_msg << work;
-				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << work_msg.str();
+				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << work_msg.str();
 
 				            const typename work_queue< output_task_element<number> >::device_queue queues = work[0];
 				            assert(queues.size() == 1);
@@ -767,7 +759,7 @@ namespace transport
 
 				                task_tags.splice(task_tags.end(), command_line_tags);
 
-				                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
+				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
 
 				                try
 					                {
@@ -781,17 +773,17 @@ namespace transport
 				                catch(runtime_exception& xe)
 					                {
 				                    success = false;
-				                    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Exception reported while processing: code=" << xe.get_exception_code() << ": " << xe.what();
+				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << "!! Exception reported while processing: code=" << xe.get_exception_code() << ": " << xe.what();
 					                }
 
 				                // check that the datapipe was correctly detached
 				                if(pipe.is_attached())
 					                {
-				                    BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
+				                    BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << "!! Task manager detected that datapipe was not correctly detached after generating derived product '" << product->get_name() << "'";
 				                    pipe.detach();
 					                }
 
-				                BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "";
+				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "";
 					            }
 
 				            // all work now done - stop the timer
@@ -799,8 +791,8 @@ namespace transport
 
 				            // notify master process that all work has been finished
 				            now = boost::posix_time::second_clock::universal_time();
-				            if(success) BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
-				            else        BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				            if(success) BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
 				            MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
 				                                                         list.size(), processing_time,
@@ -823,14 +815,14 @@ namespace transport
 					        {
 				            this->world.recv(stat.source(), MPI::END_OF_WORK);
 				            complete = true;
-				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
 
 				            // close the datapipe
 				            pipe.close();
 
 				            // send close-down acknowledgment to master
 				            now = boost::posix_time::second_clock::universal_time();
-				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
 				            this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
 
 				            break;
@@ -838,7 +830,7 @@ namespace transport
 
 				        default:
 					        {
-				            BOOST_LOG_SEV(pipe.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
 				            this->world.recv(stat.source(), stat.tag());
 				            break;
 					        }
@@ -948,14 +940,11 @@ namespace transport
 	            }
 
             // construct a callback for the integrator to push new batches to the master
-            typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            typename data_manager<number>::zeta_twopf_batcher batcher =
-	                                                              this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                               this->get_rank(), dispatcher);
+            zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
 
             this->schedule_postintegration(z2pf, ptk, payload, batcher);
 	        }
@@ -973,14 +962,11 @@ namespace transport
 	            }
 
             // construct a callback for the integrator to push new batches to the master
-            typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            typename data_manager<number>::zeta_threepf_batcher batcher =
-	                                                                this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                                   this->get_rank(), dispatcher);
+            zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
 
             this->schedule_postintegration(z3pf, ptk, payload, batcher);
 	        }
@@ -998,14 +984,11 @@ namespace transport
 	            }
 
             // construct a callback for the integrator to push new batches to the master
-            typename data_manager<number>::container_dispatch_function dispatcher =
-	                                                                       std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
-	                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
+            generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
             // construct batcher to hold output
-            typename data_manager<number>::fNL_batcher batcher =
-	                                                       this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-	                                                                                                 this->get_rank(), dispatcher, zfNL->get_template());
+            fNL_batcher<number> batcher = this->data_mgr->create_temp_fNL_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher, zfNL->get_template());
 
             this->schedule_postintegration(zfNL, ptk, payload, batcher);
 	        }
@@ -1028,8 +1011,8 @@ namespace transport
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << *tk;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
 
 		    bool complete = false;
 		    while(!complete)
@@ -1059,19 +1042,16 @@ namespace transport
 				            // keep track of wallclock time
 				            boost::timer::cpu_timer timer;
 
-				            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "-- NEW WORK ASSIGNMENT";
+				            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- NEW WORK ASSIGNMENT";
 
 				            // set up output-group finder function
-				            typename data_manager<number>::datapipe::output_group_finder finder =
-					                                                                         std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+				            typename datapipe<number>::output_group_finder finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
 				            // set up empty content-dispatch function -- this datapipe is not used to produce content
-				            typename data_manager<number>::datapipe::dispatch_function dispatcher =
-					                                                                       std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
+				            typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
 
 				            // acquire a datapipe which we can use to stream content from the databse
-				            typename data_manager<number>::datapipe pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(),
-				                                                                                           finder, dispatcher, this->get_rank(), true);
+				            datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), finder, dispatcher, this->get_rank(), true);
 
 				            // perform the task
 				            try
@@ -1083,7 +1063,7 @@ namespace transport
 				            catch(runtime_exception& xe)
 					            {
 				                success = false;
-				                BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
 					            }
 
 				            // inform the batcher we are at the end of this assignment
@@ -1094,8 +1074,8 @@ namespace transport
 
 				            // notify master process that all work has been finished (temporary containers will be deleted by the master node)
 				            now = boost::posix_time::second_clock::universal_time();
-				            if(success) BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
-				            else        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::error)  << std::endl << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
+				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
+				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)  << std::endl << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
 				            MPI::finished_postintegration_payload outgoing_payload(pipe.get_database_time(), timer.elapsed().wall,
 				                                                                   batcher.get_items_processed(), batcher.get_processing_time(),
@@ -1118,14 +1098,14 @@ namespace transport
 					        {
 						        this->world.recv(stat.source(), MPI::END_OF_WORK);
 						        complete = true;
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Notified of end-of-work: preparing to shut down";
 
 						        // close the batcher, flushing the current container to the master node if required
 						        batcher.close();
 
 						        // send close-down acknowledgment to master
 						        now = boost::posix_time::second_clock::universal_time();
-						        BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
 						        this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
 
 						        break;
@@ -1133,7 +1113,7 @@ namespace transport
 
 				        default:
 					        {
-				            BOOST_LOG_SEV(batcher.get_log(), data_manager<number>::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
+				            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "!! Received unexpected MPI message " << stat.tag() << " from master node; discarding";
 				            this->world.recv(stat.source(), stat.tag());
 				            break;
 					        }
@@ -1143,12 +1123,12 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::push_temp_container(typename data_manager<number>::generic_batcher* batcher, unsigned int message, std::string log_message)
+    void slave_controller<number>::push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message)
 	    {
         assert(batcher != nullptr);
         if(batcher == nullptr) throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_BATCHER);
 
-        BOOST_LOG_SEV(batcher->get_log(), data_manager<number>::normal) << "-- Sending " << log_message << " message for container " << batcher->get_container_path();
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "-- Sending " << log_message << " message for container " << batcher->get_container_path();
 
         MPI::data_ready_payload payload(batcher->get_container_path().string());
 
@@ -1158,7 +1138,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::push_derived_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product)
+    void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product)
 	    {
         assert(pipe != nullptr);
         assert(product != nullptr);
@@ -1167,7 +1147,7 @@ namespace transport
         if(pipe == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
         if(product == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DERIVED_PRODUCT);
 
-        BOOST_LOG_SEV(pipe->get_log(), data_manager<number>::normal) << "-- Sending DERIVED_CONTENT_READY message for derived product '" << product->get_name() << "'";
+        BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "-- Sending DERIVED_CONTENT_READY message for derived product '" << product->get_name() << "'";
 
         boost::filesystem::path product_filename = pipe->get_abs_tempdir_path() / product->get_filename();
         if(boost::filesystem::exists(product_filename))
@@ -1185,7 +1165,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::disallow_push_content(typename data_manager<number>::datapipe* pipe, typename derived_data::derived_product<number>* product)
+    void slave_controller<number>::disallow_push_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product)
 	    {
         assert(false);
 	    }

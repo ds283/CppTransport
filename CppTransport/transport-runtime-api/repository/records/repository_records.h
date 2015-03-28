@@ -34,6 +34,7 @@
 // forward-declare derived products if needed
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
+#include "boost/timer/timer.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
