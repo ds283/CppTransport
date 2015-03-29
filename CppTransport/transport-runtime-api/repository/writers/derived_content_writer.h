@@ -37,18 +37,35 @@ namespace transport
 
     //! Derived content writer: used to commit derived products to the database
 		template <typename number>
-    class derived_content_writer: public generic_writer< derived_content_writer<number> >
+    class derived_content_writer: public generic_writer
 	    {
+
+      public:
+
+        //! Define a commit callback object. Used to commit data products to the repository
+        typedef std::function<void(derived_content_writer<number>&)> commit_callback;
+
+        //! Define an abort callback object. Used to abort storage of data products
+        typedef std::function<void(derived_content_writer<number>&)> abort_callback;
+
+        //! Define an aggregation callback object. Used to aggregate results from worker processes
+        typedef std::function<bool(derived_content_writer<number>&, const std::string&)> aggregate_callback;
+
+        class callback_group
+	        {
+          public:
+            commit_callback commit;
+            abort_callback  abort;
+	        };
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct a derived-content writer object
-        derived_content_writer(output_task_record<number>* rec,
-                               const typename generic_writer< derived_content_writer<number> >::callback_group& c,
-                               const typename generic_writer< derived_content_writer<number> >::metadata_group& m,
-                               const typename generic_writer< derived_content_writer<number> >::paths_group& p,
+        derived_content_writer(output_task_record<number>* rec, const callback_group& c,
+                               const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
         //! disallow copying to ensure consistency of RAII idiom
@@ -56,6 +73,25 @@ namespace transport
 
         //! Destroy a derived-content writer object
         virtual ~derived_content_writer();
+
+
+        // AGGREGATION
+
+      public:
+
+        //! Set aggregator
+        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+
+        //! Aggregate a product
+        bool aggregate(const std::string& product);
+
+
+        // DATABASE FUNCTIONS
+
+      public:
+
+        //! Commit contents of this integration_writer to the database
+        void commit() { this->callbacks.commit(*this); this->committed = true; }
 
 
         // ADMINISTRATION
@@ -111,6 +147,18 @@ namespace transport
 
       private:
 
+        // REPOSITORY CALLBACK FUNCTIONS
+
+        //! Repository callbacks
+        callback_group callbacks;
+
+
+        // DATA MANAGER CALLBACK FUNCTIONS
+
+        //! Aggregate callback
+        aggregate_callback aggregator;
+
+
         // CONTENT
 
         std::list<derived_content> content;
@@ -131,12 +179,12 @@ namespace transport
 
 
     template <typename number>
-    derived_content_writer<number>::derived_content_writer(output_task_record<number>* rec,
-                                                           const typename generic_writer< derived_content_writer<number> >::callback_group& c,
-                                                           const typename generic_writer< derived_content_writer<number> >::metadata_group& m,
-                                                           const typename generic_writer< derived_content_writer<number> >::paths_group& p,
+    derived_content_writer<number>::derived_content_writer(output_task_record<number>* rec, const typename derived_content_writer<number>::callback_group& c,
+                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                            unsigned int w)
-	    : generic_writer< derived_content_writer<number> >(c, m, p, w),
+	    : generic_writer(m, p, w),
+	      callbacks(c),
+	      aggregator(nullptr),
 	      parent_record(dynamic_cast< output_task_record<number>* >(rec->clone())),
 	      metadata()
 	    {
@@ -154,6 +202,19 @@ namespace transport
         if(!this->committed) this->callbacks.abort(*this);
 
         delete this->parent_record;
+	    }
+
+
+    template <typename number>
+    bool derived_content_writer<number>::aggregate(const std::string& product)
+	    {
+        if(!this->aggregator)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+	        }
+
+        return this->aggregator(*this, product);
 	    }
 
 

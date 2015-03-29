@@ -37,8 +37,27 @@ namespace transport
 
     //! Integration writer: used to commit integration output to the database
 		template <typename number>
-    class integration_writer: public generic_writer< integration_writer<number> >
+    class integration_writer: public generic_writer
 	    {
+
+      public:
+
+        //! Define a commit callback object. Used to commit data products to the repository
+        typedef std::function<void(integration_writer<number>&)> commit_callback;
+
+        //! Define an abort callback object. Used to abort storage of data products
+        typedef std::function<void(integration_writer<number>&)> abort_callback;
+
+        //! Define an aggregation callback object. Used to aggregate results from worker processes
+        typedef std::function<bool(integration_writer<number>&, const std::string&)> aggregate_callback;
+
+        class callback_group
+	        {
+          public:
+            commit_callback commit;
+            abort_callback  abort;
+	        };
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -47,10 +66,8 @@ namespace transport
         //! Construct an integration writer object.
         //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
         //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-        integration_writer(integration_task_record<number>* rec,
-                           const typename generic_writer< integration_writer<number> >::callback_group& c,
-                           const typename generic_writer< integration_writer<number> >::metadata_group& m,
-                           const typename generic_writer< integration_writer<number> >::paths_group& p,
+        integration_writer(integration_task_record<number>* rec, const callback_group& c,
+                           const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                            unsigned int w);
 
         //! disallow copying to ensure consistency of RAII idiom
@@ -58,6 +75,25 @@ namespace transport
 
         //! Destroy an integration container object
         virtual ~integration_writer();
+
+
+        // AGGREGATION
+
+      public:
+
+        //! Set aggregator
+        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+
+        //! Aggregate a product
+        bool aggregate(const std::string& product);
+
+
+        // DATABASE FUNCTIONS
+
+      public:
+
+        //! Commit contents of this integration_writer to the database
+        void commit() { this->callbacks.commit(*this); this->committed = true; }
 
 
         // STATISTICS
@@ -86,6 +122,17 @@ namespace transport
 
       private:
 
+        // REPOSITORY CALLBACK FUNCTIONS
+
+        //! Repository callbacks
+        callback_group callbacks;
+
+
+        // DATA MANAGER CALLBACK FUNCTIONS
+
+        //! Aggregate callback
+        aggregate_callback aggregator;
+
 
         // METADATA
 
@@ -108,12 +155,12 @@ namespace transport
 
 
     template <typename number>
-    integration_writer<number>::integration_writer(integration_task_record<number>* rec,
-                                                   const typename generic_writer< integration_writer<number> >::callback_group& c,
-                                                   const typename generic_writer< integration_writer<number> >::metadata_group& m,
-                                                   const typename generic_writer< integration_writer<number> >::paths_group& p,
+    integration_writer<number>::integration_writer(integration_task_record<number>* rec, const typename integration_writer<number>::callback_group& c,
+                                                   const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                    unsigned int w)
-	    : generic_writer<integration_writer>(c, m, p, w),
+	    : generic_writer(m, p, w),
+	      callbacks(c),
+	      aggregator(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),
 	      supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata()
@@ -133,6 +180,19 @@ namespace transport
 
         // delete copy of task object
         delete this->parent_record;
+	    }
+
+
+		template <typename number>
+    bool integration_writer<number>::aggregate(const std::string& product)
+	    {
+        if(!this->aggregator)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+	        }
+
+        return this->aggregator(*this, product);
 	    }
 
 

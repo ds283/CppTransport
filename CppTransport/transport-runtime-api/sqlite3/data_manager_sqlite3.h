@@ -148,22 +148,22 @@ namespace transport
       protected:
 
         //! Aggregate a temporary twopf container into a principal container
-        bool aggregate_twopf_batch(base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_twopf_batch(integration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary threepf container into a principal container
-        bool aggregate_threepf_batch(base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_threepf_batch(integration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a derived product
-        bool aggregate_derived_product(base_writer& writer, const std::string& temp_name);
+        bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name);
 
         //! Aggregate a temporary zeta_twopf container
-        bool aggregate_zeta_twopf_batch(base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary zeta_threepf container
-        bool aggregate_zeta_threepf_batch(base_writer& writer, const std::string& temp_ctr);
+        bool aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a temporary fNL container
-        bool aggregate_fNL_batch(base_writer& writer, const std::string& temp_ctr, derived_data::template_type type);
+        bool aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type);
 
 
         // DATA PIPES -- implements a 'data_manager' interface
@@ -906,10 +906,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_twopf_batch(base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_twopf_batch(integration_writer<number>& writer, const std::string& temp_ctr)
       {
-        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
-
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -925,10 +923,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_threepf_batch(base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_threepf_batch(integration_writer<number>& writer, const std::string& temp_ctr)
       {
-        integration_writer<number>& writer = dynamic_cast< integration_writer<number>& >(gwriter);
-
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -946,10 +942,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr)
       {
-        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
-
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -960,10 +954,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(base_writer& gwriter, const std::string& temp_ctr)
+    bool data_manager_sqlite3<number>::aggregate_zeta_threepf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr)
       {
-        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
-
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -976,10 +968,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_fNL_batch(base_writer& gwriter, const std::string& temp_ctr, derived_data::template_type type)
+    bool data_manager_sqlite3<number>::aggregate_fNL_batch(postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
       {
-        postintegration_writer<number>& writer = dynamic_cast< postintegration_writer<number>& >(gwriter);
-
         sqlite3* db = nullptr;
         writer.get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
@@ -990,10 +980,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_derived_product(base_writer& gwriter, const std::string& temp_name)
+    bool data_manager_sqlite3<number>::aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name)
       {
-        derived_content_writer<number>& writer = dynamic_cast< derived_content_writer<number>& >(gwriter);
-
         bool success = true;
 
         // lookup derived product from output task

@@ -39,16 +39,32 @@ namespace transport
 
     //! Postintegration writer: used to commit postprocessing of integration output to the database
 		template <typename number>
-    class postintegration_writer: public generic_writer< postintegration_writer<number> >
+    class postintegration_writer: public generic_writer
 	    {
 
       public:
+
+        //! Define a commit callback object. Used to commit data products to the repository
+        typedef std::function<void(postintegration_writer<number>&)> commit_callback;
+
+        //! Define an abort callback object. Used to abort storage of data products
+        typedef std::function<void(postintegration_writer<number>&)> abort_callback;
+
+        //! Define an aggregation callback object. Used to aggregate results from worker processes
+        typedef std::function<bool(postintegration_writer<number>&, const std::string&)> aggregate_callback;
 
         //! Callback for merging postintegration correlation-function output between data containers
         typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&)> merge_callback;
 
         //! Callback for merging postintegration fNL output between data containers
         typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&, derived_data::template_type)> fNL_merge_callback;
+
+        class callback_group
+	        {
+          public:
+            commit_callback commit;
+            abort_callback  abort;
+	        };
 
         class merge_group
 	        {
@@ -59,16 +75,15 @@ namespace transport
             fNL_merge_callback fNL;
 	        };
 
+
         // CONSTRUCTOR, DESTRUCTOR
 
       public:
 
         //! Construct a postintegration writer object.
         //! After creation it must be initialized by a suitable data_manager
-        postintegration_writer(postintegration_task_record<number>* rec,
-                               const typename generic_writer< postintegration_writer<number> >::callback_group& c,
-                               const typename generic_writer< postintegration_writer<number> >::metadata_group& m,
-                               const typename generic_writer< postintegration_writer<number> >::paths_group& p,
+        postintegration_writer(postintegration_task_record<number>* rec, const callback_group& c,
+                               const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
         //! disallow copying to ensure consistency of RAII idiom
@@ -76,6 +91,25 @@ namespace transport
 
         //! Destroy a postintegration writer object
         virtual ~postintegration_writer();
+
+
+        // AGGREGATION
+
+      public:
+
+        //! Set aggregator
+        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
+
+        //! Aggregate a product
+        bool aggregate(const std::string& product);
+
+
+        // DATABASE FUNCTIONS
+
+      public:
+
+        //! Commit contents of this integration_writer to the database
+        void commit() { this->callbacks.commit(*this); this->committed = true; }
 
 
         // MERGE CONTAINER OUTPUT
@@ -114,6 +148,18 @@ namespace transport
 
       private:
 
+        // REPOSITORY CALLBACK FUNCTIONS
+
+        //! Repository callbacks
+        callback_group callbacks;
+
+
+        // DATA MANAGER CALLBACK FUNCTIONS
+
+        //! Aggregate callback
+        aggregate_callback aggregator;
+
+
         // METADATA
 
         //! task associated with this integration writer
@@ -135,12 +181,12 @@ namespace transport
 
 
     template <typename number>
-    postintegration_writer<number>::postintegration_writer(postintegration_task_record<number>* rec,
-                                                           const typename generic_writer< postintegration_writer<number> >::callback_group& c,
-                                                           const typename generic_writer< postintegration_writer<number> >::metadata_group& m,
-                                                           const typename generic_writer< postintegration_writer<number> >::paths_group& p,
+    postintegration_writer<number>::postintegration_writer(postintegration_task_record<number>* rec, const typename postintegration_writer<number>::callback_group& c,
+                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                            unsigned int w)
-	    : generic_writer< postintegration_writer<number> >(c, m, p, w),
+	    : generic_writer(m, p, w),
+	      callbacks(c),
+	      aggregator(nullptr),
 	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),
 	      metadata()
 	    {
@@ -158,6 +204,19 @@ namespace transport
         if(!this->committed) this->callbacks.abort(*this);
 
         delete this->parent_record;
+	    }
+
+
+    template <typename number>
+    bool postintegration_writer<number>::aggregate(const std::string& product)
+	    {
+        if(!this->aggregator)
+	        {
+            assert(false);
+            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
+	        }
+
+        return this->aggregator(*this, product);
 	    }
 
 

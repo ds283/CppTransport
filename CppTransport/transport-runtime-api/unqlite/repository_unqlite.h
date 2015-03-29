@@ -1284,15 +1284,15 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-        typename generic_writer< integration_writer<number> >::callback_group callbacks;
+        typename integration_writer<number>::callback_group callbacks;
         callbacks.commit = std::bind(&repository_unqlite<number>::close_integration_writer, this, std::placeholders::_1);
         callbacks.abort  = std::bind(&repository_unqlite<number>::abort_integration_writer, this, std::placeholders::_1);
 
-        typename generic_writer< integration_writer<number> >::metadata_group metadata;
+        generic_writer::metadata_group metadata;
         metadata.tags          = tags;
         metadata.creation_time = now;
 
-        typename generic_writer< integration_writer<number> >::paths_group paths;
+        generic_writer::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = output_path;
         paths.data   = sql_path;
@@ -1329,15 +1329,15 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-        typename generic_writer< derived_content_writer<number> >::callback_group callbacks;
+        typename derived_content_writer<number>::callback_group callbacks;
         callbacks.commit = std::bind(&repository_unqlite<number>::close_derived_content_writer, this, std::placeholders::_1);
         callbacks.abort  = std::bind(&repository_unqlite<number>::abort_derived_content_writer, this, std::placeholders::_1);
 
-        typename generic_writer< derived_content_writer<number> >::metadata_group metadata;
+        generic_writer::metadata_group metadata;
         metadata.tags          = tags;
         metadata.creation_time = now;
 
-        typename generic_writer< derived_content_writer<number> >::paths_group paths;
+        generic_writer::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = output_path;
         paths.log    = log_path;
@@ -1371,15 +1371,15 @@ namespace transport
         boost::filesystem::create_directories(this->get_root_path() / log_path);
         boost::filesystem::create_directories(this->get_root_path() / temp_path);
 
-        typename generic_writer< postintegration_writer<number> >::callback_group callbacks;
+        typename postintegration_writer<number>::callback_group callbacks;
         callbacks.commit        = std::bind(&repository_unqlite<number>::close_postintegration_writer, this, std::placeholders::_1);
         callbacks.abort         = std::bind(&repository_unqlite<number>::abort_postintegration_writer, this, std::placeholders::_1);
 
-        typename generic_writer< postintegration_writer<number> >::metadata_group metadata;
+        generic_writer::metadata_group metadata;
         metadata.tags          = tags;
         metadata.creation_time = now;
 
-        typename generic_writer< postintegration_writer<number> >::paths_group paths;
+        generic_writer::paths_group paths;
         paths.root   = this->get_root_path();
         paths.output = output_path;
         paths.data   = sql_path;

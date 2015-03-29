@@ -67,27 +67,10 @@ namespace transport
 	    };
 
     //! 'generic_writer' supplies generic services for writers
-    template <typename WriterObject>
     class generic_writer: public base_writer
 	    {
 
       public:
-
-        //! Define a commit callback object. Used to commit data products to the repository
-        typedef std::function<void(WriterObject&)> commit_callback;
-
-        //! Define an abort callback object. Used to abort storage of data products
-        typedef std::function<void(WriterObject&)> abort_callback;
-
-        //! Define an aggregation callback object. Used to aggregate results from worker processes
-        typedef std::function<bool(WriterObject&, const std::string&)> aggregate_callback;
-
-        class callback_group
-	        {
-          public:
-            commit_callback commit;
-            abort_callback  abort;
-	        };
 
         class metadata_group
 	        {
@@ -112,29 +95,10 @@ namespace transport
       public:
 
         //! construct a generic writer object
-        generic_writer(const callback_group& c, const metadata_group& m, const paths_group& p, unsigned int w);
+        generic_writer(const metadata_group& m, const paths_group& p, unsigned int w);
 
         //! destroy a generic writer object
         virtual ~generic_writer();
-
-
-        // AGGREGATION
-
-      public:
-
-        //! Set aggregator
-        void set_aggregation_handler(aggregate_callback c) { this->aggregator = c; }
-
-        //! Aggregate a product
-        bool aggregate(const std::string& product);
-
-
-        // DATABASE FUNCTIONS
-
-      public:
-
-        //! Commit contents of this integration_writer to the database
-        void commit() { this->callbacks.commit(static_cast<WriterObject&>(*this)); this->committed = true; }
 
 
         // ADMINISTRATION
@@ -208,18 +172,6 @@ namespace transport
         bool committed;
 
 
-        // REPOSITORY CALLBACK FUNCTIONS
-
-        //! Repository callbacks
-        callback_group callbacks;
-
-
-        // DATA MANAGER CALLBACK FUNCTIONS
-
-        //! Aggregate callback
-        aggregate_callback aggregator;
-
-
         // PATHS
 
         //! paths associated with this writer
@@ -255,13 +207,10 @@ namespace transport
     // GENERIC WRITER METHODS
 
 
-    template <typename WriterObject>
-    generic_writer<WriterObject>::generic_writer(const typename generic_writer<WriterObject>::callback_group& c,
-                                                 const typename generic_writer<WriterObject>::metadata_group& m,
-                                                 const typename generic_writer<WriterObject>::paths_group& p,
-                                                 unsigned int w)
-	    : callbacks(c),
-	      generic_metadata(m),
+    generic_writer::generic_writer(const generic_writer::metadata_group& m,
+                                   const generic_writer::paths_group& p,
+                                   unsigned int w)
+	    : generic_metadata(m),
 	      paths(p),
 	      worker_number(w),
 	      data_manager_handle(nullptr),
@@ -293,8 +242,7 @@ namespace transport
 	    }
 
 
-    template <typename WriterObject>
-    generic_writer<WriterObject>::~generic_writer()
+    generic_writer::~generic_writer()
 	    {
         // remove logging objects
         boost::shared_ptr<boost::log::core> core = boost::log::core::get();
@@ -303,30 +251,15 @@ namespace transport
 	    }
 
 
-    template <typename WriterObject>
-    bool generic_writer<WriterObject>::aggregate(const std::string& product)
-	    {
-        if(!this->aggregator)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET);
-	        }
-
-        return this->aggregator(static_cast<WriterObject&>(*this), product);
-	    }
-
-
-    template <typename WriterObject>
     template <typename data_manager_type>
-    void generic_writer<WriterObject>::set_data_manager_handle(data_manager_type data)
+    void generic_writer::set_data_manager_handle(data_manager_type data)
 	    {
         this->data_manager_handle = static_cast<void*>(data);  // will fail if data_manager_type not (static-)castable to void*
 	    }
 
 
-    template <typename WriterObject>
     template <typename data_manager_type>
-    void generic_writer<WriterObject>::get_data_manager_handle(data_manager_type* data)
+    void generic_writer::get_data_manager_handle(data_manager_type* data)
 	    {
         if(this->data_manager_handle == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE);
         *data = static_cast<data_manager_type>(this->data_manager_handle);
