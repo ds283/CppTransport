@@ -120,7 +120,9 @@
 #define __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION     "Internal error: received unexpected postintegration task"
 
 #define __CPP_TRANSPORT_PROCESSED_TASKS_A                "Task manager: processed"
-#define __CPP_TRANSPORT_PROCESSED_TASKS_B                "database tasks in wallclock time"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR       "database task"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL         "database tasks"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_C                "in wallclock time"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

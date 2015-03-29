@@ -629,7 +629,16 @@ namespace transport
 		        if(database_tasks > 0)
 			        {
 		            std::ostringstream msg;
-		            msg << __CPP_TRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " " << __CPP_TRANSPORT_PROCESSED_TASKS_B << " " << format_time(timer.elapsed().wall);
+		            msg << __CPP_TRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " ";
+				        if(database_tasks > 1)
+					        {
+						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL;
+					        }
+				        else
+					        {
+						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR;
+					        }
+		            msg << " " << format_time(timer.elapsed().wall);
 				        this->message_handler(msg.str());
 			        }
 	        }
