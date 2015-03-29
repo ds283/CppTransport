@@ -30,10 +30,7 @@
 
 #include "transport-runtime-api/repository/records/repository_records.h"
 
-#include "transport-runtime-api/repository/writers/generic_writer.h"
-#include "transport-runtime-api/repository/writers/integration_writer.h"
-#include "transport-runtime-api/repository/writers/postintegration_writer.h"
-#include "transport-runtime-api/repository/writers/derived_content_writer.h"
+#include "transport-runtime-api/repository/writers/writers.h"
 
 #include "boost/filesystem/operations.hpp"
 
