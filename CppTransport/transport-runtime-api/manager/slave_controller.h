@@ -540,7 +540,7 @@ namespace transport
 				            // keep track of wallclock time
 				            boost::timer::cpu_timer timer;
 
-						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- NEW WORK ASSIGNMENT";
+						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW WORK ASSIGNMENT";
 
 				            // perform the integration
 				            try
@@ -723,6 +723,8 @@ namespace transport
 						        ctx.add_device("CPU");
 						        scheduler sch(ctx);
 						        auto work = sch.make_queue(*tk, filter);
+
+				            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- NEW WORK ASSIGNMENT";
 
 				            bool success = true;
 
@@ -1042,7 +1044,7 @@ namespace transport
 				            // keep track of wallclock time
 				            boost::timer::cpu_timer timer;
 
-				            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- NEW WORK ASSIGNMENT";
+				            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW WORK ASSIGNMENT";
 
 				            // set up output-group finder function
 				            typename datapipe<number>::output_group_finder finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
