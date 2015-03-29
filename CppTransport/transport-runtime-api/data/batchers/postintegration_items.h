@@ -62,6 +62,16 @@ namespace transport
             number TT;
 	        };
 
+
+		    struct fNL_item_comparator
+			    {
+		      public:
+				    bool operator() (const fNL_item& A, const fNL_item& B)
+					    {
+						    return(A.time_serial < B.time_serial);
+					    }
+			    };
+
 	    };
 
 	}   // namespace transport

@@ -9,6 +9,7 @@
 
 
 #include <vector>
+#include <set>
 #include <functional>
 
 #include "transport-runtime-api/derived-products/template_types.h"
@@ -32,13 +33,13 @@ namespace transport
 		  public:
 
 		    //! Zeta 2pf writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector<typename postintegration_items<number>::zeta_twopf_item>&)> zeta_twopf_writer;
+		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_twopf_item >&)> zeta_twopf_writer;
 
 		    //! Zeta 3pf writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector<typename postintegration_items<number>::zeta_threepf_item>&)> zeta_threepf_writer;
+		    typedef std::function<void(postintegration_batcher*, const std::vector< typename postintegration_items<number>::zeta_threepf_item >&)> zeta_threepf_writer;
 
 		    //! fNL writer function
-		    typedef std::function<void(postintegration_batcher*, const std::vector<typename postintegration_items<number>::fNL_item>&, derived_data::template_type)> fNL_writer;
+		    typedef std::function<void(postintegration_batcher*, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >&, derived_data::template_type)> fNL_writer;
 
 			};
 
@@ -218,7 +219,7 @@ namespace transport
 
         const writer_group writers;
 
-        std::vector< typename postintegration_items<number>::fNL_item > fNL_batch;
+        std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator > fNL_batch;
 
         derived_data::template_type type;
 
@@ -451,7 +452,20 @@ namespace transport
         item.BT          = BT;
         item.TT          = TT;
 
-        this->fNL_batch.push_back(item);
+		    // if an existing item with this serial number exists, we want to accumulate the BT and TT values
+		    // we then have to remove the existing record before inserting an updated one -- elements in a std::set
+		    // are always const and therefore read-only
+        typename std::set<  typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >::iterator t;
+		    t = this->fNL_batch.find(item); // searching in a set is fairly efficient, O(log N)
+
+		    if(t != this->fNL_batch.end())
+			    {
+				    item.BT += t->BT;
+				    item.TT += t->TT;
+				    this->fNL_batch.erase(t);
+			    }
+
+        this->fNL_batch.insert(item);
         this->check_for_flush();
 	    }
 

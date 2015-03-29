@@ -9,6 +9,7 @@
 
 
 #include <set>
+#include <vector>
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/derived-products/template_types.h"
@@ -50,6 +51,7 @@
 #define __CPP_TRANSPORT_SQLITE_TEMP_SERIAL_TABLE                   "serial_search"
 #define __CPP_TRANSPORT_SQLITE_TEMP_THREEPF_TABLE                  "threepf_search"
 #define __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE                      "fNL_update"
+#define __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE                    "fNL_insert"
 
 #define __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME                    "tempdb"
 
@@ -199,8 +201,8 @@ namespace transport
 
             for(std::vector<time_config>::const_iterator t = sample_times.begin(); t != sample_times.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).t));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, t->t));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TIMETAB_FAIL, SQLITE_DONE);
 
@@ -243,9 +245,9 @@ namespace transport
 
             for(std::vector<twopf_kconfig>::const_iterator t = kconfig_list.begin(); t != kconfig_list.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).k_conventional));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).k_comoving));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, t->k_conventional));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, t->k_comoving));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_TWOPFTAB_FAIL, SQLITE_DONE);
 
@@ -296,14 +298,14 @@ namespace transport
 
             for(std::vector<threepf_kconfig>::const_iterator t = threepf_sample.begin(); t != threepf_sample.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).index[0]));
-                check_stmt(db, sqlite3_bind_int(stmt, 3, (*t).index[1]));
-                check_stmt(db, sqlite3_bind_int(stmt, 4, (*t).index[2]));
-                check_stmt(db, sqlite3_bind_double(stmt, 5, (*t).k_t_comoving));
-                check_stmt(db, sqlite3_bind_double(stmt, 6, (*t).k_t_conventional));
-                check_stmt(db, sqlite3_bind_double(stmt, 7, (*t).alpha));
-                check_stmt(db, sqlite3_bind_double(stmt, 8, (*t).beta));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->index[0]));
+                check_stmt(db, sqlite3_bind_int(stmt, 3, t->index[1]));
+                check_stmt(db, sqlite3_bind_int(stmt, 4, t->index[2]));
+                check_stmt(db, sqlite3_bind_double(stmt, 5, t->k_t_comoving));
+                check_stmt(db, sqlite3_bind_double(stmt, 6, t->k_t_conventional));
+                check_stmt(db, sqlite3_bind_double(stmt, 7, t->alpha));
+                check_stmt(db, sqlite3_bind_double(stmt, 8, t->beta));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_THREEPFTAB_FAIL, SQLITE_DONE);
 
@@ -619,10 +621,10 @@ namespace transport
 
             for(typename std::vector<typename integration_items<number>::configuration_statistics >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, (*t).integration));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, (*t).batching));
-		            check_stmt(db, sqlite3_bind_int(stmt, 4, (*t).refinements));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, t->integration));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, t->batching));
+		            check_stmt(db, sqlite3_bind_int(stmt, 4, t->refinements));
                 check_stmt(db, sqlite3_bind_int(stmt, 5, batcher->get_worker_number()));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
@@ -669,13 +671,13 @@ namespace transport
               {
                 for(unsigned int page = 0; page < num_pages; page++)
 	                {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
 		                check_stmt(db, sqlite3_bind_int(stmt, 2, page));
 
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields ? (*t).coords[index] : 0.0;
+				                number       value = index < 2*Nfields ? t->coords[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+3, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -725,14 +727,14 @@ namespace transport
               {
 		            for(unsigned int page = 0; page < num_pages; page++)
 			            {
-		                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
 				            check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields * 2*Nfields ? (*t).elements[index] : 0.0;
+				                number       value = index < 2*Nfields * 2*Nfields ? t->elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -780,14 +782,14 @@ namespace transport
               {
                 for(unsigned int page = 0; page < num_pages; page++)
                   {
-                    check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                    check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                    check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
                     check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
                     for(unsigned int i = 0; i < num_cols; i++)
                       {
                         unsigned int index = page*num_cols + i;
-                        number       value = index < 4 ? (*t).elements[index] : 0.0;
+                        number       value = index < 4 ? t->elements[index] : 0.0;
 
                         check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
                       }
@@ -837,14 +839,14 @@ namespace transport
               {
 		            for(unsigned int page  = 0; page < num_pages; page++)
 			            {
-		                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-		                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+		                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
 				            check_stmt(db, sqlite3_bind_int(stmt, 3, page));
 
 		                for(unsigned int i = 0; i < num_cols; i++)
 			                {
 				                unsigned int index = page*num_cols + i;
-				                number       value = index < 2*Nfields * 2*Nfields * 2*Nfields ? (*t).elements[index] : 0.0;
+				                number       value = index < 2*Nfields * 2*Nfields * 2*Nfields ? t->elements[index] : 0.0;
 
 		                    check_stmt(db, sqlite3_bind_double(stmt, i+4, static_cast<double>(value)));    // 'number' must be castable to double
 			                }
@@ -878,9 +880,9 @@ namespace transport
 
             for(typename std::vector< typename postintegration_items<number>::zeta_twopf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_TWOPF_DATATAB_FAIL, SQLITE_DONE);
 
@@ -910,9 +912,9 @@ namespace transport
 
             for(typename std::vector< typename postintegration_items<number>::zeta_threepf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_THREEPF_DATATAB_FAIL, SQLITE_DONE);
 
@@ -942,9 +944,9 @@ namespace transport
 
             for(typename std::vector<typename postintegration_items<number>::zeta_threepf_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_int(stmt, 2, (*t).kconfig_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).value)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                check_stmt(db, sqlite3_bind_int(stmt, 2, t->kconfig_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->value)));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_ZETA_REDBSP_DATATAB_FAIL, SQLITE_DONE);
 
@@ -957,33 +959,72 @@ namespace transport
           }
 
 
-        // Write a batch of zeta threepf values
+        // Write a batch of fNL values.
+		    // The semantics here are slightly different. If an existing value is already present for a given
+		    // tserial then we want to add our new value to it.
+		    // For that purpose we use COALESCE.
         template <typename number>
-        void write_fNL(postintegration_batcher* batcher, const std::vector< typename postintegration_items<number>::fNL_item >& batch,
+        void write_fNL(postintegration_batcher* batcher, const std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >& batch,
                        derived_data::template_type type)
           {
             sqlite3* db = nullptr;
             batcher->get_manager_handle(&db);
 
+            exec(db, "BEGIN TRANSACTION;");
+
+		        // first, inject all new BT and TT values into a temporary table
+            std::stringstream create_stmt;
+		        create_stmt << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " ("
+			        << "tserial INTEGER, "
+		          << "BT      DOUBLE, "
+			        << "TT      DOUBLE, "
+		          << "PRIMARY KEY (tserial)"
+		          << ");";
+		        exec(db, create_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << fNL_table_name(type) << " VALUES (@tserial, @BT, @TT);";
+            insert_stmt << "INSERT INTO temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " VALUES (@tserial, @BT, @TT);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
 
-            exec(db, "BEGIN TRANSACTION;");
-
-            for(typename std::vector< typename postintegration_items<number>::fNL_item >::const_iterator t = batch.begin(); t != batch.end(); t++)
+            for(typename std::set< typename postintegration_items<number>::fNL_item, typename postintegration_items<number>::fNL_item_comparator >::const_iterator t = batch.begin(); t != batch.end(); t++)
               {
-                check_stmt(db, sqlite3_bind_int(stmt, 1, (*t).time_serial));
-                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>((*t).BT)));
-                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>((*t).TT)));
+                check_stmt(db, sqlite3_bind_int(stmt, 1, t->time_serial));
+                check_stmt(db, sqlite3_bind_double(stmt, 2, static_cast<double>(t->BT)));
+                check_stmt(db, sqlite3_bind_double(stmt, 3, static_cast<double>(t->TT)));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL, SQLITE_DONE);
 
                 check_stmt(db, sqlite3_clear_bindings(stmt));
                 check_stmt(db, sqlite3_reset(stmt));
               }
+
+		        // now create a second temporary table which merges results from the existing fNL table
+		        // and the new one we have just constructed
+            std::stringstream create_stmt2;
+		        create_stmt2 << "CREATE TEMP TABLE " << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << " AS"
+		          << " SELECT temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial AS tserial,"
+		          << " temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".BT + COALESCE(" << fNL_table_name(type) << ".BT, 0.0) AS new_BT,"
+		          << " temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".TT + COALESCE(" << fNL_table_name(type) << ".TT, 0.0) AS new_TT"
+		          << " FROM temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << " LEFT JOIN " << fNL_table_name(type)
+		          << " ON temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ".tserial=" << fNL_table_name(type) << ".tserial;";
+		        exec(db, create_stmt2.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+
+		        // finally, copy or update values back into the main table
+            std::stringstream copy_stmt;
+		        copy_stmt
+		          << " INSERT OR REPLACE INTO " << fNL_table_name(type)
+			        << " SELECT tserial AS tserial,"
+		          << " new_BT AS BT,"
+			        << " new_TT AS TT"
+		          << " FROM temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+		        exec(db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
+
+            std::stringstream drop_stmt;
+		        drop_stmt << "DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_INSERT_FNL_TABLE << ";"
+		          << " DROP TABLE temp." << __CPP_TRANSPORT_SQLITE_TEMP_FNL_TABLE << ";";
+		        exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATACTR_FNL_DATATAB_FAIL);
 
             exec(db, "END TRANSACTION;");
             check_stmt(db, sqlite3_finalize(stmt));
@@ -1329,13 +1370,15 @@ namespace transport
 
 
         // Aggregate an fNL value table from a temporary container
-        // Aggregation of fNL values is slightly different, because we want to add together results with the same
-        // tserial
+        // Aggregation of fNL values is slightly different, because if an existing result is present for for
+		    // some time serial tserial, we want to add our new value to it.
+		    // For that purpose we use COALESCE.
         template <typename number>
         void aggregate_fNL(sqlite3* db, postintegration_writer<number>& writer, const std::string& temp_ctr, derived_data::template_type type)
           {
 //            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "   && Aggregating " << derived_data::template_name(type) << " values";
 
+		        // create a temporary table with updated values
             std::stringstream create_stmt;
             create_stmt
               << "ATTACH DATABASE '" << temp_ctr << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
