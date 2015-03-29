@@ -285,6 +285,8 @@ namespace transport
 
         timer.stop();
         batcher.report_finished_item(timer.elapsed().wall);
+
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "-- Processed " << list.size() << " k-configurations in time = " << format_time(timer.elapsed().wall);
 	    }
 
 	}   // namespace transport
