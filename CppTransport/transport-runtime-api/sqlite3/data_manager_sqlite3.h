@@ -740,7 +740,7 @@ namespace transport
         // set up batcher
         fNL_batcher<number> batcher(this->batcher_capacity, container, logdir, writers, dispatcher, replacer, db, worker, type);
 
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary " << derived_data::template_type(type) << " container " << container;
+        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary " << derived_data::template_name(type) << " container " << container;
 
         // add this database to our list of open connections
         this->open_containers.push_back(db);
