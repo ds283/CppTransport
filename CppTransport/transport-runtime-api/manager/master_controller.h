@@ -594,9 +594,12 @@ namespace transport
 	        }
         else
 	        {
+            boost::timer::cpu_timer timer;
+
 		        // set up workers
 		        this->initialize_workers();
 
+		        unsigned int database_tasks = 0;
             for(typename std::list<job_descriptor>::const_iterator t = this->job_queue.begin(); t != this->job_queue.end(); t++)
 	            {
                 switch((*t).get_type())
@@ -604,6 +607,7 @@ namespace transport
                     case job_task:
 	                    {
                         this->process_task(*t);
+		                    database_tasks++;
                         break;
 	                    }
 
@@ -620,6 +624,14 @@ namespace transport
 	                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_UNKNOWN_JOB_TYPE);
 	                }
 	            }
+
+		        timer.stop();
+		        if(database_tasks > 0)
+			        {
+		            std::ostringstream msg;
+		            msg << __CPP_TRANSPORT_PROCESSED_TASKS_A << " " << database_tasks << " " << __CPP_TRANSPORT_PROCESSED_TASKS_B << " " << format_time(timer.elapsed().wall);
+				        this->message_handler(msg.str());
+			        }
 	        }
 
         // there is no more work, so ask all workers to shut down
