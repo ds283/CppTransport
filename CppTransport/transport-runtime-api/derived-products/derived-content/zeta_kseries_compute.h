@@ -229,9 +229,9 @@ namespace transport
                 if(small_fraction < global_small) global_small = small_fraction;
               }
 
-            std::ostringstream msg;
-            msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
+//            std::ostringstream msg;
+//            msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
+//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
@@ -383,9 +383,9 @@ namespace transport
                 if(small_fraction < global_small) global_small = small_fraction;
               }
 
-            std::ostringstream msg;
-            msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
-            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
+//            std::ostringstream msg;
+//            msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
+//            BOOST_LOG_SEV(h->pipe.get_log(), datapipe<number>::normal) << msg.str();
 //            std::cout << msg.str() << std::endl;
           }
 
