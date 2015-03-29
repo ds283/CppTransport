@@ -22,10 +22,10 @@ namespace transport
 					{
 						switch(type)
 							{
-						    case fNLlocal: return(__CPP_TRANSPORT_FNL_LOCAL);
-						    case fNLequi:  return(__CPP_TRANSPORT_FNL_EQUI);
-						    case fNLortho: return(__CPP_TRANSPORT_FNL_ORTHO);
-						    case fNLDBI:   return(__CPP_TRANSPORT_FNL_DBI);
+						    case fNLlocal: return(std::string(__CPP_TRANSPORT_FNL_LOCAL));
+						    case fNLequi:  return(std::string(__CPP_TRANSPORT_FNL_EQUI));
+						    case fNLortho: return(std::string(__CPP_TRANSPORT_FNL_ORTHO));
+						    case fNLDBI:   return(std::string(__CPP_TRANSPORT_FNL_DBI));
 						    default:
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
