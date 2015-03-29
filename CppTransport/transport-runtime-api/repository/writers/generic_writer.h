@@ -9,6 +9,7 @@
 
 
 #include <iostream>
+#include <list>
 #include <string>
 #include <memory>
 #include <functional>
@@ -18,6 +19,7 @@
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/localizations/messages_en.h"
 
+#include "boost/filesystem.hpp"
 #include "boost/log/core.hpp"
 #include "boost/log/trivial.hpp"
 #include "boost/log/sources/severity_feature.hpp"
@@ -25,6 +27,8 @@
 #include "boost/log/sinks/sync_frontend.hpp"
 #include "boost/log/sinks/text_file_backend.hpp"
 #include "boost/log/utility/setup/common_attributes.hpp"
+#include "boost/date_time/posix_time/posix_time.hpp"
+#include "boost/shared_ptr.hpp"
 
 
 // log file name
