@@ -150,7 +150,7 @@ namespace transport
 						line_collection(const line_collection<number>& obj);
 
 						//! Deserialization constructor
-						line_collection(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder);
+						line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
 
 						virtual ~line_collection();
 
@@ -209,7 +209,7 @@ namespace transport
 
 				  public:
 
-						virtual void serialize(serialization_writer& writer) const override;
+						virtual void serialize(Json::Value& writer) const override;
 
 
 						// WRITE SELF TO A STANDARD STREAM
@@ -258,35 +258,27 @@ namespace transport
 
 
 				template <typename number>
-				line_collection<number>::line_collection(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder)
+				line_collection<number>::line_collection(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 					: derived_product<number>(name, reader)
 					{
-						// extract data from reader
-						assert(reader != nullptr);
-
 						// read in line management attributes
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, enforce_max_value_types);
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, max_value_types);
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, log_x);
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, log_y);
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, abs_y);
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, use_LaTeX);
+						enforce_max_value_types = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT].asBool();
+				    max_value_types = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES].asUInt();
+				    log_x = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
+				    log_y = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
+				    abs_y = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
+				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
 
 						// read in line specifications
-				    unsigned int num_lines = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
+				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
+						assert(line_array.isArray());
 
 				    lines.clear();
-				    for(unsigned int i = 0; i < num_lines; i++)
+						for(Json::Value::iterator t = line_array.begin(); t != line_array.end(); t++)
 					    {
-				        reader->start_array_element();
-
-				        derived_line<number>* data = derived_line_helper::deserialize<number>(reader, finder);
+				        derived_line<number>* data = derived_line_helper::deserialize<number>(*t, finder);
 				        lines.push_back(data);
-
-				        reader->end_array_element();
 					    }
-
-				    reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
 					}
 
 
@@ -501,23 +493,23 @@ namespace transport
 
 
 		    template <typename number>
-		    void line_collection<number>::serialize(serialization_writer& writer) const
+		    void line_collection<number>::serialize(Json::Value& writer) const
 			    {
-				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT, this->enforce_max_value_types);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES, this->max_value_types);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX, this->log_x);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY, this->log_y);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY, this->abs_y);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX, this->use_LaTeX);
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT] = this->enforce_max_value_types;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES] = this->max_value_types;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX] = this->log_x;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY] = this->log_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY] = this->abs_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
-		        writer.start_array(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY, this->lines.size() == 0);
+		        Json::Value line_array(Json::arrayValue);
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
 			        {
-		            writer.start_node("arrayelt", false);    // node name ignored in array
-		            (*t)->serialize(writer);
-		            writer.end_element("arrayelt");
+		            Json::Value line_element(Json::objectValue);
+		            (*t)->serialize(line_element);
+				        line_array.append(line_element);
 			        }
-		        writer.end_element(__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY);
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;
 
 		        // call next serialization
 		        this->derived_product<number>::serialize(writer);

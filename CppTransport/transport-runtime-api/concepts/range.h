@@ -49,7 +49,7 @@ namespace transport
         range(value mn, value mx, unsigned int st, spacing_type sp=linear);
 
         //! Deserialization constructor
-        range(serialization_reader* reader);
+        range(Json::Value& reader);
 
         //! Construct a null range object. Used in 'task' objects as placeholders when storing the original wavenumber grid.
         range();
@@ -104,7 +104,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
         friend std::ostream& operator<< <>(std::ostream& out, const range<value>& obj);
 
@@ -148,23 +148,17 @@ namespace transport
 
 
     template <typename value>
-    range<value>::range(serialization_reader* reader)
+    range<value>::range(Json::Value& reader)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_RANGE_NULL_SERIALIZATION_READER);
-
-        double m;
-
-        reader->read_value(__CPP_TRANSPORT_NODE_MIN, m);
+        double m = reader[__CPP_TRANSPORT_NODE_MIN].asDouble();
         min = static_cast<value>(m);
 
-        reader->read_value(__CPP_TRANSPORT_NODE_MAX, m);
+        m = reader[__CPP_TRANSPORT_NODE_MAX].asDouble();
         max = static_cast<value>(m);
 
-        reader->read_value(__CPP_TRANSPORT_NODE_STEPS, steps);
+        steps = reader[__CPP_TRANSPORT_NODE_STEPS].asUInt();
 
-        std::string spc_string;
-        reader->read_value(__CPP_TRANSPORT_NODE_SPACING, spc_string);
+        std::string spc_string = reader[__CPP_TRANSPORT_NODE_SPACING].asString();
 
         if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
         else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
@@ -217,22 +211,22 @@ namespace transport
       }
 
     template <typename value>
-    void range<value>::serialize(serialization_writer& writer) const
+    void range<value>::serialize(Json::Value& writer) const
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_MIN, this->min);
-        writer.write_value(__CPP_TRANSPORT_NODE_MAX, this->max);
-        writer.write_value(__CPP_TRANSPORT_NODE_STEPS, this->steps);
+        writer[__CPP_TRANSPORT_NODE_MIN] = static_cast<double>(this->min);
+        writer[__CPP_TRANSPORT_NODE_MAX] = static_cast<double>(this->max);
+        writer[__CPP_TRANSPORT_NODE_STEPS] = this->steps;
 
 		    switch(this->spacing)
 			    {
 		        case linear:
-			        writer.write_value(__CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LINEAR));
+			        writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LINEAR);
 				      break;
 
 		        case logarithmic:
-			        writer.write_value(__CPP_TRANSPORT_NODE_SPACING, std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC));
+			        writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC);
 				      break;
 
 		        default:

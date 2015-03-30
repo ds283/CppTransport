@@ -66,7 +66,7 @@ namespace transport
 		        twopf_line(const twopf_list_task<number>& tk, index_selector<2>& sel, filter::twopf_kconfig_filter& kfilter);
 
 		        //! Deserialization constructor
-		        twopf_line(serialization_reader* reader);
+		        twopf_line(Json::Value& reader);
 
 		        virtual ~twopf_line() = default;
 
@@ -118,7 +118,7 @@ namespace transport
           public:
 
 		        //! Serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 
 		        // INTERNAL DATA
@@ -170,15 +170,11 @@ namespace transport
 		    // Deserialization constructor DOESN'T CALL the proper derived_line<> deserialization constructor
 		    // because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
-		    twopf_line<number>::twopf_line(serialization_reader* reader)
+		    twopf_line<number>::twopf_line(Json::Value& reader)
 		      : derived_line<number>(reader),
 		        active_indices(reader)
 			    {
-		        assert(reader != nullptr);
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
-
-		        std::string tpf_type;
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, tpf_type);
+		        std::string tpf_type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
 
 		        if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL) twopf_meaning = real;
 		        else if(tpf_type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY) twopf_meaning = imaginary;
@@ -248,7 +244,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void twopf_line<number>::serialize(serialization_writer& writer) const
+		    void twopf_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
 
@@ -256,13 +252,13 @@ namespace transport
 			        {
 		            case real:
 			            {
-		                writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL));
+		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_REAL);
 		                break;
 			            }
 
 		            case imaginary:
 			            {
-		                writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY));
+		                writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_IMAGINARY);
 		                break;
 			            }
 

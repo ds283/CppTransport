@@ -59,7 +59,7 @@ namespace transport
 		        time_series(const integration_task<number>& tk, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
-		        time_series(serialization_reader* reader);
+		        time_series(Json::Value& reader);
 
 		        virtual ~time_series() = default;
 
@@ -104,7 +104,7 @@ namespace transport
 		      public:
 
 		        //! Serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 			    };
 
@@ -134,11 +134,9 @@ namespace transport
 				// Deserialization constructor DOESN'T CALL derived_line<> deserialization constructor
 				// because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
-		    time_series<number>::time_series(serialization_reader* reader)
+		    time_series<number>::time_series(Json::Value& reader)
 					: derived_line<number>(reader)
 			    {
-		        assert(reader != nullptr);
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 			    }
 
 
@@ -242,7 +240,7 @@ namespace transport
 
 
 		    template <typename number>
-		    void time_series<number>::serialize(serialization_writer& writer) const
+		    void time_series<number>::serialize(Json::Value& writer) const
 			    {
 				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
 				    // concrete classes must call it themselves

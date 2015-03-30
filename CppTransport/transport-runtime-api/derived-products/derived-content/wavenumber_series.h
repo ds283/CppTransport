@@ -61,7 +61,7 @@ namespace transport
 		        wavenumber_series(const integration_task<number>& tk, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
-		        wavenumber_series(serialization_reader* reader);
+		        wavenumber_series(Json::Value& reader);
 
 		        virtual ~wavenumber_series() = default;
 
@@ -90,7 +90,7 @@ namespace transport
           public:
 
 		        //! Serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 
             // INTERNAL DATA
@@ -127,11 +127,9 @@ namespace transport
 
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
-		    wavenumber_series<number>::wavenumber_series(serialization_reader* reader)
+		    wavenumber_series<number>::wavenumber_series(Json::Value& reader)
           : derived_line<number>(reader)
 			    {
-				    assert(reader != nullptr);
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
 			    }
 
 
@@ -160,7 +158,7 @@ namespace transport
 
 
 		    template <typename number>
-			  void wavenumber_series<number>::serialize(serialization_writer& writer) const
+			  void wavenumber_series<number>::serialize(Json::Value& writer) const
 			    {
 				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
 				    // concrete classes must call it themselves

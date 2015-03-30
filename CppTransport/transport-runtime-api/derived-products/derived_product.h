@@ -67,14 +67,10 @@ namespace transport
 			        }
 
 				    //! Deserialization constructor
-				    derived_product(const std::string& nm, serialization_reader* reader)
+				    derived_product(const std::string& nm, Json::Value& reader)
 				      : name(nm)
 					    {
-						    assert(reader != nullptr);
-
-				        std::string fnam;
-						    reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, fnam);
-						    filename = fnam;
+						    filename = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME].asString();
 					    }
 
 		        virtual ~derived_product() = default;
@@ -107,7 +103,7 @@ namespace transport
 
 		      public:
 
-				    virtual void serialize(serialization_writer& writer) const override;
+				    virtual void serialize(Json::Value& writer) const override;
 
 
 				    // CLONE
@@ -140,9 +136,9 @@ namespace transport
 
 
 				template <typename number>
-				void derived_product<number>::serialize(serialization_writer& writer) const
+				void derived_product<number>::serialize(Json::Value& writer) const
 					{
-						writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME, this->filename.string());
+						writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_FILENAME] = this->filename.string();
 					}
 
 

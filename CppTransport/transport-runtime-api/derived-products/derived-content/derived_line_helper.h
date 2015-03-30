@@ -41,15 +41,11 @@ namespace transport
 			        {
 
 		            template <typename number>
-		            derived_line<number>* deserialize(serialization_reader* reader, typename repository_finder<number>::task_finder finder)
+		            derived_line<number>* deserialize(Json::Value& reader, typename repository_finder<number>::task_finder finder)
 			            {
-		                assert(reader != nullptr);
-		                if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_READER);
-
 		                derived_line<number>* rval = nullptr;
 
-		                std::string type;
-		                reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE, type);
+		                std::string type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE].asString();
 
 		                if     (type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BACKGROUND)                                rval = new background_time_series<number>(reader, finder);
 		                else if(type == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_TIME_SERIES)                         rval = new twopf_time_series<number>(reader, finder);

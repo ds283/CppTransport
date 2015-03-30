@@ -29,19 +29,14 @@ namespace transport
       {
 
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::package_finder& f)
+        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::package_finder& f)
           {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
             integration_task<number>* rval = nullptr;
 
-            std::string type;
-            reader->read_value(__CPP_TRANSPORT_NODE_TASK_TYPE, type);
+            std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
             // extract initial conditions
-            std::string pkg_name;
-            reader->read_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, pkg_name);
+            std::string pkg_name = reader[__CPP_TRANSPORT_NODE_PACKAGE_NAME].asString();
             std::unique_ptr< package_record<number> > record(f(pkg_name));
             initial_conditions<number> ics = record->get_ics();
 
@@ -64,15 +59,11 @@ namespace transport
       {
 
         template <typename number>
-        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder)
+        output_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
           {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
             output_task<number>* rval = nullptr;
 
-            std::string type;
-            reader->read_value(__CPP_TRANSPORT_NODE_TASK_TYPE, type);
+            std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
             if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT) rval = new output_task<number>(nm, reader, pfinder);
             else
@@ -91,15 +82,11 @@ namespace transport
       {
 
         template <typename number>
-        postintegration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& f)
+        postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& f)
           {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
             postintegration_task<number>* rval = nullptr;
 
-            std::string type;
-            reader->read_value(__CPP_TRANSPORT_NODE_TASK_TYPE, type);
+            std::string type = reader[__CPP_TRANSPORT_NODE_TASK_TYPE].asString();
 
             if     (type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF)   rval = new zeta_twopf_task<number>(nm, reader, f);
             else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF) rval = new zeta_threepf_task<number>(nm, reader, f);

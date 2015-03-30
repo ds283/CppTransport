@@ -76,7 +76,7 @@ namespace transport
 
             // output data
             int id;
-            unqlite_serialization_reader* reader;
+            unqlite_Json::Value& reader;
           };
 
         typedef std::function<int(unqlite_value*, unqlite_value*)> array_extraction_functor;
@@ -304,11 +304,11 @@ namespace transport
         int array_extract_content_groups(unqlite_value* key, unqlite_value* value, std::list< std::shared_ptr< output_group_record<Payload> > >* list);
 
         //! Get a serialization reader from the database. The internal UnQLite record id is stored in 'id'
-        unqlite_serialization_reader* query_serialization_reader(const std::string& name, const std::string& collection,
+        unqlite_Json::Value& query_serialization_reader(const std::string& name, const std::string& collection,
                                                                  const std::string& record_type, unsigned int& id);
 
         //! Get a serialization reader from the database.
-        unqlite_serialization_reader* query_serialization_reader(const std::string& name, const std::string& collection, const std::string& record_type);
+        unqlite_Json::Value& query_serialization_reader(const std::string& name, const std::string& collection, const std::string& record_type);
 
         //! Check whether a task already exists in the database. Throws an exception if so.
         void check_task_duplicate(const std::string& name);
@@ -364,31 +364,31 @@ namespace transport
         package_record<number>* package_record_factory(const initial_conditions<number>& ics);
 
         //! Create a package record from a serialization reader
-        package_record<number>* package_record_factory(serialization_reader* reader);
+        package_record<number>* package_record_factory(Json::Value& reader);
 
         //! Create a new integration task record from an explicit object
         integration_task_record<number>* integration_task_record_factory(const integration_task<number>& tk);
 
         //! Create an integration task record from a serialization reader
-        integration_task_record<number>* integration_task_record_factory(serialization_reader* reader);
+        integration_task_record<number>* integration_task_record_factory(Json::Value& reader);
 
         //! Create a new output task record from an explicit object
         output_task_record<number>* output_task_record_factory(const output_task<number>& tk);
 
         //! Create an output task record from a serialization reader
-        output_task_record<number>* output_task_record_factory(serialization_reader* reader);
+        output_task_record<number>* output_task_record_factory(Json::Value& reader);
 
         //! Create a postintegration task record from an explicit object
         postintegration_task_record<number>* postintegration_task_record_factory(const postintegration_task<number>& tk);
 
         //! Create a postintegration task record from a serialization reader
-        postintegration_task_record<number>* postintegration_task_record_factory(serialization_reader* reader);
+        postintegration_task_record<number>* postintegration_task_record_factory(Json::Value& reader);
 
         //! Create a new derived product record from explicit object
         derived_product_record<number>* derived_product_record_factory(const derived_data::derived_product<number>& prod);
 
         //! create a new derived product record from a serialization reader
-        derived_product_record<number>* derived_product_record_factory(serialization_reader* reader);
+        derived_product_record<number>* derived_product_record_factory(Json::Value& reader);
 
         //! Create a new content record from an explicit object
         template <typename Payload>
@@ -397,7 +397,7 @@ namespace transport
 
         //! Create a new content from from a serialization reader
         template <typename Payload>
-        output_group_record<Payload>* output_group_record_factory(serialization_reader* reader);
+        output_group_record<Payload>* output_group_record_factory(Json::Value& reader);
 
 
         // INTERNAL DATA
@@ -769,7 +769,7 @@ namespace transport
 
 
     template <typename number>
-    unqlite_serialization_reader* repository_unqlite<number>::query_serialization_reader(const std::string& name, const std::string& collection,
+    unqlite_Json::Value& repository_unqlite<number>::query_serialization_reader(const std::string& name, const std::string& collection,
                                                                                          const std::string& record_type, unsigned int& id)
       {
         array_extraction_data data;
@@ -795,7 +795,7 @@ namespace transport
 
 
     template <typename number>
-    unqlite_serialization_reader* repository_unqlite<number>::query_serialization_reader(const std::string& name, const std::string& collection,
+    unqlite_Json::Value& repository_unqlite<number>::query_serialization_reader(const std::string& name, const std::string& collection,
                                                                                          const std::string& record_type)
       {
         unsigned int task_id;
@@ -859,7 +859,7 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>* repository_unqlite<number>::package_record_factory(serialization_reader* reader)
+    package_record<number>* repository_unqlite<number>::package_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -882,7 +882,7 @@ namespace transport
 
 
     template <typename number>
-    integration_task_record<number>* repository_unqlite<number>::integration_task_record_factory(serialization_reader* reader)
+    integration_task_record<number>* repository_unqlite<number>::integration_task_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -905,7 +905,7 @@ namespace transport
 
 
     template <typename number>
-    output_task_record<number>* repository_unqlite<number>::output_task_record_factory(serialization_reader* reader)
+    output_task_record<number>* repository_unqlite<number>::output_task_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -928,7 +928,7 @@ namespace transport
 
 
     template <typename number>
-    postintegration_task_record<number>* repository_unqlite<number>::postintegration_task_record_factory(serialization_reader* reader)
+    postintegration_task_record<number>* repository_unqlite<number>::postintegration_task_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -951,7 +951,7 @@ namespace transport
 
 
     template <typename number>
-    derived_product_record<number>* repository_unqlite<number>::derived_product_record_factory(serialization_reader* reader)
+    derived_product_record<number>* repository_unqlite<number>::derived_product_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
@@ -981,7 +981,7 @@ namespace transport
 
     template <typename number>
     template <typename Payload>
-    output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(serialization_reader* reader)
+    output_group_record<Payload>* repository_unqlite<number>::output_group_record_factory(Json::Value& reader)
       {
         assert(reader != nullptr);
         if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);

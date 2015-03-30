@@ -57,7 +57,7 @@ namespace transport
 				    zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
-				    zeta_twopf_line(serialization_reader* reader);
+				    zeta_twopf_line(Json::Value& reader);
 
 				    virtual ~zeta_twopf_line() = default;
 
@@ -94,7 +94,7 @@ namespace transport
 		      public:
 
 				    //! Serialize this object
-				    virtual void serialize(serialization_writer& writer) const override;
+				    virtual void serialize(Json::Value& writer) const override;
 
 			    };
 
@@ -125,11 +125,9 @@ namespace transport
 				// Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 				// because of virtual inheritance; concrete classes must call it themselves
 				template <typename number>
-				zeta_twopf_line<number>::zeta_twopf_line(serialization_reader* reader)
+				zeta_twopf_line<number>::zeta_twopf_line(Json::Value& reader)
 					: derived_line<number>(reader)
 					{
-				    assert(reader != nullptr);
-				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
 					}
 
 
@@ -171,7 +169,7 @@ namespace transport
 
 
 				template <typename number>
-				void zeta_twopf_line<number>::serialize(serialization_writer& writer) const
+				void zeta_twopf_line<number>::serialize(Json::Value& writer) const
 					{
 					}
 

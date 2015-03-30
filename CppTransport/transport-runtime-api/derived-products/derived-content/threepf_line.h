@@ -57,7 +57,7 @@ namespace transport
 		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter);
 
 		        //! Deserialization constructor
-		        threepf_line(serialization_reader* reader);
+		        threepf_line(Json::Value& reader);
 
 		        virtual ~threepf_line() = default;
 
@@ -108,7 +108,7 @@ namespace transport
           public:
 
 		        //! Serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 
 		        // INTERNAL DATA
@@ -166,16 +166,13 @@ namespace transport
 		    // Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 		    // because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
-		    threepf_line<number>::threepf_line(serialization_reader* reader)
+		    threepf_line<number>::threepf_line(Json::Value& reader)
 			    : derived_line<number>(reader),
 			      active_indices(reader)
 			    {
-				    assert(reader != nullptr);
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
-
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT, this->use_kt_label);
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-		        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA, this->use_beta_label);
+		        use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
+		        use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
+		        use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
 			    }
 
 
@@ -259,13 +256,13 @@ namespace transport
 
 
         template <typename number>
-		    void threepf_line<number>::serialize(serialization_writer& writer) const
+		    void threepf_line<number>::serialize(Json::Value& writer) const
 			    {
 				    this->active_indices.serialize(writer);
 
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT, this->use_kt_label);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA, this->use_alpha_label);
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA, this->use_beta_label);
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT] = this->use_kt_label;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA] = this->use_alpha_label;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA] = this->use_beta_label;
 			    }
 
 

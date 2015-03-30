@@ -48,7 +48,7 @@ namespace transport
 				postintegration_task(const std::string& nm, const integration_task<number>& t, bool write=false);
 
 				//! deserialization constructor
-				postintegration_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+				postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				//! override copy constructor to perform a deep copy
 				postintegration_task(const postintegration_task<number>& obj);
@@ -76,7 +76,7 @@ namespace transport
 		  public:
 
 				//! serialize this object
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
         // WRITE TO STREAM
@@ -129,18 +129,15 @@ namespace transport
 
 
 		template <typename number>
-		postintegration_task<number>::postintegration_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+		postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			: task<number>(nm, reader),
 				tk(nullptr)
 			{
-				assert(reader != nullptr);
-
 				// deserialize and reconstruct parent integration task
-		    std::string tk_name;
-				reader->read_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT, tk_name);
+		    std::string tk_name = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
 
 				// deserialize write-back status
-				reader->read_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK, write_back);
+		    write_back = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK].asBool();
 
 		    std::unique_ptr< task_record<number> > record(finder(tk_name));
 		    assert(record.get() != nullptr);
@@ -163,13 +160,13 @@ namespace transport
 
 
 		template <typename number>
-		void postintegration_task<number>::serialize(serialization_writer& writer) const
+		void postintegration_task<number>::serialize(Json::Value& writer) const
 			{
 				// serialize parent integration task
-				writer.write_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT, this->tk->get_name());
+				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->tk->get_name();
 
 				// serialize write-back status
-				writer.write_value(__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK, this->write_back);
+				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK] = this->write_back;
 			}
 
 
@@ -195,7 +192,7 @@ namespace transport
 				zeta_twopf_task(const std::string& nm, const twopf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
-				zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+				zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_twopf_task() = default;
@@ -205,7 +202,7 @@ namespace transport
 
 		  public:
 
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
 				// CLONE
@@ -225,16 +222,16 @@ namespace transport
 
 
     template <typename number>
-    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+    zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
       }
 
 
     template <typename number>
-    void zeta_twopf_task<number>::serialize(serialization_writer& writer) const
+    void zeta_twopf_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
 
         this->postintegration_task<number>::serialize(writer);
       }
@@ -256,7 +253,7 @@ namespace transport
 				zeta_threepf_task(const std::string& nm, const threepf_task<number>& t, bool w=false);
 
 				//! deserialization constructor
-				zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+				zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~zeta_threepf_task() = default;
@@ -266,7 +263,7 @@ namespace transport
 
 		  public:
 
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
 				// CLONE
@@ -286,16 +283,16 @@ namespace transport
 
 
     template <typename number>
-    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+    zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
       }
 
 
     template <typename number>
-    void zeta_threepf_task<number>::serialize(serialization_writer& writer) const
+    void zeta_threepf_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
 
         this->postintegration_task<number>::serialize(writer);
       }
@@ -316,7 +313,7 @@ namespace transport
 				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal, bool w=false);
 
 				//! deserialization constructor
-				fNL_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+				fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				//! destructor is default
 				virtual ~fNL_task() = default;
@@ -337,7 +334,7 @@ namespace transport
 
 		  public:
 
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
 				// CLONE
@@ -365,14 +362,10 @@ namespace transport
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+    fNL_task<number>::fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
       : postintegration_task<number>(nm, reader, finder)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
-        std::string type_str;
-        reader->read_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, type_str);
+        std::string type_str = reader[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
 
         if     (type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::fNLlocal;
         else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::fNLequi;
@@ -388,26 +381,26 @@ namespace transport
 
 
     template <typename number>
-    void fNL_task<number>::serialize(serialization_writer& writer) const
+    void fNL_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_FNL));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_FNL);
 
         switch(this->type)
           {
             case derived_data::fNLlocal:
-              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL));
+              writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL);
               break;
 
             case derived_data::fNLequi:
-              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI));
+              writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI);
               break;
 
             case derived_data::fNLortho:
-              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO));
+              writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO);
               break;
 
             case derived_data::fNLDBI:
-              writer.write_value(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI));
+              writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI);
               break;
 
             default:

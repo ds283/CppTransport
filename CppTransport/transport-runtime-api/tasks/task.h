@@ -50,7 +50,7 @@ namespace transport
 				task(const std::string& nm);
 
 				//! Deserialization constructor
-				task(const std::string& nm, serialization_reader* reader);
+				task(const std::string& nm, Json::Value& reader);
 
 				//! Destroy a task
 				virtual ~task() = default;
@@ -79,7 +79,7 @@ namespace transport
 		  public:
 
 		    //! serialize this object
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
 				// INTERNAL DATA
@@ -100,19 +100,15 @@ namespace transport
 
 
 		template <typename number>
-		task<number>::task(const std::string& nm, serialization_reader* reader)
+		task<number>::task(const std::string& nm, Json::Value& reader)
 			: name(nm)
 			{
-				assert(reader != nullptr);
-				if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-				// Currently no deserialization required
 			}
 
 
 		template <typename number>
-		void task<number>::serialize(serialization_writer& writer) const
+		void task<number>::serialize(Json::Value& writer) const
 			{
-				// Currently no serialization required
 			}
 
 

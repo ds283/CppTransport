@@ -63,7 +63,6 @@
 
 // used for integration tasks
 #define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS                  "output-groups"
-#define __CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP                   "name"
 // used for output tasks
 
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME               "parent-task"
@@ -71,9 +70,7 @@
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_CREATED                 "creation-time"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED                  "locked"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE                    "note"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                    "tags"
-#define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG                     "tag"
 
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND         "backend"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
@@ -90,9 +87,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME            "filename"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED             "creation-time"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES               "notes"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE                "note"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS                "tags"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG                 "tag"
 
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_GROUP                    "integration-metadata"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
@@ -149,7 +144,7 @@ namespace transport
         record_metadata();
 
         //! deserialization constructor
-        record_metadata(serialization_reader* reader);
+        record_metadata(Json::Value& reader);
 
         virtual ~record_metadata() = default;
 
@@ -178,7 +173,7 @@ namespace transport
 
       public:
 
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -225,7 +220,7 @@ namespace transport
         repository_record(const std::string& nm, repository_record::handler_package& pkg);
 
         //! deserialization constructor
-        repository_record(serialization_reader* reader, repository_record::handler_package& pkg);
+        repository_record(Json::Value& reader, repository_record::handler_package& pkg);
 
         virtual ~repository_record() = default;
 
@@ -274,7 +269,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -317,7 +312,7 @@ namespace transport
         package_record(const initial_conditions<number>& i, repository_record::handler_package& pkg);
 
         //! deserialization constructor
-        package_record(serialization_reader* reader, typename instance_manager<number>::model_finder& f, repository_record::handler_package& pkg);
+        package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f, repository_record::handler_package& pkg);
 
         virtual ~package_record() = default;
 
@@ -335,7 +330,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -376,7 +371,7 @@ namespace transport
         task_record(const std::string& nm, repository_record::handler_package& pkg);
 
         //! deserialization constructor
-        task_record(serialization_reader* f, repository_record::handler_package& pkg);
+        task_record(Json::Value& f, repository_record::handler_package& pkg);
 
         virtual ~task_record() = default;
 
@@ -397,7 +392,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -428,7 +423,7 @@ namespace transport
         integration_task_record(const integration_task_record& obj);
 
         //! deserialization constructor
-        integration_task_record(serialization_reader* reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg);
+        integration_task_record(Json::Value& reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg);
 
         virtual ~integration_task_record();
 
@@ -454,7 +449,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -493,7 +488,7 @@ namespace transport
         postintegration_task_record(const postintegration_task_record& obj);
 
         //! deserialization constructor
-        postintegration_task_record(serialization_reader* reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg);
+        postintegration_task_record(Json::Value& reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg);
 
         virtual ~postintegration_task_record();
 
@@ -519,7 +514,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -558,7 +553,7 @@ namespace transport
         derived_product_record(const derived_product_record& obj);
 
         //! deserialization constructor
-        derived_product_record(serialization_reader* reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg);
+        derived_product_record(Json::Value& reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg);
 
         virtual ~derived_product_record();
 
@@ -576,7 +571,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -615,7 +610,7 @@ namespace transport
         output_task_record(const output_task_record& obj);
 
         //! deserialization constructor
-        output_task_record(serialization_reader* reader, typename repository_finder<number>::derived_product_finder& f, repository_record::handler_package& pkg);
+        output_task_record(Json::Value& reader, typename repository_finder<number>::derived_product_finder& f, repository_record::handler_package& pkg);
 
         virtual ~output_task_record();
 
@@ -641,7 +636,7 @@ namespace transport
       public:
 
         //! serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -717,7 +712,7 @@ namespace transport
 	        }
 
         //! deserialization constructor
-        integration_metadata(serialization_reader* reader);
+        integration_metadata(Json::Value& reader);
 
 
         // SERIALIZE -- implements a 'serializable' interface
@@ -725,7 +720,7 @@ namespace transport
       public:
 
         //! serialize this object
-        void serialize(serialization_writer& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // DATA
@@ -816,7 +811,7 @@ namespace transport
 	        }
 
         //! deserialization constructor
-        output_metadata(serialization_reader* reader);
+        output_metadata(Json::Value& reader);
 
 
         // SERIALIZE -- implements a 'serializable' interface
@@ -824,7 +819,7 @@ namespace transport
       public:
 
         //! serialize this object
-        void serialize(serialization_writer& writer) const override;
+        void serialize(Json::Value& writer) const override;
 
 
         // DATA
@@ -905,7 +900,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        derived_content(serialization_reader* reader);
+        derived_content(Json::Value& reader);
 
         //! Destroy a derived_product descriptor
         ~derived_content() = default;
@@ -936,7 +931,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -975,7 +970,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        precomputed_products(serialization_reader* reader);
+        precomputed_products(Json::Value& reader);
 
         //! Destroy a precomputed products record
         ~precomputed_products() = default;
@@ -1033,7 +1028,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -1078,7 +1073,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        integration_payload(serialization_reader* reader);
+        integration_payload(Json::Value& reader);
 
         //! Destroy a payload
         ~integration_payload() = default;
@@ -1124,7 +1119,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -1160,7 +1155,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        postintegration_payload(serialization_reader* reader);
+        postintegration_payload(Json::Value& reader);
 
         //! Destroy a payload
         ~postintegration_payload() = default;
@@ -1201,7 +1196,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -1233,7 +1228,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_payload(serialization_reader* reader);
+        output_payload(Json::Value& reader);
 
         //! Destroy a payload
         ~output_payload() = default;
@@ -1264,7 +1259,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -1304,7 +1299,7 @@ namespace transport
                             repository_record::handler_package& pkg);
 
         //! Deserialization constructor
-        output_group_record(serialization_reader* reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
+        output_group_record(Json::Value& reader, const boost::filesystem::path& root, repository_record::handler_package& pkg);
 
         //! Destroy an output_group_record descriptor
         ~output_group_record() = default;
@@ -1363,7 +1358,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        void serialize(serialization_writer& writer) const;
+        void serialize(Json::Value& writer) const;
 
 
         // CLONE
@@ -1429,34 +1424,29 @@ namespace transport
 	    }
 
 
-    record_metadata::record_metadata(serialization_reader* reader)
+    record_metadata::record_metadata(Json::Value& reader)
 	    {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+        Json::Value& metadata = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP];
+		    assert(metadata.isArray());
 
-        reader->start_node(__CPP_TRANSPORT_NODE_METADATA_GROUP);
-
-        std::string ctime_str;
-        reader->read_value(__CPP_TRANSPORT_NODE_METADATA_CREATED, ctime_str);
+        std::string ctime_str = metadata[__CPP_TRANSPORT_NODE_METADATA_CREATED].asString();
         this->creation_time = boost::posix_time::from_iso_string(ctime_str);
 
-        std::string etime_str;
-        reader->read_value(__CPP_TRANSPORT_NODE_METADATA_EDITED, etime_str);
+        std::string etime_str = metadata[__CPP_TRANSPORT_NODE_METADATA_EDITED].asString();
         this->last_edit_time = boost::posix_time::from_iso_string(etime_str);
 
-        reader->read_value(__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
-
-        reader->end_element(__CPP_TRANSPORT_NODE_METADATA_GROUP);
+        this->runtime_api = reader[__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API].asUInt();
 	    }
 
 
-    void record_metadata::serialize(serialization_writer& writer) const
+    void record_metadata::serialize(Json::Value& writer) const
 	    {
-        writer.start_node(__CPP_TRANSPORT_NODE_METADATA_GROUP, false);
-        writer.write_value(__CPP_TRANSPORT_NODE_METADATA_CREATED, boost::posix_time::to_iso_string(this->creation_time));
-        writer.write_value(__CPP_TRANSPORT_NODE_METADATA_EDITED, boost::posix_time::to_iso_string(this->last_edit_time));
-        writer.write_value(__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API, this->runtime_api);
-        writer.end_element(__CPP_TRANSPORT_NODE_METADATA_GROUP);
+        Json::Value metadata(Json::objectValue);
+
+        metadata[__CPP_TRANSPORT_NODE_METADATA_CREATED] = boost::posix_time::to_iso_string(this->creation_time);
+        metadata[__CPP_TRANSPORT_NODE_METADATA_EDITED] = boost::posix_time::to_iso_string(this->last_edit_time);
+        metadata[__CPP_TRANSPORT_NODE_METADATA_RUNTIME_API] = this->runtime_api;
+        writer[__CPP_TRANSPORT_NODE_METADATA_GROUP] = metadata;
 	    }
 
 
@@ -1479,20 +1469,17 @@ namespace transport
 	    }
 
 
-    repository_record::repository_record(serialization_reader* reader, repository_record::handler_package& pkg)
+    repository_record::repository_record(Json::Value& reader, repository_record::handler_package& pkg)
 	    : metadata(reader),
 	      handlers(pkg)
 	    {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
-
-        reader->read_value(__CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+		    name = reader[__CPP_TRANSPORT_NODE_RECORD_NAME].asString();
 	    }
 
 
-    void repository_record::serialize(serialization_writer& writer) const
+    void repository_record::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_NAME, this->name);
+        writer[__CPP_TRANSPORT_NODE_RECORD_NAME] = this->name;
         this->metadata.serialize(writer);
 	    }
 
@@ -1509,20 +1496,18 @@ namespace transport
 
 
     template <typename number>
-    package_record<number>::package_record(serialization_reader* reader, typename instance_manager<number>::model_finder& f,
+    package_record<number>::package_record(Json::Value& reader, typename instance_manager<number>::model_finder& f,
                                            repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
 	      ics(this->name, reader, f)        // name gets deserialized by repository_record, so is safe to use here
 	    {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
 	    }
 
 
     template <typename number>
-    void package_record<number>::serialize(serialization_writer& writer) const
+    void package_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_PACKAGE);
         this->ics.serialize(writer);
         this->repository_record::serialize(writer);
 	    }
@@ -1539,42 +1524,31 @@ namespace transport
 
 
 		template <typename number>
-    task_record<number>::task_record(serialization_reader* reader, repository_record::handler_package& pkg)
+    task_record<number>::task_record(Json::Value& reader, repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg)
 	    {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+		    Json::Value& group_list = reader[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS];
+				assert(group_list.isArray());
 
-        unsigned int num_groups = reader->start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
-
-        for(unsigned int i = 0; i < num_groups; i++)
+        for(Json::Value::iterator t = group_list.begin(); t != group_list.end(); t++)
 	        {
-            reader->start_array_element();
-
-            std::string name;
-            reader->read_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP, name);
+            std::string name = t->asString();
             this->content_groups.push_back(name);
-
-            reader->end_array_element();
 	        }
-
-        reader->end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
 	    }
 
 
 		template <typename number>
-    void task_record<number>::serialize(serialization_writer& writer) const
+    void task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.start_array(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS, this->content_groups.size()==0);
+		    Json::Value group_list(Json::arrayValue);
 
         for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
 	        {
-            writer.start_node("arrayelt", false);   // node names ignored in arrays
-            writer.write_value(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUP, *t);
-            writer.end_element("arrayelt");
+            Json::Value group_element(Json::stringValue) = *t;
+		        group_list.append(group_element);
 	        }
-
-        writer.end_element(__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS);
+        writer[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
 
         this->repository_record::serialize(writer);
 	    }
@@ -1602,7 +1576,7 @@ namespace transport
 
 
     template <typename number>
-    integration_task_record<number>::integration_task_record(serialization_reader* reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg)
+    integration_task_record<number>::integration_task_record(Json::Value& reader, typename repository_finder<number>::package_finder& f, repository_record::handler_package& pkg)
 	    : task_record<number>(reader, pkg),
 	      tk(integration_task_helper::deserialize<number>(this->name, reader, f))
 	    {
@@ -1619,9 +1593,9 @@ namespace transport
 
 
     template <typename number>
-    void integration_task_record<number>::serialize(serialization_writer& writer) const
+    void integration_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_INTEGRATION_TASK);
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
@@ -1649,7 +1623,7 @@ namespace transport
 
 
     template <typename number>
-    postintegration_task_record<number>::postintegration_task_record(serialization_reader* reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg)
+    postintegration_task_record<number>::postintegration_task_record(Json::Value& reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg)
 	    : task_record<number>(reader, pkg),
 	      tk(postintegration_task_helper::deserialize<number>(this->name, reader, f))
 	    {
@@ -1666,9 +1640,9 @@ namespace transport
 
 
     template <typename number>
-    void postintegration_task_record<number>::serialize(serialization_writer& writer) const
+    void postintegration_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_POSTINTEGRATION_TASK);
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
@@ -1696,11 +1670,10 @@ namespace transport
 
 
     template <typename number>
-    output_task_record<number>::output_task_record(serialization_reader* reader, typename repository_finder<number>::derived_product_finder& f, repository_record::handler_package& pkg)
+    output_task_record<number>::output_task_record(Json::Value& reader, typename repository_finder<number>::derived_product_finder& f, repository_record::handler_package& pkg)
 	    : task_record<number>(reader, pkg),
 	      tk(output_task_helper::deserialize<number>(this->name, reader, f))
 	    {
-        assert(reader != nullptr);
         assert(tk != nullptr);
 
         if(tk == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL);
@@ -1715,9 +1688,9 @@ namespace transport
 
 
     template <typename number>
-    void output_task_record<number>::serialize(serialization_writer& writer) const
+    void output_task_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_OUTPUT_TASK);
         this->tk->serialize(writer);
         this->task_record<number>::serialize(writer);
 	    }
@@ -1745,11 +1718,10 @@ namespace transport
 
 
     template <typename number>
-    derived_product_record<number>::derived_product_record(serialization_reader* reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg)
+    derived_product_record<number>::derived_product_record(Json::Value& reader, typename repository_finder<number>::task_finder& f, repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
 	      product(derived_data::derived_product_helper::deserialize<number>(this->name, reader, f))
 	    {
-        assert(reader != nullptr);
         assert(product != nullptr);
 
         if(product == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL);
@@ -1764,9 +1736,9 @@ namespace transport
 
 
     template <typename number>
-    void derived_product_record<number>::serialize(serialization_writer& writer) const
+    void derived_product_record<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_DERIVED_PRODUCT);
         this->product->serialize(writer);
         this->repository_record::serialize(writer);
 	    }
@@ -1775,101 +1747,102 @@ namespace transport
     // OUTPUT METADATA
 
 
-    output_metadata::output_metadata(serialization_reader* reader)
+    output_metadata::output_metadata(Json::Value& reader)
 	    {
-        assert(reader != nullptr);
+        Json::Value node = reader[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP];
+		    assert(node.isObject());
 
-        reader->start_node(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, work_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, db_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, time_config_hits);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, time_config_unloads);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, twopf_kconfig_hits);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, twopf_kconfig_unloads);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, threepf_kconfig_hits);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, threepf_kconfig_unloads);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, data_hits);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, data_unloads);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS, zeta_hits);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS, zeta_unloads);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS, time_config_evictions);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS, twopf_kconfig_evictions);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS, threepf_kconfig_evictions);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS, data_evictions);
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS, zeta_evictions);
-        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
+        work_time                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        db_time                   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME].asLargestInt();
+        aggregation_time          = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME].asLargestInt();
+        time_config_hits          = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS].asUInt();
+        time_config_unloads       = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS].asUInt();
+        twopf_kconfig_hits        = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS].asUInt();
+        twopf_kconfig_unloads     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS].asUInt();
+        threepf_kconfig_hits      = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS].asUInt();
+        threepf_kconfig_unloads   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS].asUInt();
+        data_hits                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS].asUInt();
+        data_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
+        zeta_hits                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS].asUInt();
+        zeta_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS].asUInt();
+        time_config_evictions     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asUInt();
+        twopf_kconfig_evictions   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asUInt();
+        threepf_kconfig_evictions = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asUInt();
+        data_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asUInt();
+        zeta_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asUInt();
 	    }
 
 
-    void output_metadata::serialize(serialization_writer& writer) const
+    void output_metadata::serialize(Json::Value& writer) const
 	    {
-        writer.start_node(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP, false);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME, this->work_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME, this->db_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME, aggregation_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS, this->time_config_hits);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS, this->time_config_unloads);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS, this->twopf_kconfig_hits);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS, this->twopf_kconfig_unloads);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS, this->threepf_kconfig_hits);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS, this->threepf_kconfig_unloads);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS, this->data_hits);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS, this->data_unloads);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS, this->zeta_hits);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS, this->zeta_unloads);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS, this->time_config_evictions);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS, this->twopf_kconfig_evictions);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS, this->threepf_kconfig_evictions);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS, this->data_evictions);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS, this->zeta_evictions);
-        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP);
+        Json::Value node(Json::objectValue);
+
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = this->work_time;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = this->db_time;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = aggregation_time;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_UNLOADS]     = this->twopf_kconfig_unloads;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_HITS]      = this->threepf_kconfig_hits;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_UNLOADS]   = this->threepf_kconfig_unloads;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_HITS]         = this->data_hits;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS]         = this->zeta_hits;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS]      = this->zeta_unloads;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = this->time_config_evictions;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = this->twopf_kconfig_evictions;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = this->threepf_kconfig_evictions;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = this->data_evictions;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = this->zeta_evictions;
+
+        writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP] = node;
 	    }
 
 
     // INTEGRATION METADATA
 
 
-    integration_metadata::integration_metadata(serialization_reader* reader)
+    integration_metadata::integration_metadata(Json::Value& reader)
 	    {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER);
+        Json::Value& node = reader[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP];
+		    assert(node.isObject());
 
-        reader->start_node(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, total_wallclock_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, total_aggregation_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, total_integration_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, min_mean_integration_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, max_mean_integration_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, global_min_integration_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, global_max_integration_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, total_batching_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, min_mean_batching_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, max_mean_batching_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, global_min_batching_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, global_max_batching_time);
-        reader->read_value(__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, total_configurations);
-        reader->end_element(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
+        total_wallclock_time        = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME].asLargestInt();
+        total_aggregation_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME].asLargestInt();
+        total_integration_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME].asLargestInt();
+        min_mean_integration_time   = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME].asLargestInt();
+        max_mean_integration_time   = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME].asLargestInt();
+        global_min_integration_time = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME].asLargestInt();
+        global_max_integration_time = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME].asLargestInt();
+        total_batching_time         = node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME].asLargestInt();
+        min_mean_batching_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME].asLargestInt();
+        max_mean_batching_time      = node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME].asLargestInt();
+        global_min_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
+        global_max_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
+        total_configurations        = node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
 	    }
 
 
-    void integration_metadata::serialize(serialization_writer& writer) const
+    void integration_metadata::serialize(Json::Value& writer) const
 	    {
-        writer.start_node(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP, false);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME, this->total_wallclock_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME, this->total_aggregation_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME, this->total_integration_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME, this->min_mean_integration_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME, this->max_mean_integration_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME, this->global_min_integration_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME, this->global_max_integration_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME, this->total_batching_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME, this->min_mean_batching_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME, this->max_mean_batching_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME, this->global_min_batching_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME, this->global_max_batching_time);
-        writer.write_value(__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS, this->total_configurations);
-        writer.end_element(__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP);
+        Json::Value node(Json::objectValue);
+
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = this->total_wallclock_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = this->total_aggregation_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = this->total_integration_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = this->min_mean_integration_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = this->max_mean_integration_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = this->global_min_integration_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = this->global_max_integration_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = this->total_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = this->min_mean_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = this->max_mean_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = this->global_min_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = this->global_max_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
+
+        writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP] = node;
 	    }
 
 
@@ -1938,77 +1911,61 @@ namespace transport
 
 
     template <typename Payload>
-    output_group_record<Payload>::output_group_record(serialization_reader* reader, const boost::filesystem::path& root,
+    output_group_record<Payload>::output_group_record(Json::Value& reader, const boost::filesystem::path& root,
                                                       repository_record::handler_package& pkg)
 	    : repository_record(reader, pkg),
 	      payload(reader)
 	    {
-        assert(reader != nullptr);
-
         paths.root = root;
 
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, task);
+        task = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME].asString();
+        paths.output = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT].asString();
+				locked = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED].asBool();
 
-        std::string output_str;
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, output_str);
-        paths.output = output_str;
+        Json::Value note_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES];
+				assert(note_list.isArray());
 
-        reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
-
-        unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
-        for(unsigned int i = 0; i < num_notes; i++)
+        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); t++)
 	        {
-            reader->start_array_element();
-
-            std::string note;
-            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, note);
-            notes.push_back(note);
-
-            reader->end_array_element();
+            notes.push_back(t->asString());
 	        }
-        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
 
-        unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-        for(unsigned int i = 0; i < num_tags; i++)
+        Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
+		    assert(tag_list.isArray());
+
+        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); t++)
 	        {
-            reader->start_array_element();
-
-            std::string tag;
-            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
-            tags.push_back(tag);
-
-            reader->end_array_element();
+            tags.push_back(t->asString());
 	        }
-        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
 	    }
 
 
     template <typename Payload>
-    void output_group_record<Payload>::serialize(serialization_writer& writer) const
+    void output_group_record<Payload>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_RECORD_TYPE, std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT));
+        writer[__CPP_TRANSPORT_NODE_RECORD_TYPE] = std::string(__CPP_TRANSPORT_NODE_RECORD_CONTENT);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME, this->task);
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT, this->paths.output.string());
-        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED, this->locked);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TASK_NAME] = this->task;
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_DATA_ROOT] = this->paths.output.string();
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_LOCKED] = this->locked;
 
-        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES, this->notes.size() == 0);
+        Json::Value note_list(Json::arrayValue);
+
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
 	        {
-            writer.start_node("arrayelt");   // node name doesn't matter for an array
-            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTE, *t);
-            writer.end_element("arrayelt");
+            Json::Value note_element(Json::stringValue) = *t;
+		        note_list.append(note_element);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES] = note_list;
 
-        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);
+        Json::Value tag_list(Json::arrayValue);
+
         for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); t++)
 	        {
-            writer.start_node("arrayelt");   // node name doesn't matter for an array
-            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *t);
-            writer.end_element("arrayelt");
+            Json::Value tag_element(Json::stringValue) = *t;
+		        tag_list.append(tag_element);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+        writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
 
         this->payload.serialize(writer);
 
@@ -2045,29 +2002,27 @@ namespace transport
 	    }   // unnamed namespace
 
 
-    precomputed_products::precomputed_products(serialization_reader* reader)
+    precomputed_products::precomputed_products(Json::Value& reader)
 	    {
-        assert(reader != nullptr);
-
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
+        zeta_twopf   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF].asBool();
+        zeta_threepf = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF].asBool();
+        zeta_redbsp  = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP].asBool();
+        fNL_local    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL].asBool();
+        fNL_equi     = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI].asBool();
+        fNL_ortho    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO].asBool();
+        fNL_DBI      = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI].asBool();
 	    }
 
 
-    void precomputed_products::serialize(serialization_writer& writer) const
+    void precomputed_products::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF, this->zeta_twopf);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF, this->zeta_threepf);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP, this->zeta_redbsp);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL, this->fNL_local);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI, this->fNL_equi);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO, this->fNL_ortho);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI, this->fNL_DBI);
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF]   = this->zeta_twopf;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF] = this->zeta_threepf;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_REDBSP]  = this->zeta_redbsp;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_LOCAL]    = this->fNL_local;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_EQUI]     = this->fNL_equi;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_ORTHO]    = this->fNL_ortho;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_FNL_DBI]      = this->fNL_DBI;
 	    }
 
 
@@ -2083,24 +2038,19 @@ namespace transport
 	    }
 
 
-    integration_payload::integration_payload(serialization_reader* reader)
+    integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader),
 	      precomputed(reader)
 	    {
-        assert(reader != nullptr);
-
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
-
-        std::string ctr_path;
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
-        this->container = ctr_path;
+        backend = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND].asString();
+        container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
 	    }
 
 
-    void integration_payload::serialize(serialization_writer& writer) const
+    void integration_payload::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND, this->backend);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND] = this->backend;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
 
         this->metadata.serialize(writer);
         this->precomputed.serialize(writer);
@@ -2116,21 +2066,17 @@ namespace transport
 	    }
 
 
-    postintegration_payload::postintegration_payload(serialization_reader* reader)
+    postintegration_payload::postintegration_payload(Json::Value& reader)
 	    : metadata(reader),
 	      precomputed(reader)
 	    {
-        assert(reader != nullptr);
-
-        std::string ctr_path;
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, ctr_path);
-        this->container = ctr_path;
+        this->container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
 	    }
 
 
-    void postintegration_payload::serialize(serialization_writer& writer) const
+    void postintegration_payload::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE, this->container.string());
+		    writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
 
         this->metadata.serialize(writer);
         this->precomputed.serialize(writer);
@@ -2145,30 +2091,30 @@ namespace transport
 	    }
 
 
-    output_payload::output_payload(serialization_reader* reader)
+    output_payload::output_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        assert(reader != nullptr);
+        Json::Value& content_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY];
+		    assert(content_array.isArray());
 
-        unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
-        for(unsigned int i = 0; i < num_elements; i++)
+        for(Json::Value::iterator t = content_array.begin(); t != content_array.end(); t++)
 	        {
-            this->content.push_back( derived_content(reader) );
+            this->content.push_back( derived_content(*t) );
 	        }
-        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
 	    }
 
 
-    void output_payload::serialize(serialization_writer& writer) const
+    void output_payload::serialize(Json::Value& writer) const
 	    {
-        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY, this->content.size() == 0);
+        Json::Value content_array(Json::arrayValue);
+
         for(std::list<derived_content>::const_iterator t = this->content.begin(); t != this->content.end(); t++)
 	        {
-            writer.start_node("arrayelt", false);    // node names are ignored in an array
-            (*t).serialize(writer);
-            writer.end_element("arrayelt");
+            Json::Value element(Json::objectValue);
+            (*t).serialize(element);
+		        content_array.append(element);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY);
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY] = content_array;
 
         this->metadata.serialize(writer);
 	    }
@@ -2184,71 +2130,55 @@ namespace transport
 	    }
 
 
-    derived_content::derived_content(serialization_reader* reader)
+    derived_content::derived_content(Json::Value& reader)
 	    {
-        assert(reader != nullptr);
+        parent_product = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME].asString();
+        filename = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME].asString();
 
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME, parent_product);
-
-        std::string fnam_string;
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME, fnam_string);
-        filename = fnam_string;
-
-        std::string ctime_string;
-        reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED, ctime_string);
+        std::string ctime_string = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
         created = boost::posix_time::from_iso_string(ctime_string);
 
-        unsigned int num_notes = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
-        for(unsigned int i = 0; i < num_notes; i++)
+        Json::Value note_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
+		    assert(note_list.isArray());
+
+        for(Json::Value::iterator t = note_list.begin(); t != note_list.end(); t++)
 	        {
-            reader->start_array_element();
-
-            std::string note;
-            reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE, note);
-            notes.push_back(note);
-
-            reader->end_array_element();
+            notes.push_back(t->asString());
 	        }
-        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
 
-        unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
-        for(unsigned int i = 0; i < num_tags; i++)
+        Json::Value tag_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS];
+		    assert(tag_list.isArray());
+
+        for(Json::Value::iterator t = tag_list.begin(); t != tag_list.end(); t++)
 	        {
-            reader->start_array_element();
-
-            std::string tag;
-            reader->read_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG, tag);
-            tags.push_back(tag);
-
-            reader->end_array_element();
+            tags.push_back(t->asString());
 	        }
-        reader->end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
 	    }
 
 
-    void derived_content::serialize(serialization_writer& writer) const
+    void derived_content::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME, this->parent_product);
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME, this->filename.string());
-        writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED, boost::posix_time::to_iso_string(this->created));
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME] = this->parent_product;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME]     = this->filename.string();
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED]      = boost::posix_time::to_iso_string(this->created);
 
-        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES, this->notes.size() == 0);
+        Json::Value note_list(Json::arrayValue);
+
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
 	        {
-            writer.start_node("arrayelt", false);   // node name is ignored in array element
-            writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTE, *t);
-            writer.end_element("arrayelt");
+            Json::Value note_element(Json::stringValue) = *t;
+		        note_list.append(note_element);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES);
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;
 
-        writer.start_array(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS, this->tags.size() == 0);
+        Json::Value tag_list(Json::arrayValue);
+
         for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
 	        {
-            writer.start_node("arrayelt", false);   // node name is ignored in array element
-            writer.write_value(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAG, *t);
-            writer.end_element("arrayelt");
+            Json::Value tag_element(Json::stringValue) = *t;
+		        tag_list.append(tag_element);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS);
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS] = tag_list;
 	    }
 
 	}   // namespace transport

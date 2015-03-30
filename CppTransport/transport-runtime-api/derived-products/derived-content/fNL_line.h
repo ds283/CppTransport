@@ -67,7 +67,7 @@ namespace transport
             fNL_line(const threepf_task<number>& tk);
 
             //! Deserialization constructor
-            fNL_line(serialization_reader* reader);
+            fNL_line(Json::Value& reader);
 
             virtual ~fNL_line() = default;
 
@@ -107,7 +107,7 @@ namespace transport
           public:
 
             //! Serialize this object
-            virtual void serialize(serialization_writer& writer) const override;
+            virtual void serialize(Json::Value& writer) const override;
 
 
             // INTERNAL DATA
@@ -133,15 +133,11 @@ namespace transport
 
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
-        fNL_line<number>::fNL_line(serialization_reader* reader)
+        fNL_line<number>::fNL_line(Json::Value& reader)
           : derived_line<number>(reader),
             type(fNLlocal)
           {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_NULL_READER);
-
-            std::string type_str;
-            reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE, type_str);
+            std::string type_str = reader[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
 
             if     (type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = fNLlocal;
             else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = fNLequi;
@@ -221,24 +217,24 @@ namespace transport
 
 
         template <typename number>
-        void fNL_line<number>::serialize(serialization_writer& writer) const
+        void fNL_line<number>::serialize(Json::Value& writer) const
           {
             switch(this->type)
               {
                 case fNLlocal:
-                  writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL));
+                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL);
                   break;
 
                 case fNLequi:
-                  writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL));
+                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL);
                   break;
 
                 case fNLortho:
-                  writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL));
+                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL);
                   break;
 
                 case fNLDBI:
-                  writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI));
+                  writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI);
                   break;
 
                 default:

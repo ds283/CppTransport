@@ -263,7 +263,7 @@ namespace transport
 
 		    //! Insert the contents of a serialization_writer.
 				//! Destroys the contents of the writer object, which becomes empty.
-		    virtual void insert_writer_contents(serialization_writer& writer) override;
+		    virtual void insert_writer_contents(Json::Value& writer) override;
 
 
 		    // OUTPUT METHODS -- implementation dependent, not part of the interface
@@ -657,9 +657,9 @@ namespace transport
 			}
 
 
-		void unqlite_serialization_reader::insert_writer_contents(serialization_writer& writer)
+		void unqlite_serialization_reader::insert_writer_contents(Json::Value& writer)
 			{
-				unqlite_serialization_writer& unq_writer = dynamic_cast<unqlite_serialization_writer&>(writer);
+				unqlite_Json::Value& unq_writer = dynamic_cast<unqlite_Json::Value&>(writer);
 				this->stack.merge(unq_writer.stack);
 			}
 

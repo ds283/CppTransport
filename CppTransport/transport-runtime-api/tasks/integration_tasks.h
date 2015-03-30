@@ -39,7 +39,6 @@
 #define __CPP_TRANSPORT_NODE_MESH_REFINEMENTS              "mesh-refinements"
 
 #define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE           "time-config-storage-policy"
-#define __CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN        "n"
 #define __CPP_TRANSPORT_NODE_TIME_RANGE                    "time-config-range"
 
 #define __CPP_TRANSPORT_NODE_KSTAR                         "kstar"
@@ -154,7 +153,7 @@ namespace transport
           }
 
 		    //! deserialization constructor
-		    integration_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+		    integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
         //! Destroy an integration task
         virtual ~integration_task() = default;
@@ -263,7 +262,7 @@ namespace transport
 		  public:
 
 				//! serialize this object
-				virtual void serialize(serialization_writer& writer) const override;
+				virtual void serialize(Json::Value& writer) const override;
 
 
 
@@ -355,52 +354,45 @@ namespace transport
 
 
 		template <typename number>
-		integration_task<number>::integration_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+		integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
 			: time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
         ics(i),
         task<number>(nm, reader)
 			{
-				assert(reader != nullptr);
-		    if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
 				// deserialize fast-forward integration setting
-				reader->read_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, fast_forward);
+				fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
 
 				// deserialize number of fast-forward efolds
-				reader->read_value(__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS, ff_efolds);
+				ff_efolds = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS].asUInt();
 
 				// deserialize max number of mesh refinements
-				reader->read_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, max_refinements);
+				max_refinements = reader[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS].asUInt();
 
         // deserialize range of sampling times
-        reader->start_node(__CPP_TRANSPORT_NODE_TIME_RANGE);
-        times = range<double>(reader);
-        reader->end_element(__CPP_TRANSPORT_NODE_TIME_RANGE);
+		    Json::Value& time_range = reader[__CPP_TRANSPORT_NODE_TIME_RANGE];
+				assert(time_range.isObject());
+        times = range<double>(time_range);
 
 				// raw grid of sampling times can be reconstructed from the range object
 				raw_time_list = times.get_grid();
 
 				// filtered times have to be reconstructed from the database
-				unsigned int num_configs = reader->start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+		    Json::Value& time_storage = reader[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE];
+				assert(time_storage.isArray());
+
         time_config_list.clear();
-        time_config_list.reserve(num_configs);
+        time_config_list.reserve(time_storage.size());
 
-				for(unsigned int i = 0; i < num_configs; i++)
+				for(Json::Value::iterator t = time_storage.begin(); t != time_storage.end(); t++)
 					{
-						reader->start_array_element();
-
-						unsigned int sn;
-						reader->read_value(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, sn);
+						unsigned int sn = t->asUInt();
 						if(sn >= raw_time_list.size()) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_TIME_CONFIG_SN_TOO_BIG);
 
 						time_config tc;
 						tc.t = raw_time_list[sn];
 						tc.serial = sn;
 						time_config_list.push_back(tc);
-
-            reader->end_array_element();
 					}
-				reader->end_element(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
 
         // the integrator relies on the list of time configurations being in order
         struct TimeConfigSorter
@@ -414,34 +406,33 @@ namespace transport
 
 
 		template <typename number>
-		void integration_task<number>::serialize(serialization_writer& writer) const
+		void integration_task<number>::serialize(Json::Value& writer) const
 			{
         // store name of package
-        writer.write_value(__CPP_TRANSPORT_NODE_PACKAGE_NAME, this->ics.get_name());
+        writer[__CPP_TRANSPORT_NODE_PACKAGE_NAME] = this->ics.get_name();
 
 				// store fast-forward integration setting
-				writer.write_value(__CPP_TRANSPORT_NODE_FAST_FORWARD, this->fast_forward);
+				writer[__CPP_TRANSPORT_NODE_FAST_FORWARD] = this->fast_forward;
 
 				// store number of fast-forward efolds
-				writer.write_value(__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS, this->ff_efolds);
+				writer[__CPP_TRANSPORT_NODE_FAST_FORWARD_EFOLDS] = this->ff_efolds;
 
 				// store max number of mesh refinements
-				writer.write_value(__CPP_TRANSPORT_NODE_MESH_REFINEMENTS, this->max_refinements);
+				writer[__CPP_TRANSPORT_NODE_MESH_REFINEMENTS] = this->max_refinements;
 
         // serialize range of sampling times
-        writer.start_node(__CPP_TRANSPORT_NODE_TIME_RANGE, false);
-        this->times.serialize(writer);
-        writer.end_element(__CPP_TRANSPORT_NODE_TIME_RANGE);
+		    Json::Value time_range(Json::objectValue);
+		    this->times.serialize(time_range);
+				writer[__CPP_TRANSPORT_NODE_TIME_RANGE] = time_range;
 
         // serialize filtered range of times, those which will be stored in the database
-				writer.start_array(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE, this->time_config_list.size() == 0);
+		    Json::Value time_storage(Json::arrayValue);
 				for(std::vector<time_config>::const_iterator t = this->time_config_list.begin(); t != this->time_config_list.end(); t++)
 					{
-						writer.start_node("arrayelt", false);    // node name ignored in arrays
-						writer.write_value(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE_SN, (*t).serial);
-						writer.end_element("arrayelt");
+				    Json::Value storage_element(Json::uintValue) = t->serial;
+						time_storage.append(storage_element);
 					}
-				writer.end_element(__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE);
+				writer[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE] = time_range;
 
         // note that we DO NOT serialize the initial conditions;
         // these are handled separately by the repository layer
@@ -539,10 +530,10 @@ namespace transport
 					{
 						if(this->raw_time_list[i] >= Nstart)
 							{
-						    if(t != this->time_config_list.end() && (*t).serial == i)
+						    if(t != this->time_config_list.end() && t->serial == i)
 							    {
 								    times.push_back(this->raw_time_list[i]);
-								    slist.push_back(time_storage_record(true, (*t).serial));
+								    slist.push_back(time_storage_record(true, t->serial));
                     t++;
 							    }
 								else
@@ -644,7 +635,7 @@ namespace transport
 
 		    //! Throw an exception if any attempt is made to serialize a background_task.
 		    //! Only twopf and threepf integration tasks can be serialized.
-        virtual void serialize(serialization_writer& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
+        virtual void serialize(Json::Value& writer) const override { throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_BACKGROUND_TASK); }
 
 
 		    // CLONE
@@ -683,7 +674,7 @@ namespace transport
                         typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
-        twopf_list_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+        twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
         virtual ~twopf_list_task() = default;
 
@@ -722,7 +713,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // INTERNAL DATA
@@ -760,42 +751,34 @@ namespace transport
 
 
     template <typename number>
-    twopf_list_task<number>::twopf_list_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+    twopf_list_task<number>::twopf_list_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : integration_task<number>(nm, reader, i),
         kmax(-DBL_MAX),
         serial(0)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
         // deserialize comoving normalization constant
-        reader->read_value(__CPP_TRANSPORT_NODE_KSTAR, comoving_normalization);
+        comoving_normalization = reader[__CPP_TRANSPORT_NODE_KSTAR].asDouble();
 
         // deserialize list of twopf k-configurations
-        unsigned int configs = reader->start_array(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
+        Json::Value& config_list = reader[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE];
         twopf_config_list.clear();
-        twopf_config_list.reserve(configs);
+        twopf_config_list.reserve(config_list.size());
 
-        for(unsigned int i = 0; i < configs; i++)
+        for(Json::Value::iterator t = config_list.begin(); t != config_list.end(); t++)
           {
-            reader->start_array_element();
-
             twopf_kconfig c;
-            reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN, c.serial);
-            reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, c.k_conventional);
+            c.serial = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN].asUInt();
+            c.k_conventional = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K].asDouble();
 
             assert(c.k_conventional > 0.0);
             c.k_comoving = c.k_conventional*comoving_normalization;
 		        if(c.k_conventional > this->kmax) this->kmax = c.k_conventional;
 
-            reader->read_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, c.store_background);
+            c.store_background = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG].asBool();
 
             twopf_config_list.push_back(c);
             serial++;
-
-            reader->end_array_element();
           }
-        reader->end_element(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
 
         // sort twopf_config_list into ascending serial-number order
         // this isn't absolutely required, because nothing in the integration step depends on
@@ -810,24 +793,23 @@ namespace transport
 
 
     template <typename number>
-    void twopf_list_task<number>::serialize(serialization_writer& writer) const
+    void twopf_list_task<number>::serialize(Json::Value& writer) const
       {
         // serialize comoving normalization constant
-        writer.write_value(__CPP_TRANSPORT_NODE_KSTAR, this->comoving_normalization);
+        writer[__CPP_TRANSPORT_NODE_KSTAR] = this->comoving_normalization;
 
         // serialize list of twopf kconfigurations
         // note we store only k_conventional to save space
         // k_comoving can be reconstructed on deserialization
-        writer.start_array(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE, this->twopf_config_list.size()==0);
+        Json::Value config_list[Json::arrayValue];
         for(std::vector<twopf_kconfig>::const_iterator t = this->twopf_config_list.begin(); t != this->twopf_config_list.end(); t++)
           {
-            writer.start_node("arrayelt", false);    // node name ignored in arrays
-            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN, (*t).serial);
-            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K, (*t).k_conventional);
-            writer.write_value(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG, (*t).store_background);
-            writer.end_element("arrayelt");
+            Json::Value config_element(Json::objectValue);
+            config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN] = t->serial;
+            config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K] = t->k_conventional;
+            config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG] = t->store_background;
           }
-        writer.end_element(__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE);
+        writer[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE] = config_list;
 
         this->integration_task<number>::serialize(writer);
       }
@@ -866,10 +848,10 @@ namespace transport
         bool rval = false;
         for(std::vector<twopf_kconfig>::const_iterator t = this->twopf_config_list.begin(); !rval && t != this->twopf_config_list.end(); t++)
           {
-            if(fabs((*t).k_conventional - k) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION)
+            if(fabs(t->k_conventional - k) < __CPP_TRANSPORT_DEFAULT_KCONFIG_SEARCH_PRECISION)
               {
                 rval = true;
-                serial = (*t).serial;
+                serial = t->serial;
               }
           }
 
@@ -883,7 +865,7 @@ namespace transport
         std::vector<twopf_kconfig>::const_iterator t;
         for(t = this->twopf_config_list.begin(); t != this->twopf_config_list.end(); t++)
           {
-            if((*t).serial == serial) break;
+            if(t->serial == serial) break;
           }
 
         if(t == this->twopf_config_list.end()) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_TASK_TWOPF_CONFIG_SN_TOO_BIG);
@@ -915,7 +897,7 @@ namespace transport
           }
 
         //! deserialization constructor
-        twopf_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+        twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
         //! Destroy a two-point function task
         ~twopf_task() = default;
@@ -937,7 +919,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -969,19 +951,17 @@ namespace transport
 
     // deserializtaion constructor
     template <typename number>
-    twopf_task<number>::twopf_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+    twopf_task<number>::twopf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : twopf_list_task<number>(nm, reader, i)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
       }
 
 
     // serialize a twopf task to the repository
     template <typename number>
-    void twopf_task<number>::serialize(serialization_writer& writer) const
+    void twopf_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF));
+		    writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF);
 
         this->twopf_list_task<number>::serialize(writer);
       }
@@ -1000,9 +980,14 @@ namespace transport
 		    //! for the purpose of deciding whether a threepf-kconfiguration will be kept
 		    class threepf_kconfig_storage_policy_data
 			    {
+
 		      public:
+
 				    threepf_kconfig_storage_policy_data(double k, double a, double b, unsigned int s)
-					    : k_t(k), alpha(a), beta(b), serial(s)
+					    : k_t(k),
+					      alpha(a),
+					      beta(b),
+					      serial(s)
 					    {
 								k1 = (k_t/4.0)*(1.0 + alpha + beta);
 						    k2 = (k_t/4.0)*(1.0 - alpha + beta);
@@ -1010,6 +995,7 @@ namespace transport
 					    }
 
 		      public:
+
 				    double k_t;
 				    double alpha;
 				    double beta;
@@ -1043,7 +1029,7 @@ namespace transport
                      typename integration_task<number>::time_config_storage_policy p);
 
         //! deserialization constructor
-        threepf_task(const std::string& n, serialization_reader* reader, const initial_conditions<number>& i);
+        threepf_task(const std::string& n, Json::Value& reader, const initial_conditions<number>& i);
 
         //! Destroy a three-point function task
         virtual ~threepf_task() = default;
@@ -1071,7 +1057,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
 		    // INTERNAL DATA
@@ -1100,34 +1086,29 @@ namespace transport
 
 
     template <typename number>
-    threepf_task<number>::threepf_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+    threepf_task<number>::threepf_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : twopf_list_task<number>(nm, reader, i),
         serial(0)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
         //! deserialize integrable status
-        reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE, integrable);
+        integrable = reader[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE].asBool();
 
         //! deserialize array of k-configurations
-        unsigned int configs = reader->start_array(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
+        Json::Value& config_list = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE];
         threepf_config_list.clear();
-        threepf_config_list.reserve(configs);
+        threepf_config_list.reserve(config_list.size());
 
-        for(unsigned int i = 0; i < configs; i++)
+        for(Json::Value::iterator t = config_list.begin(); t != config_list.end(); t++)
           {
-            reader->start_array_element();
-
             threepf_kconfig c;
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN, c.serial);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN, c.index[0]);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN, c.index[1]);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN, c.index[2]);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG, c.store_background);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1, c.store_twopf_k1);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2, c.store_twopf_k2);
-            reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3, c.store_twopf_k3);
+            c.serial = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN].asUInt();
+            c.index[0] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN].asUInt();
+            c.index[1] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN].asUInt();
+            c.index[2] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN].asUInt();
+            c.store_background = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG].asBool();
+            c.store_twopf_k1 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1].asBool();
+            c.store_twopf_k2 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2].asBool();
+            c.store_twopf_k3 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3].asBool();
 
             const twopf_kconfig& k1 = this->lookup_twopf_kconfig(c.index[0]);
             const twopf_kconfig& k2 = this->lookup_twopf_kconfig(c.index[1]);
@@ -1148,10 +1129,7 @@ namespace transport
 
             threepf_config_list.push_back(c);
             serial++;
-
-            reader->end_array_element();
           }
-        reader->end_element(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
 
         // sort threepf_config_list into ascending serial-number order
         // this isn't absolutely required, because nothing in the integration step depends on it
@@ -1165,27 +1143,27 @@ namespace transport
 
 
     template <typename number>
-    void threepf_task<number>::serialize(serialization_writer& writer) const
+    void threepf_task<number>::serialize(Json::Value& writer) const
       {
         // serialize integrable status
-        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE, this->integrable);
+        writer[__CPP_TRANSPORT_NODE_THREEPF_INTEGRABLE] = this->integrable;
 
-        // serialize array of k-configurations
-        writer.start_array(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE, this->threepf_config_list.size()==0);
+        // serialize array of k-configuration
+        Json::Value config_list(Json::arrayValue);
         for(std::vector<threepf_kconfig>::const_iterator t = this->threepf_config_list.begin(); t != this->threepf_config_list.end(); t++)
           {
-            writer.start_node("arrayelt", false);    // node name is ignored in arrays
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN, (*t).serial);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN, (*t).index[0]);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN, (*t).index[1]);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN, (*t).index[2]);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG, (*t).store_background);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1, (*t).store_twopf_k1);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2, (*t).store_twopf_k2);
-            writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3, (*t).store_twopf_k3);
-            writer.end_element("arrayelt");
+            Json::Value config_element(Json::objectValue);
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN] = t->serial;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN] = t->index[0];
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN] = t->index[1];
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN] = t->index[2];
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG] = t->store_background;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1] = t->store_twopf_k1;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2] = t->store_twopf_k2;
+            config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3] = t->store_twopf_k3;
+						config_list.append(config_list);
           }
-        writer.end_element(__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE);
+        writer[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE] = config_list;
 
         this->twopf_list_task<number>::serialize(writer);
       }
@@ -1217,7 +1195,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        threepf_cubic_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+        threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
 
         // INTERFACE
@@ -1236,7 +1214,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -1336,22 +1314,19 @@ namespace transport
 
 
     template <typename number>
-    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+    threepf_cubic_task<number>::threepf_cubic_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : threepf_task<number>(nm, reader, i)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
-        reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING, this->spacing);
+		    spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING].asDouble();
       }
 
 
     template <typename number>
-    void threepf_cubic_task<number>::serialize(serialization_writer& writer) const
+    void threepf_cubic_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING, this->spacing);
+        writer[__CPP_TRANSPORT_NODE_THREEPF_CUBIC_SPACING] = this->spacing;
 
         this->threepf_task<number>::serialize(writer);
       }
@@ -1385,7 +1360,7 @@ namespace transport
           }
 
         //! Deserialization construcitr
-        threepf_fls_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i);
+        threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i);
 
 
         // INTERFACE
@@ -1404,7 +1379,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -1508,26 +1483,23 @@ namespace transport
 
 
     template <typename number>
-    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, serialization_reader* reader, const initial_conditions<number>& i)
+    threepf_fls_task<number>::threepf_fls_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
       : threepf_task<number>(nm, reader, i)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
-        reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING, kt_spacing);
-        reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING, alpha_spacing);
-        reader->read_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING, beta_spacing);
+        kt_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING].asDouble();
+        alpha_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING].asDouble();
+        beta_spacing = reader[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING].asDouble();
       }
 
 
     template <typename number>
-    void threepf_fls_task<number>::serialize(serialization_writer& writer) const
+    void threepf_fls_task<number>::serialize(Json::Value& writer) const
       {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS);
 
-        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING, this->kt_spacing);
-        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING, this->alpha_spacing);
-        writer.write_value(__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING, this->beta_spacing);
+        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_KT_SPACING] = this->kt_spacing;
+        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_ALPHA_SPACING] = this->alpha_spacing;
+        writer[__CPP_TRANSPORT_NODE_THREEPF_FLS_BETA_SPACING] = this->beta_spacing;
 
         this->threepf_task<number>::serialize(writer);
       }

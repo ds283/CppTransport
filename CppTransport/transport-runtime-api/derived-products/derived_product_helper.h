@@ -22,15 +22,11 @@ namespace transport
           {
 
             template <typename number>
-            derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+            derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
               {
-                assert(reader != nullptr);
-
-                std::string type;
+                std::string type = reader[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE].asString();
 
                 derived_data::derived_product<number>* rval = nullptr;
-
-                reader->read_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, type);
 
                 if (type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D) rval = new line_plot2d<number>(name, reader, finder);
                 else if(type == __CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE) rval = new line_asciitable<number>(name, reader, finder);

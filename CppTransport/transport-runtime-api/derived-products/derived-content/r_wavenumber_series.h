@@ -41,7 +41,7 @@ namespace transport
 		                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
-		        r_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+		        r_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~r_wavenumber_series() = default;
 
@@ -70,7 +70,7 @@ namespace transport
 		      public:
 
 		        //! serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 			    };
 
@@ -92,13 +92,11 @@ namespace transport
 		    // derived_line<> is not called automatically during construction of time_series<>.
 		    // We have to call it ourselves.
 				template <typename number>
-				r_wavenumber_series<number>::r_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+				r_wavenumber_series<number>::r_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: derived_line<number>(reader, finder),
 		        r_line<number>(reader),
 		        wavenumber_series<number>(reader)
 			    {
-				    assert(reader != nullptr);
-				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 			    }
 
 
@@ -171,10 +169,9 @@ namespace transport
 		    // note that because time_series<> inherits virtually form derived_line<>, the serialize method for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    void r_wavenumber_series<number>::serialize(serialization_writer& writer) const
+		    void r_wavenumber_series<number>::serialize(Json::Value& writer) const
 			    {
-		        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-		                           std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES));
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R_WAVENUMBER_SERIES);
 
 		        this->derived_line<number>::serialize(writer);
 		        this->r_line<number>::serialize(writer);

@@ -129,10 +129,10 @@ namespace transport
 						derived_line(const integration_task<number>& tk);
 
 				    //! Deserialization constructor
-						derived_line(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+						derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 						//! Dummy deserialization constructor, should not be used; called only for incorrectly-constructed instances
-						derived_line(serialization_reader* reader);
+						derived_line(Json::Value& reader);
 
 						// Override default copy constructor to perform a deep copy of the parent task
 						derived_line(const derived_line<number>& obj);
@@ -196,7 +196,7 @@ namespace transport
 				  public:
 
 						//! Serialize this object
-						virtual void serialize(serialization_writer& writer) const override;
+						virtual void serialize(Json::Value& writer) const override;
 
 
 				    // INTERNAL DATA
@@ -265,7 +265,7 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(serialization_reader* reader)
+				derived_line<number>::derived_line(Json::Value& reader)
 					: parent_task(nullptr), mdl(nullptr)
 					{
 						assert(false);
@@ -273,17 +273,12 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+				derived_line<number>::derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: parent_task(nullptr), mdl(nullptr)
 					{
-						assert(reader != nullptr);
+				    precision = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
 
-				    if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NULL_READER);
-
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION, precision);
-
-				    std::string parent_task_name;
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME, parent_task_name);
+				    std::string parent_task_name = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
 				    // extract parent task and model
             std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
@@ -299,8 +294,7 @@ namespace transport
             mdl = parent_task->get_model();
 
 						// Deserialize: axis type for this derived line
-				    std::string xtype;
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, xtype);
+				    std::string xtype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE].asString();
 						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
 						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = wavenumber_series;
 						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES) x_type = angle_series;
@@ -313,8 +307,7 @@ namespace transport
 							}
 
 						// Deserialize: value type for this derived line
-				    std::string ytype;
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, ytype);
+				    std::string ytype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE].asString();
 						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF) y_type = correlation_function;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD) y_type = background_field;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL) y_type = fNL;
@@ -328,8 +321,7 @@ namespace transport
 							}
 
 						// Deserialize: meaning of 'dot' for this derived line
-				    std::string dot_meaning_value;
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE, dot_meaning_value);
+				    std::string dot_meaning_value = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
 
 				    if(dot_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE) dot_meaning = derivatives;
 				    else if(dot_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA) dot_meaning = momenta;
@@ -341,8 +333,7 @@ namespace transport
 					    }
 
 						// Deserialize: meaning of k-labels for this derived line
-				    std::string label_meaning_value;
-				    reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE, label_meaning_value);
+				    std::string label_meaning_value = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE].asString();
 
 				    if(label_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL) klabel_meaning = conventional;
 				    else if(label_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING) klabel_meaning = comoving;
@@ -354,34 +345,22 @@ namespace transport
 					    }
 
 						// Deserialize: list of time configuration sample points
-				    unsigned int time_sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
+				    Json::Value& time_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS];
+						assert(time_sns_list.isArray());
 
-				    for(unsigned int i = 0; i < time_sns; i++)
+				    for(Json::Value::iterator t = time_sns_list.begin(); t != time_sns_list.end(); t++)
 					    {
-				        reader->start_array_element();
-
-				        unsigned int sn;
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER, sn);
-				        time_sample_sns.push_back(sn);
-
-				        reader->end_array_element();
+				        time_sample_sns.push_back(t->asUInt());
 					    }
-				    reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
 
-						// Deserialize: list of k-configuration sample points
-				    unsigned int kconfig_sns = reader->start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
+				    // Deserialize: list of k-configuration sample points
+				    Json::Value& kconfig_sns_list = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS];
+						assert(kconfig_sns_list.isArray());
 
-				    for(unsigned int i = 0; i < kconfig_sns; i++)
+				    for(Json::Value::iterator t = kconfig_sns_list.begin(); t != kconfig_sns_list.end(); t++)
 					    {
-				        reader->start_array_element();
-
-				        unsigned int sn;
-				        reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, sn);
-				        kconfig_sample_sns.push_back(sn);
-
-				        reader->end_array_element();
+				        kconfig_sample_sns.push_back(t->asUInt());
 					    }
-				    reader->end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
 					}
 
 
@@ -425,29 +404,28 @@ namespace transport
 
 
 				template <typename number>
-				void derived_line<number>::serialize(serialization_writer& writer) const
+				void derived_line<number>::serialize(Json::Value& writer) const
 					{
-				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME, this->parent_task->get_name());
-
-				    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION, this->precision);
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME] = this->parent_task->get_name();
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION] = this->precision;
 
 						// Serialize: axis type of this derived line
 				    switch(this->x_type)
 							{
 						    case time_series:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES);
 									break;
 
 						    case wavenumber_series:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES);
 									break;
 
 				        case angle_series:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES));
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES);
 						      break;
 
 				        case squeezing_fraction:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION));
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION);
 						      break;
 
 						    default:
@@ -459,23 +437,23 @@ namespace transport
 						switch(this->y_type)
 							{
 						    case correlation_function:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF);
 									break;
 
 						    case background_field:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD);
 									break;
 
 						    case fNL:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL);
 									break;
 
 						    case r:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R);
 									break;
 
 						    case spectral_index:
-							    writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX));
+							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX);
 									break;
 
 						    default:
@@ -487,12 +465,12 @@ namespace transport
 				    switch(this->dot_meaning)
 					    {
 				        case derivatives:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE));
-				        break;
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE);
+				          break;
 
 				        case momenta:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA));
-				        break;
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA);
+				          break;
 
 				        default:
 					        assert(false);
@@ -503,12 +481,12 @@ namespace transport
 				    switch(this->klabel_meaning)
 					    {
 				        case conventional:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL));
-				        break;
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL);
+				          break;
 
 				        case comoving:
-					        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE, std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING));
-				        break;
+					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING);
+				          break;
 
 				        default:
 					        assert(false);
@@ -516,25 +494,24 @@ namespace transport
 					    }
 
 						// Serialize: list of time-configuration sample points
-				    writer.start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS, this->time_sample_sns.size() == 0);
+				    Json::Value time_sns_list(Json::arrayValue);
+
 				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
 					    {
-				        writer.start_node("arrayelt", false);    // node name ignored for arrays
-				        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER, *t);
-				        writer.end_element("arrayelt");
+				        Json::Value sns_element(Json::uintValue) = *t;
+						    time_sns_list.append(sns_element);
 					    }
-				    writer.end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS);
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS] = time_sns_list;
 
 						// Serialize: list of k-configuration sample points
-				    writer.start_array(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS, this->kconfig_sample_sns.size() == 0);
+				    Json::Value kconfig_sns_list(Json::arrayValue);
+
 				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
 					    {
-				        writer.start_node("arrayelt", false);    // node name ignored for arrays
-				        writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER, *t);
-				        writer.end_element("arrayelt");
+				        Json::Value kconfig_element(Json::uintValue) = *t;
+						    kconfig_sns_list.append(kconfig_element);
 					    }
-				    writer.end_element(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS);
-
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS] = kconfig_sns_list;
 					}
 
 

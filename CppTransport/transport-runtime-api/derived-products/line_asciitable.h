@@ -63,7 +63,7 @@ namespace transport
 					    }
 
 				    //! Deserialization constructor
-				    line_asciitable(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder);
+				    line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
 
 				    virtual ~line_asciitable() = default;
 
@@ -101,7 +101,7 @@ namespace transport
 
 		      public:
 
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 
 		        // WRITE SELF TO A STANDARD STREAM
@@ -124,13 +124,11 @@ namespace transport
 
 
 				template <typename number>
-				line_asciitable<number>::line_asciitable(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder finder)
+				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 					: line_collection<number>(name, reader, finder)
 					{
-						assert(reader != nullptr);
-
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION, precision);
-						reader->read_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL, x_label);
+						precision = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
+						x_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
 					}
 
 
@@ -216,12 +214,12 @@ namespace transport
 					}
 
 				template <typename number>
-				void line_asciitable<number>::serialize(serialization_writer& writer) const
+				void line_asciitable<number>::serialize(Json::Value& writer) const
 					{
-						writer.write_value(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE, std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE));
+						writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE] = std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE);
 
-						writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION, this->precision);
-						writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL, this->x_label);
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION] = this->precision;
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL] = this->x_label;
 
 						// call next serializer
 						this->line_collection<number>::serialize(writer);

@@ -52,7 +52,7 @@ namespace transport
         parameters(number Mp, const std::vector<number>& p, model<number>* m);
 
         //! Deserialization constructor
-        parameters(serialization_reader* reader, typename instance_manager<number>::model_finder f);
+        parameters(Json::Value& reader, typename instance_manager<number>::model_finder f);
 
         virtual ~parameters() = default;
 
@@ -76,7 +76,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // WRITE TO A STREAM
@@ -118,37 +118,27 @@ namespace transport
 
 
     template <typename number>
-    parameters<number>::parameters(serialization_reader* reader, typename instance_manager<number>::model_finder f)
+    parameters<number>::parameters(Json::Value& reader, typename instance_manager<number>::model_finder f)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PARAMS_NULL_SERIALIZATION_READER);
-
 		    // construct model object
-        std::string uid;
-		    reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, uid);
+        std::string uid = reader[__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID].asString();
 		    mdl = f(uid);
 
         // deserialize value of Planck mass
-        reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_MPLANCK, M_Planck);
+		    M_Planck = static_cast<number>(reader[__CPP_TRANSPORT_NODE_PARAMS_MPLANCK].asDouble());
 
         // deserialize array of parameter values
-        unsigned int parameters = reader->start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
+        Json::Value& param_array = reader[__CPP_TRANSPORT_NODE_PARAMS_VALUES];
+		    assert(param_array.isArray());
+
         std::vector< named_list::element<number> > temp;
-        for(unsigned int i = 0; i < parameters; i++)
+		    for(Json::Value::iterator t = param_array.begin(); t != param_array.end(); t++)
           {
-            reader->start_array_element();
-
-            std::string param_name;
-            reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_NAME, param_name);
-
-            double param_value;
-            reader->read_value(__CPP_TRANSPORT_NODE_PARAMS_VALUE, param_value);
+            std::string param_name = (*t)[__CPP_TRANSPORT_NODE_PARAMS_NAME].asString();
+            double param_value = (*t)[__CPP_TRANSPORT_NODE_PARAMS_VALUE].asDouble();
 
             temp.push_back(named_list::element<number>(param_name, static_cast<number>(param_value)));
-
-            reader->end_array_element();
           }
-        reader->end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
 
 		    const std::vector<std::string>& order = mdl->get_param_names();
         if(temp.size() != order.size()) throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_BADLY_FORMED_PARAMS);
@@ -169,13 +159,13 @@ namespace transport
 
 
     template <typename number>
-    void parameters<number>::serialize(serialization_writer& writer) const
+    void parameters<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID, this->mdl->get_identity_string());
+		    writer[__CPP_TRANSPORT_NODE_PARAMS_MODEL_UID] = this->mdl->get_identity_string();
 
         // serialize value of Planck mass
-        writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_MPLANCK, this->M_Planck);
+        writer[__CPP_TRANSPORT_NODE_PARAMS_MPLANCK] = this->M_Planck;
 
         // serialize array of parameter values
 		    const std::vector<std::string>& names = this->mdl->get_param_names();
@@ -183,15 +173,14 @@ namespace transport
 
         if(this->params.size() == names.size())
           {
-            writer.start_array(__CPP_TRANSPORT_NODE_PARAMS_VALUES, this->params.size()==0);
+            Json::Value param_array(Json::arrayValue);
+
             for(unsigned int i = 0; i < this->params.size(); i++)
               {
-                writer.start_node("arrayelt", false);   // node name is ignored in arrays
-		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_NAME, names[i]);
-		            writer.write_value(__CPP_TRANSPORT_NODE_PARAMS_VALUE, this->params[i]);
-                writer.end_element("arrayelt");
+		            param_array[__CPP_TRANSPORT_NODE_PARAMS_NAME] = names[i];
+		            param_array[__CPP_TRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
               }
-            writer.end_element(__CPP_TRANSPORT_NODE_PARAMS_VALUES);
+		        writer[__CPP_TRANSPORT_NODE_PARAMS_VALUES] = param_array;
           }
         else throw std::out_of_range(__CPP_TRANSPORT_PARAM_DATA_MISMATCH);
       }

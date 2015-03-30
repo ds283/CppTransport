@@ -25,7 +25,6 @@
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL   "all"
 #define __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD "field"
 #define __CPP_TRANSPORT_NODE_INDEX_TOGGLES     "enabled-indices"
-#define __CPP_TRANSPORT_NODE_INDEX_TOGGLE      "enabled"
 
 
 namespace transport
@@ -46,7 +45,7 @@ namespace transport
         index_selector(unsigned int N_f, range_type r=all_range);
 
 		    //! Deserialization constructor
-		    index_selector(serialization_reader* reader);
+		    index_selector(Json::Value& reader);
 
 		    ~index_selector() = default;
 
@@ -71,7 +70,7 @@ namespace transport
 
       public:
 
-		    virtual void serialize(serialization_writer& writer) const override;
+		    virtual void serialize(Json::Value& writer) const override;
 
 
 		    //! Write self to standard output
@@ -185,32 +184,26 @@ namespace transport
 
 
 		template <unsigned int indices>
-		void index_selector<indices>::serialize(serialization_writer& writer) const
+		void index_selector<indices>::serialize(Json::Value& writer) const
 			{
-				writer.write_value(__CPP_TRANSPORT_NODE_INDEX_RANGE,
-				                       this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD));
-				writer.write_value(__CPP_TRANSPORT_NODE_INDEX_FIELDS, this->N_fields);
+				writer[__CPP_TRANSPORT_NODE_INDEX_RANGE] = this->range == all_range ? std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_ALL) : std::string(__CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD);
+				writer[__CPP_TRANSPORT_NODE_INDEX_FIELDS] = this->N_fields;
 
-				writer.start_array(__CPP_TRANSPORT_NODE_INDEX_TOGGLES, this->size == 0);
+		    Json::Value toggle_array(Json::arrayValue);
 				for(unsigned int i = 0; i < this->size; i++)
 					{
-						writer.start_node("arrayelt", false);   // node names are ignored for arrays
-						writer.write_value(__CPP_TRANSPORT_NODE_INDEX_TOGGLE, this->enabled[i]);
-						writer.end_element("arrayelt");
+				    Json::Value elt(Json::booleanValue) = this->enabled[i];
+						toggle_array.append(elt);
 					}
-				writer.end_element(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
+				writer[__CPP_TRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;
 			}
 
 
 		template <unsigned int indices>
-		index_selector<indices>::index_selector(serialization_reader* reader)
+		index_selector<indices>::index_selector(Json::Value& reader)
 			{
-				assert(reader != nullptr);
-
-		    std::string range_string;
-		    reader->read_value(__CPP_TRANSPORT_NODE_INDEX_RANGE, range_string);
-
-		    reader->read_value(__CPP_TRANSPORT_NODE_INDEX_FIELDS, N_fields);
+		    std::string range_string = reader[__CPP_TRANSPORT_NODE_INDEX_RANGE].asString();
+		    N_fields = reader[__CPP_TRANSPORT_NODE_INDEX_FIELDS].asUInt();
 
 		    if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_ALL)        range = index_selector<indices>::all_range;
 		    else if(range_string == __CPP_TRANSPORT_NODE_INDEX_RANGE_FIELD) range = index_selector<indices>::field_range;
@@ -224,22 +217,15 @@ namespace transport
 		    // read array of toggles
 
 				enabled.clear();
-		    unsigned int serial_numbers = reader->start_array(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
+		    Json::Value toggle_array = reader[__CPP_TRANSPORT_NODE_INDEX_TOGGLES];
+				assert(toggle_array.isArray());
 
-		    for(unsigned int i = 0; i < serial_numbers; i++)
+				for(Json::Value::iterator t = toggle_array.begin(); t != toggle_array.end(); t++)
 			    {
-		        reader->start_array_element();
-
-		        bool toggle;
-		        reader->read_value(__CPP_TRANSPORT_NODE_INDEX_TOGGLE, toggle);
-		        enabled.push_back(toggle);
-
-		        reader->end_array_element();
+						enabled.push_back(t->asBool());
 			    }
 
-		    reader->end_element(__CPP_TRANSPORT_NODE_INDEX_TOGGLES);
-
-		    // work out how many components this object has
+		    // work out how many components this object has (or should have)
 		    size = 1;
 		    unsigned int scale_factor = (range == all_range ? 2 : 1);
 

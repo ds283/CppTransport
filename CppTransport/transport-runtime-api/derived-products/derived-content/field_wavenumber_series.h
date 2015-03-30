@@ -43,7 +43,7 @@ namespace transport
                                     unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 		        //! deserialization constructor
-		        twopf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+		        twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~twopf_wavenumber_series() = default;
 
@@ -72,7 +72,7 @@ namespace transport
           public:
 
             //! serialize this object
-            virtual void serialize(serialization_writer& writer) const override;
+            virtual void serialize(Json::Value& writer) const override;
 
 	        };
 
@@ -92,13 +92,11 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        twopf_wavenumber_series<number>::twopf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+        twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	        : derived_line<number>(reader, finder),
 	          twopf_line<number>(reader),
 	          wavenumber_series<number>(reader)
 	        {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 	        }
 
 
@@ -170,10 +168,9 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        void twopf_wavenumber_series<number>::serialize(serialization_writer& writer) const
+        void twopf_wavenumber_series<number>::serialize(Json::Value& writer) const
 	        {
-            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES));
+            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TWOPF_WAVENUMBER_SERIES);
 
             this->derived_line<number>::serialize(writer);
             this->twopf_line<number>::serialize(writer);
@@ -196,7 +193,7 @@ namespace transport
 				    unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
-				    threepf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+				    threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				    virtual ~threepf_wavenumber_series() = default;
 
@@ -231,7 +228,7 @@ namespace transport
 		      public:
 
 		        //! serialize this object
-		        virtual void serialize(serialization_writer& writer) const override;
+		        virtual void serialize(Json::Value& writer) const override;
 
 			    };
 
@@ -252,13 +249,11 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the constructor for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        threepf_wavenumber_series<number>::threepf_wavenumber_series(serialization_reader* reader, typename repository_finder<number>::task_finder& finder)
+        threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	        : derived_line<number>(reader, finder),
 	          threepf_line<number>(reader),
 	          wavenumber_series<number>(reader)
 	        {
-            assert(reader != nullptr);
-            if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 	        }
 
 
@@ -356,10 +351,9 @@ namespace transport
         // note that because time_series<> inherits virtually from derived_line<>, the serialize method for
         // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
         template <typename number>
-        void threepf_wavenumber_series<number>::serialize(serialization_writer& writer) const
+        void threepf_wavenumber_series<number>::serialize(Json::Value& writer) const
 	        {
-            writer.write_value(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE,
-                                   std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES));
+            writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_WAVENUMBER_SERIES);
 
             this->derived_line<number>::serialize(writer);
             this->threepf_line<number>::serialize(writer);

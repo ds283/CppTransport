@@ -85,7 +85,7 @@ namespace transport
 	        }
 
         //! Deserialization constructor
-        output_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder);
+        output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder);
 
 
         //! Destroy an output task
@@ -123,7 +123,7 @@ namespace transport
       public:
 
         //! Serialize this task to the repository
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // CLONE
@@ -161,39 +161,26 @@ namespace transport
 
 
     template <typename number>
-    output_task<number>::output_task(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder)
+    output_task<number>::output_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder)
       : task<number>(nm, reader),
         serial(0)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_TASK_NULL_SERIALIZATION_READER);
-
         // deserialize array of task elements
-        unsigned int num_elements = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+        Json::Value& element_list = reader[__CPP_TRANSPORT_NODE_OUTPUT_ARRAY];
+		    assert(element_list.isArray());
 
-        for(unsigned int i = 0; i < num_elements; i++)
+        for(Json::Value::iterator t = element_list.begin(); t != element_list.end(); t++)
           {
-            reader->start_array_element();
-
-            std::string product_name;
-            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, product_name);
-
-            unsigned int sn;
-            reader->read_value(__CPP_TRANSPORT_NODE_OUTPUT_SERIAL, sn);
+            std::string  product_name = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT].asString();
+            unsigned int sn           = (*t)[__CPP_TRANSPORT_NODE_OUTPUT_SERIAL].asUInt();
 
             std::list<std::string> tags;
-            unsigned int num_tags = reader->start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-            for(unsigned int j = 0; j < num_tags; j++)
-              {
-                reader->start_array_element();
-                std::string tag;
-                reader->read_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, tag);
-                tags.push_back(tag);
-                reader->end_array_element();
-              }
-            reader->end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
+            Json::Value& tag_list = (*t)[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS];
 
-            reader->end_array_element();
+            for(Json::Value::iterator u = tag_list.begin(); u != tag_list.end(); u++)
+              {
+		            tags.push_back(u->asString());
+              }
 
             std::unique_ptr< derived_product_record<number> > product_record(pfinder(product_name));
             assert(product_record.get() != nullptr);
@@ -203,38 +190,38 @@ namespace transport
             elements.push_back(output_task_element<number>(*dp, tags, sn));
             if(sn > serial) serial = sn;
           }
-
-        reader->end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
       }
 
 
     // serialize an output task to the repository
     template <typename number>
-    void output_task<number>::serialize(serialization_writer& writer) const
+    void output_task<number>::serialize(Json::Value& writer) const
 	    {
-        writer.write_value(__CPP_TRANSPORT_NODE_TASK_TYPE, std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT));
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_OUTPUT);
 
         // serialize array of task elements
-        writer.start_array(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY, this->elements.size() == 0);    // node name is actually ignored for an array
+        Json::Value element_list(Json::arrayValue);
+
         for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 	        {
-            writer.start_node("arrayelt", false);    // node name is ignored for arrays
+            Json::Value elem(Json::objectValue);
 
-            writer.write_value(__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT, (*t).get_product_name());
-		        writer.write_value(__CPP_TRANSPORT_NODE_OUTPUT_SERIAL, (*t).get_serial());
+            elem[__CPP_TRANSPORT_NODE_OUTPUT_DERIVED_PRODUCT] = t->get_product_name();
+            elem[__CPP_TRANSPORT_NODE_OUTPUT_SERIAL]          = t->get_serial();
 
-            const std::list<std::string>& tags = (*t).get_tags();
+            const std::list<std::string>& tags = t->get_tags();
 
-            writer.start_array(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS, tags.size() == 0);      // node name is ignored for an array ...
+            Json::Value tag_list(Json::objectValue);
+
             for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
 	            {
-                writer.write_value(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAG, *u);
+                Json::Value tag_element(Json::stringValue) = *u;
+                tag_list.append(tag_element);
 	            }
-            writer.end_element(__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS);
-
-            writer.end_element("arrayelt");
+		        elem[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
+		        element_list.append(elem);
 	        }
-        writer.end_element(__CPP_TRANSPORT_NODE_OUTPUT_ARRAY);
+        writer[__CPP_TRANSPORT_NODE_OUTPUT_ARRAY] = element_list;
 
         this->task<number>::serialize(writer);
 	    }
@@ -247,7 +234,7 @@ namespace transport
 
         for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 	        {
-            if((*t).get_product()->get_filename() == prod.get_filename())
+            if(t->get_product()->get_filename() == prod.get_filename())
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_OUTPUT_TASK_FILENAME_COLLISION_A << " " << prod.get_filename() << " "
@@ -255,7 +242,7 @@ namespace transport
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
 
-            if((*t).get_product_name() == prod.get_name())
+            if(t->get_product_name() == prod.get_name())
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_OUTPUT_TASK_NAME_COLLISION_A << " " << prod.get_name() << " "
@@ -285,9 +272,9 @@ namespace transport
 
 				for(typename std::vector< output_task_element<number> >::const_iterator t = this->elements.begin(); t != this->elements.end(); t++)
 					{
-						if((*t).get_product_name() == name)
+						if(t->get_product_name() == name)
 							{
-								rval = (*t).get_product();
+								rval = t->get_product();
 								break;
 							}
 					}

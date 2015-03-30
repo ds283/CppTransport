@@ -68,7 +68,7 @@ namespace transport
           }
 
         //! Deserialization constructor
-        initial_conditions(const std::string& nm, serialization_reader* reader, typename instance_manager<number>::model_finder f);
+        initial_conditions(const std::string& nm, Json::Value& reader, typename instance_manager<number>::model_finder f);
 
         virtual ~initial_conditions() = default;
 
@@ -101,7 +101,7 @@ namespace transport
       public:
 
         //! Serialize this object
-        virtual void serialize(serialization_writer& writer) const override;
+        virtual void serialize(Json::Value& writer) const override;
 
 
         // WRITE TO A STREAM
@@ -177,39 +177,29 @@ namespace transport
 
 
     template <typename number>
-    initial_conditions<number>::initial_conditions(const std::string& nm, serialization_reader* reader,
+    initial_conditions<number>::initial_conditions(const std::string& nm, Json::Value& reader,
                                                    typename instance_manager<number>::model_finder f)
       : name(nm), params(reader, f)
       {
-        assert(reader != nullptr);
-        if(reader == nullptr) throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_ICS_NULL_SERIALIZATION_READER);
-
 		    // construct model object
-        std::string uid;
-		    reader->read_value(__CPP_TRANSPORT_NODE_ICS_MODEL_UID, uid);
+        std::string uid = reader[__CPP_TRANSPORT_NODE_ICS_MODEL_UID].asString();
 		    mdl = f(uid);
 
         // deserialize N*
-        reader->read_value(__CPP_TRANSPORT_NODE_ICS_NSTAR, Nstar);
+		    Nstar = reader[__CPP_TRANSPORT_NODE_ICS_NSTAR].asDouble();
 
         // deserialize array of initial values
-        unsigned int fields = reader->start_array(__CPP_TRANSPORT_NODE_ICS_VALUES);
+        Json::Value& ics_array = reader[__CPP_TRANSPORT_NODE_ICS_VALUES];
+		    assert(ics_array.isArray());
+
         std::vector< named_list::element<number> > temp;
-        for(unsigned int i = 0; i < fields; i++)
+		    for(Json::Value::iterator t = ics_array.begin(); t != ics_array.end(); t++)
           {
-            reader->start_array_element();
-
-            std::string field_name;
-            reader->read_value(__CPP_TRANSPORT_NODE_ICS_NAME, field_name);
-
-            double field_value;
-            reader->read_value(__CPP_TRANSPORT_NODE_ICS_VALUE, field_value);
+            std::string field_name = (*t)[__CPP_TRANSPORT_NODE_ICS_NAME].asString();
+            double field_value = (*t)[__CPP_TRANSPORT_NODE_ICS_VALUE].asDouble();
 
             temp.push_back(named_list::element<number>(field_name, static_cast<number>(field_value)));
-
-            reader->end_array_element();
           }
-        reader->end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
 
 		    // sort into order required by model object
         const std::vector<std::string>& field_ordering = mdl->get_state_names();
@@ -246,27 +236,28 @@ namespace transport
 
 
     template <typename number>
-    void initial_conditions<number>::serialize(serialization_writer& writer) const
+    void initial_conditions<number>::serialize(Json::Value& writer) const
       {
 		    // serialize model UID
-		    writer.write_value(__CPP_TRANSPORT_NODE_ICS_MODEL_UID, this->mdl->get_identity_string());
+		    writer[__CPP_TRANSPORT_NODE_ICS_MODEL_UID] = Json::Value(this->mdl->get_identity_string());
 
         // serialize N*
-        writer.write_value(__CPP_TRANSPORT_NODE_ICS_NSTAR, this->Nstar);
+        writer[__CPP_TRANSPORT_NODE_ICS_NSTAR] = Json::Value(this->Nstar);
 
         // serialize array of initial values
+        Json::Value ics(Json::arrayValue);
+
 		    const std::vector<std::string>& names = this->mdl->get_state_names();
 		    assert(names.size() == this->ics.size());
 
-        writer.start_array(__CPP_TRANSPORT_NODE_ICS_VALUES, this->ics.size()==0);
         for(unsigned int i = 0; i < this->ics.size(); i++)
           {
-            writer.start_node("arrayelt", false);   // node name is ignored in arrays
-		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_NAME, names[i]);
-		        writer.write_value(__CPP_TRANSPORT_NODE_ICS_VALUE, this->ics[i]);
-            writer.end_element("arrayelt");
+            Json::Value ics_element(Json::objectValue);
+		        ics_element[__CPP_TRANSPORT_NODE_ICS_NAME] = names[i];
+		        ics_element[__CPP_TRANSPORT_NODE_ICS_VALUE] = static_cast<double>(this->ics[i]);
+		        ics.append(ics_element);
           }
-        writer.end_element(__CPP_TRANSPORT_NODE_ICS_VALUES);
+		    writer[__CPP_TRANSPORT_NODE_ICS_VALUES] = ics;
 
         // serialize parameter values
         this->params.serialize(writer);

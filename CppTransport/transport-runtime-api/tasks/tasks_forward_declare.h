@@ -26,7 +26,7 @@ namespace transport
     namespace integration_task_helper
 	    {
         template <typename number>
-        integration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::package_finder& f);
+        integration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::package_finder& f);
 	    }
 #endif
 
@@ -38,7 +38,7 @@ namespace transport
     namespace output_task_helper
 	    {
         template <typename number>
-        output_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::derived_product_finder& pfinder);
+        output_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::derived_product_finder& pfinder);
 	    }
 #endif
 
@@ -53,7 +53,7 @@ namespace transport
     namespace postintegration_task_helper
 	    {
         template <typename number>
-        postintegration_task<number>* deserialize(const std::string& nm, serialization_reader* reader, typename repository_finder<number>::task_finder& f);
+        postintegration_task<number>* deserialize(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& f);
 	    }
 #endif
 

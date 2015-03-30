@@ -28,7 +28,7 @@ namespace transport
 		    namespace derived_product_helper
 			    {
 		        template <typename number>
-		        derived_data::derived_product<number>* deserialize(const std::string& name, serialization_reader* reader, typename repository_finder<number>::task_finder& finder);
+		        derived_data::derived_product<number>* deserialize(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 			    }
 #endif
 
