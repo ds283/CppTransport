@@ -104,7 +104,10 @@ namespace transport
 		            opener();
 			        }
 
-		        ~scoped_transaction() { this->closer(); }
+		        ~scoped_transaction()
+			        {
+		            this->closer();
+			        }
 
 		      private:
 
@@ -564,8 +567,6 @@ namespace transport
                                                   typename repository_sqlite3<number>::store_function storer,
                                                   std::string store_root, std::string exists_err)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         // check that no package with this name already exists
         unsigned int count = counter(this->db, record.get_name());
         if(count > 0)
@@ -577,7 +578,11 @@ namespace transport
 
         // commit entry to the database
         boost::filesystem::path document_path = boost::filesystem::path(store_root) / record.get_name();
-        storer(this->db, record.get_name(), document_path.string());
+
+        {
+	        scoped_transaction scoped_xn = this->scoped_transaction_factory();
+	        storer(this->db, record.get_name(), document_path.string());
+        }
 
         // store package on disk
         this->commit_document(document_path, record);
@@ -587,8 +592,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_replace(repository_record& record, typename repository_sqlite3<number>::find_function finder)
 	    {
-				scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
 		    // find existing record in the
         boost::filesystem::path document_path = finder(this->db, record.get_name());
 
@@ -752,8 +755,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_package(const initial_conditions<number>& ics)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         std::unique_ptr< package_record<number> > record(package_record_factory(ics));
         record->commit();
 	    }
@@ -763,8 +764,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_task(const integration_task<number>& tk)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -788,8 +787,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_task(const output_task<number>& tk)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -819,8 +816,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_task(const postintegration_task<number>& tk)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         // check for a task with a duplicate name
         this->check_task_duplicate(tk.get_name());
 
@@ -844,8 +839,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::commit_derived_product(const derived_data::derived_product<number>& d)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         std::unique_ptr< derived_product_record<number> > record(derived_product_record_factory(d));
         record->commit();
 
@@ -875,8 +868,6 @@ namespace transport
 		template <typename number>
 		package_record<number>* repository_sqlite3<number>::query_package(const std::string& name)
 			{
-				scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
 		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, __CPP_TRANSPORT_REPO_PACKAGE_MISSING);
 		    Json::Value root = this->deserialize_document(filename);
 				return this->package_record_factory(root);
@@ -887,8 +878,6 @@ namespace transport
 		template <typename number>
 		task_record<number>* repository_sqlite3<number>::query_task(const std::string& name)
 			{
-				scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
 				if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
 					{
 				    boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
@@ -918,8 +907,6 @@ namespace transport
 		template <typename number>
 		derived_product_record<number>* repository_sqlite3<number>::query_derived_product(const std::string& name)
 			{
-				scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
 		    boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
 		    Json::Value root = this->deserialize_document(filename);
 				return this->derived_product_record_factory(root);
@@ -940,7 +927,6 @@ namespace transport
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 
-				scoped_transaction scoped_xn = this->scoped_transaction_factory();
 		    std::list< std::shared_ptr< output_group_record<integration_payload> > > list;
 				find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
 				this->enumerate_content_groups<integration_payload>(name, list, finder);
@@ -964,7 +950,6 @@ namespace transport
 				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 					}
 
-		    scoped_transaction scoped_xn = this->scoped_transaction_factory();
 		    std::list< std::shared_ptr< output_group_record<output_payload> > > list;
 		    find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
 		    this->enumerate_content_groups<output_payload>(name, list, finder);
@@ -1437,8 +1422,6 @@ namespace transport
 		template <typename number>
 		std::string repository_sqlite3<number>::export_JSON_package_record(const std::string& name)
 			{
-		    scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
 		    boost::filesystem::path filename = sqlite3_operations::find_package(this->db, name, __CPP_TRANSPORT_REPO_PACKAGE_MISSING);
 		    Json::Value root = this->deserialize_document(filename);
 
@@ -1450,8 +1433,6 @@ namespace transport
     template <typename number>
     std::string repository_sqlite3<number>::export_JSON_task_record(const std::string& name)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         if(sqlite3_operations::count_integration_tasks(this->db, name) > 0)
 	        {
             boost::filesystem::path filename = sqlite3_operations::find_integration_task(this->db, name, __CPP_TRANSPORT_REPO_TASK_MISSING);
@@ -1486,8 +1467,6 @@ namespace transport
     template <typename number>
     std::string repository_sqlite3<number>::export_JSON_product_record(const std::string& name)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         boost::filesystem::path filename = sqlite3_operations::find_product(this->db, name, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
         Json::Value root = this->deserialize_document(filename);
 
@@ -1537,8 +1516,6 @@ namespace transport
     template <typename number>
     void repository_sqlite3<number>::check_task_duplicate(const std::string& name)
 	    {
-        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-
         if(sqlite3_operations::count_tasks(this->db, name) > 0) // should always =1, because primary key constraints in the database prevent duplicates
 	        {
             std::ostringstream msg;
@@ -1552,7 +1529,7 @@ namespace transport
     void repository_sqlite3<number>::commit_document(const boost::filesystem::path& path, const repository_record& record)
 	    {
         // serialize the record
-        Json::Value root;
+        Json::Value root(Json::objectValue);
         record.serialize(root);
 
         // write out contents to a temporary file

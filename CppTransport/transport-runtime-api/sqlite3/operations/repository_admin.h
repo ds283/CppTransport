@@ -110,7 +110,7 @@ namespace transport
 						check_stmt(db, sqlite3_prepare_v2(db, select_stmt.str().c_str(), select_stmt.str().length()+1, &stmt, nullptr));
 
 						unsigned int result = 0;
-						unsigned int num_rows;
+						unsigned int num_rows = 0;
 
 						int status;
 						while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -132,7 +132,9 @@ namespace transport
 
 						if(num_rows != 1)
 							{
-								throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_COUNT_MULTIPLE_RETURN);
+						    std::stringstream msg;
+								msg << __CPP_TRANSPORT_REPO_COUNT_MULTIPLE_RETURN << " (" << num_rows << ")";
+								throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 							}
 
 						return(result);
@@ -210,7 +212,7 @@ namespace transport
 				void store_package(sqlite3* db, std::string name, std::string filename)
 					{
 				    std::stringstream store_stmt;
-						store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE << " VALUES (@name, @path)";
+						store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_PACKAGE_TABLE << " VALUES (@name, @path)";
 
 						sqlite3_stmt* stmt;
 						check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -228,7 +230,7 @@ namespace transport
 		    void store_integration_task(sqlite3* db, std::string name, std::string filename, std::string pkg)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @package, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @package, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -247,7 +249,7 @@ namespace transport
 		    void store_postintegration_task(sqlite3* db, std::string name, std::string filename, std::string parent)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_TASKS_TABLE << " VALUES (@name, @parent, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_TASKS_TABLE << " VALUES (@name, @parent, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -266,7 +268,7 @@ namespace transport
 		    void store_output_task(sqlite3* db, std::string name, std::string filename)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << " VALUES (@name, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_TASKS_TABLE << " VALUES (@name, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -284,7 +286,7 @@ namespace transport
 		    void store_product(sqlite3* db, std::string name, std::string filename)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << " VALUES (@name, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_DERIVED_PRODUCTS_TABLE << " VALUES (@name, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -307,7 +309,7 @@ namespace transport
 				void store_group<integration_payload>(sqlite3* db, std::string name, std::string filename, std::string task)
 					{
 				    std::stringstream store_stmt;
-				    store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+				    store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -327,7 +329,7 @@ namespace transport
 		    void store_group<postintegration_payload>(sqlite3* db, std::string name, std::string filename, std::string task)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -347,7 +349,7 @@ namespace transport
 		    void store_group<output_payload>(sqlite3* db, std::string name, std::string filename, std::string task)
 			    {
 		        std::stringstream store_stmt;
-		        store_stmt << "INSERT VALUE INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << " VALUES (@name, @task, @path)";
+		        store_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE << " VALUES (@name, @task, @path)";
 
 		        sqlite3_stmt* stmt;
 		        check_stmt(db, sqlite3_prepare_v2(db, store_stmt.str().c_str(), store_stmt.str().length()+1, &stmt, nullptr));
@@ -372,7 +374,7 @@ namespace transport
 						check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
 
 				    std::string result;
-				    unsigned int num_rows;
+				    unsigned int num_rows = 0;
 
 				    int status;
 				    while((status = sqlite3_step(stmt)) != SQLITE_DONE)
@@ -401,7 +403,9 @@ namespace transport
 					    }
 						else if(num_rows > 1)
 					    {
-						    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, __CPP_TRANSPORT_REPO_SEARCH_MULTIPLE_RETURN);
+				        std::stringstream msg;
+						    msg << __CPP_TRANSPORT_REPO_SEARCH_MULTIPLE_RETURN << " (" << num_rows << ")";
+						    throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
 					    }
 
 				    return(result);

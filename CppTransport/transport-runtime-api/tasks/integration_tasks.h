@@ -1161,7 +1161,7 @@ namespace transport
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1] = t->store_twopf_k1;
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2] = t->store_twopf_k2;
             config_element[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3] = t->store_twopf_k3;
-						config_list.append(config_list);
+						config_list.append(config_element);
           }
         writer[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE] = config_list;
 

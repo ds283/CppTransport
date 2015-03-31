@@ -177,8 +177,10 @@ namespace transport
 
             for(unsigned int i = 0; i < this->params.size(); i++)
               {
-		            param_array[__CPP_TRANSPORT_NODE_PARAMS_NAME] = names[i];
-		            param_array[__CPP_TRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
+                Json::Value param_element(Json::objectValue);
+		            param_element[__CPP_TRANSPORT_NODE_PARAMS_NAME] = names[i];
+		            param_element[__CPP_TRANSPORT_NODE_PARAMS_VALUE] = this->params[i];
+		            param_array.append(param_element);
               }
 		        writer[__CPP_TRANSPORT_NODE_PARAMS_VALUES] = param_array;
           }
