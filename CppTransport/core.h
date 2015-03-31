@@ -13,8 +13,8 @@
 #include "msg_en.h"
 
 #define CPPTRANSPORT_NAME            "CppTransport"
-#define CPPTRANSPORT_VERSION         "0.10"
-#define CPPTRANSPORT_NUMERIC_VERSION (0.10)
+#define CPPTRANSPORT_VERSION         "0.11"
+#define CPPTRANSPORT_NUMERIC_VERSION (0.11)
 #define CPPTRANSPORT_COPYRIGHT       "(c) University of Sussex 2013-15"
 
 #define MODEL_SCRIPT_SUFFIX          ".model"
