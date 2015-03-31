@@ -1765,11 +1765,11 @@ namespace transport
         data_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS].asUInt();
         zeta_hits                 = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS].asUInt();
         zeta_unloads              = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS].asUInt();
-        time_config_evictions     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asUInt();
-        twopf_kconfig_evictions   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asUInt();
-        threepf_kconfig_evictions = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asUInt();
-        data_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asUInt();
-        zeta_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asUInt();
+        time_config_evictions     = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS].asLargestInt();
+        twopf_kconfig_evictions   = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS].asLargestInt();
+        threepf_kconfig_evictions = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS].asLargestInt();
+        data_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS].asLargestInt();
+        zeta_evictions            = node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS].asLargestInt();
 	    }
 
 
@@ -1777,9 +1777,9 @@ namespace transport
 	    {
         Json::Value node(Json::objectValue);
 
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = this->work_time;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = this->db_time;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = aggregation_time;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME]    = static_cast<Json::LargestInt>(this->work_time);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_DB_TIME]           = static_cast<Json::LargestInt>(this->db_time);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_AGG_TIME]          = static_cast<Json::LargestInt>(aggregation_time);
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_HITS]         = this->time_config_hits;
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_UNLOADS]      = this->time_config_unloads;
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_HITS]        = this->twopf_kconfig_hits;
@@ -1790,11 +1790,11 @@ namespace transport
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_UNLOADS]      = this->data_unloads;
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_HITS]         = this->zeta_hits;
         node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_UNLOADS]      = this->zeta_unloads;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = this->time_config_evictions;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = this->twopf_kconfig_evictions;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = this->threepf_kconfig_evictions;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = this->data_evictions;
-        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = this->zeta_evictions;
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TIME_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->time_config_evictions);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_TWOPF_CACHE_EVICTIONS]   = static_cast<Json::LargestInt>(this->twopf_kconfig_evictions);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_THREEPF_CACHE_EVICTIONS] = static_cast<Json::LargestInt>(this->threepf_kconfig_evictions);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_DATA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->data_evictions);
+        node[__CPP_TRANSPORT_NODE_OUTPUTDATA_ZETA_CACHE_EVICTIONS]    = static_cast<Json::LargestInt>(this->zeta_evictions);
 
         writer[__CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP] = node;
 	    }
@@ -1828,18 +1828,18 @@ namespace transport
 	    {
         Json::Value node(Json::objectValue);
 
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = this->total_wallclock_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = this->total_aggregation_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = this->total_integration_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = this->min_mean_integration_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = this->max_mean_integration_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = this->global_min_integration_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = this->global_max_integration_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = this->total_batching_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = this->min_mean_batching_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = this->max_mean_batching_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = this->global_min_batching_time;
-        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = this->global_max_batching_time;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_WALLCLOCK_TIME]  = static_cast<Json::LargestInt>(this->total_wallclock_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_AGG_TIME]        = static_cast<Json::LargestInt>(this->total_aggregation_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_INT_TIME]        = static_cast<Json::LargestInt>(this->total_integration_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->min_mean_integration_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_INT_TIME]     = static_cast<Json::LargestInt>(this->max_mean_integration_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_INT_TIME]   = static_cast<Json::LargestInt>(this->global_min_integration_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_INT_TIME]   = static_cast<Json::LargestInt>(this->global_max_integration_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_TOTAL_BATCH_TIME]      = static_cast<Json::LargestInt>(this->total_batching_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MIN_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->min_mean_batching_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME]   = static_cast<Json::LargestInt>(this->max_mean_batching_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
         node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
 
         writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP] = node;
