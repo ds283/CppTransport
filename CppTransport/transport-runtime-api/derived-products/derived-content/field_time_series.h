@@ -123,7 +123,6 @@ namespace transport
 			      derived_line<number>(reader, finder),
 			      time_series<number>(reader)
 			    {
-		        if(reader == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_NULL_READER);
 			    }
 
 		    // note that because time_series<> inherits virtually from derived_line<>, the write method for
