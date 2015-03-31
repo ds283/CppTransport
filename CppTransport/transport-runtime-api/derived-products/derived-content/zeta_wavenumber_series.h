@@ -82,7 +82,7 @@ namespace transport
 		    template <typename number>
 		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const twopf_list_task<number>& tk,
 		                                                                       filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
+			    : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
 			      zeta_twopf_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {
@@ -130,7 +130,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);
@@ -227,7 +227,7 @@ namespace transport
 		    template <typename number>
 		    zeta_threepf_wavenumber_series<number>::zeta_threepf_wavenumber_series(const threepf_task<number>& tk,
 		                                                                           filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
+			    : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
 			      zeta_threepf_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {
@@ -277,7 +277,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);
@@ -366,7 +366,7 @@ namespace transport
 		    template <typename number>
 		    zeta_reduced_bispectrum_wavenumber_series<number>::zeta_reduced_bispectrum_wavenumber_series(const threepf_task<number>& tk,
 		                                                                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, fNL, prec),
+			    : derived_line<number>(tk, wavenumber_axis, fNL_value, prec),
 			      zeta_reduced_bispectrum_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {
@@ -416,7 +416,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, fNL,
+		            data_line<number> line = data_line<number>(wavenumber_axis, fNL_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);

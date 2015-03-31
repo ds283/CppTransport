@@ -16,7 +16,7 @@ namespace transport
 
 		    typedef enum { time_axis, wavenumber_axis, angle_axis, squeezing_fraction_axis } axis_type;
 
-		    typedef enum { background_field, correlation_function, fNL, r, spectral_index } value_type;
+		    typedef enum { background_field_value, correlation_function_value, fNL_value, r_value, spectral_index_value } value_type;
 
 			}   // namespace derived_data
 

@@ -88,7 +88,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, correlation_function, prec),
+			    : derived_line<number>(tk, time_axis, correlation_function_value, prec),
             tensor_twopf_line<number>(tk, sel, kfilter),
             time_series<number>(tk, tfilter)
 			    {
@@ -145,7 +145,7 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-								            data_line<number> line = data_line<number>(time_axis, correlation_function,
+								            data_line<number> line = data_line<number>(time_axis, correlation_function_value,
 								                                                       t_axis, line_data, latex_label, nonlatex_label);
 
 								            lines.push_back(line);

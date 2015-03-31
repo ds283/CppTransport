@@ -82,7 +82,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
+	        : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
 	          twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -140,7 +140,7 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-								            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+								            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
 								                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 								            lines.push_back(line);
@@ -239,7 +239,7 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
+	        : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
 	          threepf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -322,7 +322,7 @@ namespace transport
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		                            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+		                            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
 		                                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		                            lines.push_back(line);

@@ -85,7 +85,7 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const threepf_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk, time_axis, fNL),
+          : derived_line<number>(tk, time_axis, fNL_value),
             fNL_line<number>(tk),
             time_series<number>(tk, tfilter)
           {
@@ -131,7 +131,7 @@ namespace transport
             std::string latex_label = "$" + this->make_LaTeX_label() + "$";
             std::string nonlatex_label = this->make_non_LaTeX_label();
 
-            data_line<number> line = data_line<number>(time_axis, fNL,
+            data_line<number> line = data_line<number>(time_axis, fNL_value,
                                                        t_axis, line_data, latex_label, nonlatex_label);
 
             lines.push_back(line);

@@ -307,11 +307,11 @@ namespace transport
 
 						// Deserialize: value type for this derived line
 				    std::string ytype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE].asString();
-						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF)                  y_type = correlation_function;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = background_field;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL)            y_type = fNL;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R)              y_type = r;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index;
+						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF)                  y_type = correlation_function_value;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = background_field_value;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL)            y_type = fNL_value;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R)              y_type = r_value;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index_value;
 						else
 							{
 						    std::ostringstream msg;
@@ -437,23 +437,23 @@ namespace transport
 						// Serialize: value type of this derived line
 						switch(this->y_type)
 							{
-						    case correlation_function:
+						    case correlation_function_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF);
 									break;
 
-						    case background_field:
+						    case background_field_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD);
 									break;
 
-						    case fNL:
+						    case fNL_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL);
 									break;
 
-						    case r:
+						    case r_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R);
 									break;
 
-						    case spectral_index:
+						    case spectral_index_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX);
 									break;
 
@@ -551,23 +551,23 @@ namespace transport
 						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_YTYPE << " ";
 						switch(this->y_type)
 							{
-						    case correlation_function:
+						    case correlation_function_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CF_LABEL << std::endl;
 									break;
 
-						    case background_field:
+						    case background_field_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_BGFIELD_LABEL << std::endl;
 									break;
 
-						    case fNL:
+						    case fNL_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_FNL_LABEL << std::endl;
 									break;
 
-						    case r:
+						    case r_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_R_LABEL << std::endl;
 									break;
 
-						    case spectral_index:
+						    case spectral_index_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX_LABEL << std::endl;
 									break;
 

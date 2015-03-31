@@ -86,7 +86,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                     filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, time_axis, r, prec),
+					: derived_line<number>(tk, time_axis, r_value, prec),
 					  r_line<number>(tk, kfilter),
 					  time_series<number>(tk, tfilter)
 					{
@@ -149,7 +149,7 @@ namespace transport
 				        std::string latex_label    = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 				        std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-				        data_line<number> line = data_line<number>(time_axis, r,
+				        data_line<number> line = data_line<number>(time_axis, r_value,
 				                                                   t_axis, line_data, latex_label, nonlatex_label);
 
 						    lines.push_back(line);
