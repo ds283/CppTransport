@@ -539,13 +539,22 @@ namespace transport
 
 				    exec(db, "BEGIN TRANSACTION");
 
+				    // to document the different choice of length in these sqlite3_bind_text() statements compared to sqlite3_prepare_v2,
+				    // the SQLite3 documentation says:
+
+		        // If the caller knows that the supplied string is nul-terminated, then there is a small performance advantage to be
+		        // gained by passing an nByte parameter that is equal to the number of bytes in the input string including the nul-terminator
+		        // bytes as this saves SQLite from having to make a copy of the input string.
+
+				    // However, here, we certainly *shouldn't* include the nul-terminator byte, because that isn't part of the string
+
 				    check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_number()));
-				    check_stmt(db, sqlite3_bind_text(stmt, 2, host.get_host_name().c_str(), host.get_host_name().length()+1, SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 3, host.get_os_name().c_str(), host.get_os_name().length()+1, SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_os_version().c_str(), host.get_os_version().length()+1, SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_release().c_str(), host.get_os_release().length()+1, SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_architecture().c_str(), host.get_architecture().length()+1, SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length()+1, SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 2, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 3, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
 
 				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
