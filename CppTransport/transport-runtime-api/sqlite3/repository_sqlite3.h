@@ -365,7 +365,7 @@ namespace transport
 
 		  private:
 
-		    //! UnQLite database connexion
+		    //! SQLite database connexion
 		    sqlite3* db;
 
 		    //! Number of open clients on the database, used for keep track of when the
