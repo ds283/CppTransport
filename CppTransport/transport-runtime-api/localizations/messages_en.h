@@ -34,8 +34,7 @@
 #include "transport-runtime-api/localizations/messages_en/repository.h"
 #include "transport-runtime-api/localizations/messages_en/json_repository_interface.h"
 
-#include "transport-runtime-api/localizations/messages_en/repository_unqlite.h"
-#include "transport-runtime-api/localizations/messages_en/unqlite.h"
+#include "transport-runtime-api/localizations/messages_en/repository_sqlite3.h"
 
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 

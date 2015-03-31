@@ -19,8 +19,8 @@
 
 #include "transport-runtime-api/tasks/task_helper.h"
 
-// current implementation uses unqlite as the repository database
-#include "transport-runtime-api/unqlite/repository_unqlite.h"
+// current implementation uses SQLite/libjsoncpp as the repository database
+#include "transport-runtime-api/sqlite3/repository_sqlite3.h"
 
 // current implementation uses sqlite3 as the data container database
 #include "transport-runtime-api/sqlite3/data_manager_sqlite3.h"
