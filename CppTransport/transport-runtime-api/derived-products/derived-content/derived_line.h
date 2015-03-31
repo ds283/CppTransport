@@ -35,6 +35,8 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
+#include "transport-runtime-api/derived-products/line_values.h"
+
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"
 
@@ -112,9 +114,6 @@ namespace transport
 
 				    typedef enum { derivatives, momenta } dot_type;
 				    typedef enum { conventional, comoving } klabel_type;
-
-						typedef enum { time_series, wavenumber_series, angle_series, squeezing_fraction } axis_type;
-				    typedef enum { background_field, correlation_function, fNL, r, spectral_index } value_type;
 
 
 						// CONSTRUCTOR, DESTRUCTOR
@@ -295,23 +294,23 @@ namespace transport
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE].asString();
-						if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES) x_type = time_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES) x_type = wavenumber_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES) x_type = angle_series;
-						else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION) x_type = squeezing_fraction;
-						else
-							{
-						    std::ostringstream msg;
-								msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE << " '" << xtype << "'";
-								throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-							}
+				    if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES)             x_type = time_axis;
+				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES)           x_type = wavenumber_axis;
+				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES)       x_type = angle_axis;
+				    else if(xtype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION) x_type = squeezing_fraction_axis;
+				    else
+					    {
+				        std::ostringstream msg;
+				        msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE << " '" << xtype << "'";
+				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
+					    }
 
 						// Deserialize: value type for this derived line
 				    std::string ytype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE].asString();
-						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF) y_type = correlation_function;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD) y_type = background_field;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL) y_type = fNL;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R) y_type = r;
+						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF)                  y_type = correlation_function;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = background_field;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL)            y_type = fNL;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R)              y_type = r;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index;
 						else
 							{
@@ -323,7 +322,7 @@ namespace transport
 						// Deserialize: meaning of 'dot' for this derived line
 				    std::string dot_meaning_value = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
 
-				    if(dot_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE) dot_meaning = derivatives;
+				    if(dot_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_DERIVATIVE)   dot_meaning = derivatives;
 				    else if(dot_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_MOMENTA) dot_meaning = momenta;
 				    else
 					    {
@@ -335,7 +334,7 @@ namespace transport
 						// Deserialize: meaning of k-labels for this derived line
 				    std::string label_meaning_value = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_TYPE].asString();
 
-				    if(label_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL) klabel_meaning = conventional;
+				    if(label_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL)  klabel_meaning = conventional;
 				    else if(label_meaning_value == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING) klabel_meaning = comoving;
 				    else
 					    {
@@ -366,8 +365,10 @@ namespace transport
 
 				template <typename number>
 				derived_line<number>::derived_line(const derived_line<number>& obj)
-					: x_type(obj.x_type), y_type(obj.y_type),
-            dot_meaning(obj.dot_meaning), klabel_meaning(obj.klabel_meaning),
+					: x_type(obj.x_type),
+					  y_type(obj.y_type),
+            dot_meaning(obj.dot_meaning),
+					  klabel_meaning(obj.klabel_meaning),
             precision(obj.precision),
             time_sample_sns(obj.time_sample_sns),
             kconfig_sample_sns(obj.kconfig_sample_sns),
@@ -412,19 +413,19 @@ namespace transport
 						// Serialize: axis type of this derived line
 				    switch(this->x_type)
 							{
-						    case time_series:
+						    case time_axis:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TIME_SERIES);
 									break;
 
-						    case wavenumber_series:
+						    case wavenumber_axis:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES);
 									break;
 
-				        case angle_series:
+				        case angle_axis:
 					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES);
 						      break;
 
-				        case squeezing_fraction:
+				        case squeezing_fraction_axis:
 					        writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION);
 						      break;
 
@@ -526,19 +527,19 @@ namespace transport
 						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_XTYPE << " ";
 						switch(this->x_type)
 							{
-						    case time_series:
+						    case time_axis:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TIME_SERIES_LABEL << std::endl;
 									break;
 
-						    case wavenumber_series:
+						    case wavenumber_axis:
 									out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_K_SERIES_LABEL << std::endl;
 									break;
 
-						    case angle_series:
+						    case angle_axis:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_ANGLE_SERIES_LABEL << std::endl;
 									break;
 
-						    case squeezing_fraction:
+						    case squeezing_fraction_axis:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION_LABEL << std::endl;
 									break;
 

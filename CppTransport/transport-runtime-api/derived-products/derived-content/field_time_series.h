@@ -102,7 +102,7 @@ namespace transport
 		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
 			    : active_indices(sel),
-			      derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::background_field, prec),
+			      derived_line<number>(tk, time_axis, background_field, prec),
 			      time_series<number>(tk, tfilter)
 			    {
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
@@ -160,7 +160,7 @@ namespace transport
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
             // loop through all the fields, pulling data from the database for those which are enabled
 
@@ -176,8 +176,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::background_field,
-                                                               time_axis, line_data,
+                    data_line<number> line = data_line<number>(time_axis, background_field, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
@@ -290,7 +289,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+			    : derived_line<number>(tk, time_axis, correlation_function, prec),
 			      twopf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
@@ -316,7 +315,7 @@ namespace transport
             this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
@@ -348,8 +347,8 @@ namespace transport
 		                        std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 		                        std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-		                        data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
-		                                                                   time_axis, line_data, latex_label, nonlatex_label);
+		                        data_line<number> line = data_line<number>(time_axis, correlation_function,
+		                                                                   t_axis, line_data, latex_label, nonlatex_label);
 
 		                        lines.push_back(line);
 			                    }
@@ -455,7 +454,7 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
 		                                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+			    : derived_line<number>(tk, time_axis, correlation_function, prec),
 			      threepf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
@@ -481,7 +480,7 @@ namespace transport
             this->attach(pipe, tags);
 
 		        // pull time-axis data
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::threepf_kconfig_handle& k_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
@@ -513,13 +512,13 @@ namespace transport
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
-			                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, time_axis, l, m, n, k_values[i]);
+			                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-		                            data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
-		                                                                       time_axis, line_data, latex_label, nonlatex_label);
+		                            data_line<number> line = data_line<number>(time_axis, correlation_function,
+		                                                                       t_axis, line_data, latex_label, nonlatex_label);
 
 		                            lines.push_back(line);
 			                        }

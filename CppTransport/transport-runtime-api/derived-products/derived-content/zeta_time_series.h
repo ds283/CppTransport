@@ -88,7 +88,7 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const twopf_list_task<number>& tk,
                                                                filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+	        : derived_line<number>(tk, time_axis, correlation_function, prec),
 	          zeta_twopf_line<number>(tk, kfilter),
 	          time_series<number>(tk, tfilter)
           {
@@ -113,7 +113,7 @@ namespace transport
             // attach datapipe to an output group
             this->attach(pipe, tags);
 
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
@@ -133,8 +133,8 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-                data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
-                                                           time_axis, line_data, latex_label, nonlatex_label);
+                data_line<number> line = data_line<number>(time_axis, correlation_function,
+                                                           t_axis, line_data, latex_label, nonlatex_label);
 
                 lines.push_back(line);
               }
@@ -221,7 +221,7 @@ namespace transport
         template <typename number>
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const threepf_task<number>& tk,
                                                                    filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-          : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+          : derived_line<number>(tk, time_axis, correlation_function, prec),
             zeta_threepf_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {
@@ -246,7 +246,7 @@ namespace transport
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
@@ -268,8 +268,8 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
-                                                           time_axis, line_data, latex_label, nonlatex_label);
+                data_line<number> line = data_line<number>(time_axis, correlation_function,
+                                                           t_axis, line_data, latex_label, nonlatex_label);
 
                 lines.push_back(line);
               }
@@ -358,7 +358,7 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const threepf_task<number>& tk,
                                                                                          filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::fNL, prec),
+          : derived_line<number>(tk, time_axis, fNL, prec),
             zeta_reduced_bispectrum_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {
@@ -383,7 +383,7 @@ namespace transport
             // attach our datapipe to an output group
             this->attach(pipe, tags);
 
-            const std::vector<double> time_axis = this->pull_time_axis(pipe);
+            const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
             // set up cache handles
             typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
@@ -405,8 +405,8 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::fNL,
-                                                           time_axis, line_data, latex_label, nonlatex_label);
+                data_line<number> line = data_line<number>(time_axis, fNL,
+                                                           t_axis, line_data, latex_label, nonlatex_label);
 
                 lines.push_back(line);
               }

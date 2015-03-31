@@ -88,7 +88,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, derived_line<number>::time_series, derived_line<number>::correlation_function, prec),
+			    : derived_line<number>(tk, time_axis, correlation_function, prec),
             tensor_twopf_line<number>(tk, sel, kfilter),
             time_series<number>(tk, tfilter)
 			    {
@@ -115,7 +115,7 @@ namespace transport
 		        this->attach(pipe, tags);
 
 		        // pull time-axis data
-		        const std::vector<double> time_axis = this->pull_time_axis(pipe);
+		        const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
@@ -145,8 +145,8 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-								            data_line<number> line = data_line<number>(data_line<number>::time_series, data_line<number>::correlation_function,
-								                                                       time_axis, line_data, latex_label, nonlatex_label);
+								            data_line<number> line = data_line<number>(time_axis, correlation_function,
+								                                                       t_axis, line_data, latex_label, nonlatex_label);
 
 								            lines.push_back(line);
 									        }

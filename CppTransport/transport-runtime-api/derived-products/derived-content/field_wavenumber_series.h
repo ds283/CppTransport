@@ -82,7 +82,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
+	        : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
 	          twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -110,8 +110,8 @@ namespace transport
 		        this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-		        std::vector<double> wavenumber_axis;
-		        this->pull_wavenumber_axis(pipe, wavenumber_axis);
+		        std::vector<double> w_axis;
+		        this->pull_wavenumber_axis(pipe, w_axis);
 
 				    // set up cache handles
 				    typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -140,8 +140,8 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-								            data_line<number> line = data_line<number>(data_line<number>::wavenumber_series, data_line<number>::correlation_function,
-								                                                       wavenumber_axis, line_data, latex_label, nonlatex_label);
+								            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+								                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 								            lines.push_back(line);
 									        }
@@ -239,7 +239,7 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, derived_line<number>::wavenumber_series, derived_line<number>::correlation_function, prec),
+	        : derived_line<number>(tk, wavenumber_axis, correlation_function, prec),
 	          threepf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -267,8 +267,8 @@ namespace transport
             this->attach(pipe, tags);
 
             // pull wavenumber-axis data
-            std::vector<double> wavenumber_axis;
-            this->pull_wavenumber_axis(pipe, wavenumber_axis);
+            std::vector<double> w_axis;
+            this->pull_wavenumber_axis(pipe, w_axis);
 
             // set up cache handles
             typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -322,8 +322,8 @@ namespace transport
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		                            data_line<number> line = data_line<number>(data_line<number>::wavenumber_series, data_line<number>::correlation_function,
-		                                                                       wavenumber_axis, line_data, latex_label, nonlatex_label);
+		                            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function,
+		                                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		                            lines.push_back(line);
 			                        }

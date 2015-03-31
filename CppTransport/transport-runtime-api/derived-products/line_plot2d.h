@@ -72,12 +72,19 @@ namespace transport
 
 		      public:
 
-						//! Basic user-facing constructor
+						//! Basic user-facing constructor.
+				    //! A line_plot2d is an instance of a line_collection; we limit
+				    //! the maximum number of value types in the collection to two,
+				    //! because that's as many different y-axes as we can have on the plot.
 		        line_plot2d(const std::string& name, const boost::filesystem::path& filename)
 		          : line_collection<number>(name, filename, true, 2),
-								reverse_x(false), reverse_y(false),
-								x_label(false), y_label(false),
-								title(false), legend(false), position(top_right),
+								reverse_x(false),
+								reverse_y(false),
+								x_label(false),
+								y_label(false),
+								title(false),
+								legend(false),
+								position(top_right),
 								typeset_with_LaTeX(false)
 			        {
 								if(this->filename.extension().string() != ".pdf" &&
@@ -92,6 +99,7 @@ namespace transport
 										throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
 									}
 
+								// find location of Python interpreter
                 this->set_python_path();
 			        }
 
@@ -296,15 +304,15 @@ namespace transport
 		    line_plot2d<number>::line_plot2d(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 			    : line_collection<number>(name, reader, finder)
 			    {
-		        reverse_x = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX].asBool();
-		        reverse_y = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY].asBool();
-		        x_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL].asBool();
-		        x_label_text = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT].asString();
-		        y_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL].asBool();
-		        y_label_text = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT].asString();
-		        title = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE].asBool();
-		        title_text = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT].asString();
-		        legend = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND].asBool();
+				    reverse_x    = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX].asBool();
+				    reverse_y    = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY].asBool();
+				    x_label      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL].asBool();
+				    x_label_text = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT].asString();
+				    y_label      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL].asBool();
+				    y_label_text = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT].asString();
+				    title        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE].asBool();
+				    title_text   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT].asString();
+				    legend       = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND].asBool();
 
 		        std::string leg_pos = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS].asString();
 
@@ -338,6 +346,7 @@ namespace transport
 						this->obtain_output(pipe, tags, derived_lines);
 
 						// merge this output onto a single axis
+						// this turns out collection of data_lines into a collection of output_lines
 				    std::deque<double> axis;
 				    typename std::vector< typename line_collection<number>::output_line > output_lines;
 						this->merge_lines(pipe, derived_lines, axis, output_lines);
