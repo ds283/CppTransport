@@ -1065,7 +1065,7 @@ namespace transport
 				            catch(runtime_exception& xe)
 					            {
 				                success = false;
-				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
+				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "-- Exception reported during postintegration: code=" << xe.get_exception_code() << ": " << xe.what();
 					            }
 
 				            // inform the batcher we are at the end of this assignment

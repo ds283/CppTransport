@@ -726,7 +726,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->output_store.string(), __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
 
         typename output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
@@ -1564,6 +1564,13 @@ namespace transport
 		    boost::filesystem::path abs_record = this->get_root_path() / path;
 
 		    Json::Value root;
+
+				if(!boost::filesystem::is_regular_file(abs_record))
+					{
+				    std::stringstream msg;
+				    msg << __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE << " '" << path << "'";
+				    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
 
 		    std::ifstream in;
 				in.open(abs_record.string().c_str(), std::ios_base::in);

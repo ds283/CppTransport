@@ -468,7 +468,7 @@ namespace transport
 				void internal_enumerate_content_groups(sqlite3* db, const std::string& name, std::list<std::string>& groups, const std::string& table)
 					{
 				    std::stringstream find_stmt;
-						find_stmt << "SELECT path FROM " << table << " WHERE " << table << ".task='" << name << "'";
+						find_stmt << "SELECT name FROM " << table << " WHERE " << table << ".task='" << name << "'";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
