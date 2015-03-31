@@ -86,7 +86,6 @@ namespace transport
             boost::filesystem::path output;
             boost::filesystem::path data;
             boost::filesystem::path log;
-            boost::filesystem::path task;
             boost::filesystem::path temp;
 	        };
 

@@ -31,7 +31,10 @@ namespace transport
 
       public:
 
-        json_interface_repository(const std::string& path, typename repository<number>::access_type type);
+        json_interface_repository(const std::string& path, typename repository<number>::access_type type,
+                                  typename repository_finder<number>::package_finder pf,
+                                  typename repository_finder<number>::task_finder tf,
+                                  typename repository_finder<number>::derived_product_finder dpf);
 
         virtual ~json_interface_repository() = default;
 
@@ -67,8 +70,11 @@ namespace transport
 
 
     template <typename number>
-    json_interface_repository<number>::json_interface_repository(const std::string& path, typename repository<number>::access_type type)
-      : repository<number>(path, type)
+    json_interface_repository<number>::json_interface_repository(const std::string& path, typename repository<number>::access_type type,
+                                                                 typename repository_finder<number>::package_finder pf,
+                                                                 typename repository_finder<number>::task_finder tf,
+                                                                 typename repository_finder<number>::derived_product_finder dpf)
+      : repository<number>(path, type, pf, tf, dpf)
       {
       }
 

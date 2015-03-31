@@ -22,7 +22,7 @@
 #include "boost/timer/timer.hpp"
 
 #include "sqlite3.h"
-#include "transport-runtime-api/sqlite3/sqlite3_operations.h"
+#include "transport-runtime-api/sqlite3/operations/data_manager_admin.h"
 
 
 #define __CPP_TRANSPORT_TEMPORARY_CONTAINER_STEM "worker"

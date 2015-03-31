@@ -4,12 +4,14 @@
 //
 
 
-#ifndef __sqlite3_operations_H_
-#define __sqlite3_operations_H_
+#ifndef __data_manager_operations_H_
+#define __data_manager_operations_H_
 
 
 #include <set>
 #include <vector>
+#include <string>
+#include <sstream>
 
 #include "transport-runtime-api/tasks/task.h"
 #include "transport-runtime-api/derived-products/template_types.h"
@@ -26,6 +28,8 @@
 #include "boost/lexical_cast.hpp"
 
 #include "sqlite3.h"
+
+#include "transport-runtime-api/sqlite3/operations/sqlite3_utility.h"
 
 
 #define __CPP_TRANSPORT_SQLITE_TIME_SAMPLE_TABLE                   "time_samples"
@@ -87,58 +91,6 @@ namespace transport
         // Utility functions
         namespace
           {
-
-            // error-check an exec statement
-            inline void exec(sqlite3* db, const std::string& stmt, const std::string& err)
-              {
-                char* errmsg;
-
-                int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
-
-                if(status != SQLITE_OK)
-                  {
-                    std::ostringstream msg;
-                    msg << err << errmsg << ") [status=" << status << "]";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
-              }
-
-            // error-check an exec statement
-            inline void exec(sqlite3* db, const std::string& stmt)
-              {
-                char* errmsg;
-
-                int status = sqlite3_exec(db, stmt.c_str(), nullptr, nullptr, &errmsg);
-
-                if(status != SQLITE_OK)
-                  {
-                    std::ostringstream msg;
-                    msg << errmsg << " [status=" << status << "]";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
-              }
-
-            // error-check a non-exec statement
-            inline void check_stmt(sqlite3* db, int status, const std::string& err, int check_code=SQLITE_OK)
-              {
-                if(status != check_code)
-                  {
-                    std::ostringstream msg;
-                    msg << err << sqlite3_errmsg(db) << ") [status=" << status << "]";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
-              }
-
-            // error-check a non-exec statement
-            inline void check_stmt(sqlite3* db, int status, int check_code=SQLITE_OK)
-              {
-                if(status != check_code)
-                  {
-                    std::ostringstream msg;
-                    msg << sqlite3_errmsg(db) << " [status=" << status << "]";
-                    throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-                  }
-              }
 
             // construct the name of a twopf table
             inline std::string twopf_table_name(twopf_value_type type)
@@ -2628,11 +2580,9 @@ namespace transport
             if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
 	        }
 
-
-
 	    }   // namespace sqlite3_operations
 
   }   // namespace transport
 
 
-#endif //__sqlite3_operations_H_
+#endif //__data_manager_operations_H_

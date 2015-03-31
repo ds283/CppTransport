@@ -35,15 +35,6 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_REPO_REPOSITORY_LEAF "database.unqlite"
-#define __CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF "output"
-#define __CPP_TRANSPORT_REPO_LOGDIR_LEAF     "logs"
-#define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF    "tempfiles"
-#define __CPP_TRANSPORT_REPO_TASKFILE_LEAF   "tasks.sqlite"
-#define __CPP_TRANSPORT_REPO_DATABASE_LEAF   "integration.sqlite"
-#define __CPP_TRANSPORT_REPO_FAILURE_LEAF    "failed"
-
-
 namespace transport
 	{
 
@@ -56,6 +47,18 @@ namespace transport
     template <typename number>
     class repository
 	    {
+
+      public:
+
+        //! Error-reporting callback object
+        typedef std::function<void(const std::string&)> error_callback;
+
+        //! Warning callback object
+        typedef std::function<void(const std::string&)> warning_callback;
+
+        //! Message callback object
+        typedef std::function<void(const std::string&)> message_callback;
+
 
         // LOGGING SERVICES
 
@@ -70,10 +73,10 @@ namespace transport
       public:
 
         //! Create a repository object
-        repository(const std::string& path, access_type mode)
-	        : root_path(path), access_mode(mode)
-	        {
-	        }
+        repository(const std::string& path, access_type mode,
+                   typename repository_finder<number>::package_finder pf,
+                   typename repository_finder<number>::task_finder tf,
+                   typename repository_finder<number>::derived_product_finder dpf);
 
 
         //! Close a repository, including the corresponding containers and environment. In practice this would always be delegated to the implementation class
@@ -85,7 +88,7 @@ namespace transport
       public:
 
 		    //! Set model_finder object
-		    virtual void set_model_finder(const typename instance_manager<number>::model_finder& f) = 0;
+		    void set_model_finder(const typename instance_manager<number>::model_finder& f);
 
         //! Get path to root of repository
         const boost::filesystem::path& get_root_path() const { return (this->root_path); };
@@ -167,7 +170,46 @@ namespace transport
         //! BOOST path to the repository root directory
         const boost::filesystem::path root_path;
 
+
+		    // FINDER SERVICES
+
+        //! Cached model-finder supplied by instance manager
+        typename instance_manager<number>::model_finder model_finder;
+
+        //! Cached package-finder instance
+        typename repository_finder<number>::package_finder pkg_finder;
+
+        //! Cached task-finder instance
+        typename repository_finder<number>::task_finder tk_finder;
+
+        //! Cached derived-product-finder instance
+        typename repository_finder<number>::derived_product_finder dprod_finder;
+
 	    };
+
+
+    // ADMINISTRATION
+
+
+    template <typename number>
+    repository<number>::repository(const std::string& path, typename repository<number>::access_type mode,
+                                   typename repository_finder<number>::package_finder pf,
+                                   typename repository_finder<number>::task_finder tf,
+                                   typename repository_finder<number>::derived_product_finder dpf)
+	    : root_path(path),
+	      access_mode(mode),
+	      pkg_finder(pf),
+	      tk_finder(tf),
+	      dprod_finder(dpf)
+	    {
+	    }
+
+
+    template <typename number>
+    void repository<number>::set_model_finder(const typename instance_manager<number>::model_finder& f)
+	    {
+        this->model_finder = f;
+	    }
 
 
 	}   // namespace transport

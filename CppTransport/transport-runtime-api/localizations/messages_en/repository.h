@@ -9,9 +9,31 @@
 
 
 #define __CPP_TRANSPORT_REPO_MISSING_ROOT                "Repository error: Root directory does not exist"
-#define __CPP_TRANSPORT_REPO_MISSING_DATABASE            "Repository error: Repository database not present or inaccessible"
+#define __CPP_TRANSPORT_REPO_MISSING_DATABASE            "Repository error: Repository database not present or inaccessible:"
+#define __CPP_TRANSPORT_REPO_MISSING_PACKAGE_STORE       "Repository error: Package store not present or inaccessible"
+#define __CPP_TRANSPORT_REPO_MISSING_TASK_STORE          "Repository error: Task store not present or inaccessible"
+#define __CPP_TRANSPORT_REPO_MISSING_PRODUCT_STORE       "Repository error: Product store not present or inaccessible"
+#define __CPP_TRANSPORT_REPO_MISSING_OUTPUT_STORE        "Repository error: Output store not present or inaccessible"
 
-#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_A             "Repository error: Atttempt to insert duplicate"
+#define __CPP_TRANSPORT_REPO_PACKAGE_EXISTS              "Repository error: attempt to insert duplicate package record"
+#define __CPP_TRANSPORT_REPO_TASK_EXISTS                 "Repository error: attempt to insert duplicate task record"
+#define __CPP_TRANSPORT_REPO_PRODUCT_EXISTS              "Repository error: attempt to insert duplicate derived product record"
+#define __CPP_TRANSPORT_REPO_OUTPUT_EXISTS               "Repository error: attempt to insert duplicate output record"
+
+#define __CPP_TRANSPORT_REPO_PACKAGE_MISSING             "Repository error: missing record for package"
+#define __CPP_TRANSPORT_REPO_TASK_MISSING                "Repository error: missing record for task"
+#define __CPP_TRANSPORT_REPO_PRODUCT_MISSING             "Repository error: missing record for derived product"
+#define __CPP_TRANSPORT_REPO_OUTPUT_MISSING              "Repository error: missing record for output"
+
+#define __CPP_TRANSPORT_REPO_TASK_DUPLICATE              "Repository error: duplicate task"
+#define __CPP_TRANSPORT_REPO_PACKAGE_DUPLICATE           "Repository error: duplicate package"
+#define __CPP_TRANSPORT_REPO_PRODUCT_DUPLICATE           "Repository error: duplicate derived product"
+#define __CPP_TRANSPORT_REPO_CONTENT_DUPLICATE           "Repository error: duplicate content group"
+
+#define __CPP_TRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
+#define __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
+
+#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_A             "Repository error: Attempt to insert duplicate"
 #define __CPP_TRANSPORT_REPO_RECORD_EXISTS_B             "record"
 
 #define __CPP_TRANSPORT_REPO_RECORD_MISSING_A            "Repository error:"
@@ -74,11 +96,6 @@
 #define __CPP_TRANSPORT_REPO_MISSING_PACKAGE             "Repository error: Could not find specified package"
 #define __CPP_TRANSPORT_REPO_MISSING_PRODUCT             "Repository error: Could not find specified derived product"
 #define __CPP_TRANSPORT_REPO_MISSING_CONTENT             "Repostiory error: Could not find specified content group"
-
-#define __CPP_TRANSPORT_REPO_DUPLICATE_TASK              "Repository error: Duplicate task"
-#define __CPP_TRANSPORT_REPO_DUPLICATE_PACKAGE           "Repository error: Duplicate package"
-#define __CPP_TRANSPORT_REPO_DUPLICATE_PRODUCT           "Repository error: Duplicate derived product"
-#define __CPP_TRANSPORT_REPO_DUPLICATE_CONTENT           "Repository error: Duplicate content group"
 
 #define __CPP_TRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define __CPP_TRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
