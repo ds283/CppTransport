@@ -745,7 +745,8 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_plot<double> fNL_plot = transport::derived_data::time_series_plot<double>("axion.threepf-1.fNL", "fNL.pdf");
     fNL_plot.add_line(fNLloc_time_series);
     fNL_plot.add_line(fNLequi_time_series);
-    fNL_plot.add_line(fNLortho_time_series);
+		fNL_plot.add_line(r_group);
+//    fNL_plot.add_line(fNLortho_time_series);
 //    fNL_plot.add_line(tk3_zeta_redbsp_sq);
     fNL_plot.set_log_y(false);
     fNL_plot.set_abs_y(false);
