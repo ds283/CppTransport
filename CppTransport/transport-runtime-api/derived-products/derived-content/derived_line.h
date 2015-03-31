@@ -498,7 +498,7 @@ namespace transport
 
 				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end(); t++)
 					    {
-				        Json::Value sns_element(Json::uintValue) = *t;
+				        Json::Value sns_element = *t;
 						    time_sns_list.append(sns_element);
 					    }
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS] = time_sns_list;
@@ -508,7 +508,7 @@ namespace transport
 
 				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end(); t++)
 					    {
-				        Json::Value kconfig_element(Json::uintValue) = *t;
+				        Json::Value kconfig_element = *t;
 						    kconfig_sns_list.append(kconfig_element);
 					    }
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS] = kconfig_sns_list;

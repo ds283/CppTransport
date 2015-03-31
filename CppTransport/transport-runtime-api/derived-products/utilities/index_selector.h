@@ -192,7 +192,7 @@ namespace transport
 		    Json::Value toggle_array(Json::arrayValue);
 				for(unsigned int i = 0; i < this->size; i++)
 					{
-				    Json::Value elt(Json::booleanValue) = this->enabled[i];
+				    Json::Value elt = static_cast<bool>(this->enabled[i]);
 						toggle_array.append(elt);
 					}
 				writer[__CPP_TRANSPORT_NODE_INDEX_TOGGLES] = toggle_array;

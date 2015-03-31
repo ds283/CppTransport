@@ -429,7 +429,7 @@ namespace transport
 		    Json::Value time_storage(Json::arrayValue);
 				for(std::vector<time_config>::const_iterator t = this->time_config_list.begin(); t != this->time_config_list.end(); t++)
 					{
-				    Json::Value storage_element(Json::uintValue) = t->serial;
+				    Json::Value storage_element = t->serial;
 						time_storage.append(storage_element);
 					}
 				writer[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE] = time_range;

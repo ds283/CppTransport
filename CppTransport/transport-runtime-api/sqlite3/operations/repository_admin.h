@@ -379,7 +379,8 @@ namespace transport
 					    {
 				        if(status == SQLITE_ROW)
 					        {
-				            result = std::string(sqlite3_column_text(stmt, 0));
+						        const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+				            result = std::string(sqlite_str);
 				            num_rows++;
 					        }
 				        else
@@ -438,25 +439,25 @@ namespace transport
 
 
 				template <typename Payload>
-				std::string find_output(sqlite3* db, std::string name, std::string missing_msg);
+				std::string find_group(sqlite3* db, std::string name, std::string missing_msg);
 
 
 				template <>
-				std::string find_output<integration_payload>(sqlite3* db, std::string name, std::string missing_msg)
+				std::string find_group<integration_payload>(sqlite3* db, std::string name, std::string missing_msg)
 					{
 						return internal_find(db, name, __CPP_TRANSPORT_SQLITE_INTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
 					}
 
 
 		    template <>
-		    std::string find_output<postintegration_payload>(sqlite3* db, std::string name, std::string missing_msg)
+		    std::string find_group<postintegration_payload>(sqlite3* db, std::string name, std::string missing_msg)
 					{
 				    return internal_find(db, name, __CPP_TRANSPORT_SQLITE_POSTINTEGRATION_GROUPS_TABLE, "name", "path", missing_msg);
 					}
 
 
 		    template <>
-		    std::string find_output<output_payload>(sqlite3* db, std::string name, std::string missing_msg)
+		    std::string find_group<output_payload>(sqlite3* db, std::string name, std::string missing_msg)
 			    {
 		        return internal_find(db, name, __CPP_TRANSPORT_SQLITE_OUTPUT_GROUPS_TABLE, "name", "path", missing_msg);
 			    }
@@ -475,7 +476,8 @@ namespace transport
 					    {
 				        if(status == SQLITE_ROW)
 					        {
-				            std::string result = std::string(sqlite3_column_text(stmt, 0));
+						        const char* sqlite_str = reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0));
+				            std::string result = std::string(sqlite_str);
 						        groups.push_back(result);
 					        }
 				        else
@@ -516,6 +518,7 @@ namespace transport
 
 
 			}   // namespace sqlite3_operations
+
 
 	}   // namespace transport
 

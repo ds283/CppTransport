@@ -27,7 +27,6 @@
 
 #include "sqlite3.h"
 #include "transport-runtime-api/sqlite3/operations/repository_admin.h"
-#import "postintegration_tasks.h"
 
 
 #define __CPP_TRANSPORT_REPO_REPOSITORY_LEAF "database.sqlite"
@@ -276,10 +275,10 @@ namespace transport
 		  protected:
 
 				//! Commit callback: commit to database for the first time
-				void commit_first(const repository_record& record, count_function counter, store_function storer, std::string store_root, std::string exists_err);
+				void commit_first(repository_record& record, count_function counter, store_function storer, std::string store_root, std::string exists_err);
 
 				//! Commit callback: replacement commit to database
-				void commit_replace(const repository_record& record, find_function counter);
+				void commit_replace(repository_record& record, find_function finder);
 
 
 		    // REPOSITORY RECORD FACTORIES
@@ -317,17 +316,9 @@ namespace transport
 		    derived_product_record<number>* derived_product_record_factory(Json::Value& reader);
 
 		    //! Create a new content record from an explicit object
-		    output_group_record<integration_payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-								                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
-
-		    //! Create a new content record from an explicit object
-		    output_group_record<postintegration_payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
-
-		    //! Create a new content record from an explicit object
-		    output_group_record<output_payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
-
+				template <typename Payload>
+		    output_group_record<Payload>* output_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+								                                                  bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg);
 
 		    //! Create a new content from from a serialization reader
 		    template <typename Payload>
@@ -340,28 +331,19 @@ namespace transport
 		    void check_task_duplicate(const std::string& name);
 
 		    //! Write a serialized JSON record to a file
-		    void commit_document(boost::filesystem::path& path, repository_record& record);
+		    void commit_document(const boost::filesystem::path& path, const repository_record& record);
 
 				//! Read a serialized JSON record from a file
 				Json::Value deserialize_document(boost::filesystem::path& path);
 
 				//! Enumerate content groups
 				template <typename Payload>
-				void enumerate_content_groups(const std::string& name, std::list< std::shared_ptr< output_group_record<Payload> > >& list, finder_function finder);
+				void enumerate_content_groups(const std::string& name, std::list< std::shared_ptr< output_group_record<Payload> > >& list, find_function finder);
 
 
 		    // INTERNAL DATA
 
 		  private:
-
-		    //! Error handler
-		    error_callback error;
-
-		    //! Warning handler
-		    warning_callback warning;
-
-		    //! Message handler
-		    message_callback message;
 
 		    //! BOOST path to database
 		    boost::filesystem::path db_path;
@@ -402,12 +384,11 @@ namespace transport
 		                                               typename repository<number>::error_callback e,
 		                                               typename repository<number>::warning_callback w,
 		                                               typename repository<number>::message_callback m)
-			: json_interface_repository<number>(path, mode,
+			: json_interface_repository<number>(path, mode, e, w, m,
 			                                    std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
-			  db(nullptr), open_clients(0),
-			  error(e), warning(w), message(m)
+			  db(nullptr), open_clients(0)
 			{
 		    // supplied path should be a directory which exists
 		    if(!boost::filesystem::is_directory(path))
@@ -427,7 +408,7 @@ namespace transport
 			    }
 
 				// package store should be present
-				package_store = __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
+				package_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
 		    if(!boost::filesystem::is_directory(this->db_path / package_store))
 			    {
 		        std::ostringstream msg;
@@ -436,7 +417,7 @@ namespace transport
 			    }
 
 				// task store should be present
-				task_store = __CPP_TRANSPORT_REPO_TASKS_LEAF;
+				task_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_TASKS_LEAF;
 		    if(!boost::filesystem::is_directory(this->db_path / task_store))
 			    {
 		        std::ostringstream msg;
@@ -445,7 +426,7 @@ namespace transport
 			    }
 
 		    // product store should be present
-		    product_store = __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
+		    product_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
 		    if(!boost::filesystem::is_directory(this->db_path / product_store))
 			    {
 		        std::ostringstream msg;
@@ -454,7 +435,7 @@ namespace transport
 			    }
 
 		    // output store should be present
-		    output_store = __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
+		    output_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
 		    if(!boost::filesystem::is_directory(this->db_path / output_store))
 			    {
 		        std::ostringstream msg;
@@ -477,11 +458,15 @@ namespace transport
 		// Create a named repository
 		template <typename number>
 		repository_sqlite3<number>::repository_sqlite3(const std::string& path, const repository_creation_key& key)
-			: json_interface_repository<number>(path, repository<number>::access_type::readwrite),
-			  db(nullptr), open_clients(0),
-			  error(repository_sqlite3<number>::default_error_handler()),
-			  warning(repository_sqlite3<number>::default_warning_handler()),
-			  message(repository_sqlite3<number>::default_message_handler())
+			: json_interface_repository<number>(path, repository<number>::access_type::readwrite,
+			                                    typename repository<number>::error_callback(repository_sqlite3<number>::default_error_handler()),
+			                                    typename repository<number>::warning_callback(repository_sqlite3<number>::default_warning_handler()),
+			                                    typename repository<number>::message_callback(repository_sqlite3<number>::default_message_handler()),
+			                                    std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
+			                                    std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
+			                                    std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
+			  db(nullptr),
+			  open_clients(0)
 			{
 		    // check whether root directory for the repository already exists -- it shouldn't
 		    if(boost::filesystem::exists(path))
@@ -492,10 +477,10 @@ namespace transport
 			    }
 
 		    db_path       = this->get_root_path() / __CPP_TRANSPORT_REPO_REPOSITORY_LEAF;
-		    package_store = __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
-		    task_store    = __CPP_TRANSPORT_REPO_TASKS_LEAF;
-		    product_store = __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
-		    output_store  = __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
+		    package_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
+		    task_store    = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_TASKS_LEAF;
+		    product_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
+		    output_store  = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
 
 		    // create directory structure
 		    boost::filesystem::create_directories(this->get_root_path());
@@ -574,7 +559,7 @@ namespace transport
 
 
     template <typename number>
-    void repository_sqlite3<number>::commit_first(const repository_record& record,
+    void repository_sqlite3<number>::commit_first(repository_record& record,
                                                   typename repository_sqlite3<number>::count_function counter,
                                                   typename repository_sqlite3<number>::store_function storer,
                                                   std::string store_root, std::string exists_err)
@@ -591,7 +576,7 @@ namespace transport
 	        }
 
         // commit entry to the database
-        boost::filesystem::path document_path = store_root / record.get_name();
+        boost::filesystem::path document_path = boost::filesystem::path(store_root) / record.get_name();
         storer(this->db, record.get_name(), document_path.string());
 
         // store package on disk
@@ -600,7 +585,7 @@ namespace transport
 
 
     template <typename number>
-    void repository_sqlite3<number>::commit_replace(const repository_record& record, typename repository_sqlite3<number>::find_function finder)
+    void repository_sqlite3<number>::commit_replace(repository_record& record, typename repository_sqlite3<number>::find_function finder)
 	    {
 				scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
@@ -621,7 +606,7 @@ namespace transport
         repository_record::handler_package pkg;
 		    count_function counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
 		    store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store, __CPP_TRANSPORT_REPO_PACKAGE_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store.string(), __CPP_TRANSPORT_REPO_PACKAGE_EXISTS);
 
         return new package_record<number>(ics, pkg);
 	    }
@@ -644,7 +629,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_ics().get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new integration_task_record<number>(tk, pkg);
 	    }
@@ -667,7 +652,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new output_task_record<number>(tk, pkg);
 	    }
@@ -690,7 +675,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_parent_task()->get_name());
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new postintegration_task_record<number>(tk, pkg);
 	    }
@@ -700,7 +685,7 @@ namespace transport
     postintegration_task_record<number>* repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function counter = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new postintegration_task_record<number>(reader, this->tk_finder, pkg);
@@ -713,7 +698,7 @@ namespace transport
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
         store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store, __CPP_TRANSPORT_REPO_PRODUCT_EXISTS);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), __CPP_TRANSPORT_REPO_PRODUCT_EXISTS);
 
         return new derived_product_record<number>(prod, pkg);
 	    }
@@ -723,8 +708,8 @@ namespace transport
     derived_product_record<number>* repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function counter = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, counter);
+        find_function finder = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new derived_product_record<number>(reader, this->tk_finder, pkg);
 	    }
@@ -737,8 +722,8 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
-        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store, __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
+        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
+        pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
 
         typename output_group_record<Payload>::paths_group paths;
         paths.root   = this->get_root_path();
@@ -753,10 +738,10 @@ namespace transport
     output_group_record<Payload>* repository_sqlite3<number>::output_group_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function counter = std::bind(&sqlite3_operations::find_output<Payload>, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_group<Payload>, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
-        return new output_group_record<integration_payload>(reader, this->root_path, pkg);
+        return new output_group_record<Payload>(reader, this->root_path, pkg);
 	    }
 
 
@@ -957,7 +942,7 @@ namespace transport
 
 				scoped_transaction scoped_xn = this->scoped_transaction_factory();
 		    std::list< std::shared_ptr< output_group_record<integration_payload> > > list;
-				finder_function finder = std::bind(&repository_sqlite3<number>::find_integration_task, std::placeholders::_1, std::placeholders::_1, __CPP_TRANSPORT_REPO_TASK_MISSING);
+				find_function finder = std::bind(sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
 				this->enumerate_content_groups<integration_payload>(name, list, finder);
 
 				list.sort(&output_group_helper::comparator<integration_payload>);
@@ -981,10 +966,10 @@ namespace transport
 
 		    scoped_transaction scoped_xn = this->scoped_transaction_factory();
 		    std::list< std::shared_ptr< output_group_record<output_payload> > > list;
-		    finder_function finder = std::bind(&repository_sqlite3<number>::find_output_task, std::placeholders::_1, std::placeholders::_1, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
+		    find_function finder = std::bind(sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
 		    this->enumerate_content_groups<output_payload>(name, list, finder);
 
-		    list.sort(&output_group_helper::comparator<integration_payload>);
+		    list.sort(&output_group_helper::comparator<output_payload>);
 		    return(list);
 			}
 
@@ -1463,7 +1448,7 @@ namespace transport
 
 
     template <typename number>
-    std::string repository_sqlite3<number>::extract_JSON_task_record(const std::string& name)
+    std::string repository_sqlite3<number>::export_JSON_task_record(const std::string& name)
 	    {
         scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
@@ -1499,7 +1484,7 @@ namespace transport
 
 
     template <typename number>
-    std::string repository_sqlite3<number>::extract_JSON_product_record(const std::string& name)
+    std::string repository_sqlite3<number>::export_JSON_product_record(const std::string& name)
 	    {
         scoped_transaction scoped_xn = this->scoped_transaction_factory();
 
@@ -1512,7 +1497,7 @@ namespace transport
 
 
 		template <typename number>
-		std::string repository_sqlite3<number>::extract_JSON_content_record(const std::string& name)
+		std::string repository_sqlite3<number>::export_JSON_content_record(const std::string& name)
 			{
 		    if(sqlite3_operations::count_integration_groups(this->db, name) > 0)
 			    {
@@ -1564,15 +1549,20 @@ namespace transport
 
 
     template <typename number>
-    void repository_sqlite3<number>::commit_document(boost::filesystem::path& path, repository_record& record)
+    void repository_sqlite3<number>::commit_document(const boost::filesystem::path& path, const repository_record& record)
 	    {
         // serialize the record
         Json::Value root;
         record.serialize(root);
 
         // write out contents to a temporary file
+        boost::filesystem::path filename = path.filename();
+        boost::filesystem::path parent   = path;
+		    parent.remove_filename();
+        boost::filesystem::path temp_filename = boost::filesystem::path(filename.string() + "-temp");
+
         boost::filesystem::path abs_record    = this->get_root_path() / path;
-        boost::filesystem::path abs_temporary = this->get_root_path() / (path + std::string("-temp"));
+        boost::filesystem::path abs_temporary = this->get_root_path() / (parent / temp_filename);
 
         std::ofstream out;
         out.open(abs_temporary.string().c_str(), std::ios_base::out | std::ios_base::trunc);
@@ -1619,7 +1609,7 @@ namespace transport
 
 		template <typename number>
 		template <typename Payload>
-		void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list< std::shared_ptr< output_group_record<Payload> > >& list, finder_function finder)
+		void repository_sqlite3<number>::enumerate_content_groups(const std::string& name, std::list< std::shared_ptr< output_group_record<Payload> > >& list, find_function finder)
 			{
 				std::list<std::string> group_names;
 
@@ -1628,9 +1618,9 @@ namespace transport
 
 				for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); t++)
 					{
-						boost::filesystem::path filename = sqlite3_operations::find_output<Payload>(this->db, *t);
+						boost::filesystem::path filename = sqlite3_operations::find_group<Payload>(this->db, *t, __CPP_TRANSPORT_REPO_OUTPUT_MISSING);
 						Json::Value root = this->deserialize_document(filename);
-						list.push_back(std::shared_ptr< output_group_record<Payload> >(this->output_group_factory<Payload>(root)));
+						list.push_back(std::shared_ptr< output_group_record<Payload> >(this->template output_group_record_factory<Payload>(root)));
 					}
 			}
 

@@ -1545,7 +1545,7 @@ namespace transport
 
         for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
 	        {
-            Json::Value group_element(Json::stringValue) = *t;
+            Json::Value group_element = *t;
 		        group_list.append(group_element);
 	        }
         writer[__CPP_TRANSPORT_NODE_TASK_OUTPUT_GROUPS] = group_list;
@@ -1953,7 +1953,7 @@ namespace transport
 
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
 	        {
-            Json::Value note_element(Json::stringValue) = *t;
+            Json::Value note_element = *t;
 		        note_list.append(note_element);
 	        }
         writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES] = note_list;
@@ -1962,7 +1962,7 @@ namespace transport
 
         for(std::list<std::string>::const_iterator t = tags.begin(); t != tags.end(); t++)
 	        {
-            Json::Value tag_element(Json::stringValue) = *t;
+            Json::Value tag_element = *t;
 		        tag_list.append(tag_element);
 	        }
         writer[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
@@ -2166,7 +2166,7 @@ namespace transport
 
         for(std::list<std::string>::const_iterator t = this->notes.begin(); t != this->notes.end(); t++)
 	        {
-            Json::Value note_element(Json::stringValue) = *t;
+            Json::Value note_element = *t;
 		        note_list.append(note_element);
 	        }
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES] = note_list;
@@ -2175,7 +2175,7 @@ namespace transport
 
         for(std::list<std::string>::const_iterator t = this->tags.begin(); t != this->tags.end(); t++)
 	        {
-            Json::Value tag_element(Json::stringValue) = *t;
+            Json::Value tag_element = *t;
 		        tag_list.append(tag_element);
 	        }
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_TAGS] = tag_list;

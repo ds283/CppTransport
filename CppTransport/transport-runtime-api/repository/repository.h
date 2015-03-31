@@ -74,6 +74,9 @@ namespace transport
 
         //! Create a repository object
         repository(const std::string& path, access_type mode,
+                   typename repository<number>::error_callback e,
+                   typename repository<number>::warning_callback w,
+                   typename repository<number>::message_callback m,
                    typename repository_finder<number>::package_finder pf,
                    typename repository_finder<number>::task_finder tf,
                    typename repository_finder<number>::derived_product_finder dpf);
@@ -171,6 +174,18 @@ namespace transport
         const boost::filesystem::path root_path;
 
 
+		    // ERROR, WARNING, MESSAGE HANDLERS
+
+		    //! error handler
+		    error_callback error;
+
+		    //! warning handler
+		    warning_callback warning;
+
+		    //! message handler
+		    message_callback message;
+
+
 		    // FINDER SERVICES
 
         //! Cached model-finder supplied by instance manager
@@ -193,11 +208,17 @@ namespace transport
 
     template <typename number>
     repository<number>::repository(const std::string& path, typename repository<number>::access_type mode,
+                                   typename repository<number>::error_callback e,
+                                   typename repository<number>::warning_callback w,
+                                   typename repository<number>::message_callback m,
                                    typename repository_finder<number>::package_finder pf,
                                    typename repository_finder<number>::task_finder tf,
                                    typename repository_finder<number>::derived_product_finder dpf)
 	    : root_path(path),
 	      access_mode(mode),
+	      error(e),
+	      warning(w),
+	      message(m),
 	      pkg_finder(pf),
 	      tk_finder(tf),
 	      dprod_finder(dpf)

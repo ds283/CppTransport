@@ -215,7 +215,7 @@ namespace transport
 
             for(std::list<std::string>::const_iterator u = tags.begin(); u != tags.end(); u++)
 	            {
-                Json::Value tag_element(Json::stringValue) = *u;
+                Json::Value tag_element = *u;
                 tag_list.append(tag_element);
 	            }
 		        elem[__CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS] = tag_list;
