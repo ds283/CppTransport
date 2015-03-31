@@ -100,7 +100,7 @@
 #define __CPP_TRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define __CPP_TRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
 #define __CPP_TRANSPORT_RUN_REPAIR                       "; consider checking database integrity"
-#define __CPP_TRANSPORT_REPO_FOR_TASK                    "for task"
+#define __CPP_TRANSPORT_REPO_FOR_TASK                    "while processing task"
 #define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: Unexpected job type in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"

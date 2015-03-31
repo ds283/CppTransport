@@ -412,7 +412,7 @@ namespace transport
 
 				// package store should be present
 				package_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PACKAGES_LEAF;
-		    if(!boost::filesystem::is_directory(this->db_path / package_store))
+		    if(!boost::filesystem::is_directory(this->get_root_path() / package_store))
 			    {
 		        std::ostringstream msg;
 		        msg << __CPP_TRANSPORT_REPO_MISSING_PACKAGE_STORE << " '" << path << "'";
@@ -421,7 +421,7 @@ namespace transport
 
 				// task store should be present
 				task_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_TASKS_LEAF;
-		    if(!boost::filesystem::is_directory(this->db_path / task_store))
+		    if(!boost::filesystem::is_directory(this->get_root_path() / task_store))
 			    {
 		        std::ostringstream msg;
 		        msg << __CPP_TRANSPORT_REPO_MISSING_TASK_STORE << " '" << path << "'";
@@ -430,7 +430,7 @@ namespace transport
 
 		    // product store should be present
 		    product_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_PRODUCTS_LEAF;
-		    if(!boost::filesystem::is_directory(this->db_path / product_store))
+		    if(!boost::filesystem::is_directory(this->get_root_path() / product_store))
 			    {
 		        std::ostringstream msg;
 		        msg << __CPP_TRANSPORT_REPO_MISSING_PRODUCT_STORE << " '" << path << "'";
@@ -439,7 +439,7 @@ namespace transport
 
 		    // output store should be present
 		    output_store = boost::filesystem::path(__CPP_TRANSPORT_REPO_STORE_LEAF) / __CPP_TRANSPORT_REPO_OUTPUT_LEAF;
-		    if(!boost::filesystem::is_directory(this->db_path / output_store))
+		    if(!boost::filesystem::is_directory(this->get_root_path() / output_store))
 			    {
 		        std::ostringstream msg;
 		        msg << __CPP_TRANSPORT_REPO_MISSING_OUTPUT_STORE << " '" << path << "'";
@@ -897,9 +897,7 @@ namespace transport
 						return this->output_task_record_factory(root);
 					}
 
-		    std::stringstream msg;
-				msg << __CPP_TRANSPORT_REPO_TASK_MISSING << " '" << name << "'";
-				throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+				throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
 			}
 
 

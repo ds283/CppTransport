@@ -368,7 +368,7 @@ namespace transport
 				std::string internal_find(sqlite3* db, const std::string& name, const std::string& table, const std::string& column, const std::string& target, const std::string& missing_msg)
 					{
 				    std::stringstream find_stmt;
-				    find_stmt << "SELECT " << target << " FROM " << table << " WHERE " << table << "." << target << "='" << name << "'";
+				    find_stmt << "SELECT " << target << " FROM " << table << " WHERE " << table << "." << column << "='" << name << "'";
 
 						sqlite3_stmt* stmt;
 						check_stmt(db, sqlite3_prepare_v2(db, find_stmt.str().c_str(), find_stmt.str().length()+1, &stmt, nullptr));
@@ -397,9 +397,7 @@ namespace transport
 
 				    if(num_rows == 0)
 					    {
-				        std::stringstream msg;
-						    msg << missing_msg << " '" << name << "'";
-				        throw runtime_exception(runtime_exception::REPOSITORY_BACKEND_ERROR, msg.str());
+				        throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, name);   // RECORD_NOT_FOUND expects task name in message
 					    }
 						else if(num_rows > 1)
 					    {

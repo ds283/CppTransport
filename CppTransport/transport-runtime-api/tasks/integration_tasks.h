@@ -432,7 +432,7 @@ namespace transport
 				    Json::Value storage_element = t->serial;
 						time_storage.append(storage_element);
 					}
-				writer[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE] = time_range;
+				writer[__CPP_TRANSPORT_NODE_TIME_CONFIG_STORAGE] = time_storage;
 
         // note that we DO NOT serialize the initial conditions;
         // these are handled separately by the repository layer
@@ -761,13 +761,15 @@ namespace transport
 
         // deserialize list of twopf k-configurations
         Json::Value& config_list = reader[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE];
+		    assert(config_list.isArray());
+
         twopf_config_list.clear();
         twopf_config_list.reserve(config_list.size());
 
         for(Json::Value::iterator t = config_list.begin(); t != config_list.end(); t++)
           {
             twopf_kconfig c;
-            c.serial = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN].asUInt();
+            c.serial         = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN].asUInt();
             c.k_conventional = (*t)[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K].asDouble();
 
             assert(c.k_conventional > 0.0);
@@ -801,13 +803,14 @@ namespace transport
         // serialize list of twopf kconfigurations
         // note we store only k_conventional to save space
         // k_comoving can be reconstructed on deserialization
-        Json::Value config_list[Json::arrayValue];
+        Json::Value config_list(Json::arrayValue);
         for(std::vector<twopf_kconfig>::const_iterator t = this->twopf_config_list.begin(); t != this->twopf_config_list.end(); t++)
           {
             Json::Value config_element(Json::objectValue);
             config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_SN] = t->serial;
             config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_K] = t->k_conventional;
             config_element[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE_BG] = t->store_background;
+		        config_list.append(config_element);
           }
         writer[__CPP_TRANSPORT_NODE_TWOPF_KCONFIG_STORAGE] = config_list;
 
@@ -1095,20 +1098,22 @@ namespace transport
 
         //! deserialize array of k-configurations
         Json::Value& config_list = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE];
+		    assert(config_list.isArray());
+
         threepf_config_list.clear();
         threepf_config_list.reserve(config_list.size());
 
         for(Json::Value::iterator t = config_list.begin(); t != config_list.end(); t++)
           {
             threepf_kconfig c;
-            c.serial = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN].asUInt();
-            c.index[0] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN].asUInt();
-            c.index[1] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN].asUInt();
-            c.index[2] = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN].asUInt();
-            c.store_background = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG].asBool();
-            c.store_twopf_k1 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1].asBool();
-            c.store_twopf_k2 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2].asBool();
-            c.store_twopf_k3 = reader[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3].asBool();
+            c.serial           = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_SN].asUInt();
+            c.index[0]         = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K1_SN].asUInt();
+            c.index[1]         = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K2_SN].asUInt();
+            c.index[2]         = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_K3_SN].asUInt();
+            c.store_background = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_BG].asBool();
+            c.store_twopf_k1   = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF1].asBool();
+            c.store_twopf_k2   = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF2].asBool();
+            c.store_twopf_k3   = (*t)[__CPP_TRANSPORT_NODE_THREEPF_KCONFIG_STORAGE_TPF3].asBool();
 
             const twopf_kconfig& k1 = this->lookup_twopf_kconfig(c.index[0]);
             const twopf_kconfig& k2 = this->lookup_twopf_kconfig(c.index[1]);

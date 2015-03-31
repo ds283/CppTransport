@@ -1427,7 +1427,7 @@ namespace transport
     record_metadata::record_metadata(Json::Value& reader)
 	    {
         Json::Value& metadata = reader[__CPP_TRANSPORT_NODE_METADATA_GROUP];
-		    assert(metadata.isArray());
+		    assert(metadata.isObject());
 
         std::string ctime_str = metadata[__CPP_TRANSPORT_NODE_METADATA_CREATED].asString();
         this->creation_time = boost::posix_time::from_iso_string(ctime_str);

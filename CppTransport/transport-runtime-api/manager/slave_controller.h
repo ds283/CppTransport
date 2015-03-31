@@ -407,16 +407,16 @@ namespace transport
 
                 case task_record<number>::output:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::postintegration:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 default:
@@ -621,9 +621,9 @@ namespace transport
 	            {
                 case task_record<number>::integration:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());     // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::output:
@@ -640,9 +640,9 @@ namespace transport
 
                 case task_record<number>::postintegration:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 default:
@@ -858,16 +858,16 @@ namespace transport
 	            {
                 case task_record<number>::integration:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::output:
 	                {
-                    std::ostringstream msg;
-                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
-                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, msg.str());
+//                    std::ostringstream msg;
+//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
+                    throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::postintegration:

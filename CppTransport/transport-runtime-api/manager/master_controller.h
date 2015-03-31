@@ -638,7 +638,7 @@ namespace transport
 					        {
 						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR;
 					        }
-		            msg << " " << format_time(timer.elapsed().wall);
+		            msg << " " << __CPP_TRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
 				        this->message_handler(msg.str());
 			        }
 	        }
