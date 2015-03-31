@@ -308,7 +308,7 @@ namespace transport
 						// Deserialize: value type for this derived line
 				    std::string ytype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE].asString();
 						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF)                  y_type = correlation_function_value;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = background_field_value;
+						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = field_value;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL)            y_type = fNL_value;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R)              y_type = r_value;
 						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index_value;
@@ -441,7 +441,7 @@ namespace transport
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF);
 									break;
 
-						    case background_field_value:
+						    case field_value:
 							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD);
 									break;
 
@@ -555,7 +555,7 @@ namespace transport
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CF_LABEL << std::endl;
 									break;
 
-						    case background_field_value:
+						    case field_value:
 							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_BGFIELD_LABEL << std::endl;
 									break;
 

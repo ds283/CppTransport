@@ -98,14 +98,16 @@ namespace transport
 					    };
 
 
-						//! An output_line is a collection of output values, together with a label
+						//! An output_line is a collection of output values, together with a label.
+						//! output_lines inherit their type from their parent data_line
 				    class output_line
 					    {
 
 				      public:
 
-				        output_line(const std::string& l)
-					        : label(l)
+				        output_line(const std::string& l, value_type v)
+					        : label(l),
+				            value(v)
 					        {
 					        }
 
@@ -118,8 +120,10 @@ namespace transport
 
 				        //! Add a value at the back
 				        void push_back(const output_value& v) { this->values.push_back(v); }
+
 				        //! Add a value at the front
 				        void push_front(const output_value& v) { this->values.push_front(v); }
+
 				        //! Get values
 				        const std::deque<output_value>& get_values() const { return(this->values); }
 
@@ -129,6 +133,8 @@ namespace transport
 				        //! Get label
 				        const std::string& get_label() const { return(this->label); }
 
+						    //! Get type
+						    value_type get_value_type() const { return(this->value); }
 
 				        // INTERNAL DATA
 
@@ -136,6 +142,9 @@ namespace transport
 
 				        //! this line's label
 				        std::string label;
+
+						    //! this line's value, inherited from its parent
+						    value_type value;
 
 				        //! this line's data points
 				        std::deque<output_value> values;
@@ -390,7 +399,7 @@ namespace transport
 
 		        for(typename std::list< data_line<number> >::const_iterator t = input.begin(); t != input.end(); t++)
 			        {
-		            const std::vector< std::pair<double, number> >& line_data = (*t).get_data_points();
+		            const std::vector< std::pair<double, number> >& line_data = t->get_data_points();
 
 		            bool need_abs_y = false;
 		            bool nonzero_values = false;
@@ -399,15 +408,15 @@ namespace transport
 			            {
 		                for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); (!need_abs_y || !nonzero_values) && u != line_data.end(); u++)
 			                {
-		                    if((*u).second <= 0.0) need_abs_y = true;
-		                    if((*u).second > 0.0 || (*u).second < 0.0) nonzero_values = true;
+		                    if(u->second <= 0.0) need_abs_y = true;
+		                    if(u->second > 0.0 || u->second < 0.0) nonzero_values = true;
 			                }
 
 		                // issue warnings if required
 		                if(need_abs_y && !this->abs_y && nonzero_values)        // can plot the line, but have to abs() it
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains negative or zero values; plotting absolute values instead because of logarithmic y-axis";
 		                else if(need_abs_y && !this->abs_y && !nonzero_values)  // can't plot the line
-			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
+			                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains no positive values and can't be plotted on a logarithmic y-axis -- skipping this line";
 			            }
 
 				        bool nonzero_axis = true;
@@ -415,12 +424,12 @@ namespace transport
 					        {
 				            for(typename std::vector< std::pair<double, number> >::const_iterator u = line_data.begin(); nonzero_axis && u != line_data.end(); u++)
 					            {
-						            if((*u).first <= 0.0) nonzero_axis = false;
+						            if(u->first <= 0.0) nonzero_axis = false;
 					            }
 
 						        // warn if line can't be plotted
 						        if(!nonzero_axis)
-							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << (*t).get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
+							        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << ":: Warning: data line '" << t->get_non_LaTeX_label() << "' contains nonpositive x-axis values and can't be plotted on a logarithmic x-axis -- skipping this line";
 					        }
 
 		            // if we can plot the line, push it onto the queue to be processed.
@@ -429,10 +438,10 @@ namespace transport
 				        //    ** the x-axis is logarithmic but there are some nonpositive points
 		            if((!this->log_x || (this->log_x && nonzero_axis)) && (!this->log_y || (this->log_y && nonzero_values)))
 			            {
-		                output.push_back(output_line(this->use_LaTeX ? (*t).get_LaTeX_label() : (*t).get_non_LaTeX_label()));
+		                output.push_back(output_line(this->use_LaTeX ? t->get_LaTeX_label() : t->get_non_LaTeX_label(), t->get_value_type()));
 		                data_absy.push_back(this->abs_y || need_abs_y);
 
-				            data.push_back((*t).get_data_points());
+				            data.push_back(t->get_data_points());
 			            }
 			        }
 

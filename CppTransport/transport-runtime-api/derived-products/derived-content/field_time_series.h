@@ -102,7 +102,7 @@ namespace transport
 		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
 			    : active_indices(sel),
-			      derived_line<number>(tk, time_axis, background_field_value, prec),
+			      derived_line<number>(tk, time_axis, field_value, prec),
 			      time_series<number>(tk, tfilter)
 			    {
 		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
@@ -176,7 +176,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(time_axis, background_field_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(time_axis, field_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
