@@ -116,13 +116,13 @@ namespace transport
 
 
 				//! record count callback, used when committing to the database
-				typedef std::function<unsigned int(sqlite3*,const std::string&)> count_function;
+				typedef std::function<unsigned int(sqlite3*,std::string)> count_function;
 
 				//! record store callback, used when committing to the database
-				typedef std::function<void(sqlite3*,const std::string&,const std::string&)> store_function;
+				typedef std::function<void(sqlite3*,std::string,std::string)> store_function;
 
-				//! record find functin, used when replacing records in the database
-				typedef std::function<std::string(sqlite3*,const std::string&,const std::string&)> find_function;
+				//! record find function, used when replacing records in the database
+				typedef std::function<std::string(sqlite3*,std::string)> find_function;
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -620,7 +620,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
 		    count_function counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
-		    store_function storer  = std::bind(&sqlite3_operations::store_package, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store, __CPP_TRANSPORT_REPO_PACKAGE_EXISTS);
 
         return new package_record<number>(ics, pkg);
@@ -643,7 +643,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_integration_task, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_ics().get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new integration_task_record<number>(tk, pkg);
@@ -654,7 +654,7 @@ namespace transport
     integration_task_record<number>* repository_sqlite3<number>::integration_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_integration_tasks, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_integration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new integration_task_record<number>(reader, this->pkg_finder, pkg);
@@ -666,7 +666,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_output_task, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new output_task_record<number>(tk, pkg);
@@ -677,7 +677,7 @@ namespace transport
     output_task_record<number>* repository_sqlite3<number>::output_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function finder = std::bind(&sqlite3_operations::find_output_tasks, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function finder = std::bind(&sqlite3_operations::find_output_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new output_task_record<number>(reader, this->dprod_finder, pkg);
@@ -689,7 +689,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_parent_task()->get_name());
+        store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_parent_task()->get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store, __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new postintegration_task_record<number>(tk, pkg);
@@ -700,7 +700,7 @@ namespace transport
     postintegration_task_record<number>* repository_sqlite3<number>::postintegration_task_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function counter = std::bind(&sqlite3_operations::find_postintegration_tasks, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
+        find_function counter = std::bind(&sqlite3_operations::find_postintegration_task, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_TASK_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, finder);
 
         return new postintegration_task_record<number>(reader, this->tk_finder, pkg);
@@ -712,7 +712,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store, __CPP_TRANSPORT_REPO_PRODUCT_EXISTS);
 
         return new derived_product_record<number>(prod, pkg);
@@ -723,7 +723,7 @@ namespace transport
     derived_product_record<number>* repository_sqlite3<number>::derived_product_record_factory(Json::Value& reader)
 	    {
         repository_record::handler_package pkg;
-        find_function counter = std::bind(&sqlite3_operations::find_products, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
+        find_function counter = std::bind(&sqlite3_operations::find_product, std::placeholders::_1, std::placeholders::_2, __CPP_TRANSPORT_REPO_PRODUCT_MISSING);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_replace, this, std::placeholders::_1, counter);
 
         return new derived_product_record<number>(reader, this->tk_finder, pkg);
@@ -736,8 +736,8 @@ namespace transport
                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg)
 	    {
         repository_record::handler_package pkg;
-        count_function counter = std::bind(&sqlite3_operations::count_outputs, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_output, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
+        count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
+        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store, __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
 
         typename output_group_record<Payload>::paths_group paths;
@@ -1624,7 +1624,7 @@ namespace transport
 				std::list<std::string> group_names;
 
 				// get list of group names associated with the task 'name'
-				sqlite3_operations::enumerate_content_groups<Payload>(name, group_names);
+				sqlite3_operations::enumerate_content_groups<Payload>(this->db, name, group_names);
 
 				for(std::list<std::string>::iterator t = group_names.begin(); t != group_names.end(); t++)
 					{
