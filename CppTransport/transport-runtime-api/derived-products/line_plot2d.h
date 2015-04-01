@@ -476,9 +476,6 @@ namespace transport
 
 				    out << "plt.figure()" << std::endl;
 
-				    if(this->log_x) out << "plt.xscale('log')" << std::endl;
-				    if(this->log_y) out << "plt.yscale('log')" << std::endl;
-
 				    out << "x = [ ";
 				    for(std::deque<double>::const_iterator t = axis.begin(); t != axis.end(); t++)
 					    {
@@ -556,6 +553,14 @@ namespace transport
 							    {
 						        out << "ax" << i << ".set_ylim(ax.get_ylim()[::-1])" << std::endl;
 							    }
+					    }
+				    if(this->log_x) out << "ax1.set_xscale('log')" << std::endl;
+				    if(this->log_y)
+					    {
+				        for(unsigned int i = 1; i < bin_count; i++)
+					        {
+				            out << "ax" << i << ".set_yscale('log')" << std::endl;
+					        }
 					    }
 
 				    if(this->legend)

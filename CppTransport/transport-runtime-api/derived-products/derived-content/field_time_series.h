@@ -176,7 +176,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(time_axis, field_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(time_axis, this->mdl->is_field(m) ? field_value : momentum_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
