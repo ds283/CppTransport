@@ -15,12 +15,12 @@
 #define __CPP_TRANSPORT_VALUE_NON_LATEX_R                    "tensor-to-scalar ratio"
 #define __CPP_TRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX       "spectral index"
 
-#define __CPP_TRANSPORT_VALUE_LATEX_FIELD                    "field value"
-#define __CPP_TRANSPORT_VALUE_LATEX_MOMENTUM                 "momentum value"
-#define __CPP_TRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION     "correlation function"
+#define __CPP_TRANSPORT_VALUE_LATEX_FIELD                    "\\textrm{field value}"
+#define __CPP_TRANSPORT_VALUE_LATEX_MOMENTUM                 "\\textrm{momentum value}"
+#define __CPP_TRANSPORT_VALUE_LATEX_CORRELATION_FUNCTION     "\\textrm{correlation function}"
 #define __CPP_TRANSPORT_VALUE_LATEX_FNL                      "$f_{\\mathrm{NL}}$"
-#define __CPP_TRANSPORT_VALUE_LATEX_R                        "tensor-to-scalar ratio"
-#define __CPP_TRANSPORT_VALUE_LATEX_SPECTRAL_INDEX           "spectral index"
+#define __CPP_TRANSPORT_VALUE_LATEX_R                        "\\textrm{tensor-to-scalar ratio}"
+#define __CPP_TRANSPORT_VALUE_LATEX_SPECTRAL_INDEX           "\\textrm{spectral index}"
 
 #define __CPP_TRANSPORT_VALUE_UNKNOWN_TYPE                   "lines_values: unknown value type"
 
