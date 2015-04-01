@@ -33,22 +33,6 @@
 #define __CPP_TRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
 #define __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
 
-#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_A             "Repository error: Attempt to insert duplicate"
-#define __CPP_TRANSPORT_REPO_RECORD_EXISTS_B             "record"
-
-#define __CPP_TRANSPORT_REPO_RECORD_MISSING_A            "Repository error:"
-#define __CPP_TRANSPORT_REPO_RECORD_MISSING_B            "record for"
-#define __CPP_TRANSPORT_REPO_RECORD_MISSING_C            "not found when committing update to repository"
-
-#define __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_A          "Repository error: Duplicate"
-#define __CPP_TRANSPORT_REPO_RECORD_DUPLICATE_B          "record for"
-
-#define __CPP_TRANSPORT_REPO_INSERT_ERROR                "Repository error: Error while inserting document into repository (backend code="
-#define __CPP_TRANSPORT_REPO_QUERY_ERROR                 "Repository error: Error while querying document from repository (backend code="
-#define __CPP_TRANSPORT_REPO_DELETE_ERROR                "Repository error: Error while deleting repository document (backend id="
-#define __CPP_TRANSPORT_REPO_COMMIT_ERROR                "Repository error: Error while committing changes to repository (backend id="
-#define __CPP_TRANSPORT_REPO_PRECOMMIT_ERROR             "Repository error: Error while preparing to commit changes to repository (backend id="
-
 #define __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH     "Repository error: Error while attempting to move output group to failure cache"
 
 #define __CPP_TRANSPORT_REPO_AUTOCOMMIT_INTEGRATION_A    "Autocommit: integration task"
@@ -84,18 +68,9 @@
 #define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C      "moved to fail cache in repository"
 
 #define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
-#define __CPP_TRANSPORT_REPO_WRITE_SLAVE                 "Internal error: Attempt to write to repository from MPI slave process"
 #define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
 
-#define __CPP_TRANSPORT_REPO_NULL_MODEL                  "Internal error: Null model in repository"
-#define __CPP_TRANSPORT_REPO_NULL_TASK                   "Internal error: Null task in repository"
-#define __CPP_TRANSPORT_REPO_NULL_SERIALIZATION_READER   "Internal error: Null serialization reader in repository"
-#define __CPP_TRANSPORT_REPO_NULL_RECORD                 "Internal error: Null record in repository"
-
 #define __CPP_TRANSPORT_REPO_MISSING_RECORD              "Repository error: Could not find database record"
-#define __CPP_TRANSPORT_REPO_MISSING_PACKAGE             "Repository error: Could not find specified package"
-#define __CPP_TRANSPORT_REPO_MISSING_PRODUCT             "Repository error: Could not find specified derived product"
-#define __CPP_TRANSPORT_REPO_MISSING_CONTENT             "Repostiory error: Could not find specified content group"
 
 #define __CPP_TRANSPORT_REPO_SKIPPING_TASK               "; skipping this task"
 #define __CPP_TRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
@@ -122,25 +97,14 @@
 #define __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
 #define __CPP_TRANSPORT_REPO_PRODUCT_DESERIALIZE_FAIL    "Repository error: failed to deserialize derived product"
 
-#define __CPP_TRANSPORT_REPO_PACKAGE_RECORD              "package"
-#define __CPP_TRANSPORT_REPO_TASK_RECORD                 "task"
-#define __CPP_TRANSPORT_REPO_INTEGRATION_TASK_RECORD     "integration task"
-#define __CPP_TRANSPORT_REPO_POSTINTEGRATION_TASK_RECORD "postintegration task"
-#define __CPP_TRANSPORT_REPO_OUTPUT_TASK_RECORD          "output task"
-#define __CPP_TRANSPORT_REPO_DERIVED_PRODUCT_RECORD      "derived product"
-#define __CPP_TRANSPORT_REPO_CONTENT_RECORD              "content"
-
 #define __CPP_TRANSPORT_REPO_UNKNOWN_RECORD_TYPE         "Repository error: unknown type for record"
 #define __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED          "Internal error: dynamic cast of repository record failed"
 
-#define __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT              "Internal error: received unexpected output task"
-#define __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION         "Internal error: received unexpected integration task"
-#define __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION     "Internal error: received unexpected postintegration task"
+#define __CPP_TRANSPORT_REPO_TRANSACTION_UNDERWAY        "Repository error: attempt to begin a new transaction while one is already underway"
+#define __CPP_TRANSPORT_REPO_TRANSACTION_COMMITTED       "Repository error: attempt to add to a transaction which has already been committed"
+#define __CPP_TRANSPORT_REPO_TRANSACTION_DEAD            "Repostiory error: attempt to add to a transaction which has been rolled back"
 
-#define __CPP_TRANSPORT_PROCESSED_TASKS_A                "Task manager: processed"
-#define __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR       "database task"
-#define __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL         "database tasks"
-#define __CPP_TRANSPORT_PROCESSED_TASKS_C                "in wallclock time"
+#define __CPP_TRANSPORT_REPO_TRANSACTION_OVER_RELEASE    "Internal error: over-release of transaction"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_REPOSITORY_H

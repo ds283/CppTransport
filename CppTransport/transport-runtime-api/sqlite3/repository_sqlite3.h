@@ -85,42 +85,14 @@ namespace transport
 			    };
 
 
-		    // RAII transaction manager
-		    class scoped_transaction
-			    {
-
-		      public:
-
-		        typedef std::function<void()> open_handler;
-		        typedef std::function<void()> close_handler;
-
-		        scoped_transaction(open_handler& o, close_handler& c)
-			        : opener(o), closer(c)
-			        {
-		            opener();
-			        }
-
-		        ~scoped_transaction()
-			        {
-		            this->closer();
-			        }
-
-		      private:
-
-		        open_handler opener;
-		        close_handler closer;
-
-			    };
-
-
 				//! record count callback, used when committing to the database
-				typedef std::function<unsigned int(sqlite3*,std::string)> count_function;
+				typedef std::function<unsigned int(sqlite3*,const std::string&)> count_function;
 
 				//! record store callback, used when committing to the database
-				typedef std::function<void(sqlite3*,std::string,std::string)> store_function;
+				typedef std::function<void(transaction_manager&, sqlite3*,const std::string&,const std::string&)> store_function;
 
 				//! record find function, used when replacing records in the database
-				typedef std::function<std::string(sqlite3*,std::string)> find_function;
+				typedef std::function<std::string(sqlite3*,const std::string&)> find_function;
 
 
 		    // CONSTRUCTOR, DESTRUCTOR
@@ -142,18 +114,21 @@ namespace transport
 
 
 
-		    // TRANSACTION MANAGEMENT
+		    // TRANSACTIONS
 
 		  protected:
+
+		    //! Generate a transaction management object
+		    transaction_manager transaction_factory();
 
 		    //! Begin a transaction on the database.
 		    void begin_transaction();
 
 		    //! Commit a transaction to the database.
-		    void end_transaction();
+		    void commit_transaction();
 
-		    //! Generate an RAII transaction management object
-		    scoped_transaction scoped_transaction_factory();
+				//! Rollback database to beginning of last transaction
+				void abort_transaction();
 
 
 		    // CREATE RECORDS -- implements a 'repository' interface
@@ -347,10 +322,6 @@ namespace transport
 		    //! SQLite database connexion
 		    sqlite3* db;
 
-		    //! Number of open clients on the database, used for keep track of when the
-		    //! database connexion can be closed
-		    unsigned int open_clients;
-
 			};
 
 
@@ -367,7 +338,7 @@ namespace transport
 			                                    std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
-			  db(nullptr), open_clients(0)
+			  db(nullptr)
 			{
 		    // supplied path should be a directory which exists
 		    if(!boost::filesystem::is_directory(path))
@@ -444,8 +415,7 @@ namespace transport
 			                                    std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
 			                                    std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
-			  db(nullptr),
-			  open_clients(0)
+			  db(nullptr)
 			{
 		    // check whether root directory for the repository already exists -- it shouldn't
 		    if(boost::filesystem::exists(path))
@@ -498,39 +468,38 @@ namespace transport
 			{
 				assert(this->db != nullptr);
 
-				if(this->open_clients == 0)
-					{
-				    sqlite3_operations::exec(this->db, "BEGIN TRANSACTION");
-					}
-
-				this->open_clients++;
+		    sqlite3_operations::exec(this->db, "BEGIN TRANSACTION");
 			}
 
 
 		// End transaction
 		template <typename number>
-		void repository_sqlite3<number>::end_transaction()
+		void repository_sqlite3<number>::commit_transaction()
 			{
 				assert(this->db != nullptr);
 
-		    if(this->open_clients <= 0) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_DATABASES_NOT_OPEN);
+		    sqlite3_operations::exec(this->db, "COMMIT");
+			}
 
-		    this->open_clients--;
 
-				if(this->open_clients == 0)
-					{
-				    sqlite3_operations::exec(this->db, "END TRANSACTION");
-					}
+		// Abort transaction
+		template <typename number>
+		void repository_sqlite3<number>::abort_transaction()
+			{
+				assert(this->db != nullptr);
+
+		    sqlite3_operations::exec(this->db, "ROLLBACK");
 			}
 
 
     template <typename number>
-    typename repository_sqlite3<number>::scoped_transaction repository_sqlite3<number>::scoped_transaction_factory()
+    transaction_manager repository_sqlite3<number>::transaction_factory()
 	    {
-        typename repository_sqlite3<number>::scoped_transaction::open_handler opener = std::bind(&repository_sqlite3<number>::begin_transaction, this);
-        typename repository_sqlite3<number>::scoped_transaction::close_handler closer = std::bind(&repository_sqlite3<number>::end_transaction, this);
+        transaction_manager::open_handler     opener   = std::bind(&repository_sqlite3<number>::begin_transaction, this);
+        transaction_manager::commit_handler   closer   = std::bind(&repository_sqlite3<number>::commit_transaction, this);
+        transaction_manager::rollback_handler rollback = std::bind(&repository_sqlite3<number>::abort_transaction, this);
 
-        return typename repository_sqlite3<number>::scoped_transaction(opener, closer);
+        return this->repository<number>::transaction_factory(opener, closer, rollback);
 	    }
 
 
@@ -555,13 +524,18 @@ namespace transport
         // commit entry to the database
         boost::filesystem::path document_path = boost::filesystem::path(store_root) / record.get_name();
 
-        {
-	        scoped_transaction scoped_xn = this->scoped_transaction_factory();
-	        storer(this->db, record.get_name(), document_path.string());
-        }
+		    // obtain a lock on the database
+		    // the transaction manager will roll back any changes if it is not committed
+        transaction_manager transaction = this->transaction_factory();
+
+        // store record in database
+        storer(transaction, this->db, record.get_name(), document_path.string());
 
         // store package on disk
-        this->commit_JSON_document(document_path, record);
+        this->commit_JSON_document(transaction, document_path, record);
+
+        // commit
+        transaction.commit();
 	    }
 
 
@@ -571,8 +545,15 @@ namespace transport
 		    // find existing record in the
         boost::filesystem::path document_path = finder(this->db, record.get_name());
 
+        // obtain a lock on the database
+        // the transaction manager will roll back any changes if it is not committed
+		    transaction_manager transaction = this->transaction_factory();
+
 		    // replace package on disk
-        this->commit_JSON_document(document_path, record);
+        this->commit_JSON_document(transaction, document_path, record);
+
+		    // commit
+		    transaction.commit();
 	    }
 
 
@@ -588,7 +569,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
 		    count_function counter = std::bind(&sqlite3_operations::count_packages, std::placeholders::_1, std::placeholders::_2);
-		    store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+		    store_function storer  = std::bind(&sqlite3_operations::store_package, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->package_store.string(), __CPP_TRANSPORT_REPO_PACKAGE_EXISTS);
 
         return new package_record<number>(ics, pkg);
@@ -611,7 +592,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_ics().get_name());
+        store_function storer  = std::bind(&sqlite3_operations::store_integration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_ics().get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new integration_task_record<number>(tk, pkg);
@@ -634,7 +615,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        store_function storer  = std::bind(&sqlite3_operations::store_output_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new output_task_record<number>(tk, pkg);
@@ -657,7 +638,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_tasks, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tk.get_parent_task()->get_name());
+        store_function storer  = std::bind(&sqlite3_operations::store_postintegration_task, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tk.get_parent_task()->get_name());
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->task_store.string(), __CPP_TRANSPORT_REPO_TASK_EXISTS);
 
         return new postintegration_task_record<number>(tk, pkg);
@@ -680,7 +661,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_products, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        store_function storer  = std::bind(&sqlite3_operations::store_product, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->product_store.string(), __CPP_TRANSPORT_REPO_PRODUCT_EXISTS);
 
         return new derived_product_record<number>(prod, pkg);
@@ -750,7 +731,7 @@ namespace transport
 	    {
         repository_record::handler_package pkg;
         count_function counter = std::bind(&sqlite3_operations::count_groups, std::placeholders::_1, std::placeholders::_2);
-        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, tn);
+        store_function storer  = std::bind(&sqlite3_operations::store_group<Payload>, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, tn);
         pkg.commit = std::bind(&repository_sqlite3<number>::commit_first, this, std::placeholders::_1, counter, storer, this->output_store.string(), __CPP_TRANSPORT_REPO_OUTPUT_EXISTS);
 
         typename output_group_record<Payload>::paths_group paths;

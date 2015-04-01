@@ -103,8 +103,10 @@ namespace transport
 
       protected:
 
-        //! Write a serialized JSON record to a file
-        void commit_JSON_document(const boost::filesystem::path& path, const repository_record& record);
+        //! Write a serialized JSON record to a file.
+		    //! Note that this requires a transaction_manager, so commits are not possible without
+		    //! opening an explicit transaction
+        void commit_JSON_document(transaction_manager& mgr, const boost::filesystem::path& path, const repository_record& record);
 
         //! Read a serialized JSON record from a file
         Json::Value deserialize_JSON_document(boost::filesystem::path& path);
@@ -129,7 +131,7 @@ namespace transport
 
 
     template <typename number>
-    void json_repository<number>::commit_JSON_document(const boost::filesystem::path& path, const repository_record& record)
+    void json_repository<number>::commit_JSON_document(transaction_manager& mgr, const boost::filesystem::path& path, const repository_record& record)
 	    {
         // serialize the record
         Json::Value root(Json::objectValue);
@@ -146,20 +148,18 @@ namespace transport
 
         std::ofstream out;
         out.open(abs_temporary.string().c_str(), std::ios_base::out | std::ios_base::trunc);
-        if(out.is_open() && !out.fail())
-	        {
-            out << root;
-            out.close();
-	        }
-        else
+        if(!out.is_open() || out.fail())
 	        {
             std::stringstream msg;
             msg << __CPP_TRANSPORT_REPO_COMMIT_FAILURE << " '" << record.get_name() << "'";
             throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	        }
 
-        // if this succeeded, remove any existing file and replace it with the new one
-        boost::filesystem::rename(abs_temporary, abs_record);
+        out << root;
+        out.close();
+
+        // if this succeeded, add this record to the transaction journal
+		    mgr.journal_deposit(abs_temporary, abs_record);
 	    }
 
 

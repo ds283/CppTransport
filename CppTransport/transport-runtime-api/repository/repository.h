@@ -13,6 +13,10 @@
 #include <memory>
 #include <functional>
 
+#include "transport-runtime-api/version.h"
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
+
 #include "transport-runtime-api/serialization/serializable.h"
 #include "transport-runtime-api/manager/instance_manager.h"
 
@@ -29,8 +33,8 @@
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
 #include "transport-runtime-api/repository/records/repository_records.h"
-
 #include "transport-runtime-api/repository/writers/writers.h"
+#include "transport-runtime-api/repository/transaction_manager.h"
 
 #include "boost/filesystem/operations.hpp"
 
@@ -105,6 +109,17 @@ namespace transport
 
         //! Get access mode
         const access_type& get_access_mode() const { return (this->access_mode); }
+
+
+		    // TRANSACTIONS
+
+      protected:
+
+		    //! Generate a transaction management object
+		    transaction_manager transaction_factory(transaction_manager::open_handler o, transaction_manager::commit_handler c, transaction_manager::rollback_handler r);
+
+		    //! Release resources after end of transaction
+		    void release_transaction();
 
 
 		    // CREATE RECORDS
@@ -291,6 +306,12 @@ namespace transport
         //! Cached derived-product-finder instance
         typename repository_finder<number>::derived_product_finder dprod_finder;
 
+
+		    // TRANSACTIONS
+
+        //! Number of open transactions on the database
+        unsigned int transactions;
+
 	    };
 
 
@@ -312,7 +333,8 @@ namespace transport
 	      message(m),
 	      pkg_finder(pf),
 	      tk_finder(tf),
-	      dprod_finder(dpf)
+	      dprod_finder(dpf),
+        transactions(0)
 	    {
 	    }
 
@@ -322,6 +344,29 @@ namespace transport
 	    {
         this->model_finder = f;
 	    }
+
+
+		// TRANSACTIONS
+
+
+		template <typename number>
+		transaction_manager repository<number>::transaction_factory(transaction_manager::open_handler o, transaction_manager::commit_handler c, transaction_manager::rollback_handler r)
+			{
+				if(this->transactions > 0) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, __CPP_TRANSPORT_REPO_TRANSACTION_UNDERWAY);
+				this->transactions++;
+
+				typename transaction_manager::release_handler releaser = std::bind(&repository<number>::release_transaction, this);
+
+				return transaction_manager(o, c, r, releaser);
+			}
+
+
+		template <typename number>
+		void repository<number>::release_transaction()
+			{
+				if(this->transactions == 0) throw runtime_exception(runtime_exception::REPOSITORY_TRANSACTION_ERROR, __CPP_TRANSPORT_REPO_TRANSACTION_OVER_RELEASE);
+				this->transactions--;
+			}
 
 
     // GENERATE WRITERS FOR TASKS
