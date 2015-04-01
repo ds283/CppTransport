@@ -63,12 +63,6 @@ namespace transport
         //! Get parent integration task
         integration_task<number>* get_parent_task() const { return(this->tk); }
 
-				//! Set whether to write data back to parent
-				bool get_write_back() const { return(this->write_back); }
-
-				//! Set whether to write data back to parent
-				void set_write_back(bool write) { this->write_back = write; }
-
 
 				// SERIALIZATION (implements a 'serializable' interface)
 
@@ -92,9 +86,6 @@ namespace transport
 
 				//! Parent integration task
 				integration_task<number>* tk;
-
-				//! Write data back to parent?
-				bool write_back;
 
 			};
 
