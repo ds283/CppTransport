@@ -35,6 +35,13 @@
 #include "boost/filesystem/operations.hpp"
 
 
+#define __CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF "output"
+#define __CPP_TRANSPORT_REPO_FAILURE_LEAF    "failed"
+#define __CPP_TRANSPORT_REPO_LOGDIR_LEAF     "logs"
+#define __CPP_TRANSPORT_REPO_TEMPDIR_LEAF    "tempfiles"
+#define __CPP_TRANSPORT_REPO_DATABASE_LEAF   "data.sqlite"
+
+
 namespace transport
 	{
 
@@ -137,22 +144,39 @@ namespace transport
         //! Enumerate the output groups available from a named integration task
         virtual std::list< std::shared_ptr< output_group_record<integration_payload> > > enumerate_integration_task_content(const std::string& name) = 0;
 
+		    //! Enumerate the output groups available for a named postintegration task
+		    virtual std::list< std::shared_ptr< output_group_record<postintegration_payload> > > enumerate_postintegration_task_content(const std::string& name) = 0;
+
 		    //! Enumerate the output groups available from a named output task
 		    virtual std::list< std::shared_ptr< output_group_record<output_payload> > > enumerate_output_task_content(const std::string& name) = 0;
 		    
 
-        // ADD CONTENT ASSOCIATED WITH A TASK
+        // GENERATE WRITERS FOR TASKS
+		    // The 'base' forms perform common tasks, using a suite of callbacks provided.
+		    // The repository<> class provides a default implementation, but it can be overridden
+		    // by an implementation if desired.
 
       public:
 
 		    //! Generate a writer object for new integration output
-		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
 
 		    //! Generate a writer object for new derived-content output
-		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
 
         //! Generate a writer object for new postintegration output
-        virtual std::shared_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker) = 0;
+        virtual std::shared_ptr< postintegration_writer<number> > new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker);
+
+      protected:
+
+        std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+                                                                                       typename integration_writer<number>::callback_group& callbacks);
+
+        std::shared_ptr <derived_content_writer<number>> base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+                                                                                      typename derived_content_writer<number>::callback_group& callbacks);
+
+        std::shared_ptr <postintegration_writer<number>> base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+                                                                                               typename postintegration_writer<number>::callback_group& callbacks);
 
 
         // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
@@ -160,7 +184,74 @@ namespace transport
       public:
 
         //! Find an output group for an integration task
-        virtual std::shared_ptr< output_group_record<integration_payload> > find_integration_task_output(const std::string& name, const std::list<std::string>& tags) = 0;
+        std::shared_ptr< output_group_record<integration_payload> > find_integration_task_output(const std::string& name, const std::list<std::string>& tags);
+
+		    //! Find an output group for a postintegration task
+		    std::shared_ptr< output_group_record<postintegration_payload> > find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags);
+
+
+        // STANDARD WRITER CALLBACKS
+
+      protected:
+
+        //! Advise that an output group has been committed
+        template <typename Payload>
+        void advise_commit(output_group_record<Payload>* group);
+
+        //! Advise that postintegration products have been committed to an output group
+        template <typename Payload>
+        void advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group);
+
+        //! Commit the products from an integration to the database
+        void close_integration_writer(integration_writer<number>& writer);
+
+        //! Rollback a failed integration
+        void abort_integration_writer(integration_writer<number>& writer);
+
+        //! Commit hte products from a postintegration to the database
+        void close_postintegration_writer(postintegration_writer<number>& writer);
+
+        //! Rollback a failed postintegration
+        void abort_postintegration_writer(postintegration_writer<number>& writer);
+
+        //! Commit the products from an output task to the database
+        void close_derived_content_writer(derived_content_writer<number>& writer);
+
+        //! Rollback a failed integration
+        void abort_derived_content_writer(derived_content_writer<number>& writer);
+
+
+		    // REPOSITORY RECORD FACTORIES -- USED TO OBTAIN REPOSITORY RECORD CLASSES FROM OTHER REPRESENTATIONS
+		    // A basic repository need only provide factories based on the real class hierarchy
+
+      protected:
+
+        //! Create a new package record from an explicit object
+        virtual package_record<number>* package_record_factory(const initial_conditions<number>& ics) = 0;
+
+        //! Create a new integration task record from an explicit object
+        virtual integration_task_record<number>* integration_task_record_factory(const integration_task<number>& tk) = 0;
+
+        //! Create a new output task record from an explicit object
+        virtual output_task_record<number>* output_task_record_factory(const output_task<number>& tk) = 0;
+
+        //! Create a postintegration task record from an explicit object
+        virtual postintegration_task_record<number>* postintegration_task_record_factory(const postintegration_task<number>& tk) = 0;
+
+        //! Create a new derived product record from explicit object
+        virtual derived_product_record<number>* derived_product_record_factory(const derived_data::derived_product<number>& prod) = 0;
+
+		    //! Create a new content group for an integration task
+		    virtual output_group_record<integration_payload>* integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+		                                                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+
+		    //! Create a new content group for a postintegration task
+		    virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+		                                                                                                      bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+
+		    //! Create a new content group for an output task
+		    virtual output_group_record<output_payload>* output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
+		                                                                                     bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 
         // PRIVATE DATA
@@ -230,6 +321,514 @@ namespace transport
     void repository<number>::set_model_finder(const typename instance_manager<number>::model_finder& f)
 	    {
         this->model_finder = f;
+	    }
+
+
+    // GENERATE WRITERS FOR TASKS
+
+
+    template <typename number>
+    std::shared_ptr< integration_writer<number> >
+    repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+	    {
+        typename integration_writer<number>::callback_group callbacks;
+        callbacks.commit = std::bind(&repository<number>::close_integration_writer, this, std::placeholders::_1);
+        callbacks.abort  = std::bind(&repository<number>::abort_integration_writer, this, std::placeholders::_1);
+
+        return this->base_new_integration_task_content(rec, tags, worker, callbacks);
+	    }
+
+
+    template <typename number>
+    std::shared_ptr< derived_content_writer<number> >
+    repository<number>::new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+	    {
+        typename derived_content_writer<number>::callback_group callbacks;
+        callbacks.commit = std::bind(&repository<number>::close_derived_content_writer, this, std::placeholders::_1);
+        callbacks.abort  = std::bind(&repository<number>::abort_derived_content_writer, this, std::placeholders::_1);
+
+        return this->base_new_output_task_content(rec, tags, worker, callbacks);
+	    }
+
+
+    template <typename number>
+    std::shared_ptr< postintegration_writer<number> >
+    repository<number>::new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker)
+	    {
+        typename postintegration_writer<number>::callback_group callbacks;
+        callbacks.commit        = std::bind(&repository<number>::close_postintegration_writer, this, std::placeholders::_1);
+        callbacks.abort         = std::bind(&repository<number>::abort_postintegration_writer, this, std::placeholders::_1);
+
+        return this->base_new_postintegration_task_content(rec, tags, worker, callbacks);
+	    }
+
+
+		template <typename number>
+		std::shared_ptr< integration_writer<number> >
+		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+		                                                      typename integration_writer<number>::callback_group& callbacks)
+			{
+		    // get current time
+		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+		    // construct paths for the various output files and directories.
+		    // We use the ISO form of the current time to label the output group directory.
+		    // This means the repository directory structure will be human-readable if necessary.
+		    std::string output_leaf = boost::posix_time::to_iso_string(now);
+
+		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+		    boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+
+		    // temporary stuff, location not recorded in the database
+		    boost::filesystem::path log_path  = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+		    boost::filesystem::path temp_path = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+
+		    // create directories
+		    boost::filesystem::create_directories(this->get_root_path() / output_path);
+		    boost::filesystem::create_directories(this->get_root_path() / log_path);
+		    boost::filesystem::create_directories(this->get_root_path() / temp_path);
+
+		    generic_writer::metadata_group metadata;
+		    metadata.tags          = tags;
+		    metadata.creation_time = now;
+
+		    generic_writer::paths_group paths;
+		    paths.root   = this->get_root_path();
+		    paths.output = output_path;
+		    paths.data   = sql_path;
+		    paths.log    = log_path;
+		    paths.temp   = temp_path;
+
+		    // integration_writer constructor takes a copy of the integration_task_record
+		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(rec, callbacks, metadata, paths, worker));
+			}
+
+
+    template <typename number>
+    std::shared_ptr< derived_content_writer<number> >
+    repository<number>::base_new_output_task_content(output_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+                                                     typename derived_content_writer<number>::callback_group& callbacks)
+	    {
+        // get current time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+        // construct paths for output files and directories
+        // We use the ISO form of the current time to label the output group directory.
+        // This means the repository directory structure is human-readable if necessary.
+        std::string output_leaf = boost::posix_time::to_iso_string(now);
+
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+
+        // temporary stuff, location not recorded in the database
+        boost::filesystem::path log_path  = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path temp_path = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+
+        // create directories
+        boost::filesystem::create_directories(this->get_root_path() / output_path);
+        boost::filesystem::create_directories(this->get_root_path() / log_path);
+        boost::filesystem::create_directories(this->get_root_path() / temp_path);
+
+        generic_writer::metadata_group metadata;
+        metadata.tags          = tags;
+        metadata.creation_time = now;
+
+        generic_writer::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = output_path;
+        paths.log    = log_path;
+        paths.temp   = temp_path;
+
+        return std::shared_ptr< derived_content_writer<number> >(new derived_content_writer<number>(rec, callbacks, metadata, paths, worker));
+	    }
+
+
+    template <typename number>
+    std::shared_ptr< postintegration_writer<number> >
+    repository<number>::base_new_postintegration_task_content(postintegration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+                                                              typename postintegration_writer<number>::callback_group& callbacks)
+	    {
+        // get current time
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+        // construct paths for output files and directories
+        std::string output_leaf = boost::posix_time::to_iso_string(now);
+
+        boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
+        boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
+
+        // temporary stuff, location not recorded in the database
+        boost::filesystem::path log_path    = output_path / __CPP_TRANSPORT_REPO_LOGDIR_LEAF;
+        boost::filesystem::path temp_path   = output_path / __CPP_TRANSPORT_REPO_TEMPDIR_LEAF;
+
+        // create directories
+        boost::filesystem::create_directories(this->get_root_path() / output_path);
+        boost::filesystem::create_directories(this->get_root_path() / log_path);
+        boost::filesystem::create_directories(this->get_root_path() / temp_path);
+
+        generic_writer::metadata_group metadata;
+        metadata.tags          = tags;
+        metadata.creation_time = now;
+
+        generic_writer::paths_group paths;
+        paths.root   = this->get_root_path();
+        paths.output = output_path;
+        paths.data   = sql_path;
+        paths.log    = log_path;
+        paths.temp   = temp_path;
+
+        return std::shared_ptr< postintegration_writer<number> >(new postintegration_writer<number>(rec, callbacks, metadata, paths, worker));
+	    }
+
+
+    // STANDARD WRITER CALLBACKS
+
+
+    template <typename number>
+    template <typename Payload>
+    void repository<number>::advise_commit(output_group_record<Payload>* group)
+	    {
+        std::ostringstream msg;
+
+        msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "'";
+
+        this->message(msg.str());
+	    }
+
+
+    template <typename number>
+    template <typename Payload>
+    void repository<number>::advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group)
+	    {
+        std::ostringstream msg;
+
+        msg << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_A << " '" << group->get_name() << "' "
+	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B << " '" << rec->get_name() << "' ("
+	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_C << " '" << group->get_task_name() << "')";
+
+        this->message(msg.str());
+	    }
+
+
+    template <typename number>
+    void repository<number>::close_integration_writer(integration_writer<number>& writer)
+	    {
+        integration_task_record<number>* rec = writer.get_record();
+        const std::list<std::string>& tags = writer.get_tags();
+        assert(rec != nullptr);
+
+        // set up notes for the new output record, if it exists
+        std::list<std::string> notes;
+        if(!writer.collect_statistics())
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_NOTE_NO_STATISTICS << " '" << rec->get_task()->get_model()->get_backend() << "'";
+            notes.push_back(msg.str());
+	        }
+
+        // create a new, empty output group record
+        std::unique_ptr< output_group_record<integration_payload> >
+	        output_record(this->integration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags));
+
+        // stamp output group with the correct 'created' time stamp
+        output_record->set_creation_time(writer.get_creation_time());
+        output_record->set_name_from_creation_time();
+
+        // populate output group with content from the writer
+        output_record->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
+        output_record->get_payload().set_container_path(writer.get_relative_container_path());
+        output_record->get_payload().set_metadata(writer.get_metadata());
+
+        // commit new output record
+        output_record->commit();
+
+        // add this output group to the integration task record
+        rec->add_new_output_group(output_record->get_name());
+        rec->update_last_edit_time();
+        rec->commit();
+
+        this->advise_commit(output_record.get());
+	    }
+
+
+    template <typename number>
+    void repository<number>::abort_integration_writer(integration_writer<number>& writer)
+	    {
+        boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+        if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+        if(boost::filesystem::is_directory(fail_path))
+	        {
+            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+            try
+	            {
+                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+	            }
+            catch(boost::filesystem::filesystem_error& xe)
+	            {
+                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	            }
+
+            std::ostringstream msg;
+
+            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+            msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
+	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
+
+            this->message(msg.str());
+	        }
+        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	    }
+
+
+    template <typename number>
+    void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer)
+	    {
+        // get repository record for postintegration task
+        postintegration_task_record<number>* rec = writer.get_record();
+        const std::list<std::string>& tags = writer.get_tags();
+
+        // get repository record for parent integration task
+        postintegration_task<number>* tk = rec->get_task();
+        assert(tk != nullptr);
+
+        integration_task<number>* ptk = tk->get_parent_task();
+        assert(ptk != nullptr);
+
+        // get repository record for content group we have used to computation
+        std::shared_ptr< output_group_record<integration_payload> > parent_content_record = find_integration_task_output(ptk->get_name(), tags);
+
+        // get source and destination data containers
+        boost::filesystem::path source_container = writer.get_abs_container_path();
+        boost::filesystem::path dest_container   = parent_content_record->get_abs_repo_path() / parent_content_record->get_payload().get_container_path();
+
+        // create a new, empty output group record
+        std::list<std::string> notes;
+        std::unique_ptr< output_group_record<postintegration_payload> >
+                               output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags));
+
+        // stamp output group with the correct 'created' time stamp
+        output_record->set_creation_time(writer.get_creation_time());
+        output_record->set_name_from_creation_time();
+
+        // populate output group with content from the writer
+        output_record->get_payload().set_container_path(writer.get_relative_container_path());
+        output_record->get_payload().set_metadata(writer.get_metadata());
+
+        // commit new output record
+        output_record->commit();
+
+        // add this output group to the integration task record
+        rec->add_new_output_group(output_record->get_name());
+        rec->update_last_edit_time();
+        rec->commit();
+
+        this->advise_commit(output_record.get());
+
+        zeta_twopf_task<number>* z2pf = nullptr;
+        zeta_threepf_task<number>* z3pf = nullptr;
+        fNL_task<number>* zfNL = nullptr;
+
+        // write back postintegration task output into the parent container if the task stipulates that
+        if(tk->get_write_back())
+	        {
+            if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
+	            {
+                writer.merge_zeta_twopf(source_container, dest_container);
+                parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
+	            }
+            else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
+	            {
+                writer.merge_zeta_twopf(source_container, dest_container);
+                writer.merge_zeta_threepf(source_container, dest_container);
+                writer.merge_zeta_redbsp(source_container, dest_container);
+                parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
+                parent_content_record->get_payload().get_precomputed_products().add_zeta_threepf();
+                parent_content_record->get_payload().get_precomputed_products().add_zeta_redbsp();
+	            }
+            else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
+	            {
+                writer.merge_fNL(source_container, dest_container, zfNL->get_template());
+
+                switch(zfNL->get_template())
+	                {
+                    case derived_data::fNLlocal:
+	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_local();
+                    break;
+
+                    case derived_data::fNLequi:
+	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_equi();
+                    break;
+
+                    case derived_data::fNLortho:
+	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_ortho();
+                    break;
+
+                    case derived_data::fNLDBI:
+	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_DBI();
+                    break;
+
+                    default:
+	                    assert(false);
+                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+	                }
+	            }
+
+            // update and commit parent group record
+            parent_content_record->update_last_edit_time();
+            parent_content_record->commit();
+
+            this->advise_commit(rec, parent_content_record.get());
+	        }
+	    }
+
+
+    template <typename number>
+    void repository<number>::abort_postintegration_writer(postintegration_writer<number>& writer)
+	    {
+        boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+        if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+        if(boost::filesystem::is_directory(fail_path))
+	        {
+            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+            try
+	            {
+                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+	            }
+            catch(boost::filesystem::filesystem_error& xe)
+	            {
+                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	            }
+
+            std::ostringstream msg;
+
+            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+            msg << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
+	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C;
+
+            this->message(msg.str());
+	        }
+        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	    }
+
+
+    template <typename number>
+    void repository<number>::close_derived_content_writer(derived_content_writer<number>& writer)
+	    {
+        output_task_record<number>* rec = writer.get_record();
+        const std::list<std::string>& tags = writer.get_tags();
+        assert(rec != nullptr);
+
+        // create a new, empty output group record
+        std::unique_ptr< output_group_record<output_payload> >
+	        output_record(this->output_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, std::list<std::string>(), tags));
+
+        // stamp output group with the correct 'created' time stamp
+        output_record->set_creation_time(writer.get_creation_time());
+        output_record->set_name_from_creation_time();
+
+        // populate output group with content from the writer
+        const std::list<derived_content>& content = writer.get_content();
+        for(std::list<derived_content>::const_iterator t = content.begin(); t != content.end(); t++)
+	        {
+            output_record->get_payload().add_derived_content(*t);
+	        }
+        output_record->get_payload().set_metadata(writer.get_metadata());
+
+        // commit new output record
+        output_record->commit();
+
+        // add this output group to the integration task record
+        rec->add_new_output_group(output_record->get_name());
+        rec->update_last_edit_time();
+        rec->commit();
+
+        this->advise_commit(output_record.get());
+	    }
+
+
+    template <typename number>
+    void repository<number>::abort_derived_content_writer(derived_content_writer<number>& writer)
+	    {
+        boost::filesystem::path fail_path = this->get_root_path() / __CPP_TRANSPORT_REPO_FAILURE_LEAF;
+
+        if(!boost::filesystem::exists(fail_path)) boost::filesystem::create_directories(fail_path);
+        if(boost::filesystem::is_directory(fail_path))
+	        {
+            boost::filesystem::path abs_dest = fail_path / writer.get_relative_output_path().leaf();
+
+            try
+	            {
+                boost::filesystem::rename(writer.get_abs_output_path(), abs_dest);
+	            }
+            catch(boost::filesystem::filesystem_error& xe)
+	            {
+                throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	            }
+
+            std::ostringstream msg;
+
+            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
+
+            msg << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
+	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C;
+
+            this->message(msg.str());
+	        }
+        else throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_CANT_WRITE_FAILURE_PATH);
+	    }
+
+
+    // FIND AN OUTPUT GROUP MATCHING DEFINED TAGS
+
+
+    template<typename number>
+    std::shared_ptr< output_group_record<integration_payload> >
+    repository<number>::find_integration_task_output(const std::string& name, const std::list<std::string>& tags)
+	    {
+        // search for output groups associated with this task
+        std::list< std::shared_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
+
+        // remove items from the list which have mismatching tags
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> > group) { return(group.get()->check_tags(tags)); } );
+
+        if(output.empty())
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+	        }
+
+        return(output.front());
+	    }
+
+
+    template<typename number>
+    std::shared_ptr< output_group_record<postintegration_payload> >
+    repository<number>::find_postintegration_task_output(const std::string& name, const std::list<std::string>& tags)
+	    {
+        // search for output groups associated with this task
+        std::list< std::shared_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
+
+        // remove items from the list which have mismatching tags
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> > group) { return(group.get()->check_tags(tags)); } );
+
+        if(output.empty())
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS << " '" << name << "'";
+            throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+	        }
+
+        return(output.front());
 	    }
 
 

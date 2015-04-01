@@ -117,7 +117,7 @@ int main(int argc, char* argv[])
 
     transport::repository_creation_key key;
 
-    transport::json_interface_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
+    transport::json_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(0, nullptr, repo);
@@ -178,10 +178,10 @@ int main(int argc, char* argv[])
 
 
     // construct zeta threepf versions
-    transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3, true);
-    transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", tk3, transport::derived_data::fNLlocal, true);
-    transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", tk3, transport::derived_data::fNLequi, true);
-    transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", tk3, transport::derived_data::fNLortho, true);
+    transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
+    transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", tk3, transport::derived_data::fNLlocal);
+    transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", tk3, transport::derived_data::fNLequi);
+    transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", tk3, transport::derived_data::fNLortho);
 
     std::cout << tk3;
 

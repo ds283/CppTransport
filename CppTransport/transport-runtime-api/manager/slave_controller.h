@@ -195,7 +195,7 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_interface_repository<number>* repo;
+		    json_repository<number>* repo;
 
 		    //! Data manager instance
 		    data_manager<number>* data_mgr;

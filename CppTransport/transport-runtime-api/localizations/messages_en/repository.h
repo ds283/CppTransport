@@ -25,10 +25,10 @@
 #define __CPP_TRANSPORT_REPO_PRODUCT_MISSING             "Repository error: missing record for derived product"
 #define __CPP_TRANSPORT_REPO_OUTPUT_MISSING              "Repository error: missing record for output"
 
-#define __CPP_TRANSPORT_REPO_TASK_DUPLICATE              "Repository error: duplicate task"
-#define __CPP_TRANSPORT_REPO_PACKAGE_DUPLICATE           "Repository error: duplicate package"
-#define __CPP_TRANSPORT_REPO_PRODUCT_DUPLICATE           "Repository error: duplicate derived product"
-#define __CPP_TRANSPORT_REPO_CONTENT_DUPLICATE           "Repository error: duplicate content group"
+#define __CPP_TRANSPORT_REPO_TASK_DUPLICATE              "Repository error: attempt to add record for already existing task"
+#define __CPP_TRANSPORT_REPO_PACKAGE_DUPLICATE           "Repository error: attempt to add record for already existing package"
+#define __CPP_TRANSPORT_REPO_PRODUCT_DUPLICATE           "Repository error: attempt to add record for already existing derived product"
+#define __CPP_TRANSPORT_REPO_CONTENT_DUPLICATE           "Repository error: attempt to add record for already existing content group"
 
 #define __CPP_TRANSPORT_REPO_COMMIT_FAILURE              "Repository error: could not write database record for"
 #define __CPP_TRANSPORT_REPO_DESERIALIZE_FAILURE         "Repository error: could not read database record for"
@@ -112,6 +112,7 @@
 #define __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET     "Repository error: fNL merger unset in writer object"
 
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT "Repository error: Attempt to enumerate derived contents for non-postintegration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
 
 #define __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN     "Repository error: task named in output task is not of integration-type"

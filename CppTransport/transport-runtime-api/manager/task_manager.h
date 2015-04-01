@@ -11,7 +11,7 @@
 
 #include "transport-runtime-api/manager/instance_manager.h"
 
-#include "transport-runtime-api/repository/json_repository_interface.h"
+#include "transport-runtime-api/repository/json_repository.h"
 
 #include "master_controller.h"
 #include "slave_controller.h"
@@ -25,7 +25,7 @@ namespace transport
   {
 
     //! Task manager is a managed interface to CppTransport's integration and output stacks,
-    //! relying on a JSON-aware repository interface 'json_interface_repository'
+    //! relying on a JSON-aware repository interface 'json_repository'
     //! to handle storage and serialization, and MPI to handle task communication.
     template <typename number>
     class task_manager: public instance_manager<number>
@@ -42,7 +42,7 @@ namespace transport
                      unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
 
         //! Construct a task manager using a previously-constructed repository object. Usually this will be used only when creating a new repository.
-        task_manager(int argc, char* argv[], json_interface_repository<number>* r,
+        task_manager(int argc, char* argv[], json_repository<number>* r,
                      unsigned int bcp=__CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
                      unsigned int pcp=__CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
                      unsigned int zcp=__CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE);
@@ -64,7 +64,7 @@ namespace transport
       public:
 
 		    //! Return handle to repository
-		    json_interface_repository<number>* get_repository();
+		    json_repository<number>* get_repository();
 
 
         // INTERFACE -- ERROR REPORTING
@@ -132,7 +132,7 @@ namespace transport
 
 
     template <typename number>
-    task_manager<number>::task_manager(int argc, char* argv[], json_interface_repository<number>* r, unsigned int bcp, unsigned int pcp, unsigned int zcp)
+    task_manager<number>::task_manager(int argc, char* argv[], json_repository<number>* r, unsigned int bcp, unsigned int pcp, unsigned int zcp)
       : instance_manager<number>(),
         environment(argc, argv),
         // note it is safe to assume environment and world have been constructed when the constructor for
@@ -175,7 +175,7 @@ namespace transport
 
 
 		template <typename number>
-		json_interface_repository<number>* task_manager<number>::get_repository()
+		json_repository<number>* task_manager<number>::get_repository()
 			{
 				assert(this->repo != nullptr);
 

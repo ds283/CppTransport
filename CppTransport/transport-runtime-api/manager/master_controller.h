@@ -22,7 +22,7 @@
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
-#include "transport-runtime-api/repository/json_repository_interface.h"
+#include "transport-runtime-api/repository/json_repository.h"
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/manager/master_scheduler.h"
@@ -156,7 +156,7 @@ namespace transport
 
 				//! construct a master controller object with a supplied repository
 				master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-				                  json_interface_repository<number>* r,
+				                  json_repository<number>* r,
 				                  error_callback err, warning_callback warn, message_callback msg,
 				                  unsigned int bcp = __CPP_TRANSPORT_DEFAULT_BATCHER_STORAGE,
 				                  unsigned int pcp = __CPP_TRANSPORT_DEFAULT_PIPE_STORAGE,
@@ -309,7 +309,7 @@ namespace transport
 		    // RUNTIME AGENTS
 
 		    //! Repository manager instance
-		    json_interface_repository<number>* repo;
+		    json_repository<number>* repo;
 
 		    //! Data manager instance
 		    data_manager<number>* data_mgr;
@@ -367,7 +367,7 @@ namespace transport
 
     template <typename number>
     master_controller<number>::master_controller(boost::mpi::environment& e, boost::mpi::communicator& w,
-                                           json_interface_repository<number>* r,
+                                           json_repository<number>* r,
                                            error_callback err, warning_callback warn, message_callback msg,
                                            unsigned int bcp, unsigned int pcp, unsigned int zcp)
 	    : environment(e),
