@@ -19,7 +19,6 @@
 
 
 #define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
-#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK "write-back"
 
 #define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE               "template"
 #define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL         "local"
@@ -45,7 +44,7 @@ namespace transport
 		  public:
 
 				//! Construct a named postintegration_task with supplied parent integration_task
-				postintegration_task(const std::string& nm, const integration_task<number>& t, bool write=false);
+				postintegration_task(const std::string& nm, const integration_task<number>& t);
 
 				//! deserialization constructor
 				postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -109,10 +108,9 @@ namespace transport
 
 
 		template <typename number>
-		postintegration_task<number>::postintegration_task(const std::string& nm, const integration_task<number>& t, bool write)
+		postintegration_task<number>::postintegration_task(const std::string& nm, const integration_task<number>& t)
 			: task<number>(nm),
         tk(dynamic_cast<integration_task<number>*>(t.clone())),
-				write_back(write)
 			{
 				assert(tk != nullptr);
 			}
@@ -121,8 +119,7 @@ namespace transport
 		template <typename number>
 		postintegration_task<number>::postintegration_task(const postintegration_task<number>& obj)
 			: task<number>(obj),
-			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone())),
-				write_back(obj.write_back)
+			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
 			{
 				assert(tk != nullptr);
 			}
@@ -135,9 +132,6 @@ namespace transport
 			{
 				// deserialize and reconstruct parent integration task
 		    std::string tk_name = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
-
-				// deserialize write-back status
-		    write_back = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK].asBool();
 
 		    std::unique_ptr< task_record<number> > record(finder(tk_name));
 		    assert(record.get() != nullptr);
@@ -164,9 +158,6 @@ namespace transport
 			{
 				// serialize parent integration task
 				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->tk->get_name();
-
-				// serialize write-back status
-				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_WRITE_BACK] = this->write_back;
 			}
 
 
