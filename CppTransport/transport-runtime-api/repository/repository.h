@@ -632,57 +632,54 @@ namespace transport
         zeta_threepf_task<number>* z3pf = nullptr;
         fNL_task<number>* zfNL = nullptr;
 
-        // write back postintegration task output into the parent container if the task stipulates that
-        if(tk->get_write_back())
-	        {
-            if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
-	            {
-                writer.merge_zeta_twopf(source_container, dest_container);
-                parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
-	            }
-            else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
-	            {
-                writer.merge_zeta_twopf(source_container, dest_container);
-                writer.merge_zeta_threepf(source_container, dest_container);
-                writer.merge_zeta_redbsp(source_container, dest_container);
-                parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
-                parent_content_record->get_payload().get_precomputed_products().add_zeta_threepf();
-                parent_content_record->get_payload().get_precomputed_products().add_zeta_redbsp();
-	            }
-            else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
-	            {
-                writer.merge_fNL(source_container, dest_container, zfNL->get_template());
+        // write back postintegration task output into the parent container
+        if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
+          {
+            writer.merge_zeta_twopf(source_container, dest_container);
+            parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
+          }
+        else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
+          {
+            writer.merge_zeta_twopf(source_container, dest_container);
+            writer.merge_zeta_threepf(source_container, dest_container);
+            writer.merge_zeta_redbsp(source_container, dest_container);
+            parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
+            parent_content_record->get_payload().get_precomputed_products().add_zeta_threepf();
+            parent_content_record->get_payload().get_precomputed_products().add_zeta_redbsp();
+          }
+        else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
+          {
+            writer.merge_fNL(source_container, dest_container, zfNL->get_template());
 
-                switch(zfNL->get_template())
-	                {
-                    case derived_data::fNLlocal:
-	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_local();
-                    break;
+            switch(zfNL->get_template())
+              {
+                case derived_data::fNLlocal:
+                  parent_content_record->get_payload().get_precomputed_products().add_fNL_local();
+                break;
 
-                    case derived_data::fNLequi:
-	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_equi();
-                    break;
+                case derived_data::fNLequi:
+                  parent_content_record->get_payload().get_precomputed_products().add_fNL_equi();
+                break;
 
-                    case derived_data::fNLortho:
-	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_ortho();
-                    break;
+                case derived_data::fNLortho:
+                  parent_content_record->get_payload().get_precomputed_products().add_fNL_ortho();
+                break;
 
-                    case derived_data::fNLDBI:
-	                    parent_content_record->get_payload().get_precomputed_products().add_fNL_DBI();
-                    break;
+                case derived_data::fNLDBI:
+                  parent_content_record->get_payload().get_precomputed_products().add_fNL_DBI();
+                break;
 
-                    default:
-	                    assert(false);
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
-	                }
-	            }
+                default:
+                  assert(false);
+                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
+              }
+          }
 
-            // update and commit parent group record
-            parent_content_record->update_last_edit_time();
-            parent_content_record->commit();
+        // update and commit parent group record
+        parent_content_record->update_last_edit_time();
+        parent_content_record->commit();
 
-            this->advise_commit(rec, parent_content_record.get());
-	        }
+        this->advise_commit(rec, parent_content_record.get());
 	    }
 
 
