@@ -321,11 +321,11 @@ int main(int argc, char* argv[])
     tensor_twopf_group.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
     transport::derived_data::r_time_series<double> r_group =
-	                                                   transport::derived_data::r_time_series<double>(tk3, transport::derived_data::filter::time_filter(timeseries_filter),
+	                                                   transport::derived_data::r_time_series<double>(ztk3, transport::derived_data::filter::time_filter(timeseries_filter),
 	                                                                                                  transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
 
     transport::derived_data::r_wavenumber_series<double> r_spectrum_group =
-	                                                         transport::derived_data::r_wavenumber_series<double>(tk3, transport::derived_data::filter::time_filter(time_config_filter),
+	                                                         transport::derived_data::r_wavenumber_series<double>(ztk3, transport::derived_data::filter::time_filter(time_config_filter),
 	                                                                                                              transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_filter));
 
 
