@@ -148,10 +148,13 @@ namespace transport
 		    std::unique_ptr< task_record<number> > record(finder(tk_name));
 		    assert(record.get() != nullptr);
 
-		    if(record->get_type() != task_record<number>::integration || record->get_type() != task_record<number>::postintegration)
-			    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_INTGRTN);
-
 				ptk = dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone());
+				if(ptk == nullptr)
+					{
+				    std::stringstream msg;
+						msg << __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE << " '" << tk_name << "'";
+						throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
+					}
 			}
 
 

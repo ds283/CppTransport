@@ -82,20 +82,14 @@
 #define __CPP_TRANSPORT_REPO_FOR_TASK                    "while processing task"
 #define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: Unexpected job type in 'task_manager'"
 #define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
-#define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETTASK     "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'integration_writer'"
-#define __CPP_TRANSPORT_REPO_DERIVED_WRITER_UNSETTASK    "Repository error: Attempt to read an unset 'data_manager' taskfile handle in 'derived_content_writer'"
 #define __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Repository error: Aggregator unset in writer object"
-#define __CPP_TRANSPORT_REPO_WRITER_TWOPF_MERGER_UNSET   "Repository error: zeta twopf merger unset in writer object"
-#define __CPP_TRANSPORT_REPO_WRITER_THREEPF_MERGER_UNSET "Repository error: zeta threepf merger unset in writer object"
-#define __CPP_TRANSPORT_REPO_WRITER_REDBSP_MERGER_UNSET  "Repository error: zeta reduced bispectrum merger unset in writer object"
-#define __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET     "Repository error: fNL merger unset in writer object"
 
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT "Repository error: Attempt to enumerate derived contents for non-postintegration task"
 #define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
 
-#define __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN     "Repository error: task named in output task is not of integration-type"
-#define __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_INTGRTN       "Repository error: task named in zeta task is not of integration-type"
+#define __CPP_TRANSPORT_REPO_TASK_NOT_INTEGRATION        "Repository error: derived product requires an integration task"
+#define __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE     "Repository error: task named in zeta task is not of derivable-type"
 #define __CPP_TRANSPORT_REPO_NO_MATCHING_OUTPUT_GROUPS   "Repository error: no matching output groups for task"
 
 #define __CPP_TRANSPORT_REPO_TASK_DESERIALIZE_FAIL       "Repository error: failed to deserialize task"
