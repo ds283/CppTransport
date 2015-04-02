@@ -46,10 +46,10 @@ namespace transport
 		      public:
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
-		        void apply_default_labels();
+		        virtual void apply_default_labels(bool x_label_set=true, bool y_label_set=true, bool title_set=true) override;
 
 		        //! (re-)set a default list of settings
-		        void apply_default_settings();
+		        virtual void apply_default_settings() override;
 
 			    };
 
@@ -84,15 +84,18 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series_plot<number>::apply_default_labels()
+		    void wavenumber_series_plot<number>::apply_default_labels(bool x_label, bool y_label, bool title)
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
 
-		        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_LATEX);
-		        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_NOLATEX);
+				    if(x_label)
+					    {
+				        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_LATEX);
+				        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_NOLATEX);
+					    }
 
-		        this->clear_y_label_text();
-		        this->clear_title_text();
+		        if(y_label) this->clear_y_label_text();
+		        if(title) this->clear_title_text();
 			    }
 
 

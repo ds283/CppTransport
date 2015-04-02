@@ -34,6 +34,9 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND        "legend"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS    "legend-position"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND   "dash-second-axis"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET   "x-label-set"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET   "y-label-set"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET     "title-set"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR     "top-right"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR     "bottom-right"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL     "bottom-left"
@@ -87,7 +90,10 @@ namespace transport
 								legend(false),
 								position(top_right),
 								typeset_with_LaTeX(false),
-								dash_second_axis(false)
+								dash_second_axis(false),
+								x_label_set(false),
+								y_label_set(false),
+								title_set(false)
 			        {
 								if(this->filename.extension().string() != ".pdf" &&
 									 this->filename.extension().string() != ".png" &&
@@ -109,6 +115,17 @@ namespace transport
 		        line_plot2d(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder);
 
 		        virtual ~line_plot2d() = default;
+
+
+		        // SETTING DEFAULTS
+
+		      public:
+
+		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
+		        virtual void apply_default_labels(bool x_label, bool y_label, bool title) {}
+
+		        //! (re-)set a default list of settings
+		        virtual void apply_default_settings() {}
 
 
 				    // GENERATE PLOT -- implements a 'derived_product' interface
@@ -164,6 +181,7 @@ namespace transport
 		                this->x_label_text = text;
 		                this->x_label = true;
 			            }
+		            this->x_label_set = true;
 			        }
 		        //! clear x-axis label text
 		        void clear_x_label_text() { this->x_label_text.clear(); }
@@ -187,6 +205,7 @@ namespace transport
 		                this->y_label_text = text;
 		                this->y_label = true;
 			            }
+				        this->y_label_set = true;
 			        }
 		        //! clear y-axis label text
 		        void clear_y_label_text() { this->y_label_text.clear(); }
@@ -210,6 +229,7 @@ namespace transport
 		                this->title_text = text;
 		                this->title = true;
 			            }
+				        this->title_set = true;
 			        }
 				    //! clear title text
 				    void clear_title_text() { this->title_text.clear(); }
@@ -227,7 +247,7 @@ namespace transport
 				    //! get typeset with LaTeX setting
 				    bool get_typeset_with_LaTeX() const { return(this->typeset_with_LaTeX); }
 				    //! set typeset with LaTeX setting
-				    void set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; }
+				    void set_typeset_with_LaTeX(bool g) { this->typeset_with_LaTeX = g; this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); }
 
 				    //! get dash second axis
 				    bool get_dash_second_axis() const { return(this->dash_second_axis); }
@@ -314,6 +334,11 @@ namespace transport
             //! path to Python interpreter
             boost::filesystem::path python_path;
 
+				    //! which labels have been explicitly set?
+				    bool x_label_set;
+				    bool y_label_set;
+				    bool title_set;
+
 			    };
 
 
@@ -331,6 +356,9 @@ namespace transport
 				    title_text       = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT].asString();
 				    legend           = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND].asBool();
 				    dash_second_axis = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND].asBool();
+						x_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET].asBool();
+						y_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET].asBool();
+						title_set        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET].asBool();
 
 		        std::string leg_pos = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS].asString();
 
@@ -717,6 +745,9 @@ namespace transport
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT]  = this->title_text;
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND]      = this->legend;
 		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND] = this->dash_second_axis;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET] = this->x_label_set;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET] = this->y_label_set;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET]   = this->title_set;
 
 		        switch(this->position)
 			        {
