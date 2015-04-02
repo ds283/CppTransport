@@ -830,6 +830,8 @@ namespace transport
 			        break;
 			    }
 
+		    this->type = none_attached;
+
         this->time_config_cache_table = nullptr;
         this->twopf_kconfig_cache_table = nullptr;
         this->threepf_kconfig_cache_table = nullptr;
