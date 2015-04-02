@@ -753,7 +753,7 @@ namespace transport
         if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
         // work out what sort of content group we are trying to attach
-        integration_task<number>    * itk = nullptr;
+        integration_task<number>* itk     = nullptr;
         postintegration_task<number>* ptk = nullptr;
 
         if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
@@ -770,7 +770,7 @@ namespace transport
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
 		            << " (from integration task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
 	        }
-        else if((ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)      // trying to attach to a postintegration content group
+        else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
 	        {
             this->type                           = postintegration_attached;
             this->attached_postintegration_group = this->utilities.postintegration_attach(this, this->utilities.postintegration_finder, tk->get_name(), tags);
