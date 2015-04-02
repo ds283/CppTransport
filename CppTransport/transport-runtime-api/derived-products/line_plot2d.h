@@ -78,7 +78,7 @@ namespace transport
 				    //! the maximum number of value types in the collection to two,
 				    //! because that's as many different y-axes as we can have on the plot.
 		        line_plot2d(const std::string& name, const boost::filesystem::path& filename)
-		          : line_collection<number>(name, filename, true, 2),
+		          : line_collection<number>(name, filename),
 								reverse_x(false),
 								reverse_y(false),
 								x_label(false),
@@ -373,6 +373,13 @@ namespace transport
 				    std::vector< std::vector< typename line_collection<number>::output_line > > binned_lines;
 				    std::vector< value_type > bin_types;
 						this->bin_lines(output_lines, binned_lines, bin_types);
+
+						if(binned_lines.size() > 2)
+							{
+								BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error) << "!! line_plot2d: more than two y-value types; unplottable values have been discarded";
+								binned_lines.resize(2);
+								bin_types.resize(2);
+							}
 
 						// generate plot
 				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types);

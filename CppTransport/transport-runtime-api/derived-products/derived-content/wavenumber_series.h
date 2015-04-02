@@ -58,7 +58,7 @@ namespace transport
           public:
 
 		        //! Basic user-facing constructor
-		        wavenumber_series(const integration_task<number>& tk, filter::time_filter tfilter);
+		        wavenumber_series(const derivable_task<number>& tk, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
 		        wavenumber_series(Json::Value& reader);
@@ -104,7 +104,7 @@ namespace transport
 
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
-		    wavenumber_series<number>::wavenumber_series(const integration_task<number>& tk, filter::time_filter tfilter)
+		    wavenumber_series<number>::wavenumber_series(const derivable_task<number>& tk, filter::time_filter tfilter)
           : derived_line<number>(tk)
 			    {
 				    // set up list of serial numbers corresponding to the sample times for this derived line

@@ -53,26 +53,11 @@ namespace transport
         //! Define an aggregation callback object. Used to aggregate results from worker processes
         typedef std::function<bool(postintegration_writer<number>&, const std::string&)> aggregate_callback;
 
-        //! Callback for merging postintegration correlation-function output between data containers
-        typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&)> merge_callback;
-
-        //! Callback for merging postintegration fNL output between data containers
-        typedef std::function<void(const boost::filesystem::path&, const boost::filesystem::path&, derived_data::template_type)> fNL_merge_callback;
-
         class callback_group
 	        {
           public:
             commit_callback commit;
             abort_callback  abort;
-	        };
-
-        class merge_group
-	        {
-          public:
-            merge_callback     zeta_twopf;
-            merge_callback     zeta_threepf;
-            merge_callback     zeta_redbsp;
-            fNL_merge_callback fNL;
 	        };
 
 
@@ -112,24 +97,6 @@ namespace transport
         void commit() { this->callbacks.commit(*this); this->committed = true; }
 
 
-        // MERGE CONTAINER OUTPUT
-
-        //! assign merge handlers
-        void set_merge_handlers(const merge_group& d) { this->mergers = d; }
-
-        //! merge zeta twopf
-        void merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
-
-        //! merge zeta threepf
-        void merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest);
-
-        //! merge zeta reduced bispectrum
-        void merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest);
-
-        //! merge fNL_local
-        void merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type);
-
-
         // METADATA
 
       public:
@@ -142,6 +109,14 @@ namespace transport
 
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
+
+
+		    // CONTENT
+
+      public:
+
+		    //! Return contents
+		    precomputed_products& get_products() { return(this->contents); }
 
 
         // INTERNAL DATA
@@ -169,10 +144,10 @@ namespace transport
         output_metadata metadata;
 
 
-        // MERGE CALLBACKS
+		    // CONTENT TAGS
 
-        //! merge callbacks
-        merge_group mergers;
+		    //! record products associated with this writer
+		    precomputed_products contents;
 
 	    };
 
@@ -182,8 +157,7 @@ namespace transport
 
     template <typename number>
     postintegration_writer<number>::postintegration_writer(postintegration_task_record<number>* rec, const typename postintegration_writer<number>::callback_group& c,
-                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
-                                                           unsigned int w)
+                                                           const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
 	    : generic_writer(m, p, w),
 	      callbacks(c),
 	      aggregator(nullptr),
@@ -217,58 +191,6 @@ namespace transport
 	        }
 
         return this->aggregator(*this, product);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_twopf)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_TWOPF_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_twopf(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_threepf)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_THREEPF_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_threepf(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	    {
-        if(!this->mergers.zeta_redbsp)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_REDBSP_MERGER_UNSET);
-	        }
-
-        this->mergers.zeta_redbsp(source, dest);
-	    }
-
-
-		template <typename number>
-    void postintegration_writer<number>::merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
-	    {
-        if(!this->mergers.fNL)
-	        {
-            assert(false);
-            throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_REPO_WRITER_FNL_MERGER_UNSET);
-	        }
-
-        this->mergers.fNL(source, dest, type);
 	    }
 
 	}

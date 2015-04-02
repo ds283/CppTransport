@@ -31,7 +31,12 @@
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_OUTPUT            "output"
 #define __CPP_TRANSPORT_OUTPUT_ELEMENT_TAGS              "tags"
 
+#define __CPP_TRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL        "Internal error: expected zeta_twopf_list_task parent to be castable to twopf_list_task, but dynamic cast failed"
+#define __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL           "Internal error: expected zeta_threepf_task parent to be castable to threepf_task, but dynamic cast failed"
+
 #define __CPP_TRANSPORT_FNL_TASK_UNKNOWN_TEMPLATE        "Internal error: unknown bispectrum template"
+
+#define __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE          "fNL_task: can't construct fNL product from non-integrable task"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASKS_H

@@ -8,7 +8,19 @@
 #define __zeta_tasks_H_
 
 
+#include <assert.h>
+#include <iostream>
+#include <iomanip>
+#include <array>
+#include <vector>
+#include <list>
+#include <sstream>
+#include <stdexcept>
+#include <functional>
+
+
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/derivable_task.h"
 #include "transport-runtime-api/tasks/integration_tasks.h"
 #include "transport-runtime-api/tasks/task_configurations.h"
 
@@ -36,7 +48,7 @@ namespace transport
 		//! an integration to produce zeta correlation functions and other derived products.
 		//! The more specialized two- and three-pf zeta tasks are derived from it.
 		template <typename number>
-		class postintegration_task: public task<number>
+		class postintegration_task: public derivable_task<number>
 			{
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -44,7 +56,7 @@ namespace transport
 		  public:
 
 				//! Construct a named postintegration_task with supplied parent integration_task
-				postintegration_task(const std::string& nm, const integration_task<number>& t);
+				postintegration_task(const std::string& nm, const derivable_task<number>& t);
 
 				//! deserialization constructor
 				postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -56,12 +68,21 @@ namespace transport
 				virtual ~postintegration_task();
 
 
+		    // INTERFACE - implements a 'derivable task' interface
+
+		  public:
+
+		    //! Get vector of time configurations to store; in a postintegration task, this is inherited from our parent,
+				//! which may itself inherit from its parent, and so on
+		    virtual const std::vector<time_config>& get_time_config_list() const override { return(this->ptk->get_time_config_list()); }
+
+
         // INTERFACE
 
       public:
 
         //! Get parent integration task
-        integration_task<number>* get_parent_task() const { return(this->tk); }
+        derivable_task<number>* get_parent_task() const { return(this->ptk); }
 
 
 				// SERIALIZATION (implements a 'serializable' interface)
@@ -84,8 +105,8 @@ namespace transport
 
 		  protected:
 
-				//! Parent integration task
-				integration_task<number>* tk;
+				//! Parent task, which must be of derivable type
+				derivable_task<number>* ptk;
 
 			};
 
@@ -99,27 +120,27 @@ namespace transport
 
 
 		template <typename number>
-		postintegration_task<number>::postintegration_task(const std::string& nm, const integration_task<number>& t)
-			: task<number>(nm),
-        tk(dynamic_cast<integration_task<number>*>(t.clone()))
+		postintegration_task<number>::postintegration_task(const std::string& nm, const derivable_task<number>& t)
+			: derivable_task<number>(nm),
+        ptk(dynamic_cast<derivable_task<number>*>(t.clone()))
 			{
-				assert(tk != nullptr);
+				assert(ptk != nullptr);
 			}
 
 
 		template <typename number>
 		postintegration_task<number>::postintegration_task(const postintegration_task<number>& obj)
-			: task<number>(obj),
-			  tk(dynamic_cast<integration_task<number>*>(obj.tk->clone()))
+			: derivable_task<number>(obj),
+			  ptk(dynamic_cast<derivable_task<number>*>(obj.ptk->clone()))
 			{
-				assert(tk != nullptr);
+				assert(ptk != nullptr);
 			}
 
 
 		template <typename number>
 		postintegration_task<number>::postintegration_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-			: task<number>(nm, reader),
-				tk(nullptr)
+			: derivable_task<number>(nm, reader),
+				ptk(nullptr)
 			{
 				// deserialize and reconstruct parent integration task
 		    std::string tk_name = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT].asString();
@@ -127,20 +148,17 @@ namespace transport
 		    std::unique_ptr< task_record<number> > record(finder(tk_name));
 		    assert(record.get() != nullptr);
 
-		    if(record->get_type() != task_record<number>::integration)
+		    if(record->get_type() != task_record<number>::integration || record->get_type() != task_record<number>::postintegration)
 			    throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_INTGRTN);
 
-				integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(record.get());
-				assert(int_rec != nullptr);
-
-				tk = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());
+				ptk = dynamic_cast< derivable_task<number>* >(record->get_abstract_task()->clone());
 			}
 
 
 		template <typename number>
 		postintegration_task<number>::~postintegration_task()
 			{
-				delete this->tk;
+				delete this->ptk;
 			}
 
 
@@ -148,22 +166,98 @@ namespace transport
 		void postintegration_task<number>::serialize(Json::Value& writer) const
 			{
 				// serialize parent integration task
-				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->tk->get_name();
+				writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT] = this->ptk->get_name();
+				this->derivable_task<number>::serialize(writer);
 			}
 
 
     template <typename number>
     void postintegration_task<number>::write(std::ostream& out) const
       {
-        out << __CPP_TRANSPORT_PARENT_TASK << ": '" << this->tk->get_name() << "'" << std::endl;
+        out << __CPP_TRANSPORT_PARENT_TASK << ": '" << this->ptk->get_name() << "'" << std::endl;
       }
+
+
+		// ZETA TWOPF LIST TASK -- COMMON ANCESTOR FOR ZETA_TWOPF_TASK AND ZETA_THREEPF_TASK
+
+		template <typename number>
+		class zeta_twopf_list_task: public postintegration_task<number>
+			{
+
+				// CONSTRUCTOR, DESTRUCTOR
+
+		  public:
+
+				//! construct a zeta_twopf_list task
+				zeta_twopf_list_task(const std::string& nm, const twopf_list_task<number>& t);
+
+				//! deserialization constructor
+				zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
+
+				//! destructor is default
+				~zeta_twopf_list_task() = default;
+
+
+		    // INTERFACE
+
+		  public:
+
+		    //! Get flattened list of ks at which we sample the two-point function
+		    const std::vector<twopf_kconfig>& get_twopf_kconfig_list() const { return(this->ptk_as_twopf_list->get_twopf_kconfig_list()); }
+
+
+		    // SERIALIZATION
+
+		  public:
+
+		    virtual void serialize(Json::Value& writer) const override;
+
+
+				// PRIVATE DATA
+
+		  protected:
+
+				//! cast-up version of parent task
+				//! TODO: it would be preferable to avoid this somehow
+				twopf_list_task<number>* ptk_as_twopf_list;
+
+			};
+
+
+		template <typename number>
+		zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, const twopf_list_task<number>& t)
+			: postintegration_task<number>(nm, t)
+			{
+				ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+				assert(ptk_as_twopf_list != nullptr);
+
+		    if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+			}
+
+
+		template <typename number>
+		zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+			: postintegration_task<number>(nm, reader, finder)
+			{
+		    ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+				assert(ptk_as_twopf_list != nullptr);
+
+				if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+			}
+
+
+		template <typename number>
+		void zeta_twopf_list_task<number>::serialize(Json::Value& writer) const
+			{
+		    this->postintegration_task<number>::serialize(writer);
+			}
 
 
 		// ZETA TWOPF TASK
 
 		//! A 'zeta_twopf_task' task is a postintegration task which produces the zeta two-point function
 		template <typename number>
-		class zeta_twopf_task: public postintegration_task<number>
+		class zeta_twopf_task: public zeta_twopf_list_task<number>
 			{
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -198,14 +292,14 @@ namespace transport
 
     template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
-      : postintegration_task<number>(nm, t)
+      : zeta_twopf_list_task<number>(nm, t)
       {
       }
 
 
     template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-      : postintegration_task<number>(nm, reader, finder)
+      : zeta_twopf_list_task<number>(nm, reader, finder)
       {
       }
 
@@ -215,7 +309,7 @@ namespace transport
       {
         writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
 
-        this->postintegration_task<number>::serialize(writer);
+        this->zeta_twopf_list_task<number>::serialize(writer);
       }
 
 
@@ -224,7 +318,7 @@ namespace transport
 		//! A 'zeta_threepf_task' task is a postintegration task which produces the zeta three-point
 		//! function and associated derived quantities (the reduced bispectrum at the moment)
 		template <typename number>
-		class zeta_threepf_task: public postintegration_task<number>
+		class zeta_threepf_task: public zeta_twopf_list_task<number>
 			{
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -241,6 +335,17 @@ namespace transport
 				virtual ~zeta_threepf_task() = default;
 
 
+				// INTERFACE
+
+		  public:
+
+		    //! Determine whether this task is integrable; inherited from parent threepf_task
+		    bool is_integrable() const { return(this->ptk_as_threepf->is_integrable()); }
+
+		    //! Get list of k-configurations at which this task samples the threepf; inherited from parent threepf_task
+		    const std::vector<threepf_kconfig>& get_threepf_kconfig_list() const { return(this->ptk_as_threepf->get_threepf_kconfig_list()); }
+
+
 				// SERIALIZATION
 
 		  public:
@@ -254,20 +359,37 @@ namespace transport
 
 				virtual task<number>* clone() const override { return new zeta_threepf_task<number>(static_cast<const zeta_threepf_task<number>&>(*this)); }
 
+
+				// PRIVATE DATA
+
+		  protected:
+
+				//! cast-up version of parent task
+				//! TODO: it would be preferable to avoid this somehow
+				threepf_task<number>* ptk_as_threepf;
+
 			};
 
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
-      : postintegration_task<number>(nm, t)
+      : zeta_twopf_list_task<number>(nm, t)
       {
+		    ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
+		    assert(ptk_as_threepf != nullptr);
+
+		    if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
       }
 
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-      : postintegration_task<number>(nm, reader, finder)
+      : zeta_twopf_list_task<number>(nm, reader, finder)
       {
+        ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
+        assert(ptk_as_threepf != nullptr);
+
+        if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
       }
 
 
@@ -276,7 +398,7 @@ namespace transport
       {
         writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
 
-        this->postintegration_task<number>::serialize(writer);
+        this->zeta_twopf_list_task<number>::serialize(writer);
       }
 
 
@@ -291,8 +413,8 @@ namespace transport
 
 		  public:
 
-				//! construct an fNL task
-				fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty=derived_data::fNLlocal);
+				//! construct an fNL task; this depends on output from a zeta_threepf_task
+				fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty=derived_data::fNL_local_template);
 
 				//! deserialization constructor
 				fNL_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -330,16 +452,24 @@ namespace transport
 
 		  protected:
 
+				//! template type
 				derived_data::template_type type;
 
 			};
 
 
     template <typename number>
-    fNL_task<number>::fNL_task(const std::string& nm, const threepf_task<number>& t, derived_data::template_type ty)
+    fNL_task<number>::fNL_task(const std::string& nm, const zeta_threepf_task<number>& t, derived_data::template_type ty)
       : postintegration_task<number>(nm, t),
         type(ty)
       {
+		    // ensure we are trying to construct this fNL task from an integrable threepf task
+        if(!t.is_integrable())
+	        {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE << " '" << t.get_name() << "'";
+            throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
+	        }
       }
 
 
@@ -349,10 +479,10 @@ namespace transport
       {
         std::string type_str = reader[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE].asString();
 
-        if     (type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::fNLlocal;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::fNLequi;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::fNLortho;
-        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::fNLDBI;
+        if     (type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL) type = derived_data::fNL_local_template;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI)  type = derived_data::fNL_equi_template;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO) type = derived_data::fNL_ortho_template;
+        else if(type_str == __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI)   type = derived_data::fNL_DBI_template;
         else
           {
             std::ostringstream msg;
@@ -369,19 +499,19 @@ namespace transport
 
         switch(this->type)
           {
-            case derived_data::fNLlocal:
+            case derived_data::fNL_local_template:
               writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL);
               break;
 
-            case derived_data::fNLequi:
+            case derived_data::fNL_equi_template:
               writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_EQUI);
               break;
 
-            case derived_data::fNLortho:
+            case derived_data::fNL_ortho_template:
               writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_ORTHO);
               break;
 
-            case derived_data::fNLDBI:
+            case derived_data::fNL_DBI_template:
               writer[__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_DBI);
               break;
 

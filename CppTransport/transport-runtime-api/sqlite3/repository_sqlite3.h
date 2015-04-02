@@ -835,11 +835,27 @@ namespace transport
         unsigned int count = sqlite3_operations::count_tasks(this->db, tk.get_parent_task()->get_name());
         if(count == 0)
 	        {
-            std::ostringstream msg;
-            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
-	            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
-            this->warning(msg.str());
-            this->commit_task(*(tk.get_parent_task()));
+		        derivable_task<number>* ptk = tk.get_parent_task();
+
+		        integration_task<number>* Itk = nullptr;
+		        postintegration_task<number>* Ptk = nullptr;
+
+		        if((Itk = dynamic_cast< integration_task<number>* >(ptk)) != nullptr)
+			        {
+		            std::ostringstream msg;
+		            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_A << " '" << tk.get_name() << "' "
+			            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_B << " '" << tk.get_parent_task()->get_name() << "'";
+		            this->message(msg.str());
+		            this->commit_task(*Itk);
+			        }
+		        else if((Ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)
+			        {
+		            std::ostringstream msg;
+		            msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_C << " '" << tk.get_name() << "' "
+			            << __CPP_TRANSPORT_REPO_AUTOCOMMIT_POSTINTEGR_D << " '" << tk.get_parent_task()->get_name() << "'";
+		            this->message(msg.str());
+		            this->commit_task(*Ptk);
+			        }
 	        }
 	    }
 
@@ -855,19 +871,33 @@ namespace transport
         record->commit();
 
         // check whether all tasks on which this derived product depends are already in the database
-        typename std::vector< integration_task<number>* > task_list;
+        typename std::vector< derivable_task<number>* > task_list;
         d.get_task_list(task_list);
 
-        for(typename std::vector< integration_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); t++)
+        for(typename std::vector< derivable_task<number>* >::iterator t = task_list.begin(); t != task_list.end(); t++)
 	        {
             unsigned int count = sqlite3_operations::count_tasks(this->db, (*t)->get_name());
             if(count == 0)
 	            {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
-	                << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << (*t)->get_name() << "'";
-                this->warning(msg.str());
-                this->commit_task(*(*t));
+                integration_task<number>* Itk = nullptr;
+                postintegration_task<number>* Ptk = nullptr;
+
+                if((Itk = dynamic_cast< integration_task<number>* >(*t)) != nullptr)
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_A << " '" << d.get_name() << "' "
+	                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_B << " '" << Itk->get_name() << "'";
+                    this->message(msg.str());
+                    this->commit_task(*Itk);
+	                }
+                else if((Ptk = dynamic_cast< postintegration_task<number>* >(*t)) != nullptr)
+	                {
+                    std::ostringstream msg;
+                    msg << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_C << " '" << d.get_name() << "' "
+	                    << __CPP_TRANSPORT_REPO_AUTOCOMMIT_PRODUCT_D << " '" << Ptk->get_name() << "'";
+                    this->message(msg.str());
+                    this->commit_task(*Ptk);
+	                }
 	            }
 	        }
 	    }

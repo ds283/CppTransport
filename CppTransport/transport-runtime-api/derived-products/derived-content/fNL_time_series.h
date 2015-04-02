@@ -37,7 +37,7 @@ namespace transport
           public:
 
             //! construct an fNL time series data object
-            fNL_time_series(const threepf_task<number>& tk, filter::time_filter tfilter);
+            fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter);
 
             //! deserialization constructor
             fNL_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -84,17 +84,11 @@ namespace transport
         // for derived_line<> is not called automatically when constructing time_series<>.
         // We have to call it ourselves.
         template <typename number>
-        fNL_time_series<number>::fNL_time_series(const threepf_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk, time_axis, fNL_value),
+        fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter)
+          : derived_line<number>(tk, time_axis),
             fNL_line<number>(tk),
             time_series<number>(tk, tfilter)
           {
-            if(!tk.is_integrable())
-              {
-                std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_INTEGRABLE << " '" << tk.get_name() << "'";
-                throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
-              }
           }
 
 

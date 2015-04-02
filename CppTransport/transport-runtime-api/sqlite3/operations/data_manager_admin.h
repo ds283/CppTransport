@@ -104,16 +104,16 @@ namespace transport
               {
                 switch(type)
                   {
-                    case derived_data::fNLlocal:
+                    case derived_data::fNL_local_template:
                       return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_LOCAL_VALUE_TABLE);
                       
-                    case derived_data::fNLequi:
+                    case derived_data::fNL_equi_template:
                       return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_EQUI_VALUE_TABLE);
                     
-                    case derived_data::fNLortho:
+                    case derived_data::fNL_ortho_template:
                       return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_ORTHO_VALUE_TABLE);
                     
-                    case derived_data::fNLDBI:
+                    case derived_data::fNL_DBI_template:
                       return static_cast<std::string>(__CPP_TRANSPORT_SQLITE_FNL_DBI_VALUE_TABLE);
                       
                     default:
@@ -2036,84 +2036,6 @@ namespace transport
             // check that we have as many values as we expect
             if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
           }
-
-
-		    //! Merge tables between database containers
-		    void merge_table(const boost::filesystem::path& source, const boost::filesystem::path& dest, const std::string table,
-		                     std::function<void(sqlite3*, add_foreign_keys_type)> make_tables)
-			    {
-				    sqlite3* dest_db = nullptr;
-
-		        int status = sqlite3_open_v2(dest.string().c_str(), &dest_db, SQLITE_OPEN_READWRITE, nullptr);
-
-		        if(status != SQLITE_OK)
-			        {
-		            std::ostringstream msg;
-		            if(dest_db != nullptr)
-			            {
-		                msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << dest.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(dest_db) << ")";
-		                sqlite3_close(dest_db);
-			            }
-		            else
-			            {
-		                msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << dest.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
-			            }
-		            throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-			        }
-		        sqlite3_extended_result_codes(dest_db, 1);
-
-		        // enable foreign key constraints
-		        char* errmsg;
-		        sqlite3_exec(dest_db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
-
-		        std::stringstream drop_stmt;
-				    drop_stmt << "DROP TABLE IF EXISTS " << table << ";";
-		        exec(dest_db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_DROP_DEST_FAIL);
-
-				    make_tables(dest_db, foreign_keys);
-
-		        std::stringstream copy_stmt;
-				    copy_stmt
-				      << "ATTACH DATABASE '" << source.string() << "' AS " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";"
-					    << " INSERT INTO " << table
-					    << " SELECT * FROM " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << "." << table << ";"
-					    << " DETACH DATABASE " << __CPP_TRANSPORT_SQLITE_TEMPORARY_DBNAME << ";";
-				    exec(dest_db, copy_stmt.str(), __CPP_TRANSPORT_DATACTR_POST_INTEGRATION_COPY);
-
-            check_stmt(dest_db, sqlite3_close(dest_db));
-			    }
-
-
-		    //! Merge zeta twopf table
-		    void merge_zeta_twopf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-			    {
-				    auto make_table = std::bind(&create_zeta_twopf_table, std::placeholders::_1, std::placeholders::_2);
-				    merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_TWOPF_VALUE_TABLE, make_table);
-			    }
-
-
-		    //! Merge zeta threepf table
-		    void merge_zeta_threepf(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-			    {
-		        auto make_table = std::bind(&create_zeta_threepf_table, std::placeholders::_1, std::placeholders::_2);
-		        merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_THREEPF_VALUE_TABLE, make_table);
-			    }
-
-
-        //! Merge zeta reduced bispectrum table
-        void merge_zeta_redbsp(const boost::filesystem::path& source, const boost::filesystem::path& dest)
-	        {
-            auto make_table = std::bind(&create_zeta_reduced_bispectrum_table, std::placeholders::_1, std::placeholders::_2);
-            merge_table(source, dest, __CPP_TRANSPORT_SQLITE_ZETA_REDUCED_BISPECTRUM_VALUE_TABLE, make_table);
-	        }
-
-
-        //! Merge fNL table
-        void merge_fNL(const boost::filesystem::path& source, const boost::filesystem::path& dest, derived_data::template_type type)
-	        {
-            auto make_table = std::bind(&create_fNL_table, std::placeholders::_1, type, std::placeholders::_2);
-            merge_table(source, dest, fNL_table_name(type), make_table);
-	        }
 
 
 		    // Pull a sample of a zeta twopf, for a specific k-configuration and a specific set of time serial numbers

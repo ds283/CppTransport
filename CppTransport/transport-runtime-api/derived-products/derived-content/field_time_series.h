@@ -88,7 +88,10 @@ namespace transport
 
 		        // INTERNAL DATA
 
-		      private:
+		      protected:
+
+				    //! gadget for extracting details about parent task
+				    integration_task_gadget<number> gadget;
 
 		        //! record which indices are active in this group
 		        index_selector<1> active_indices;
@@ -101,16 +104,17 @@ namespace transport
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
-			    : active_indices(sel),
-			      derived_line<number>(tk, time_axis, field_value, prec),
-			      time_series<number>(tk, tfilter)
+			    : derived_line<number>(tk, time_axis, prec),
+			      time_series<number>(tk, tfilter),
+			      gadget(tk),
+			      active_indices(sel)
 			    {
-		        if(active_indices.get_number_fields() != this->mdl->get_N_fields())
+		        if(active_indices.get_number_fields() != gadget.get_N_fields())
 			        {
 		            std::ostringstream msg;
 		            msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
+			              << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << gadget.get_N_fields() << ")";
 		            throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 			        }
 			    }
@@ -119,10 +123,12 @@ namespace transport
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
 		    background_time_series<number>::background_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-			    : active_indices(reader),
-			      derived_line<number>(reader, finder),
-			      time_series<number>(reader)
+			    : derived_line<number>(reader, finder),
+			      time_series<number>(reader),
+			      gadget(),
+			      active_indices(reader)
 			    {
+		        gadget.set_task(this->parent_task, finder);
 			    }
 
 		    // note that because time_series<> inherits virtually from derived_line<>, the write method for
@@ -135,7 +141,9 @@ namespace transport
 
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
-		        this->active_indices.write(out, this->mdl->get_state_names());
+
+				    integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());
+		        this->active_indices.write(out, itk->get_model()->get_state_names());
 			    }
 
 
@@ -166,17 +174,17 @@ namespace transport
 
 		        typename datapipe<number>::time_data_handle& handle = pipe.new_time_data_handle(this->time_sample_sns);
 
-            for(unsigned int m = 0; m < 2 * this->mdl->get_N_fields(); m++)
+            for(unsigned int m = 0; m < 2 * this->gadget.get_N_fields(); m++)
               {
                 std::array<unsigned int, 1> index_set = {m};
                 if(this->active_indices.is_on(index_set))
                   {
-										background_time_data_tag<number> tag = pipe.new_background_time_data_tag(this->mdl->flatten(m));
+										background_time_data_tag<number> tag = pipe.new_background_time_data_tag(this->gadget.get_model()->flatten(m));
 
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(time_axis, this->mdl->is_field(m) ? field_value : momentum_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(time_axis, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
@@ -193,9 +201,9 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        const std::vector<std::string>& field_names = this->mdl->get_f_latex_names();
+		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
 		        label << "$";
 		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
@@ -217,9 +225,9 @@ namespace transport
 	        {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
-	          const std::vector<std::string>& field_names = this->mdl->get_field_names();
+	          const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
 	          if(this->get_dot_meaning() == derived_line<number>::derivatives)
 	            {
@@ -280,7 +288,6 @@ namespace transport
 		        //! serialize this object
 		        virtual void serialize(Json::Value& writer) const override;
 
-
 			    };
 
 
@@ -289,7 +296,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, correlation_function_value, prec),
+			    : derived_line<number>(tk, time_axis, prec),
 			      twopf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
@@ -301,7 +308,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
-			      twopf_line<number>(reader),
+			      twopf_line<number>(reader, finder),
 			      time_series<number>(reader)
 			    {
 			    }
@@ -330,16 +337,16 @@ namespace transport
 		        // pulling data from the database
 		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
 			        {
-		            for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+		            for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); m++)
 			            {
-		                for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+		                for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); n++)
 			                {
 		                    std::array<unsigned int, 2> index_set = { m, n };
 		                    if(this->active_indices.is_on(index_set))
 			                    {
 		                        cf_time_data_tag<number> tag =
 			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
-			                                                                           this->mdl->flatten(m, n), this->kconfig_sample_sns[i]);
+			                                                                           this->gadget.get_model()->flatten(m, n), this->kconfig_sample_sns[i]);
 
                             // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
@@ -454,7 +461,7 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
 		                                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, time_axis, correlation_function_value, prec),
+			    : derived_line<number>(tk, time_axis, prec),
 			      threepf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
@@ -466,7 +473,7 @@ namespace transport
 		    template <typename number>
 		    threepf_time_series<number>::threepf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
-		        threepf_line<number>(reader),
+		        threepf_line<number>(reader, finder),
 		        time_series<number>(reader)
 			    {
 			    }
@@ -496,23 +503,23 @@ namespace transport
 
 		        for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
 			        {
-		            for(unsigned int l = 0; l < 2*this->mdl->get_N_fields(); l++)
+		            for(unsigned int l = 0; l < 2*this->gadget.get_N_fields(); l++)
 			            {
-		                for(unsigned int m = 0; m < 2*this->mdl->get_N_fields(); m++)
+		                for(unsigned int m = 0; m < 2*this->gadget.get_N_fields(); m++)
 			                {
-		                    for(unsigned int n = 0; n < 2*this->mdl->get_N_fields(); n++)
+		                    for(unsigned int n = 0; n < 2*this->gadget.get_N_fields(); n++)
 			                    {
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->mdl->flatten(l,m,n), this->kconfig_sample_sns[i]);
+				                        cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), this->kconfig_sample_sns[i]);
 
 		                            std::vector<number> line_data = t_handle.lookup_tag(tag);
 
 		                            // the integrator produces correlation functions involving the canonical momenta,
 		                            // not the derivatives. If the user wants derivatives then we have to shift.
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
-			                            this->shifter.shift(this->parent_task, this->mdl, pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
+			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);

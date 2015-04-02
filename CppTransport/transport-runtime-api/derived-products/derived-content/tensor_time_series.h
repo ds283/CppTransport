@@ -88,7 +88,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, correlation_function_value, prec),
+			    : derived_line<number>(tk, time_axis, prec),
             tensor_twopf_line<number>(tk, sel, kfilter),
             time_series<number>(tk, tfilter)
 			    {
@@ -101,7 +101,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader, finder),
-			      tensor_twopf_line<number>(reader),
+			      tensor_twopf_line<number>(reader, finder),
 			      time_series<number>(reader)
 			    {
 			    }
@@ -136,8 +136,7 @@ namespace transport
 						            std::array<unsigned int, 2> index_set = { m, n };
 								        if(this->active_indices.is_on(index_set))
 									        {
-								            cf_time_data_tag<number> tag =
-									                                                                      pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->mdl->tensor_flatten(m, n), this->kconfig_sample_sns[i]);
+								            cf_time_data_tag<number> tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(m, n), this->kconfig_sample_sns[i]);
 
 								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);

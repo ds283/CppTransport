@@ -24,14 +24,12 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT     "enforce-max-value-types"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES "max-value-types"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX            "log-x"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY            "log-y"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY            "abs-y"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX           "latex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX       "log-x"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY       "log-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY       "abs-y"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX      "latex"
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY      "line-array"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY "line-array"
 
 
 namespace transport
@@ -157,10 +155,8 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						line_collection(const std::string& name, const boost::filesystem::path& filename, bool enforce_mvt=false, unsigned int mvt=0)
-				      : enforce_max_value_types(enforce_mvt),
-				        max_value_types(mvt),
-				        log_x(false),
+						line_collection(const std::string& name, const boost::filesystem::path& filename)
+				      : log_x(false),
 				        log_y(false),
 				        abs_y(false),
 				        use_LaTeX(false),
@@ -198,8 +194,8 @@ namespace transport
           public:
 
             //! Collect a list of tasks which this derived product depends on;
-            //! used by the repository to autocommit any necessary integration tasks
-            virtual void get_task_list(typename std::vector< integration_task<number>* >& list) const override;
+            //! used by the repository to autocommit any necessary tasks
+            virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const override;
 
 
 						// GET AND SET BASIC LINE PROPERTIES
@@ -284,12 +280,10 @@ namespace transport
 					: derived_product<number>(name, reader)
 					{
 						// read in line management attributes
-				    enforce_max_value_types = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT].asBool();
-				    max_value_types         = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES].asUInt();
-				    log_x                   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
-				    log_y                   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
-				    abs_y                   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
-				    use_LaTeX               = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
+				    log_x     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
+				    log_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
+				    abs_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
+				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
 
 						// read in line specifications
 				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
@@ -307,8 +301,6 @@ namespace transport
 		    template <typename number>
 		    line_collection<number>::line_collection(const line_collection<number>& obj)
 			    : derived_product<number>(obj),
-			      max_value_types(obj.max_value_types),
-			      enforce_max_value_types(obj.enforce_max_value_types),
 		        log_x(obj.log_x),
 			      log_y(obj.log_y),
 		        abs_y(obj.abs_y),
@@ -334,30 +326,6 @@ namespace transport
 					    {
 						    if(line.get_axis_type() != this->lines.front()->get_axis_type())
 							    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
-					    }
-
-				    // if we are enforcing a maximum number of value types, then
-				    // check that adding this line won't introduce too many
-				    if(this->enforce_max_value_types)
-					    {
-								// build a list of value types which we use, beginning with the line we want to add
-				        typename std::list< value_type > value_list;
-				        value_list.push_back(line.get_value_type());
-
-						    // now iterate through the already-present lines and add their values
-				        for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++)
-					        {
-				            value_type value = (*t)->get_value_type();
-
-						        // if this value type is not already present in our list, then add it
-				            if(std::find(value_list.begin(), value_list.end(), value) == value_list.end())
-					            {
-				                value_list.push_back(value);
-					            }
-					        }
-
-				        if(value_list.size() > this->max_value_types)
-					        throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_TOO_MANY_VALUES);
 					    }
 
 		        this->lines.push_back(line.clone());
@@ -513,7 +481,7 @@ namespace transport
 
 
         template <typename number>
-        void line_collection<number>::get_task_list(typename std::vector< integration_task<number>* >& list) const
+        void line_collection<number>::get_task_list(typename std::vector< derivable_task<number>* >& list) const
           {
             list.clear();
 
@@ -528,12 +496,10 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ENFORCE_MVT]     = this->enforce_max_value_types;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_MAX_VALUE_TYPES] = this->max_value_types;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]            = this->log_x;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]            = this->log_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]            = this->abs_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX]           = this->use_LaTeX;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]  = this->log_x;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]  = this->log_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]  = this->abs_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)

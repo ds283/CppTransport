@@ -376,6 +376,14 @@ namespace transport
         virtual ~task_record() = default;
 
 
+		    // GET CONTENTS
+
+      public:
+
+		    //! get task object
+		    virtual task<number>* get_abstract_task() const = 0;
+
+
         // ADMINISTRATION
 
       public:
@@ -434,6 +442,9 @@ namespace transport
 
         //! Get task
         integration_task<number>* get_task() const { return(this->tk); }
+
+		    //! Get abstract task
+		    virtual task<number>* get_abstract_task() const override { return(this->tk); }
 
 
         // ADMINISTRATION
@@ -499,6 +510,9 @@ namespace transport
 
         //! Get task
         postintegration_task<number>* get_task() const { return(this->tk); }
+
+        //! Get abstract task
+        virtual task<number>* get_abstract_task() const override { return(this->tk); }
 
 
         // ADMINISTRATION
@@ -621,6 +635,9 @@ namespace transport
 
         //! Get task
         output_task<number>* get_task() const { return(this->tk); }
+
+        //! Get abstract task
+        virtual task<number>* get_abstract_task() const override { return(this->tk); }
 
 
         // ADMINISTRATION
@@ -964,8 +981,13 @@ namespace transport
 
         //! Create a precomputed products record
         precomputed_products()
-	        : zeta_twopf(false), zeta_threepf(false), zeta_redbsp(false),
-	          fNL_local(false), fNL_equi(false), fNL_ortho(false), fNL_DBI(false)
+	        : zeta_twopf(false),
+	          zeta_threepf(false),
+	          zeta_redbsp(false),
+	          fNL_local(false),
+	          fNL_equi(false),
+	          fNL_ortho(false),
+	          fNL_DBI(false)
 	        {
 	        }
 
@@ -1067,8 +1089,7 @@ namespace transport
 
         //! Create a payload
         integration_payload()
-	        : metadata(),
-	          precomputed()
+	        : metadata()
 	        {
 	        }
 
@@ -1103,9 +1124,6 @@ namespace transport
 
       public:
 
-        //! Get precomputed products record
-        precomputed_products& get_precomputed_products() { return(this->precomputed); }
-
 
         // WRITE TO A STREAM
 
@@ -1134,9 +1152,6 @@ namespace transport
 
         //! Metadata
         integration_metadata metadata;
-
-        //! Precomputed products
-        precomputed_products precomputed;
 
 	    };
 
@@ -2039,8 +2054,7 @@ namespace transport
 
 
     integration_payload::integration_payload(Json::Value& reader)
-	    : metadata(reader),
-	      precomputed(reader)
+	    : metadata(reader)
 	    {
         backend = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND].asString();
         container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
@@ -2053,7 +2067,6 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
 
         this->metadata.serialize(writer);
-        this->precomputed.serialize(writer);
 	    }
 
 
@@ -2061,8 +2074,6 @@ namespace transport
 	    {
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
-
-        this->precomputed.write(out);
 	    }
 
 

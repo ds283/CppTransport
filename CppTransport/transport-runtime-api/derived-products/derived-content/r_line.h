@@ -35,6 +35,9 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
+#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/integration_task_gadget.h"
+
 
 namespace transport
 	{
@@ -59,7 +62,7 @@ namespace transport
 				    r_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
-				    r_line(Json::Value& reader);
+				    r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 				    virtual ~r_line() = default;
 
@@ -98,13 +101,22 @@ namespace transport
 				    //! Serialize this object
 				    virtual void serialize(Json::Value& writer) const override;
 
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! integration task gadget
+				    integration_task_gadget<number> gadget;
+
 			    };
 
 
 				// constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
 				r_line<number>::r_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
-					: derived_line<number>(tk)
+					: derived_line<number>(tk),
+						gadget(tk)
 					{
 						// set up a list of serial numbers corresponding to the k-configurations for this derived line
 				    try
@@ -127,9 +139,11 @@ namespace transport
 				// deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 				// because of virtual inheritance; concrete classes must call it for themselves
 				template <typename number>
-				r_line<number>::r_line(Json::Value& reader)
-					: derived_line<number>(reader)
+				r_line<number>::r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
+					: derived_line<number>(reader),
+						gadget()
 					{
+				    gadget.set_task(this->parent_task, finder);
 					}
 
 

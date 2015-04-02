@@ -470,27 +470,42 @@ namespace transport
         if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_twopf_batch, this, std::placeholders::_1, std::placeholders::_2));
+		        writer->get_products().add_zeta_twopf();
           }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_zeta_threepf_batch, this, std::placeholders::_1, std::placeholders::_2));
+		        writer->get_products().add_zeta_twopf();
+		        writer->get_products().add_zeta_threepf();
+		        writer->get_products().add_zeta_redbsp();
           }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
           {
             writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_fNL_batch, this, std::placeholders::_1, std::placeholders::_2, zfNL->get_template()));
+		        switch(zfNL->get_template())
+			        {
+		            case derived_data::fNL_local_template:
+			            writer->get_products().add_fNL_local();
+				          break;
+
+		            case derived_data::fNL_equi_template:
+			            writer->get_products().add_fNL_equi();
+				          break;
+
+		            case derived_data::fNL_ortho_template:
+			            writer->get_products().add_fNL_ortho();
+				          break;
+
+		            case derived_data::fNL_DBI_template:
+			            writer->get_products().add_fNL_DBI();
+				          break;
+			        }
           }
         else
           {
             assert(false);
             throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATACTR_AGGREGATION_HANDLER_NOT_SET);
           }
-
-		    typename postintegration_writer<number>::merge_group mergers;
-		    mergers.zeta_twopf   = std::bind(&sqlite3_operations::merge_zeta_twopf, std::placeholders::_1, std::placeholders::_2);
-		    mergers.zeta_threepf = std::bind(&sqlite3_operations::merge_zeta_threepf, std::placeholders::_1, std::placeholders::_2);
-				mergers.zeta_redbsp  = std::bind(&sqlite3_operations::merge_zeta_redbsp, std::placeholders::_1, std::placeholders::_2);
-		    mergers.fNL          = std::bind(&sqlite3_operations::merge_fNL, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-		    writer->set_merge_handlers(mergers);
       }
 
 

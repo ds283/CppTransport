@@ -38,7 +38,7 @@ namespace transport
 		      public:
 
 				    //! construct a zeta twopf wavenumber data object
-				    zeta_twopf_wavenumber_series(const twopf_list_task<number>& tk,
+				    zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
 				                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter,
 				                                 unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -80,9 +80,9 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const twopf_list_task<number>& tk,
+		    zeta_twopf_wavenumber_series<number>::zeta_twopf_wavenumber_series(const zeta_twopf_list_task<number>& tk,
 		                                                                       filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
+			    : derived_line<number>(tk, wavenumber_axis, prec),
 			      zeta_twopf_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {
@@ -175,7 +175,7 @@ namespace transport
 				  public:
 
 						//! construct a zeta threepf wavenumber-series object
-            zeta_threepf_wavenumber_series(const threepf_task<number>& tk,
+            zeta_threepf_wavenumber_series(const zeta_threepf_task<number>& tk,
                                            filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                            unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -225,9 +225,9 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    zeta_threepf_wavenumber_series<number>::zeta_threepf_wavenumber_series(const threepf_task<number>& tk,
+		    zeta_threepf_wavenumber_series<number>::zeta_threepf_wavenumber_series(const zeta_threepf_task<number>& tk,
 		                                                                           filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
+			    : derived_line<number>(tk, wavenumber_axis, prec),
 			      zeta_threepf_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {
@@ -322,7 +322,7 @@ namespace transport
 		      public:
 
 		        //! construct a zeta reduced bispectrum wavenumber-series object
-		        zeta_reduced_bispectrum_wavenumber_series(const threepf_task<number>& tk,
+		        zeta_reduced_bispectrum_wavenumber_series(const zeta_threepf_task<number>& tk,
 		                                                  filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                  unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
@@ -364,9 +364,9 @@ namespace transport
 		    // note that because time_series<> inherits virtually from derived_line<>, the constructor for
 		    // derived_line<> is *not* called from time_series<>. We have to call it ourselves.
 		    template <typename number>
-		    zeta_reduced_bispectrum_wavenumber_series<number>::zeta_reduced_bispectrum_wavenumber_series(const threepf_task<number>& tk,
+		    zeta_reduced_bispectrum_wavenumber_series<number>::zeta_reduced_bispectrum_wavenumber_series(const zeta_threepf_task<number>& tk,
 		                                                                                                 filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, wavenumber_axis, fNL_value, prec),
+			    : derived_line<number>(tk, wavenumber_axis, prec),
 			      zeta_reduced_bispectrum_line<number>(tk, kfilter),
 			      wavenumber_series<number>(tk, tfilter)
 			    {

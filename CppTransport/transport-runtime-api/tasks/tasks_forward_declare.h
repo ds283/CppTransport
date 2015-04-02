@@ -15,6 +15,10 @@ namespace transport
     template <typename number> class task;
 #endif
 
+#ifndef __derivable_task_H_
+		template <typename number> class derivable_task;
+#endif
+
 #ifndef __integration_tasks_H_
     template <typename number> class integration_task;
     template <typename number> class twopf_list_task;

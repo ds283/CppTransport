@@ -54,7 +54,8 @@ namespace transport
 
         //! general fNL content producer
         //! As usual, we derive virtually from derived_line<>, so concrete
-        //! classes must call its constructor explicitly
+        //! classes must call its constructor explicitly.
+		    //! The template to be plotted is inherited
         template <typename number>
         class fNL_line: public virtual derived_line<number>
           {
@@ -64,7 +65,7 @@ namespace transport
           public:
 
             //! Basic user-facing constructor
-            fNL_line(const threepf_task<number>& tk);
+            fNL_line(const fNL_task<number>& tk);
 
             //! Deserialization constructor
             fNL_line(Json::Value& reader);
@@ -81,17 +82,6 @@ namespace transport
 
             //! make a non-LaTeX label
             std::string make_non_LaTeX_label() const;
-
-
-            // SET/GET FNL TEMPLATE
-
-          public:
-
-            //! get type of fNL
-            template_type get_type() const { return(this->type); }
-
-            //! set type of fNL
-            void set_type(template_type t) { this->type = t; }
 
 
             // WRITE TO A STREAM
@@ -122,9 +112,9 @@ namespace transport
 
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
-        fNL_line<number>::fNL_line(const threepf_task<number>& tk)
+        fNL_line<number>::fNL_line(const fNL_task<number>& tk)
           : derived_line<number>(tk),
-            type(fNLlocal)
+            type(tk.get_template())
           {
             // we could store all kconfiguration numbers we're going to use, but it's
             // more space efficient to just recover them at runtime
@@ -135,14 +125,14 @@ namespace transport
         template <typename number>
         fNL_line<number>::fNL_line(Json::Value& reader)
           : derived_line<number>(reader),
-            type(fNLlocal)
+            type(fNL_local_template)
           {
             std::string type_str = reader[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE].asString();
 
-            if     (type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = fNLlocal;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = fNLequi;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = fNLortho;
-            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = fNLDBI;
+            if     (type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL)       type = fNL_local_template;
+            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL) type = fNL_equi_template;
+            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL)  type = fNL_ortho_template;
+            else if(type_str == __CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI)         type = fNL_DBI_template;
             else
               {
                 std::ostringstream msg;
@@ -159,19 +149,19 @@ namespace transport
 
             switch(this->type)
               {
-                case fNLlocal:
+                case fNL_local_template:
                   label << __CPP_TRANSPORT_LATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case fNLequi:
+                case fNL_equi_template:
                   label << __CPP_TRANSPORT_LATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case fNLortho:
+                case fNL_ortho_template:
                   label << __CPP_TRANSPORT_LATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case fNLDBI:
+                case fNL_DBI_template:
                   label << __CPP_TRANSPORT_LATEX_FNL_DBI_SYMBOL;
                   break;
 
@@ -191,19 +181,19 @@ namespace transport
 
             switch(this->type)
               {
-                case fNLlocal:
+                case fNL_local_template:
                   label << __CPP_TRANSPORT_NONLATEX_FNL_LOCAL_SYMBOL;
                   break;
 
-                case fNLequi:
+                case fNL_equi_template:
                   label << __CPP_TRANSPORT_NONLATEX_FNL_EQUI_SYMBOL;
                   break;
 
-                case fNLortho:
+                case fNL_ortho_template:
                   label << __CPP_TRANSPORT_NONLATEX_FNL_ORTHO_SYMBOL;
                   break;
 
-                case fNLDBI:
+                case fNL_DBI_template:
                   label << __CPP_TRANSPORT_NONLATEX_FNL_DBI_SYMBOL;
                   break;
 
@@ -221,19 +211,19 @@ namespace transport
           {
             switch(this->type)
               {
-                case fNLlocal:
+                case fNL_local_template:
                   writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_LOCAL);
                   break;
 
-                case fNLequi:
+                case fNL_equi_template:
                   writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_EQUILATERAL);
                   break;
 
-                case fNLortho:
+                case fNL_ortho_template:
                   writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_ORTHOGONAL);
                   break;
 
-                case fNLDBI:
+                case fNL_DBI_template:
                   writer[__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_FNL_TEMPLATE_DBI);
                   break;
 

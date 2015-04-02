@@ -632,15 +632,16 @@ namespace transport
     template <typename number>
     void repository<number>::close_postintegration_writer(postintegration_writer<number>& writer)
 	    {
-        // get repository record for postintegration task
+        // get repository record for this task
         postintegration_task_record<number>* rec = writer.get_record();
         const std::list<std::string>& tags = writer.get_tags();
 
-        // get repository record for parent integration task
+        // convert to task class
         postintegration_task<number>* tk = rec->get_task();
         assert(tk != nullptr);
 
-        integration_task<number>* ptk = tk->get_parent_task();
+		    // get task class for parent
+        derivable_task<number>* ptk = tk->get_parent_task();
         assert(ptk != nullptr);
 
         // get repository record for content group we have used to computation
@@ -663,6 +664,15 @@ namespace transport
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
 
+        // tag this output group with its contents
+        if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
+		    if(writer.get_products().get_zeta_threepf()) output_record->get_payload().get_precomputed_products().add_zeta_threepf();
+		    if(writer.get_products().get_zeta_redbsp())  output_record->get_payload().get_precomputed_products().add_zeta_redbsp();
+		    if(writer.get_products().get_fNL_local())    output_record->get_payload().get_precomputed_products().add_fNL_local();
+		    if(writer.get_products().get_fNL_equi())     output_record->get_payload().get_precomputed_products().add_fNL_equi();
+		    if(writer.get_products().get_fNL_ortho())    output_record->get_payload().get_precomputed_products().add_fNL_ortho();
+		    if(writer.get_products().get_fNL_DBI())      output_record->get_payload().get_precomputed_products().add_fNL_DBI();
+
         // commit new output record
         output_record->commit();
 
@@ -672,59 +682,6 @@ namespace transport
         rec->commit();
 
         this->advise_commit(output_record.get());
-
-        zeta_twopf_task<number>* z2pf = nullptr;
-        zeta_threepf_task<number>* z3pf = nullptr;
-        fNL_task<number>* zfNL = nullptr;
-
-        // write back postintegration task output into the parent container
-        if((z2pf = dynamic_cast<zeta_twopf_task<number>*>(tk)) != nullptr)
-          {
-            writer.merge_zeta_twopf(source_container, dest_container);
-            parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
-          }
-        else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
-          {
-            writer.merge_zeta_twopf(source_container, dest_container);
-            writer.merge_zeta_threepf(source_container, dest_container);
-            writer.merge_zeta_redbsp(source_container, dest_container);
-            parent_content_record->get_payload().get_precomputed_products().add_zeta_twopf();
-            parent_content_record->get_payload().get_precomputed_products().add_zeta_threepf();
-            parent_content_record->get_payload().get_precomputed_products().add_zeta_redbsp();
-          }
-        else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
-          {
-            writer.merge_fNL(source_container, dest_container, zfNL->get_template());
-
-            switch(zfNL->get_template())
-              {
-                case derived_data::fNLlocal:
-                  parent_content_record->get_payload().get_precomputed_products().add_fNL_local();
-                break;
-
-                case derived_data::fNLequi:
-                  parent_content_record->get_payload().get_precomputed_products().add_fNL_equi();
-                break;
-
-                case derived_data::fNLortho:
-                  parent_content_record->get_payload().get_precomputed_products().add_fNL_ortho();
-                break;
-
-                case derived_data::fNLDBI:
-                  parent_content_record->get_payload().get_precomputed_products().add_fNL_DBI();
-                break;
-
-                default:
-                  assert(false);
-                throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_FNL_LINE_UNKNOWN_TEMPLATE);
-              }
-          }
-
-        // update and commit parent group record
-        parent_content_record->update_last_edit_time();
-        parent_content_record->commit();
-
-        this->advise_commit(rec, parent_content_record.get());
 	    }
 
 

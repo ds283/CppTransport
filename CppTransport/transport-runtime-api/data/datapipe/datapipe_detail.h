@@ -920,19 +920,19 @@ namespace transport
         bool rval = false;
         switch(type)
 	        {
-            case derived_data::fNLlocal:
+            case derived_data::fNL_local_template:
 	            rval = payload.get_precomputed_products().get_fNL_local();
             break;
 
-            case derived_data::fNLequi:
+            case derived_data::fNL_equi_template:
 	            rval = payload.get_precomputed_products().get_fNL_equi();
             break;
 
-            case derived_data::fNLortho:
+            case derived_data::fNL_ortho_template:
 	            rval = payload.get_precomputed_products().get_fNL_ortho();
             break;
 
-            case derived_data::fNLDBI:
+            case derived_data::fNL_DBI_template:
 	            rval = payload.get_precomputed_products().get_fNL_DBI();
             break;
 	        }

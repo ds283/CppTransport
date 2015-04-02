@@ -54,7 +54,7 @@ namespace transport
           public:
 
 				    //! Basic user-facing constructor
-				    zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
+				    zeta_twopf_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    zeta_twopf_line(Json::Value& reader);
@@ -101,7 +101,7 @@ namespace transport
 
 		    // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
-				zeta_twopf_line<number>::zeta_twopf_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
+				zeta_twopf_line<number>::zeta_twopf_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
 		      : derived_line<number>(tk)
 					{
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line

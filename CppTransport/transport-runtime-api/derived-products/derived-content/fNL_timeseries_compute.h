@@ -226,7 +226,7 @@ namespace transport
             if(!this->tk->is_integrable())
               {
                 std::ostringstream msg;
-                msg << __CPP_TRANSPORT_PRODUCT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
+                msg << __CPP_TRANSPORT_FNL_TASK_NOT_INTEGRABLE << " " << this->tk->get_name();
                 throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, msg.str());
               }
           }
@@ -449,19 +449,19 @@ namespace transport
 
 		            switch(type)
 			            {
-		                case fNLlocal:
+		                case fNL_local_template:
 			                T = this->local_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNLequi:
+		                case fNL_equi_template:
 			                T = this->equi_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNLortho:
+		                case fNL_ortho_template:
 			                T = this->ortho_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 			                break;
 
-		                case fNLDBI:
+		                case fNL_DBI_template:
 			                T = this->DBI_template(twopf_k1[j], twopf_k2[j], twopf_k3[j]);
 		                  break;
 

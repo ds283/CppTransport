@@ -20,7 +20,7 @@ namespace transport
 
 		    typedef enum { time_axis, wavenumber_axis, angle_axis, squeezing_fraction_axis } axis_type;
 
-		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value, r_value, spectral_index_value } value_type;
+		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value, r_value, spectral_index_value, dimensionless_value } value_type;
 
 				inline std::string value_type_to_string_non_LaTeX(value_type type)
 					{
@@ -32,6 +32,7 @@ namespace transport
 						    case fNL_value:                  return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_FNL);
 						    case r_value:                    return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_R);
 						    case spectral_index_value:       return std::string(__CPP_TRANSPORT_VALUE_NON_LATEX_SPECTRAL_INDEX);
+						    case dimensionless_value:        return std::string("");
 						    default:
 							    {
 						        std::stringstream msg;
@@ -51,6 +52,7 @@ namespace transport
 		            case fNL_value:                  return std::string(__CPP_TRANSPORT_VALUE_LATEX_FNL);
 		            case r_value:                    return std::string(__CPP_TRANSPORT_VALUE_LATEX_R);
 		            case spectral_index_value:       return std::string(__CPP_TRANSPORT_VALUE_LATEX_SPECTRAL_INDEX);
+		            case dimensionless_value:        return std::string("");
 		            default:
 			            {
 		                std::stringstream msg;

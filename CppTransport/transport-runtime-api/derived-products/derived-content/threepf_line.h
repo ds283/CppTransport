@@ -33,6 +33,9 @@
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
+#include "transport-runtime-api/derived-products/derived-content/derived_line.h"
+#include "transport-runtime-api/derived-products/derived-content/integration_task_gadget.h"
+
 
 namespace transport
 	{
@@ -57,7 +60,7 @@ namespace transport
 		        threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter);
 
 		        //! Deserialization constructor
-		        threepf_line(Json::Value& reader);
+		        threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
 		        virtual ~threepf_line() = default;
 
@@ -115,6 +118,9 @@ namespace transport
 
           protected:
 
+		        //! integration task gadget
+            integration_task_gadget<number> gadget;
+
 		        //! record which indices are active in this group
 		        index_selector<3> active_indices;
 
@@ -134,14 +140,18 @@ namespace transport
         template <typename number>
         threepf_line<number>::threepf_line(const threepf_task<number>& tk, index_selector<3>& sel, filter::threepf_kconfig_filter& kfilter)
 	        : derived_line<number>(tk),
-	          active_indices(sel), use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+	          gadget(tk),
+	          active_indices(sel),
+	          use_kt_label(true),
+	          use_alpha_label(false),
+	          use_beta_label(false)
 	        {
-            if(active_indices.get_number_fields() != this->mdl->get_N_fields())
+            if(active_indices.get_number_fields() != this->gadget.get_N_fields())
 	            {
                 std::ostringstream msg;
                 msg << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH << " ("
 	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_A << " " << active_indices.get_number_fields() << ", "
-	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->mdl->get_N_fields() << ")";
+	                << __CPP_TRANSPORT_PRODUCT_INDEX_MISMATCH_B << " " << this->gadget.get_N_fields() << ")";
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, msg.str());
 	            }
 
@@ -166,10 +176,13 @@ namespace transport
 		    // Deserialization constructor DOESN'T CALL the correct derived_line<> deserialization constructor
 		    // because of virtual inheritance; concrete classes must call it themselves
 		    template <typename number>
-		    threepf_line<number>::threepf_line(Json::Value& reader)
+		    threepf_line<number>::threepf_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 			    : derived_line<number>(reader),
+			      gadget(),
 			      active_indices(reader)
 			    {
+		        gadget.set_task(this->parent_task, finder);
+
 		        use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();
 		        use_alpha_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA].asBool();
 		        use_beta_label  = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_BETA].asBool();
@@ -181,11 +194,11 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
 		        label << std::setprecision(this->precision);
 
-		        const std::vector<std::string>& field_names = this->mdl->get_f_latex_names();
+		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
 		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
@@ -209,11 +222,11 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
 		        label << std::setprecision(this->precision);
 
-		        const std::vector<std::string>& field_names = this->mdl->get_field_names();
+		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
 		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			        {
@@ -271,7 +284,7 @@ namespace transport
 			    {
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_LABEL_THREEPF << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
-		        this->active_indices.write(out, this->mdl->get_state_names());
+		        this->active_indices.write(out, this->gadget.get_model()->get_state_names());
 		        out << std::endl;
 			    }
 

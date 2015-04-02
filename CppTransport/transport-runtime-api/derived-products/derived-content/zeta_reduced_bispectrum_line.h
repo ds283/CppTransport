@@ -54,7 +54,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    zeta_reduced_bispectrum_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter);
+				    zeta_reduced_bispectrum_line(const zeta_threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    zeta_reduced_bispectrum_line(Json::Value& reader);
@@ -133,9 +133,11 @@ namespace transport
 
 		    // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
         template <typename number>
-        zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(const threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
+        zeta_reduced_bispectrum_line<number>::zeta_reduced_bispectrum_line(const zeta_threepf_task<number>& tk, filter::threepf_kconfig_filter& kfilter)
           : derived_line<number>(tk),
-            use_kt_label(true), use_alpha_label(false), use_beta_label(false)
+            use_kt_label(true),
+            use_alpha_label(false),
+            use_beta_label(false)
 			    {
 		        // set up a list of serial numbers corresponding to the sample kconfigs for this derived line
             try

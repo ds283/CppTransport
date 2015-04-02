@@ -86,7 +86,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                     filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, time_axis, r_value, prec),
+					: derived_line<number>(tk, time_axis, prec),
 					  r_line<number>(tk, kfilter),
 					  time_series<number>(tk, tfilter)
 					{
@@ -99,7 +99,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: derived_line<number>(reader, finder),
-		        r_line<number>(reader),
+		        r_line<number>(reader, finder),
 		        time_series<number>(reader)
 					{
 					}
@@ -128,8 +128,7 @@ namespace transport
 				    // for each k-configuration, pull data from the database
 				    for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
 					    {
-				        cf_time_data_tag<number> tensor_tag =
-					                                                                  pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->mdl->tensor_flatten(0, 0), this->kconfig_sample_sns[i]);
+				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), this->kconfig_sample_sns[i]);
 
 				        // must copy this, because we will call lookup_tag() again
 				        const std::vector<number> tensor_data = t_handle.lookup_tag(tensor_tag);
@@ -149,8 +148,7 @@ namespace transport
 				        std::string latex_label    = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 				        std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-				        data_line<number> line = data_line<number>(time_axis, r_value,
-				                                                   t_axis, line_data, latex_label, nonlatex_label);
+				        data_line<number> line = data_line<number>(time_axis, r_value, t_axis, line_data, latex_label, nonlatex_label);
 
 						    lines.push_back(line);
 					    }

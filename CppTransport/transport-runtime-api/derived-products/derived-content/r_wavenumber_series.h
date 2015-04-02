@@ -81,7 +81,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                                 filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, wavenumber_axis, r_value, prec),
+					: derived_line<number>(tk, wavenumber_axis, prec),
 					  r_line<number>(tk, kfilter),
 					  wavenumber_series<number>(tk, tfilter)
 					{
@@ -94,7 +94,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: derived_line<number>(reader, finder),
-		        r_line<number>(reader),
+		        r_line<number>(reader, finder),
 		        wavenumber_series<number>(reader)
 			    {
 			    }
@@ -124,7 +124,7 @@ namespace transport
 				    for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 					    {
 						    cf_kconfig_data_tag<number> tensor_tag =
-							    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->mdl->tensor_flatten(0,0), this->time_sample_sns[i]);
+							    pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), this->time_sample_sns[i]);
 
 						    // must copy this, becaue we will call lookup_tag() again
 						    const std::vector<number> tensor_data = k_handle.lookup_tag(tensor_tag);

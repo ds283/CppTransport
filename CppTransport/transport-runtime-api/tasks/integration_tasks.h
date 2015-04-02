@@ -19,10 +19,11 @@
 #include <functional>
 
 
-// need rpackage_finder
+// need package_finder
 #include "transport-runtime-api/repository/records/record_finder.h"
 
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/derivable_task.h"
 #include "transport-runtime-api/concepts/initial_conditions.h"
 #include "transport-runtime-api/concepts/parameters.h"
 #include "transport-runtime-api/concepts/range.h"
@@ -84,7 +85,7 @@ namespace transport
 		//! An 'integration_task' contains information on the initial conditions, horizon-crossing
 		//! time and sampling times.
     template <typename number>
-    class integration_task: public task<number>
+    class integration_task: public derivable_task<number>
 	    {
 
 	      // TIME CONFIGURATION STORAGE POLICIES
@@ -173,7 +174,15 @@ namespace transport
         model<number>* get_model() const { return(this->ics.get_model()); }
 
 
-		    // INTERFACE - INTEGRATION DETAILS - TIMES AND INITIAL CONDITIONS
+		    // INTERFACE - implements a 'derivable task' interface
+
+      public:
+
+        //! Get vector of time configurations to store
+        virtual const std::vector<time_config>& get_time_config_list() const override { return(this->time_config_list); }
+
+
+        // INTERFACE - INTEGRATION DETAILS - TIMES AND INITIAL CONDITIONS
 
       public:
 
@@ -197,9 +206,6 @@ namespace transport
 
 		    //! Get std::vector of integration step times, truncated at Nstart if fast-forwarding enabled
 		    std::vector<double> get_integration_step_times(double Nstart, std::vector<time_storage_record>& slist, unsigned int refine = 0) const;
-
-        //! Get vector of time configurations to store
-        const std::vector<time_config>& get_time_config_list() const { return(this->time_config_list); }
 
 		    //! Get std::vector of initial conditions, offset using fast forwarding if enabled
 		    std::vector<number> get_ics_vector(const twopf_kconfig& kconfig) const;
@@ -318,9 +324,9 @@ namespace transport
     template <typename number>
     integration_task<number>::integration_task(const std::string& nm, const initial_conditions<number>& i,
                                                const range<double>& t, time_config_storage_policy p)
-      : ics(i),
+      : derivable_task<number>(nm),
+        ics(i),
         times(t),
-        task<number>(nm),
         time_storage_policy(p),
         fast_forward(true), ff_efolds(__CPP_TRANSPORT_DEFAULT_FAST_FORWARD_EFOLDS),
         max_refinements(__CPP_TRANSPORT_DEFAULT_MESH_REFINEMENTS)
@@ -355,9 +361,9 @@ namespace transport
 
 		template <typename number>
 		integration_task<number>::integration_task(const std::string& nm, Json::Value& reader, const initial_conditions<number>& i)
-			: time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
-        ics(i),
-        task<number>(nm, reader)
+			: derivable_task<number>(nm, reader),
+			  time_storage_policy(integration_task<number>::default_time_config_storage_policy()),
+        ics(i)
 			{
 				// deserialize fast-forward integration setting
 				fast_forward = reader[__CPP_TRANSPORT_NODE_FAST_FORWARD].asBool();
@@ -438,7 +444,7 @@ namespace transport
         // these are handled separately by the repository layer
 
 				// call next serializers in the queue
-				this->task<number>::serialize(writer);
+				this->derivable_task<number>::serialize(writer);
 			}
 
 
@@ -683,15 +689,20 @@ namespace transport
 
       public:
 
+        //! Get flattened list of ks at which we sample the two-point function
+        const std::vector<twopf_kconfig>& get_twopf_kconfig_list() const { return(this->twopf_config_list); }
+
+
+		    // SERVICES FOR DERIVED CLASSES
+
+      protected:
+
         //! Add a wavenumber to the list. The wavenumber should be conventionally normalized.
         //! Returns the serial number of the new configuration.
         unsigned int push_twopf_klist(double k, bool store=false);
 
         //! Convert a conventionally-normalized wavenumber to a comoving wavenumber
         double comoving_normalize(double k) const;
-
-        //! Get flattened list of ks at which we sample the two-point function
-        const std::vector<twopf_kconfig>& get_twopf_kconfig_list() const { return(this->twopf_config_list); }
 
         //! Search for a twopf kconfiguration by conventionally-normalized wavenumber.
         bool find_comoving_k(double k, unsigned int& serial) const;

@@ -56,7 +56,7 @@ namespace transport
 		      public:
 
 		        //! Basic user-facing constructor
-		        time_series(const integration_task<number>& tk, filter::time_filter tfilter);
+		        time_series(const derivable_task<number>& tk, filter::time_filter tfilter);
 
 		        //! Deserialization constructor
 		        time_series(Json::Value& reader);
@@ -110,7 +110,7 @@ namespace transport
 
 
 		    template <typename number>
-		    time_series<number>::time_series(const integration_task<number>& tk, filter::time_filter tfilter)
+		    time_series<number>::time_series(const derivable_task<number>& tk, filter::time_filter tfilter)
 		      : derived_line<number>(tk)
 			    {
 		        // set up a list of serial numbers corresponding to the sample times for this derived line

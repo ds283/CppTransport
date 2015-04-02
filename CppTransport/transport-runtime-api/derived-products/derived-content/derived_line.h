@@ -36,6 +36,7 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/derived-products/line_values.h"
+#import "integration_tasks.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"
@@ -55,12 +56,6 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIES                                  "k-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ANGLE_SERIES                              "angle-series"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SQUEEZING_FRACTION                        "squeezing-fraction"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE                                     "value-type"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF                                        "correlation-function"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD                                   "background-field"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL                                       "fNL"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R                                         "r"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX                            "spectral-index"
 
 
 // derived content types
@@ -85,10 +80,8 @@
 
 // common serialization groups used by derived products
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBERS                          "kconfig-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_K_SERIAL_NUMBER                           "n"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBERS                          "time-serial-numbers"
-#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_T_SERIAL_NUMBER                           "n"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT                          "use-kt-label"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_ALPHA                       "use-alpha-label"
@@ -121,16 +114,22 @@ namespace transport
 				  public:
 
 						//! Basic user-facing constructor
-						derived_line(const integration_task<number>& tk, axis_type at, value_type vt,
+						derived_line(const derivable_task<number>& tk, axis_type at,
 						             unsigned int prec=__CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
-						//! Dummy user-facing constructor, should not be used; called only for incorrectly-constructed instances
-						derived_line(const integration_task<number>& tk);
+						//! Dummy constructor, should not be used.
+						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
+						//! a warning from the Intel compiler), but not intended to be used
+						//! to construct real objects.
+						derived_line(const task<number>& tk);
 
 				    //! Deserialization constructor
 						derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
-						//! Dummy deserialization constructor, should not be used; called only for incorrectly-constructed instances
+						//! Dummy deserialization constructor, should not be used
+						//! Has to be provided as part of our virtual inheritance strategy (mainly to silence
+						//! a warning from the Intel compiler), but not intended to be used
+						//! to construct real objects.
 						derived_line(Json::Value& reader);
 
 						// Override default copy constructor to perform a deep copy of the parent task
@@ -142,12 +141,10 @@ namespace transport
 				    // ADMIN
 
 				    //! Get parent task
-				    integration_task<number>* get_parent_task() const { return(this->parent_task); }
+				    derivable_task<number>* get_parent_task() const { return(this->parent_task); }
 
             //! Get axis type
 						axis_type get_axis_type() const { return(this->x_type); }
-						//! Get value type
-						value_type get_value_type() const { return(this->y_type); }
 
 				    //! get dot meaning
 				    dot_type get_dot_meaning() const { return(this->dot_meaning); }
@@ -205,14 +202,8 @@ namespace transport
 						//! Axis type
 						axis_type x_type;
 
-						//! Value type
-						value_type y_type;
-
-				    //! record task which corresponds to this derivation
-				    integration_task<number>* parent_task;
-
-				    //! record model used for this derivation
-				    model<number>* mdl;
+				    //! record the task which 'owns' this derived content
+				    derivable_task<number>* parent_task;
 
 				    //! record meaning of momenta - do we interpret them as derivatives?
 				    dot_type dot_meaning;
@@ -239,14 +230,12 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(const integration_task<number>& tk, axis_type at, value_type vt, unsigned int prec)
+				derived_line<number>::derived_line(const derivable_task<number>& tk, axis_type at, unsigned int prec)
 					: x_type(at),
-            y_type(vt),
             dot_meaning(momenta),
             klabel_meaning(conventional),
             precision(prec),
-		        mdl(tk.get_model()),
-            parent_task(dynamic_cast<integration_task<number>*>(tk.clone()))
+            parent_task(dynamic_cast< derivable_task<number>* >(tk.clone()))
 					{
 						assert(parent_task != nullptr);
 
@@ -256,8 +245,8 @@ namespace transport
 
 
 				template <typename number>
-				derived_line<number>::derived_line(const integration_task<number>& tk)
-					: parent_task(nullptr), mdl(nullptr)
+				derived_line<number>::derived_line(const task<number>& tk)
+					: parent_task(nullptr)
 					{
 						assert(false);
 					}
@@ -265,7 +254,7 @@ namespace transport
 
 				template <typename number>
 				derived_line<number>::derived_line(Json::Value& reader)
-					: parent_task(nullptr), mdl(nullptr)
+					: parent_task(nullptr)
 					{
 						assert(false);
 					}
@@ -273,24 +262,17 @@ namespace transport
 
 				template <typename number>
 				derived_line<number>::derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-					: parent_task(nullptr), mdl(nullptr)
+					: parent_task(nullptr)
 					{
 				    precision = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
 
 				    std::string parent_task_name = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
-				    // extract parent task and model
+				    // extract parent task
             std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
             assert(tk_rec.get() != nullptr);
-            
-            if(tk_rec->get_type() != task_record<number>::integration)
-              throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_OUTPUT_TASK_NOT_INTGRTN);
-            
-            integration_task_record<number>* int_rec = dynamic_cast< integration_task_record<number>* >(tk_rec.get());
-            assert(int_rec != nullptr);
-            
-            parent_task = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());
-            mdl = parent_task->get_model();
+
+						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task());
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE].asString();
@@ -304,20 +286,6 @@ namespace transport
 				        msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE << " '" << xtype << "'";
 				        throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 					    }
-
-						// Deserialize: value type for this derived line
-				    std::string ytype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE].asString();
-						if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF)                  y_type = correlation_function_value;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD)        y_type = field_value;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL)            y_type = fNL_value;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R)              y_type = r_value;
-						else if(ytype == __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX) y_type = spectral_index_value;
-						else
-							{
-						    std::ostringstream msg;
-								msg << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_YTYPE << " '" << ytype << "'";
-								throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
-							}
 
 						// Deserialize: meaning of 'dot' for this derived line
 				    std::string dot_meaning_value = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_DOT_TYPE].asString();
@@ -366,13 +334,11 @@ namespace transport
 				template <typename number>
 				derived_line<number>::derived_line(const derived_line<number>& obj)
 					: x_type(obj.x_type),
-					  y_type(obj.y_type),
             dot_meaning(obj.dot_meaning),
 					  klabel_meaning(obj.klabel_meaning),
             precision(obj.precision),
             time_sample_sns(obj.time_sample_sns),
             kconfig_sample_sns(obj.kconfig_sample_sns),
-            mdl(obj.mdl),   // it's OK to shallow copy 'mdl'. Pointers to model instances are managed by the instance_manager
 		        parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone()))
 					{
 						assert(this->parent_task != nullptr);
@@ -393,7 +359,7 @@ namespace transport
 		    template <typename number>
 		    void derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags) const
 			    {
-		        pipe.attach(this->parent_task, this->mdl->get_N_fields(), tags);
+		        pipe.attach(this->parent_task, tags);
 			    }
 
 
@@ -432,34 +398,6 @@ namespace transport
 						    default:
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE);
-							}
-
-						// Serialize: value type of this derived line
-						switch(this->y_type)
-							{
-						    case correlation_function_value:
-							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_CF);
-									break;
-
-						    case field_value:
-							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_BGFIELD);
-									break;
-
-						    case fNL_value:
-							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_FNL);
-									break;
-
-						    case r_value:
-							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_R);
-									break;
-
-						    case spectral_index_value:
-							    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_YTYPE] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX);
-									break;
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_YTYPE);
 							}
 
 						// Serialize: meaning of 'dot' for this derived line
@@ -520,9 +458,16 @@ namespace transport
 				void derived_line<number>::write(std::ostream& out)
 					{
 						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << ", ";
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << this->mdl->get_name()
-								<< " [" << this->mdl->get_author() << " | " << this->mdl->get_tag() << "]" << std::endl;
+						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name();
+
+						// output model details if this derived line is directly associated with an integration task
+						integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->parent_task);
+						if(itk != nullptr)
+							{
+						    out << ", " <<__CPP_TRANSPORT_PRODUCT_DERIVED_LINE_MODEL_NAME << " '" << itk->get_model()->get_name()
+							    << " [" << itk->get_model()->get_author() << " | " << itk->get_model()->get_tag() << "]" << std::endl;
+
+							}
 
 						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_XTYPE << " ";
 						switch(this->x_type)
@@ -547,35 +492,6 @@ namespace transport
 							    assert(false);
 									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_XTYPE);
 							}
-
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_YTYPE << " ";
-						switch(this->y_type)
-							{
-						    case correlation_function_value:
-							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CF_LABEL << std::endl;
-									break;
-
-						    case field_value:
-							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_BGFIELD_LABEL << std::endl;
-									break;
-
-						    case fNL_value:
-							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_FNL_LABEL << std::endl;
-									break;
-
-						    case r_value:
-							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_R_LABEL << std::endl;
-									break;
-
-						    case spectral_index_value:
-							    out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_SPECTRAL_INDEX_LABEL << std::endl;
-									break;
-
-						    default:
-							    assert(false);
-									throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_YTYPE);
-							}
-
 
 						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING << " ";
 						switch(this->dot_meaning)
@@ -635,8 +551,7 @@ namespace transport
 				    this->wrapper.wrap_newline(out);
 					}
 
-
-			}   // derived_data
+			};   // derived_data
 
 
 	}   // namespace transport

@@ -82,7 +82,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
+	        : derived_line<number>(tk, wavenumber_axis, prec),
 	          twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -94,7 +94,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	        : derived_line<number>(reader, finder),
-	          twopf_line<number>(reader),
+	          twopf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader)
 	        {
 	        }
@@ -104,7 +104,7 @@ namespace transport
 		    void twopf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                                       const std::list<std::string>& tags) const
 			    {
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
 		        // attach our datapipe to an output group
 		        this->attach(pipe, tags);
@@ -132,7 +132,7 @@ namespace transport
 								        if(this->active_indices.is_on(index_set))
 									        {
 								            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
-								                                                                           this->mdl->flatten(m, n), this->time_sample_sns[i]);
+								                                                                           this->gadget.get_model()->flatten(m, n), this->time_sample_sns[i]);
 
                             // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = k_handle.lookup_tag(tag);
@@ -239,7 +239,7 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, correlation_function_value, prec),
+	        : derived_line<number>(tk, wavenumber_axis, prec),
 	          threepf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -251,7 +251,7 @@ namespace transport
         template <typename number>
         threepf_wavenumber_series<number>::threepf_wavenumber_series(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 	        : derived_line<number>(reader, finder),
-	          threepf_line<number>(reader),
+	          threepf_line<number>(reader, finder),
 	          wavenumber_series<number>(reader)
 	        {
 	        }
@@ -261,7 +261,7 @@ namespace transport
         void threepf_wavenumber_series<number>::derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                                              const std::list<std::string>& tags) const
 	        {
-		        unsigned int N_fields = this->mdl->get_N_fields();
+		        unsigned int N_fields = this->gadget.get_N_fields();
 
             // attach our datapipe to an output group
             this->attach(pipe, tags);
@@ -310,14 +310,14 @@ namespace transport
 		                        std::array<unsigned int, 3> index_set = { l, m, n };
 		                        if(this->active_indices.is_on(index_set))
 			                        {
-		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, this->mdl->flatten(l,m,n), this->time_sample_sns[i]);
+		                            cf_kconfig_data_tag<number> tag = pipe.new_cf_kconfig_data_tag(data_tag<number>::cf_threepf, this->gadget.get_model()->flatten(l,m,n), this->time_sample_sns[i]);
 
 		                            std::vector<number> line_data = k_handle.lookup_tag(tag);
 
 				                        // the integrator produces correlation functions involving the canonical momenta,
 				                        // not the derivatives. If the user wants derivatives then we have to shift.
 				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
-					                        this->shifter.shift(this->parent_task, this->mdl, pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
+					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
