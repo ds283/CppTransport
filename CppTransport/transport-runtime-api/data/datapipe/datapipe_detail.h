@@ -69,6 +69,7 @@ namespace transport
 
         //! Logging severity level
         typedef enum { datapipe_pull, normal, warning, error, critical } log_severity_level;
+
         typedef boost::log::sinks::synchronous_sink< boost::log::sinks::text_file_backend > sink_t;
 
 
@@ -78,83 +79,91 @@ namespace transport
 
         typedef enum { twopf_real, twopf_imag } twopf_type;
 
-        //! Output-group finder function -- serivce provided by a repository implementation
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string& name, const std::list<std::string>&)> output_group_finder;
+        //! Find integration content -- serivce provided by a repository implementation
+        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(const std::string& name, const std::list<std::string>&)> integration_content_finder;
 
-        //! Attach function for a datapipe
-        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(datapipe*, output_group_finder&, const std::string&, const std::list<std::string>&)> attach_callback;
+        //! Find postintegration content -- serivce provided by a repository implementation
+        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(const std::string& name, const std::list<std::string>&)> postintegration_content_finder;
+
+        //! Attach to integration content group
+        typedef std::function<std::shared_ptr< output_group_record<integration_payload> >(datapipe<number>*, integration_content_finder&, const std::string&, const std::list<std::string>&)> integration_attach_callback;
+
+        //! Attach to postintegration content group
+        typedef std::function<std::shared_ptr< output_group_record<postintegration_payload> >(datapipe<number>*, postintegration_content_finder&, const std::string&, const std::list<std::string>&)> postintegration_attach_callback;
 
         //! Detach function for a datapipe
-        typedef std::function<void(datapipe*)> detach_callback;
+        typedef std::function<void(datapipe<number>*)> detach_callback;
 
         //! Push derived content
-        typedef std::function<void(datapipe*, typename derived_data::derived_product<number>*)> dispatch_function;
+        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*)> dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
 
         //! Extract a set of 2pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&)> kconfig_twopf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<twopf_configuration>&)> kconfig_twopf_callback;
 
         //! Extract a set of 3pf k-configuration sample points from a datapipe
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&)> kconfig_threepf_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<threepf_configuration>&)> kconfig_threepf_callback;
 
         //! Extract a background field at a set of time sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, std::vector<number>&)> background_time_callback;
 
         //! Extract a twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_time_callback;
 
         //! Extract a threepf component at fixed k-configuration for a set of time sample-point
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_time_callback;
 
         //! Extract a tensor twopf component at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_time_callback;
 
         //! Extract the zeta twopf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_time_callback;
 
         //! Extract the zeta threepf at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_time_callback;
 
         //! Extract the zeta reduced bispectrum at fixed k-configuration for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_time_callback;
 
         //! Extract an fNL for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> fNL_time_callback;
 
         //! Extract bispectrum.template data for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> BT_time_callback;
 
         //! Extract template.template data for a set of time sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<number>&, derived_data::template_type)> TT_time_callback;
 
         //! Extract a twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&, twopf_type)> twopf_kconfig_callback;
 
         //! Extract a threepf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> threepf_kconfig_callback;
 
         //! Extract a tensor twopf component at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, unsigned int, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> tensor_twopf_kconfig_callback;
 
         //! Extract the zeta twopf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_twopf_kconfig_callback;
 
         //! Extract the zeta threepf at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_threepf_kconfig_callback;
 
         //! Extract the zeta reduced bispectrum at fixed time for a set of k-configuration sample-points
-        typedef std::function<void(datapipe*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
+        typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, unsigned int, std::vector<number>&)> zeta_redbsp_kconfig_callback;
 
 
         class utility_callbacks
 	        {
           public:
-            output_group_finder finder;
-            attach_callback     attach;
-            detach_callback     detach;
-            dispatch_function   dispatch;
+            integration_content_finder      integration_finder;
+            integration_attach_callback     integration_attach;
+            postintegration_content_finder  postintegration_finder;
+            postintegration_attach_callback postintegration_attach;
+            detach_callback                 detach;
+            dispatch_function               dispatch;
 	        };
 
 
@@ -194,6 +203,10 @@ namespace transport
             zeta_redbsp_kconfig_callback  zeta_redbsp;
 	        };
 
+      protected:
+
+		    typedef enum { none_attached, integration_attached, postintegration_attached } attachment_type;
+
 
         // CONSTRUCTOR, DESTRUCTOR
 
@@ -228,6 +241,7 @@ namespace transport
 
         //! Validate that the pipe is attached to a container
         bool validate_attached(void) const;
+		    bool validate_attached(attachment_type) const;
 
         //! Validate that the pipe is *not* attached to a container
         bool validate_unattached(void) const;
@@ -316,22 +330,25 @@ namespace transport
 
       public:
 
-        //! Attach an output-group to the datapipe, ready for reading
-        void attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags);
+        //! Attach a content group to the datapipe, ready for reading
+        void attach(derivable_task<number>* tk, const std::list<std::string>& tags);
 
-        //! Detach an output-group from the datapipe
+        //! Detach a content group from the datapipe
         void detach(void);
 
         //! Is this datapipe attached to an output group?
-        bool is_attached() const { return(this->attached_group.get() != nullptr); }
+        bool is_attached() const { return(this->type != none_attached); }
+
+      protected:
+
+		    //! set up cache tables for a newly-attached content group
+		    template <typename Payload>
+		    void attach_cache_tables(Payload& payload);
 
 
         // PROPERTIES OF CURRENTLY-ATTACHED GROUP
 
       public:
-
-        //! Get attached output group
-        std::shared_ptr< output_group_record<integration_payload> > get_attached_output_group(void) const;
 
         //! Get number of fields associated with currently attached group.
         //! Output is meaningful only when a group is attached.
@@ -421,14 +438,8 @@ namespace transport
         //! Generate a new bispectrum.template time tag
         BT_time_data_tag<number> new_BT_time_data_tag(derived_data::template_type type);
 
-        //! Generate a new bispectrum.template time tag, with restriction on integral over triangles
-        BT_time_data_tag<number> new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc);
-
         //! Generate a new template.template time tag
         TT_time_data_tag<number> new_TT_time_data_tag(derived_data::template_type type);
-
-        //! Generate a new template.template time tag, with restriction on integral over triangles
-        TT_time_data_tag<number> new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc);
 
 
         // INTERNAL DATA
@@ -507,11 +518,14 @@ namespace transport
 
         // CURRENTLY ATTACHED OUTPUT GROUP
 
-        //! Currently-attached output group; null if no group is attached
-        std::shared_ptr< output_group_record<integration_payload> > attached_group;
+		    //! what sort of group is currently attached?
+		    attachment_type type;
 
-        //! Currently attached task
-        integration_task<number>* attached_task;
+        //! Attachment point for an integration_payload output group; null if none is attached
+        std::shared_ptr< output_group_record<integration_payload> > attached_integration_group;
+
+		    //! Attachment point for a postintegration_payload output group; null if none is attached
+		    std::shared_ptr< output_group_record<postintegration_payload> > attached_postintegration_group;
 
         //! Number of fields associated with currently attached group
         unsigned int N_fields;
@@ -565,8 +579,13 @@ namespace transport
     datapipe<number>::datapipe(unsigned int dcap, unsigned int zcap,
                                              const boost::filesystem::path& lp, const boost::filesystem::path& tp, unsigned int w,
                                              utility_callbacks& u, config_cache& cf, timeslice_cache& t, kslice_cache& k, bool no_log)
-	    : logdir_path(lp), temporary_path(tp), worker_number(w),
-	      utilities(u), pull_config(cf), pull_timeslice(t), pull_kslice(k),
+	    : logdir_path(lp),
+	      temporary_path(tp),
+	      worker_number(w),
+	      utilities(u),
+	      pull_config(cf),
+	      pull_timeslice(t),
+	      pull_kslice(k),
 	      time_config_cache_table(nullptr),
 	      twopf_kconfig_cache_table(nullptr),
 	      threepf_kconfig_cache_table(nullptr),
@@ -577,7 +596,8 @@ namespace transport
 	      threepf_kconfig_cache(__CPP_TRANSPORT_DEFAULT_CONFIGURATION_CACHE_SIZE),
 	      data_cache(dcap),
 	      zeta_cache(zcap),
-	      attached_task(nullptr)
+	      type(none_attached),
+        N_fields(0)
 	    {
         this->database_timer.stop();
 
@@ -647,7 +667,20 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, normal) << "--   zeta evictions                     = " << format_time(this->zeta_cache.get_eviction_timer());
 
         // detach any attached output group, if necessary
-        if(this->attached_group.get() != nullptr) this->detach();
+		    switch(this->type)
+			    {
+		        case integration_attached:
+			        if(this->attached_integration_group.get() != nullptr) this->detach();
+				      break;
+
+		        case postintegration_attached:
+			        if(this->attached_postintegration_group.get() != nullptr) this->detach();
+				      break;
+
+		        case none_attached:
+		        default:
+			        break;
+			    }
 
         if(this->log_sink)    // implicitly converts to bool, value true if not null
 	        {
@@ -660,31 +693,58 @@ namespace transport
     template <typename number>
     bool datapipe<number>::validate_unattached(void) const
 	    {
-        return(this->attached_group.get() == nullptr &&
-	        this->attached_task == nullptr &&
-	        this->time_config_cache_table == nullptr &&
-	        this->twopf_kconfig_cache_table == nullptr &&
-	        this->threepf_kconfig_cache_table == nullptr &&
-	        this->data_cache_table == nullptr &&
-	        this->zeta_cache_table == nullptr);
+		    if(this->type != none_attached) return(false);
+
+		    if(this->attached_integration_group.get() != nullptr
+			       || this->attached_postintegration_group.get() != nullptr) return(false);
+
+		    if(this->time_config_cache_table != nullptr
+				    || this->twopf_kconfig_cache_table != nullptr
+				    || this->threepf_kconfig_cache_table != nullptr
+				    || this->data_cache_table != nullptr
+				    || this->zeta_cache_table != nullptr) return(false);
+
+		    return(true);
 	    }
 
 
     template <typename number>
     bool datapipe<number>::validate_attached(void) const
 	    {
-        return(this->attached_group.get() != nullptr &&
-	        this->attached_task != nullptr &&
-	        this->time_config_cache_table != nullptr &&
-	        this->twopf_kconfig_cache_table != nullptr &&
-	        this->threepf_kconfig_cache_table != nullptr &&
-	        this->data_cache_table != nullptr &&
-	        this->zeta_cache_table != nullptr);
+		    switch(this->type)
+			    {
+		        case none_attached:
+			        return(false);
+
+		        case integration_attached:
+			        if(this->attached_integration_group.get() == nullptr) return(false);
+				      break;
+
+		        case postintegration_attached:
+			        if(this->attached_postintegration_group.get() == nullptr) return(false);
+				      break;
+			    }
+
+		    if(this->time_config_cache_table == nullptr
+			       || this->twopf_kconfig_cache_table == nullptr
+			       || this->threepf_kconfig_cache_table == nullptr
+			       || this->data_cache_table == nullptr
+			       || this->zeta_cache_table == nullptr) return(false);
+
+		    return(true);
 	    }
 
 
+		template <typename number>
+		bool datapipe<number>::validate_attached(attachment_type t) const
+			{
+				if(this->type != t) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_WRONG_CONTENT);
+				return(this->validate_attached());
+			}
+
+
     template <typename number>
-    void datapipe<number>::attach(integration_task<number>* tk, unsigned int Nf, const std::list<std::string>& tags)
+    void datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
 	    {
         assert(this->validate_unattached());
         if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
@@ -692,24 +752,57 @@ namespace transport
         assert(tk != nullptr);
         if(tk == nullptr) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NULL_TASK);
 
-        this->attached_group = this->utilities.attach(this, this->utilities.finder, tk->get_name(), tags);
-        this->attached_task  = tk;
+        // work out what sort of content group we are trying to attach
+        integration_task<number>    * itk = nullptr;
+        postintegration_task<number>* ptk = nullptr;
 
-        integration_payload& payload = this->attached_group->get_payload();
+        if((itk = dynamic_cast< integration_task<number>* >(tk)) != nullptr)    // trying to attach to an integration content group
+	        {
+            this->type                       = integration_attached;
+            this->attached_integration_group = this->utilities.integration_attach(this, this->utilities.integration_finder, tk->get_name(), tags);
 
-        BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time())
-	        << " (from task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
+            // remember number of fields associated with this container
+            this->N_fields = itk->get_model()->get_N_fields();
 
-        // attach new cache tables
+            integration_payload& payload = this->attached_integration_group->get_payload();
+            this->attach_cache_tables(payload);
+
+            BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
+		            << " (from integration task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
+	        }
+        else if((ptk = dynamic_cast< postintegration_task<number>* >(ptk)) != nullptr)      // trying to attach to a postintegration content group
+	        {
+            this->type                           = postintegration_attached;
+            this->attached_postintegration_group = this->utilities.postintegration_attach(this, this->utilities.postintegration_finder, tk->get_name(), tags);
+
+            this->N_fields = 0;
+
+            postintegration_payload& payload = this->attached_postintegration_group->get_payload();
+            this->attach_cache_tables(payload);
+
+            BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
+		            << " (from postintegration task '" << tk->get_name() << "'";
+	        }
+        else
+	        {
+            std::stringstream msg;
+            msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
+            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
+	        }
+	    }
+
+
+		template <typename number>
+		template <typename Payload>
+		void datapipe<number>::attach_cache_tables(Payload& payload)
+			{
+        // attach new cache tables for this container
 
         this->time_config_cache_table = &(this->time_config_cache.get_table_handle(payload.get_container_path().string()));
         this->twopf_kconfig_cache_table = &(this->twopf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
         this->threepf_kconfig_cache_table = &(this->threepf_kconfig_cache.get_table_handle(payload.get_container_path().string()));
         this->data_cache_table = &(this->data_cache.get_table_handle(payload.get_container_path().string()));
         this->zeta_cache_table = &(this->zeta_cache.get_table_handle(payload.get_container_path().string()));
-
-        // remember number of fields associated with this container
-        this->N_fields = Nf;
 	    }
 
 
@@ -719,27 +812,29 @@ namespace transport
         assert(this->validate_attached());
         if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_DETACH_PIPE_NOT_ATTACHED);
 
-        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_group->get_creation_time());
-
         this->utilities.detach(this);
-        this->attached_group.reset();
-        this->attached_task = nullptr;
+
+		    switch(this->type)
+			    {
+		        case integration_attached:
+			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time());
+			        this->attached_integration_group.reset();
+				      break;
+
+		        case postintegration_attached:
+			        BOOST_LOG_SEV(this->get_log(), datapipe<number>::normal) << "** DETACH output group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time());
+			        this->attached_postintegration_group.reset();
+				      break;
+
+		        default:
+			        break;
+			    }
 
         this->time_config_cache_table = nullptr;
         this->twopf_kconfig_cache_table = nullptr;
         this->threepf_kconfig_cache_table = nullptr;
         this->data_cache_table = nullptr;
         this->zeta_cache_table = nullptr;
-	    }
-
-
-    template <typename number>
-    std::shared_ptr< output_group_record<integration_payload> > datapipe<number>::get_attached_output_group(void) const
-	    {
-        assert(this->validate_attached());
-        if(!this->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
-
-        return(this->attached_group);
 	    }
 
 
@@ -870,114 +965,63 @@ namespace transport
     template <typename number>
     zeta_twopf_time_data_tag<number> datapipe<number>::new_zeta_twopf_time_data_tag(const twopf_configuration& kdata)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_twopf();
-        return zeta_twopf_time_data_tag<number>(this, kdata, this->attached_task, this->N_fields, cached);
+        return zeta_twopf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
     zeta_threepf_time_data_tag<number> datapipe<number>::new_zeta_threepf_time_data_tag(const threepf_configuration& kdata)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_threepf();
-        return zeta_threepf_time_data_tag<number>(this, kdata, this->attached_task, this->N_fields, cached);
+        return zeta_threepf_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
     zeta_reduced_bispectrum_time_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_time_data_tag(const threepf_configuration& kdata)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_redbsp();
-        return zeta_reduced_bispectrum_time_data_tag<number>(this, kdata, this->attached_task, this->N_fields, cached);
+        return zeta_reduced_bispectrum_time_data_tag<number>(this, kdata);
 	    }
 
 
     template <typename number>
     zeta_twopf_kconfig_data_tag<number> datapipe<number>::new_zeta_twopf_kconfig_data_tag(unsigned int tserial)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_twopf();
-        return zeta_twopf_kconfig_data_tag<number>(this, tserial, this->attached_task, this->N_fields, cached);
+        return zeta_twopf_kconfig_data_tag<number>(this, tserial);
 	    }
 
 
     template <typename number>
     zeta_threepf_kconfig_data_tag<number> datapipe<number>::new_zeta_threepf_kconfig_data_tag(unsigned int tserial)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_threepf();
-        return zeta_threepf_kconfig_data_tag<number>(this, tserial, this->attached_task, this->N_fields, cached);
+        return zeta_threepf_kconfig_data_tag<number>(this, tserial);
 	    }
 
 
     template <typename number>
     zeta_reduced_bispectrum_kconfig_data_tag<number> datapipe<number>::new_zeta_reduced_bispectrum_kconfig_data_tag(unsigned int tserial)
 	    {
-        bool cached = this->attached_group->get_payload().get_precomputed_products().get_zeta_redbsp();
-        return zeta_reduced_bispectrum_kconfig_data_tag<number>(this, tserial, this->attached_task, this->N_fields, cached);
-	    }
-
-
-    bool is_cached(integration_payload& payload, derived_data::template_type type)
-	    {
-        bool rval = false;
-        switch(type)
-	        {
-            case derived_data::fNL_local_template:
-	            rval = payload.get_precomputed_products().get_fNL_local();
-            break;
-
-            case derived_data::fNL_equi_template:
-	            rval = payload.get_precomputed_products().get_fNL_equi();
-            break;
-
-            case derived_data::fNL_ortho_template:
-	            rval = payload.get_precomputed_products().get_fNL_ortho();
-            break;
-
-            case derived_data::fNL_DBI_template:
-	            rval = payload.get_precomputed_products().get_fNL_DBI();
-            break;
-	        }
-
-        return(rval);
+        return zeta_reduced_bispectrum_kconfig_data_tag<number>(this, tserial);
 	    }
 
 
     template <typename number>
     fNL_time_data_tag<number> datapipe<number>::new_fNL_time_data_tag(derived_data::template_type type)
 	    {
-        bool cached = is_cached(this->attached_group->get_payload(), type);
-        return fNL_time_data_tag<number>(this, this->attached_task, this->N_fields, type, cached);
+        return fNL_time_data_tag<number>(this, type);
 	    }
 
 
     template <typename number>
     BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::template_type type)
 	    {
-        bool cached = is_cached(this->attached_group->get_payload(), type);
-        return BT_time_data_tag<number>(this, this->attached_task, this->N_fields, type, cached);
-	    }
-
-
-    template <typename number>
-    BT_time_data_tag<number> datapipe<number>::new_BT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
-	    {
-        bool cached = is_cached(this->attached_group->get_payload(), type);
-        return BT_time_data_tag<number>(this, this->attached_task, this->N_fields, type, kc, cached);
+        return BT_time_data_tag<number>(this, type);
 	    }
 
 
     template <typename number>
     TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::template_type type)
 	    {
-        bool cached = is_cached(this->attached_group->get_payload(), type);
-        return TT_time_data_tag<number>(this, this->attached_task, this->N_fields, type, cached);
-	    }
-
-
-    template <typename number>
-    TT_time_data_tag<number> datapipe<number>::new_TT_time_data_tag(derived_data::template_type type, const std::vector<unsigned int>& kc)
-	    {
-        bool cached = is_cached(this->attached_group->get_payload(), type);
-        return TT_time_data_tag<number>(this, this->attached_task, this->N_fields, type, kc, cached);
+        return TT_time_data_tag<number>(this, type);
 	    }
 
 

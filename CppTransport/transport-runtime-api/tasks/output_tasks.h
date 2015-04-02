@@ -19,12 +19,14 @@
 #include <functional>
 
 
-// need repository records to get derived_product_finder
-#include "transport-runtime-api/repository/records/repository_records.h"
-
 #include "transport-runtime-api/tasks/task.h"
-#include "transport-runtime-api/derived-products/derived_product.h"
 #include "transport-runtime-api/messages.h"
+
+// forward-declare repository records if needed
+#include "transport-runtime-api/repository/records/repository_records_forward_declare.h"
+
+// forward declare derived products if needed
+#include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
 
 

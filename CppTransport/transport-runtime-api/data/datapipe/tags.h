@@ -471,12 +471,9 @@ namespace transport
 
       public:
 
-        zeta_twopf_time_data_tag(datapipe<number>* p, const twopf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+        zeta_twopf_time_data_tag(datapipe<number>* p, const twopf_configuration& k)
 	        : data_tag<number>(p),
-	          kdata(k),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          kdata(k)
 	        {
 	        }
 
@@ -517,20 +514,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! kserial - controls which k serial number is sampled
         const twopf_configuration kdata;
-
-        //! compute delegate
-        derived_data::zeta_timeseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -544,12 +529,9 @@ namespace transport
 
       public:
 
-        zeta_threepf_time_data_tag(datapipe<number>* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+        zeta_threepf_time_data_tag(datapipe<number>* p, const threepf_configuration& k)
 	        : data_tag<number>(p),
-	          kdata(k),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          kdata(k)
 	        {
 	        }
 
@@ -590,20 +572,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! kserial - controls which k serial number is sampled
         const threepf_configuration kdata;
-
-        //! compute delegate
-        derived_data::zeta_timeseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -617,12 +587,9 @@ namespace transport
 
       public:
 
-        zeta_reduced_bispectrum_time_data_tag(datapipe<number>* p, const threepf_configuration& k, integration_task<number>* t, unsigned int N, bool c)
+        zeta_reduced_bispectrum_time_data_tag(datapipe<number>* p, const threepf_configuration& k)
 	        : data_tag<number>(p),
-	          kdata(k),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          kdata(k)
 	        {
 	        }
 
@@ -663,20 +630,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! kserial - controls which k serial number is sampled
         const threepf_configuration kdata;
-
-        //! compute delegate
-        derived_data::zeta_timeseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -690,12 +645,9 @@ namespace transport
 
       public:
 
-        zeta_twopf_kconfig_data_tag(datapipe<number>* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+        zeta_twopf_kconfig_data_tag(datapipe<number>* p, unsigned int ts)
 	        : data_tag<number>(p),
-	          tserial(ts),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          tserial(ts)
 	        {
 	        }
 
@@ -736,20 +688,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! tserial - controls which t serial number is sampled
         const unsigned int tserial;
-
-        //! compute delegate
-        derived_data::zeta_kseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -763,12 +703,9 @@ namespace transport
 
       public:
 
-        zeta_threepf_kconfig_data_tag(datapipe<number>* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+        zeta_threepf_kconfig_data_tag(datapipe<number>* p, unsigned int ts)
 	        : data_tag<number>(p),
-	          tserial(ts),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          tserial(ts)
 	        {
 	        }
 
@@ -809,20 +746,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! tserial - controls which t serial number is sampled
         const unsigned int tserial;
-
-        //! compute delegate
-        derived_data::zeta_kseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -836,12 +761,9 @@ namespace transport
 
       public:
 
-        zeta_reduced_bispectrum_kconfig_data_tag(datapipe<number>* p, unsigned int ts, integration_task<number>* t, unsigned int N, bool c)
+        zeta_reduced_bispectrum_kconfig_data_tag(datapipe<number>* p, unsigned int ts)
 	        : data_tag<number>(p),
-	          tserial(ts),
-	          tk(t),
-	          N_fields(N),
-	          cached(c)
+	          tserial(ts)
 	        {
 	        }
 
@@ -882,20 +804,8 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
         //! tserial - controls which t serial number is sampled
         const unsigned int tserial;
-
-        //! compute delegate
-        derived_data::zeta_kseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
 
 	    };
 
@@ -909,12 +819,9 @@ namespace transport
 
       public:
 
-        fNL_time_data_tag(datapipe<number>* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+        fNL_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
 	        : data_tag<number>(p),
-	          tk(t),
-	          N_fields(N),
-	          type(ty),
-	          cached(c)
+	          type(ty)
 	        {
 	        }
 
@@ -955,18 +862,6 @@ namespace transport
 
       protected:
 
-        //! cached version available?
-        bool cached;
-
-        //! compute delegate
-        derived_data::fNL_timeseries_compute<number> computer;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
-
         //! template type
         typename derived_data::template_type type;
 
@@ -982,25 +877,9 @@ namespace transport
 
       public:
 
-        BT_time_data_tag(datapipe<number>* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+        BT_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
 	        : data_tag<number>(p),
-	          tk(t),
-	          N_fields(N),
-	          type(ty),
-	          cached(c),
-	          restrict_triangles(false)
-	        {
-	        }
-
-        BT_time_data_tag(datapipe<number>* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
-                         const std::vector<unsigned int>& kc, bool c)
-	        : data_tag<number>(p),
-	          tk(t),
-	          N_fields(N),
-	          type(ty),
-	          cached(c),
-	          restrict_triangles(true),
-	          kconfig_sns(kc)
+	          type(ty)
 	        {
 	        }
 
@@ -1041,26 +920,8 @@ namespace transport
 
       protected:
 
-        //! compute delegate
-        derived_data::fNL_timeseries_compute<number> computer;
-
-        //! cached version available?
-        bool cached;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
-
         //! template type
         typename derived_data::template_type type;
-
-        //! restrict integration to supplied set of triangles?
-        bool restrict_triangles;
-
-        //! set of kconfig serial numbers to restrict to, if used
-        std::vector<unsigned int> kconfig_sns;
 
 	    };
 
@@ -1074,25 +935,9 @@ namespace transport
 
       public:
 
-        TT_time_data_tag(datapipe<number>* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty, bool c)
+        TT_time_data_tag(datapipe<number>* p, derived_data::template_type ty)
 	        : data_tag<number>(p),
-	          tk(t),
-	          N_fields(N),
-	          type(ty),
-	          cached(c),
-	          restrict_triangles(false)
-	        {
-	        }
-
-        TT_time_data_tag(datapipe<number>* p, integration_task<number>* t, unsigned int N, derived_data::template_type ty,
-                         const std::vector<unsigned int>& kc, bool c)
-	        : data_tag<number>(p),
-	          tk(t),
-	          N_fields(N),
-	          type(ty),
-	          cached(c),
-	          restrict_triangles(true),
-	          kconfig_sns(kc)
+	          type(ty)
 	        {
 	        }
 
@@ -1133,26 +978,8 @@ namespace transport
 
       protected:
 
-        //! compute delegate
-        derived_data::fNL_timeseries_compute<number> computer;
-
-        //! cached version available?
-        bool cached;
-
-        //! pointer to task
-        integration_task<number>* tk;
-
-        //! number of fields
-        unsigned int N_fields;
-
         //! template type
         typename derived_data::template_type type;
-
-        //! restrict integration to supplied set of triangles?
-        bool restrict_triangles;
-
-        //! set of kconfig serial numbers to restrict to, if used
-        std::vector<unsigned int> kconfig_sns;
 
 	    };
 
@@ -1160,6 +987,9 @@ namespace transport
     template <typename number>
     void time_config_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<double>& data)
 	    {
+		    // check we are attached to a content group
+		    // time configuration data can be extracted from any container, so it doesn't matter what sort of group
+		    // we are attached to
         assert(this->pipe->validate_attached());
         if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
@@ -1176,6 +1006,7 @@ namespace transport
     template <typename number>
     void twopf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<twopf_configuration>& data)
 	    {
+		    // TODO: should work out whether this content group can serve twopf configuration data?
         assert(this->pipe->validate_attached());
         if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
@@ -1192,6 +1023,7 @@ namespace transport
     template <typename number>
     void threepf_kconfig_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<threepf_configuration>& data)
 	    {
+		    // TODO: should work out whether this content group can serve threepf configuration data?
         assert(this->pipe->validate_attached());
         if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
@@ -1208,8 +1040,9 @@ namespace transport
     template <typename number>
     void background_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+		    // check that we are attached to an integration content group
+        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL background time sample request for element " << this->id;
@@ -1224,8 +1057,9 @@ namespace transport
     template <typename number>
     void cf_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        // check that we are attached to an integration content group
+        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(this->type == data_tag<number>::cf_twopf_re)
 	        {
@@ -1310,8 +1144,9 @@ namespace transport
     template <typename number>
     void cf_kconfig_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        // check that we are attached to an integration content group
+        assert(this->pipe->validate_attached(datapipe<number>::integration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::integration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
         if(this->type == data_tag<number>::cf_twopf_re)
 	        {
@@ -1395,304 +1230,145 @@ namespace transport
     template <typename number>
     void zeta_twopf_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+		    // check that we are attached to a content group
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf time sample request, k-configuration " << this->kdata.kserial;
 #endif
 
-        if(this->cached)  // extract from data container
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.zeta_twopf(this->pipe, sns, this->kdata.serial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-            this->computer.twopf(handle, sample, this->kdata);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.zeta_twopf(this->pipe, sns, this->kdata.serial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void zeta_threepf_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        if(this->cached)  // extract from data container
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.zeta_threepf(this->pipe, sns, this->kdata.serial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-            this->computer.threepf(handle, sample, this->kdata);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.zeta_threepf(this->pipe, sns, this->kdata.serial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void zeta_reduced_bispectrum_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum time sample request, type = real, k-configuration " << this->kdata.kserial;
 #endif
 
-        if(this->cached)  // extract from data container
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.zeta_redbsp(this->pipe, sns, this->kdata.serial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields);
-            this->computer.reduced_bispectrum(handle, sample, this->kdata);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.zeta_redbsp(this->pipe, sns, this->kdata.serial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void zeta_twopf_kconfig_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta twopf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        if(this->cached)  // extract from data container
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.zeta_twopf(this->pipe, sns, this->tserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // pull information on this time-value from the database -- not efficient! but is there a better way?
-            std::vector<unsigned int> time_sn;
-            time_sn.push_back(this->tserial);
-
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-            this->computer.twopf(handle, sample, 0);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_kslice.zeta_twopf(this->pipe, sns, this->tserial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void zeta_threepf_kconfig_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta threepf kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        if(this->cached)  // extract from data contanier
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.zeta_threepf(this->pipe, sns, this->tserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // pull information on this time-value from the database -- as above, not efficient
-            std::vector<unsigned int> time_sn;
-            time_sn.push_back(this->tserial);
-
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-            this->computer.threepf(handle, sample, 0);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_kslice.zeta_threepf(this->pipe, sns, this->tserial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void zeta_reduced_bispectrum_kconfig_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL zeta reduced bispectrum kconfig sample request, t-serial " << this->tserial;
 #endif
 
-        if(this->cached)  // extract from data contanier
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_kslice.zeta_redbsp(this->pipe, sns, this->tserial, sample);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // pull information on this time-value from the database -- as above, not efficient
-            std::vector<unsigned int> time_sn;
-            time_sn.push_back(this->tserial);
-
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(time_sn);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::zeta_kseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_sn, time_values, this->N_fields);
-            this->computer.reduced_bispectrum(handle, sample, 0);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_kslice.zeta_redbsp(this->pipe, sns, this->tserial, sample);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void fNL_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL fNL sample request, template = " << template_type(this->type);
 #endif
 
-        if(this->cached)  // extract from data container
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.fNL(this->pipe, sns, sample, this->type);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-            this->computer.fNL(handle, sample);
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.fNL(this->pipe, sns, sample, this->type);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void BT_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL bispectrum.template sample request, template = " << template_type(this->type);
 #endif
 
-        if(!this->restrict_triangles && this->cached)  // extract from data contanier
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            if(this->restrict_triangles)
-	            {
-                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
-                this->computer.BT(handle, sample);
-	            }
-            else
-	            {
-                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-                this->computer.BT(handle, sample);
-	            }
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
+        this->pipe->database_timer.stop();
 	    }
 
 
     template <typename number>
     void TT_time_data_tag<number>::pull(const std::vector<unsigned int>& sns, std::vector<number>& sample)
 	    {
-        assert(this->pipe->validate_attached());
-        if(!this->pipe->validate_attached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
+        assert(this->pipe->validate_attached(datapipe<number>::postintegration_attached));
+        if(!this->pipe->validate_attached(datapipe<number>::postintegration_attached)) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_PIPE_NOT_ATTACHED);
 
 #ifdef __CPP_TRANSPORT_DEBUG_DATAPIPE
 		    BOOST_LOG_SEV(this->pipe->get_log(), datapipe<number>::datapipe_pull) << "** PULL template.template sample request, template = " << template_type(this->type);
 #endif
 
-        if(!this->restrict_triangles && this->cached)  // extract from data contanier
-	        {
-            this->pipe->database_timer.resume();
-            this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
-            this->pipe->database_timer.stop();
-	        }
-        else              // have to compute values on the fly
-	        {
-            // look up time values corresponding to these serial numbers
-            typename datapipe<number>::time_config_handle& tc_handle = this->pipe->new_time_config_handle(sns);
-            time_config_tag<number> tc_tag = this->pipe->new_time_config_tag();
-
-            const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
-
-            // set up handle for compute delegate
-            if(this->restrict_triangles)
-	            {
-                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type, this->kconfig_sns);
-                this->computer.TT(handle, sample);
-	            }
-            else
-	            {
-                std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->computer.make_handle(*(this->pipe), this->tk, sns, time_values, this->N_fields, this->type);
-                this->computer.TT(handle, sample);
-	            }
-	        }
+        this->pipe->database_timer.resume();
+        this->pipe->pull_timeslice.BT(this->pipe, sns, sample, this->type);
+        this->pipe->database_timer.stop();
 	    }
 
 

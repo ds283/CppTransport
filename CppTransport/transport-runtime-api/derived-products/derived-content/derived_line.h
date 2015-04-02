@@ -36,7 +36,6 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 #include "transport-runtime-api/derived-products/line_values.h"
-#import "integration_tasks.h"
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME                                 "task-name"

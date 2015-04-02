@@ -173,7 +173,8 @@ namespace transport
         //! Create a new datapipe
         virtual datapipe<number> create_datapipe(const boost::filesystem::path& logdir,
                                                  const boost::filesystem::path& tempdir,
-                                                 typename datapipe<number>::output_group_finder finder,
+                                                 typename datapipe<number>::integration_content_finder integration_finder,
+                                                 typename datapipe<number>::postintegration_content_finder postintegration_finder,
                                                  typename datapipe<number>::dispatch_function dispatcher,
                                                  unsigned int worker, bool no_log = false) override;
 
@@ -254,10 +255,18 @@ namespace transport
 
       protected:
 
-        //! Attach an output_group_record to a pipe
-        std::shared_ptr< output_group_record<integration_payload> >
-          datapipe_attach(datapipe<number>* pipe, typename datapipe<number>::output_group_finder& finder,
-                          const std::string& name, const std::list<std::string>& tags);
+        //! Attach a SQLite database to a datapipe
+        void datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path);
+
+        //! Attach an integration content group to a datapipe
+        std::shared_ptr <output_group_record<integration_payload>>
+	        datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
+	                                            const std::string& name, const std::list<std::string>& tags);
+
+        //! Attach an postintegration content group to a datapipe
+        std::shared_ptr <output_group_record<postintegration_payload>>
+	        datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
+	                                                const std::string& name, const std::list<std::string>& tags);
 
         //! Detach an output_group_record from a pipe
         void datapipe_detach(datapipe<number>* pipe);
@@ -574,7 +583,9 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_time_sample_table(db, tk);
+        sqlite3_operations::create_twopf_sample_table(db, tk);
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
       }
 
 
@@ -584,9 +595,12 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::no_foreign_keys);
-        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::no_foreign_keys);
-        sqlite3_operations::create_zeta_reduced_bispectrum_table(db, sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_time_sample_table(db, tk);
+        sqlite3_operations::create_twopf_sample_table(db, tk);
+        sqlite3_operations::create_threepf_sample_table(db, tk);
+        sqlite3_operations::create_zeta_twopf_table(db, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_zeta_threepf_table(db, sqlite3_operations::foreign_keys);
+        sqlite3_operations::create_zeta_reduced_bispectrum_table(db, sqlite3_operations::foreign_keys);
       }
 
 
@@ -596,7 +610,8 @@ namespace transport
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
-        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::no_foreign_keys);
+        sqlite3_operations::create_time_sample_table(db, tk);
+        sqlite3_operations::create_fNL_table(db, tk->get_template(), sqlite3_operations::foreign_keys);
       }
 
 
@@ -1046,21 +1061,25 @@ namespace transport
 
     template <typename number>
     datapipe<number> data_manager_sqlite3<number>::create_datapipe(const boost::filesystem::path& logdir, const boost::filesystem::path& tempdir,
-                                                                   typename datapipe<number>::output_group_finder finder,
+                                                                   typename datapipe<number>::integration_content_finder integration_finder,
+                                                                   typename datapipe<number>::postintegration_content_finder postintegration_finder,
                                                                    typename datapipe<number>::dispatch_function dispatcher,
                                                                    unsigned int worker, bool no_log)
 			{
 		    // set up callback API
-
 		    typename datapipe<number>::utility_callbacks utilities;
 
-		    utilities.attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach, this,
-		                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+        utilities.integration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_integration_content, this,
+                                                 std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
+
+        utilities.postintegration_attach = std::bind(&data_manager_sqlite3<number>::datapipe_attach_postintegration_content, this,
+                                                     std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4);
 
 		    utilities.detach = std::bind(&data_manager_sqlite3<number>::datapipe_detach, this, std::placeholders::_1);
 
-		    utilities.finder   = finder;
-		    utilities.dispatch = dispatcher;
+        utilities.integration_finder     = integration_finder;
+        utilities.postintegration_finder = postintegration_finder;
+        utilities.dispatch               = dispatcher;
 
 		    typename datapipe<number>::config_cache config;
 
@@ -1410,15 +1429,51 @@ namespace transport
 	    }
 
 
+		template <typename number>
+		void data_manager_sqlite3<number>::datapipe_attach_container(datapipe<number>* pipe, const boost::filesystem::path& ctr_path)
+			{
+		    sqlite3* db = nullptr;
+
+		    int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
+
+		    if(status != SQLITE_OK)
+			    {
+		        std::ostringstream msg;
+		        if(db != nullptr)
+			        {
+		            msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
+		            sqlite3_close(db);
+			        }
+		        else
+			        {
+		            msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
+			        }
+		        throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
+			    }
+		    sqlite3_extended_result_codes(db, 1);
+
+		    // enable foreign key constraints
+		    char* errmsg;
+		    sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+		    // force temporary databases to be stored in memory, for speed
+		    sqlite3_exec(db, "PRAGMA temp_store = 2;", nullptr, nullptr, &errmsg);
+
+		    // remember this connexion
+		    this->open_containers.push_back(db);
+		    pipe->set_manager_handle(db);
+
+		    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "' to datapipe";
+			}
+
+
     template <typename number>
     std::shared_ptr< output_group_record<integration_payload> >
-    data_manager_sqlite3<number>::datapipe_attach(datapipe<number>* pipe, typename datapipe<number>::output_group_finder& finder,
-                                                  const std::string& name, const std::list<std::string>& tags)
+    data_manager_sqlite3<number>::datapipe_attach_integration_content(datapipe<number>* pipe, typename datapipe<number>::integration_content_finder& finder,
+                                                                      const std::string& name, const std::list<std::string>& tags)
 			{
 				assert(pipe != nullptr);
 				if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
-
-				sqlite3* db = nullptr;
 
         // find a suitable output group for this task
         std::shared_ptr< output_group_record<integration_payload> > group = finder(name, tags);
@@ -1428,39 +1483,32 @@ namespace transport
 				// get path to the output group data container
 		    boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
 
-				int status = sqlite3_open_v2(ctr_path.string().c_str(), &db, SQLITE_OPEN_READONLY, nullptr);
-
-				if(status != SQLITE_OK)
-					{
-				    std::ostringstream msg;
-						if(db != nullptr)
-							{
-								msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ": " << sqlite3_errmsg(db) << ")";
-								sqlite3_close(db);
-							}
-						else
-							{
-								msg << __CPP_TRANSPORT_DATACTR_OPEN_A << " '" << ctr_path.string() << "' " << __CPP_TRANSPORT_DATACTR_OPEN_B << status << ")";
-							}
-						throw runtime_exception(runtime_exception::DATA_CONTAINER_ERROR, msg.str());
-					}
-        sqlite3_extended_result_codes(db, 1);
-
-        // enable foreign key constraints
-        char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
-
-		    // force temporary databases to be stored in memory, for speed
-		    sqlite3_exec(db, "PRAGMA temp_store = 2;", nullptr, nullptr, &errmsg);
-
-        // remember this connexion
-				this->open_containers.push_back(db);
-				pipe->set_manager_handle(db);
-
-				BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "' to datapipe";
+        this->datapipe_attach_container(pipe, ctr_path);
 
         return(group);
 			}
+
+
+    template <typename number>
+    std::shared_ptr <output_group_record<postintegration_payload>>
+    data_manager_sqlite3<number>::datapipe_attach_postintegration_content(datapipe<number>* pipe, typename datapipe<number>::postintegration_content_finder& finder,
+                                                                          const std::string& name, const std::list<std::string>& tags)
+	    {
+        assert(pipe != nullptr);
+        if(pipe == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_DATAMGR_NULL_DATAPIPE);
+
+        // find a suitable output group for this task
+        std::shared_ptr< output_group_record<postintegration_payload> > group = finder(name, tags);
+
+        postintegration_payload& payload = group->get_payload();
+
+        // get path to the output group data container
+        boost::filesystem::path ctr_path = group->get_abs_repo_path() / payload.get_container_path();
+
+		    this->datapipe_attach_container(pipe, ctr_path);
+
+        return(group);
+	    }
 
 
 		template <typename number>

@@ -13,11 +13,11 @@
 
 #include "transport-runtime-api/serialization/serializable.h"
 
-// need data_manager in order to get the details of a data_manager<number>>data_pipe
-// (can't forward-declare because it is a nested class)
-#include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/derived-products/utilities/wrapper.h"
+
+// forward-declare datapipe if needed
+#include "transport-runtime-api/data/datapipe/datapipe_forward_declare.h"
 
 // forward-declare model class if needed
 #include "transport-runtime-api/models/model_forward_declare.h"

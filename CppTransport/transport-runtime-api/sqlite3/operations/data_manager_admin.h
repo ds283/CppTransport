@@ -127,7 +127,7 @@ namespace transport
 
         // Create a sample table of times
         template <typename number>
-        void create_time_sample_table(sqlite3* db, integration_task<number>* tk)
+        void create_time_sample_table(sqlite3* db, derivable_task<number>* tk)
           {
             assert(db != nullptr);
             assert(tk != nullptr);
@@ -168,8 +168,8 @@ namespace transport
 
 
         // Create a sample table of twopf configurations
-        template <typename number>
-        void create_twopf_sample_table(sqlite3* db, twopf_list_task<number>* tk)
+        template <typename TaskType>
+        void create_twopf_sample_table(sqlite3* db, TaskType* tk)
           {
             assert(db != nullptr);
             assert(tk != nullptr);
@@ -213,8 +213,8 @@ namespace transport
 
 
         // Create a sample table of threepf configurations
-        template <typename number>
-        void create_threepf_sample_table(sqlite3* db, threepf_task<number>* tk)
+        template <typename TaskType>
+        void create_threepf_sample_table(sqlite3* db, TaskType* tk)
           {
             assert(db != nullptr);
             assert(tk != nullptr);

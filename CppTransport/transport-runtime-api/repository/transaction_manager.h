@@ -60,7 +60,10 @@ namespace transport
 					    {
 					    }
 
-				    virtual ~rename_record() = default;
+				    // TODO: Intel compiler complains if destructor is explicitly defaulted; can probably be reverted with new version of compiler [Intel say this issue is 'fixed']
+				    virtual ~rename_record()
+					    {
+					    }
 
 				    virtual void commit() override { boost::filesystem::rename(journal, target); }
 

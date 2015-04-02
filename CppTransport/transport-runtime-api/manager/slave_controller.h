@@ -689,13 +689,14 @@ namespace transport
         this->send_worker_data();
 
         // set up output-group finder function
-        typename datapipe<number>::output_group_finder finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::integration_content_finder     i_finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::postintegration_content_finder p_finder = std::bind(&repository<number>::find_postintegration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
         // set up content-dispatch function
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
-        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), finder, dispatcher, this->get_rank());
+        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1017,13 +1018,14 @@ namespace transport
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
 
         // set up output-group finder function
-        typename datapipe<number>::output_group_finder finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::integration_content_finder     i_finder = std::bind(&repository<number>::find_integration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::postintegration_content_finder p_finder = std::bind(&repository<number>::find_postintegration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
         // set up empty content-dispatch function -- this datapipe is not used to produce content
         typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::disallow_push_content, this, std::placeholders::_1, std::placeholders::_2);
 
         // acquire a datapipe which we can use to stream content from the databse
-        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), finder, dispatcher, this->get_rank(), true);
+        datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank(), true);
 
 		    bool complete = false;
 		    while(!complete)
@@ -1058,7 +1060,7 @@ namespace transport
 				            // perform the task
 				            try
 					            {
-				                pipe.attach(ptk, ptk->get_model()->get_N_fields(), payload.get_tags());
+				                pipe.attach(ptk, payload.get_tags());
 				                this->work_handler.postintegration_handler(tk, ptk, work, batcher, pipe);
 				                pipe.detach();
 					            }

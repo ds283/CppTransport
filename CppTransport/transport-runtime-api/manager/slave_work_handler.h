@@ -19,6 +19,8 @@
 #include "transport-runtime-api/tasks/output_tasks.h"
 
 #include "transport-runtime-api/data/data_manager.h"
+#include "transport-runtime-api/derived-products/derived-content/zeta_timeseries_compute.h"
+#include "transport-runtime-api/derived-products/derived-content/fNL_timeseries_compute.h"
 
 #include "boost/timer/timer.hpp"
 
@@ -55,6 +57,17 @@ namespace transport
         void postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
                                      fNL_batcher<number>& batcher, datapipe<number>& pipe);
 
+
+		    // PRIVATE DATA
+
+      protected:
+
+        //! compute delegate - zeta products
+        derived_data::zeta_timeseries_compute<number> zeta_computer;
+
+        //! compute delegate - fNL products
+        derived_data::fNL_timeseries_compute<number> fNL_computer;
+
 	    };
 
 
@@ -88,23 +101,30 @@ namespace transport
 	        }
 
         // set up cache handles
+        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
         typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(kconfig_sns);
         typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
+        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+
         twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
         const std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+
+        // set up handle for compute delegate
+        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
+
+		    // buffer for computed values
+        std::vector<number> sample;
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
             boost::timer::cpu_timer timer;
 
-            zeta_twopf_time_data_tag<number> tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
-            // safe to use a reference here to avoid a copy
-            const std::vector<number>& twopf = z_handle.lookup_tag(tag);
-
+            this->zeta_computer.twopf(handle, sample, k_values[i]);
             for(unsigned int j = 0; j < time_sns.size(); j++)
 	            {
-                batcher.push_twopf(time_sns[j], kconfig_sns[i], twopf[j]);
+                batcher.push_twopf(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
 
             timer.stop();
@@ -146,32 +166,36 @@ namespace transport
 	        }
 
         // set up cache handles
+        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
         typename datapipe<number>::threepf_kconfig_handle& kc_handle = pipe.new_threepf_kconfig_handle(kconfig_sns);
         typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
 
+        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
+
         threepf_kconfig_tag<number> k_tag = pipe.new_threepf_kconfig_tag();
         const std::vector< threepf_configuration > k_values = kc_handle.lookup_tag(k_tag);
+
+        // set up handle for compute delegate
+        std::shared_ptr<typename derived_data::zeta_timeseries_compute<number>::handle> handle = this->zeta_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields());
+
+		    // buffer for computed values
+        std::vector<number> sample;
 
         for(unsigned int i = 0; i < list.size(); i++)
 	        {
             boost::timer::cpu_timer timer;
 
-            zeta_threepf_time_data_tag<number> tpf_tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
-            // safe to use a reference here to avoid a copy
-            const std::vector<number>& threepf = z_handle.lookup_tag(tpf_tag);
-
+            this->zeta_computer.threepf(handle, sample, k_values[i]);
             for(unsigned int j = 0; j < time_sns.size(); j++)
 	            {
-                batcher.push_threepf(time_sns[j], kconfig_sns[i], threepf[j]);
+                batcher.push_threepf(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
 
-            zeta_reduced_bispectrum_time_data_tag<number> rbs_tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
-            // safe to use a reference here to avoid a copy
-            const std::vector<number>& redbsp = z_handle.lookup_tag(rbs_tag);
-
+            this->zeta_computer.reduced_bispectrum(handle, sample, k_values[i]);
             for(unsigned int j = 0; j < time_sns.size(); j++)
 	            {
-                batcher.push_reduced_bispectrum(time_sns[j], kconfig_sns[i], redbsp[j]);
+                batcher.push_reduced_bispectrum(time_sns[j], kconfig_sns[i], sample[j]);
 	            }
 
             if(list[i].store_twopf_k1)
@@ -182,13 +206,10 @@ namespace transport
                 k1.k_comoving     = k_values[i].k1_comoving;
                 k1.k_conventional = k_values[i].k1_conventional;
 
-                zeta_twopf_time_data_tag<number> k1_tag = pipe.new_zeta_twopf_time_data_tag(k1);
-                // safe to use a reference here to avoid a copy
-                const std::vector<number>& k1_twopf = z_handle.lookup_tag(k1_tag);
-
+		            this->zeta_computer.twopf(handle, sample, k1);
                 for(unsigned int j = 0; j < time_sns.size(); j++)
 	                {
-                    batcher.push_twopf(time_sns[j], k1.serial, k1_twopf[j]);
+                    batcher.push_twopf(time_sns[j], k1.serial, sample[j]);
 	                }
 	            }
 
@@ -200,13 +221,10 @@ namespace transport
                 k2.k_comoving     = k_values[i].k2_comoving;
                 k2.k_conventional = k_values[i].k2_conventional;
 
-                zeta_twopf_time_data_tag<number> k2_tag = pipe.new_zeta_twopf_time_data_tag(k2);
-                // safe to use a reference here to avoid a copy
-                const std::vector<number>& k2_twopf = z_handle.lookup_tag(k2_tag);
-
+                this->zeta_computer.twopf(handle, sample, k2);
                 for(unsigned int j = 0; j < time_sns.size(); j++)
 	                {
-                    batcher.push_twopf(time_sns[j], k2.serial, k2_twopf[j]);
+                    batcher.push_twopf(time_sns[j], k2.serial, sample[j]);
 	                }
 	            }
 
@@ -218,13 +236,10 @@ namespace transport
                 k3.k_comoving     = k_values[i].k3_comoving;
                 k3.k_conventional = k_values[i].k3_conventional;
 
-                zeta_twopf_time_data_tag<number> k3_tag = pipe.new_zeta_twopf_time_data_tag(k3);
-                // safe to use a reference here to avoid a copy
-                const std::vector<number>& k3_twopf = z_handle.lookup_tag(k3_tag);
-
+                this->zeta_computer.twopf(handle, sample, k3);
                 for(unsigned int j = 0; j < time_sns.size(); j++)
 	                {
-                    batcher.push_twopf(time_sns[j], k3.serial, k3_twopf[j]);
+                    batcher.push_twopf(time_sns[j], k3.serial, sample[j]);
 	                }
 	            }
 
@@ -269,15 +284,21 @@ namespace transport
 	        }
 
         // set up cache handles
-        typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(time_sns);
+        // look up time values corresponding to these serial numbers
+        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(time_sns);
 
-        BT_time_data_tag<number> BT_tag = pipe.new_BT_time_data_tag(tk->get_template(), kconfig_sns);
-        TT_time_data_tag<number> TT_tag = pipe.new_TT_time_data_tag(tk->get_template(), kconfig_sns);
+        time_config_tag<number> tc_tag = pipe.new_time_config_tag();
+        const std::vector<double> time_values = tc_handle.lookup_tag(tc_tag);
 
-        const std::vector<number> BT = z_handle.lookup_tag(BT_tag);
-        // safe to use a reference here to avoid a copy
-        const std::vector<number>& TT = z_handle.lookup_tag(TT_tag);
+		    // buffer for computed values
+        std::vector<number> BT;
+        std::vector<number> TT;
 
+		    // set up handle for compute delegate
+        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields(), tk->get_template(), kconfig_sns);
+
+        this->fNL_computer.BT(handle, BT);
+		    this->fNL_computer.TT(handle, TT);
         for(unsigned int j = 0; j < time_sns.size(); j++)
 	        {
             batcher.push_fNL(time_sns[j], BT[j], TT[j]);

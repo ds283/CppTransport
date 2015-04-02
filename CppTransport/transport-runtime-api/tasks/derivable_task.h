@@ -21,6 +21,7 @@
 #include "transport-runtime-api/messages.h"
 
 #include "transport-runtime-api/tasks/task.h"
+#include "transport-runtime-api/tasks/task_configurations.h"
 
 namespace transport
 	{
