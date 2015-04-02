@@ -781,7 +781,7 @@ namespace transport
             this->attach_cache_tables(payload);
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
-		            << " (from postintegration task '" << tk->get_name() << "'";
+		            << " (from postintegration task '" << tk->get_name() << "')";
 	        }
         else
 	        {
