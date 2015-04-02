@@ -523,6 +523,7 @@ namespace transport
 
         // commit entry to the database
         boost::filesystem::path document_path = boost::filesystem::path(store_root) / record.get_name();
+		    document_path += ".json";   // add json extension
 
 		    // obtain a lock on the database
 		    // the transaction manager will roll back any changes if it is not committed
