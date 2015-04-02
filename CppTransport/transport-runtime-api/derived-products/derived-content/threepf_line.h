@@ -181,6 +181,7 @@ namespace transport
 			      gadget(),
 			      active_indices(reader)
 			    {
+				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
 
 		        use_kt_label    = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_THREEPF_LABEL_KT].asBool();

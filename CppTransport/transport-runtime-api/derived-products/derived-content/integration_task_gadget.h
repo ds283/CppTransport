@@ -104,6 +104,8 @@ namespace transport
 				template <typename number>
 				void integration_task_gadget<number>::set_task(derivable_task<number>* tk, typename repository_finder<number>::task_finder& finder)
 					{
+						assert(tk != nullptr);
+
 				    std::unique_ptr< task_record<number> > tk_rec(finder(tk->get_name()));
 				    assert(tk_rec.get() != nullptr);
 
@@ -114,6 +116,8 @@ namespace transport
 				    assert(int_rec != nullptr);
 
 				    this->itk = dynamic_cast<integration_task<number>*>(int_rec->get_task()->clone());
+						assert(this->itk != nullptr);
+
 				    this->mdl = this->itk->get_model();
 
 						this->N_fields = this->mdl->get_N_fields();

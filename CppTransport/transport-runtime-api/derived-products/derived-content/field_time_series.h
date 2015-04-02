@@ -128,6 +128,7 @@ namespace transport
 			      gadget(),
 			      active_indices(reader)
 			    {
+				    assert(this->parent_task != nullptr);
 		        gadget.set_task(this->parent_task, finder);
 			    }
 

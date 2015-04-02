@@ -271,7 +271,8 @@ namespace transport
             std::unique_ptr< task_record<number> > tk_rec(finder(parent_task_name));
             assert(tk_rec.get() != nullptr);
 
-						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task());
+						parent_task = dynamic_cast< derivable_task<number>* >(tk_rec->get_abstract_task()->clone());
+						assert(parent_task != nullptr);
 
 						// Deserialize: axis type for this derived line
 				    std::string xtype = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_XTYPE].asString();

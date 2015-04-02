@@ -183,6 +183,7 @@ namespace transport
 		        gadget(),
 		        active_indices(reader)
 			    {
+				    assert(this->parent_task != nullptr);
 				    gadget.set_task(this->parent_task, finder);
 
 		        std::string tpf_type = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_TWOPF_LINE_TYPE].asString();
