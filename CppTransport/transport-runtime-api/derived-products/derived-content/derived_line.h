@@ -239,7 +239,7 @@ namespace transport
 						assert(parent_task != nullptr);
 
 				    if(parent_task == nullptr)
-					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_INTEGRATION_TASK);
+					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
 					}
 
 
@@ -338,12 +338,12 @@ namespace transport
             precision(obj.precision),
             time_sample_sns(obj.time_sample_sns),
             kconfig_sample_sns(obj.kconfig_sample_sns),
-		        parent_task(dynamic_cast<integration_task<number>*>(obj.parent_task->clone()))
+		        parent_task(dynamic_cast<derivable_task<number>*>(obj.parent_task->clone()))
 					{
 						assert(this->parent_task != nullptr);
 
 				    if(parent_task == nullptr)
-					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_INTEGRATION_TASK);
+					    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK);
 					}
 
 
