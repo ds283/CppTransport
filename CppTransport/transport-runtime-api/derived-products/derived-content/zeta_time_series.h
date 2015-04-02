@@ -258,7 +258,7 @@ namespace transport
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
+                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing 3pf k-configuration " << i << std::endl;
 
 		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
@@ -395,7 +395,7 @@ namespace transport
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing 3pf k-configuration " << i << std::endl;
+                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing 3pf k-configuration " << i << std::endl;
 
 		            zeta_reduced_bispectrum_time_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_time_data_tag(k_values[i]);
 

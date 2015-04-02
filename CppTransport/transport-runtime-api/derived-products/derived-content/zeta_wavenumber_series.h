@@ -267,7 +267,7 @@ namespace transport
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
-				        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing time-configuration " << i << std::endl;
+				        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing time-configuration " << i << std::endl;
 
 				        zeta_threepf_kconfig_data_tag<number> tag = pipe.new_zeta_threepf_kconfig_data_tag(this->time_sample_sns[i]);
 
@@ -406,7 +406,7 @@ namespace transport
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
-		            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "§§ Processing time-configuration " << i << std::endl;
+		            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing time-configuration " << i << std::endl;
 
 				        zeta_reduced_bispectrum_kconfig_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_kconfig_data_tag(this->time_sample_sns[i]);
 
