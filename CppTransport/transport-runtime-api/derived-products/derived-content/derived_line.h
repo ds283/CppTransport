@@ -163,6 +163,9 @@ namespace transport
 				    //! attach datapipe to output group
 				    void attach(datapipe<number>& pipe, const std::list<std::string>& tags) const;
 
+						//! attach datapipe to output group, using specified task
+						void attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const;
+
 				    //! detach datapipe from output group
 				    void detach(datapipe<number>& detach) const;
 
@@ -362,6 +365,13 @@ namespace transport
 		        pipe.attach(this->parent_task, tags);
 			    }
 
+
+		    template <typename number>
+		    void derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags, derivable_task<number>* tk) const
+			    {
+				    assert(tk != nullptr);
+		        pipe.attach(tk, tags);
+			    }
 
 		    template <typename number>
 		    void derived_line<number>::detach(datapipe<number>& pipe) const

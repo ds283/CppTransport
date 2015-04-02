@@ -36,7 +36,7 @@ namespace transport
 		      public:
 
 				    //! construct an r_line time series data object
-				    r_time_series(const twopf_list_task<number>& tk, filter::time_filter, filter::twopf_kconfig_filter kfilter,
+				    r_time_series(const zeta_twopf_list_task<number>& tk, filter::time_filter, filter::twopf_kconfig_filter kfilter,
 				                  unsigned int prec = __CPP_TRANSPORT_DEFAULT_PLOT_PRECISION);
 
 				    //! deserialization constructor
@@ -84,7 +84,7 @@ namespace transport
 				// derived_line<> is not called automatically during construction of time_series<>.
 				// We have to call it ourselves
 				template <typename number>
-				r_time_series<number>::r_time_series(const twopf_list_task<number>& tk, filter::time_filter tfilter,
+				r_time_series<number>::r_time_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                     filter::twopf_kconfig_filter kfilter, unsigned int prec)
 					: derived_line<number>(tk, time_axis, prec),
 					  r_line<number>(tk, kfilter),
@@ -110,22 +110,42 @@ namespace transport
 		                                             const std::list<std::string>& tags) const
 			    {
 						// attach our datapipe to an output group
-		        this->attach(pipe, tags);
+		        this->attach(pipe, tags, this->parent_task);
 
 				    // pull time-axis data
 				    const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
 				    // set up cache handles
 				    typename datapipe<number>::twopf_kconfig_handle& k_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
-				    typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
 				    typename datapipe<number>::time_zeta_handle& z_handle = pipe.new_time_zeta_handle(this->time_sample_sns);
 
 				    // pull k-configuration information from the database
 				    twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
-
 				    const typename std::vector< twopf_configuration > k_values = k_handle.lookup_tag(k_tag);
 
+		        std::vector< std::vector<number> > zeta_data;
+				    zeta_data.resize(this->kconfig_sample_sns.size());
+
 				    // for each k-configuration, pull data from the database
+				    for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
+					    {
+				        zeta_twopf_time_data_tag<number> zeta_tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
+
+				        // this time we can take a reference
+				        zeta_data[i] = z_handle.lookup_tag(zeta_tag);
+					    }
+
+				    pipe.detach();
+
+				    // attach datapipe to an output group for the tensor part of r
+				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
+				    assert(ptk != nullptr);
+
+				    this->attach(pipe, tags, ptk->get_parent_task());
+
+						// rebind handles
+		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
+
 				    for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
 					    {
 				        cf_time_data_tag<number> tensor_tag = pipe.new_cf_time_data_tag(data_tag<number>::cf_tensor_twopf, this->gadget.get_model()->tensor_flatten(0,0), this->kconfig_sample_sns[i]);
@@ -133,16 +153,11 @@ namespace transport
 				        // must copy this, because we will call lookup_tag() again
 				        const std::vector<number> tensor_data = t_handle.lookup_tag(tensor_tag);
 
-				        zeta_twopf_time_data_tag<number> zeta_tag = pipe.new_zeta_twopf_time_data_tag(k_values[i]);
+				        std::vector<number> line_data(tensor_data.size());
 
-				        // this time we can take a reference
-				        const std::vector<number>& zeta_data = z_handle.lookup_tag(zeta_tag);
-
-				        std::vector<number> line_data(zeta_data.size());
-
-				        for(unsigned int j = 0; j < zeta_data.size(); j++)
+				        for(unsigned int j = 0; j < tensor_data.size(); j++)
 					        {
-				            line_data[j] = tensor_data[j] / zeta_data[j];
+				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
 				        std::string latex_label    = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
@@ -150,7 +165,7 @@ namespace transport
 
 				        data_line<number> line = data_line<number>(time_axis, r_value, t_axis, line_data, latex_label, nonlatex_label);
 
-						    lines.push_back(line);
+				        lines.push_back(line);
 					    }
 
 				    // detach pipe from output group

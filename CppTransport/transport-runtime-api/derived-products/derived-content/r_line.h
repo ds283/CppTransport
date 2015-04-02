@@ -59,7 +59,7 @@ namespace transport
 		      public:
 
 				    //! Basic user-facing constructor
-				    r_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
+				    r_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter);
 
 				    //! Deserialization constructor
 				    r_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder);
@@ -114,9 +114,9 @@ namespace transport
 
 				// constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
-				r_line<number>::r_line(const twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
+				r_line<number>::r_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
 					: derived_line<number>(tk),
-						gadget(tk)
+						gadget(dynamic_cast< integration_task<number>& >(*(tk.get_parent_task())))
 					{
 						// set up a list of serial numbers corresponding to the k-configurations for this derived line
 				    try
@@ -144,7 +144,11 @@ namespace transport
 						gadget()
 					{
 						assert(this->parent_task != nullptr);
-				    gadget.set_task(this->parent_task, finder);
+
+						postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
+						assert(ptk != nullptr);
+
+				    gadget.set_task(ptk->get_parent_task(), finder);
 					}
 
 
