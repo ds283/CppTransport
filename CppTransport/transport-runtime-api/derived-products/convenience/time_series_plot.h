@@ -88,10 +88,11 @@ namespace transport
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
 
+		        // only use LaTeX x-label if typesetting with LaTeX; otherwise it doesn't work
 				    if(x_label)
 					    {
-				        if(this->get_use_LaTeX()) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-				        else                      this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+				        if(this->typeset_with_LaTeX) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+				        else                         this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
 					    }
 
 		        if(y_label) this->clear_y_label_text();
