@@ -202,11 +202,13 @@ int main(int argc, char* argv[])
 	                                                       transport::derived_data::time_series_plot<double>("axion.twopf-1.background", "background.pdf");
 		tk2_bg_plot.add_line(tk2_bg);
     tk2_bg_plot.set_title_text("Background fields");
+		tk2_bg_plot.set_y_label(true);
 
     transport::derived_data::time_series_plot<double> tk3_bg_plot =
 	                                                       transport::derived_data::time_series_plot<double>("axion.threepf-1.background", "background.pdf");
 		tk3_bg_plot.add_line(tk3_bg);
 		tk3_bg_plot.set_title_text("Background fields");
+		tk3_bg_plot.set_y_label(true);
 
 		// plots of some components of the twopf
 
@@ -749,6 +751,8 @@ int main(int argc, char* argv[])
     fNL_plot.set_log_y(false);
     fNL_plot.set_abs_y(false);
     fNL_plot.set_title(false);
+		fNL_plot.set_y_label(true);
+		fNL_plot.set_typeset_with_LaTeX(true);
 
     transport::derived_data::time_series_table<double> fNL_table = transport::derived_data::time_series_table<double>("axion.threepf-1.fNL-table", "fNL-table.txt");
     fNL_table.add_line(fNLloc_time_series);
