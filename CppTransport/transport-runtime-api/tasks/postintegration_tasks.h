@@ -348,6 +348,8 @@ namespace transport
 		    //! Get list of k-configurations at which this task samples the threepf; inherited from parent threepf_task
 		    const std::vector<threepf_kconfig>& get_threepf_kconfig_list() const { return(this->ptk_as_threepf->get_threepf_kconfig_list()); }
 
+				//! Get measure at a particular k-point
+				number measure(const threepf_kconfig& config) const { return(this->ptk_as_threepf->measure(config)); }
 
 				// SERIALIZATION
 

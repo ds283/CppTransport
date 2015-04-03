@@ -54,7 +54,7 @@ namespace transport
                                      zeta_threepf_batcher<number>& batcher, datapipe<number>& pipe);
 
         //! Handler: fNL task
-        void postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+        void postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
                                      fNL_batcher<number>& batcher, datapipe<number>& pipe);
 
 
@@ -253,7 +253,7 @@ namespace transport
 
 
     template <typename number>
-    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
+    void slave_work_handler<number>::postintegration_handler(fNL_task<number>* tk, zeta_threepf_task<number>* ptk, work_queue<threepf_kconfig>& work,
                                                              fNL_batcher<number>& batcher, datapipe<number>& pipe)
 	    {
         assert(tk != nullptr);
@@ -295,7 +295,7 @@ namespace transport
         std::vector<number> TT;
 
 		    // set up handle for compute delegate
-        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, time_sns, time_values, ptk->get_model()->get_N_fields(), tk->get_template(), kconfig_sns);
+        std::shared_ptr<typename derived_data::fNL_timeseries_compute<number>::handle> handle = this->fNL_computer.make_handle(pipe, ptk, time_sns, time_values, tk->get_template(), kconfig_sns);
 
         this->fNL_computer.BT(handle, BT);
 		    this->fNL_computer.TT(handle, TT);

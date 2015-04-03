@@ -138,6 +138,9 @@ namespace transport
 		    //! Construct a work item filter for a threepf task
 		    work_item_filter<threepf_kconfig> work_item_filter_factory(threepf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<threepf_kconfig>(items); }
 
+				//! Construct a work item filter for a zeta threepf task
+				work_item_filter<threepf_kconfig> work_item_filter_factory(zeta_threepf_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter<threepf_kconfig>(items); }
+
 				//! Construct a work item filter factory for an output task
 				work_item_filter< output_task_element<number> > work_item_filter_factory(output_task<number>* tk, const std::list<unsigned int>& items) const { return work_item_filter< output_task_element<number> >(items); }
 
@@ -976,7 +979,7 @@ namespace transport
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
 	        {
 		        // get parent task
-            threepf_task<number>* ptk = dynamic_cast<threepf_task<number>*>(zfNL->get_parent_task());
+            zeta_threepf_task<number>* ptk = dynamic_cast<zeta_threepf_task<number>*>(zfNL->get_parent_task());
 
             assert(ptk != nullptr);
             if(ptk == nullptr)

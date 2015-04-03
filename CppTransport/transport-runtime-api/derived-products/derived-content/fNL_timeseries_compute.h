@@ -37,12 +37,12 @@ namespace transport
 
 				      public:
 
-				        handle(datapipe<number>& pipe, integration_task<number>* tk,
-				               const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+				        handle(datapipe<number>& pipe, postintegration_task<number>* tk,
+				               const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
 				               template_type ty);
 
-                handle(datapipe<number>& pipe, integration_task<number>* tk,
-                       const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+                handle(datapipe<number>& pipe, postintegration_task<number>* tk,
+                       const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
                        template_type ty, const std::vector<unsigned int>& kc);
 
 						    ~handle() = default;
@@ -59,7 +59,7 @@ namespace transport
 						    datapipe<number>& pipe;
 
 						    //! task pointer
-						    threepf_task<number>* tk;
+						    zeta_threepf_task<number>* tk;
 
 						    //! set of time serial numbers for which we are computing
 						    const std::vector<unsigned int>& time_sample_sns;
@@ -69,9 +69,6 @@ namespace transport
 
 						    //! datapipe handle for this set of serial numbers
 						    typename datapipe<number>::time_data_handle& t_handle;
-
-						    //! number of fields
-						    unsigned int N_fields;
 
 						    //! template type
 						    template_type type;
@@ -103,14 +100,14 @@ namespace transport
 		      public:
 
 				    //! make a handle, integrate over all triangles
-				    std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
+				    std::shared_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk,
 				                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
-				                                        unsigned int Nf, template_type ty) const;
+				                                        template_type ty) const;
 
             //! make a handle, integrate over a supplied subset of triangles
-            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, integration_task<number>* tk,
+            std::shared_ptr<handle> make_handle(datapipe<number>& pipe, postintegration_task<number>* tk,
                                                 const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
-                                                unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc) const;
+                                                template_type ty, const std::vector<unsigned int>& kc) const;
 
 
 				    // COMPUTE FNL PRODUCT
@@ -168,15 +165,14 @@ namespace transport
 
 
 		    template <typename number>
-		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
+		    fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t,
 		                                                   const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
-		                                                   unsigned int Nf, template_type ty)
+		                                                   template_type ty)
 			    : pipe(p),
-			      tk(dynamic_cast<threepf_task<number>*>(t)),
+			      tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
 			      time_sample_sns(tsample),
 			      time_axis(taxis),
 			      t_handle(p.new_time_data_handle(tsample)),
-			      N_fields(Nf),
 			      type(ty),
             restrict_triangles(false)
 			    {
@@ -194,15 +190,14 @@ namespace transport
 
 
         template <typename number>
-        fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, integration_task<number>* t,
+        fNL_timeseries_compute<number>::handle::handle(datapipe<number>& p, postintegration_task<number>* t,
                                                        const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
-                                                       unsigned int Nf, template_type ty, const std::vector<unsigned int>& kc)
+                                                       template_type ty, const std::vector<unsigned int>& kc)
           : pipe(p),
-            tk(dynamic_cast<threepf_task<number>*>(t)),
+            tk(dynamic_cast<zeta_threepf_task<number>*>(t)),
             time_sample_sns(tsample),
             time_axis(taxis),
             t_handle(p.new_time_data_handle(tsample)),
-            N_fields(Nf),
             type(ty),
             restrict_triangles(true),
             kconfig_sns(kc)
@@ -237,21 +232,21 @@ namespace transport
 
 		    template <typename number>
 		    std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
-		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
-		                                                const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+		    fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* t,
+		                                                const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
 		                                                template_type ty) const
 			    {
-		        return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf, ty));
+		        return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, ty));
 			    }
 
 
         template <typename number>
         std::shared_ptr<typename fNL_timeseries_compute<number>::handle>
-        fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, integration_task<number>* t,
-                                                    const std::vector<unsigned int>& tsample, const std::vector<double>& taxis, unsigned int Nf,
+        fNL_timeseries_compute<number>::make_handle(datapipe<number>& pipe, postintegration_task<number>* t,
+                                                    const std::vector<unsigned int>& tsample, const std::vector<double>& taxis,
                                                     template_type ty, const std::vector<unsigned int>& kc) const
           {
-            return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, Nf, ty, kc));
+            return std::shared_ptr<handle>(new handle(pipe, t, tsample, taxis, ty, kc));
           }
 
 

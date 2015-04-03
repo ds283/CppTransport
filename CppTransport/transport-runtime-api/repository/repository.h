@@ -223,7 +223,7 @@ namespace transport
         //! Rollback a failed integration
         void abort_integration_writer(integration_writer<number>& writer);
 
-        //! Commit hte products from a postintegration to the database
+        //! Commit the products from a postintegration to the database
         void close_postintegration_writer(postintegration_writer<number>& writer);
 
         //! Rollback a failed postintegration
@@ -644,16 +644,9 @@ namespace transport
         derivable_task<number>* ptk = tk->get_parent_task();
         assert(ptk != nullptr);
 
-        // get repository record for content group we have used to computation
-        std::shared_ptr< output_group_record<integration_payload> > parent_content_record = find_integration_task_output(ptk->get_name(), tags);
-
-        // get source and destination data containers
-        boost::filesystem::path source_container = writer.get_abs_container_path();
-        boost::filesystem::path dest_container   = parent_content_record->get_abs_repo_path() / parent_content_record->get_payload().get_container_path();
-
         // create a new, empty output group record
         std::list<std::string> notes;
-        std::unique_ptr< output_group_record<postintegration_payload> >
+        std::unique_ptr<output_group_record<postintegration_payload>>
                                output_record(this->postintegration_content_group_record_factory(rec->get_task()->get_name(), writer.get_relative_output_path(), false, notes, tags));
 
         // stamp output group with the correct 'created' time stamp

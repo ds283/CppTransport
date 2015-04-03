@@ -115,6 +115,10 @@ namespace transport
         template <typename number>
         work_queue<threepf_kconfig> make_queue(unsigned int size, const threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
 
+        //! set up a work queue for a zeta three-point function task, using a user-provided filter function
+        template <typename number>
+        work_queue<threepf_kconfig> make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F);
+
 		    //! set up a work queue for an output task, using a user-provided filter function
 		    template <typename number>
 		    work_queue< output_task_element<number> > make_queue(const output_task<number>& task, const abstract_filter< output_task_element<number> >& F);
@@ -167,6 +171,21 @@ namespace transport
 
         return(work);
       }
+
+
+    template <typename number>
+    work_queue<threepf_kconfig> scheduler::make_queue(unsigned int size, const zeta_threepf_task<number>& task, const abstract_filter<threepf_kconfig>& F)
+	    {
+        work_queue<threepf_kconfig> work(this->ctx, size);
+
+        const std::vector<threepf_kconfig>& config_list = task.get_threepf_kconfig_list();
+        for(std::vector<threepf_kconfig>::const_iterator t = config_list.begin(); t != config_list.end(); t++)
+	        {
+            if(F.filter(*t)) work.enqueue_work_item(*t);
+	        }
+
+        return(work);
+	    }
 
 
 		template <typename number>
