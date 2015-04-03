@@ -40,9 +40,9 @@ namespace transport
             std::unique_ptr< package_record<number> > record(f(pkg_name));
             initial_conditions<number> ics = record->get_ics();
 
-            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF) rval = new twopf_task<number>(nm, reader, ics);
+            if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_TWOPF)              rval = new twopf_task<number>(nm, reader, ics);
             else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_CUBIC) rval = new threepf_cubic_task<number>(nm, reader, ics);
-            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS) rval = new threepf_fls_task<number>(nm, reader, ics);
+            else if(type == __CPP_TRANSPORT_NODE_TASK_TYPE_THREEPF_FLS)   rval = new threepf_fls_task<number>(nm, reader, ics);
             else
               {
                 std::ostringstream msg;

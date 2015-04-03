@@ -197,6 +197,9 @@ namespace transport
 				//! deserialization constructor
 				zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
+				//! override copy constructor to reset ptk_as_twopf_list
+				zeta_twopf_list_task(const zeta_twopf_list_task<number>& obj);
+
 				//! destructor is default
 				~zeta_twopf_list_task() = default;
 
@@ -229,7 +232,8 @@ namespace transport
 
 		template <typename number>
 		zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, const twopf_list_task<number>& t)
-			: postintegration_task<number>(nm, t)
+			: postintegration_task<number>(nm, t),
+				ptk_as_twopf_list(nullptr)
 			{
 				ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
 				assert(ptk_as_twopf_list != nullptr);
@@ -240,12 +244,25 @@ namespace transport
 
 		template <typename number>
 		zeta_twopf_list_task<number>::zeta_twopf_list_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-			: postintegration_task<number>(nm, reader, finder)
+			: postintegration_task<number>(nm, reader, finder),
+				ptk_as_twopf_list(nullptr)
 			{
 		    ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
 				assert(ptk_as_twopf_list != nullptr);
 
 				if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
+			}
+
+
+		template <typename number>
+		zeta_twopf_list_task<number>::zeta_twopf_list_task(const zeta_twopf_list_task<number>& obj)
+			: postintegration_task<number>(obj),
+			  ptk_as_twopf_list(nullptr)
+			{
+		    ptk_as_twopf_list = dynamic_cast< twopf_list_task<number>* >(this->ptk);
+		    assert(ptk_as_twopf_list != nullptr);
+
+		    if(ptk_as_twopf_list == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_TWOPF_LIST_CAST_FAIL);
 			}
 
 
@@ -334,6 +351,9 @@ namespace transport
 				//! deserialization constructor
 				zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder);
 
+				//! override copy constructor to reset ptk_as_threepf
+				zeta_threepf_task(const zeta_threepf_task<number>& obj);
+
 				//! destructor is default
 				virtual ~zeta_threepf_task() = default;
 
@@ -378,7 +398,8 @@ namespace transport
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
-      : zeta_twopf_list_task<number>(nm, t)
+      : zeta_twopf_list_task<number>(nm, t),
+        ptk_as_threepf(nullptr)
       {
 		    ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
 		    assert(ptk_as_threepf != nullptr);
@@ -389,13 +410,26 @@ namespace transport
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
-      : zeta_twopf_list_task<number>(nm, reader, finder)
+      : zeta_twopf_list_task<number>(nm, reader, finder),
+        ptk_as_threepf(nullptr)
       {
         ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
         assert(ptk_as_threepf != nullptr);
 
         if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
       }
+
+
+		template <typename number>
+		zeta_threepf_task<number>::zeta_threepf_task(const zeta_threepf_task<number>& obj)
+			: zeta_twopf_list_task<number>(obj),
+			  ptk_as_threepf(nullptr)
+			{
+		    ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
+		    assert(ptk_as_threepf != nullptr);
+
+		    if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
+			}
 
 
     template <typename number>

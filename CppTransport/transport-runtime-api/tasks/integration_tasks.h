@@ -1200,7 +1200,7 @@ namespace transport
                            typename integration_task<number>::time_config_storage_policy tp,
                            typename threepf_task<number>::threepf_kconfig_storage_policy kp);
 
-        //! Construct a named three-point function task based on sampling from a cubix lattice of ks,
+        //! Construct a named three-point function task based on sampling from a cubic lattice of ks,
         //! with default policies
         threepf_cubic_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                            const range<double>& ks)
