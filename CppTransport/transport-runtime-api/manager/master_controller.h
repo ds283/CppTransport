@@ -26,6 +26,7 @@
 #include "transport-runtime-api/data/data_manager.h"
 
 #include "transport-runtime-api/manager/master_scheduler.h"
+#include "transport-runtime-api/manager/work_journal.h"
 
 #include "transport-runtime-api/scheduler/context.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
@@ -244,10 +245,12 @@ namespace transport
 
 		    //! Master node: Dispatch an integration queue to the worker processes.
 		    template <typename TaskObject>
-		    void schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags);
+		    void schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+		                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: Pass new integration task to the workers
-		    bool integration_task_to_workers(std::shared_ptr< integration_writer<number> >& writer);
+		    bool integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
+		                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_batch(std::shared_ptr< integration_writer<number> >& writer, int source, integration_metadata& metadata);
@@ -265,10 +268,12 @@ namespace transport
 
 		    //! Master node: Dispatch a postintegration queue to the worker processes
 		    template <typename TaskObject, typename ParentTaskObject>
-		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags);
+		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
+		                                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: Pass new postintegration task to workers
-		    bool postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags);
+		    bool postintegration_task_to_workers(std::shared_ptr <postintegration_writer<number>>& writer, const std::list<std::string>& tags,
+		                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, int source, output_metadata& metadata);
@@ -282,7 +287,8 @@ namespace transport
 		    void dispatch_output_task(output_task_record<number>* rec, const std::list<std::string>& tags);
 
 		    //! Master node: Pass new output task to the workers
-		    bool output_task_to_workers(std::shared_ptr< derived_content_writer<number> >& writer, const std::list<std::string>& tags);
+		    bool output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
+		                                slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to a notification of new derived content
 		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, int source, output_metadata& metadata);
@@ -313,6 +319,9 @@ namespace transport
 
 		    //! Data manager instance
 		    data_manager<number>* data_mgr;
+
+				//! Event journal
+				work_journal journal;
 
 
 		    // DATA AND STATE
@@ -355,6 +364,7 @@ namespace transport
 	      world(w),
 	      repo(nullptr),
 	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      journal(w.size()-1),
 	      batcher_capacity(bcp),
 	      pipe_data_capacity(pcp),
 	      pipe_zeta_capacity(zcp),
@@ -374,6 +384,7 @@ namespace transport
 	      world(w),
 	      repo(r),
 	      data_mgr(data_manager_factory<number>(bcp, pcp, zcp)),
+	      journal(w.size()-1),
 	      batcher_capacity(bcp),
 	      pipe_data_capacity(pcp),
 	      pipe_zeta_capacity(zcp),
@@ -798,13 +809,13 @@ namespace transport
 	        {
 		        this->work_scheduler.set_state_size(m->backend_twopf_state_size());
 		        this->work_scheduler.prepare_queue(*tka);
-            this->schedule_integration(rec, tka, tags);
+            this->schedule_integration(rec, tka, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
 	        }
         else if((tkb = dynamic_cast< threepf_task<number>* >(tk)) != nullptr)
 	        {
 		        this->work_scheduler.set_state_size(m->backend_threepf_state_size());
             this->work_scheduler.prepare_queue(*tkb);
-            this->schedule_integration(rec, tkb, tags);
+            this->schedule_integration(rec, tkb, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
 	        }
         else
 	        {
@@ -817,7 +828,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject>
-    void master_controller<number>::schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags)
+    void master_controller<number>::schedule_integration(integration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
+                                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(rec != nullptr);
 
@@ -834,7 +846,7 @@ namespace transport
 
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        bool success = this->integration_task_to_workers(writer);
+        bool success = this->integration_task_to_workers(writer, begin_label, end_label);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -845,7 +857,8 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::integration_task_to_workers(std::shared_ptr< integration_writer<number> >& writer)
+    bool master_controller<number>::integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
+                                                                slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
 
@@ -903,14 +916,28 @@ namespace transport
 	            {
                 case MPI::INTEGRATION_DATA_READY:
 	                {
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     this->aggregate_batch(writer, stat.source(), metadata);
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
+
                     break;
+	                }
+
+                case MPI::NEW_WORK_ACKNOWLEDGMENT:
+	                {
+                    MPI::work_acknowledgment_payload payload;
+		                this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
+		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
+		                BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
+
+		                break;
 	                }
 
                 case MPI::FINISHED_INTEGRATION:
 	                {
                     MPI::finished_integration_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
+		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
 
 		                // mark this worker as unassigned, and update its mean time per work item
@@ -924,6 +951,7 @@ namespace transport
 	                {
                     MPI::finished_integration_payload payload;
                     this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
 										this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
@@ -1068,7 +1096,7 @@ namespace transport
         this->data_mgr->initialize_writer(writer);
 
         // instruct workers to carry out their tasks
-        bool success = this->output_task_to_workers(writer, tags);
+        bool success = this->output_task_to_workers(writer, tags, slave_work_event::begin_output_assignment, slave_work_event::end_output_assignment);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -1079,7 +1107,8 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::output_task_to_workers(std::shared_ptr< derived_content_writer<number> >& writer, const std::list<std::string>& tags)
+    bool master_controller<number>::output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
+                                                           slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
 
@@ -1137,7 +1166,20 @@ namespace transport
 	            {
                 case MPI::DERIVED_CONTENT_READY:
 	                {
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     if(!this->aggregate_content(writer, stat.source(), metadata)) success = false;
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
+
+                    break;
+	                }
+
+                case MPI::NEW_WORK_ACKNOWLEDGMENT:
+	                {
+                    MPI::work_acknowledgment_payload payload;
+		                this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
+		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
+
                     break;
 	                }
 
@@ -1145,6 +1187,7 @@ namespace transport
 	                {
                     MPI::finished_derived_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
+		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
 
 		                // mark this scheduler as unassigned, and update its mean time per work item
@@ -1158,6 +1201,7 @@ namespace transport
 	                {
                     MPI::finished_derived_payload payload;
                     this->world.recv(stat.source(), MPI::DERIVED_CONTENT_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
                     // mark this scheduler as unassigned, and update its mean time per work item
@@ -1167,7 +1211,6 @@ namespace transport
                     success = false;
                     break;
 	                }
-
 
                 case MPI::WORKER_CLOSE_DOWN:
 	                {
@@ -1286,7 +1329,7 @@ namespace transport
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, z2pf, ptk, tags);
+            this->schedule_postintegration(rec, z2pf, ptk, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
 	        {
@@ -1302,7 +1345,7 @@ namespace transport
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, z3pf, ptk, tags);
+            this->schedule_postintegration(rec, z3pf, ptk, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
 	        {
@@ -1318,7 +1361,7 @@ namespace transport
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, zfNL, ptk, tags);
+            this->schedule_postintegration(rec, zfNL, ptk, tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
 	        }
         else
 	        {
@@ -1331,7 +1374,8 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename ParentTaskObject>
-    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags)
+    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
+                                                             slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(rec != nullptr);
 
@@ -1347,7 +1391,7 @@ namespace transport
         this->data_mgr->create_tables(writer, tk);
 
         // instruct workers to carry out the calculation
-        bool success = this->postintegration_task_to_workers(writer, tags);
+        bool success = this->postintegration_task_to_workers(writer, tags, begin_label, end_label);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -1358,7 +1402,8 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags)
+    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr <postintegration_writer<number>>& writer, const std::list<std::string>& tags,
+                                                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
 
@@ -1416,7 +1461,20 @@ namespace transport
 	            {
                 case MPI::POSTINTEGRATION_DATA_READY:
 	                {
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     this->aggregate_postprocess(writer, stat.source(), metadata);
+		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
+
+                    break;
+	                }
+
+                case MPI::NEW_WORK_ACKNOWLEDGMENT:
+	                {
+                    MPI::work_acknowledgment_payload payload;
+                    this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
+
                     break;
 	                }
 
@@ -1424,6 +1482,7 @@ namespace transport
 	                {
                     MPI::finished_postintegration_payload payload;
                     this->world.recv(stat.source(), MPI::FINISHED_POSTINTEGRATION, payload);
+		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
 
 		                // mark this worker as unassigned, and update its mean time per work item
@@ -1437,6 +1496,7 @@ namespace transport
 	                {
                     MPI::finished_postintegration_payload payload;
                     this->world.recv(stat.source(), MPI::POSTINTEGRATION_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
                     BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
 		                // mark this worker as unassigned, and update its mean time per work item

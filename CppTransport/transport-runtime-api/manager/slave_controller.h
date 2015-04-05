@@ -529,6 +529,10 @@ namespace transport
 				            MPI::work_assignment_payload payload;
 						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, payload);
 
+				            MPI::work_acknowledgment_payload ack_payload;
+				            ack_payload.set_timestamp();
+				            this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
+
 				            const std::list<unsigned int>& work_items = payload.get_items();
 						        auto filter = this->work_item_filter_factory(tk, work_items);
 
@@ -718,6 +722,10 @@ namespace transport
 					        {
 				            MPI::work_assignment_payload assignment_payload;
 						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, assignment_payload);
+
+				            MPI::work_acknowledgment_payload ack_payload;
+						        ack_payload.set_timestamp();
+						        this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
 
 						        const std::list<unsigned int>& work_items = assignment_payload.get_items();
 						        auto filter = this->work_item_filter_factory(tk, work_items);
@@ -1042,6 +1050,10 @@ namespace transport
 					        {
 				            MPI::work_assignment_payload assignment_payload;
 						        this->world.recv(stat.source(), MPI::NEW_WORK_ASSIGNMENT, assignment_payload);
+
+				            MPI::work_acknowledgment_payload ack_payload;
+				            ack_payload.set_timestamp();
+				            this->world.isend(MPI::RANK_MASTER, MPI::NEW_WORK_ACKNOWLEDGMENT, ack_payload);
 
 				            const std::list<unsigned int>& work_items = assignment_payload.get_items();
 						        auto filter = this->work_item_filter_factory(ptk, work_items);

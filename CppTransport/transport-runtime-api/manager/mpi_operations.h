@@ -10,6 +10,7 @@
 #include "boost/mpi.hpp"
 #include "boost/serialization/string.hpp"
 #include "boost/serialization/list.hpp"
+#include "boost/date_time/posix_time/time_serialize.hpp"
 #include "boost/timer/timer.hpp"
 
 
@@ -42,8 +43,9 @@ namespace transport
             const unsigned int INFORMATION_REQUEST        = 90;
 		        const unsigned int INFORMATION_RESPONSE       = 91;
 		        const unsigned int NEW_WORK_ASSIGNMENT        = 92;
-		        const unsigned int END_OF_WORK                = 93;
-		        const unsigned int WORKER_CLOSE_DOWN          = 94;
+		        const unsigned int NEW_WORK_ACKNOWLEDGMENT    = 93;
+		        const unsigned int END_OF_WORK                = 97;
+		        const unsigned int WORKER_CLOSE_DOWN          = 98;
             const unsigned int TERMINATE                  = 99;
 
             // MPI ranks
@@ -75,10 +77,10 @@ namespace transport
 		            unsigned int get_batcher_capacity() const { return(this->batcher_capacity); }
 
 		            //! Get datapipe main cache capacity
-		            unsigned int get_data_capacity() const { return(this->data_capacity); }
+		            unsigned int get_data_capacity()    const { return(this->data_capacity); }
 
 		            //! Get datapipe zeta cache capacity
-		            unsigned int get_zeta_capacity() const { return(this->zeta_capacity); }
+		            unsigned int get_zeta_capacity()    const { return(this->zeta_capacity); }
 
               private:
 
@@ -195,6 +197,35 @@ namespace transport
 			        };
 
 
+		        class work_acknowledgment_payload
+			        {
+		          public:
+				        //! Default constructor (used for receiving messages)
+				        work_acknowledgment_payload() = default;
+
+				        //! get timestamp
+				        boost::posix_time::ptime get_timestamp() const { return(this->timestamp); }
+
+				        //! set timestamp
+				        void set_timestamp() { this->timestamp = boost::posix_time::second_clock::universal_time(); }
+
+		          private:
+
+				        //! timestamp
+				        boost::posix_time::ptime timestamp;
+
+				        // enable boost::serialization support, and hence automated packing for transmission over MPI
+				        friend class boost::serialization::access;
+
+				        template <typename Archive>
+				        void serialize(Archive& ar, unsigned int version)
+					        {
+						        ar & timestamp;
+					        }
+
+			        };
+
+
             class new_integration_payload
               {
               public:
@@ -287,15 +318,20 @@ namespace transport
                                              const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
                                              const boost::timer::nanosecond_type& w,
                                              const unsigned int& n)
-                  : integration_time(i), max_integration_time(max_i), min_integration_time(min_i),
-                    batching_time(b), max_batching_time(max_b), min_batching_time(min_b),
+                  : integration_time(i),
+                    max_integration_time(max_i),
+                    min_integration_time(min_i),
+                    batching_time(b),
+                    max_batching_time(max_b),
+                    min_batching_time(min_b),
                     wallclock_time(w),
-                    num_integrations(n)
+                    num_integrations(n),
+                    timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
                 //! Get total integration time
-                boost::timer::nanosecond_type get_integration_time() const { return(this->integration_time); }
+                boost::timer::nanosecond_type get_integration_time()     const { return(this->integration_time); }
 
                 //! Get longest integration time
                 boost::timer::nanosecond_type get_max_integration_time() const { return(this->max_integration_time); }
@@ -304,19 +340,22 @@ namespace transport
                 boost::timer::nanosecond_type get_min_integration_time() const { return(this->min_integration_time); }
 
                 //! Get total batching time
-                boost::timer::nanosecond_type get_batching_time() const { return(this->batching_time); }
+                boost::timer::nanosecond_type get_batching_time()        const { return(this->batching_time); }
 
                 //! Get longest batching time
-                boost::timer::nanosecond_type get_max_batching_time() const { return(this->max_batching_time); }
+                boost::timer::nanosecond_type get_max_batching_time()    const { return(this->max_batching_time); }
 
                 //! Get shortest batching time
-                boost::timer::nanosecond_type get_min_batching_time() const { return(this->min_batching_time); }
+                boost::timer::nanosecond_type get_min_batching_time()    const { return(this->min_batching_time); }
 
                 //! Get total wallclock time
-                boost::timer::nanosecond_type get_wallclock_time() const { return(this->wallclock_time); }
+                boost::timer::nanosecond_type get_wallclock_time()       const { return(this->wallclock_time); }
 
                 //! Get total number of reported integrations
-                unsigned int get_num_integrations() const { return(this->num_integrations); }
+                unsigned int                  get_num_integrations()     const { return(this->num_integrations); }
+
+		            //! Get timestamp
+		            boost::posix_time::ptime      get_timestamp()            const { return(this->timestamp); }
 
               private:
 
@@ -344,6 +383,9 @@ namespace transport
                 //! Total elapsed wallclock time
                 boost::timer::nanosecond_type wallclock_time;
 
+		            //! Timestamp
+		            boost::posix_time::ptime timestamp;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -358,6 +400,7 @@ namespace transport
                     ar & min_batching_time;
                     ar & wallclock_time;
                     ar & num_integrations;
+		                ar & timestamp;
                   }
 
               };
@@ -483,14 +526,22 @@ namespace transport
 			              processing_time(tp),
 			              max_processing_time(max_tp),
 			              min_processing_time(min_tp),
-			              time_config_hits(tc), time_config_unloads(tc_u),
-			              twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
-			              threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
-			              data_hits(td), data_unloads(td_u),
-                    zeta_hits(tz), zeta_unloads(tz_u),
-		                time_config_evictions(tce), twopf_kconfig_evictions(twopf_e),
-		                threepf_kconfig_evictions(threepf_e), data_evictions(de),
-                    zeta_evictions(zeta_e)
+			              time_config_hits(tc),
+			              time_config_unloads(tc_u),
+			              twopf_kconfig_hits(twopf_k),
+			              twopf_kconfig_unloads(twopf_k_u),
+			              threepf_kconfig_hits(threepf_k),
+			              threepf_kconfig_unloads(threepf_k_u),
+			              data_hits(td),
+			              data_unloads(td_u),
+                    zeta_hits(tz),
+			              zeta_unloads(tz_u),
+		                time_config_evictions(tce),
+			              twopf_kconfig_evictions(twopf_e),
+		                threepf_kconfig_evictions(threepf_e),
+			              data_evictions(de),
+                    zeta_evictions(zeta_e),
+		                timestamp(boost::posix_time::second_clock::universal_time())
 			            {
 			            }
 
@@ -557,6 +608,9 @@ namespace transport
                 //! Get zeta cache evictions
                 boost::timer::nanosecond_type  get_zeta_evictions()            const { return(this->zeta_evictions); }
 
+				        //! Get timestamp
+				        boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
+
 
 		          private:
 
@@ -620,8 +674,11 @@ namespace transport
 				        //! Time spent doing data cache evictions
 				        boost::timer::nanosecond_type data_evictions;
 
-                //! Time spetn doign zeta cache evictions
+                //! Time spent doing zeta cache evictions
                 boost::timer::nanosecond_type zeta_evictions;
+
+		            //! Timestamp
+		            boost::posix_time::ptime timestamp;
 
 		            // enable boost::serialization support, and hence automated packing for transmission over MPI
 		            friend class boost::serialization::access;
@@ -650,6 +707,7 @@ namespace transport
 				            ar & threepf_kconfig_evictions;
 				            ar & data_evictions;
                     ar & zeta_evictions;
+				            ar & timestamp;
 			            }
 
 			        };
@@ -739,14 +797,20 @@ namespace transport
                     processing_time(tp),
                     max_processing_time(max_tp),
                     min_processing_time(min_tp),
-                    time_config_hits(tc), time_config_unloads(tc_u),
-                    twopf_kconfig_hits(twopf_k), twopf_kconfig_unloads(twopf_k_u),
-                    threepf_kconfig_hits(threepf_k), threepf_kconfig_unloads(threepf_k_u),
+                    time_config_hits(tc),
+                    time_config_unloads(tc_u),
+                    twopf_kconfig_hits(twopf_k),
+                    twopf_kconfig_unloads(twopf_k_u),
+                    threepf_kconfig_hits(threepf_k),
+                    threepf_kconfig_unloads(threepf_k_u),
                     data_hits(td), data_unloads(td_u),
                     zeta_hits(tz), zeta_unloads(tz_u),
-                    time_config_evictions(tce), twopf_kconfig_evictions(twopf_e),
-                    threepf_kconfig_evictions(threepf_e), data_evictions(de),
-                    zeta_evictions(zeta_e)
+                    time_config_evictions(tce),
+                    twopf_kconfig_evictions(twopf_e),
+                    threepf_kconfig_evictions(threepf_e),
+                    data_evictions(de),
+                    zeta_evictions(zeta_e),
+                    timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
@@ -813,6 +877,9 @@ namespace transport
                 //! Get zeta cache evictions
                 boost::timer::nanosecond_type  get_zeta_evictions()            const { return(this->zeta_evictions); }
 
+		            //! Get timestamp
+		            boost::posix_time::ptime       get_timestamp()                 const { return(this->timestamp); }
+
 
               private:
 
@@ -876,8 +943,11 @@ namespace transport
                 //! Time spent doing data cache evictions
                 boost::timer::nanosecond_type data_evictions;
 
-                //! Time spetn doign zeta cache evictions
+                //! Time spent doing zeta cache evictions
                 boost::timer::nanosecond_type zeta_evictions;
+
+		            //! Timestamp
+		            boost::posix_time::ptime timestamp;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -906,6 +976,7 @@ namespace transport
                     ar & threepf_kconfig_evictions;
                     ar & data_evictions;
                     ar & zeta_evictions;
+		                ar & timestamp;
                   }
 
               };
