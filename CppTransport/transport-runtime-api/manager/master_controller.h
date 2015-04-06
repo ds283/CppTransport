@@ -45,12 +45,13 @@
 
 
 
-#define __CPP_TRANSPORT_SWITCH_REPO              "-repo"
-#define __CPP_TRANSPORT_SWITCH_TAG               "-tag"
-#define __CPP_TRANSPORT_SWITCH_CAPACITY          "-caches"
-#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "-batch-cache"
-#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "-data-cache"
-#define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "-zeta-cache"
+#define __CPP_TRANSPORT_SWITCH_REPO              "--repo"
+#define __CPP_TRANSPORT_SWITCH_TAG               "--tag"
+#define __CPP_TRANSPORT_SWITCH_CAPACITY          "--caches"
+#define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
+#define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
+#define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "--zeta-cache"
+#define __CPP_TRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
 
 #define __CPP_TRANSPORT_VERB_TASK                "task"
 #define __CPP_TRANSPORT_VERB_GET                 "get"
@@ -69,6 +70,27 @@ namespace transport
 	{
 
     // MASTER FUNCTIONS
+
+		class argument_cache
+			{
+		  public:
+				argument_cache()
+					: gantt_chart(false)
+					{
+					}
+
+				~argument_cache() = default;
+
+				void set_gantt_chart(bool g)                  { this->gantt_chart = g; }
+				bool get_gantt_chart() const                  { return(this->gantt_chart); }
+
+				void set_gantt_filename(const std::string f)  { this->gantt_filename = f; }
+				const std::string& get_gantt_filename() const { return(this->gantt_filename); }
+
+		  private:
+				bool gantt_chart;
+        std::string gantt_filename;
+			};
 
 
 		template <typename number>
@@ -323,6 +345,9 @@ namespace transport
 				//! Event journal
 				work_journal journal;
 
+				//! Argument cache
+				argument_cache arg_cache;
+
 
 		    // DATA AND STATE
 
@@ -546,6 +571,16 @@ namespace transport
 			                }
 			            }
 			        }
+		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_GANTT_CHART)
+			        {
+				        if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GANTT_FILENAME);
+				        else
+					        {
+						        ++i;
+						        this->arg_cache.set_gantt_chart(true);
+						        this->arg_cache.set_gantt_filename(argv[i]);
+					        }
+			        }
 		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
@@ -657,6 +692,8 @@ namespace transport
         // there is no more work, so ask all workers to shut down
         // and then exit ourselves
         this->terminate_workers();
+
+		    if(this->arg_cache.get_gantt_chart()) this->journal.make_gantt_chart(this->arg_cache.get_gantt_filename());
 	    }
 
 

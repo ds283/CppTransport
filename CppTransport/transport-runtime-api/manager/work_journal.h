@@ -10,12 +10,88 @@
 
 #include <list>
 
+#include "transport-runtime-api/defaults.h"
+#include "transport-runtime-api/messages.h"
+#include "transport-runtime-api/exceptions.h"
 
 #include "boost/date_time.hpp"
+#include "boost/filesystem/operations.hpp"
+#include "boost/algorithm/string.hpp"
 
 
 namespace transport
 	{
+
+		class work_item
+			{
+		  public:
+
+				work_item(boost::posix_time::ptime b, boost::posix_time::ptime e, std::string c)
+					: begin_time(b),
+		        end_time(e),
+		        colour(c),
+						height(0.3),
+						axes_object("ax"),
+						mplt_date_namespace("mdt"),
+						dt_namespace("dt"),
+						dateutil_namespace("dateutil.parser")
+					{
+					}
+
+
+				// INTERFACE
+
+		  public:
+
+				std::string format_gantt_bar(unsigned int unique_id, double y) const;
+
+		  private:
+
+				//! colour of this bar
+				std::string colour;
+
+				//! start time
+				boost::posix_time::ptime begin_time;
+
+				//! end time
+				boost::posix_time::ptime end_time;
+
+				//! height of bar
+				double height;
+
+				//! name of axes object
+				std::string axes_object;
+
+				//! namespace for Matplotlib dates module
+				std::string mplt_date_namespace;
+
+				//! namespace for Python datetime module
+				std::string dt_namespace;
+
+				//! namespace for Pythond dateutil module
+				std::string dateutil_namespace;
+
+			};
+
+
+    std::string work_item::format_gantt_bar(unsigned int unique_id, double y) const
+	    {
+        std::ostringstream begin_label;
+        std::ostringstream end_label;
+        std::ostringstream insn;
+
+		    begin_label << "time_begin" << unique_id;
+		    end_label << "time_end" << unique_id;
+
+		    insn << begin_label.str() << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->begin_time << "'))" << std::endl;
+		    insn << end_label.str()   << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->end_time << "'))" << std::endl;
+
+        insn << this->axes_object << ".barh(" << y << ", " << end_label.str() << "-" << begin_label.str()
+	        << ", height=" << this->height << ", left=" << begin_label.str() << ", color='" << this->colour << "', align='edge')";
+
+		    return(insn.str());
+	    }
+
 
 		//! work_events record events
 		class work_event
@@ -39,7 +115,19 @@ namespace transport
 		  public:
 
 				//! Is this a master-record object?
-				virtual bool is_master() const { return(false); };
+				virtual bool is_master()                 const = 0;
+
+				//! Get timestamp
+				boost::posix_time::ptime get_timestamp() const { return(this->timestamp); }
+
+
+				// CLONE
+
+		  public:
+
+				//! Clone
+				virtual work_event* clone() const = 0;
+
 
 				// PRIVATE DATA
 
@@ -90,6 +178,16 @@ namespace transport
 		  public:
 
 				virtual bool is_master() const override { return(true); }
+
+				event_type   get_type()  const { return(this->type); }
+
+
+		    // CLONE
+
+		  public:
+
+		    //! Clone
+		    virtual work_event* clone() const override { return new master_work_event(dynamic_cast< const master_work_event& >(*this)); }
 
 
 				// PRIVATE DATA
@@ -145,8 +243,20 @@ namespace transport
 
 				// INTERFACE
 
+		    virtual bool is_master() const override { return(false); }
+
 				//! return worker number
 				unsigned int get_worker_number() const { return(this->worker_number); }
+
+		    event_type   get_type()          const { return(this->type); }
+
+
+		    // CLONE
+
+		  public:
+
+		    //! Clone
+		    virtual work_event* clone() const override { return new slave_work_event(dynamic_cast< const slave_work_event& >(*this)); }
 
 
 				// PRIVATE DATA
@@ -191,13 +301,27 @@ namespace transport
 				work_journal(unsigned int N);
 
 				//! destructor
-				~work_journal() = default;
+				~work_journal();
 
 
 				// INTERFACE -- JOURNAL ENTRIES
 
 				//! push item to the journal
+
+		  public:
+
 				void add_entry(const work_event& w);
+
+
+				// INTERFACE -- ANALYSIS
+
+		  public:
+
+				void make_gantt_chart(const std::string& filename);
+
+		  protected:
+
+				void bin_work(std::list< std::list< work_item > >& list);
 
 
 				// PRIVATE DATA
@@ -208,7 +332,10 @@ namespace transport
 				unsigned int N_workers;
 
 				//! journal
-				std::list< work_event > journal;
+				std::list< work_event* > journal;
+
+				//! Path to Python executable
+				boost::filesystem::path python_path;
 
 			};
 
@@ -216,12 +343,270 @@ namespace transport
 		work_journal::work_journal(unsigned int N)
 			: N_workers(N)
 			{
+		    FILE* f = popen("which python", "r");
+
+		    if(!f)
+			    {
+		        this->python_path = __CPP_TRANSPORT_DEFAULT_PYTHON_PATH;
+			    }
+		    else
+			    {
+		        char buffer[1024];
+		        char* line = fgets(buffer, sizeof(buffer), f);
+		        pclose(f);
+
+		        std::string path(line);
+		        boost::algorithm::trim_right(path);
+		        this->python_path = path;
+			    }
+			}
+
+
+		work_journal::~work_journal()
+			{
+				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+					{
+						delete *t;
+					}
 			}
 
 
 		void work_journal::add_entry(const work_event& w)
 			{
-				this->journal.push_back(w);
+				this->journal.push_back(w.clone());
+			}
+
+
+		void work_journal::bin_work(std::list< std::list< work_item > >& list)
+			{
+				list.clear();
+
+				class WorkItemSorter
+					{
+				  public:
+						bool operator()(const work_event* A, const work_event* B)
+							{
+								return(A->get_timestamp() < B->get_timestamp());
+							}
+					};
+
+				// strip out master events and sort them in order
+		    std::list< master_work_event* > master_events;
+				for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+					{
+						if((*t)->is_master())
+							{
+								master_events.push_back(dynamic_cast< master_work_event* >(*t));
+							}
+					}
+				master_events.sort(WorkItemSorter());
+
+				list.resize(list.size()+1);
+		    std::list< std::list< work_item > >::iterator current_bin = --list.end();
+
+				// work through master events, pairing them up
+				for(std::list< master_work_event* >::const_iterator t = master_events.begin(); t != master_events.end(); t++)
+					{
+						switch((*t)->get_type())
+							{
+						    case master_work_event::aggregate_begin:
+							    {
+						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+						        t++;
+						        if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_TOO_FEW);
+						        if((*t)->get_type() != master_work_event::aggregate_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_AGGREGATE_END_MISSING);
+						        current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "black"));
+						        break;
+							    }
+
+						    case master_work_event::aggregate_end:
+						    default:
+							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+							};
+					}
+
+				// strip out events for each worker, and sort them likewise
+		    std::list< slave_work_event* > worker_events;
+				for(unsigned int i = 0; i < this->N_workers; i++)
+					{
+				    worker_events.clear();
+						for(std::list< work_event* >::iterator t = this->journal.begin(); t != this->journal.end(); t++)
+							{
+								if(!(*t)->is_master())
+									{
+										slave_work_event* event = dynamic_cast< slave_work_event* >(*t);
+								    if(event->get_worker_number() == i) worker_events.push_back(event);
+									}
+							}
+						worker_events.sort(WorkItemSorter());
+
+				    list.resize(list.size()+1);
+				    current_bin = --list.end();
+
+						// work through events, pairing them up
+						for(std::list< slave_work_event* >::const_iterator t = worker_events.begin(); t != worker_events.end(); t++)
+							{
+								switch((*t)->get_type())
+									{
+								    case slave_work_event::begin_twopf_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+								        t++;
+								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::end_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_TWOPF_END_MISSING);
+								        current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "red"));
+								        break;
+									    }
+
+								    case slave_work_event::begin_threepf_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+								        t++;
+								        if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_TOO_FEW);
+								        if((*t)->get_type() != slave_work_event::end_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_THREEPF_END_MISSING);
+										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "orangered"));
+								        break;
+									    }
+
+								    case slave_work_event::begin_zeta_twopf_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+										    t++;
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_zeta_twopf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_TWOPF_END_MISSING);
+										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "green"));
+										    break;
+									    }
+
+								    case slave_work_event::begin_zeta_threepf_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+										    t++;
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_zeta_threepf_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_ZETA_THREEPF_END_MISSING);
+										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "limegreen"));
+										    break;
+									    }
+
+								    case slave_work_event::begin_fNL_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+										    t++;
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_fNL_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_FNL_END_MISSING);
+										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "royalblue"));
+										    break;
+									    }
+
+								    default:
+									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
+									};
+							}
+					}
+			}
+
+
+		void work_journal::make_gantt_chart(const std::string& filename)
+			{
+		    std::list< std::list< work_item > > work_list;
+				this->bin_work(work_list);
+
+				assert(work_list.size() == this->N_workers+1);
+
+		    boost::filesystem::path out_file(filename);
+
+				// obtain path for Python script output
+		    boost::filesystem::path script_file = out_file;
+				script_file.replace_extension(".py");
+
+		    std::ofstream out;
+				out.open(script_file.c_str(), std::ios_base::trunc | std::ios_base::out);
+
+				if(!out.is_open() || out.fail())
+					{
+				    std::ostringstream msg;
+						msg << __CPP_TRANSPORT_JOURNAL_OPEN_FAIL << " " << script_file;
+						throw runtime_exception(runtime_exception::JOURNAL_ERROR, msg.str());
+					}
+
+				out << "import numpy as np" << std::endl;
+				out << "import matplotlib.pyplot as plt" << std::endl;
+				out << "import matplotlib.dates as mdt" << std::endl;
+				out << "import datetime as dt" << std::endl;
+				out << "import dateutil.parser" << std::endl;
+
+				out << "fig = plt.figure()" << std::endl;
+				out << "ax = plt.gca()" << std::endl;
+
+		    std::list< std::list< work_item > >::const_iterator t = work_list.begin();
+				unsigned int bar_count = 0;
+				unsigned int total_count = 0;
+
+				// output the bar-chart part of the gantt chart
+				if(t != work_list.end())
+					{
+						// format master bar
+				    std::list< work_item >::const_iterator u = t->begin();
+				    while(u != t->end())
+					    {
+						    out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*0.5) << std::endl;
+						    u++;
+						    total_count++;
+					    }
+
+						bar_count++;
+						t++;
+
+						while(t != work_list.end())
+							{
+								u = t->begin();
+						    while(u != t->end())
+							    {
+						        out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*0.5) << std::endl;
+						        u++;
+								    total_count++;
+							    }
+
+								bar_count++;
+								t++;
+							}
+					}
+
+				// format the x-axis
+
+
+				// format y axis
+				out << "ylabels = []" << std::endl;
+				out << "ylabels.append('Master')" << std::endl;
+
+				for(unsigned int i = 0; i < this->N_workers; i++)
+					{
+						out << "ylabels.append('Worker " << i << "')" << std::endl;
+					}
+
+				out << "pos = np.arange(0.5, " << 0.5+bar_count*0.5 << ", 0.5)" << std::endl;
+				out << "locsy, labelsy = plt.yticks(pos, ylabels)" << std::endl;
+				out << "plt.setp(labelsy, fontsize=12)" << std::endl;
+
+				out << "ax.xaxis_date()" << std::endl;
+				out << "ax.axis('tight')" << std::endl;
+
+				out << "ax.invert_yaxis()" << std::endl;
+				out << "fig.autofmt_xdate()" << std::endl;
+				out << "plt.savefig(" << out_file << ")" << std::endl;
+
+				out.close();
+		    std::ostringstream command;
+		    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
+		    int rc = system(command.str().c_str());
+
+		    bool rval = true;
+
+		    // remove python script if worked ok
+		    if(rc == 0)
+			    {
+		        boost::filesystem::remove(script_file);
+			    }
 			}
 
 
