@@ -498,6 +498,16 @@ namespace transport
 										    break;
 									    }
 
+								    case slave_work_event::begin_output_assignment:
+									    {
+								        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+										    t++;
+										    if(t == worker_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_TOO_FEW);
+										    if((*t)->get_type() != slave_work_event::end_output_assignment) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_OUTPUT_END_MISSING);
+										    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "orchid"));
+										    break;
+									    }
+
 								    default:
 									    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 									};
