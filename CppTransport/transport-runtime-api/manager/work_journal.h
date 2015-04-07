@@ -530,7 +530,29 @@ namespace transport
 
 				assert(work_list.size() == this->N_workers+1);
 
+				// set up BOOST path to output file
 		    boost::filesystem::path out_file(filename);
+
+				// check if out_file already exists; if so, rename it uniquely
+		    if(boost::filesystem::exists(out_file))
+			    {
+		        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+
+		        boost::filesystem::path out_dir = out_file;
+		        out_dir.remove_filename();
+
+		        boost::filesystem::path out_leaf = out_file.filename();
+		        boost::filesystem::path out_ext  = out_file.extension();
+		        out_leaf.replace_extension("");
+
+		        std::stringstream new_leaf;
+		        new_leaf << out_leaf.string() << "-" << boost::posix_time::to_iso_string(now);
+
+		        out_leaf = boost::filesystem::path(new_leaf.str());
+		        out_leaf.replace_extension(out_ext);
+		        out_file = out_dir / out_leaf;
+			    }
+
 		    boost::filesystem::path script_file = out_file;
 				if(script_file.extension() != ".py")
 					{
