@@ -15,10 +15,12 @@
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
+#include "transport-runtime-api/repository/writers/generic_writer.h"
+
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
 
-#include <boost/timer/timer.hpp>
+#include "boost/timer/timer.hpp"
 
 
 // target work assignment of 1 minute's worth of work, expressed in nanosecond
@@ -260,7 +262,7 @@ namespace transport
 		    bool assignable() const;
 
 		    //! generate work assignments
-		    std::list<work_assignment> assign_work();
+		    std::list<work_assignment> assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
 
 		    //! mark a worker as assigned
 		    void mark_assigned(const work_assignment& assignment);
@@ -289,13 +291,13 @@ namespace transport
       protected:
 
 		    //! schedule work for a pool of CPU only workers
-		    std::list<work_assignment> assign_work_cpu_only_strategy();
+		    std::list<work_assignment> assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
 
 		    //! schedule work for a pool of GPU only workers
-		    std::list<work_assignment> assign_work_gpu_only_strategy();
+		    std::list<work_assignment> assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
 
 		    //! schedule work for a mixed pool of CPU and GPU workers
-		    std::list<work_assignment> assign_work_mixed_strategy();
+		    std::list<work_assignment> assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log);
 
 
 		    // INTERNAL DATA
@@ -521,29 +523,29 @@ namespace transport
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work()
+		std::list<master_scheduler::work_assignment> master_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 		    // generate a work assignment
 
 		    if(this->has_cpus && !this->has_gpus)
 			    {
 		        // CPU only scheduling strategy
-		        return this->assign_work_cpu_only_strategy();
+		        return this->assign_work_cpu_only_strategy(log);
 			    }
 		    else if(this->has_gpus && !this->has_cpus)
 			    {
 		        // GPU only scheduling strategy
-		        return this->assign_work_gpu_only_strategy();
+		        return this->assign_work_gpu_only_strategy(log);
 			    }
 		    else
 			    {
 		        // mixed CPU & GPU scheduling strategy
-		        return this->assign_work_mixed_strategy();
+		        return this->assign_work_mixed_strategy(log);
 			    }
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_cpu_only_strategy()
+		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_cpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 				// schedule work for a CPU only pool
 				// the strategy is to avoid cores becoming idle because they have run out of work
@@ -572,8 +574,8 @@ namespace transport
 					};
 				workers.sort(MeanTimeComparator());
 
-				// step through list of workers requiring assignments, assigning work to the fastest first
-				// workers who have not yet had any assignments will be at the top of the queue
+				// tep through list of workers requiring assignments, assigning work to the fastest first.
+				// Note that workers who have not yet had any assignments will be at the top of the queue
 		    std::list<work_assignment> assignment_list;
 
 				// if we allocated work equally, what would be the mean allocation per worker?
@@ -583,6 +585,9 @@ namespace transport
 
 				// set up an iterator to point at the next item of work
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
+
+				// loop through workers, allocating work from the queue
+				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", mean allocation per worker=" << mean_allocation_per_worker << ")";
 				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++)
 					{
 				    std::list<unsigned int> items;
@@ -590,6 +595,7 @@ namespace transport
 						// is this a worker which has not yet had any assignment?
 						if((*t)->get_total_time() == 0)
 							{
+								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number() << " has not yet been allocated work; allocating 1 item";
 								// if so, assign just a single work item to get a sense of how long it takes this worker to process
 								items.push_back(*next_item);
 								next_item++;
@@ -598,15 +604,18 @@ namespace transport
 							{
 								// allocate up to __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
 								// or the mean allocation per worker, whichever is smaller
-						    boost::timer::nanosecond_type mean_time_per_item = (*t)->get_mean_time_per_work_item();
-								if(mean_time_per_item == 0) mean_time_per_item = 1000*1000*1000;
+						    boost::timer::nanosecond_type time_per_item   = (*t)->get_mean_time_per_work_item();
+						    boost::timer::nanosecond_type granularity     = time_per_item > 0 ? __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY / (*t)->get_mean_time_per_work_item() : 1.0;
+						    unsigned int                  granularity_int = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(granularity)));
 
-						    boost::timer::nanosecond_type granularity = __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY / (*t)->get_mean_time_per_work_item();
-
-								unsigned int unit_of_work = std::min(this->max_work_allocation, static_cast<unsigned int>(granularity));
+								unsigned int unit_of_work = std::min(this->max_work_allocation, granularity_int);
 								if(unit_of_work == 0) unit_of_work = 1;
 
 								unsigned int num_work_items = std::min(unit_of_work, mean_allocation_per_worker);
+
+								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number() << " mean time-per-item = " << format_time(time_per_item)
+										<< " -> granularity = " << granularity_int
+										<< ". Allocated " << num_work_items << " items";
 
 								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; i++)
 									{
@@ -622,7 +631,7 @@ namespace transport
 			}
 
 
-		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_gpu_only_strategy()
+		std::list<master_scheduler::work_assignment> master_scheduler::assign_work_gpu_only_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 				// currently we schedule work just by breaking it up between all workers
 				// TODO: in future, this should be replaced by a more intelligent scheduler
@@ -665,7 +674,7 @@ namespace transport
 			}
 
 
-    std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy()
+    std::list<master_scheduler::work_assignment> master_scheduler::assign_work_mixed_strategy(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 	    {
 				throw runtime_exception(runtime_exception::RUNTIME_ERROR, "Mixed CPU/GPU scheduling is not yet implemented");
 	    }

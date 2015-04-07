@@ -1694,7 +1694,7 @@ namespace transport
 		void master_controller<number>::assign_work_to_workers(WriterObject& writer)
 			{
         // generate a list of work assignments
-        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work();
+        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(writer->get_log());
 
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Generating new work assignments for " << work.size() << " workers (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
 
