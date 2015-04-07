@@ -449,12 +449,14 @@ namespace transport
 
 		void master_scheduler::compute_max_allocation()
 			{
-				// set maximum work allocation to be an equitable share of the queue size
+				// set maximum work allocation to force multiple scheduling adjustments during
+				// the lifetime of the task.
+				// This is intended to prevent lots of k-configurations being allocated in one go,
+				// and then the system inadvertently running out of work with some cores
+				// left unallocated for a long period.
 				if(this->worker_data.size() > 0)
 					{
-						unsigned int share_per_worker = std::max(static_cast<unsigned int>(this->queue.size() / this->worker_data.size()), static_cast<unsigned int>(1));
-						unsigned int five_percent = std::max(static_cast<unsigned int>(this->queue.size() / 20), static_cast<unsigned int>(1));
-				    this->max_work_allocation = std::min(share_per_worker, five_percent);
+				    this->max_work_allocation = std::max(static_cast<unsigned int>(this->queue.size() / (5*this->worker_data.size())), static_cast<unsigned int>(1));
 					}
 				else
 					{
@@ -578,9 +580,9 @@ namespace transport
 				// Note that workers who have not yet had any assignments will be at the top of the queue
 		    std::list<work_assignment> assignment_list;
 
-				// if we allocated work equally, what would be the mean allocation per worker?
+				// if we allocated work equally among all workers, what would be the mean allocation per worker?
 				assert(workers.size() > 0);
-				unsigned int mean_allocation_per_worker = static_cast<unsigned int>(this->queue.size() / workers.size());
+				unsigned int mean_allocation_per_worker = static_cast<unsigned int>(this->queue.size() / this->worker_data.size());
 				if(mean_allocation_per_worker == 0) mean_allocation_per_worker = 1;
 
 				// set up an iterator to point at the next item of work
@@ -613,7 +615,7 @@ namespace transport
 
 								unsigned int num_work_items = std::min(unit_of_work, mean_allocation_per_worker);
 
-								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number() << " mean time-per-item = " << format_time(time_per_item)
+								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
 										<< " -> granularity = " << granularity_int
 										<< ". Allocated " << num_work_items << " items";
 
