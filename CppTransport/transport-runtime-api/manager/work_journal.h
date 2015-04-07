@@ -531,10 +531,12 @@ namespace transport
 				assert(work_list.size() == this->N_workers+1);
 
 		    boost::filesystem::path out_file(filename);
-
-				// obtain path for Python script output
 		    boost::filesystem::path script_file = out_file;
-				script_file.replace_extension(".py");
+				if(script_file.extension() != ".py")
+					{
+				    // obtain path for Python script output
+				    script_file.replace_extension(".py");
+					}
 
 		    std::ofstream out;
 				out.open(script_file.c_str(), std::ios_base::trunc | std::ios_base::out);
@@ -613,20 +615,34 @@ namespace transport
 
 				out << "ax.invert_yaxis()" << std::endl;
 				out << "fig.autofmt_xdate()" << std::endl;
-				out << "plt.savefig(" << out_file << ")" << std::endl;
+				if(out_file.extension() != ".py")
+					{
+				    out << "plt.savefig(" << out_file << ")" << std::endl;
+					}
+				else
+					{
+				    boost::filesystem::path temp = out_file;
+						temp.replace_extension(".pdf");
+						out << "plt.savefig(" << temp << ")" << std::endl;
+					}
 
 				out.close();
-		    std::ostringstream command;
-		    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
-		    int rc = system(command.str().c_str());
 
-		    bool rval = true;
+				// if output format wasn't Python, try to execute this script
+				if(out_file.extension() != ".py")
+					{
+				    std::ostringstream command;
+				    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
+				    int rc = system(command.str().c_str());
 
-		    // remove python script if worked ok
-		    if(rc == 0)
-			    {
-//		        boost::filesystem::remove(script_file);
-			    }
+				    bool rval = true;
+
+				    // remove python script if worked ok
+				    if(rc == 0)
+					    {
+				        boost::filesystem::remove(script_file);
+					    }
+					}
 			}
 
 
