@@ -30,7 +30,8 @@ namespace transport
 					: begin_time(b),
 		        end_time(e),
 		        colour(c),
-						height(0.3),
+						height(1.0),
+						alpha(0.6),
 						axes_object("ax"),
 						mplt_date_namespace("mdt"),
 						dt_namespace("dt"),
@@ -59,6 +60,9 @@ namespace transport
 				//! height of bar
 				double height;
 
+				//! alpha channel
+				double alpha;
+
 				//! name of axes object
 				std::string axes_object;
 
@@ -68,7 +72,7 @@ namespace transport
 				//! namespace for Python datetime module
 				std::string dt_namespace;
 
-				//! namespace for Pythond dateutil module
+				//! namespace for Python dateutil module
 				std::string dateutil_namespace;
 
 			};
@@ -86,8 +90,11 @@ namespace transport
 		    insn << begin_label.str() << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->begin_time << "'))" << std::endl;
 		    insn << end_label.str()   << " = " << this->mplt_date_namespace << ".date2num(" << this->dateutil_namespace << ".parse('" << this->end_time << "'))" << std::endl;
 
-        insn << this->axes_object << ".barh(" << y << ", " << end_label.str() << "-" << begin_label.str()
-	        << ", height=" << this->height << ", left=" << begin_label.str() << ", color='" << this->colour << "', align='edge')";
+		    double bar_height = 0.8*this->height;
+		    double bar_pad    = 0.1*this->height;
+
+        insn << this->axes_object << ".barh(" << y+bar_pad << ", " << end_label.str() << "-" << begin_label.str()
+	        << ", height=" << bar_height << ", left=" << begin_label.str() << ", color='" << this->colour << "', alpha=" << this->alpha << ", align='edge')";
 
 		    return(insn.str());
 	    }
@@ -559,7 +566,7 @@ namespace transport
 				    std::list< work_item >::const_iterator u = t->begin();
 				    while(u != t->end())
 					    {
-						    out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*0.5) << std::endl;
+						    out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*1.0) << std::endl;
 						    u++;
 						    total_count++;
 					    }
@@ -572,7 +579,7 @@ namespace transport
 								u = t->begin();
 						    while(u != t->end())
 							    {
-						        out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*0.5) << std::endl;
+						        out << u->format_gantt_bar(total_count, static_cast<double>(bar_count)*1.0) << std::endl;
 						        u++;
 								    total_count++;
 							    }
@@ -585,18 +592,21 @@ namespace transport
 				// format the x-axis
 
 
-				// format y axis
-				out << "ylabels = []" << std::endl;
-				out << "ylabels.append('Master')" << std::endl;
-
-				for(unsigned int i = 0; i < this->N_workers; i++)
+				// label y-axis by worker if there are not too many labels
+				if(this->N_workers <= 20)
 					{
-						out << "ylabels.append('Worker " << i << "')" << std::endl;
-					}
+				    out << "ylabels = []" << std::endl;
+				    out << "ylabels.append('Master')" << std::endl;
 
-				out << "pos = np.arange(0.5, " << 0.5+bar_count*0.5 << ", 0.5)" << std::endl;
-				out << "locsy, labelsy = plt.yticks(pos, ylabels)" << std::endl;
-				out << "plt.setp(labelsy, fontsize=12)" << std::endl;
+				    for(unsigned int i = 0; i < this->N_workers; i++)
+					    {
+				        out << "ylabels.append('Worker " << i << "')" << std::endl;
+					    }
+
+				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(bar_count)*1.0 << ", 1.0)" << std::endl;
+				    out << "locsy, labelsy = plt.yticks(pos, ylabels)" << std::endl;
+				    out << "plt.setp(labelsy, fontsize=12)" << std::endl;
+					}
 
 				out << "ax.xaxis_date()" << std::endl;
 				out << "ax.axis('tight')" << std::endl;
@@ -615,7 +625,7 @@ namespace transport
 		    // remove python script if worked ok
 		    if(rc == 0)
 			    {
-		        boost::filesystem::remove(script_file);
+//		        boost::filesystem::remove(script_file);
 			    }
 			}
 
