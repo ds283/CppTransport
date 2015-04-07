@@ -46,6 +46,16 @@ bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threep
     return(fabs(data.beta - 0.95) < 0.01); // use beta = 0.9 only
 	}
 
+bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+	{
+		return(fabs(data.kt-exp(3.0)) < 0.01 && fabs(data.beta-0.5) < 0.01);
+	}
+
+bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
+	{
+    return(fabs(data.kt-exp(8.0)) < 0.01 && fabs(data.beta-0.5) < 0.01);
+	}
+
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
 	{
 		return(true);   // plot all 2pf configuraitons
@@ -139,39 +149,39 @@ int main(int argc, char* argv[])
     std::cout << tk3;
 
     // check the zeta twopf
-    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(ztk3,
-                                                                                                                                           transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                                                                           transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
+    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3,
+                                                                                 transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                                 transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_twopf = transport::derived_data::time_series_plot<double>("axion.threepf-1.zeta-twopf", "zeta-twopf.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_twopf("axion.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
     tk3_zeta_twopf.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
     // check the zeta threepf
-    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(ztk3,
-                                                                                                                                            transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                                                                            transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3,
+                                                                                transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                                transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
     tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
     tk3_zeta_sq_group.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_zeta_sq = transport::derived_data::time_series_plot<double>("axion.threepf-1.zeta-sq", "zeta-sq.pdf");
+    transport::derived_data::time_series_plot<double> tk3_zeta_sq("axion.threepf-1.zeta-sq", "zeta-sq.pdf");
     tk3_zeta_sq.add_line(tk3_zeta_sq_group);
     tk3_zeta_sq.set_title_text("3pf of $\\zeta$ near squeezed configurations");
 
 		// set up a table too
-    transport::derived_data::time_series_table<double> tk3_zeta_sq_table = transport::derived_data::time_series_table<double>("axion.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
+    transport::derived_data::time_series_table<double> tk3_zeta_sq_table("axion.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
 
     // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(ztk3,
-                                                                                                                                                                transport::derived_data::filter::time_filter(timeseries_axis_filter),
-                                                                                                                                                                transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3,
+                                                                                         transport::derived_data::filter::time_filter(timeseries_axis_filter),
+                                                                                         transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
     tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
     tk3_zeta_redbsp.set_use_beta_label(true);
 
-    transport::derived_data::time_series_plot<double> tk3_redbsp = transport::derived_data::time_series_plot<double>("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
+    transport::derived_data::time_series_plot<double> tk3_redbsp("axion.threepf-1.redbsp-sq", "redbsp-sq.pdf");
     tk3_redbsp.set_log_y(false);
     tk3_redbsp.set_abs_y(false);
     tk3_redbsp.add_line(tk3_zeta_redbsp);
@@ -181,9 +191,9 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
     tk3_redbsp_table.add_line(tk3_zeta_redbsp);
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(ztk3,
-                                                                                                                                                 transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                                                                 transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3,
+                                                                                 transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                 transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
@@ -194,30 +204,81 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec = transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double>(ztk3,
-                                                                                                                                                                                 transport::derived_data::filter::time_filter(kseries_last_time),
-                                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3,
+                                                                                                    transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                    transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
 		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
+		tk3_redbsp_spec_plot.set_typeset_with_LaTeX(true);
 		tk3_redbsp_spec_plot.set_title("Reduced bispectrum in the squeezed limit");
+		tk3_redbsp_spec_plot.set_x_label_text("$k_t$");
 
-    transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
+    transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
 
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3,
+                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::beta_axis);
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3,
+                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("axion.threepf-1.redbsp-beta", "redbsp-beta.pdf");
+		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
+    tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_hi);
+		tk3_redbsp_beta_plot.set_typeset_with_LaTeX(true);
+		tk3_redbsp_beta_plot.set_title("Shape-dependence of reduced bispectrum");
+
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_alpha_lo(ztk3,
+                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    tk3_zeta_redbsp_alpha_lo.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_alpha_lo.set_current_x_axis_value(transport::derived_data::alpha_axis);
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_alpha_hi(ztk3,
+                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    tk3_zeta_redbsp_alpha_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_alpha_hi.set_current_x_axis_value(transport::derived_data::alpha_axis);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_alpha_plot("axion.threepf-1.redbsp-alpha", "redbsp-alpha.pdf");
+    tk3_redbsp_alpha_plot.add_line(tk3_zeta_redbsp_alpha_lo);
+		tk3_redbsp_alpha_plot.add_line(tk3_zeta_redbsp_alpha_hi);
+    tk3_redbsp_alpha_plot.set_typeset_with_LaTeX(true);
+    tk3_redbsp_alpha_plot.set_title("Shape-dependence of reduced bispectrum");
+
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk1_lo(ztk3,
+                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
+    tk3_zeta_redbsp_sqk1_lo.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_sqk1_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k1_axis);
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk1_hi(ztk3,
+                                                                                                       transport::derived_data::filter::time_filter(kseries_last_time),
+                                                                                                       transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
+    tk3_zeta_redbsp_sqk1_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+    tk3_zeta_redbsp_sqk1_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k1_axis);
+
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk1_plot("axion.threepf-1.redbsp-sqk1", "redbsp-sqk1.pdf");
+    tk3_redbsp_sqk1_plot.add_line(tk3_zeta_redbsp_sqk1_lo);
+    tk3_redbsp_sqk1_plot.add_line(tk3_zeta_redbsp_sqk1_hi);
+    tk3_redbsp_sqk1_plot.set_typeset_with_LaTeX(true);
+    tk3_redbsp_sqk1_plot.set_title("Shape-dependence of reduced bispectrum");
 
 		// construct output tasks
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_sq);
-		threepf_output.add_element(tk3_zeta_sq_table);
     threepf_output.add_element(tk3_redbsp);
-    threepf_output.add_element(tk3_redbsp_table);
     threepf_output.add_element(tk3_zeta_2spec_plot);
-    threepf_output.add_element(tk3_zeta_2spec_table);
 		threepf_output.add_element(tk3_redbsp_spec_plot);
-		threepf_output.add_element(tk3_redbsp_spec_table);
+		threepf_output.add_element(tk3_redbsp_beta_plot);
+    threepf_output.add_element(tk3_redbsp_alpha_plot);
+    threepf_output.add_element(tk3_redbsp_sqk1_plot);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
