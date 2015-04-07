@@ -81,7 +81,7 @@ namespace transport
 				template <typename number>
 				r_wavenumber_series<number>::r_wavenumber_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                                 filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, wavenumber_axis, prec),
+					: derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
 					  r_line<number>(tk, kfilter),
 					  wavenumber_series<number>(tk, tfilter)
 					{

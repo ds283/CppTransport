@@ -86,7 +86,7 @@ namespace transport
 				template <typename number>
 				r_time_series<number>::r_time_series(const zeta_twopf_list_task<number>& tk, filter::time_filter tfilter,
 				                                     filter::twopf_kconfig_filter kfilter, unsigned int prec)
-					: derived_line<number>(tk, time_axis, prec),
+					: derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 					  r_line<number>(tk, kfilter),
 					  time_series<number>(tk, tfilter)
 					{

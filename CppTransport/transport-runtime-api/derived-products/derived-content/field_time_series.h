@@ -104,7 +104,7 @@ namespace transport
 		    template <typename number>
 		    background_time_series<number>::background_time_series(const integration_task<number>& tk, index_selector<1>& sel,
 		                                                           filter::time_filter tfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, prec),
+			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 			      time_series<number>(tk, tfilter),
 			      gadget(tk),
 			      active_indices(sel)
@@ -297,7 +297,7 @@ namespace transport
 		    template <typename number>
 		    twopf_time_series<number>::twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                 filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, prec),
+			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 			      twopf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {
@@ -462,7 +462,7 @@ namespace transport
 		    threepf_time_series<number>::threepf_time_series(const threepf_task<number>& tk, index_selector<3>& sel,
 		                                                     filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
 		                                                     unsigned int prec)
-			    : derived_line<number>(tk, time_axis, prec),
+			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 			      threepf_line<number>(tk, sel, kfilter),
 			      time_series<number>(tk, tfilter)
 			    {

@@ -88,7 +88,7 @@ namespace transport
         template <typename number>
         zeta_twopf_time_series<number>::zeta_twopf_time_series(const zeta_twopf_list_task<number>& tk,
                                                                filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, time_axis, prec),
+	        : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
 	          zeta_twopf_line<number>(tk, kfilter),
 	          time_series<number>(tk, tfilter)
           {
@@ -221,7 +221,7 @@ namespace transport
         template <typename number>
         zeta_threepf_time_series<number>::zeta_threepf_time_series(const zeta_threepf_task<number>& tk,
                                                                    filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter, unsigned int prec)
-          : derived_line<number>(tk, time_axis, prec),
+          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
             zeta_threepf_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {
@@ -358,7 +358,7 @@ namespace transport
         zeta_reduced_bispectrum_time_series<number>::zeta_reduced_bispectrum_time_series(const zeta_threepf_task<number>& tk,
                                                                                          filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                                          unsigned int prec)
-          : derived_line<number>(tk, time_axis, prec),
+          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
             zeta_reduced_bispectrum_line<number>(tk, kfilter),
             time_series<number>(tk, tfilter)
           {

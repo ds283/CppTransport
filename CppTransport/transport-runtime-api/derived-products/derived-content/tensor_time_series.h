@@ -88,7 +88,7 @@ namespace transport
 		    template <typename number>
 		    tensor_twopf_time_series<number>::tensor_twopf_time_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
 		                                                               filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-			    : derived_line<number>(tk, time_axis, prec),
+			    : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }, prec),
             tensor_twopf_line<number>(tk, sel, kfilter),
             time_series<number>(tk, tfilter)
 			    {

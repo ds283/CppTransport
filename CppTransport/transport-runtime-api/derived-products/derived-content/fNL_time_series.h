@@ -85,7 +85,7 @@ namespace transport
         // We have to call it ourselves.
         template <typename number>
         fNL_time_series<number>::fNL_time_series(const fNL_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk, time_axis),
+          : derived_line<number>(tk, time_axis, std::list<axis_value>{ efolds_axis }),
             fNL_line<number>(tk),
             time_series<number>(tk, tfilter)
           {

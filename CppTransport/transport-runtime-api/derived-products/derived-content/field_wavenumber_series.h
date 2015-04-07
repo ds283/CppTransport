@@ -82,7 +82,7 @@ namespace transport
         template <typename number>
         twopf_wavenumber_series<number>::twopf_wavenumber_series(const twopf_list_task<number>& tk, index_selector<2>& sel,
                                                                  filter::time_filter tfilter, filter::twopf_kconfig_filter kfilter, unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, prec),
+	        : derived_line<number>(tk, wavenumber_axis, std::list<axis_value>{ k_axis, efolds_exit_axis }, prec),
 	          twopf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
@@ -239,7 +239,9 @@ namespace transport
         threepf_wavenumber_series<number>::threepf_wavenumber_series(const threepf_task<number>& tk, index_selector<3>& sel,
                                                                      filter::time_filter tfilter, filter::threepf_kconfig_filter kfilter,
                                                                      unsigned int prec)
-	        : derived_line<number>(tk, wavenumber_axis, prec),
+	        : derived_line<number>(tk, wavenumber_axis,
+	                               std::list<axis_value>{ k_axis, efolds_exit_axis, alpha_axis, beta_axis, squeezing_fraction_k1_axis, squeezing_fraction_k2_axis, squeezing_fraction_k3_axis },
+	                               prec),
 	          threepf_line<number>(tk, sel, kfilter),
 	          wavenumber_series<number>(tk, tfilter)
 	        {
