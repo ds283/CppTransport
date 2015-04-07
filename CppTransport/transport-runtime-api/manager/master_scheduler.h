@@ -12,10 +12,13 @@
 #include <list>
 #include <functional>
 #include <algorithm>
+#include <cmath>
 
 #include "transport-runtime-api/manager/mpi_operations.h"
 
 #include "transport-runtime-api/repository/writers/generic_writer.h"
+
+#include "transport-runtime-api/utilities/formatter.h"
 
 #include "transport-runtime-api/exceptions.h"
 #include "transport-runtime-api/messages.h"
@@ -576,20 +579,20 @@ namespace transport
 					};
 				workers.sort(MeanTimeComparator());
 
-				// tep through list of workers requiring assignments, assigning work to the fastest first.
+				// step through list of workers requiring assignments, assigning work to the fastest first.
 				// Note that workers who have not yet had any assignments will be at the top of the queue
 		    std::list<work_assignment> assignment_list;
 
-				// if we allocated work equally among all workers, what would be the mean allocation per worker?
+				// try to prevent large chunks of work from being allocate
 				assert(workers.size() > 0);
-				unsigned int mean_allocation_per_worker = static_cast<unsigned int>(this->queue.size() / this->worker_data.size());
-				if(mean_allocation_per_worker == 0) mean_allocation_per_worker = 1;
+				double worker_scale = sqrt(workers.size() * this->worker_data.size());
+				unsigned int max_allocation_per_worker = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(static_cast<double>(this->queue.size()) / worker_scale)));
 
 				// set up an iterator to point at the next item of work
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
 				// loop through workers, allocating work from the queue
-				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", mean allocation per worker=" << mean_allocation_per_worker << ")";
+				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
 				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++)
 					{
 				    std::list<unsigned int> items;
@@ -613,7 +616,7 @@ namespace transport
 								unsigned int unit_of_work = std::min(this->max_work_allocation, granularity_int);
 								if(unit_of_work == 0) unit_of_work = 1;
 
-								unsigned int num_work_items = std::min(unit_of_work, mean_allocation_per_worker);
+								unsigned int num_work_items = std::min(unit_of_work, max_allocation_per_worker);
 
 								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
 										<< " -> granularity = " << granularity_int
