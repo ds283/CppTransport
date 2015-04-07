@@ -21,7 +21,8 @@
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CLASS_WAVENUMBER_LABEL             "k-value"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CLASS_THREEPF_CONFIGURATION_LABEL  "threepf configuration"
 
-#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED                   "supported values"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED                   "supported x-axis values:"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS                     "current x-axis value:"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS                "e-folds"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_K                     "k-value"
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_VALUE_EFOLDS_EXIT           "efolds from horizone exit"
@@ -45,6 +46,9 @@
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN                "derived_line error: unknown klabel meaning"
 
 #define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NOT_DERIVABLE_TASK                 "derived_line error: cannot derive data from a non-derivable task"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_NO_AXIS_TYPES                      "derived_line error: no supported axis types"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_NOT_SUPPORTED               "derived_line error: unsupported x-axis type"
+#define __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNSUPPORTED_X_AXIS_TYPE            "derived_line error: attempt to set x-axis to unsupported type"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DERIVED_LINE_H
