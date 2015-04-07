@@ -58,10 +58,10 @@ namespace transport
       public:
 
         template <typename handle_type>
-        integration_batcher(unsigned int cap, unsigned int Nf,
+        integration_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                             const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                             container_dispatch_function d, container_replacement_function r,
-                            handle_type h, unsigned int w, bool s);
+                            handle_type h, unsigned int w, unsigned int g=0, bool s=true);
 
         virtual ~integration_batcher() = default;
 
@@ -71,11 +71,10 @@ namespace transport
       public:
 
         //! Return number of fields
-        unsigned int get_number_fields() const
-	        {
-            return (this->Nfields);
-	        }
+        unsigned int get_number_fields() const { return(this->Nfields); }
 
+		    //! Return backend identifier
+				const std::string& get_backend() const { return(this->backend); }
 
         //! Close this batcher -- called at the end of an integration
         virtual void close() override;
@@ -207,6 +206,9 @@ namespace transport
         //! Number of fields associated with this integration
         const unsigned int Nfields;
 
+		    //! Backend name associated with this integration
+		    const std::string backend;
+
 
         // INTEGRATION EVENT TRACKING
 
@@ -266,11 +268,11 @@ namespace transport
       public:
 
         template <typename handle_type>
-        twopf_batcher(unsigned int cap, unsigned int Nf,
+        twopf_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                      handle_type h, unsigned int wn, bool s);
+                      handle_type h, unsigned int wn, unsigned int wg, bool s);
 
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
@@ -318,11 +320,11 @@ namespace transport
         typedef enum { real_twopf, imag_twopf } twopf_type;
 
         template <typename handle_type>
-        threepf_batcher(unsigned int cap, unsigned int Nf,
+        threepf_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                        handle_type h, unsigned int wn, bool s);
+                        handle_type h, unsigned int wn, unsigned int wg, bool s);
 
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, twopf_type t = real_twopf);
 
@@ -355,12 +357,13 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int Nf,
+    integration_batcher<number>::integration_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                                                      const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                                      container_dispatch_function d, container_replacement_function r,
-                                                     handle_type h, unsigned int w, bool s)
-	    : generic_batcher(cap, cp, lp, d, r, h, w),
+                                                     handle_type h, unsigned int w, unsigned int g, bool s)
+	    : generic_batcher(cap, cp, lp, d, r, h, w, g),
 	      Nfields(Nf),
+	      backend(b),
 	      num_integrations(0),
 	      integration_time(0),
 	      max_integration_time(0),
@@ -511,12 +514,12 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int Nf,
+    twopf_batcher<number>::twopf_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                          const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                         handle_type h, unsigned int wn, bool s)
-	    : integration_batcher<number>(cap, Nf, cp, lp, d, r, h, wn, s),
+                                         handle_type h, unsigned int wn, unsigned int wg, bool s)
+	    : integration_batcher<number>(cap, Nf, b, cp, lp, d, r, h, wn, wg, s),
 	      writers(w)
 	    {
 	    }
@@ -632,12 +635,12 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int Nf,
+    threepf_batcher<number>::threepf_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                                              const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
-                                             handle_type h, unsigned int wn, bool s)
-	    : integration_batcher<number>(cap, Nf, cp, lp, d, r, h, wn, s),
+                                             handle_type h, unsigned int wn, unsigned int wg, bool s)
+	    : integration_batcher<number>(cap, Nf, b, cp, lp, d, r, h, wn, wg, s),
 	      writers(w)
 	    {
 	    }

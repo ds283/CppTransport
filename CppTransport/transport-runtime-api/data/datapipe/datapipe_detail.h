@@ -768,7 +768,7 @@ namespace transport
             this->attach_cache_tables(payload);
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
-		            << " (from integration task '" << tk->get_name() << "', generated using integration backend '" << payload.get_backend() << "')";
+		            << " (from integration task '" << tk->get_name() << "')";
 	        }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
 	        {

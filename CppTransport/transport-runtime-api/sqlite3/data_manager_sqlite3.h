@@ -117,13 +117,13 @@ namespace transport
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
         virtual twopf_batcher<number> create_temp_twopf_container(const boost::filesystem::path& tempdir,
                                                                   const boost::filesystem::path& logdir,
-                                                                  unsigned int worker, model<number>* m,
+                                                                  unsigned int worker, unsigned int group, model<number>* m,
                                                                   generic_batcher::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
         virtual threepf_batcher<number> create_temp_threepf_container(const boost::filesystem::path& tempdir,
                                                                       const boost::filesystem::path& logdir,
-                                                                      unsigned int worker, model<number>* m,
+                                                                      unsigned int worker, unsigned int group, model<number>* m,
                                                                       generic_batcher::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for zeta twopf data. Returns a batcher which can be used for writing to the container.
@@ -620,7 +620,8 @@ namespace transport
     template <typename number>
     twopf_batcher<number>
     data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                              unsigned int worker, model<number>* m, generic_batcher::container_dispatch_function dispatcher)
+                                                              unsigned int worker, unsigned int group,
+                                                              model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -640,7 +641,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
+        twopf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), m->get_backend(), container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -654,7 +655,8 @@ namespace transport
     template <typename number>
     threepf_batcher<number>
     data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
-                                                                unsigned int worker, model<number>* m, generic_batcher::container_dispatch_function dispatcher)
+                                                                unsigned int worker, unsigned int group,
+                                                                model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
         boost::filesystem::path container = this->generate_temporary_container_path(tempdir, worker);
 
@@ -676,7 +678,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), container, logdir, writers, dispatcher, replacer, db, worker, m->supports_per_configuration_statistics());
+        threepf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), m->get_backend(), container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 

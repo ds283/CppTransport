@@ -8,6 +8,7 @@
 #ifndef __CPP_TRANSPORT_MESSAGES_EN_H_
 #define __CPP_TRANSPORT_MESSAGES_EN_H_
 
+
 #include "transport-runtime-api/localizations/messages_en/runtimeapi.h"
 
 #include "transport-runtime-api/localizations/messages_en/serialization.h"
@@ -36,6 +37,8 @@
 #include "transport-runtime-api/localizations/messages_en/json_repository_interface.h"
 
 #include "transport-runtime-api/localizations/messages_en/repository_sqlite3.h"
+
+#include "transport-runtime-api/localizations/messages_en/sqlite3_utility.h"
 
 #include "transport-runtime-api/localizations/messages_en/named_list.h"
 

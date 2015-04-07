@@ -276,13 +276,17 @@ namespace transport
 		        std::ostringstream create_stmt;
 				    create_stmt
 				      << "CREATE TABLE " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "("
-				      << "worker        INTEGER PRIMARY KEY, "
+					    << "workgroup     INTEGER, "
+				      << "worker        INTEGER, "
+					    << "backend       TEXT, "
 				      << "hostname      TEXT, "
 				      << "os_name       TEXT, "
 				      << "os_version    TEXT, "
 				      << "os_release    TEXT, "
 				      << "architecture  TEXT, "
-				      << "cpu_vendor_id TEXT)";
+				      << "cpu_vendor_id TEXT, "
+		          << "PRIMARY KEY (workgroup, worker)"
+					    << ");";
 
 				    exec(db, create_stmt.str());
 			    }
@@ -298,7 +302,8 @@ namespace transport
               << "integration_time  DOUBLE, "
               << "batch_time        DOUBLE, "
 	            << "refinements       INTEGER, "
-              << "worker            INTEGER";
+              << "workgroup         INTEGER, "
+	            << "worker            INTEGER";
 
             if(keys == foreign_keys)
               {
@@ -318,7 +323,7 @@ namespace transport
                   }
                 create_stmt << "(serial)";
 
-		            create_stmt << ", FOREIGN KEY(worker) REFERENCES " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "(worker)";
+		            create_stmt << ", FOREIGN KEY(workgroup, worker) REFERENCES " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << "(workgroup, worker)";
               }
             create_stmt << ");";
 
@@ -524,7 +529,7 @@ namespace transport
 
 		    // Write host information
 		    template <typename number>
-		    void write_host_info(generic_batcher* batcher)
+		    void write_host_info(integration_batcher<number>* batcher)
 			    {
 				    sqlite3* db = nullptr;
 				    batcher->get_manager_handle(&db);
@@ -532,7 +537,7 @@ namespace transport
 				    const host_information& host = batcher->get_host_information();
 
 		        std::ostringstream insert_stmt;
-				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@worker, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
+				    insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_WORKERS_TABLE << " VALUES (@workgroup, @worker, @backend, @hostname, @os_name, @os_version, @os_release, @architecture, @cpu_vendor_id)";
 
 				    sqlite3_stmt* stmt;
 				    check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -548,13 +553,15 @@ namespace transport
 
 				    // However, here, we certainly *shouldn't* include the nul-terminator byte, because that isn't part of the string
 
-				    check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_number()));
-				    check_stmt(db, sqlite3_bind_text(stmt, 2, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 3, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
-				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_int(stmt, 1, batcher->get_worker_group()));
+				    check_stmt(db, sqlite3_bind_int(stmt, 2, batcher->get_worker_number()));
+				    check_stmt(db, sqlite3_bind_text(stmt, 3, batcher->get_backend().c_str(), batcher->get_backend().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 4, host.get_host_name().c_str(), host.get_host_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 5, host.get_os_name().c_str(), host.get_os_name().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 6, host.get_os_version().c_str(), host.get_os_version().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 7, host.get_os_release().c_str(), host.get_os_release().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 8, host.get_architecture().c_str(), host.get_architecture().length(), SQLITE_STATIC));
+				    check_stmt(db, sqlite3_bind_text(stmt, 9, host.get_cpu_vendor_id().c_str(), host.get_cpu_vendor_id().length(), SQLITE_STATIC));
 
 				    check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_WORKER_INSERT_FAIL, SQLITE_DONE);
 
@@ -573,7 +580,7 @@ namespace transport
             batcher->get_manager_handle(&db);
 
             std::ostringstream insert_stmt;
-            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @refinements, @worker);";
+            insert_stmt << "INSERT INTO " << __CPP_TRANSPORT_SQLITE_STATS_TABLE << " VALUES (@kserial, @integration_time, @batch_time, @refinements, @workgroup, @worker);";
 
             sqlite3_stmt* stmt;
             check_stmt(db, sqlite3_prepare_v2(db, insert_stmt.str().c_str(), insert_stmt.str().length()+1, &stmt, nullptr));
@@ -586,7 +593,8 @@ namespace transport
                 check_stmt(db, sqlite3_bind_double(stmt, 2, t->integration));
                 check_stmt(db, sqlite3_bind_double(stmt, 3, t->batching));
 		            check_stmt(db, sqlite3_bind_int(stmt, 4, t->refinements));
-                check_stmt(db, sqlite3_bind_int(stmt, 5, batcher->get_worker_number()));
+		            check_stmt(db, sqlite3_bind_int(stmt, 5, batcher->get_worker_group()));
+                check_stmt(db, sqlite3_bind_int(stmt, 6, batcher->get_worker_number()));
 
                 check_stmt(db, sqlite3_step(stmt), __CPP_TRANSPORT_DATACTR_STATS_INSERT_FAIL, SQLITE_DONE);
 

@@ -72,7 +72,6 @@
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_NOTES                   "notes"
 #define __CPP_TRANSPORT_NODE_OUTPUTGROUP_TAGS                    "tags"
 
-#define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND         "backend"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE        "database-path"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_TWOPF      "zeta-twopf"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_ZETA_THREEPF    "zeta-threepf"
@@ -1104,11 +1103,6 @@ namespace transport
 
       public:
 
-        //! Get name of backend used to generate this output group
-        const std::string& get_backend() const { return(this->backend); }
-        //! Set name of backend used to generate this output group
-        void set_backend(const std::string& be) { this->backend = be; }
-
         //! Get path of data container
         const boost::filesystem::path& get_container_path() const { return(this->container); }
         //! Set path of data container
@@ -1143,9 +1137,6 @@ namespace transport
         // INTERNAL DATA
 
       protected:
-
-        //! Backend used to generate this payload
-        std::string backend;
 
         //! Path to data container
         boost::filesystem::path container;
@@ -2056,14 +2047,12 @@ namespace transport
     integration_payload::integration_payload(Json::Value& reader)
 	    : metadata(reader)
 	    {
-        backend = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND].asString();
         container = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
 	    }
 
 
     void integration_payload::serialize(Json::Value& writer) const
 	    {
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_BACKEND] = this->backend;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE] = this->container.string();
 
         this->metadata.serialize(writer);
@@ -2072,7 +2061,6 @@ namespace transport
 
     void integration_payload::write(std::ostream& out) const
 	    {
-        out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_BACKEND << " " << this->backend << std::endl;
         out << __CPP_TRANSPORT_PAYLOAD_INTEGRATION_DATA << " = " << this->container << std::endl;
 	    }
 

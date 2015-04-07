@@ -580,7 +580,6 @@ namespace transport
         output_record->set_name_from_creation_time();
 
         // populate output group with content from the writer
-        output_record->get_payload().set_backend(rec->get_task()->get_model()->get_backend());
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
 

@@ -476,7 +476,7 @@ namespace transport
                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
-            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), m, dispatcher);
+            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), 0, m, dispatcher);
 
             this->schedule_integration(tka, m, payload, batcher, m->backend_twopf_state_size());
 	        }
@@ -488,7 +488,7 @@ namespace transport
 
             // construct a batcher to hold the output of the integration
             threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
-                                                                                            this->get_rank(), m, dispatcher);
+                                                                                            this->get_rank(), 0, m, dispatcher);
 
             this->schedule_integration(tkb, m, payload, batcher, m->backend_threepf_state_size());
 	        }
