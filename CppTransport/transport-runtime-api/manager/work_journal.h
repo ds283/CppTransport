@@ -657,8 +657,6 @@ namespace transport
 				    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
 				    int rc = system(command.str().c_str());
 
-				    bool rval = true;
-
 				    // remove python script if worked ok
 				    if(rc == 0)
 					    {

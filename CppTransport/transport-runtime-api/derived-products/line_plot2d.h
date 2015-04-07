@@ -102,7 +102,8 @@ namespace transport
 									 this->filename.extension().string() != ".ps" &&
 									 this->filename.extension().string() != ".eps" &&
 									 this->filename.extension().string() != ".svg" &&
-									 this->filename.extension().string() != ".svgz")
+									 this->filename.extension().string() != ".svgz" &&
+									 this->filename.extension().string() != ".py")
 									{
 								    std::ostringstream msg;
 										msg << __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_UNSUPPORTED_FORMAT << " " << filename.extension();
@@ -512,12 +513,14 @@ namespace transport
 						// extract paths from the datapipe
             boost::filesystem::path temp_root = pipe.get_abs_tempdir_path();
 
-						// obtain path for Python script output
-				    boost::filesystem::path script_file = temp_root / this->filename;
-						script_file.replace_extension(".py");
-
-						// obtain path for plot output
+				    // obtain path for plot output
 				    boost::filesystem::path plot_file = temp_root / this->filename;
+
+				    boost::filesystem::path script_file = plot_file;
+						if(script_file.extension() != ".py")
+							{
+								script_file.replace_extension(".py");
+							}
 
 				    std::ofstream out;
 						out.open(script_file.string().c_str(), std::ios_base::trunc | std::ios_base::out);
@@ -684,29 +687,42 @@ namespace transport
 					        }
 					    }
 
-				    if(this->title)   out << "plt.title(r'"  << this->title_text   << "')" << std::endl;
+				    if(this->title) out << "plt.title(r'" << this->title_text << "')" << std::endl;
 
-				    out << "plt.savefig('" << plot_file.string() << "')" << std::endl;
+						if(plot_file.extension() != ".py")
+							{
+						    out << "plt.savefig('" << plot_file.string() << "')" << std::endl;
+							}
+						else
+							{
+						    boost::filesystem::path temp = plot_file;
+								temp.replace_extension(".pdf");
+								out << "plt.savefig('" << temp.string() << "')" << std::endl;
+							}
 				    out << "plt.close()" << std::endl;
 
 				    out.close();
 
-				    std::ostringstream command;
-						command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
-				    int rc = system(command.str().c_str());
+				    bool rval = true;
 
-						bool rval = true;
+						// if output format wasn't Python, try to execute the script
+						if(plot_file.extension() != ".py")
+							{
+						    std::ostringstream command;
+						    command << "source ~/.profile; " << this->python_path.string() << " \"" << script_file.string() << "\"";
+						    int rc = system(command.str().c_str());
 
-						// remove python script if worked ok, otherwise move script to destination and throw an exception
-						if(rc == 0)
-							{
-						    boost::filesystem::remove(script_file);
-							}
-						else
-							{
-								if(boost::filesystem::exists(plot_file)) boost::filesystem::remove(plot_file);
-						    boost::filesystem::rename(script_file, plot_file);
-								rval = false;
+						    // remove python script if worked ok, otherwise move script to destination and throw an exception
+						    if(rc == 0)
+							    {
+						        boost::filesystem::remove(script_file);
+							    }
+						    else
+							    {
+						        if(boost::filesystem::exists(plot_file)) boost::filesystem::remove(plot_file);
+						        boost::filesystem::rename(script_file, plot_file);
+						        rval = false;
+							    }
 							}
 
 						return(rval);
