@@ -34,6 +34,9 @@
 #define __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
 
 
+//#define __CPP_TRANSPORT_DEBUG_SCHEDULER
+
+
 namespace transport
 	{
 
@@ -592,7 +595,9 @@ namespace transport
 		    std::list<unsigned int>::iterator next_item = this->queue.begin();
 
 				// loop through workers, allocating work from the queue
+#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
 				BOOST_LOG_SEV(log, generic_writer::normal) << "%% BEGIN NEW SCHEDULE (max work allocation=" << this->max_work_allocation << ", max allocation per worker=" << max_allocation_per_worker << ")";
+#endif
 				for(typename std::list< std::vector<master_scheduler::worker_information>::iterator >::iterator t = workers.begin(); next_item != this->queue.end() && t != workers.end(); t++)
 					{
 				    std::list<unsigned int> items;
@@ -600,7 +605,9 @@ namespace transport
 						// is this a worker which has not yet had any assignment?
 						if((*t)->get_total_time() == 0)
 							{
+#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
 								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " has not yet been allocated work; allocating 1 item";
+#endif
 								// if so, assign just a single work item to get a sense of how long it takes this worker to process
 								items.push_back(*next_item);
 								next_item++;
@@ -618,9 +625,11 @@ namespace transport
 
 								unsigned int num_work_items = std::min(unit_of_work, max_allocation_per_worker);
 
+#ifdef __CPP_TRANSPORT_DEBUG_SCHEDULER
 								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " mean time-per-item = " << format_time(time_per_item)
 										<< " -> granularity = " << granularity_int
 										<< ". Allocated " << num_work_items << " items";
+#endif
 
 								for(unsigned int i = 0; next_item != this->queue.end() && i < num_work_items; i++)
 									{
