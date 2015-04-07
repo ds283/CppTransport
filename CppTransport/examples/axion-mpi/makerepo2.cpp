@@ -4,7 +4,7 @@
 //
 
 
-#include "axion_basic.h"
+#include "axion_basic_unrolled.h"
 
 #include "transport-runtime-api/repository/repository_creation_key.h"
 
@@ -68,7 +68,7 @@ int main(int argc, char* argv[])
 
     transport::repository_creation_key key;
 
-    transport::json_interface_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
+    transport::json_repository<double>* repo = transport::repository_factory<double>(argv[1], key);
 
     // set up an instance of a manager
     transport::task_manager<double>* mgr = new transport::task_manager<double>(0, nullptr, repo);
@@ -130,13 +130,16 @@ int main(int argc, char* argv[])
     transport::range<double> betas  = transport::range<double>(betamin, betamax, b_samples, transport::range<double>::linear);
 
     // construct a threepf task
-    transport::threepf_fls_task<double> tk3 = transport::threepf_fls_task<double>("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
+    transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
 		tk3.set_fast_forward_efolds(4.0);
+
+		// construct a zeta threepf task
+    transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
 
     std::cout << tk3;
 
     // check the zeta twopf
-    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(tk3,
+    transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(ztk3,
                                                                                                                                            transport::derived_data::filter::time_filter(timeseries_axis_filter),
                                                                                                                                            transport::derived_data::filter::twopf_kconfig_filter(timeseries_twopf_kconfig_filter));
 
@@ -147,7 +150,7 @@ int main(int argc, char* argv[])
     tk3_zeta_twopf.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
 
     // check the zeta threepf
-    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(tk3,
+    transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group = transport::derived_data::zeta_threepf_time_series<double>(ztk3,
                                                                                                                                             transport::derived_data::filter::time_filter(timeseries_axis_filter),
                                                                                                                                             transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
     tk3_zeta_sq_group.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
@@ -162,7 +165,7 @@ int main(int argc, char* argv[])
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
 
     // compute the reduced bispectrum in a few squeezed configurations
-    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(tk3,
+    transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp = transport::derived_data::zeta_reduced_bispectrum_time_series<double>(ztk3,
                                                                                                                                                                 transport::derived_data::filter::time_filter(timeseries_axis_filter),
                                                                                                                                                                 transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
     tk3_zeta_redbsp.set_klabel_meaning(transport::derived_data::derived_line<double>::comoving);
@@ -178,7 +181,7 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-dq.table", "redbsp-sq-table.txt");
     tk3_redbsp_table.add_line(tk3_zeta_redbsp);
 
-    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(tk3,
+    transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec = transport::derived_data::zeta_twopf_wavenumber_series<double>(ztk3,
                                                                                                                                                  transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                                                                  transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
@@ -191,7 +194,7 @@ int main(int argc, char* argv[])
     transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
 
-    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec = transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double>(tk3,
+    transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec = transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double>(ztk3,
                                                                                                                                                                                  transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                                                                                                  transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
