@@ -624,7 +624,7 @@ namespace transport
 
 				    for(unsigned int i = 0; i < this->N_workers; i++)
 					    {
-				        out << "ylabels.append('Worker " << i << "')" << std::endl;
+				        out << "ylabels.append('Worker " << i+1 << "')" << std::endl;
 					    }
 
 				    out << "pos = np.arange(0.5, " << 0.5 + static_cast<double>(bar_count)*1.0 << ", 1.0)" << std::endl;

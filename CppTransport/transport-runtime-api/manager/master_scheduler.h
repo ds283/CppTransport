@@ -595,7 +595,7 @@ namespace transport
 						// is this a worker which has not yet had any assignment?
 						if((*t)->get_total_time() == 0)
 							{
-								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number() << " has not yet been allocated work; allocating 1 item";
+								BOOST_LOG_SEV(log, generic_writer::normal) << "%% Worker " << (*t)->get_number()+1 << " has not yet been allocated work; allocating 1 item";
 								// if so, assign just a single work item to get a sense of how long it takes this worker to process
 								items.push_back(*next_item);
 								next_item++;
