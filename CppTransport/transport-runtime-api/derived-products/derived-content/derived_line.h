@@ -147,7 +147,7 @@ namespace transport
 				    derivable_task<number>* get_parent_task() const { return(this->parent_task); }
 
             //! Get axis type
-            axis_class get_axis_type() const { return(this->x_class); }
+            axis_class get_x_axis_class() const { return(this->x_class); }
 
 				    //! get dot meaning
 				    dot_type get_dot_meaning() const { return(this->dot_meaning); }

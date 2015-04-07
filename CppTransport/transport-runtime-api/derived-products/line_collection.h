@@ -24,6 +24,8 @@
 #include "boost/filesystem/operations.hpp"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT       "line-collection"
+
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX       "log-x"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY       "log-y"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY       "abs-y"
@@ -178,7 +180,11 @@ namespace transport
 				  public:
 
 				    //! Add a line to the collection
-				    void add_line(const derived_line<number>& line);
+				    virtual void add_line(const derived_line<number>& line);
+
+						//! Get x-axis type
+						axis_value get_x_axis_value() const;
+
 
 				  protected:
 
@@ -247,17 +253,6 @@ namespace transport
 				    std::list< derived_line<number>* > lines;
 
 
-						// ADMIN
-
-						//! Enforce maximum number of value types?
-						bool enforce_max_value_types;
-
-				    //! Maximum number of different value-types to allow
-				    unsigned int max_value_types;
-
-
-						// HANDLING DATA
-
 						// LINE HANDLING ATTRIBUTES
 
 				    //! logarithmic x-axis?
@@ -280,13 +275,13 @@ namespace transport
 					: derived_product<number>(name, reader)
 					{
 						// read in line management attributes
-				    log_x     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
-				    log_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
-				    abs_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
-				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
+				    log_x     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX].asBool();
+				    log_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY].asBool();
+				    abs_y     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY].asBool();
+				    use_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX].asBool();
 
 						// read in line specifications
-				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
+				    Json::Value& line_array = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY];
 						assert(line_array.isArray());
 
 				    lines.clear();
@@ -324,12 +319,27 @@ namespace transport
 				    // x-axis type (or be convertible to it)
 				    if(this->lines.size() > 0)
 					    {
-						    if(line.get_axis_type() != this->lines.front()->get_axis_type())
+						    if(line.get_current_x_axis_value() != this->lines.front()->get_current_x_axis_value())
 							    throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH);
 					    }
 
 		        this->lines.push_back(line.clone());
 			    }
+
+
+				template <typename number>
+				axis_value line_collection<number>::get_x_axis_value() const
+					{
+						if(this->lines.size() > 0)
+							{
+						    return(this->lines.front()->get_current_x_axis_value());
+							}
+						else
+							{
+								return(unset_axis);
+							}
+
+					}
 
 
 		    template <typename number>
@@ -496,10 +506,10 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::serialize(Json::Value& writer) const
 			    {
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]  = this->log_x;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]  = this->log_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]  = this->abs_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGX]  = this->log_x;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LOGY]  = this->log_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ABSY]  = this->abs_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LATEX] = this->use_LaTeX;
 
 		        Json::Value line_array(Json::arrayValue);
 		        for(typename std::list< derived_line<number>* >::const_iterator t = this->lines.begin(); t != this->lines.end(); t++)
@@ -508,7 +518,7 @@ namespace transport
 		            (*t)->serialize(line_element);
 				        line_array.append(line_element);
 			        }
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_COLLECTION_LINE_ARRAY] = line_array;
 
 		        // call next serialization
 		        this->derived_product<number>::serialize(writer);

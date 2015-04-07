@@ -84,19 +84,59 @@ namespace transport
 
 
 		    template <typename number>
-		    void wavenumber_series_plot<number>::apply_default_labels(bool x_label, bool y_label, bool title)
+		    void wavenumber_series_plot<number>::apply_default_labels(bool x_label_set, bool y_label_set, bool title_set)
 			    {
-		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
+		        // only use LaTeX x-label if typesetting with LaTeX; otherwise it doesn't work
 
-				    // only use LaTeX x-label if typesetting with LaTeX; otherwise it doesn't work
-				    if(x_label)
-					    {
-				        if(this->typeset_with_LaTeX) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_LATEX);
-				        else                         this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_WAVENUMBER_SERIES_PLOT_X_LABEL_NOLATEX);
+		        axis_value x_axis = this->get_x_axis_value();
+
+		        if(x_label_set)
+			        {
+								switch(x_axis)
+									{
+								    case unset_axis:
+								    case k_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_K_VALUE_AXIS_LABEL_NOLATEX);
+											break;
+
+								    case efolds_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_EFOLDS_EXIT_AXIS_LABEL_NOLATEX);
+									    break;
+
+								    case alpha_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_ALPHA_AXIS_LABEL_NOLATEX);
+								      break;
+
+								    case beta_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_BETA_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_BETA_AXIS_LABEL_NOLATEX);
+								      break;
+
+								    case squeezing_fraction_k1_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K1_AXIS_LABEL_NOLATEX);
+								      break;
+
+								    case squeezing_fraction_k2_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K2_AXIS_LABEL_NOLATEX);
+								      break;
+
+								    case squeezing_fraction_k3_axis:
+									    if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_LATEX);
+									    else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_SQUEEZING_FRACTION_K3_AXIS_LABEL_NOLATEX);
+								      break;
+
+								    default:
+									    assert(false);
+									}
 					    }
 
-		        if(y_label) this->clear_y_label_text();
-		        if(title) this->clear_title_text();
+		        if(y_label_set) this->internal_clear_y_label_text();
+		        if(title_set)   this->internal_clear_title_text();
 			    }
 
 

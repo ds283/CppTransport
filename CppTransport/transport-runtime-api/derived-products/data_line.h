@@ -31,7 +31,7 @@ namespace transport
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
-            data_line(axis_class at, value_type vt, const std::vector<double>& a, const std::vector<number>& d, const std::string& Ll, const std::string& nLl);
+            data_line(axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d, const std::string& Ll, const std::string& nLl);
 
             ~data_line() = default;
 
@@ -51,7 +51,7 @@ namespace transport
 		        const std::vector< std::pair<double, number> >& get_data_points() const { return(this->data); }
 
 		        //! Get axis type
-		        axis_class get_axis_type() const { return(this->x_type); }
+		        axis_class get_axis_value() const { return(this->x_type); }
 
 		        //! Get value type
 		        value_type get_value_type() const { return(this->y_type); }
@@ -60,7 +60,7 @@ namespace transport
             // INTERNAL DATA
 
 		        //! axis type
-		        const axis_class x_type;
+		        const axis_value x_type;
 
 		        //! value type
 		        const value_type y_type;
@@ -77,7 +77,7 @@ namespace transport
 
 
         template <typename number>
-        data_line<number>::data_line(axis_class at, value_type vt,
+        data_line<number>::data_line(axis_value at, value_type vt,
                                      const std::vector<double>& a, const std::vector<number>& d,
                                      const std::string& Ll, const std::string& nLl)
 	        : x_type(at),

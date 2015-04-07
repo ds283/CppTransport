@@ -18,6 +18,7 @@
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LATEX     "use LaTeX-format labels"
 
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH   "line_collection: attempt to add new line group with axis type which doesn't agree with existing axes"
-#define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_TOO_MANY_VALUES "line_collection: attempt to add new line group giving too many different value types"
+#define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_EMPTY           "line_collection: attempt to process, but collection is empty"
+
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LINE_COLLECTION_PRODUCT_H

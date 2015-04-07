@@ -163,7 +163,7 @@ namespace transport
 				        std::string latex_label    = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 				        std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-				        data_line<number> line = data_line<number>(time_axis, r_value, t_axis, line_data, latex_label, nonlatex_label);
+				        data_line<number> line = data_line<number>(this->x_type, r_value, t_axis, line_data, latex_label, nonlatex_label);
 
 				        lines.push_back(line);
 					    }

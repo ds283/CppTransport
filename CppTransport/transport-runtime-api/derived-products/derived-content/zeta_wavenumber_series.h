@@ -108,8 +108,7 @@ namespace transport
 		        this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-		        std::vector<double> w_axis;
-		        this->pull_wavenumber_axis(pipe, w_axis);
+		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -130,7 +129,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
+		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);
@@ -255,8 +254,7 @@ namespace transport
 		        this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-		        std::vector<double> w_axis;
-		        this->pull_wavenumber_axis(pipe, w_axis);
+		        std::vector<double> w_axis = this->pull_threepf_kconfig_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -279,7 +277,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, correlation_function_value,
+		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);
@@ -396,8 +394,7 @@ namespace transport
 		        this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
-		        std::vector<double> w_axis;
-		        this->pull_wavenumber_axis(pipe, w_axis);
+		        std::vector<double> w_axis = this->pull_threepf_kconfig_axis(pipe);
 
 		        // set up cache handles
 		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
@@ -420,7 +417,7 @@ namespace transport
 		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-		            data_line<number> line = data_line<number>(wavenumber_axis, fNL_value,
+		            data_line<number> line = data_line<number>(this->x_type, fNL_value,
 		                                                       w_axis, line_data, latex_label, nonlatex_label);
 
 		            lines.push_back(line);

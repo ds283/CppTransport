@@ -42,7 +42,8 @@ namespace transport
 				    efolds_axis, k_axis, efolds_exit_axis, alpha_axis, beta_axis,
 				    squeezing_fraction_k1_axis,
 						squeezing_fraction_k2_axis,
-						squeezing_fraction_k3_axis
+						squeezing_fraction_k3_axis,
+						unset_axis
 					} axis_value;
 
 		    typedef enum { field_value, momentum_value, correlation_function_value, fNL_value, r_value, spectral_index_value, dimensionless_value } value_type;

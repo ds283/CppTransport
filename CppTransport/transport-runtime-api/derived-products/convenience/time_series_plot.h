@@ -84,19 +84,30 @@ namespace transport
 
 
 		    template <typename number>
-		    void time_series_plot<number>::apply_default_labels(bool x_label, bool y_label, bool title)
+		    void time_series_plot<number>::apply_default_labels(bool x_label_set, bool y_label_set, bool title_set)
 			    {
 		        // default label set is: no y-axis label, x-axis label is time in e-folds; no title
-
 		        // only use LaTeX x-label if typesetting with LaTeX; otherwise it doesn't work
-				    if(x_label)
-					    {
-				        if(this->typeset_with_LaTeX) this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
-				        else                         this->set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
-					    }
 
-		        if(y_label) this->clear_y_label_text();
-		        if(title) this->clear_title_text();
+				    axis_value x_axis = this->get_x_axis_value();
+
+		        if(x_label_set)
+			        {
+						    switch(x_axis)
+							    {
+						        case unset_axis:
+						        case efolds_axis:
+			                if(this->typeset_with_LaTeX) this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_LATEX);
+			                else                         this->internal_set_x_label_text(__CPP_TRANSPORT_PRODUCT_TIME_SERIES_PLOT_X_LABEL_NOLATEX);
+							        break;
+
+						        default:
+							        assert(false);
+							    }
+			        }
+
+		        if(y_label_set) this->internal_clear_y_label_text();
+		        if(title_set)   this->internal_clear_title_text();
 			    }
 
 

@@ -66,6 +66,17 @@ namespace transport
 		        virtual ~wavenumber_series() = default;
 
 
+            // DATAPIPE SERVICES
+
+          public:
+
+            //! extract axis data, corresponding to our sample wavenumbers, from datapipe
+            std::vector<double> pull_twopf_kconfig_axis(datapipe<number>& pipe) const;
+
+            //! extract axis data, corresponding to our sample wavenumbers, from datapipe
+            std::vector<double> pull_threepf_kconfig_axis(datapipe<number>& pipe) const;
+
+
 		        // LABELLING SERVICES
 
           public:
@@ -133,7 +144,130 @@ namespace transport
 			    }
 
 
-		    template <typename number>
+
+
+        template <typename number>
+        std::vector<double> wavenumber_series<number>::pull_twopf_kconfig_axis(datapipe<number>& pipe) const
+	        {
+		        assert(this->x_type == k_axis);
+
+            typename datapipe<number>::twopf_kconfig_handle& handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+            twopf_kconfig_tag<number> tag = pipe.new_twopf_kconfig_tag();
+
+            // safe to take a reference here and avoid a copy
+            const std::vector< twopf_configuration >& configs = handle.lookup_tag(tag);
+
+            std::vector<double> axis;
+
+            for(typename std::vector< twopf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+	            {
+                if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).k_comoving);
+                else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).k_conventional);
+                else
+	                {
+                    assert(false);
+                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+	                }
+	            }
+
+		        return(axis);
+	        }
+
+
+        template <typename number>
+        std::vector<double> wavenumber_series<number>::pull_threepf_kconfig_axis(datapipe<number>& pipe) const
+	        {
+            typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
+            threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
+
+            // safe to take a reference here
+            const std::vector< threepf_configuration >& configs = handle.lookup_tag(tag);
+
+            std::vector<double> axis;
+
+		        switch(this->x_type)
+			        {
+		            case k_axis:
+			            {
+				            // axis consists of k_t values
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back(t->kt_comoving);
+		                    else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back(t->kt_conventional);
+		                    else
+			                    {
+		                        assert(false);
+		                        throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
+			                    }
+			                }
+				            break;
+			            }
+
+		            case efolds_exit_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+				                axis.push_back(log(t->kt_conventional));
+			                }
+		                break;
+			            }
+
+		            case alpha_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    axis.push_back(t->alpha);
+			                }
+		                break;
+			            }
+
+		            case beta_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    axis.push_back(t->beta);
+			                }
+		                break;
+			            }
+
+		            case squeezing_fraction_k1_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    axis.push_back(t->k1_conventional/t->kt_conventional);
+			                }
+		                break;
+			            }
+
+		            case squeezing_fraction_k2_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    axis.push_back(t->k2_conventional/t->kt_conventional);
+			                }
+		                break;
+			            }
+
+		            case squeezing_fraction_k3_axis:
+			            {
+		                for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
+			                {
+		                    axis.push_back(t->k3_conventional/t->kt_conventional);
+			                }
+		                break;
+			            }
+
+		            default:
+			            assert(false);
+			        };
+
+
+		        return(axis);
+	        }
+
+
+
+        template <typename number>
 		    std::string wavenumber_series<number>::make_LaTeX_tag(double config) const
 			    {
 		        std::ostringstream label;

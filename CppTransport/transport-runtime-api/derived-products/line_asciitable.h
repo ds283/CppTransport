@@ -25,8 +25,11 @@
 #include "boost/filesystem/operations.hpp"
 
 
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION "precision"
-#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL   "x-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT        "line-asciitable"
+
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION   "precision"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL     "x-label"
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET "x-label-set"
 
 
 namespace transport
@@ -45,13 +48,10 @@ namespace transport
 
 				    //! Basic user-facing constructor
 				    line_asciitable(const std::string& name, const boost::filesystem::path& filename, unsigned int prec=__CPP_TRANSPORT_DEFAULT_TABLE_PRECISION)
-		          : precision(prec), line_collection<number>(name, filename)
-					    {
-						    this->log_y     = false;
-						    this->log_x     = false;
-						    this->abs_y     = false;
-						    this->use_LaTeX = false;
-
+		          : line_collection<number>(name, filename),
+				        x_label_set(false),
+				        precision(prec)
+				    {
 						    if(this->filename.extension().string() != ".txt" &&
 							     this->filename.extension().string() != ".dat" &&
 							     this->filename.extension().string() != ".data")
@@ -68,12 +68,21 @@ namespace transport
 				    virtual ~line_asciitable() = default;
 
 
+		        // LINE MANAGEMENT
+
+		      public:
+
+		        //! Add a line to the collection
+		        virtual void add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set); }
+
+
 		        // GENERATE TABLE -- implements a 'derived_product' interface
 
 		      public:
 
 						//! Generate our derived output
 		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
+
 
 		      protected:
 
@@ -88,7 +97,24 @@ namespace transport
 				    //! get x-axis text label
 				    const std::string& get_x_label() const { return(this->x_label); }
 				    //! set x-axis text label
-				    void set_x_label(const std::string& l) { this->x_label = l; }
+				    void set_x_label(const std::string& l) { this->internal_set_x_label(l); this->x_label_set = true; }
+
+		      protected:
+
+				    void internal_set_x_label(const std::string& l) { this->x_label = l; }
+
+		      public:
+
+		        // SETTING DEFAULTS
+
+		      public:
+
+		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
+		        virtual void apply_default_labels(bool x_label_set) {}
+
+		        //! (re-)set a default list of settings
+		        virtual void apply_default_settings() {}
+
 
 		        // CLONE
 
@@ -96,6 +122,7 @@ namespace transport
 
 		        //! Copy this object
 		        virtual derived_product<number>* clone() const { return new line_asciitable<number>(static_cast<const line_asciitable<number>&>(*this)); }
+
 
 		        // SERIALIZATION -- implements a 'serializable' interface
 
@@ -120,6 +147,10 @@ namespace transport
 
 				    //! x-axis label
 				    std::string x_label;
+
+		        //! which labels have been explicitly set?
+		        bool x_label_set;
+
 			    };
 
 
@@ -127,8 +158,9 @@ namespace transport
 				line_asciitable<number>::line_asciitable(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 					: line_collection<number>(name, reader, finder)
 					{
-						precision = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
-						x_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
+						precision   = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION].asUInt();
+						x_label     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL].asString();
+						x_label_set = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET].asBool();
 					}
 
 
@@ -218,8 +250,9 @@ namespace transport
 					{
 						writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE] = std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_ASCIITABLE);
 
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION] = this->precision;
-						writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL] = this->x_label;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_PRECISION]   = this->precision;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL]     = this->x_label;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_ASCIITABLE_X_LABEL_SET] = this->x_label_set;
 
 						// call next serializer
 						this->line_collection<number>::serialize(writer);

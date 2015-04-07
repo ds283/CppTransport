@@ -90,14 +90,6 @@ namespace transport
 		        std::string make_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n) const;
 
 
-            // K-CONFIGURATION SERVICES
-
-          public:
-
-            //! lookup wavenumber axis data
-            void pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const;
-
-
 		        // WRITE TO A STREAM
 
           public:
@@ -244,29 +236,6 @@ namespace transport
 
 				    return(label.str());
 			    }
-
-
-        template <typename number>
-        void threepf_line<number>::pull_wavenumber_axis(datapipe<number>& pipe, std::vector<double>& axis) const
-	        {
-            typename datapipe<number>::threepf_kconfig_handle& handle = pipe.new_threepf_kconfig_handle(this->kconfig_sample_sns);
-            threepf_kconfig_tag<number> tag = pipe.new_threepf_kconfig_tag();
-
-            // safe to take a reference here
-            const std::vector< threepf_configuration >& configs = handle.lookup_tag(tag);
-
-            axis.clear();
-            for(typename std::vector< threepf_configuration >::const_iterator t = configs.begin(); t != configs.end(); t++)
-	            {
-                if(this->klabel_meaning == derived_line<number>::comoving) axis.push_back((*t).kt_comoving);
-                else if(this->klabel_meaning == derived_line<number>::conventional) axis.push_back((*t).kt_conventional);
-                else
-	                {
-                    assert(false);
-                    throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_KLABEL_TYPE_UNKNOWN);
-	                }
-	            }
-	        }
 
 
         template <typename number>

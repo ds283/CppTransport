@@ -23,6 +23,8 @@
 #include "boost/filesystem/operations.hpp"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT          "line-plot2d"
+
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX      "reverse-x"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY      "reverse-y"
 #define __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL        "x-label"
@@ -117,12 +119,20 @@ namespace transport
 		        virtual ~line_plot2d() = default;
 
 
+		        // LINE MANAGEMENT
+
+		      public:
+
+		        //! Add a line to the collection
+		        virtual void add_line(const derived_line<number>& line) override { this->line_collection<number>::add_line(line); this->apply_default_labels(!this->x_label_set, !this->y_label_set, !this->title_set); }
+
+
 		        // SETTING DEFAULTS
 
 		      public:
 
 		        //! (re-)set a default set of labels; should account for the LaTeX setting if desired
-		        virtual void apply_default_labels(bool x_label, bool y_label, bool title) {}
+		        virtual void apply_default_labels(bool x_label_set, bool y_label_set, bool title_set) {}
 
 		        //! (re-)set a default list of settings
 		        virtual void apply_default_settings() {}
@@ -134,6 +144,7 @@ namespace transport
 
 				    //! Generate our derived output
 				    virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
+
 
 		      protected:
 
@@ -169,22 +180,28 @@ namespace transport
 		        //! get x-axis label text
 		        const std::string& get_x_label_text() const { return(this->x_label_text); }
 		        //! set x-axis label text
-		        void set_x_label_text(const std::string& text)
-			        {
-		            if(text.empty())  // assume intended to suppress x-axis label
-			            {
-		                this->x_label_text.clear();
-		                this->x_label = false;
-			            }
-		            else
-			            {
-		                this->x_label_text = text;
-		                this->x_label = true;
-			            }
-		            this->x_label_set = true;
-			        }
+		        void set_x_label_text(const std::string& text) { this->internal_set_x_label_text(text); this->x_label_set = true; }
 		        //! clear x-axis label text
-		        void clear_x_label_text() { this->x_label_text.clear(); }
+		        void clear_x_label_text() { this->internal_clear_x_label_text(); this->x_label_set = true; }
+
+		      protected:
+
+						void internal_set_x_label_text(const std::string& text)
+							{
+						    if(text.empty())  // assume intended to suppress x-axis label
+							    {
+						        this->x_label_text.clear();
+						        this->x_label = false;
+							    }
+						    else
+							    {
+						        this->x_label_text = text;
+						        this->x_label = true;
+							    }
+							}
+				    void internal_clear_x_label_text() { this->x_label_text.clear(); }
+
+		      public:
 
 		        //! get use y-axis label setting
 		        bool get_y_label() const { return(this->y_label); }
@@ -193,22 +210,28 @@ namespace transport
 		        //! get y-axis label text
 		        const std::string& get_y_label_text() const { return(this->y_label_text); }
 		        //! set y-axis label text
-		        void set_y_label_text(const std::string& text)
-			        {
-		            if(text.empty())  // assume intended to suppress y-axis label
-			            {
-		                this->y_label_text.clear();
-		                this->y_label = false;
-			            }
-		            else
-			            {
-		                this->y_label_text = text;
-		                this->y_label = true;
-			            }
-				        this->y_label_set = true;
-			        }
+		        void set_y_label_text(const std::string& text) { this->internal_set_y_label_text(text); this->y_label_set = true; }
 		        //! clear y-axis label text
-		        void clear_y_label_text() { this->y_label_text.clear(); }
+		        void clear_y_label_text() { this->internal_clear_y_label_text(); this->y_label_set = true; }
+
+		      protected:
+
+				    void internal_set_y_label_text(const std::string& text)
+					    {
+				        if(text.empty())  // assume intended to suppress y-axis label
+					        {
+				            this->y_label_text.clear();
+				            this->y_label = false;
+					        }
+				        else
+					        {
+				            this->y_label_text = text;
+				            this->y_label = true;
+					        }
+					    }
+				    void internal_clear_y_label_text() { this->y_label_text.clear(); }
+
+		      public:
 
 		        //! get use title setting
 		        bool get_title() const { return(this->title); }
@@ -217,22 +240,28 @@ namespace transport
 		        //! get title text
 		        const std::string& get_title_text() const { return(this->title_text); }
 		        //! set title text
-		        void set_title_text(const std::string& text)
-			        {
-		            if(text.empty())    // assume intended to suppress the title
-			            {
-		                this->title_text.clear();
-		                this->title = false;
-			            }
-		            else
-			            {
-		                this->title_text = text;
-		                this->title = true;
-			            }
-				        this->title_set = true;
-			        }
+		        void set_title_text(const std::string& text) { this->internal_set_title_text(text); this->title_set = true; }
 				    //! clear title text
-				    void clear_title_text() { this->title_text.clear(); }
+				    void clear_title_text() { this->internal_clear_title_text(); this->title_set = true; }
+
+		      protected:
+
+				    void internal_set_title_text(const std::string& text)
+					    {
+				        if(text.empty())    // assume intended to suppress the title
+					        {
+				            this->title_text.clear();
+				            this->title = false;
+					        }
+				        else
+					        {
+				            this->title_text = text;
+				            this->title = true;
+					        }
+					    }
+				    void internal_clear_title_text() { this->title_text.clear(); }
+
+		      public:
 
 				    //! get legend setting
 				    bool get_legend() const { return(this->legend); }
@@ -264,6 +293,7 @@ namespace transport
 
             //! set path to Python interpreter
             void set_python_interpreter(const boost::filesystem::path& p);
+
 
           protected:
 
@@ -346,21 +376,21 @@ namespace transport
 		    line_plot2d<number>::line_plot2d(const std::string& name, Json::Value& reader, typename repository_finder<number>::task_finder finder)
 			    : line_collection<number>(name, reader, finder)
 			    {
-				    reverse_x        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX].asBool();
-				    reverse_y        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY].asBool();
-				    x_label          = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL].asBool();
-				    x_label_text     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT].asString();
-				    y_label          = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL].asBool();
-				    y_label_text     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT].asString();
-				    title            = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE].asBool();
-				    title_text       = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT].asString();
-				    legend           = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND].asBool();
-				    dash_second_axis = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND].asBool();
-						x_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET].asBool();
-						y_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET].asBool();
-						title_set        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET].asBool();
+				    reverse_x        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX].asBool();
+				    reverse_y        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY].asBool();
+				    x_label          = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL].asBool();
+				    x_label_text     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT].asString();
+				    y_label          = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL].asBool();
+				    y_label_text     = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT].asString();
+				    title            = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE].asBool();
+				    title_text       = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT].asString();
+				    legend           = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND].asBool();
+				    dash_second_axis = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND].asBool();
+						x_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET].asBool();
+						y_label_set      = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET].asBool();
+						title_set        = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET].asBool();
 
-		        std::string leg_pos = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS].asString();
+		        std::string leg_pos = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS].asString();
 
 		        if     (leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL) position = top_left;
 		        else if(leg_pos == __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR) position = top_right;
@@ -379,8 +409,8 @@ namespace transport
 		            throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, msg.str());
 			        }
 
-		        typeset_with_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
-            python_path = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH].asString();
+		        typeset_with_LaTeX = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX].asBool();
+            python_path = reader[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH].asString();
 			    }
 
 
@@ -613,17 +643,6 @@ namespace transport
 								    out << "labels" << i << std::endl;
 							    }
 
-//						        out << "y_labels = [ ";
-//								    unsigned int count = 0;
-//								    for(std::vector< std::vector<std::string> >::const_iterator t = line_labels.begin(); t != line_labels.end(); t++)
-//									    {
-//										    for(std::vector<std::string>::const_iterator u = t->begin(); u != t->end(); u++)
-//											    {
-//												    out << (count > 0 ? ", " : "") << "r'" << *u << "'";
-//											    }
-//									    }
-//						        out << " ]" << std::endl;
-
 				        out << "ax" << bin_count-1 << ".legend(handles, labels, frameon=False, loc=";
 				        switch(this->position)
 					        {
@@ -735,60 +754,60 @@ namespace transport
 			    {
 		        writer[__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_TYPE] = std::string(__CPP_TRANSPORT_NODE_DERIVED_PRODUCT_LINE_PLOT2D);
 
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX]    = this->reverse_x;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY]    = this->reverse_y;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL]      = this->x_label;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT] = this->x_label_text;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL]      = this->y_label;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT] = this->y_label_text;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE]       = this->title;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT]  = this->title_text;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND]      = this->legend;
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND] = this->dash_second_axis;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET] = this->x_label_set;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET] = this->y_label_set;
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET]   = this->title_set;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEX]    = this->reverse_x;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_REVERSEY]    = this->reverse_y;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL]      = this->x_label;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_XLABEL_TEXT] = this->x_label_text;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL]      = this->y_label;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_YLABEL_TEXT] = this->y_label_text;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE]       = this->title;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_TEXT]  = this->title_text;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND]      = this->legend;
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_DASH_SECOND] = this->dash_second_axis;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_X_LABEL_SET] = this->x_label_set;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_Y_LABEL_SET] = this->y_label_set;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TITLE_SET]   = this->title_set;
 
 		        switch(this->position)
 			        {
 		            case top_left:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL);
 		              break;
 
 		            case top_right:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR);
 		              break;
 
 		            case bottom_left:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL);
 		              break;
 
 		            case bottom_right:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR);
 		              break;
 
 		            case right:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R);
 		              break;
 
 		            case centre_right:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR);
 		              break;
 
 		            case centre_left:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL);
 		              break;
 
 		            case upper_centre:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC);
 		              break;
 
 		            case lower_centre:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC);
 		              break;
 
 		            case centre:
-			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C);
+			            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_POS] = std::string(__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C);
 		              break;
 
 		            default:
@@ -796,8 +815,8 @@ namespace transport
 		              throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_INVALID_LEGEND_POSITION);
 			        }
 
-		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX] = this->typeset_with_LaTeX;
-            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH] = this->python_path.string();
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_TYPESET_LATEX] = this->typeset_with_LaTeX;
+            writer[__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_PYTHON_PATH] = this->python_path.string();
 
 		        // call next serialization
 		        this->line_collection<number>::serialize(writer);
@@ -816,14 +835,11 @@ namespace transport
 		        this->wrapper.wrap_list_item(out, this->reverse_x, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_REVERSEX, count);
 		        this->wrapper.wrap_list_item(out, this->reverse_y, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_REVERSEY, count);
 		        this->wrapper.wrap_list_item(out, this->x_label, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_XLABEL, count);
-		        if(this->x_label)
-			        this->wrapper.wrap_value(out, this->x_label_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
+		        if(this->x_label) this->wrapper.wrap_value(out, this->x_label_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
 		        this->wrapper.wrap_list_item(out, this->y_label, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_YLABEL, count);
-		        if(this->y_label)
-			        this->wrapper.wrap_value(out, this->y_label_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
+		        if(this->y_label) this->wrapper.wrap_value(out, this->y_label_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
 		        this->wrapper.wrap_list_item(out, this->title, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_TITLE, count);
-		        if(this->title)
-			        this->wrapper.wrap_value(out, this->title_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
+		        if(this->title) this->wrapper.wrap_value(out, this->title_text, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LABEL, count);
 		        this->wrapper.wrap_list_item(out, this->legend, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_LABEL_LEGEND, count);
 
 		        if(this->legend)
@@ -833,34 +849,34 @@ namespace transport
 			            {
 		                case top_left:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TL;
-		                break;
+		                  break;
 		                case top_right:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_TR;
-		                break;
+		                  break;
 		                case bottom_left:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BL;
-		                break;
+		                  break;
 		                case bottom_right:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_BR;
-		                break;
+		                  break;
 		                case right:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_R;
-		                break;
+		                  break;
 		                case centre_right:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CR;
-		                break;
+		                  break;
 		                case centre_left:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_CL;
-		                break;
+		                  break;
 		                case upper_centre:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_LC;
-		                break;
+		                  break;
 		                case lower_centre:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_UC;
-		                break;
+		                  break;
 		                case centre:
 			                out << __CPP_TRANSPORT_NODE_PRODUCT_LINE_PLOT2D_LEGEND_C;
-		                break;
+		                  break;
 		                default:
 			                assert(false);
 			            }

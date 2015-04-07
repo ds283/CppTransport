@@ -185,7 +185,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(time_axis, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(this->x_type, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
@@ -355,7 +355,7 @@ namespace transport
 		                        std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
 		                        std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
 
-		                        data_line<number> line = data_line<number>(time_axis, correlation_function_value,
+		                        data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
 		                                                                   t_axis, line_data, latex_label, nonlatex_label);
 
 		                        lines.push_back(line);
@@ -525,7 +525,7 @@ namespace transport
 		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
 		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-		                            data_line<number> line = data_line<number>(time_axis, correlation_function_value,
+		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
 		                                                                       t_axis, line_data, latex_label, nonlatex_label);
 
 		                            lines.push_back(line);
