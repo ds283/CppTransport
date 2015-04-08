@@ -642,7 +642,10 @@ namespace transport
 				template <typename number>
 				void derived_line<number>::write(std::ostream& out)
 					{
-						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
+						unsigned int saved_left_margin = this->wrapper.get_left_margin();
+						this->wrapper.set_left_margin(2);
+
+//						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
 						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << std::endl;
 
 						// output model details if this derived line is directly associated with an integration task
@@ -720,7 +723,7 @@ namespace transport
 						if(count == __CPP_TRANSPORT_PRODUCT_MAX_SUPPORTED_AXES) this->wrapper.wrap_list_item(out, true, "...", count);
 				    this->wrapper.wrap_newline(out);
 
-						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
+						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
 				    switch(this->x_type)
 					    {
 				        case efolds_axis:
@@ -795,7 +798,7 @@ namespace transport
 				    count = 0;
 
 						this->wrapper.wrap_newline(out);
-				    this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
+				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
 				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
 					    {
 				        std::ostringstream msg;
@@ -807,7 +810,7 @@ namespace transport
 				    this->wrapper.wrap_newline(out);
 
 				    count = 0;
-				    this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
+				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_KCONFIG_SN_LABEL " ");
 				    for(std::vector<unsigned int>::const_iterator t = this->kconfig_sample_sns.begin(); t != this->kconfig_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
 					    {
 				        std::ostringstream msg;
@@ -817,6 +820,8 @@ namespace transport
 					    }
 				    if(count == __CPP_TRANSPORT_PRODUCT_MAX_SN) this->wrapper.wrap_list_item(out, true, "...", count);
 				    this->wrapper.wrap_newline(out);
+
+						this->wrapper.set_left_margin(saved_left_margin);
 					}
 
 			};   // derived_data
