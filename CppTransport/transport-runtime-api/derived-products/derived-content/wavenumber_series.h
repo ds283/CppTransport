@@ -95,6 +95,12 @@ namespace transport
 		        //! Write self-details to a stream
 		        virtual void write(std::ostream& out);
 
+		        //! Write details of the k-configurations included in this product - twopf version
+		        void write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list);
+
+		        //! Write details of the k-configurations included in this product - threepf version
+		        void write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list);
+
 
 		        // SERIALIZATION -- implements a 'serializable' interface
 
@@ -302,6 +308,77 @@ namespace transport
 		    template <typename number>
 		    void wavenumber_series<number>::write(std::ostream& out)
 			    {
+			    }
+
+
+		    template <typename number>
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< twopf_kconfig >& list)
+			    {
+		        unsigned int count = 0;
+
+		        unsigned int saved_left_margin = this->wrapper.get_left_margin();
+		        this->wrapper.set_left_margin(2);
+		        this->wrapper.wrap_newline(out);
+
+		        for(std::vector< twopf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+			        {
+		            std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
+
+		            if(s != this->kconfig_sample_sns.end())
+			            {
+		                std::ostringstream line;
+		                line << std::setprecision(4);
+
+		                line << count << ". ";
+				            line << "serial = " << t->serial << ", ";
+		                line << "k = " << t->k_conventional;
+
+		                this->wrapper.wrap_out(out, line.str());
+		                this->wrapper.wrap_newline(out);
+
+				            count++;
+			            }
+			        }
+
+		        this->wrapper.set_left_margin(saved_left_margin);
+			    }
+
+
+		    template <typename number>
+		    void wavenumber_series<number>::write_kconfig_list(std::ostream& out, const std::vector< threepf_kconfig >& list)
+			    {
+				    unsigned int count = 0;
+
+				    unsigned int saved_left_margin = this->wrapper.get_left_margin();
+				    this->wrapper.set_left_margin(2);
+				    this->wrapper.wrap_newline(out);
+
+				    for(std::vector< threepf_kconfig >::const_iterator t = list.begin(); t != list.end(); t++)
+					    {
+				        std::vector< unsigned int >::iterator s = std::find(this->kconfig_sample_sns.begin(), this->kconfig_sample_sns.end(), t->serial);
+
+						    if(s != this->kconfig_sample_sns.end())
+							    {
+						        std::ostringstream line;
+						        line << std::setprecision(4);
+
+						        line << count << ". ";
+								    line << "serial = " << t->serial << ", ";
+						        line << "k_t = " << t->k_t_conventional << ", ";
+						        line << "alpha = " << t->alpha << ", ";
+						        line << "beta = " << t->beta << ", ";
+						        line << "k1/k_t = " << t->k1_conventional/t->k_t_conventional << ", ";
+						        line << "k2/k_t = " << t->k2_conventional/t->k_t_conventional << ", ";
+						        line << "k3/k_t = " << t->k3_conventional/t->k_t_conventional;
+
+						        this->wrapper.wrap_out(out, line.str());
+						        this->wrapper.wrap_newline(out);
+
+								    count++;
+							    }
+					    }
+
+				    this->wrapper.set_left_margin(saved_left_margin);
 			    }
 
 

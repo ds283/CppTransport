@@ -113,13 +113,13 @@ namespace transport
 
 				void wrapped_output::wrap_newline(std::ostream& out)
 					{
-				    this->cpos = 0;
 				    out << std::endl;
 
 						for(unsigned int i = 0; i < this->left_margin; i++)
 							{
 								out << " ";
 							}
+				    this->cpos = this->left_margin;
 					}
 
 

@@ -50,7 +50,7 @@ namespace transport
 						//! get pointer to model instance
 						model<number>* get_model() const { return(this->mdl); }
 
-						//! get pointer to integration_task<> insatnce
+						//! get pointer to integration_task<> instance
 						integration_task<number>* get_integration_task() const { return(this->itk); }
 
 						//! quick access to get number of fields

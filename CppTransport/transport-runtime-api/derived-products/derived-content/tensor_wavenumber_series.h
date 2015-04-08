@@ -159,6 +159,12 @@ namespace transport
             this->tensor_twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
             this->derived_line<number>::write(out);
+
+            twopf_list_task<number>* ptk = dynamic_cast< twopf_list_task<number>* >(this->get_parent_task());
+            if(ptk != nullptr)
+	            {
+                this->write_kconfig_list(out, ptk->get_twopf_kconfig_list());
+	            }
 	        }
 
 
