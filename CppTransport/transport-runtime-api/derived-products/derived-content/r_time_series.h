@@ -180,30 +180,40 @@ namespace transport
 		    template <typename number>
 		    std::string r_time_series<number>::get_LaTeX_label(const twopf_configuration& k) const
 			    {
+		        std::string tag = this->make_LaTeX_tag(k);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->LaTeX_label);
+		            label = this->LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k) + "$";
-		            return(latex_label);
+		            label = "$" + this->make_LaTeX_label() + "$";
 			        }
+
+		        if(this->use_tags) label += " $" + tag + "$";
+		        return(label);
 			    }
 
 
 		    template <typename number>
 		    std::string r_time_series<number>::get_non_LaTeX_label(const twopf_configuration& k) const
 			    {
+		        std::string tag = this->make_non_LaTeX_tag(k);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->non_LaTeX_label);
+		            label = this->non_LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k);
-		            return(nonlatex_label);
+		            label = this->make_non_LaTeX_label();
 			        }
+
+		        if(this->use_tags) label += " " + tag;
+		        return(label);
 			    }
 
 

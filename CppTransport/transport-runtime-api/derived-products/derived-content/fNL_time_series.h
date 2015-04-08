@@ -53,6 +53,12 @@ namespace transport
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
+            //! generate a LaTeX label
+            std::string get_LaTeX_label() const;
+
+            //! generate a non-LaTeX label
+            std::string get_non_LaTeX_label() const;
+
 
             // CLONE
 
@@ -122,16 +128,49 @@ namespace transport
 		        // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
             const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-            std::string latex_label = "$" + this->make_LaTeX_label() + "$";
-            std::string nonlatex_label = this->make_non_LaTeX_label();
-
-            data_line<number> line = data_line<number>(this->x_type, fNL_value, t_axis, line_data, latex_label, nonlatex_label);
+            data_line<number> line = data_line<number>(this->x_type, fNL_value, t_axis, line_data, this->get_LaTeX_label(), this->get_non_LaTeX_label());
 
             lines.push_back(line);
 
             // detach pipe from output group
             this->detach(pipe);
           }
+
+
+        template <typename number>
+        std::string fNL_time_series<number>::get_LaTeX_label() const
+	        {
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->LaTeX_label;
+	            }
+            else
+	            {
+                label = "$" + this->make_LaTeX_label() + "$";
+	            }
+
+            return(label);
+	        }
+
+
+        template <typename number>
+        std::string fNL_time_series<number>::get_non_LaTeX_label() const
+	        {
+            std::string label;
+
+            if(this->label_set)
+	            {
+                label = this->non_LaTeX_label;
+	            }
+            else
+	            {
+                label = this->make_non_LaTeX_label();
+	            }
+
+            return(label);
+	        }
 
 
         // note that because time_series<> inherits virtually from derived_line<>, the write method for

@@ -389,30 +389,40 @@ namespace transport
 		    template <typename number>
 		    std::string twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
 			    {
+		        std::string tag = this->make_LaTeX_tag(k);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->LaTeX_label);
+		            label = this->LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k) + "$";
-		            return(latex_label);
+		            label = "$" + this->make_LaTeX_label(m,n) + "$";
 			        }
+
+				    if(this->use_tags) label += " $" + tag + "$";
+				    return(label);
 			    }
 
 
 		    template <typename number>
 		    std::string twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
 			    {
+		        std::string tag = this->make_non_LaTeX_tag(k);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->non_LaTeX_label);
+		            label = this->non_LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k);
-		            return(nonlatex_label);
+		            label = this->make_non_LaTeX_label(m,n);
 			        }
+
+				    if(this->use_tags) label += " " + tag;
+				    return(label);
 			    }
 
 
@@ -593,30 +603,40 @@ namespace transport
 		    template <typename number>
 		    std::string threepf_time_series<number>::get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
 			    {
+		        std::string tag = this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->LaTeX_label);
+		            label = this->LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
-		            return(latex_label);
+		            label = "$" + this->make_LaTeX_label(l,m,n) + "$";
 			        }
+
+		        if(this->use_tags) label += " $" + tag + "$";
+		        return(label);
 			    }
 
 
 		    template <typename number>
 		    std::string threepf_time_series<number>::get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
 			    {
+		        std::string tag = this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
+		        std::string label;
+
 		        if(this->label_set)
 			        {
-		            return(this->non_LaTeX_label);
+		            label = this->non_LaTeX_label;
 			        }
 		        else
 			        {
-		            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
-		            return(nonlatex_label);
+		            label = this->make_non_LaTeX_label(l,m,n);
 			        }
+
+		        if(this->use_tags) label += " " + tag;
+		        return(label);
 			    }
 
 

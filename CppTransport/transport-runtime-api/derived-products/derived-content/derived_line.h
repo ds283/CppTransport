@@ -53,6 +53,7 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET                                 "label-set"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX                               "label-latex"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX                            "label-nonlatex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS                            "label-tags"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                                 "precision"
 
@@ -180,6 +181,12 @@ namespace transport
 						//! has a label been set?
 						bool is_label_set() const { return(this->label_set); }
 
+						//! use tags?
+						bool get_label_tags() const { return(this->use_tags); }
+
+						//! set use tags flag
+						void set_label_tags(bool g) { this->use_tags = g; }
+
 
 				    // DATAPIPE HANDLING
 
@@ -250,6 +257,9 @@ namespace transport
 						//! has an x-label been set?
 						bool label_set;
 
+						//! generate tags when making labels?
+						bool use_tags;
+
 				    //! record the task which 'owns' this derived content
 				    derivable_task<number>* parent_task;
 
@@ -284,6 +294,7 @@ namespace transport
             dot_meaning(momenta),
             klabel_meaning(conventional),
             label_set(false),
+            use_tags(true),
             precision(prec),
             parent_task(dynamic_cast< derivable_task<number>* >(tk.clone()))
 					{
@@ -320,6 +331,7 @@ namespace transport
 				    label_set       = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET].asBool();
 				    LaTeX_label     = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX].asString();
 				    non_LaTeX_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX].asString();
+						use_tags        = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS].asBool();
 
 				    std::string parent_task_name = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
@@ -449,6 +461,7 @@ namespace transport
 					  label_set(obj.label_set),
 					  LaTeX_label(obj.LaTeX_label),
 					  non_LaTeX_label(obj.non_LaTeX_label),
+					  use_tags(obj.use_tags),
             precision(obj.precision),
             time_sample_sns(obj.time_sample_sns),
             kconfig_sample_sns(obj.kconfig_sample_sns),
@@ -539,6 +552,7 @@ namespace transport
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET]      = this->label_set;
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX]    = this->LaTeX_label;
 				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX] = this->non_LaTeX_label;
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_USE_TAGS] = this->use_tags;
 
 						// Serialize: axis type of this derived line
 				    switch(this->x_class)
