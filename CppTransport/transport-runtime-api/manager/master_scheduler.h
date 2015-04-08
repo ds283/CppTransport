@@ -31,7 +31,7 @@
 // 1 millisecond = 1000 microsecond
 // 1 second = 1000 milisecond
 // 1 minute = 60 seconds
-#define __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
+#define __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
 
 
 //#define __CPP_TRANSPORT_DEBUG_SCHEDULER
@@ -197,7 +197,10 @@ namespace transport
 		        active(0),
 		        has_cpus(false),
 		        has_gpus(false),
-		        max_work_allocation(1)
+		        max_work_allocation(1),
+		        current_granularity(__CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY),
+		        total_aggregation_time(0),
+		        number_aggregations(0)
 			    {
 			    }
 
@@ -223,6 +226,9 @@ namespace transport
 
 		    //! set current state; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
+
+        //! advise a new aggregation time
+        void report_aggregation(boost::timer::nanosecond_type time);
 
 
 		    // INTERFACE -- MANAGE WORK QUEUE
@@ -330,6 +336,15 @@ namespace transport
 
 		    //! Maximum number of work items to be allocated in one shot
 		    unsigned int max_work_allocation;
+
+		    //! Current scheduling granularity
+		    boost::timer::nanosecond_type current_granularity;
+
+		    //! Keep track of total time spent aggregating, so we can work out a mean aggregation time
+		    boost::timer::nanosecond_type total_aggregation_time;
+
+		    //! Keep track of total number of aggregations, so we can work out a mean aggregation time
+		    unsigned int number_aggregations;
 
 		    //! CPUs in our pool of workers?
 		    bool has_cpus;
@@ -531,6 +546,28 @@ namespace transport
 			}
 
 
+		void master_scheduler::report_aggregation(boost::timer::nanosecond_type time)
+			{
+				this->total_aggregation_time += time;
+				this->number_aggregations++;
+
+		    boost::timer::nanosecond_type mean_aggregation_time = this->total_aggregation_time / this->number_aggregations;
+
+				// we want to allocate work in chunks large enough that they last
+				// many times the time required to aggregate, otherwise the workers will spend
+				// a lot of time waiting around for the master to process MPI messages
+				// in between aggregations
+				if(10*mean_aggregation_time > __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY)
+					{
+						this->current_granularity = 10*mean_aggregation_time;
+					}
+				else
+					{
+						this->current_granularity = __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY;
+					}
+			}
+
+
 		std::list<master_scheduler::work_assignment> master_scheduler::assign_work(boost::log::sources::severity_logger<generic_writer::log_severity_level>& log)
 			{
 		    // generate a work assignment
@@ -617,7 +654,7 @@ namespace transport
 								// allocate up to __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY of work,
 								// or the mean allocation per worker, whichever is smaller
 						    boost::timer::nanosecond_type time_per_item   = (*t)->get_mean_time_per_work_item();
-						    boost::timer::nanosecond_type granularity     = time_per_item > 0 ? __CPP_TRANSPORT_TARGET_SCHEDULING_GRANULARITY / (*t)->get_mean_time_per_work_item() : 1.0;
+						    boost::timer::nanosecond_type granularity     = time_per_item > 0 ? this->current_granularity / (*t)->get_mean_time_per_work_item() : 1.0;
 						    unsigned int                  granularity_int = std::max(static_cast<unsigned int>(1), static_cast<unsigned int>(floor(granularity)));
 
 								unsigned int unit_of_work = std::min(this->max_work_allocation, granularity_int);

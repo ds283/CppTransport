@@ -1046,14 +1046,17 @@ namespace transport
         this->world.recv(source, MPI::INTEGRATION_DATA_READY, payload);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << source << " sent aggregation notification for container '" << payload.get_container_path() << "'";
 
-        // set up a timer to measure how long we spend batching
-        boost::timer::cpu_timer batching_timer;
+        // set up a timer to measure how long we spend aggregating
+        boost::timer::cpu_timer aggregate_timer;
 
         writer->aggregate(payload.get_container_path());
 
-        batching_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(batching_timer.elapsed().wall);
-        metadata.total_aggregation_time += batching_timer.elapsed().wall;
+        aggregate_timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+        metadata.total_aggregation_time += aggregate_timer.elapsed().wall;
+
+        // inform scheduler of a new aggregation
+        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
 
         // remove temporary container
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
@@ -1309,6 +1312,9 @@ namespace transport
 
         aggregate_timer.stop();
         metadata.aggregation_time += aggregate_timer.elapsed().wall;
+
+		    // inform scheduler of a new aggregation
+		    this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
 
         return (success);
 	    }
@@ -1598,13 +1604,16 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << source << " sent aggregation notification for container '" << payload.get_container_path() << "'";
 
         // set up a timer to measure how long we spend batching
-        boost::timer::cpu_timer aggregation_timer;
+        boost::timer::cpu_timer aggregate_timer;
 
         writer->aggregate(payload.get_container_path());
 
-        aggregation_timer.stop();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregation_timer.elapsed().wall);
-        metadata.aggregation_time += aggregation_timer.elapsed().wall;
+        aggregate_timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Aggregated temporary container '" << payload.get_container_path() << "' in time " << format_time(aggregate_timer.elapsed().wall);
+        metadata.aggregation_time += aggregate_timer.elapsed().wall;
+
+        // inform scheduler of a new aggregation
+        this->work_scheduler.report_aggregation(aggregate_timer.elapsed().wall);
 
         // remove temporary container
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Deleting temporary container '" << payload.get_container_path() << "'";
