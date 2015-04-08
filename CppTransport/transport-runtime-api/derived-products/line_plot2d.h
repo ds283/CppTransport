@@ -337,14 +337,20 @@ namespace transport
 
 		        //! generate an x-axis label?
 		        bool x_label;
+
+				    //! x-label text
 		        std::string x_label_text;
 
 		        //! generate a y-axis label?
 		        bool y_label;
+
+				    //! y-label text
 		        std::string y_label_text;
 
 		        //! generate a title?
 		        bool title;
+
+				    //! title text
 		        std::string title_text;
 
 		        //! add a legend?
