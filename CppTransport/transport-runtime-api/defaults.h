@@ -33,6 +33,9 @@
 // default size of the zeta cache - 100 Mb
 #define __CPP_TRANSPORT_DEFAULT_ZETA_CACHE_SIZE (100*1024*1024)
 
+// tolerance when merging axis points; points closer than this are considered equivalent
+#define __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE (1E-8)
+
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"

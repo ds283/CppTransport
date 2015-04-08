@@ -18,6 +18,7 @@
 #include "transport-runtime-api/derived-products/derived-content/derived_line_helper.h"
 #include "transport-runtime-api/derived-products/data_line.h"
 
+#include "transport-runtime-api/defaults.h"
 #include "transport-runtime-api/messages.h"
 #include "transport-runtime-api/exceptions.h"
 
@@ -462,7 +463,7 @@ namespace transport
 		                        if(data[i].size() > 0)
 			                        {
 				                        const std::pair<double, number>& point = data[i].back();
-		                            if(point.first == next_axis_point)   // yes, this line has a match
+		                            if(fabs(point.first - next_axis_point) < __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE)   // yes, this line has a match
 			                            {
 		                                output[i].push_front(output_value(data_absy[i] ? fabs(point.second) : point.second));
 
