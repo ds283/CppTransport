@@ -33,6 +33,7 @@
 // 1 minute = 60 seconds
 #define __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY (boost::timer::nanosecond_type(1)*60*1000*1000*1000)
 
+#define __CPP_TRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME  (boost::timer::nanosecond_type(5)*60*1000*1000*1000)
 
 //#define __CPP_TRANSPORT_DEBUG_SCHEDULER
 
@@ -200,7 +201,9 @@ namespace transport
 		        max_work_allocation(1),
 		        current_granularity(__CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY),
 		        total_aggregation_time(0),
-		        number_aggregations(0)
+		        number_aggregations(0),
+		        total_work_time(0),
+		        number_work(0)
 			    {
 			    }
 
@@ -256,15 +259,16 @@ namespace transport
 		    void prepare_queue(output_task<number>& task);
 
 		    //! current queue exhausted? ie., finished all current work?
-//		    bool finished() const { return(this->queue.size() == 0 && this->unassigned == this->worker_data.size()); }
 		    bool finished() const { return(this->queue.size() == 0); }
 
 		    //! get remaining queue size
 		    unsigned int get_queue_size() const { return(this->queue.size()); }
 
-		    //! compute maximum work allocation; should be called before generating work assignments
-		    void compute_max_allocation();
+		    //! finalize queue setup; should be called before generating work assignments
+		    void complete_queue_setup();
 
+		    //! check for an update string
+		    bool generate_update_string(std::string& msg);
 
 		    // INTERFACE -- MANAGE WORK ASSIGNMENTS
 
@@ -316,6 +320,9 @@ namespace transport
 
       private:
 
+
+		    // WORKER POOL
+
         //! Information about workers
         std::vector<worker_information> worker_data;
 
@@ -330,6 +337,15 @@ namespace transport
 
 		    //! Current state size; used when assigning work to GPUs
 		    unsigned int state_size;
+
+        //! CPUs in our pool of workers?
+        bool has_cpus;
+
+        //! GPUs in our list of workers?
+        bool has_gpus;
+
+
+		    // QUEUE AND ALLOCATION DATA
 
 		    //! Queue of work items
 		    std::list<unsigned int> queue;
@@ -346,11 +362,20 @@ namespace transport
 		    //! Keep track of total number of aggregations, so we can work out a mean aggregation time
 		    unsigned int number_aggregations;
 
-		    //! CPUs in our pool of workers?
-		    bool has_cpus;
 
-		    //! GPUs in our list of workers?
-		    bool has_gpus;
+		    // STATUS AND TIME-TO-COMPLETION
+
+		    //! Keep track of time
+		    boost::timer::cpu_timer timer;
+
+		    //! Keep track of total time spent doing work, to estimate a time-to-completion
+		    boost::timer::nanosecond_type total_work_time;
+
+		    //! Keep track of total number of work items, to estimate a time-to-complation
+		    unsigned number_work;
+
+		    //! Points at which to emit updates
+		    std::list< unsigned int > update_stack;
 
 	    };
 
@@ -366,6 +391,8 @@ namespace transport
 
 				this->has_cpus = false;
 				this->has_gpus = false;
+
+				this->update_stack.clear();
 			}
 
 
@@ -468,7 +495,7 @@ namespace transport
 			}
 
 
-		void master_scheduler::compute_max_allocation()
+		void master_scheduler::complete_queue_setup()
 			{
 				// set maximum work allocation to force multiple scheduling adjustments during
 				// the lifetime of the task.
@@ -482,6 +509,14 @@ namespace transport
 				else
 					{
 						this->max_work_allocation = 1;
+					}
+
+				unsigned int update_interval = static_cast<unsigned int>(this->queue.size() / 10);
+				unsigned int count = update_interval;
+				while(count < this->queue.size())
+					{
+						this->update_stack.push_back(count);
+						count += update_interval;
 					}
 			}
 
@@ -533,6 +568,9 @@ namespace transport
 				this->worker_data[worker].update_timing_data(time, items);
 				this->worker_data[worker].mark_assigned(false);
 				this->unassigned++;
+
+				this->number_work += items;
+				this->total_work_time += time;
 			}
 
 
@@ -565,6 +603,42 @@ namespace transport
 					{
 						this->current_granularity = __CPP_TRANSPORT_DEFAULT_SCHEDULING_GRANULARITY;
 					}
+			}
+
+
+		bool master_scheduler::generate_update_string(std::string& msg)
+			{
+				bool result = false;
+				msg.clear();
+
+				if(this->timer.elapsed().wall > __CPP_TRANSPORT_SCHEDULER_MINIMUM_UPDATE_TIME)
+					{
+						if(this->update_stack.size() > 0)
+							{
+								if(this->update_stack.front() < this->queue.size())
+									{
+										result = true;
+										while(this->update_stack.size() > 0 && this->update_stack.front() < this->queue.size())
+											{
+												this->update_stack.pop_front();
+											}
+
+								    std::ostringstream percent_stream;
+										percent_stream << std::setprecision(3);
+										percent_stream << 100.0 * (static_cast<double>(this->number_work) / (static_cast<double>(this->number_work + this->queue.size()))) << "%";
+
+								    std::ostringstream msg_stream;
+										msg_stream << this->number_work << " work items processed, " << this->queue.size() << " remain (~" << percent_stream.str() << " complete)";
+										msg_stream << " | mean time per work item " << format_time(this->total_work_time / this->number_work);
+										msg_stream << " | target assignment duration " << format_time(this->current_granularity);
+										msg_stream << " | estimate time to complete " << format_time(boost::timer::nanosecond_type(this->queue.size()) * this->number_work / this->total_work_time);
+
+										msg = msg_stream.str();
+									}
+							}
+					}
+
+				return(result);
 			}
 
 

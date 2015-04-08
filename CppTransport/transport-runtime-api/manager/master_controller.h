@@ -1687,7 +1687,7 @@ namespace transport
 			    }
 
 				// now all data is available, ask scheduler to fix maximum unit of allocation
-				this->work_scheduler.compute_max_allocation();
+		    this->work_scheduler.complete_queue_setup();
 	    }
 
 
@@ -1710,6 +1710,16 @@ namespace transport
 			{
 		    // set up instrument to journal the MPI communication if needed
 		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
+		    // emit update message giving current status if required
+		    std::string msg;
+		    bool print_msg = this->work_scheduler.generate_update_string(msg);
+		    if(print_msg)
+			    {
+		        std::ostringstream update_msg;
+				    update_msg << "Task manager: " << msg;
+		        this->message_handler(update_msg.str());
+			    }
 
         // generate a list of work assignments
         std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(writer->get_log());
