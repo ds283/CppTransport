@@ -19,6 +19,10 @@
 #include "boost/algorithm/string.hpp"
 
 
+// set default minimum time interval for instruments to be 5 seconds
+#define __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN (5)
+
+
 namespace transport
 	{
 
@@ -166,7 +170,8 @@ namespace transport
 
 				typedef enum
 					{
-				    aggregate_begin, aggregate_end
+				    aggregate_begin, aggregate_end,
+						MPI_begin, MPI_end
 					} event_type;
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -426,7 +431,16 @@ namespace transport
 						        break;
 							    }
 
-						    case master_work_event::aggregate_end:
+						    case master_work_event::MPI_begin:
+							    {
+						        boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+								    t++;
+								    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_TOO_FEW);
+								    if((*t)->get_type() != master_work_event::MPI_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_MPI_END_MISSING);
+								    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
+								    break;
+							    }
+
 						    default:
 							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
 							};
@@ -662,6 +676,79 @@ namespace transport
 					    {
 				        boost::filesystem::remove(script_file);
 					    }
+					}
+			}
+
+
+    class journal_instrument
+	    {
+
+      public:
+
+        journal_instrument(work_journal& j,
+                           master_work_event::event_type b, master_work_event::event_type ,
+                           unsigned int m = __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN);
+
+        ~journal_instrument();
+
+
+		    // INTERFACE
+
+      public:
+
+		    void stop() { this->stop_time = boost::posix_time::second_clock::universal_time(); this->stopped = true; }
+
+
+		    // INTERNAL DATA
+
+      private:
+
+		    //! record start time of instrument
+		    boost::posix_time::ptime start_time;
+
+		    //! record stop time, if needed
+		    boost::posix_time::ptime stop_time;
+
+		    //! stopped?
+		    bool stopped;
+
+		    //! reference to parent scheduler
+		    work_journal& journal;
+
+		    //! label for begin journal item
+		    master_work_event::event_type begin_label;
+
+		    //! label for end journal item
+		    master_work_event::event_type end_label;
+
+		    //! minimum interval which will be journaled, measured in seconds
+		    unsigned int minimum_interval;
+
+	    };
+
+
+    journal_instrument::journal_instrument(work_journal& j, master_work_event::event_type b, master_work_event::event_type e, unsigned int m)
+	    : journal(j),
+	      begin_label(b),
+	      end_label(e),
+	      minimum_interval(m),
+	      stopped(false)
+	    {
+        this->start_time = boost::posix_time::second_clock::universal_time();
+        this->stop_time  = this->start_time;
+	    }
+
+
+		journal_instrument::~journal_instrument()
+			{
+				if(!this->stopped) this->stop_time = boost::posix_time::second_clock::universal_time();
+
+		    boost::posix_time::time_duration duration = this->stop_time - this->start_time;
+
+				if(duration.total_seconds() > this->minimum_interval)
+					{
+						this->journal.add_entry(master_work_event(this->begin_label, this->start_time));
+						this->journal.add_entry(master_work_event(this->end_label, this->stop_time));
 					}
 			}
 

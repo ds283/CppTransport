@@ -1629,6 +1629,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::initialize_workers(void)
 	    {
+        // set up instrument to journal the MPI communication if needed
+        journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
         // we require this->repo not to be null
@@ -1652,6 +1655,9 @@ namespace transport
 		template <typename WriterObject>
     void master_controller<number>::set_up_workers(WriterObject& writer)
 			{
+		    // set up instrument to journal the MPI communication if needed
+		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
 		    // rebuild information about our workers; this information
 				// it is updated whenever we start a new task, because the details can vary
 				// between model instances
@@ -1702,6 +1708,9 @@ namespace transport
 		template <typename WriterObject>
 		void master_controller<number>::assign_work_to_workers(WriterObject& writer)
 			{
+		    // set up instrument to journal the MPI communication if needed
+		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
         // generate a list of work assignments
         std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(writer->get_log());
 
@@ -1732,6 +1741,9 @@ namespace transport
     template <typename number>
     void master_controller<number>::terminate_workers(void)
 	    {
+		    // set up instrument to journal the MPI communication if needed
+		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
         for(unsigned int i = 0; i < this->world.size()-1; i++)
