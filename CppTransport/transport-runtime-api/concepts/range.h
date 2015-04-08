@@ -242,6 +242,12 @@ namespace transport
         out << __CPP_TRANSPORT_RANGE_A << obj.steps
             << __CPP_TRANSPORT_RANGE_B << (obj.spacing == range<value>::linear ? __CPP_TRANSPORT_RANGE_LINEAR : __CPP_TRANSPORT_RANGE_LOGARITHMIC)
             << __CPP_TRANSPORT_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_RANGE_D << obj.max << std::endl;
+
+		    for(unsigned int i = 0; i < obj.grid.size(); i++)
+			    {
+				    out << i << ". " << obj.grid[i] << std::endl;
+			    }
+
         return(out);
       }
 
