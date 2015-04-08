@@ -139,9 +139,9 @@ namespace transport
         template <typename number>
         void fNL_time_series<number>::write(std::ostream& out)
           {
-            this->derived_line<number>::write(out);
             this->fNL_line<number>::write(out);
             this->time_series<number>::write(out);
+            this->derived_line<number>::write(out);
           }
 
 

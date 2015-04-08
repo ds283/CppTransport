@@ -145,9 +145,9 @@ namespace transport
 		    template <typename number>
 		    void zeta_twopf_wavenumber_series<number>::write(std::ostream& out)
 			    {
-		        this->derived_line<number>::write(out);
 		        this->zeta_twopf_line<number>::write(out);
 		        this->wavenumber_series<number>::write(out);
+		        this->derived_line<number>::write(out);
 			    }
 
 
@@ -293,9 +293,9 @@ namespace transport
 		    template <typename number>
 		    void zeta_threepf_wavenumber_series<number>::write(std::ostream& out)
 			    {
-		        this->derived_line<number>::write(out);
 		        this->zeta_threepf_line<number>::write(out);
 		        this->wavenumber_series<number>::write(out);
+		        this->derived_line<number>::write(out);
 			    }
 
 
@@ -433,9 +433,9 @@ namespace transport
 		    template <typename number>
 		    void zeta_reduced_bispectrum_wavenumber_series<number>::write(std::ostream& out)
 			    {
-		        this->derived_line<number>::write(out);
 		        this->zeta_reduced_bispectrum_line<number>::write(out);
 		        this->wavenumber_series<number>::write(out);
+		        this->derived_line<number>::write(out);
 			    }
 
 

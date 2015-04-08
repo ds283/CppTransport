@@ -163,9 +163,9 @@ namespace transport
 		    template <typename number>
 		    void tensor_twopf_time_series<number>::write(std::ostream& out)
 			    {
+		        this->tensor_twopf_line<number>::write(out);
+		        this->time_series<number>::write(out);
 				    this->derived_line<number>::write(out);
-				    this->tensor_twopf_line<number>::write(out);
-				    this->time_series<number>::write(out);
 			    }
 
 

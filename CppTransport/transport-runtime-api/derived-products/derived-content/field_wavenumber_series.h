@@ -158,9 +158,9 @@ namespace transport
         template <typename number>
         void twopf_wavenumber_series<number>::write(std::ostream& out)
 	        {
-            this->derived_line<number>::write(out);
             this->twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
+            this->derived_line<number>::write(out);
 	        }
 
 
@@ -342,9 +342,9 @@ namespace transport
         template <typename number>
         void threepf_wavenumber_series<number>::write(std::ostream& out)
 	        {
-            this->derived_line<number>::write(out);
             this->threepf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
+            this->derived_line<number>::write(out);
 	        }
 
 

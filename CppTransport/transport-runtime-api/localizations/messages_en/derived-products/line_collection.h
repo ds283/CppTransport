@@ -12,13 +12,14 @@
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B   "containing the following line groups:"
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES   "Plotting indices"
 
+#define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE      "Line"
+
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGX      "logarithmic x-axis"
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGY      "logarithmic y-axis"
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_ABSY      "absolute values on y-axis"
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LATEX     "use LaTeX-format labels"
 
 #define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_AXIS_MISMATCH   "line_collection: attempt to add new line group with axis type which doesn't agree with existing axes"
-#define __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_EMPTY           "line_collection: attempt to process, but collection is empty"
 
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_LINE_COLLECTION_PRODUCT_H

@@ -149,9 +149,9 @@ namespace transport
         template <typename number>
         void zeta_twopf_time_series<number>::write(std::ostream& out)
           {
-            this->derived_line<number>::write(out);
             this->zeta_twopf_line<number>::write(out);
-		        this->time_series<number>::write(out);
+            this->time_series<number>::write(out);
+            this->derived_line<number>::write(out);
           }
 
 
@@ -284,9 +284,9 @@ namespace transport
         template <typename number>
         void zeta_threepf_time_series<number>::write(std::ostream& out)
           {
-            this->derived_line<number>::write(out);
             this->zeta_threepf_line<number>::write(out);
             this->time_series<number>::write(out);
+            this->derived_line<number>::write(out);
           }
 
 
@@ -421,9 +421,9 @@ namespace transport
         template <typename number>
         void zeta_reduced_bispectrum_time_series<number>::write(std::ostream& out)
           {
-            this->derived_line<number>::write(out);
             this->zeta_reduced_bispectrum_line<number>::write(out);
             this->time_series<number>::write(out);
+            this->derived_line<number>::write(out);
           }
 
 

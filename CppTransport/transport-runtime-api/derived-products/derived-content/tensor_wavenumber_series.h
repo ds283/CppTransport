@@ -156,9 +156,9 @@ namespace transport
         template <typename number>
         void tensor_twopf_wavenumber_series<number>::write(std::ostream& out)
 	        {
-            this->derived_line<number>::write(out);
             this->tensor_twopf_line<number>::write(out);
             this->wavenumber_series<number>::write(out);
+            this->derived_line<number>::write(out);
 	        }
 
 

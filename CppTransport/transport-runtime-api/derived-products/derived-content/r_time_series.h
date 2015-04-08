@@ -178,9 +178,9 @@ namespace transport
 				template <typename number>
 				void r_time_series<number>::write(std::ostream& out)
 					{
+				    this->r_line<number>::write(out);
+				    this->time_series<number>::write(out);
 						this->derived_line<number>::write(out);
-						this->r_line<number>::write(out);
-						this->time_series<number>::write(out);
 					}
 
 

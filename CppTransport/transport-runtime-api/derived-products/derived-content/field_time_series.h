@@ -137,14 +137,14 @@ namespace transport
 		    template <typename number>
 		    void background_time_series<number>::write(std::ostream& out)
 			    {
-		        this->derived_line<number>::write(out);
-		        this->time_series<number>::write(out);
-
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_TIME_SERIES_LABEL_BACKGROUND << std::endl;
 		        out << "  " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_INDICES << " ";
 
-				    integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());
+		        integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->get_parent_task());
 		        this->active_indices.write(out, itk->get_model()->get_state_names());
+
+		        this->time_series<number>::write(out);
+		        this->derived_line<number>::write(out);
 			    }
 
 
@@ -374,9 +374,9 @@ namespace transport
 		    template <typename number>
 		    void twopf_time_series<number>::write(std::ostream& out)
 			    {
-				    this->derived_line<number>::write(out);
-				    this->twopf_line<number>::write(out);
+		        this->twopf_line<number>::write(out);
 		        this->time_series<number>::write(out);
+				    this->derived_line<number>::write(out);
 			    }
 
 
@@ -545,9 +545,9 @@ namespace transport
 		    template <typename number>
 		    void threepf_time_series<number>::write(std::ostream& out)
 			    {
+		        this->threepf_line<number>::write(out);
+		        this->time_series<number>::write(out);
 				    this->derived_line<number>::write(out);
-				    this->threepf_line<number>::write(out);
-				    this->time_series<number>::write(out);
 			    }
 
 

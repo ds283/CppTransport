@@ -642,8 +642,8 @@ namespace transport
 				template <typename number>
 				void derived_line<number>::write(std::ostream& out)
 					{
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << std::endl;
+						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_LABEL << std::endl;
+						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_TASK_NAME << " '" << this->parent_task->get_name() << "'" << std::endl;
 
 						// output model details if this derived line is directly associated with an integration task
 						integration_task<number>* itk = dynamic_cast< integration_task<number>* >(this->parent_task);
@@ -654,7 +654,7 @@ namespace transport
 
 							}
 
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";
+						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_CLASS << " ";
 						switch(this->x_class)
 							{
 						    case time_axis:
@@ -675,7 +675,7 @@ namespace transport
 
 						unsigned int count = 0;
 
-						this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED " ");
+						this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_X_AXIS_SUPPORTED " ");
 						for(std::list< axis_value >::const_iterator t = this->supported_x_axes.begin(); t != this->supported_x_axes.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SUPPORTED_AXES; t++)
 							{
 								switch(*t)
@@ -720,7 +720,7 @@ namespace transport
 						if(count == __CPP_TRANSPORT_PRODUCT_MAX_SUPPORTED_AXES) this->wrapper.wrap_list_item(out, true, "...", count);
 				    this->wrapper.wrap_newline(out);
 
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
+						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_CURRENT_X_AXIS << " ";
 				    switch(this->x_type)
 					    {
 				        case efolds_axis:
@@ -760,7 +760,7 @@ namespace transport
 				          throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_UNKNOWN_X_AXIS_VALUE);
 					    }
 
-						out << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING << " ";
+						out << "  " << __CPP_TRANSPORT_PRODUCT_DERIVED_LINE_DOT_MEANING << " ";
 						switch(this->dot_meaning)
 							{
 						    case derivatives:
@@ -795,7 +795,7 @@ namespace transport
 				    count = 0;
 
 						this->wrapper.wrap_newline(out);
-				    this->wrapper.wrap_out(out, __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
+				    this->wrapper.wrap_out(out, "  " __CPP_TRANSPORT_PRODUCT_TIME_SERIES_TSAMPLE_SN_LABEL " ");
 				    for(std::vector<unsigned int>::const_iterator t = this->time_sample_sns.begin(); t != this->time_sample_sns.end() && count < __CPP_TRANSPORT_PRODUCT_MAX_SN; t++)
 					    {
 				        std::ostringstream msg;

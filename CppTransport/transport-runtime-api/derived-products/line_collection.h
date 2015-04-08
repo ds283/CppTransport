@@ -529,12 +529,10 @@ namespace transport
 		    template <typename number>
 		    void line_collection<number>::write(std::ostream& out)
 			    {
-		        // call next writer
+		        // call derived_product writer
 		        this->derived_product<number>::write(out);
 
 		        unsigned int count = 0;
-
-		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl;
 
 		        this->wrapper.wrap_list_item(out, this->log_x, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGX, count);
 		        this->wrapper.wrap_list_item(out, this->log_y, __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LOGY, count);
@@ -543,8 +541,12 @@ namespace transport
 
 						this->wrapper.wrap_newline(out);
 
-				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++)
+		        out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_A << " '" << this->get_name() << "', " << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_TITLE_B << std::endl;
+
+				    unsigned int line_counter = 1;
+				    for(typename std::list< derived_line<number>* >::iterator t = this->lines.begin(); t != this->lines.end(); t++, line_counter++)
 					    {
+						    out << __CPP_TRANSPORT_PRODUCT_LINE_COLLECTION_LABEL_LINE << " " << line_counter << ":" << std::endl;
 				        (*t)->write(out);
 				        this->wrapper.wrap_newline(out);
 					    }

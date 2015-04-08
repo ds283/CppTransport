@@ -145,7 +145,7 @@ namespace transport
 				template <typename number>
 				void derived_product<number>::write(std::ostream& out)
 					{
-						out << this->filename << std::endl;
+						out << __CPP_TRANSPORT_DERIVED_PRODUCT_FILENAME << ": " << this->filename << std::endl;
 					}
 
 
