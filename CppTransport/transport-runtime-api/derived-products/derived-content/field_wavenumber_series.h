@@ -54,6 +54,12 @@ namespace transport
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
 
+            //! generate a LaTeX label
+            std::string get_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
+            //! generate a non-LaTeX label
+            std::string get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
 
             // CLONE
 
@@ -136,11 +142,8 @@ namespace transport
                             // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = k_handle.lookup_tag(tag);
 
-								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-								                                                       w_axis, line_data, latex_label, nonlatex_label);
+								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]));
 
 								            lines.push_back(line);
 									        }
@@ -151,6 +154,36 @@ namespace transport
 		        // detach pipe from output group
 		        this->detach(pipe);
 			    }
+
+
+        template <typename number>
+        std::string twopf_wavenumber_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->LaTeX_label);
+	            }
+            else
+	            {
+                std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t) + "$";
+                return(latex_label);
+	            }
+	        }
+
+
+        template <typename number>
+        std::string twopf_wavenumber_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->non_LaTeX_label);
+	            }
+            else
+	            {
+                std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t);
+                return(nonlatex_label);
+	            }
+	        }
 
 
         // note that because time_series<> inherits virtually from derived_line<>, the write method for
@@ -210,6 +243,12 @@ namespace transport
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
+
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, double t) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, double t) const;
 
 
 		        // CLONE
@@ -325,11 +364,8 @@ namespace transport
 				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
-		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-		                                                                       w_axis, line_data, latex_label, nonlatex_label);
+		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+		                                                                       this->get_LaTeX_label(l,m,n,t_values[i]), this->get_non_LaTeX_label(l,m,n,t_values[i]));
 
 		                            lines.push_back(line);
 			                        }
@@ -340,6 +376,36 @@ namespace transport
 
             // detach pipe from output group
             this->detach(pipe);
+	        }
+
+
+        template <typename number>
+        std::string threepf_wavenumber_series<number>::get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->LaTeX_label);
+	            }
+            else
+	            {
+                std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(t) + "$";
+                return(latex_label);
+	            }
+	        }
+
+
+        template <typename number>
+        std::string threepf_wavenumber_series<number>::get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->non_LaTeX_label);
+	            }
+            else
+	            {
+                std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(t);
+                return(nonlatex_label);
+	            }
 	        }
 
 

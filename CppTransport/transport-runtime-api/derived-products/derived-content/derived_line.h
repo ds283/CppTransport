@@ -50,6 +50,10 @@
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_CONVENTIONAL                       "conventional"
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_KLABEL_COMOVING                           "comoving"
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET                                 "label-set"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX                               "label-latex"
+#define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX                            "label-nonlatex"
+
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION                                 "precision"
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_X_AXIS_CLASS                              "axis-class"
@@ -151,18 +155,30 @@ namespace transport
 
 				    //! get dot meaning
 				    dot_type get_dot_meaning() const { return(this->dot_meaning); }
+
 				    //! set dot meaning
 				    void set_dot_meaning(dot_type t) { this->dot_meaning = t; }
 
 				    //! get label meaning
 				    klabel_type get_klabel_meaning() const { return(this->klabel_meaning); }
+
 				    //! set label meaning
 				    void set_klabel_meaning(klabel_type t) { this->klabel_meaning = t; }
 
 						//! get current x-axis value type
 						axis_value get_current_x_axis_value() const { return(this->x_type); }
+
 						//! set current x-axis value
 						void set_current_x_axis_value(axis_value v);
+
+						//! set label text
+						void set_label_text(const std::string& latex, const std::string& non_latex);
+
+						//! clear label text
+						void clear_label_text();
+
+						//! has a label been set?
+						bool is_label_set() const { return(this->label_set); }
 
 
 				    // DATAPIPE HANDLING
@@ -225,6 +241,15 @@ namespace transport
 						//! Supported axis values
 						std::list< axis_value > supported_x_axes;
 
+						//! LaTeX version of label (optional)
+						std::string LaTeX_label;
+
+						//! non-LaTeX version of label (optional)
+						std::string non_LaTeX_label;
+
+						//! has an x-label been set?
+						bool label_set;
+
 				    //! record the task which 'owns' this derived content
 				    derivable_task<number>* parent_task;
 
@@ -258,6 +283,7 @@ namespace transport
 					  supported_x_axes(sax),
             dot_meaning(momenta),
             klabel_meaning(conventional),
+            label_set(false),
             precision(prec),
             parent_task(dynamic_cast< derivable_task<number>* >(tk.clone()))
 					{
@@ -290,7 +316,10 @@ namespace transport
 				derived_line<number>::derived_line(Json::Value& reader, typename repository_finder<number>::task_finder& finder)
 					: parent_task(nullptr)
 					{
-				    precision = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
+				    precision       = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION].asUInt();
+				    label_set       = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET].asBool();
+				    LaTeX_label     = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX].asString();
+				    non_LaTeX_label = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX].asString();
 
 				    std::string parent_task_name = reader[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME].asString();
 
@@ -417,6 +446,9 @@ namespace transport
 					  supported_x_axes(obj.supported_x_axes),
             dot_meaning(obj.dot_meaning),
 					  klabel_meaning(obj.klabel_meaning),
+					  label_set(obj.label_set),
+					  LaTeX_label(obj.LaTeX_label),
+					  non_LaTeX_label(obj.non_LaTeX_label),
             precision(obj.precision),
             time_sample_sns(obj.time_sample_sns),
             kconfig_sample_sns(obj.kconfig_sample_sns),
@@ -453,6 +485,31 @@ namespace transport
 					}
 
 
+				template <typename number>
+				void derived_line<number>::set_label_text(const std::string& latex, const std::string& non_latex)
+					{
+						if(latex == "" && non_latex == "")    // treat as an attempt to clear the labels
+							{
+								this->clear_label_text();
+							}
+						else
+							{
+						    this->LaTeX_label     = latex;
+						    this->non_LaTeX_label = non_latex;
+						    this->label_set       = true;
+							}
+					}
+
+
+				template <typename number>
+				void derived_line<number>::clear_label_text()
+					{
+						this->LaTeX_label.clear();
+						this->non_LaTeX_label.clear();
+						this->label_set = false;
+					}
+
+
 		    template <typename number>
 		    void derived_line<number>::attach(datapipe<number>& pipe, const std::list<std::string>& tags) const
 			    {
@@ -477,8 +534,11 @@ namespace transport
 				template <typename number>
 				void derived_line<number>::serialize(Json::Value& writer) const
 					{
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME] = this->parent_task->get_name();
-				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION] = this->precision;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_TASK_NAME]      = this->parent_task->get_name();
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_PRECISION]      = this->precision;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_SET]      = this->label_set;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_LATEX]    = this->LaTeX_label;
+				    writer[__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_DERIVED_LINE_LABEL_NONLATEX] = this->non_LaTeX_label;
 
 						// Serialize: axis type of this derived line
 				    switch(this->x_class)

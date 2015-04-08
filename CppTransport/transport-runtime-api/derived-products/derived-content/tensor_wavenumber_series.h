@@ -53,6 +53,12 @@ namespace transport
 				    virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 				                              const std::list<std::string>& tags) const override;
 
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const;
+
 
 				    // CLONE
 
@@ -137,8 +143,8 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-								                                                       w_axis, line_data, latex_label, nonlatex_label);
+								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]));
 
 										        lines.push_back(line);
 									        }
@@ -148,6 +154,36 @@ namespace transport
 
 		        // detach pipe from output group
 		        this->detach(pipe);
+	        }
+
+
+        template <typename number>
+        std::string tensor_twopf_wavenumber_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->LaTeX_label);
+	            }
+            else
+	            {
+                std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t) + "$";
+                return(latex_label);
+	            }
+	        }
+
+
+        template <typename number>
+        std::string tensor_twopf_wavenumber_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, double t) const
+	        {
+            if(this->label_set)
+	            {
+                return(this->non_LaTeX_label);
+	            }
+            else
+	            {
+                std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t);
+                return(nonlatex_label);
+	            }
 	        }
 
 

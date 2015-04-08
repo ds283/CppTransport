@@ -54,6 +54,12 @@ namespace transport
 		        virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
 
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(double t) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(double t) const;
+
 
 		        // CLONE
 
@@ -126,17 +132,44 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-		                                                       w_axis, line_data, latex_label, nonlatex_label);
+		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
 
 		            lines.push_back(line);
 			        }
 
 		        // detach pipe from output group
 		        this->detach(pipe);
+			    }
+
+
+		    template <typename number>
+		    std::string zeta_twopf_wavenumber_series<number>::get_LaTeX_label(double t) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t) + "$";
+		            return(latex_label);
+			        }
+			    }
+
+
+		    template <typename number>
+		    std::string zeta_twopf_wavenumber_series<number>::get_non_LaTeX_label(double t) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->non_LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t);
+		            return(nonlatex_label);
+			        }
 			    }
 
 
@@ -195,6 +228,12 @@ namespace transport
 				    //! generate data lines for plotting
 				    virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 				                              const std::list<std::string>& tags) const override;
+
+				    //! generate a LaTeX label
+				    std::string get_LaTeX_label(double t) const;
+
+				    //! generate a non-LaTeX label
+				    std::string get_non_LaTeX_label(double t) const;
 
 
 				    // CLONE
@@ -265,24 +304,49 @@ namespace transport
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
-				        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing time-configuration " << i << std::endl;
-
 				        zeta_threepf_kconfig_data_tag<number> tag = pipe.new_zeta_threepf_kconfig_data_tag(this->time_sample_sns[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-		                                                       w_axis, line_data, latex_label, nonlatex_label);
+		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
 
 		            lines.push_back(line);
 			        }
 
 		        // detach pipe from output group
 		        this->detach(pipe);
+			    }
+
+
+		    template <typename number>
+		    std::string zeta_threepf_wavenumber_series<number>::get_LaTeX_label(double t) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t) + "$";
+		            return(latex_label);
+			        }
+			    }
+
+
+		    template <typename number>
+		    std::string zeta_threepf_wavenumber_series<number>::get_non_LaTeX_label(double t) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->non_LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t);
+		            return(nonlatex_label);
+			        }
 			    }
 
 
@@ -341,6 +405,12 @@ namespace transport
 		        //! generate data lines for plotting
 		        virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
 		                                  const std::list<std::string>& tags) const override;
+
+				    //! generate a LaTeX label
+				    std::string get_LaTeX_label(double t) const;
+
+				    //! generate a non-LaTeX label
+				    std::string get_non_LaTeX_label(double t) const;
 
 
 		        // CLONE
@@ -411,18 +481,13 @@ namespace transport
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
-		            BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing time-configuration " << i << std::endl;
-
 				        zeta_reduced_bispectrum_kconfig_data_tag<number> tag = pipe.new_zeta_reduced_bispectrum_kconfig_data_tag(this->time_sample_sns[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
-		            std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t_values[i]);
-
-		            data_line<number> line = data_line<number>(this->x_type, fNL_value,
-		                                                       w_axis, line_data, latex_label, nonlatex_label);
+		            data_line<number> line = data_line<number>(this->x_type, fNL_value, w_axis, line_data,
+		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
 
 		            lines.push_back(line);
 			        }
@@ -430,6 +495,36 @@ namespace transport
 		        // detach pipe from output group
 		        this->detach(pipe);
 			    }
+
+
+				template <typename number>
+				std::string zeta_reduced_bispectrum_wavenumber_series<number>::get_LaTeX_label(double t) const
+					{
+						if(this->label_set)
+							{
+								return(this->LaTeX_label);
+							}
+						else
+							{
+						    std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(t) + "$";
+								return(latex_label);
+							}
+					}
+
+
+				template <typename number>
+				std::string zeta_reduced_bispectrum_wavenumber_series<number>::get_non_LaTeX_label(double t) const
+					{
+						if(this->label_set)
+							{
+						    return(this->non_LaTeX_label);
+							}
+						else
+							{
+						    std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(t);
+								return(nonlatex_label);
+							}
+					}
 
 
 		    // note that because time_series<> inherits virtually from derived_line<>, the write method for

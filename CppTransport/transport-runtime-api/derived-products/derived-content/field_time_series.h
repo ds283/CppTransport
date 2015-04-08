@@ -202,20 +202,27 @@ namespace transport
 			    {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->gadget.get_N_fields();
+				    if(this->label_set)
+					    {
+						    label << this->LaTeX_label;
+					    }
+				    else
+					    {
+				        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
+				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
-		        label << "$";
-		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
-			        {
-		            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
-			        }
-		        else
-			        {
-		            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-			        }
-		        label << "$";
+				        label << "$";
+				        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+					        {
+				            label << field_names[i % N_fields] << (i >= N_fields ? "^{" __CPP_TRANSPORT_LATEX_PRIME_SYMBOL "}" : "");
+					        }
+				        else
+					        {
+				            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+					        }
+				        label << "$";
+					    }
 
 				    return(label.str());
 			    }
@@ -226,18 +233,25 @@ namespace transport
 	        {
 		        std::ostringstream label;
 
-		        unsigned int N_fields = this->gadget.get_N_fields();
+				    if(this->label_set)
+					    {
+						    label << this->non_LaTeX_label;
+					    }
+				    else
+					    {
+				        unsigned int N_fields = this->gadget.get_N_fields();
 
-	          const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
+				        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 
-	          if(this->get_dot_meaning() == derived_line<number>::derivatives)
-	            {
-	              label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
-	            }
-	          else
-	            {
-	              label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
-	            }
+				        if(this->get_dot_meaning() == derived_line<number>::derivatives)
+					        {
+				            label << field_names[i % N_fields] << (i >= N_fields ? __CPP_TRANSPORT_NONLATEX_PRIME_SYMBOL : "");
+					        }
+				        else
+					        {
+				            label << (i >= N_fields ? "p_{" : "") << field_names[i % N_fields] << (i >= N_fields ? "}" : "");
+					        }
+					    }
 
 		        return(label.str());
 			    }
@@ -268,6 +282,12 @@ namespace transport
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
+
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const;
 
 
 		        // CLONE
@@ -352,11 +372,8 @@ namespace transport
                             // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
-		                        std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k_values[i]) + "$";
-		                        std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k_values[i]);
-
-		                        data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-		                                                                   t_axis, line_data, latex_label, nonlatex_label);
+		                        data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                                                                   this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
 
 		                        lines.push_back(line);
 			                    }
@@ -366,6 +383,36 @@ namespace transport
 
             // detach pipe from output group
             this->detach(pipe);
+			    }
+
+
+		    template <typename number>
+		    std::string twopf_time_series<number>::get_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(k) + "$";
+		            return(latex_label);
+			        }
+			    }
+
+
+		    template <typename number>
+		    std::string twopf_time_series<number>::get_non_LaTeX_label(unsigned int m, unsigned int n, const twopf_configuration& k) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->non_LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(k);
+		            return(nonlatex_label);
+			        }
 			    }
 
 
@@ -420,6 +467,12 @@ namespace transport
 		        //! generate data lines for plotting
             virtual void derive_lines(datapipe<number>& pipe, std::list< data_line<number> >& lines,
                                       const std::list<std::string>& tags) const override;
+
+		        //! generate a LaTeX label
+		        std::string get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const;
+
+		        //! generate a non-LaTeX label
+		        std::string get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const;
 
 
 		        // CLONE
@@ -522,11 +575,8 @@ namespace transport
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
 
-		                            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
-		                            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
-
-		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value,
-		                                                                       t_axis, line_data, latex_label, nonlatex_label);
+		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                                                                       this->get_LaTeX_label(l, m, n, k_values[i]), this->get_non_LaTeX_label(l, m, n, k_values[i]));
 
 		                            lines.push_back(line);
 			                        }
@@ -537,6 +587,36 @@ namespace transport
 
             // detach pipe from output group
             this->detach(pipe);
+			    }
+
+
+		    template <typename number>
+		    std::string threepf_time_series<number>::get_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string latex_label = "$" + this->make_LaTeX_label(l,m,n) + "\\;" + this->make_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
+		            return(latex_label);
+			        }
+			    }
+
+
+		    template <typename number>
+		    std::string threepf_time_series<number>::get_non_LaTeX_label(unsigned int l, unsigned int m, unsigned int n, const threepf_configuration& k) const
+			    {
+		        if(this->label_set)
+			        {
+		            return(this->non_LaTeX_label);
+			        }
+		        else
+			        {
+		            std::string nonlatex_label = this->make_non_LaTeX_label(l,m,n) + " " + this->make_non_LaTeX_tag(k, this->use_kt_label, this->use_alpha_label, this->use_beta_label);
+		            return(nonlatex_label);
+			        }
 			    }
 
 
