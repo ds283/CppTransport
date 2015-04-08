@@ -55,7 +55,7 @@ bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_
 bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use high value of k_t, restrict to isosceles triangles which have alpha=0
-    return(fabs(data.kt-exp(8.0)) < 0.001 && fabs(data.alpha) < 0.001);
+    return(fabs(data.kt-exp(9.0)) < 0.001 && fabs(data.alpha) < 0.001);
 	}
 
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
@@ -120,8 +120,8 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        ktmin      = exp(3.0);
-    const double        ktmax      = exp(8.0);
-    const unsigned int  k_samples = 30;
+    const double        ktmax      = exp(9.0);
+    const unsigned int  k_samples = 40;
 
 		const double        alphamin   = -1.0;
 		const double        alphamax   = +1.0;
@@ -129,7 +129,7 @@ int main(int argc, char* argv[])
 
 		const double        betamin    = 0.0;
 		const double        betamax    = 1.0;
-		const unsigned int  b_samples  = 100;
+		const unsigned int  b_samples  = 1000;
 
 		struct ThreepfStoragePolicy
 			{
@@ -160,8 +160,6 @@ int main(int argc, char* argv[])
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
     tk3_zeta_twopf.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
-
-    std::cout << "Zeta two-point function plot:" << std::endl << tk3_zeta_twopf << std::endl;
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3,
@@ -202,8 +200,9 @@ int main(int argc, char* argv[])
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2spec", "zeta-2spec.pdf");
     tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
+		tk3_zeta_2spec_plot.set_typeset_with_LaTeX(true);
     tk3_zeta_2spec_plot.set_log_x(true);
-    tk3_zeta_2spec_plot.set_title("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
+    tk3_zeta_2spec_plot.set_title_text("$\\langle \\zeta \\zeta \\rangle$ power spectrum");
 
     transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
@@ -212,12 +211,15 @@ int main(int argc, char* argv[])
                                                                                                     transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                     transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_near_squeezed));
 		tk3_zeta_redbsp_spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+		tk3_zeta_redbsp_spec.set_label_text("$k_3/k_t = 0.99$", "k3/k_t = 0.95");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_spec_plot("axion.threepf-1.redbsp-spec", "redbsp-spec.pdf");
 		tk3_redbsp_spec_plot.add_line(tk3_zeta_redbsp_spec);
 		tk3_redbsp_spec_plot.set_typeset_with_LaTeX(true);
-		tk3_redbsp_spec_plot.set_title("Reduced bispectrum in the squeezed limit");
+		tk3_redbsp_spec_plot.set_title_text("Reduced bispectrum at fixed $k_3/k_t$");
 		tk3_redbsp_spec_plot.set_x_label_text("$k_t$");
+		tk3_redbsp_spec_plot.set_log_x(true);
+		tk3_redbsp_spec_plot.set_log_y(false);
 
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
@@ -227,36 +229,43 @@ int main(int argc, char* argv[])
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
     tk3_zeta_redbsp_beta_lo.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_beta_lo.set_current_x_axis_value(transport::derived_data::beta_axis);
+		tk3_zeta_redbsp_beta_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_hi(ztk3,
                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
+		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^9", "k_t/k* = exp(9)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("axion.threepf-1.redbsp-beta", "redbsp-beta.pdf");
 		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
     tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_hi);
 		tk3_redbsp_beta_plot.set_typeset_with_LaTeX(true);
-		tk3_redbsp_beta_plot.set_title("Shape-dependence of reduced bispectrum on isosceles triangles");
+		tk3_redbsp_beta_plot.set_title_text("Shape-dependence of reduced bispectrum on isosceles triangles at fixed $k_t$");
+		tk3_redbsp_beta_plot.set_log_y(false);
+		tk3_redbsp_beta_plot.set_legend_position(transport::derived_data::line_plot2d<double>::centre_left);
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3,
                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_lo));
     tk3_zeta_redbsp_sqk3_lo.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_sqk3_lo.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+		tk3_zeta_redbsp_sqk3_lo.set_label_text("$k_t/k_\\star = \\mathrm{e}^3$", "k_t/k* = exp(3)");
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_hi(ztk3,
                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
+    tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^9$", "k_t/k* = exp(9)");
 
-    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk1_plot("axion.threepf-1.redbsp-sqk1", "redbsp-sqk1.pdf");
-    tk3_redbsp_sqk1_plot.add_line(tk3_zeta_redbsp_sqk3_lo);
-    tk3_redbsp_sqk1_plot.add_line(tk3_zeta_redbsp_sqk3_hi);
-    tk3_redbsp_sqk1_plot.set_typeset_with_LaTeX(true);
-    tk3_redbsp_sqk1_plot.set_title("Shape-dependence of reduced bispectrum on isosceles triangles");
-
-    std::cout << "Reduced bispectrum plot of k1/k_t:" << std::endl << tk3_redbsp_sqk1_plot << std::endl;
+    transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("axion.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
+    tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_lo);
+    tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_hi);
+    tk3_redbsp_sqk3_plot.set_typeset_with_LaTeX(true);
+    tk3_redbsp_sqk3_plot.set_title_text("Shape-dependence of reduced bispectrum on isosceles triangles at fixed $k_t$");
+		tk3_redbsp_sqk3_plot.set_log_x(true);
+		tk3_redbsp_sqk3_plot.set_log_y(false);
+		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::line_plot2d<double>::centre_left);
 
 		// construct output tasks
 
@@ -266,7 +275,7 @@ int main(int argc, char* argv[])
     threepf_output.add_element(tk3_zeta_2spec_plot);
 		threepf_output.add_element(tk3_redbsp_spec_plot);
 		threepf_output.add_element(tk3_redbsp_beta_plot);
-    threepf_output.add_element(tk3_redbsp_sqk1_plot);
+    threepf_output.add_element(tk3_redbsp_sqk3_plot);
 
     std::cout << "axion.threepf-1 output task:" << std::endl << threepf_output << std::endl;
 
