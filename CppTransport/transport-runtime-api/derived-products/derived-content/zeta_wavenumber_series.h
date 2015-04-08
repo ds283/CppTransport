@@ -215,15 +215,7 @@ namespace transport
 
 				    //! serialize this object
 				    virtual void serialize(Json::Value& writer) const override;
-
-
-            // INTERNAL DATA
-
-          protected:
-
-            //! compute delegate
-            zeta_kseries_compute<number> computer;
-
+						
 					};
 
 
