@@ -31,6 +31,7 @@
 
 
 #define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PARENT     "parent-task"
+#define __CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED     "paired"
 
 #define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE               "template"
 #define __CPP_TRANSPORT_NODE_FNL_TASK_TEMPLATE_LOCAL         "local"
@@ -294,6 +295,17 @@ namespace transport
 				virtual ~zeta_twopf_task() = default;
 
 
+				// INTERFACE
+
+		  public:
+
+				//! get pairing status
+				bool get_paired() const { return(this->paired); }
+
+				//! set pairing status
+				void set_paired(bool g) { this->paired = g; }
+
+
 				// SERIALIZATION
 
 		  public:
@@ -307,12 +319,21 @@ namespace transport
 
 				virtual task<number>* clone() const override { return new zeta_twopf_task<number>(static_cast<const zeta_twopf_task<number>&>(*this)); }
 
+
+				// INTERNAL DATA
+
+		  protected:
+
+		    //! is this task paired to its parent integration task? ie., both tasks are performed simultaneously
+		    bool paired;
+
 			};
 
 
     template <typename number>
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, const twopf_task<number>& t)
-      : zeta_twopf_list_task<number>(nm, t)
+      : zeta_twopf_list_task<number>(nm, t),
+        paired(false)
       {
       }
 
@@ -321,13 +342,15 @@ namespace transport
     zeta_twopf_task<number>::zeta_twopf_task(const std::string& nm, Json::Value& reader, typename repository_finder<number>::task_finder& finder)
       : zeta_twopf_list_task<number>(nm, reader, finder)
       {
+		    this->paired = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
       }
 
 
     template <typename number>
     void zeta_twopf_task<number>::serialize(Json::Value& writer) const
       {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]                   = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_TWOPF);
+        writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
         this->zeta_twopf_list_task<number>::serialize(writer);
       }
@@ -362,6 +385,12 @@ namespace transport
 
 		  public:
 
+		    //! get pairing status
+		    bool get_paired() const { return(this->paired); }
+
+		    //! set pairing status
+		    void set_paired(bool g) { this->paired = g; }
+
 		    //! Determine whether this task is integrable; inherited from parent threepf_task
 		    bool is_integrable() const { return(this->ptk_as_threepf->is_integrable()); }
 
@@ -393,13 +422,17 @@ namespace transport
 				//! TODO: it would be preferable to avoid this somehow
 				threepf_task<number>* ptk_as_threepf;
 
+				//! is this task paired to its parent integration task? ie., both tasks are performed simultaneously
+				bool paired;
+
 			};
 
 
     template <typename number>
     zeta_threepf_task<number>::zeta_threepf_task(const std::string& nm, const threepf_task<number>& t)
       : zeta_twopf_list_task<number>(nm, t),
-        ptk_as_threepf(nullptr)
+        ptk_as_threepf(nullptr),
+        paired(false)
       {
 		    ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
 		    assert(ptk_as_threepf != nullptr);
@@ -417,13 +450,16 @@ namespace transport
         assert(ptk_as_threepf != nullptr);
 
         if(ptk_as_threepf == nullptr) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_ZETA_THREEPF_CAST_FAIL);
+
+		    this->paired = reader[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED].asBool();
       }
 
 
 		template <typename number>
 		zeta_threepf_task<number>::zeta_threepf_task(const zeta_threepf_task<number>& obj)
 			: zeta_twopf_list_task<number>(obj),
-			  ptk_as_threepf(nullptr)
+			  ptk_as_threepf(nullptr),
+				paired(obj.paired)
 			{
 		    ptk_as_threepf = dynamic_cast< threepf_task<number>* >(this->ptk);
 		    assert(ptk_as_threepf != nullptr);
@@ -435,7 +471,8 @@ namespace transport
     template <typename number>
     void zeta_threepf_task<number>::serialize(Json::Value& writer) const
       {
-        writer[__CPP_TRANSPORT_NODE_TASK_TYPE] = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
+        writer[__CPP_TRANSPORT_NODE_TASK_TYPE]                   = std::string(__CPP_TRANSPORT_NODE_TASK_TYPE_ZETA_THREEPF);
+        writer[__CPP_TRANSPORT_NODE_POSTINTEGRATION_TASK_PAIRED] = this->paired;
 
         this->zeta_twopf_list_task<number>::serialize(writer);
       }
