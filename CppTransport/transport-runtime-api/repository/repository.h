@@ -534,7 +534,7 @@ namespace transport
 
         msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
 	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
-	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C << " " << boost::posix_time::to_simple_string(now);
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
 
         this->message(msg.str());
 	    }
