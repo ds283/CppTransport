@@ -369,7 +369,15 @@ namespace transport
 
         // enable foreign key constraints
         char* errmsg;
-        sqlite3_exec(db, "PRAGMA foreign_keys = ON", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
+
+        // force temporary databases to be stored in memory, for speed
+        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
+
+        // try to speed up SQLite accesses
+//        sqlite3_exec(db, "PRAGMA main.page_size = 4096;", nullptr, nullptr, &errmsg)
+        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -406,6 +414,14 @@ namespace transport
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        // vacuum the database
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing database maintenance ...";
+        boost::timer::cpu_timer timer;
+        char* errmsg;
+        sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
 
         this->open_containers.remove(db);
         sqlite3_close(db);
@@ -462,6 +478,15 @@ namespace transport
 
         sqlite3_extended_result_codes(db, 1);
         // leave foreign keys disabled
+
+        // force temporary databases to be stored in memory, for speed
+        char* errmsg;
+        sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
+
+        // try to speed up SQLite accesses
+//        sqlite3_exec(db, "PRAGMA main.page_size = 4096;", nullptr, nullptr, &errmsg)
+        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
 
         // remember this connexion
         this->open_containers.push_back(db);
@@ -525,6 +550,14 @@ namespace transport
         // close sqlite3 handle to principal database
         sqlite3* db = nullptr;
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
+
+        // vacuum the database
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing database maintenance ...";
+        boost::timer::cpu_timer timer;
+        char* errmsg;
+        sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
+        timer.stop();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "** Database vacuum complete in wallclock time " << format_time(timer.elapsed().wall);
 
         this->open_containers.remove(db);
         sqlite3_close(db);
@@ -1459,7 +1492,11 @@ namespace transport
 		    sqlite3_exec(db, "PRAGMA foreign_keys = ON;", nullptr, nullptr, &errmsg);
 
 		    // force temporary databases to be stored in memory, for speed
-		    sqlite3_exec(db, "PRAGMA temp_store = 2;", nullptr, nullptr, &errmsg);
+		    sqlite3_exec(db, "PRAGMA main.temp_store = 2;", nullptr, nullptr, &errmsg);
+
+        // try to speed up SQLite accesses
+        sqlite3_exec(db, "PRAGMA main.synchronous = 1;", nullptr, nullptr, &errmsg);
+        sqlite3_exec(db, "PRAGMA main.cache_size = 10000;", nullptr, nullptr, &errmsg);
 
 		    // remember this connexion
 		    this->open_containers.push_back(db);
