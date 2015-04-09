@@ -171,23 +171,19 @@ int main(int argc, char* argv[])
     transport::twopf_task<double> tk2 = transport::twopf_task<double>("axion.twopf-1", ics, times, ks);
     tk2.set_fast_forward(false);
 
-    std::cout << tk2;
-
     // construct a threepf task
     transport::threepf_cubic_task<double> tk3 = transport::threepf_cubic_task<double>("axion.threepf-1", ics, times, ks, TimeStoragePolicy(), ThreepfStoragePolicy());
 
-
     // construct zeta threepf versions
     transport::zeta_threepf_task<double> ztk3  = transport::zeta_threepf_task<double>("axion.threepf-1.zeta", tk3);
+    ztk3.set_paired(true);
     transport::fNL_task<double> ztk3_fNL_local = transport::fNL_task<double>("axion.threepf-1.fNL_local", ztk3, transport::derived_data::fNL_local_template);
     transport::fNL_task<double> ztk3_fNL_equi  = transport::fNL_task<double>("axion.threepf-1.fNL_equi", ztk3, transport::derived_data::fNL_equi_template);
     transport::fNL_task<double> ztk3_fNL_ortho = transport::fNL_task<double>("axion.threepf-1.fNL_ortho", ztk3, transport::derived_data::fNL_ortho_template);
 
-    std::cout << tk3;
-
     // construct a zeta twopf version
     transport::zeta_twopf_task<double> ztk2 = transport::zeta_twopf_task<double>("axion.twopf-1.zeta", tk2);
-
+    ztk2.set_paired(true);
 
 		// construct some derived data products; first, simply plots of the background
 

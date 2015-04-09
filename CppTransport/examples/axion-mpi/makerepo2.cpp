@@ -147,8 +147,7 @@ int main(int argc, char* argv[])
 
 		// construct a zeta threepf task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
-
-    std::cout << tk3;
+    ztk3.set_paired(true);
 
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3,
