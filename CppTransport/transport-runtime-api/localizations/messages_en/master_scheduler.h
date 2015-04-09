@@ -15,6 +15,7 @@
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_TARGET_DURATION      "target assignment"
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE  "estimated completion"
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_FROM_NOW             "from now"
+#define __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE        "all work items processed at"
 
 
 #endif //__master_scheduler_messages_H_

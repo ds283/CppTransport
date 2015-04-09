@@ -203,7 +203,8 @@ namespace transport
 		        total_aggregation_time(0),
 		        number_aggregations(0),
 		        total_work_time(0),
-		        number_work(0)
+		        number_work(0),
+            finished(false)
 			    {
 			    }
 
@@ -219,7 +220,7 @@ namespace transport
 		    void reset(unsigned int worker);
 
 		    //! initialization complete and ready to proceed with scheduling?
-		    bool ready() const { return(this->waiting_for_setup == 0); }
+		    bool is_ready() const { return(this->waiting_for_setup == 0); }
 
 		    //! initialize a worker
 		    //! reduces count of workers waiting for initialization if successful, and logs the data using the supplied WriterObject
@@ -258,7 +259,7 @@ namespace transport
 		    void prepare_queue(output_task<number>& task);
 
 		    //! current queue exhausted? ie., finished all current work?
-		    bool finished() const { return(this->queue.size() == 0); }
+		    bool is_finished() const { return(this->queue.size() == 0); }
 
 		    //! get remaining queue size
 		    unsigned int get_queue_size() const { return(this->queue.size()); }
@@ -376,6 +377,9 @@ namespace transport
 		    //! Points at which to emit updates
 		    std::list< unsigned int > update_stack;
 
+        //! work complete?
+        bool finished;
+
 	    };
 
 
@@ -392,6 +396,7 @@ namespace transport
 				this->has_gpus = false;
 
 				this->update_stack.clear();
+        finished = false;
 			}
 
 
@@ -516,6 +521,8 @@ namespace transport
 						this->update_stack.push_front(count);
 						count += update_interval;
 					}
+
+        this->finished = false;
 			}
 
 
@@ -650,6 +657,18 @@ namespace transport
 										msg = msg_stream.str();
 									}
 							}
+
+            if(this->queue.size() == 0 && !this->finished)
+              {
+                this->finished = true;
+
+                boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
+                std::ostringstream msg_stream;
+                msg_stream << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_COMPLETE << " " << boost::posix_time::to_simple_string(now);
+
+                msg = msg_stream.str();
+              }
 					}
 
 				return(result);
