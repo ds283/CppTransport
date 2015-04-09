@@ -613,7 +613,7 @@ namespace transport
 					{
 						if(this->update_stack.size() > 0)
 							{
-								if(this->update_stack.front() < this->queue.size())
+								if(this->update_stack.front() > this->queue.size())
 									{
 										result = true;
 										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size())
