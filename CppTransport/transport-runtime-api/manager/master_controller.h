@@ -77,6 +77,8 @@ namespace transport
 		class master_controller
 			{
 
+				// TYPES
+
 		  public:
 
 		    //! Error-reporting callback object
@@ -87,6 +89,15 @@ namespace transport
 
 		    //! Message callback object
 		    typedef std::function<void(const std::string&)> message_callback;
+
+				//! Integration-task aggregation handler
+				typedef std::function<void(unsigned int,integration_metadata&)> integration_aggregator;
+
+				//! Postintegration-task aggregation handler
+				typedef std::function<void(unsigned int,output_metadata&)> postintegration_aggregator;
+
+				//! Output-task aggregation handler
+				typedef std::function<bool(unsigned int,output_metadata&)> derived_content_aggregator;
 
 				//! Labels for types of job
 		    typedef enum { job_task, job_get_package, job_get_task, job_get_product, job_get_content } job_type;
@@ -225,19 +236,19 @@ namespace transport
 		    void initialize_workers(void);
 
 				//! Master node: set up workers in preparation for a new task
-				template <typename WriterObject>
-				void set_up_workers(WriterObject& writer);
+				void set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
 
 				//! Master node: close down workers after completion of a task
-				template <typename WriterObject>
-				void close_down_workers(WriterObject& writer);
+				void close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
+
+				//! Master node: main loop: poll workers for events
+				bool poll_workers(integration_aggregator i_agg, postintegration_aggregator p_agg, derived_content_aggregator d_agg,
+				                  integration_metadata& i_metadata, output_metadata& o_metdata,
+				                  boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
+				                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 				//! Master node: generate new work assignments for workers
-				template <typename WriterObject>
-				void assign_work_to_workers(WriterObject& writer);
-
-		    //! Make a 'device context' for the MPI worker processes
-		    context make_workers_context(void);
+				void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
 
 
 		    // MASTER INTEGRATION TASKS
@@ -820,6 +831,9 @@ namespace transport
 	    }
 
 
+		// INTEGRATION TASKS
+
+
     template <typename number>
     void master_controller<number>::dispatch_integration_task(integration_task_record<number>* rec, const std::list<std::string>& tags)
 	    {
@@ -891,8 +905,6 @@ namespace transport
 	    {
         assert(this->repo != nullptr);
 
-        bool success = true;
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW INTEGRATION TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
@@ -902,129 +914,58 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate integration times reported by worker processes
-        integration_metadata metadata;
+        integration_metadata i_metadata;
+        output_metadata      o_metadata;  // unused
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
         boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path);
+        {
+	        // journal_instrument will log time spent doing MPI when it goes out of scope
+	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
-	        {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_INTEGRATION, payload);
-	        }
+	        std::vector<boost::mpi::request> requests(this->world.size()-1);
+	        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path);
 
-        // wait for all messages to be received
-        boost::mpi::wait_all(requests.begin(), requests.end());
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
+	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+		        {
+	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_INTEGRATION, payload);
+		        }
 
-		    // wait for workers to report their characteristics
-		    this->set_up_workers(writer);
+	        // wait for all messages to be received
+	        boost::mpi::wait_all(requests.begin(), requests.end());
+	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
+        }
 
-        // poll workers, scattering work and receiving data until work items are exhausted
-		    bool sent_closedown = false;
-		    while(!this->work_scheduler.all_inactive())
-	        {
-		        // send closedown instruction if no more work
-		        if(this->work_scheduler.finished() && !sent_closedown)
-			        {
-				        sent_closedown = true;
-				        this->close_down_workers(writer);
-			        }
+		    // set up aggregators
+		    integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_batch, this, writer, std::placeholders::_1, std::placeholders::_2);
+		    postintegration_aggregator p_agg;
+		    derived_content_aggregator d_agg;
 
-		        // generate new work assignments if needed
-		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
-//            BOOST_LOG_SEV(writer->get_log(), base_writer::normal) <<  "++ Polling for MPI messages";
-            // wait until a message is available from a worker
-            boost::mpi::status stat = this->world.probe();
-
-            switch(stat.tag())
-	            {
-                case MPI::INTEGRATION_DATA_READY:
-	                {
-                    this->aggregate_batch(writer, stat.source(), metadata);
-                    break;
-	                }
-
-                case MPI::NEW_WORK_ACKNOWLEDGMENT:
-	                {
-                    MPI::work_acknowledgment_payload payload;
-		                this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
-		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
-		                BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
-
-		                break;
-	                }
-
-                case MPI::FINISHED_INTEGRATION:
-	                {
-                    MPI::finished_integration_payload payload;
-                    this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
-		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
-
-		                // mark this worker as unassigned, and update its mean time per work item
-		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
-                    this->update_integration_metadata(payload, metadata);
-
-                    break;
-	                }
-
-                case MPI::INTEGRATION_FAIL:
-	                {
-                    MPI::finished_integration_payload payload;
-                    this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
-                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
-
-										this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
-                    this->update_integration_metadata(payload, metadata);
-
-                    success = false;
-                    break;
-	                }
-
-                case MPI::WORKER_CLOSE_DOWN:
-	                {
-		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
-		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
-		                BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
-		                break;
-	                }
-
-                default:
-	                {
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue; discarding";
-		                this->world.recv(stat.source(), stat.tag());
-                    break;
-	                }
-	            };
-	        }
-
-		    // push task metadata we have collected to the writer
-        writer->set_metadata(metadata);
+        // push task metadata we have collected to the writer
+        writer->set_metadata(i_metadata);
 
         wallclock_timer.stop();
         now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time required by worker processes = " << format_time(metadata.total_wallclock_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.total_aggregation_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Workers processed " << metadata.total_configurations << " individual integrations";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(metadata.total_integration_time) << " | global mean integration time = " << format_time(metadata.total_integration_time/metadata.total_configurations);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean integration time = " << format_time(metadata.min_mean_integration_time) << " | global min integration time = " << format_time(metadata.global_min_integration_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean integration time = " << format_time(metadata.max_mean_integration_time) << " | global max integration time = " << format_time(metadata.global_max_integration_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(metadata.total_batching_time) << " | global mean batching time = " << format_time(metadata.total_batching_time/metadata.total_configurations);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean batching time    = " << format_time(metadata.min_mean_batching_time) << " | global min batching time = " << format_time(metadata.global_min_batching_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean batching time    = " << format_time(metadata.max_mean_batching_time) << " | global max batching time = " << format_time(metadata.global_max_batching_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/ i_metadata.total_configurations);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/ i_metadata.total_configurations);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
 
-        return(success);
+		    return(success);
 	    }
 
 
@@ -1085,24 +1026,7 @@ namespace transport
 	    }
 
 
-    template <typename number>
-    context master_controller<number>::make_workers_context(void)
-	    {
-        context ctx;
-
-        // add devices to this context
-        // in this implementation, we assume that all workers are symmetric and therefore we would like
-        // the work queues to be balanced
-        // In principle, this can be changed if we have more information about the workers
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
-	        {
-            std::ostringstream name;
-            name << __CPP_TRANSPORT_WORKER_NAME << i;
-            ctx.add_device(name.str());
-	        }
-
-        return(ctx);
-	    }
+		// OUTPUT TASKS
 
 
     template <typename number>
@@ -1143,8 +1067,6 @@ namespace transport
 	    {
         assert(this->repo != nullptr);
 
-        bool success = true;
-
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW OUTPUT TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
@@ -1154,110 +1076,38 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        output_metadata metadata;
+        integration_metadata i_metadata;  // unused
+        output_metadata      o_metadata;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
         boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
+        {
+	        // journal_instrument will log time spent doing MPI when it goes out of scope
+	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
-	        {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_DERIVED_CONTENT, payload);
-	        }
+	        std::vector<boost::mpi::request> requests(this->world.size()-1);
+	        MPI::new_derived_content_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
-        // wait for all messages to be received
-        boost::mpi::wait_all(requests.begin(), requests.end());
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+		        {
+	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_DERIVED_CONTENT, payload);
+		        }
 
-        // wait for workers to report their characteristics
-        this->set_up_workers(writer);
+	        // wait for all messages to be received
+	        boost::mpi::wait_all(requests.begin(), requests.end());
+	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
+        }
 
-        // poll workers, receiving data until workers are exhausted
-		    bool sent_closedown = false;
-        while(!this->work_scheduler.all_inactive())
-	        {
-		        // send closedown instruction if no more work
-		        if(this->work_scheduler.finished() && !sent_closedown)
-			        {
-				        sent_closedown = true;
-				        this->close_down_workers(writer);
-			        }
+		    // set up aggregators
+		    integration_aggregator     i_agg;
+		    postintegration_aggregator p_agg;
+		    derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2);
 
-		        // generate new work assignments if needed
-		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
-//            BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Master polling for DERIVED_CONTENT_READY messages";
-            // wait until a message is available from a worker
-            boost::mpi::status stat = this->world.probe();
-
-            switch(stat.tag())
-	            {
-                case MPI::DERIVED_CONTENT_READY:
-	                {
-                    if(!this->aggregate_content(writer, stat.source(), metadata)) success = false;
-                    break;
-	                }
-
-                case MPI::NEW_WORK_ACKNOWLEDGMENT:
-	                {
-                    MPI::work_acknowledgment_payload payload;
-		                this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
-		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
-
-                    break;
-	                }
-
-                case MPI::FINISHED_DERIVED_CONTENT:
-	                {
-                    MPI::finished_derived_payload payload;
-                    this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
-		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
-
-		                // mark this scheduler as unassigned, and update its mean time per work item
-		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
-                    this->update_output_metadata(payload, metadata);
-
-                    break;
-	                }
-
-                case MPI::DERIVED_CONTENT_FAIL:
-	                {
-                    MPI::finished_derived_payload payload;
-                    this->world.recv(stat.source(), MPI::DERIVED_CONTENT_FAIL, payload);
-                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
-
-                    // mark this scheduler as unassigned, and update its mean time per work item
-                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
-                    this->update_output_metadata(payload, metadata);
-
-                    success = false;
-                    break;
-	                }
-
-                case MPI::WORKER_CLOSE_DOWN:
-	                {
-		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
-		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
-		                break;
-	                }
-
-                default:
-	                {
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue; discarding";
-		                this->world.recv(stat.source(), stat.tag());
-                    break;
-	                }
-	            };
-	        }
-
-        writer->set_metadata(metadata);
+        writer->set_metadata(o_metadata);
 
         wallclock_timer.stop();
         now = boost::posix_time::second_clock::universal_time();
@@ -1266,21 +1116,21 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(metadata.work_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.aggregation_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(metadata.db_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(o_metadata.aggregation_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(o_metadata.db_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << metadata.time_config_hits << ", unloads = " << metadata.time_config_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << metadata.twopf_kconfig_hits << ", unloads = " << metadata.twopf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << metadata.threepf_kconfig_hits << ", unloads = " << metadata.threepf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << metadata.data_hits << ", unloads = " << metadata.data_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << metadata.zeta_hits << ", unloads = " << metadata.zeta_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << o_metadata.zeta_hits << ", unloads = " << o_metadata.zeta_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(metadata.time_config_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(metadata.twopf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(metadata.threepf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(metadata.data_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(metadata.zeta_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
 
         return(success);
 	    }
@@ -1332,6 +1182,9 @@ namespace transport
         metadata.zeta_unloads              += payload.get_zeta_unloads();
         metadata.zeta_evictions            += payload.get_zeta_evictions();
 	    }
+
+
+		// POSTINTEGRATION TASKS
 
 
     template <typename number>
@@ -1435,12 +1288,10 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr <postintegration_writer<number>>& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
-
-        bool success = true;
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -1451,110 +1302,38 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        output_metadata metadata;
+        integration_metadata i_metadata;  // unused
+        output_metadata      o_metadata;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
         boost::filesystem::path logdir_path  = writer->get_abs_logdir_path();
 
-        std::vector<boost::mpi::request> requests(this->world.size()-1);
-        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
+        {
+	        // journal_instrument will log time spent doing MPI when it goes out of scope
+	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
-        for(unsigned int i = 0; i < this->world.size()-1; i++)
-	        {
-            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_POSTINTEGRATION, payload);
-	        }
+	        std::vector<boost::mpi::request> requests(this->world.size()-1);
+	        MPI::new_postintegration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, tags);
 
-        // wait for all messages to be received
-        boost::mpi::wait_all(requests.begin(), requests.end());
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+	        for(unsigned int i = 0; i < this->world.size()-1; i++)
+		        {
+	            requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_POSTINTEGRATION, payload);
+		        }
 
-        // wait for workers to report their characteristics
-        this->set_up_workers(writer);
+	        // wait for all messages to be received
+	        boost::mpi::wait_all(requests.begin(), requests.end());
+	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+        }
 
-        // poll workers, receiving data until workers are exhausted
-		    bool sent_closedown = false;
-        while(!this->work_scheduler.all_inactive())
-	        {
-		        // send closedown instruction if no more work
-		        if(this->work_scheduler.finished() && !sent_closedown)
-			        {
-				        sent_closedown = true;
-				        this->close_down_workers(writer);
-			        }
+		    // set up aggregators
+		    integration_aggregator     i_agg;
+				postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2);
+		    derived_content_aggregator d_agg;
 
-		        // generate new work assignments if needed
-		        if(this->work_scheduler.assignable()) this->assign_work_to_workers(writer);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
-//            BOOST_LOG_SEV(writer->get_log(), base_writer::normal) <<  "++ Master polling for POSTINTEGRATION_DATA_READY messages";
-            // wait until a message is available from a worker
-            boost::mpi::status stat = this->world.probe();
-
-            switch(stat.tag())
-	            {
-                case MPI::POSTINTEGRATION_DATA_READY:
-	                {
-                    this->aggregate_postprocess(writer, stat.source(), metadata);
-                    break;
-	                }
-
-                case MPI::NEW_WORK_ACKNOWLEDGMENT:
-	                {
-                    MPI::work_acknowledgment_payload payload;
-                    this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
-                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
-
-                    break;
-	                }
-
-                case MPI::FINISHED_POSTINTEGRATION:
-	                {
-                    MPI::finished_postintegration_payload payload;
-                    this->world.recv(stat.source(), MPI::FINISHED_POSTINTEGRATION, payload);
-		                this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
-
-		                // mark this worker as unassigned, and update its mean time per work item
-		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
-                    this->update_output_metadata(payload, metadata);
-
-                    break;
-	                }
-
-                case MPI::POSTINTEGRATION_FAIL:
-	                {
-                    MPI::finished_postintegration_payload payload;
-                    this->world.recv(stat.source(), MPI::POSTINTEGRATION_FAIL, payload);
-                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
-
-		                // mark this worker as unassigned, and update its mean time per work item
-		                this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
-                    this->update_output_metadata(payload, metadata);
-
-                    success = false;
-                    break;
-	                }
-
-                case MPI::WORKER_CLOSE_DOWN:
-	                {
-		                this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
-		                this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
-		                BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
-		                break;
-	                }
-
-                default:
-	                {
-                    BOOST_LOG_SEV(writer->get_log(), base_writer::warning) << "++ Master received unexpected message " << stat.tag() << " waiting in the queue; discarding";
-		                this->world.recv(stat.source(), stat.tag());
-                    break;
-	                }
-	            };
-	        }
-
-        writer->set_metadata(metadata);
+        writer->set_metadata(o_metadata);
 
         wallclock_timer.stop();
         now = boost::posix_time::second_clock::universal_time();
@@ -1563,21 +1342,21 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(metadata.work_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(metadata.aggregation_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(metadata.db_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(o_metadata.aggregation_time);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(o_metadata.db_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << metadata.time_config_hits << ", unloads = " << metadata.time_config_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << metadata.twopf_kconfig_hits << ", unloads = " << metadata.twopf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << metadata.threepf_kconfig_hits << ", unloads = " << metadata.threepf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << metadata.data_hits << ", unloads = " << metadata.data_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << metadata.zeta_hits << ", unloads = " << metadata.zeta_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << o_metadata.zeta_hits << ", unloads = " << o_metadata.zeta_unloads;
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(metadata.time_config_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(metadata.twopf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(metadata.threepf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(metadata.data_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(metadata.zeta_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
 
         return(success);
 	    }
@@ -1615,6 +1394,9 @@ namespace transport
 	    }
 
 
+		// WORKER HANDLING
+
+
     template <typename number>
     void master_controller<number>::initialize_workers(void)
 	    {
@@ -1641,8 +1423,7 @@ namespace transport
 
 
 		template <typename number>
-		template <typename WriterObject>
-    void master_controller<number>::set_up_workers(WriterObject& writer)
+    void master_controller<number>::set_up_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
 		    // set up instrument to journal the MPI communication if needed
 		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
@@ -1662,13 +1443,13 @@ namespace transport
 					        {
 				            MPI::slave_information_payload payload;
 						        this->world.recv(stat.source(), MPI::INFORMATION_RESPONSE, payload);
-						        this->work_scheduler.template initialize_worker<number>(writer, this->worker_number(stat.source()), payload);
+						        this->work_scheduler.initialize_worker(log, this->worker_number(stat.source()), payload);
 						        break;
 					        }
 
 				        default:
 					        {
-						        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
+						        BOOST_LOG_SEV(log, base_writer::normal) << "!! Received unexpected MPI message " << stat.tag() << " from worker " << stat.source() << "; discarding";
 						        this->world.recv(stat.source(), stat.tag());
 						        break;
 					        }
@@ -1681,10 +1462,9 @@ namespace transport
 
 
 		template <typename number>
-		template <typename WriterObject>
-		void master_controller<number>::close_down_workers(WriterObject& writer)
+		void master_controller<number>::close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
-		    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Notifying workers of end-of-work";
+		    BOOST_LOG_SEV(log, base_writer::normal) << "++ Notifying workers of end-of-work";
 
 				for(unsigned int i = 0; i < this->world.size()-1; i++)
 					{
@@ -1694,8 +1474,7 @@ namespace transport
 
 
 		template <typename number>
-		template <typename WriterObject>
-		void master_controller<number>::assign_work_to_workers(WriterObject& writer)
+		void master_controller<number>::assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log)
 			{
 		    // set up instrument to journal the MPI communication if needed
 		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
@@ -1711,9 +1490,9 @@ namespace transport
 			    }
 
         // generate a list of work assignments
-        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(writer->get_log());
+        std::list<master_scheduler::work_assignment> work = this->work_scheduler.assign_work(log);
 
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
+        BOOST_LOG_SEV(log, base_writer::normal) << "++ Generating new work assignments for " << work.size() << " worker" << (work.size() > 1 ? "s" : "") << " (" << this->work_scheduler.get_queue_size() << " work items remain in queue)";
 
         // push assignments to workers
         std::vector<boost::mpi::request> msg_status(work.size());
@@ -1728,12 +1507,12 @@ namespace transport
 
 		        // mark this worker, and these work items, as assigned
             this->work_scheduler.mark_assigned(*t);
-		        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
+		        BOOST_LOG_SEV(log, base_writer::normal) << "++ Assigned " << t->get_items().size() << " work items to worker " << t->get_worker() << " [MPI rank=" << this->worker_rank(t->get_worker()) << "]";
 	        }
 
         // wait for all assignments to be received
         boost::mpi::wait_all(msg_status.begin(), msg_status.end());
-		    BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers accepted new assignments";
+		    BOOST_LOG_SEV(log, base_writer::normal) << "++ All workers accepted new assignments";
 			}
 
 
@@ -1752,6 +1531,174 @@ namespace transport
 
         // wait for all messages to be received, then exit ourselves
         boost::mpi::wait_all(requests.begin(), requests.end());
+	    }
+
+
+    template <typename number>
+    bool master_controller<number>::poll_workers(integration_aggregator i_agg, postintegration_aggregator p_agg, derived_content_aggregator d_agg,
+                                                 integration_metadata& i_metadata, output_metadata& o_metadata,
+                                                 boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
+                                                 slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+	    {
+		    bool success = true;
+
+        // wait for workers to report their characteristics
+        this->set_up_workers(log);
+
+        // poll workers, scattering work and aggregating the results until work items are exhausted
+        bool sent_closedown = false;
+        while(!this->work_scheduler.all_inactive())
+	        {
+            // send closedown instruction if no more work
+            if(this->work_scheduler.finished() && !sent_closedown)
+	            {
+                sent_closedown = true;
+                this->close_down_workers(log);
+	            }
+
+            // generate new work assignments if needed
+            if(this->work_scheduler.assignable()) this->assign_work_to_workers(log);
+
+            // wait until a message is available from a worker
+            boost::mpi::status stat = this->world.probe();
+
+            switch(stat.tag())
+	            {
+                case MPI::INTEGRATION_DATA_READY:
+	                {
+                    if(i_agg) i_agg(stat.source(), i_metadata);
+                    break;
+	                }
+
+                case MPI::DERIVED_CONTENT_READY:
+	                {
+		                if(d_agg)
+			                {
+		                    if(!d_agg(stat.source(), o_metadata)) success = false;
+			                }
+                    break;
+	                }
+
+                case MPI::POSTINTEGRATION_DATA_READY:
+	                {
+                    if(p_agg) p_agg(stat.source(), o_metadata);
+                    break;
+	                }
+
+                case MPI::NEW_WORK_ACKNOWLEDGMENT:
+	                {
+                    MPI::work_acknowledgment_payload payload;
+                    this->world.recv(stat.source(), MPI::NEW_WORK_ACKNOWLEDGMENT, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), begin_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising receipt of work assignment at time " << boost::posix_time::to_simple_string(payload.get_timestamp());
+
+                    break;
+	                }
+
+                case MPI::FINISHED_INTEGRATION:
+	                {
+                    MPI::finished_integration_payload payload;
+                    this->world.recv(stat.source(), MPI::FINISHED_INTEGRATION, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_wallclock_time());
+
+                    // mark this worker as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
+                    this->update_integration_metadata(payload, i_metadata);
+
+                    break;
+	                }
+
+                case MPI::INTEGRATION_FAIL:
+	                {
+                    MPI::finished_integration_payload payload;
+                    this->world.recv(stat.source(), MPI::INTEGRATION_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
+
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_integration_time(), payload.get_num_integrations());
+                    this->update_integration_metadata(payload, i_metadata);
+
+                    success = false;
+                    break;
+	                }
+
+                case MPI::FINISHED_DERIVED_CONTENT:
+	                {
+                    MPI::finished_derived_payload payload;
+                    this->world.recv(stat.source(), MPI::FINISHED_DERIVED_CONTENT, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in CPU time " << format_time(payload.get_cpu_time());
+
+                    // mark this scheduler as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
+                    this->update_output_metadata(payload, o_metadata);
+
+                    break;
+	                }
+
+                case MPI::DERIVED_CONTENT_FAIL:
+	                {
+                    MPI::finished_derived_payload payload;
+                    this->world.recv(stat.source(), MPI::DERIVED_CONTENT_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+
+                    // mark this scheduler as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
+                    this->update_output_metadata(payload, o_metadata);
+
+                    success = false;
+                    break;
+	                }
+
+                case MPI::FINISHED_POSTINTEGRATION:
+	                {
+                    MPI::finished_postintegration_payload payload;
+                    this->world.recv(stat.source(), MPI::FINISHED_POSTINTEGRATION, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising finished work assignment in wallclock time " << format_time(payload.get_cpu_time());
+
+                    // mark this worker as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
+                    this->update_output_metadata(payload, o_metadata);
+
+                    break;
+	                }
+
+                case MPI::POSTINTEGRATION_FAIL:
+	                {
+                    MPI::finished_postintegration_payload payload;
+                    this->world.recv(stat.source(), MPI::POSTINTEGRATION_FAIL, payload);
+                    this->journal.add_entry(slave_work_event(this->worker_number(stat.source()), end_label, payload.get_timestamp()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+
+                    // mark this worker as unassigned, and update its mean time per work item
+                    this->work_scheduler.mark_unassigned(this->worker_number(stat.source()), payload.get_processing_time(), payload.get_items_processed());
+                    this->update_output_metadata(payload, o_metadata);
+
+                    success = false;
+                    break;
+	                }
+
+                case MPI::WORKER_CLOSE_DOWN:
+	                {
+                    this->world.recv(stat.source(), MPI::WORKER_CLOSE_DOWN);
+                    this->work_scheduler.mark_inactive(this->worker_number(stat.source()));
+                    BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat.source() << " advising close-down after end-of-work";
+                    break;
+	                }
+
+                default:
+	                {
+                    BOOST_LOG_SEV(log, base_writer::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue; discarding";
+                    this->world.recv(stat.source(), stat.tag());
+                    break;
+	                }
+	            };
+	        }
+
+        return(success);
 	    }
 
 	}   // namespace transport
