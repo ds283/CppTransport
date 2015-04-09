@@ -674,7 +674,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), m->get_backend(), container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
+        twopf_batcher<number> batcher(this->batcher_capacity, m, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -711,7 +711,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m->get_N_fields(), m->get_backend(), container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
+        threepf_batcher<number> batcher(this->batcher_capacity, m, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 
