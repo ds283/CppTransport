@@ -660,6 +660,7 @@ namespace transport
 
             if(this->queue.size() == 0 && !this->finished)
               {
+                result = true;
                 this->finished = true;
 
                 boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
