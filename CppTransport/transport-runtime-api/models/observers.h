@@ -240,22 +240,21 @@ namespace transport
       {
         if(this->store_time_step())
           {
-            if(this->k_config.store_background)
-              {
-                std::vector<number> bg_x(this->backg_size);
-
-                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
-                this->batcher.push_backg(this->store_serial_number(), this->k_config.serial, bg_x);
-              }
+            std::vector<number> bg_x(this->backg_size);
+            for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
 
             std::vector<number> tensor_tpf_x(this->tensor_size);
             for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[this->tensor_start + i];
-            this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, tensor_tpf_x);
 
             std::vector<number> tpf_x(this->twopf_size);
-
             for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_start + i];
-            this->batcher.push_twopf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, tpf_x);
+
+            if(this->k_config.store_background)
+              {
+                this->batcher.push_backg(this->store_serial_number(), this->k_config.serial, bg_x);
+              }
+            this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, tensor_tpf_x);
+            this->batcher.push_twopf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, tpf_x, bg_x);
           }
 
         this->step();
@@ -364,62 +363,63 @@ namespace transport
       {
         if(this->store_time_step())
           {
+            std::vector<number> bg_x(this->backg_size);
+            for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
+
+            std::vector<number> tensor_tpf_x1(this->tensor_size);
+            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x1[i] = x[this->tensor_k1_start + i];
+
+            std::vector<number> tpf_x1_re(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_re[i] = x[this->twopf_re_k1_start + i];
+            std::vector<number> tpf_x1_im(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_im[i] = x[this->twopf_im_k1_start + i];
+
+            std::vector<number> tensor_tpf_x2(this->tensor_size);
+            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x2[i] = x[this->tensor_k2_start + i];
+
+            std::vector<number> tpf_x2_re(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_re[i] = x[this->twopf_re_k2_start + i];
+            std::vector<number> tpf_x2_im(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_im[i] = x[this->twopf_im_k2_start + i];
+
+            std::vector<number> tensor_tpf_x3(this->tensor_size);
+            for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x3[i] = x[this->tensor_k3_start + i];
+
+            std::vector<number> tpf_x3_re(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_re[i] = x[this->twopf_re_k3_start + i];
+            std::vector<number> tpf_x3_im(this->twopf_size);
+            for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_im[i] = x[this->twopf_im_k3_start + i];
+
+            std::vector<number> thpf_x(this->threepf_size);
+            for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
+
             if(this->k_config.store_background)
               {
-                std::vector<number> bg_x(this->backg_size);
-
-                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[this->backg_start + i];
                 this->batcher.push_backg(this->store_serial_number(), this->k_config.serial, bg_x);
               }
 
             if(this->k_config.store_twopf_k1)
               {
-                std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[this->tensor_k1_start + i];
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tensor_tpf_x);
-
-                std::vector<number> tpf_x(this->twopf_size);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k1_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k1_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tensor_tpf_x1);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x1_re, bg_x, threepf_batcher<number>::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[0], this->k_config.serial, tpf_x1_im, bg_x, threepf_batcher<number>::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k2)
               {
-                std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[this->tensor_k2_start + i];
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tensor_tpf_x);
-
-                std::vector<number> tpf_x(this->twopf_size);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k2_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k2_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tensor_tpf_x2);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x2_re, bg_x, threepf_batcher<number>::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[1], this->k_config.serial, tpf_x2_im, bg_x, threepf_batcher<number>::imag_twopf);
               }
 
             if(this->k_config.store_twopf_k3)
               {
-                std::vector<number> tensor_tpf_x(this->tensor_size);
-                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[this->tensor_k3_start + i];
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tensor_tpf_x);
-
-                std::vector<number> tpf_x(this->twopf_size);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_re_k3_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[this->twopf_im_k3_start + i];
-                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tensor_tpf_x3);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x3_re, bg_x, threepf_batcher<number>::real_twopf);
+                this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x3_im, bg_x, threepf_batcher<number>::imag_twopf);
               }
 
-            std::vector<number> thpf_x(this->threepf_size);
-            for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[this->threepf_start + i];
-            this->batcher.push_threepf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, thpf_x);
+            this->batcher.push_threepf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
           }
 
         this->step();
@@ -513,22 +513,21 @@ namespace transport
             // loop through all k-configurations
             for(unsigned int c = 0; c < n; c++)
               {
-                if(this->work_list[c].store_background)
-                  {
-                    std::vector<number> bg_x(this->backg_size);
-
-                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
-                    this->batcher.push_backg(this->store_serial_number(), this->work_list[c].serial, bg_x);
-                  }
+                std::vector<number> bg_x(this->backg_size);
+                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
 
                 std::vector<number> tensor_tpf_x(this->tensor_size);
                 for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[(this->tensor_start + i)*n + c];
-                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, tensor_tpf_x);
 
                 std::vector<number> tpf_x(this->twopf_size);
-
                 for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_start + i)*n + c];
-                this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, tpf_x);
+
+                if(this->work_list[c].store_background)
+                  {
+                    this->batcher.push_backg(this->store_serial_number(), this->work_list[c].serial, bg_x);
+                  }
+                this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, tensor_tpf_x);
+                this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, tpf_x, bg_x);
               }
           }
 
@@ -647,65 +646,63 @@ namespace transport
             // loop through all k-configurations
             for(unsigned int c = 0; c < n; c++)
               {
+                std::vector<number> bg_x(this->backg_size);
+                for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
+
+                std::vector<number> tensor_tpf_x1(this->tensor_size);
+                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x1[i] = x[(this->tensor_k1_start + i)*n + c];
+
+                std::vector<number> tpf_x1_re(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_re[i] = x[(this->twopf_re_k1_start + i)*n + c];
+                std::vector<number> tpf_x1_im(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x1_im[i] = x[(this->twopf_im_k1_start + i)*n + c];
+
+                std::vector<number> tensor_tpf_x2(this->tensor_size);
+                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x2[i] = x[(this->tensor_k2_start + i)*n + c];
+
+                std::vector<number> tpf_x2_re(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_re[i] = x[(this->twopf_re_k2_start + i)*n + c];
+                std::vector<number> tpf_x2_im(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x2_im[i] = x[(this->twopf_im_k2_start + i)*n + c];
+
+                std::vector<number> tensor_tpf_x3(this->tensor_size);
+                for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x3[i] = x[(this->tensor_k3_start + i)*n + c];
+
+                std::vector<number> tpf_x3_re(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_re[i] = x[(this->twopf_re_k3_start + i)*n + c];
+                std::vector<number> tpf_x3_im(this->twopf_size);
+                for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x3_im[i] = x[(this->twopf_im_k3_start + i)*n + c];
+
+                std::vector<number> thpf_x(this->threepf_size);
+                for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
+
                 if(this->work_list[c].store_background)
                   {
-                    std::vector<number> bg_x(this->backg_size);
-
-                    for(unsigned int i = 0; i < this->backg_size; i++) bg_x[i] = x[(this->backg_start + i)*n + c];
                     this->batcher.push_backg(this->store_serial_number(), this->work_list[c].serial, bg_x);
                   }
 
                 if(this->work_list[c].store_twopf_k1)
                   {
-                    std::vector<number> tensor_tpf_x(this->tensor_size);
-
-                    for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[(this->tensor_k1_start + i)*n + c];
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tensor_tpf_x);
-
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k1_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tensor_tpf_x1);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x1_re, bg_x, threepf_batcher<number>::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[0], this->work_list[c].serial, tpf_x1_im, bg_x, threepf_batcher<number>::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k2)
                   {
-                    std::vector<number> tensor_tpf_x(this->tensor_size);
-
-                    for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[(this->tensor_k2_start + i)*n + c];
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tensor_tpf_x);
-
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k2_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tensor_tpf_x2);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x2_re, bg_x, threepf_batcher<number>::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[1], this->work_list[c].serial, tpf_x2_im, bg_x, threepf_batcher<number>::imag_twopf);
                   }
 
                 if(this->work_list[c].store_twopf_k3)
                   {
-                    std::vector<number> tensor_tpf_x(this->tensor_size);
-
-                    for(unsigned int i = 0; i < this->tensor_size; i++) tensor_tpf_x[i] = x[(this->tensor_k2_start + i)*n + c];
-                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tensor_tpf_x);
-
-                    std::vector<number> tpf_x(this->twopf_size);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_re_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, threepf_batcher<number>::real_twopf);
-
-                    for(unsigned int i = 0; i < this->twopf_size; i++) tpf_x[i] = x[(this->twopf_im_k3_start + i)*n + c];
-                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x, threepf_batcher<number>::imag_twopf);
+                    this->batcher.push_tensor_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tensor_tpf_x3);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x3_re, bg_x, threepf_batcher<number>::real_twopf);
+                    this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x3_im, bg_x, threepf_batcher<number>::imag_twopf);
                   }
 
-                std::vector<number> thpf_x(this->threepf_size);
-                for(unsigned int i = 0; i < this->threepf_size; i++) thpf_x[i] = x[(this->threepf_start + i)*n + c];
-                this->batcher.push_threepf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, thpf_x);
+                this->batcher.push_threepf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
               }
           }
 

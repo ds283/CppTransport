@@ -171,6 +171,7 @@ namespace transport
 
         // OTHER INTERNAL DATA
 
+		    //! pointer to parent model
         model<number>* mdl;
 
         //! Cache number of fields associated with this integration
@@ -248,7 +249,7 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& tpf);
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
@@ -367,9 +368,12 @@ namespace transport
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, twopf_type t = real_twopf);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& tpf, twopf_type t = real_twopf);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+        void push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values,
+                          const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
+                          const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
+                          const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
@@ -604,7 +608,7 @@ namespace transport
 
     template <typename number>
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                           const std::vector<number>& values)
+                                           const std::vector<number>& values, const std::vector<number>& tpf)
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
@@ -749,7 +753,7 @@ namespace transport
 
     template <typename number>
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                             const std::vector<number>& values, twopf_type t)
+                                             const std::vector<number>& values, const std::vector<number>& tpf, twopf_type t)
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
@@ -769,7 +773,10 @@ namespace transport
 
     template <typename number>
     void threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                               const std::vector<number>& values)
+                                               const std::vector<number>& values,
+                                               const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
+                                               const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
+                                               const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_THREEPF);
 
