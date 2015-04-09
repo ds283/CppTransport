@@ -12,6 +12,7 @@
 #include <functional>
 
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
+#include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
 
 
@@ -85,30 +86,23 @@ namespace transport
       public:
 
         //! Add integration details
-        void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching);
 
         //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
-        void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement);
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement);
 
         //! Report a failed integration
-        void report_integration_failure();
+        virtual void report_integration_failure();
 
         //! Report an integration which required mesh refinement
         void report_refinement();
 
 
         //! Query whether any integrations failed
-        bool integrations_failed() const
-	        {
-            return (this->failures > 0);
-	        }
-
+        bool integrations_failed() const { return (this->failures > 0); }
 
         //! Query how many refinements occurred
-        unsigned int number_refinements() const
-	        {
-            return (this->refinements);
-	        }
+        unsigned int number_refinements() const { return (this->refinements); }
 
 
         //! Prepare for new work assignment
@@ -123,52 +117,25 @@ namespace transport
       public:
 
         //! Get aggregate integration time
-        boost::timer::nanosecond_type get_integration_time() const
-	        {
-            return (this->integration_time);
-	        }
-
+        boost::timer::nanosecond_type get_integration_time() const { return (this->integration_time); }
 
         //! Get longest integration time
-        boost::timer::nanosecond_type get_max_integration_time() const
-	        {
-            return (this->max_integration_time);
-	        }
-
-
+        boost::timer::nanosecond_type get_max_integration_time() const { return (this->max_integration_time); }
+        
         //! Get shortest integration time
-        boost::timer::nanosecond_type get_min_integration_time() const
-	        {
-            return (this->min_integration_time);
-	        }
-
+        boost::timer::nanosecond_type get_min_integration_time() const  { return (this->min_integration_time); }
 
         //! Get aggegrate batching time
-        boost::timer::nanosecond_type get_batching_time() const
-	        {
-            return (this->batching_time);
-	        }
-
+        boost::timer::nanosecond_type get_batching_time() const { return (this->batching_time); }
 
         //! Get longest batching time
-        boost::timer::nanosecond_type get_max_batching_time() const
-	        {
-            return (this->max_batching_time);
-	        }
-
+        boost::timer::nanosecond_type get_max_batching_time() const { return (this->max_batching_time); }
 
         //! Get shortest batching time
-        boost::timer::nanosecond_type get_min_batching_time() const
-	        {
-            return (this->min_batching_time);
-	        }
-
+        boost::timer::nanosecond_type get_min_batching_time() const { return (this->min_batching_time); }
 
         //! Get total number of reported integrations
-        unsigned int get_reported_integrations() const
-	        {
-            return (this->num_integrations);
-	        }
+        unsigned int get_reported_integrations() const { return (this->num_integrations); }
 
 
         // PUSH BACKGROUND
@@ -265,6 +232,8 @@ namespace transport
 	        };
 
 
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
 
         template <typename handle_type>
@@ -274,11 +243,49 @@ namespace transport
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                       handle_type h, unsigned int wn, unsigned int wg, bool s);
 
+
+        // BATCH, UNBATCH
+
+      public:
+
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
         virtual void unbatch(unsigned int source_serial) override;
+
+
+        // INTEGRATION MANAGEMENT
+
+      public:
+
+        //! Add integration details
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
+
+        //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+
+        //! Report a failed integration
+        virtual void report_integration_failure() override;
+
+
+        // FLUSH INTERFACE
+
+      public:
+
+        //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present
+        virtual void set_flush_mode(generic_batcher::flush_mode f) override { this->generic_batcher::set_flush_mode(f); if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f); }
+
+
+        // PAIR
+
+      public:
+
+        //! Pair with a zeta batcher. Remember to push our flush setting to it.
+        void pair(zeta_twopf_batcher<number>* batcher) { assert(batcher != nullptr); this->paired_batcher = batcher; this->paired_batcher->set_flush_mode(this->get_flush_mode()); }
+
+
+        // INTERNAL API
 
       protected:
 
@@ -286,14 +293,27 @@ namespace transport
 
         virtual void flush(generic_batcher::replacement_action action) override;
 
+
+        // INTERNAL DATA
+
       protected:
 
+        //! writer group
         const writer_group writers;
 
+        //! twopf cache
         std::vector< typename integration_items<number>::twopf_item >        twopf_batch;
+
+        //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
 
-	    };
+
+        // PAIRING
+
+        //! Paired zeta batcher, if present
+        zeta_twopf_batcher<number>* paired_batcher;
+
+      };
 
 
 		template <typename number>
@@ -314,10 +334,12 @@ namespace transport
             typename integration_writers<number>::host_info_writer    host_info;
 	        };
 
+        typedef enum { real_twopf, imag_twopf } twopf_type;
+
+
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
-
-        typedef enum { real_twopf, imag_twopf } twopf_type;
 
         template <typename handle_type>
         threepf_batcher(unsigned int cap, unsigned int Nf, const std::string& b,
@@ -325,6 +347,25 @@ namespace transport
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                         handle_type h, unsigned int wn, unsigned int wg, bool s);
+
+
+        // INTEGRATION MANAGEMENT
+
+      public:
+
+        //! Add integration details
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching) override;
+
+        //! Add integration details, plus report a k-configuration serial number and mesh refinement level for storing per-configuration statistics
+        virtual void report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement) override;
+
+        //! Report a failed integration
+        virtual void report_integration_failure() override;
+
+
+        // BATCH, UNBATCH
+
+      public:
 
         void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, twopf_type t = real_twopf);
 
@@ -334,20 +375,56 @@ namespace transport
 
         virtual void unbatch(unsigned int source_serial) override;
 
+
+        // FLUSH INTERFACE
+
+      public:
+
+        //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present
+        virtual void set_flush_mode(generic_batcher::flush_mode f) override { this->generic_batcher::set_flush_mode(f); if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f); }
+
+
+        // PAIR
+
+      public:
+
+        //! Pair with a zeta batcher. Remember to push our flush setting to it.
+        void pair(zeta_threepf_batcher<number>* batcher) { assert(batcher != nullptr); this->paired_batcher = batcher; this->paired_batcher->set_flush_mode(this->get_flush_mode()); }
+
+
+        // INTERNAL API
+
       protected:
 
         virtual size_t storage() const override;
 
         virtual void flush(generic_batcher::replacement_action action) override;
 
+
+        // INTERNAL DATA
+
       protected:
 
+        //! writer group
         const writer_group writers;
 
+        //! real twopf cache
         std::vector< typename integration_items<number>::twopf_item >        twopf_re_batch;
+
+        //! imaginary twopf cache
         std::vector< typename integration_items<number>::twopf_item >        twopf_im_batch;
+
+        //! tensor twopf cache
         std::vector< typename integration_items<number>::tensor_twopf_item > tensor_twopf_batch;
+
+        //! threeof cache
         std::vector< typename integration_items<number>::threepf_item >      threepf_batch;
+
+
+        // PAIRING
+
+        //! Paired zeta batcher, if present
+        zeta_threepf_batcher<number>* paired_batcher;
 
 	    };
 
@@ -520,7 +597,8 @@ namespace transport
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                          handle_type h, unsigned int wn, unsigned int wg, bool s)
 	    : integration_batcher<number>(cap, Nf, b, cp, lp, d, r, h, wn, wg, s),
-	      writers(w)
+	      writers(w),
+        paired_batcher(nullptr)
 	    {
 	    }
 
@@ -610,24 +688,48 @@ namespace transport
         this->backg_batch.erase(std::remove_if(this->backg_batch.begin(), this->backg_batch.end(),
                                                [ & ](const typename integration_items<number>::backg_item& item) -> bool
                                                {
-                                                 return (item.source_serial == source_serial);
+                                                 return(item.source_serial == source_serial);
                                                }),
                                 this->backg_batch.end());
 
         this->twopf_batch.erase(std::remove_if(this->twopf_batch.begin(), this->twopf_batch.end(),
                                                [ & ](const typename integration_items<number>::twopf_item& item) -> bool
                                                {
-                                                 return (item.source_serial == source_serial);
+                                                 return(item.source_serial == source_serial);
                                                }),
                                 this->twopf_batch.end());
 
         this->tensor_twopf_batch.erase(std::remove_if(this->tensor_twopf_batch.begin(), this->tensor_twopf_batch.end(),
                                                       [ & ](const typename integration_items<number>::tensor_twopf_item& item) -> bool
                                                       {
-                                                        return (item.source_serial == source_serial);
+                                                        return(item.source_serial == source_serial);
                                                       }),
                                        this->tensor_twopf_batch.end());
+
+        if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
+
+
+    template <typename number>
+    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
+      {
+        this->integration_batcher<number>::report_integration_success(integration, batching);
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
+      }
+
+    template <typename number>
+    void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+      {
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
+      }
+
+    template <typename number>
+    void twopf_batcher<number>::report_integration_failure()
+      {
+        this->integration_batcher<number>::report_integration_failure();
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
+      }
 
 
     // THREEPF BATCHER METHODS
@@ -641,7 +743,8 @@ namespace transport
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                              handle_type h, unsigned int wn, unsigned int wg, bool s)
 	    : integration_batcher<number>(cap, Nf, b, cp, lp, d, r, h, wn, wg, s),
-	      writers(w)
+	      writers(w),
+        paired_batcher(nullptr)
 	    {
 	    }
 
@@ -787,7 +890,31 @@ namespace transport
                                                    return (item.source_serial == source_serial);
                                                  }),
                                   this->threepf_batch.end());
+
+        if(this->paired_batcher != nullptr) this->paired_batcher->unbatch(source_serial);
 	    }
+
+
+    template <typename number>
+    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching)
+      {
+        this->integration_batcher<number>::report_integration_success(integration, batching);
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
+      }
+
+    template <typename number>
+    void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
+      {
+        this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
+      }
+
+    template <typename number>
+    void threepf_batcher<number>::report_integration_failure()
+      {
+        this->integration_batcher<number>::report_integration_failure();
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
+      }
 
 
 	}   // namespace transport

@@ -300,7 +300,7 @@ namespace transport
 		  public:
 
 				//! get pairing status
-				bool get_paired() const { return(this->paired); }
+				bool is_paired() const { return(this->paired); }
 
 				//! set pairing status
 				void set_paired(bool g) { this->paired = g; }
@@ -386,7 +386,7 @@ namespace transport
 		  public:
 
 		    //! get pairing status
-		    bool get_paired() const { return(this->paired); }
+		    bool is_paired() const { return(this->paired); }
 
 		    //! set pairing status
 		    void set_paired(bool g) { this->paired = g; }

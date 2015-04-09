@@ -126,8 +126,7 @@ namespace transport
 
 		    //! Slave node: process an integration queue
 		    template <typename TaskObject, typename BatchObject>
-		    void schedule_integration(TaskObject* tk, model<number>* m, const MPI::new_integration_payload& payload,
-		                              BatchObject& batcher, unsigned int state_size);
+		    void schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size);
 
 		    //! Push a temporary container to the master process
 		    void push_temp_container(generic_batcher* batcher, unsigned int message, std::string log_message);
@@ -410,15 +409,11 @@ namespace transport
 
                 case task_record<number>::output:
 	                {
-//                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_OUTPUT << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
                 case task_record<number>::postintegration:
 	                {
-//                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
@@ -478,7 +473,12 @@ namespace transport
             // construct a batcher to hold the output of the integration
             twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), 0, m, dispatcher);
 
-            this->schedule_integration(tka, m, payload, batcher, m->backend_twopf_state_size());
+            // write log header
+            boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
+
+            this->schedule_integration(tka, m, batcher, m->backend_twopf_state_size());
 	        }
         else if((tkb = dynamic_cast<threepf_task<number>*>(tk)) != nullptr)
 	        {
@@ -490,7 +490,12 @@ namespace transport
             threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
                                                                                             this->get_rank(), 0, m, dispatcher);
 
-            this->schedule_integration(tkb, m, payload, batcher, m->backend_threepf_state_size());
+            // write log header
+            boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
+
+            this->schedule_integration(tkb, m, batcher, m->backend_threepf_state_size());
 	        }
         else
 	        {
@@ -503,18 +508,12 @@ namespace transport
 
     template <typename number>
     template <typename TaskObject, typename BatchObject>
-    void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, const MPI::new_integration_payload& payload,
-                                                        BatchObject& batcher, unsigned int state_size)
+    void slave_controller<number>::schedule_integration(TaskObject* tk, model<number>* m, BatchObject& batcher, unsigned int state_size)
 	    {
         // dispatch integration to the underlying model
 
         assert(tk != nullptr);  // should be guaranteed
         assert(m != nullptr);   // should be guaranteed
-
-        // write log header
-        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
 
 		    bool complete = false;
 		    while(!complete)
@@ -566,7 +565,7 @@ namespace transport
 				            timer.stop();
 
 				            // notify master process that all work has been finished (temporary containers will be deleted by the master node)
-				            now = boost::posix_time::second_clock::universal_time();
+                    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
 				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
@@ -592,7 +591,7 @@ namespace transport
 				            batcher.close();
 
 						        // send close-down acknowledgment to master
-				            now = boost::posix_time::second_clock::universal_time();
+                    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 						        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending WORKER_CLOSE_DOWN to master | close down at " << boost::posix_time::to_simple_string(now);
 						        this->world.isend(MPI::RANK_MASTER, MPI::WORKER_CLOSE_DOWN);
 
@@ -628,8 +627,6 @@ namespace transport
 	            {
                 case task_record<number>::integration:
 	                {
-//                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_INTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());     // RECORD_NOT_FOUND expects task name in message
 	                }
 
@@ -647,8 +644,6 @@ namespace transport
 
                 case task_record<number>::postintegration:
 	                {
-//                    std::ostringstream msg;
-//                    msg << __CPP_TRANSPORT_REPO_TASK_IS_POSTINTEGRATION << " '" << payload.get_task_name() << "'";
                     throw runtime_exception(runtime_exception::RECORD_NOT_FOUND, payload.get_task_name());    // RECORD_NOT_FOUND expects task name in message
 	                }
 
@@ -953,14 +948,44 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-            // construct a callback for the integrator to push new batches to the master
+            // construct a callback for the postintegrator to push new batches to the master
             generic_batcher::container_dispatch_function dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
                                                                                 MPI::POSTINTEGRATION_DATA_READY, std::string("POSTINTEGRATION_DATA_READY"));
 
-            // construct batcher to hold output
+            // construct batcher to hold postintegration output
             zeta_twopf_batcher<number> batcher = this->data_mgr->create_temp_zeta_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
 
-            this->schedule_postintegration(z2pf, ptk, payload, batcher);
+            // is this 2pf task paired?
+            if(z2pf->is_paired())
+              {
+                model<number>* m = ptk->get_model();
+
+                // also need a callback for the paired integrator
+                generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                      MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+
+                // construct a batcher to hold integration output
+                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
+
+                // pair batchers
+                i_batcher.pair(&batcher);
+
+                // write log header
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::normal) << *ptk;
+
+                this->schedule_integration(ptk, m, i_batcher, m->backend_twopf_state_size());
+              }
+            else
+              {
+                // write log header
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
+
+                this->schedule_postintegration(z2pf, ptk, payload, batcher);
+              }
 	        }
         else if((z3pf = dynamic_cast<zeta_threepf_task<number>*>(tk)) != nullptr)
 	        {
@@ -982,7 +1007,36 @@ namespace transport
             // construct batcher to hold output
             zeta_threepf_batcher<number> batcher = this->data_mgr->create_temp_zeta_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), dispatcher);
 
-            this->schedule_postintegration(z3pf, ptk, payload, batcher);
+            if(z3pf->is_paired())
+              {
+                model<number>* m = ptk->get_model();
+
+                // also need a callback for the paired integrator
+                generic_batcher::container_dispatch_function i_dispatcher = std::bind(&slave_controller<number>::push_temp_container, this, std::placeholders::_1,
+                                                                                      MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
+
+                // construct a batcher to hold integration output
+                threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
+
+                // pair batchers
+                i_batcher.pair(&batcher);
+
+                // write log header
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+                BOOST_LOG_SEV(i_batcher.get_log(), generic_batcher::normal) << *ptk;
+
+                this->schedule_integration(ptk, m, i_batcher, m->backend_threepf_state_size());
+              }
+            else
+              {
+                // write log header
+                boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << *tk;
+
+                this->schedule_postintegration(z3pf, ptk, payload, batcher);
+              }
 	        }
         else if((zfNL = dynamic_cast<fNL_task<number>*>(tk)) != nullptr)
 	        {

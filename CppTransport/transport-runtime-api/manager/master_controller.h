@@ -63,9 +63,6 @@
 #define __CPP_TRANSPORT_NOUN_PRODUCT             "product"
 #define __CPP_TRANSPORT_NOUN_CONTENT             "content"
 
-// name for worker devices
-#define __CPP_TRANSPORT_WORKER_NAME              "mpi-worker-"
-
 
 
 namespace transport
@@ -94,7 +91,7 @@ namespace transport
 				typedef std::function<void(MPI::data_ready_payload&,integration_metadata&)> integration_aggregator;
 
 				//! Postintegration-task aggregation handler
-				typedef std::function<void(MPI::data_ready_payload&,output_metadata&)> postintegration_agg;
+				typedef std::function<void(MPI::data_ready_payload&,output_metadata&)> postintegration_aggregator;
 
 				//! Output-task aggregation handler
 				typedef std::function<bool(MPI::content_ready_payload&,output_metadata&)> derived_content_aggregator;
@@ -242,8 +239,8 @@ namespace transport
 				void close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
 
 				//! Master node: main loop: poll workers for events
-				bool poll_workers(integration_aggregator int_agg, postintegration_agg post_agg, derived_content_aggregator derived_agg,
-				                  integration_metadata&int_metadata, output_metadata&out_metadata,
+				bool poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
+				                  integration_metadata& int_metadata, output_metadata& out_metadata,
 				                  boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
 				                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
@@ -269,7 +266,8 @@ namespace transport
 
 		    //! Master node: Pass new integration task to the workers
 		    bool integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
-		                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+                                         integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, MPI::data_ready_payload& payload, integration_metadata &metadata);
@@ -286,13 +284,21 @@ namespace transport
 		    void dispatch_postintegration_task(postintegration_task_record<number>* rec, const std::list<std::string>& tags);
 
 		    //! Master node: Dispatch a postintegration queue to the worker processes
-		    template <typename TaskObject, typename ParentTaskObject>
-		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
+		    template <typename TaskObject>
+		    void schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
 		                                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
-		    //! Master node: Pass new postintegration task to workers
+        //! Master node: Dispatch a paired postintegration queue to the worker processes
+        template <typename TaskObject, typename ParentTaskObject>
+        void schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk,
+                                             ParentTaskObject* ptk, const std::list<std::string>& tags,
+                                             slave_work_event::event_type begin_label,
+                                             slave_work_event::event_type end_label);
+
+        //! Master node: Pass new postintegration task to workers
 		    bool postintegration_task_to_workers(std::shared_ptr <postintegration_writer<number>>& writer, const std::list<std::string>& tags,
-		                                         slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+                                             integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                             slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, MPI::data_ready_payload& payload, output_metadata& metadata);
@@ -307,7 +313,8 @@ namespace transport
 
 		    //! Master node: Pass new output task to the workers
 		    bool output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
-		                                slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+                                    integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: respond to a notification of new derived content
 		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, MPI::content_ready_payload& payload, output_metadata& metadata);
@@ -890,9 +897,19 @@ namespace transport
         // write the various tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
+        // set up aggregators
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2);
+        postintegration_aggregator p_agg;
+        derived_content_aggregator d_agg;
+
+        // write log header
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW INTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+
         // instruct workers to carry out the calculation
         // this call returns when all workers have signalled that their work is done
-        bool success = this->integration_task_to_workers(writer, begin_label, end_label);
+        bool success = this->integration_task_to_workers(writer, i_agg, p_agg, d_agg, begin_label, end_label);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -904,14 +921,10 @@ namespace transport
 
     template <typename number>
     bool master_controller<number>::integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
+                                                                integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                                 slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
-
-        // write log header
-        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW INTEGRATION TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *(writer->get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
@@ -941,18 +954,13 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
         }
 
-		    // set up aggregators
-		    integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, writer, std::placeholders::_1, std::placeholders::_2);
-		    postintegration_agg p_agg;
-		    derived_content_aggregator d_agg;
-
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
         // push task metadata we have collected to the writer
         writer->set_metadata(i_metadata);
 
         wallclock_timer.stop();
-        now = boost::posix_time::second_clock::universal_time();
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
@@ -1050,8 +1058,18 @@ namespace transport
         // set up the writer for us
         this->data_mgr->initialize_writer(writer);
 
+        // set up aggregators
+        integration_aggregator     i_agg;
+        postintegration_aggregator p_agg;
+        derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2);
+
+        // write log header
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW OUTPUT TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+
         // instruct workers to carry out their tasks
-        bool success = this->output_task_to_workers(writer, tags, slave_work_event::begin_output_assignment, slave_work_event::end_output_assignment);
+        bool success = this->output_task_to_workers(writer, tags, i_agg, p_agg, d_agg, slave_work_event::begin_output_assignment, slave_work_event::end_output_assignment);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -1063,14 +1081,10 @@ namespace transport
 
     template <typename number>
     bool master_controller<number>::output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
+                                                           integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(this->repo != nullptr);
-
-        // write log header
-        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW OUTPUT TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *(writer->get_record()->get_task());
 
         // set up a timer to keep track of the total wallclock time used in this task
         boost::timer::cpu_timer wallclock_timer;
@@ -1100,17 +1114,12 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
-		    // set up aggregators
-		    integration_aggregator     i_agg;
-		    postintegration_agg        p_agg;
-		    derived_content_aggregator d_agg = std::bind(&master_controller<number>::aggregate_content, this, writer, std::placeholders::_1, std::placeholders::_2);
-
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
         writer->set_metadata(o_metadata);
 
         wallclock_timer.stop();
-        now = boost::posix_time::second_clock::universal_time();
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
@@ -1210,9 +1219,20 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-		        this->work_scheduler.set_state_size(sizeof(number));
-		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, z2pf, ptk, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
+            // is this 2pf task paired?
+            if(z2pf->is_paired())
+              {
+                model<number>* m = ptk->get_model();
+                this->work_scheduler.set_state_size(m->backend_twopf_state_size());
+                this->work_scheduler.prepare_queue(*ptk);
+                this->schedule_paired_postintegration(rec, z2pf, ptk, tags, slave_work_event::begin_twopf_assignment, slave_work_event::end_twopf_assignment);
+              }
+            else
+              {
+                this->work_scheduler.set_state_size(sizeof(number));
+                this->work_scheduler.prepare_queue(*ptk);
+                this->schedule_postintegration(rec, z2pf, tags, slave_work_event::begin_zeta_twopf_assignment, slave_work_event::end_zeta_twopf_assignment);
+              }
 	        }
         else if((z3pf = dynamic_cast< zeta_threepf_task<number>* >(tk)) != nullptr)
 	        {
@@ -1226,9 +1246,20 @@ namespace transport
                 throw runtime_exception(runtime_exception::REPOSITORY_ERROR, msg.str());
 	            }
 
-		        this->work_scheduler.set_state_size(sizeof(number));
-		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, z3pf, ptk, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
+            // is this 3pf task apired?
+            if(z3pf->is_paired())
+              {
+                model<number>* m = ptk->get_model();
+                this->work_scheduler.set_state_size(m->backend_threepf_state_size());
+                this->work_scheduler.prepare_queue(*ptk);
+                this->schedule_paired_postintegration(rec, z3pf, ptk, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
+              }
+            else
+              {
+                this->work_scheduler.set_state_size(sizeof(number));
+                this->work_scheduler.prepare_queue(*ptk);
+                this->schedule_postintegration(rec, z3pf, tags, slave_work_event::begin_zeta_threepf_assignment, slave_work_event::end_zeta_threepf_assignment);
+              }
 	        }
         else if((zfNL = dynamic_cast< fNL_task<number>* >(tk)) != nullptr)
 	        {
@@ -1244,7 +1275,7 @@ namespace transport
 
 		        this->work_scheduler.set_state_size(sizeof(number));
 		        this->work_scheduler.prepare_queue(*ptk);
-            this->schedule_postintegration(rec, zfNL, ptk, tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
+            this->schedule_postintegration(rec, zfNL, tags, slave_work_event::begin_fNL_assignment, slave_work_event::end_fNL_assignment);
 	        }
         else
 	        {
@@ -1256,8 +1287,8 @@ namespace transport
 
 
     template <typename number>
-    template <typename TaskObject, typename ParentTaskObject>
-    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
+    template <typename TaskObject>
+    void master_controller<number>::schedule_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, const std::list<std::string>& tags,
                                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
         assert(rec != nullptr);
@@ -1273,8 +1304,18 @@ namespace transport
         // create new tables needed in the database
         this->data_mgr->create_tables(writer, tk);
 
+        // set up aggregators
+        integration_aggregator     i_agg;
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2);
+        derived_content_aggregator d_agg;
+
+        // write log header
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW POSTINTEGRATION TASK '" << tk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *tk;
+
         // instruct workers to carry out the calculation
-        bool success = this->postintegration_task_to_workers(writer, tags, begin_label, end_label);
+        bool success = this->postintegration_task_to_workers(writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
         // close the writer
         this->data_mgr->close_writer(writer);
@@ -1285,15 +1326,60 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
+    template <typename TaskObject, typename ParentTaskObject>
+    void master_controller<number>::schedule_paired_postintegration(postintegration_task_record<number>* rec, TaskObject* tk, ParentTaskObject* ptk, const std::list<std::string>& tags,
                                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
-	    {
-        assert(this->repo != nullptr);
+      {
+        assert(rec != nullptr);
+
+        std::unique_ptr< task_record<number> > pre_prec(this->repo->query_task(ptk->get_name()));
+        integration_task_record<number>* prec = dynamic_cast< integration_task_record<number>* >(pre_prec.get());
+
+        assert(prec != nullptr);
+        if(prec == nullptr) throw runtime_exception(runtime_exception::REPOSITORY_ERROR, __CPP_TRANSPORT_REPO_RECORD_CAST_FAILED);
+
+        // create an output writer for the postintegration task
+        std::shared_ptr< postintegration_writer<number> > p_writer = this->repo->new_postintegration_task_content(rec, tags, this->get_rank());
+        this->data_mgr->initialize_writer(p_writer);
+        this->data_mgr->create_tables(p_writer, tk);
+
+        // create an output writer for the integration task
+        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank());
+        this->data_mgr->initialize_writer(i_writer);
+        this->data_mgr->create_tables(i_writer, ptk);
+
+        // set up aggregators
+        integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);
+        postintegration_aggregator p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, p_writer, std::placeholders::_1, std::placeholders::_2);
+        derived_content_aggregator d_agg;
 
         // write log header
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ NEW POSTINTEGRATION TASK '" << writer->get_record()->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << *(writer->get_record()->get_task());
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ NEW PAIRED POSTINTEGRATION TASKS '" << tk->get_name() << "' & '" << ptk->get_name() << "' | initiated at " << boost::posix_time::to_simple_string(now) << std::endl;
+        BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << *ptk;
+
+        // instruct workers to carry out the calculation
+        bool success = this->integration_task_to_workers(i_writer, i_agg, p_agg, d_agg, begin_label, end_label);
+
+        // close both writers
+        this->data_mgr->close_writer(i_writer);
+        this->data_mgr->close_writer(p_writer);
+
+        // commit output if successful
+        if(success)
+          {
+            i_writer->commit();
+            p_writer->commit();
+          }
+      }
+
+
+    template <typename number>
+    bool master_controller<number>::postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
+                                                                    integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+	    {
+        assert(this->repo != nullptr);
 
         // set up a timer to keep track of the total wallclock time used
         boost::timer::cpu_timer wallclock_timer;
@@ -1323,17 +1409,12 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
-		    // set up aggregators
-		    integration_aggregator     i_agg;
-				postintegration_agg p_agg = std::bind(&master_controller<number>::aggregate_postprocess, this, writer, std::placeholders::_1, std::placeholders::_2);
-		    derived_content_aggregator d_agg;
-
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
         writer->set_metadata(o_metadata);
 
         wallclock_timer.stop();
-        now = boost::posix_time::second_clock::universal_time();
+        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
@@ -1534,8 +1615,8 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::poll_workers(integration_aggregator int_agg, postintegration_agg post_agg, derived_content_aggregator derived_agg,
-                                                 integration_metadata&int_metadata, output_metadata&out_metadata,
+    bool master_controller<number>::poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
+                                                 integration_metadata& int_metadata, output_metadata& out_metadata,
                                                  boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
                                                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {

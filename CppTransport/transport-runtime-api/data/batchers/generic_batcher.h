@@ -127,7 +127,10 @@ namespace transport
         flush_mode get_flush_mode() const { return(this->mode); }
 
         //! Set flush mode
-        void set_flush_mode(flush_mode f) { this->mode = f; }
+        virtual void set_flush_mode(flush_mode f) { this->mode = f; }
+
+
+        // INTERNAL API
 
       protected:
 
