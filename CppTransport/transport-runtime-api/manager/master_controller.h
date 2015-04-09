@@ -1566,7 +1566,14 @@ namespace transport
 	            {
                 case MPI::INTEGRATION_DATA_READY:
 	                {
-                    if(i_agg) i_agg(stat.source(), i_metadata);
+                    if(i_agg)
+                      {
+                        i_agg(stat.source(), i_metadata);
+                      }
+                    else
+                      {
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Received INTEGRATION_DATA_READY message from worker " << stat.source() << ", but no integration aggregator has been assigned";
+                      }
                     break;
 	                }
 
@@ -1576,12 +1583,23 @@ namespace transport
 			                {
 		                    if(!d_agg(stat.source(), o_metadata)) success = false;
 			                }
+                    else
+                      {
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Received DERIVED_CONTENT_READY message from worker " << stat.source() << ", but no derived content aggregator has been assigned";
+                      }
                     break;
 	                }
 
                 case MPI::POSTINTEGRATION_DATA_READY:
 	                {
-                    if(p_agg) p_agg(stat.source(), o_metadata);
+                    if(p_agg)
+                      {
+                        p_agg(stat.source(), o_metadata);
+                      }
+                    else
+                      {
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Received POSTINTEGRATION_DATA_READY message from worker " << stat.source() << ", but no postintegration aggregator has been assigned";
+                      }
                     break;
 	                }
 
@@ -1691,7 +1709,7 @@ namespace transport
 
                 default:
 	                {
-                    BOOST_LOG_SEV(log, base_writer::warning) << "++ Received unexpected message " << stat.tag() << " waiting in the queue; discarding";
+                    BOOST_LOG_SEV(log, base_writer::warning) << "!! Received unexpected message " << stat.tag() << " waiting in the queue; discarding";
                     this->world.recv(stat.source(), stat.tag());
                     break;
 	                }
