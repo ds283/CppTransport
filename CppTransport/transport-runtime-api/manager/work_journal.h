@@ -98,7 +98,7 @@ namespace transport
 		    double bar_pad    = 0.1*this->height;
 
         insn << this->axes_object << ".barh(" << y+bar_pad << ", " << end_label.str() << "-" << begin_label.str()
-	        << ", height=" << bar_height << ", left=" << begin_label.str() << ", color='" << this->colour << "', alpha=" << this->alpha << ", align='edge')";
+	        << ", height=" << bar_height << ", left=" << begin_label.str() << ", color='" << this->colour << "', alpha=" << this->alpha << ", align='edge', linewidth=0)";
 
 		    return(insn.str());
 	    }
