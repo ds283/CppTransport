@@ -224,8 +224,7 @@ namespace transport
 		    //! initialize a worker
 		    //! reduces count of workers waiting for initialization if successful, and logs the data using the supplied WriterObject
 		    //! otherwise, logs an error.
-		    template <typename number, typename WriterObject>
-		    void initialize_worker(WriterObject& writer, unsigned int worker, MPI::slave_information_payload& payload);
+		    void initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload);
 
 		    //! set current state; used when assigning work to GPUs
 		    void set_state_size(unsigned int size) { this->state_size = size; }
@@ -396,8 +395,7 @@ namespace transport
 			}
 
 
-		template <typename number, typename WriterObject>
-		void master_scheduler::initialize_worker(WriterObject& writer, unsigned int worker, MPI::slave_information_payload& payload)
+		void master_scheduler::initialize_worker(boost::log::sources::severity_logger< base_writer::log_severity_level >& log, unsigned int worker, MPI::slave_information_payload& payload)
 			{
 		    if(!(this->worker_data[worker].get_initialization_status()))
 			    {
@@ -429,14 +427,14 @@ namespace transport
 
 		        msg << " and priority " << payload.get_priority();
 
-		        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << msg.str();
+		        BOOST_LOG_SEV(log, base_writer::normal) << msg.str();
 
 				    this->unassigned++;
 				    this->active++;
 			    }
 		    else
 			    {
-		        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "!! Unexpected double identification for worker  " << worker;
+		        BOOST_LOG_SEV(log, base_writer::normal) << "!! Unexpected double identification for worker  " << worker;
 			    }
 
 			}
@@ -515,7 +513,7 @@ namespace transport
 				unsigned int count = update_interval;
 				while(count < this->queue.size())
 					{
-						this->update_stack.push_back(count);
+						this->update_stack.push_front(count);
 						count += update_interval;
 					}
 			}
@@ -618,7 +616,7 @@ namespace transport
 								if(this->update_stack.front() < this->queue.size())
 									{
 										result = true;
-										while(this->update_stack.size() > 0 && this->update_stack.front() < this->queue.size())
+										while(this->update_stack.size() > 0 && this->update_stack.front() > this->queue.size())
 											{
 												this->update_stack.pop_front();
 											}
@@ -647,7 +645,7 @@ namespace transport
 
 										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
 											<< boost::posix_time::to_simple_string(completion_time) << " ("
-											<< format_time(estimated_time_remaining) << ")";
+											<< format_time(estimated_time_remaining) << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_FROM_NOW << ")";
 
 										msg = msg_stream.str();
 									}

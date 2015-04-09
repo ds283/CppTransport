@@ -14,6 +14,7 @@
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM   "mean CPU/item"
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_TARGET_DURATION      "target assignment"
 #define __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE  "estimated completion"
+#define __CPP_TRANSPORT_MASTER_SCHEDULER_FROM_NOW             "from now"
 
 
 #endif //__master_scheduler_messages_H_

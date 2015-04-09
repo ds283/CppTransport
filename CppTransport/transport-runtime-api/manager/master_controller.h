@@ -672,6 +672,11 @@ namespace transport
 						        msg << __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR;
 					        }
 		            msg << " " << __CPP_TRANSPORT_PROCESSED_TASKS_C << " " << format_time(timer.elapsed().wall);
+				        msg << " | " << __CPP_TRANSPORT_PROCESSED_TASKS_D << " ";
+
+		            boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+				        msg << boost::posix_time::to_simple_string(now);
+
 				        this->message_handler(msg.str());
 			        }
 	        }

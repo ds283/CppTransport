@@ -32,6 +32,7 @@
 #define __CPP_TRANSPORT_PROCESSED_TASKS_B_SINGULAR      "database task"
 #define __CPP_TRANSPORT_PROCESSED_TASKS_B_PLURAL        "database tasks"
 #define __CPP_TRANSPORT_PROCESSED_TASKS_C               "in wallclock time"
+#define __CPP_TRANSPORT_PROCESSED_TASKS_D               "time now"
 
 #define __CPP_TRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
 

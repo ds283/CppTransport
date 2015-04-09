@@ -213,10 +213,6 @@ namespace transport
         template <typename Payload>
         void advise_commit(output_group_record<Payload>* group);
 
-        //! Advise that postintegration products have been committed to an output group
-        template <typename Payload>
-        void advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group);
-
         //! Commit the products from an integration to the database
         void close_integration_writer(integration_writer<number>& writer);
 
@@ -534,22 +530,11 @@ namespace transport
 	    {
         std::ostringstream msg;
 
+        boost::posix_time::ptime now = boost::posix_time::second_clock::local_time();
+
         msg << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
-	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "'";
-
-        this->message(msg.str());
-	    }
-
-
-    template <typename number>
-    template <typename Payload>
-    void repository<number>::advise_commit(postintegration_task_record<number>* rec, output_group_record<Payload>* group)
-	    {
-        std::ostringstream msg;
-
-        msg << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_A << " '" << group->get_name() << "' "
-	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_B << " '" << rec->get_name() << "' ("
-	        << __CPP_TRANSPORT_REPO_WRITEBACK_POSTINT_GROUP_C << " '" << group->get_task_name() << "')";
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_B << " '" << group->get_task_name() << "' "
+	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C << " " << boost::posix_time::to_simple_string(now);
 
         this->message(msg.str());
 	    }
