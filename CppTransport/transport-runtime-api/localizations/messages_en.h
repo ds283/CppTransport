@@ -32,6 +32,7 @@
 #include "transport-runtime-api/localizations/messages_en/task_manager.h"
 #include "transport-runtime-api/localizations/messages_en/instance_manager.h"
 #include "transport-runtime-api/localizations/messages_en/work_journal.h"
+#include "transport-runtime-api/localizations/messages_en/master_scheduler.h"
 
 #include "transport-runtime-api/localizations/messages_en/repository.h"
 #include "transport-runtime-api/localizations/messages_en/json_repository_interface.h"

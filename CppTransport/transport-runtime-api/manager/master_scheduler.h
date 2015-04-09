@@ -628,10 +628,26 @@ namespace transport
 										percent_stream << 100.0 * (static_cast<double>(this->number_work) / (static_cast<double>(this->number_work + this->queue.size()))) << "%";
 
 								    std::ostringstream msg_stream;
-										msg_stream << this->number_work << " work items processed, " << this->queue.size() << " remain (~" << percent_stream.str() << " complete)";
-										msg_stream << " | mean time per work item " << format_time(this->total_work_time / this->number_work);
-										msg_stream << " | target assignment duration " << format_time(this->current_granularity);
-										msg_stream << " | estimate time to complete " << format_time(boost::timer::nanosecond_type(this->queue.size()) * this->number_work / this->total_work_time);
+										msg_stream << this->number_work << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_WORK_ITEMS_PROCESSED
+											<< ", " << this->queue.size() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_REMAIN
+											<< " (~" << percent_stream.str() << " " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETE << ")";
+
+								    boost::timer::nanosecond_type mean_time_per_item = this->total_work_time / this->number_work;
+										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_MEAN_TIME_PER_ITEM << " " << format_time(mean_time_per_item);
+
+										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_TARGET_DURATION << " " << format_time(this->current_granularity);
+
+								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
+								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->number_work;
+								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size());
+
+								    boost::posix_time::time_duration duration        = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
+								    boost::posix_time::ptime         now             = boost::posix_time::second_clock::local_time();
+								    boost::posix_time::ptime         completion_time = now + duration;
+
+										msg_stream << " | " << __CPP_TRANSPORT_MASTER_SCHEDULER_COMPLETION_ESTIMATE << " "
+											<< boost::posix_time::to_simple_string(completion_time) << " ("
+											<< format_time(estimated_time_remaining) << ")";
 
 										msg = msg_stream.str();
 									}

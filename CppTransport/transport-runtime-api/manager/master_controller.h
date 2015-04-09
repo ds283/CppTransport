@@ -27,6 +27,7 @@
 
 #include "transport-runtime-api/manager/master_scheduler.h"
 #include "transport-runtime-api/manager/work_journal.h"
+#include "transport-runtime-api/manager/argument_cache.h"
 
 #include "transport-runtime-api/scheduler/context.h"
 #include "transport-runtime-api/scheduler/scheduler.h"
@@ -51,6 +52,7 @@
 #define __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY  "--batch-cache"
 #define __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY    "--data-cache"
 #define __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY     "--zeta-cache"
+#define __CPP_TRANSPORT_SWITCH_VERBOSE           "-v"
 #define __CPP_TRANSPORT_SWITCH_GANTT_CHART       "--gantt-chart"
 
 #define __CPP_TRANSPORT_VERB_TASK                "task"
@@ -70,28 +72,6 @@ namespace transport
 	{
 
     // MASTER FUNCTIONS
-
-		class argument_cache
-			{
-		  public:
-				argument_cache()
-					: gantt_chart(false)
-					{
-					}
-
-				~argument_cache() = default;
-
-				void set_gantt_chart(bool g)                  { this->gantt_chart = g; }
-				bool get_gantt_chart() const                  { return(this->gantt_chart); }
-
-				void set_gantt_filename(const std::string f)  { this->gantt_filename = f; }
-				const std::string& get_gantt_filename() const { return(this->gantt_filename); }
-
-		  private:
-				bool gantt_chart;
-        std::string gantt_filename;
-			};
-
 
 		template <typename number>
 		class master_controller
@@ -198,6 +178,9 @@ namespace transport
 				
 		    //! execute any queued tasks
 		    void execute_tasks(void);
+
+				//! expose arguments
+				const argument_cache& get_arguments(void) { return(this->arg_cache); }
 
 
 		    // MPI FUNCTIONS
@@ -441,7 +424,7 @@ namespace transport
 
 		    for(unsigned int i = 1; i < argc; i++)
 			    {
-		        if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
+		        if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_REPO)
 			        {
 		            if(repo != nullptr)
 			            {
@@ -456,7 +439,7 @@ namespace transport
 		            else
 			            {
 		                ++i;
-		                std::string repo_path = static_cast<std::string>(argv[i]);
+		                std::string repo_path = std::string(argv[i]);
 		                try
 			                {
 		                    repo = repository_factory<number>(repo_path, repository<number>::access_type::readwrite,
@@ -477,12 +460,12 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_TAG)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TAG);
 		            else            tags.push_back(std::string(argv[++i]));
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CAPACITY)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
 		            else
@@ -505,7 +488,7 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_BATCHER_CAPACITY)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
 		            else
@@ -527,7 +510,7 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_CACHE_CAPACITY)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
 		            else
@@ -549,7 +532,7 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_ZETA_CAPACITY)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_CAPACITY);
 		            else
@@ -571,7 +554,7 @@ namespace transport
 			                }
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_SWITCH_GANTT_CHART)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_GANTT_CHART)
 			        {
 				        if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GANTT_FILENAME);
 				        else
@@ -581,7 +564,11 @@ namespace transport
 						        this->arg_cache.set_gantt_filename(argv[i]);
 					        }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_SWITCH_VERBOSE)
+			        {
+				        this->arg_cache.set_verbose(true);
+			        }
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
 		            else
@@ -591,16 +578,16 @@ namespace transport
 		                tags.clear();
 			            }
 			        }
-		        else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_VERB_GET)
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_GET)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
 		            ++i;
 
 		            job_type type;
-		            if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
-		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
-		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
-		            else if(static_cast<std::string>(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
+		            if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
+		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
+		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
+		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
 		            else
 			            {
 		                std::ostringstream msg;
@@ -953,10 +940,7 @@ namespace transport
 	            {
                 case MPI::INTEGRATION_DATA_READY:
 	                {
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     this->aggregate_batch(writer, stat.source(), metadata);
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
-
                     break;
 	                }
 
@@ -1042,6 +1026,8 @@ namespace transport
     template <typename number>
     void master_controller<number>::aggregate_batch(std::shared_ptr< integration_writer<number> >& writer, int source, integration_metadata& metadata)
 	    {
+        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+
         MPI::data_ready_payload payload;
         this->world.recv(source, MPI::INTEGRATION_DATA_READY, payload);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << source << " sent aggregation notification for container '" << payload.get_container_path() << "'";
@@ -1206,10 +1192,7 @@ namespace transport
 	            {
                 case MPI::DERIVED_CONTENT_READY:
 	                {
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     if(!this->aggregate_content(writer, stat.source(), metadata)) success = false;
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
-
                     break;
 	                }
 
@@ -1301,6 +1284,8 @@ namespace transport
     template <typename number>
     bool master_controller<number>::aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, int source, output_metadata& metadata)
 	    {
+        journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+
         MPI::content_ready_payload payload;
         this->world.recv(source, MPI::DERIVED_CONTENT_READY, payload);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << source << " sent content-ready notification";
@@ -1504,10 +1489,7 @@ namespace transport
 	            {
                 case MPI::POSTINTEGRATION_DATA_READY:
 	                {
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_begin));
                     this->aggregate_postprocess(writer, stat.source(), metadata);
-		                this->journal.add_entry(master_work_event(master_work_event::aggregate_end));
-
                     break;
 	                }
 
@@ -1599,6 +1581,8 @@ namespace transport
     template <typename number>
     void master_controller<number>::aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, int source, output_metadata& metadata)
 	    {
+		    journal_instrument instrument(this->journal, master_work_event::aggregate_begin, master_work_event::aggregate_end);
+
         MPI::data_ready_payload payload;
         this->world.recv(source, MPI::POSTINTEGRATION_DATA_READY, payload);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ Worker " << source << " sent aggregation notification for container '" << payload.get_container_path() << "'";
@@ -1630,7 +1614,7 @@ namespace transport
     void master_controller<number>::initialize_workers(void)
 	    {
         // set up instrument to journal the MPI communication if needed
-        journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 
@@ -1656,7 +1640,7 @@ namespace transport
     void master_controller<number>::set_up_workers(WriterObject& writer)
 			{
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
 		    // rebuild information about our workers; this information
 				// it is updated whenever we start a new task, because the details can vary
@@ -1709,7 +1693,7 @@ namespace transport
 		void master_controller<number>::assign_work_to_workers(WriterObject& writer)
 			{
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
 		    // emit update message giving current status if required
 		    std::string msg;
@@ -1717,7 +1701,7 @@ namespace transport
 		    if(print_msg)
 			    {
 		        std::ostringstream update_msg;
-				    update_msg << "Task manager: " << msg;
+				    update_msg << __CPP_TRANSPORT_TASK_MANAGER_LABEL << " " << msg;
 		        this->message_handler(update_msg.str());
 			    }
 
@@ -1752,7 +1736,7 @@ namespace transport
     void master_controller<number>::terminate_workers(void)
 	    {
 		    // set up instrument to journal the MPI communication if needed
-		    journal_instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+		    journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
         std::vector<boost::mpi::request> requests(this->world.size()-1);
 

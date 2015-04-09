@@ -78,7 +78,7 @@ namespace transport
         void warn(const std::string& msg) { std::cout << msg << std::endl; }
 
         //! Report a message
-        void message(const std::string& msg) {std::cout << msg << std::endl; }
+        void message(const std::string& msg) { if(this->master.get_arguments().get_verbose()) std::cout << msg << std::endl; }
 
 
         // INTERNAL DATA
