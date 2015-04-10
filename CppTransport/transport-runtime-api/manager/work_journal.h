@@ -449,6 +449,7 @@ namespace transport
                     if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_TOO_FEW);
                     if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_END_MISSING);
                     current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "aquamarine"));
+                    break;
                   }
 
 						    default:
