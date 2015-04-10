@@ -92,7 +92,7 @@ namespace transport
 								legend(false),
 								position(top_right),
 								typeset_with_LaTeX(false),
-								dash_second_axis(false),
+								dash_second_axis(true),
 								x_label_set(false),
 								y_label_set(false),
 								title_set(false)
