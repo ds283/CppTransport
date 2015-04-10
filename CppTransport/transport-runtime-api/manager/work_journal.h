@@ -19,8 +19,8 @@
 #include "boost/algorithm/string.hpp"
 
 
-// set default minimum time interval for instruments to be 5 seconds
-#define __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN (5)
+// set default minimum time interval for instruments to be 1 second
+#define __CPP_TRANSPORT_JOURNAL_MINIMUM_TIMESPAN (1)
 
 
 namespace transport
