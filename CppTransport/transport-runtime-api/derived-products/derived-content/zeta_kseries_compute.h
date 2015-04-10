@@ -193,10 +193,10 @@ namespace transport
             std::vector<number> dN;
             h->mdl->compute_gauge_xfm_1(h->tk->get_params(), h->background[tindex], dN);
 
-            std::vector<number> small;
-            std::vector<number> large;
-            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
-            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
+//            std::vector<number> small;
+//            std::vector<number> large;
+//            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
+//            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
 
             for(unsigned int m = 0; m < 2*N_fields; m++)
               {
@@ -211,23 +211,23 @@ namespace transport
                       {
                         number component = dN[m]*dN[n]*sigma_line[j];
 
-                        if(fabs(component) > large[j]) large[j] = fabs(component);
-                        if(fabs(component) < small[j]) small[j] = fabs(component);
+//                        if(fabs(component) > large[j]) large[j] = fabs(component);
+//                        if(fabs(component) < small[j]) small[j] = fabs(component);
                         line_data[j] += component;
                       }
                   }
               }
 
-            number global_small = +DBL_MAX;
-            number global_large = -DBL_MAX;
-            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
-              {
-                number large_fraction = fabs(large[j]/line_data[j]);
-                number small_fraction = fabs(small[j]/line_data[j]);
-
-                if(large_fraction > global_large) global_large = large_fraction;
-                if(small_fraction < global_small) global_small = small_fraction;
-              }
+//            number global_small = +DBL_MAX;
+//            number global_large = -DBL_MAX;
+//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+//              {
+//                number large_fraction = fabs(large[j]/line_data[j]);
+//                number small_fraction = fabs(small[j]/line_data[j]);
+//
+//                if(large_fraction > global_large) global_large = large_fraction;
+//                if(small_fraction < global_small) global_small = small_fraction;
+//              }
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta twopf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
@@ -286,10 +286,10 @@ namespace transport
                 h->mdl->compute_gauge_xfm_2(h->tk->get_params(), h->background[tindex], configs[j].k3_comoving, configs[j].k1_comoving, configs[j].k2_comoving, h->time_values[tindex], ddN312[j]);
               }
 
-            std::vector<number> small;
-            std::vector<number> large;
-            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
-            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
+//            std::vector<number> small;
+//            std::vector<number> large;
+//            small.assign(h->kconfig_sample_sns.size(), +DBL_MAX);
+//            large.assign(h->kconfig_sample_sns.size(), -DBL_MAX);
 
             // linear part of the gauge transformation
             for(unsigned int l = 0; l < 2*N_fields; l++)
@@ -309,8 +309,8 @@ namespace transport
                           {
                             number component = dN[l]*dN[m]*dN[n]*threepf_line[j];
 
-                            if(fabs(component) > large[j]) large[j] = fabs(component);
-                            if(fabs(component) < small[j]) small[j] = fabs(component);
+//                            if(fabs(component) > large[j]) large[j] = fabs(component);
+//                            if(fabs(component) < small[j]) small[j] = fabs(component);
                             line_data[j] += component;
                           }
                       }
@@ -356,12 +356,12 @@ namespace transport
                                 number component2 = ddN213[j][l][m] * dN[p] * dN[q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = ddN312[j][l][m] * dN[p] * dN[q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
-                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
-                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
-                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
-                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
-                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
-                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
+//                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
+//                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
+//                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
+//                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
+//                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
+//                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
 
                                 line_data[j] += component1;
                                 line_data[j] += component2;
@@ -372,16 +372,16 @@ namespace transport
                   }
               }
 
-            number global_small = +DBL_MAX;
-            number global_large = -DBL_MAX;
-            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
-              {
-                number large_fraction = fabs(large[j]/line_data[j]);
-                number small_fraction = fabs(small[j]/line_data[j]);
-
-                if(large_fraction > global_large) global_large = large_fraction;
-                if(small_fraction < global_small) global_small = small_fraction;
-              }
+//            number global_small = +DBL_MAX;
+//            number global_large = -DBL_MAX;
+//            for(unsigned int j = 0; j < h->kconfig_sample_sns.size(); j++)
+//              {
+//                number large_fraction = fabs(large[j]/line_data[j]);
+//                number small_fraction = fabs(small[j]/line_data[j]);
+//
+//                if(large_fraction > global_large) global_large = large_fraction;
+//                if(small_fraction < global_small) global_small = small_fraction;
+//              }
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta threepf wavenumber series: serial " << h->time_sample_sns[tindex] << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
