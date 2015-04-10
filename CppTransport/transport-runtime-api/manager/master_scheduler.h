@@ -420,7 +420,7 @@ namespace transport
 				    this->waiting_for_setup--;
 
 		        std::ostringstream msg;
-		        msg << "** Worker " << worker << " identified as ";
+		        msg << "** Worker " << worker+1 << " identified as ";
 		        if(type == cpu)
 			        {
 		            msg << "CPU";
@@ -515,11 +515,14 @@ namespace transport
 					}
 
 				unsigned int update_interval = static_cast<unsigned int>(this->queue.size() / 10);
-				unsigned int count = update_interval;
-				while(count < this->queue.size())
+				if(update_interval > 0)
 					{
-						this->update_stack.push_front(count);
-						count += update_interval;
+				    unsigned int count = update_interval;
+				    while(count < this->queue.size())
+					    {
+				        this->update_stack.push_front(count);
+				        count += update_interval;
+					    }
 					}
 
         this->finished = false;
