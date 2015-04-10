@@ -163,7 +163,7 @@ namespace transport
 					        }
 
 				        data_line<number> line = data_line<number>(this->x_type, r_value, w_axis, line_data,
-				                                                   this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
+				                                                   this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 
 				        lines.push_back(line);
 					    }

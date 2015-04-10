@@ -144,7 +144,7 @@ namespace transport
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
 								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
-								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]));
+								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 
 										        lines.push_back(line);
 									        }

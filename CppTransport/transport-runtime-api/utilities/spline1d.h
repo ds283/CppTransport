@@ -2,7 +2,6 @@
 // Created by David Seery on 13/08/2013.
 // Copyright (c) 2013-15 University of Sussex. All rights reserved.
 //
-// To change the template use AppCode | Preferences | File Templates.
 //
 
 #ifndef __CPP_TRANSPORT_SPLINE_H_
@@ -11,6 +10,8 @@
 
 #include <vector>
 #include <array>
+
+#include <assert.h>
 
 #include "gsl/gsl_spline.h"
 
@@ -21,12 +22,21 @@ namespace transport
     template <typename number>
     class spline1d
       {
+
+        // CONSTRUCTOR, DESTRUCTOR
+
       public:
+
         //! set up a 1d spline object with given data points
         spline1d(const std::vector<double>& x, const std::vector<number>& y);
 
-        //! destroy object
+        //! destroy object, releasing
         ~spline1d();
+
+
+        // INTERFACE -- EVALUATE VALUES
+
+      public:
 
         //! evaluate the spline at a given value of x
         number eval(double x);
@@ -34,9 +44,26 @@ namespace transport
         //! evaluate the spline at a given value of x
         number operator()(double x) { return(this->eval(x)); }
 
+
+        // INTERFACE -- EVALUATE DERIVATIVES
+
+      public:
+
+        //! evaluate the derivative of the spline at a given value of x
+        number eval_diff(double x);
+
+
+        // INTERNAL DATA
+
+
       protected:
+
+        //! pointer to GSL spline object
         gsl_spline*       spline;
+
+        //! pointer to GSL accelerator cache
         gsl_interp_accel* accel;
+
       };
 
 
@@ -48,9 +75,11 @@ namespace transport
         spline = gsl_spline_alloc(gsl_interp_cspline, x.size());
         accel  = gsl_interp_accel_alloc();
 
+        // allocate new arrays for x and y values
         double* xs = new double[x.size()];
         double* ys = new double[x.size()];
 
+        // copy supplied data into our new arrays
         for(unsigned int i = 0; i < x.size(); i++)
           {
             // assume 'number' is explicitly castable to 'double'
@@ -58,6 +87,7 @@ namespace transport
             ys[i] = (double)y[i];
           }
 
+        // build GSL spline object and cache it
         gsl_spline_init(spline, xs, ys, x.size());
       }
 
@@ -73,7 +103,14 @@ namespace transport
     template <typename number>
     number spline1d<number>::eval(double x)
       {
-        return((number)gsl_spline_eval(this->spline, x, this->accel));
+        return( static_cast<number>(gsl_spline_eval(this->spline, x, this->accel)) );
+      }
+
+
+    template <typename number>
+    number spline1d<number>::eval_diff(double x)
+      {
+        return( static_cast<number>(gsl_spline_eval_deriv(this->spline, x, this->accel)) );
       }
 
 

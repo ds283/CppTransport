@@ -98,52 +98,52 @@ target_link_libraries(CppTransport ${GINAC_LIBRARIES} ${Boost_LIBRARIES})
 
 
 add_executable(dquad-mpi examples/dquad-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(dquad-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(dquad-makerepo examples/dquad-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(dquad-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(quadratic-mpi examples/quadratic/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(quadratic-makerepo examples/quadratic/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(axion-mpi examples/axion-mpi/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(axion-makerepo examples/axion-mpi/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(axion-makerepo2 examples/axion-mpi/makerepo2.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(axion-makerepo2 sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(mafalda40-makerepo examples/mafalda40/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(mafalda40-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(mafalda40-mpi examples/mafalda40/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(mafalda40-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(quadratic10-makerepo examples/quadratic10/makerepo.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic10-makerepo sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 add_executable(quadratic10-mpi examples/quadratic10/main.cpp jsoncpp/jsoncpp.cpp)
-target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES})
+target_link_libraries(quadratic10-mpi sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${GSL_LIBRARIES})
 
 
 # cuda_add_executable(dquad-cuda examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
+# target_link_libraries(dquad-cuda sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES}  ${GSL_LIBRARIES} /usr/local/CUDA/lib/libcuda.dylib)
 
 
 # add_executable(dquad-opencl examples/dquad-vexcl/main.cpp jsoncpp/jsoncpp.cpp)
-# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES})
+# target_link_libraries(dquad-opencl sqlite3 ${MPI_LIBRARIES} ${Boost_LIBRARIES} ${OPENCL_LIBRARIES} ${GSL_LIBRARIES})

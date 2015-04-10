@@ -155,13 +155,13 @@ namespace transport
 									                }
 
 								                data_line<number> line = data_line<number>(this->x_type, dimensionless_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]));
+								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 								                lines.push_back(line);
 									            }
 								            else
 									            {
 								                data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
-								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]));
+								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 								                lines.push_back(line);
 									            }
 									        }
@@ -393,7 +393,7 @@ namespace transport
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
 		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
-		                                                                       this->get_LaTeX_label(l,m,n,t_values[i]), this->get_non_LaTeX_label(l,m,n,t_values[i]));
+		                                                                       this->get_LaTeX_label(l,m,n,t_values[i]), this->get_non_LaTeX_label(l,m,n,t_values[i]), this->is_spectral_index());
 
 		                            lines.push_back(line);
 			                        }
