@@ -43,7 +43,8 @@ bool timeseries_twopf_kconfig_filter(const transport::derived_data::filter::twop
 // filter for near-squeezed 3pf k-configurations
 bool threepf_kconfig_near_squeezed(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
-    return(fabs(data.beta-0.99) < 0.001); // use most squeezed value of beta only
+    // use highly squeezed value of beta, restruct to isosceles triangles with alpha=0
+    return(fabs(data.beta-0.99) < 0.001 && fabs(data.alpha) < 0.001);
 	}
 
 bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
@@ -111,7 +112,7 @@ int main(int argc, char* argv[])
     struct TimeStoragePolicy
       {
       public:
-        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 2) == 0); }
+        bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 20) == 0); }
       };
 
     transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples);
@@ -125,7 +126,7 @@ int main(int argc, char* argv[])
 
 		const double        alphamin   = -1.0;
 		const double        alphamax   = +1.0;
-		const unsigned int  a_samples  = 30;
+		const unsigned int  a_samples  = 3;
 
 		const double        betamin    = 0.0;
 		const double        betamax    = 1.0;
@@ -137,6 +138,10 @@ int main(int argc, char* argv[])
 				bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 			};
 
+
+    // SET UP TASKS
+
+
     transport::range<double> kts    = transport::range<double>(ktmin, ktmax, k_samples, transport::range<double>::linear);
     transport::range<double> alphas = transport::range<double>(alphamin, alphamax, a_samples, transport::range<double>::linear);
     transport::range<double> betas  = transport::range<double>(betamin, betamax, b_samples, transport::range<double>::linear);
@@ -145,9 +150,14 @@ int main(int argc, char* argv[])
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
 		tk3.set_fast_forward_efolds(4.0);
 
-		// construct a zeta threepf task
+		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
     ztk3.set_paired(true);
+
+
+    // PLOTS
+
+    // 1. TIME EVOLUTION OF THE ZETA TWOPF
 
     // check the zeta twopf
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group(ztk3,
@@ -159,6 +169,9 @@ int main(int argc, char* argv[])
     tk3_zeta_twopf.add_line(tk3_zeta_twopf_group);
     tk3_zeta_twopf.set_title_text("$\\zeta$ two-point function");
     tk3_zeta_twopf.set_legend_position(transport::derived_data::line_plot2d<double>::bottom_left);
+
+
+    // 2. TIME EVOLUTION OF THE ZETA THREEPF
 
     // check the zeta threepf
     transport::derived_data::zeta_threepf_time_series<double> tk3_zeta_sq_group(ztk3,
@@ -174,6 +187,9 @@ int main(int argc, char* argv[])
 		// set up a table too
     transport::derived_data::time_series_table<double> tk3_zeta_sq_table("axion.threepf-1.zeta-sq.table", "zeta-sq-table.txt");
 		tk3_zeta_sq_table.add_line(tk3_zeta_sq_group);
+
+
+    // 3. TIME EVOLUTION OF THE REDUCED BISPECTRUM
 
     // compute the reduced bispectrum in a few squeezed configurations
     transport::derived_data::zeta_reduced_bispectrum_time_series<double> tk3_zeta_redbsp(ztk3,
@@ -192,6 +208,9 @@ int main(int argc, char* argv[])
     transport::derived_data::time_series_table<double> tk3_redbsp_table = transport::derived_data::time_series_table<double>("axion.threepf-1.redbsp-sq.table", "redbsp-sq-table.txt");
     tk3_redbsp_table.add_line(tk3_zeta_redbsp);
 
+
+    // 4. LATE-TIME ZETA TWO POINT FUNCTION
+
     transport::derived_data::zeta_twopf_wavenumber_series<double> tk3_zeta_2spec(ztk3,
                                                                                  transport::derived_data::filter::time_filter(kseries_last_time),
                                                                                  transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_axis_filter));
@@ -205,6 +224,9 @@ int main(int argc, char* argv[])
 
     transport::derived_data::wavenumber_series_table<double> tk3_zeta_2spec_table = transport::derived_data::wavenumber_series_table<double>("axion.threepf-1.zeta-2spec.table", "zeta-2spec-table.txt");
     tk3_zeta_2spec_table.add_line(tk3_zeta_2spec);
+
+
+    // 5. LATE-TIME ZETA REDUCED BISPECTRUM -- FIXED k3/k_t, ISOSCELES TRIANGLES, VARYING k_t
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_spec(ztk3,
                                                                                                     transport::derived_data::filter::time_filter(kseries_last_time),
@@ -222,6 +244,10 @@ int main(int argc, char* argv[])
 
     transport::derived_data::wavenumber_series_table<double> tk3_redbsp_spec_table("axion.threepf-1.redbsp-spec-table", "redbsp-spec-table.txt");
 		tk3_redbsp_spec_table.add_line(tk3_zeta_redbsp_spec);
+
+
+    // 6. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t
+    // x-axis is beta
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_beta_lo(ztk3,
                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
@@ -243,6 +269,10 @@ int main(int argc, char* argv[])
 		tk3_redbsp_beta_plot.set_title_text("Shape-dependence of reduced bispectrum on isosceles triangles at fixed $k_t$");
 		tk3_redbsp_beta_plot.set_log_y(false);
 		tk3_redbsp_beta_plot.set_legend_position(transport::derived_data::line_plot2d<double>::centre_left);
+
+
+    // 7. LATE TIME ZETA REDUCED BISPECTRUM -- FIXED k_t, ISOSCELES TRIANGLES, VARYING k3/k_t (SAME AS 6)
+    // x-axis is squeezing ratio k3/k_t
 
     transport::derived_data::zeta_reduced_bispectrum_wavenumber_series<double> tk3_zeta_redbsp_sqk3_lo(ztk3,
                                                                                                        transport::derived_data::filter::time_filter(kseries_last_time),
@@ -266,7 +296,9 @@ int main(int argc, char* argv[])
 		tk3_redbsp_sqk3_plot.set_log_y(false);
 		tk3_redbsp_sqk3_plot.set_legend_position(transport::derived_data::line_plot2d<double>::centre_left);
 
-		// construct output tasks
+
+    // OUTPUT TASKS
+
 
     transport::output_task<double> threepf_output = transport::output_task<double>("axion.threepf-1.output", tk3_zeta_twopf);
     threepf_output.add_element(tk3_zeta_sq);
