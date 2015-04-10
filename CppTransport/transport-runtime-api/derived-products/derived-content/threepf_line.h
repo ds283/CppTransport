@@ -189,8 +189,6 @@ namespace transport
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
-		        label << std::setprecision(this->precision);
-
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_f_latex_names();
 
 		        if(this->get_dot_meaning() == derived_line<number>::derivatives)
@@ -216,8 +214,6 @@ namespace transport
 		        std::ostringstream label;
 
 		        unsigned int N_fields = this->gadget.get_N_fields();
-
-		        label << std::setprecision(this->precision);
 
 		        const std::vector<std::string>& field_names = this->gadget.get_model()->get_field_names();
 

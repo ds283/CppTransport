@@ -369,13 +369,25 @@ namespace transport
 			                                                 pipe.new_cf_time_data_tag(this->is_real_twopf() ? data_tag<number>::cf_twopf_re : data_tag<number>::cf_twopf_im,
 			                                                                           this->gadget.get_model()->flatten(m, n), this->kconfig_sample_sns[i]);
 
-                            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-		                        const std::vector<number>& line_data = t_handle.lookup_tag(tag);
+		                        std::vector<number> line_data = t_handle.lookup_tag(tag);
 
-		                        data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
-		                                                                   this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+		                        if(this->dimensionless)
+			                        {
+		                            for(unsigned int j = 0; j < line_data.size(); j++)
+			                            {
+		                                line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
+			                            }
 
-		                        lines.push_back(line);
+		                            data_line<number> line = data_line<number>(this->x_type, dimensionless_value, t_axis, line_data,
+		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+		                            lines.push_back(line);
+			                        }
+		                        else
+			                        {
+		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
+		                            lines.push_back(line);
+			                        }
 			                    }
 			                }
 			            }

@@ -35,7 +35,7 @@
 
 
 #define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT          "zeta-twopf-line-settings"
-#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless-twopf"
+#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless"
 
 
 namespace transport
