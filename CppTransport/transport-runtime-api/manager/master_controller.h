@@ -1807,7 +1807,7 @@ namespace transport
                         MPI::finished_integration_payload payload;
                         this->world.recv(stat->source(), MPI::INTEGRATION_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_wallclock_time()) << ")";
 
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
                         this->update_integration_metadata(payload, int_metadata);
@@ -1835,7 +1835,7 @@ namespace transport
                         MPI::finished_derived_payload payload;
                         this->world.recv(stat->source(), MPI::DERIVED_CONTENT_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
@@ -1864,7 +1864,7 @@ namespace transport
                         MPI::finished_postintegration_payload payload;
                         this->world.recv(stat->source(), MPI::POSTINTEGRATION_FAIL, payload);
                         this->journal.add_entry(slave_work_event(this->worker_number(stat->source()), end_label, payload.get_timestamp()));
-                        BOOST_LOG_SEV(log, base_writer::normal) << "++ Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
+                        BOOST_LOG_SEV(log, base_writer::normal) << "!! Worker " << stat->source() << " advising failure of work assignment (successful work items consumed wallclock time " << format_time(payload.get_cpu_time()) << ")";
 
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
