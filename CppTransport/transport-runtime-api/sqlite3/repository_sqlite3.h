@@ -406,16 +406,16 @@ namespace transport
 
 
 		// Create a named repository
-		template <typename number>
-		repository_sqlite3<number>::repository_sqlite3(const std::string& path, const repository_creation_key& key)
-			: json_repository<number>(path, repository<number>::access_type::readwrite,
-			                                    typename repository<number>::error_callback(repository_sqlite3<number>::default_error_handler()),
-			                                    typename repository<number>::warning_callback(repository_sqlite3<number>::default_warning_handler()),
-			                                    typename repository<number>::message_callback(repository_sqlite3<number>::default_message_handler()),
-			                                    std::bind(&repository_sqlite3<number>::query_package, this, std::placeholders::_1),
-			                                    std::bind(&repository_sqlite3<number>::query_task, this, std::placeholders::_1),
-			                                    std::bind(&repository_sqlite3<number>::query_derived_product, this, std::placeholders::_1)),
-			  db(nullptr)
+    template <typename number>
+    repository_sqlite3<number>::repository_sqlite3(const std::string& path, const repository_creation_key& key)
+      : json_repository<number>(path, repository<number>::access_type::readwrite,
+                                typename repository<number>::error_callback(repository_sqlite3 < number > ::default_error_handler()),
+                                typename repository<number>::warning_callback(repository_sqlite3 < number > ::default_warning_handler()),
+                                typename repository<number>::message_callback(repository_sqlite3 < number > ::default_message_handler()),
+                                std::bind(&repository_sqlite3 < number > ::query_package, this, std::placeholders::_1),
+                                std::bind(&repository_sqlite3 < number > ::query_task, this, std::placeholders::_1),
+                                std::bind(&repository_sqlite3 < number > ::query_derived_product, this, std::placeholders::_1)),
+        db(nullptr)
 			{
 		    // check whether root directory for the repository already exists -- it shouldn't
 		    if(boost::filesystem::exists(path))
