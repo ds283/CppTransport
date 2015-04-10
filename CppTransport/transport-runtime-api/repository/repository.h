@@ -619,10 +619,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C;
 
             this->message(msg.str());
@@ -701,10 +699,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C;
 
             this->message(msg.str());
@@ -769,10 +765,8 @@ namespace transport
 
             std::ostringstream msg;
 
-            std::string group_name = boost::posix_time::to_iso_string(writer.get_creation_time());
-
             msg << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A << " '" << writer.get_record()->get_task()->get_name() << "': "
-	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << group_name << "' "
+	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_B << " '" << writer.get_name() << "' "
 	            << __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_C;
 
             this->message(msg.str());
