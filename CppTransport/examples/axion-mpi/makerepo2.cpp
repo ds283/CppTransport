@@ -126,7 +126,7 @@ int main(int argc, char* argv[])
 
 		const double        alphamin   = -1.0;
 		const double        alphamax   = +1.0;
-		const unsigned int  a_samples  = 3;
+		const unsigned int  a_samples  = 2;
 
 		const double        betamin    = 0.0;
 		const double        betamax    = 1.0;
