@@ -1038,7 +1038,7 @@ namespace transport
         metadata.total_wallclock_time += payload.get_wallclock_time();
 
         metadata.total_integration_time += payload.get_integration_time();
-        boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / payload.get_num_integrations();
+        boost::timer::nanosecond_type mean_integration_time = payload.get_integration_time() / (payload.get_num_integrations() > 0 ? payload.get_num_integrations() : 1);
         if(metadata.max_mean_integration_time == 0 || mean_integration_time > metadata.max_mean_integration_time) metadata.max_mean_integration_time = mean_integration_time;
         if(metadata.min_mean_integration_time == 0 || mean_integration_time < metadata.min_mean_integration_time) metadata.min_mean_integration_time = mean_integration_time;
 
@@ -1046,7 +1046,7 @@ namespace transport
         if(metadata.global_min_integration_time == 0 || payload.get_min_integration_time() < metadata.global_min_integration_time) metadata.global_min_integration_time = payload.get_min_integration_time();
 
         metadata.total_batching_time += payload.get_batching_time();
-        boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / payload.get_num_integrations();
+        boost::timer::nanosecond_type mean_batching_time = payload.get_batching_time() / (payload.get_num_integrations() > 0 ? payload.get_num_integrations() : 1);
         if(metadata.max_mean_batching_time == 0 || mean_batching_time > metadata.max_mean_batching_time) metadata.max_mean_batching_time = mean_batching_time;
         if(metadata.min_mean_batching_time == 0 || mean_batching_time < metadata.min_mean_batching_time) metadata.min_mean_batching_time = mean_batching_time;
 
