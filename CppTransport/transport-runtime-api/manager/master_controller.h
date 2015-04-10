@@ -911,6 +911,8 @@ namespace transport
         // this call returns when all workers have signalled that their work is done
         bool success = this->integration_task_to_workers(writer, i_agg, p_agg, d_agg, begin_label, end_label);
 
+        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+
         // close the writer
         this->data_mgr->close_writer(writer);
 
@@ -1071,6 +1073,8 @@ namespace transport
         // instruct workers to carry out their tasks
         bool success = this->output_task_to_workers(writer, tags, i_agg, p_agg, d_agg, slave_work_event::begin_output_assignment, slave_work_event::end_output_assignment);
 
+        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+
         // close the writer
         this->data_mgr->close_writer(writer);
 
@@ -1080,7 +1084,7 @@ namespace transport
 
 
     template <typename number>
-    bool master_controller<number>::output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
+    bool master_controller<number>::output_task_to_workers(std::shared_ptr< derived_content_writer<number> >& writer, const std::list<std::string>& tags,
                                                            integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                            slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
@@ -1316,6 +1320,8 @@ namespace transport
 
         // instruct workers to carry out the calculation
         bool success = this->postintegration_task_to_workers(writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+
+        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
         // close the writer
         this->data_mgr->close_writer(writer);

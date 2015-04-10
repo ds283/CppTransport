@@ -171,7 +171,8 @@ namespace transport
 				typedef enum
 					{
 				    aggregate_begin, aggregate_end,
-						MPI_begin, MPI_end
+						MPI_begin, MPI_end,
+            database_begin, database_end
 					} event_type;
 
 				// CONSTRUCTOR, DESTRUCTOR
@@ -440,6 +441,15 @@ namespace transport
 								    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "darkgoldenrod"));
 								    break;
 							    }
+
+                case master_work_event::database_begin:
+                  {
+                    boost::posix_time::ptime begin_time = (*t)->get_timestamp();
+                    t++;
+                    if(t == master_events.end()) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_TOO_FEW);
+                    if((*t)->get_type() != master_work_event::database_end) throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_DATABASE_END_MISSING);
+                    current_bin->push_back(work_item(begin_time, (*t)->get_timestamp(), "aquamarine"));
+                  }
 
 						    default:
 							    throw runtime_exception(runtime_exception::JOURNAL_ERROR, __CPP_TRANSPORT_JOURNAL_UNEXPECTED_EVENT);
