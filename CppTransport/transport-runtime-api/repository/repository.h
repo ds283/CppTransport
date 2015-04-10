@@ -459,7 +459,7 @@ namespace transport
 		    paths.temp   = temp_path;
 
 		    // integration_writer constructor takes a copy of the integration_task_record
-		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(rec, callbacks, metadata, paths, worker));
+		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
 			}
 
 
@@ -497,7 +497,7 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::shared_ptr< derived_content_writer<number> >(new derived_content_writer<number>(rec, callbacks, metadata, paths, worker));
+        return std::shared_ptr< derived_content_writer<number> >(new derived_content_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
 	    }
 
 
@@ -535,7 +535,7 @@ namespace transport
         paths.log    = log_path;
         paths.temp   = temp_path;
 
-        return std::shared_ptr< postintegration_writer<number> >(new postintegration_writer<number>(rec, callbacks, metadata, paths, worker));
+        return std::shared_ptr< postintegration_writer<number> >(new postintegration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
 	    }
 
 
@@ -580,7 +580,7 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
@@ -653,7 +653,7 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
@@ -726,7 +726,7 @@ namespace transport
 
         // stamp output group with the correct 'created' time stamp
         output_record->set_creation_time(writer.get_creation_time());
-        output_record->set_name_from_creation_time();
+        output_record->set_name(writer.get_name());
 
         // populate output group with content from the writer
         const std::list<derived_content>& content = writer.get_content();

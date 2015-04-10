@@ -67,7 +67,7 @@ namespace transport
 
         //! Construct a postintegration writer object.
         //! After creation it must be initialized by a suitable data_manager
-        postintegration_writer(postintegration_task_record<number>* rec, const callback_group& c,
+        postintegration_writer(const std::string& n, postintegration_task_record<number>* rec, const callback_group& c,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -156,9 +156,10 @@ namespace transport
 
 
     template <typename number>
-    postintegration_writer<number>::postintegration_writer(postintegration_task_record<number>* rec, const typename postintegration_writer<number>::callback_group& c,
+    postintegration_writer<number>::postintegration_writer(const std::string& n, postintegration_task_record<number>* rec,
+                                                           const typename postintegration_writer<number>::callback_group& c,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
-	    : generic_writer(m, p, w),
+	    : generic_writer(n, m, p, w),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),

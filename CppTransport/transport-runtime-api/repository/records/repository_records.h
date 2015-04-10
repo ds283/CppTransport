@@ -232,7 +232,7 @@ namespace transport
         const std::string get_name() const { return(this->name); }
 
         //! Set record time from creation-time metadata
-        void set_name_from_creation_time() { this->name = boost::posix_time::to_iso_string(this->metadata.get_creation_time()); }
+        void set_name(const std::string& n) { this->name = n; }
 
 
         // GET AND SET METADATA -- delegated to the metadata container

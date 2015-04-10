@@ -64,7 +64,7 @@ namespace transport
       public:
 
         //! Construct a derived-content writer object
-        derived_content_writer(output_task_record<number>* rec, const callback_group& c,
+        derived_content_writer(const std::string& n, output_task_record<number>* rec, const callback_group& c,
                                const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                                unsigned int w);
 
@@ -179,10 +179,11 @@ namespace transport
 
 
     template <typename number>
-    derived_content_writer<number>::derived_content_writer(output_task_record<number>* rec, const typename derived_content_writer<number>::callback_group& c,
+    derived_content_writer<number>::derived_content_writer(const std::string& n, output_task_record<number>* rec,
+                                                           const typename derived_content_writer<number>::callback_group& c,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                            unsigned int w)
-	    : generic_writer(m, p, w),
+	    : generic_writer(n, m, p, w),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< output_task_record<number>* >(rec->clone())),

@@ -66,7 +66,7 @@ namespace transport
         //! Construct an integration writer object.
         //! After creation it is not yet associated with anything in the data_manager backend; that must be done later
         //! by the task_manager, which can depute a data_manager object of its choice to do the work.
-        integration_writer(integration_task_record<number>* rec, const callback_group& c,
+        integration_writer(const std::string& n, integration_task_record<number>* rec, const callback_group& c,
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
                            unsigned int w);
 
@@ -155,10 +155,11 @@ namespace transport
 
 
     template <typename number>
-    integration_writer<number>::integration_writer(integration_task_record<number>* rec, const typename integration_writer<number>::callback_group& c,
+    integration_writer<number>::integration_writer(const std::string& n, integration_task_record<number>* rec,
+                                                   const typename integration_writer<number>::callback_group& c,
                                                    const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
                                                    unsigned int w)
-	    : generic_writer(m, p, w),
+	    : generic_writer(n, m, p, w),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),

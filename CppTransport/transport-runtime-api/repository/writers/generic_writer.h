@@ -94,7 +94,7 @@ namespace transport
       public:
 
         //! construct a generic writer object
-        generic_writer(const metadata_group& m, const paths_group& p, unsigned int w);
+        generic_writer(const std::string& n, const metadata_group& m, const paths_group& p, unsigned int w);
 
         //! destroy a generic writer object
         virtual ~generic_writer();
@@ -118,6 +118,9 @@ namespace transport
         // METADATA
 
       public:
+
+        //! Get name
+        const std::string& get_name() const { return(this->name); }
 
         //! Return tags
         const std::list<std::string>& get_tags() const { return(this->generic_metadata.tags); }
@@ -166,8 +169,12 @@ namespace transport
 
       protected:
 
+        //! name of output group we are writing to
+        std::string name;
+
         // SUCCESS FLAG - USED TO DETERMINE WHETHER TO ABORT/ROLLBACK WHEN WINDING UP
 
+        //! has this written been committed to the repository?
         bool committed;
 
 
@@ -206,11 +213,12 @@ namespace transport
     // GENERIC WRITER METHODS
 
 
-    generic_writer::generic_writer(const generic_writer::metadata_group& m,
+    generic_writer::generic_writer(const std::string& n, const generic_writer::metadata_group& m,
                                    const generic_writer::paths_group& p,
                                    unsigned int w)
 	    : generic_metadata(m),
 	      paths(p),
+        name(n),
 	      worker_number(w),
 	      data_manager_handle(nullptr),
 	      committed(false)
