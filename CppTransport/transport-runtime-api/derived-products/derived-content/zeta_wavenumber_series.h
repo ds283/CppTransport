@@ -117,25 +117,43 @@ namespace transport
 		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
 
 		        // set up cache handles
-		        typename datapipe<number>::time_config_handle& tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
-		        typename datapipe<number>::kconfig_zeta_handle& z_handle = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::twopf_kconfig_handle& kc_handle = pipe.new_twopf_kconfig_handle(this->kconfig_sample_sns);
+		        typename datapipe<number>::time_config_handle&   tc_handle = pipe.new_time_config_handle(this->time_sample_sns);
+		        typename datapipe<number>::kconfig_zeta_handle&  z_handle  = pipe.new_kconfig_zeta_handle(this->kconfig_sample_sns);
 
             // pull time-configuration information from the database
 		        time_config_tag<number> t_tag = pipe.new_time_config_tag();
 		        const std::vector<double> t_values = tc_handle.lookup_tag(t_tag);
+
+		        // pull k-configuration information from the database
+		        twopf_kconfig_tag<number> k_tag = pipe.new_twopf_kconfig_tag();
+		        const typename std::vector< twopf_configuration > k_values = kc_handle.lookup_tag(k_tag);
 
 		        // loop through all components of the twopf, for each t-configuration we use, pulling data from the database
 		        for(unsigned int i = 0; i < this->time_sample_sns.size(); i++)
 			        {
 				        zeta_twopf_kconfig_data_tag<number> tag = pipe.new_zeta_twopf_kconfig_data_tag(this->time_sample_sns[i]);
 
-                // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
-                const std::vector<number>& line_data = z_handle.lookup_tag(tag);
+                std::vector<number> line_data = z_handle.lookup_tag(tag);
 
-		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
-		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
+				        if(this->dimensionless)
+					        {
+						        assert(line_data.size() == k_values.size());
+						        for(unsigned int j = 0; j < line_data.size() && j <= k_values.size(); j++)
+							        {
+								        line_data[j] *= k_values[j].k_comoving*k_values[j].k_comoving*k_values[j].k_comoving / (2.0*M_PI*M_PI);
+							        }
 
-		            lines.push_back(line);
+				            data_line<number> line = data_line<number>(this->x_type, dimensionless_value, w_axis, line_data,
+				                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
+				            lines.push_back(line);
+					        }
+				        else
+					        {
+				            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+				                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]));
+				            lines.push_back(line);
+					        }
 			        }
 
 		        // detach pipe from output group

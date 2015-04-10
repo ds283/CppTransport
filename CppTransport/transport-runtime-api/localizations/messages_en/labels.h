@@ -82,6 +82,8 @@
 
 #define __CPP_TRANSPORT_LATEX_ZETA_SYMBOL                  "\\zeta"
 #define __CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL               "zeta"
+#define __CPP_TRANSPORT_LATEX_DIMENSIONLESS_PZETA          "\\mathcal{P}_{\\zeta}"
+#define __CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_PZETA       "cal(P)_zeta"
 #define __CPP_TRANSPORT_LATEX_TENSOR_SYMBOL                "h"
 #define __CPP_TRANSPORT_NONLATEX_TENSOR_SYMBOL             "h"
 #define __CPP_TRANSPORT_LATEX_TENSOR_MOMENTUM_SYMBOL       "\\dot{h}"

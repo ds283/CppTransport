@@ -34,6 +34,10 @@
 #include "transport-runtime-api/derived-products/utilities/filter.h"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT          "zeta-twopf-line-settings"
+#define __CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS "dimensionless-twopf"
+
+
 namespace transport
 	{
 
@@ -62,6 +66,17 @@ namespace transport
 				    virtual ~zeta_twopf_line() = default;
 
 
+				    // SETTINGS
+
+		      public:
+
+				    //! is this dimensionles?
+				    bool is_dimensionless() const { return(this->dimensionless); }
+
+				    //! set dimensionless
+				    void set_dimensionless(bool g) { this->dimensionless = g; }
+
+
 				    // LABELLING SERVICES
 
 		      public:
@@ -88,13 +103,22 @@ namespace transport
 				    //! Serialize this object
 				    virtual void serialize(Json::Value& writer) const override;
 
+
+				    // INTERNAL DATA
+
+		      protected:
+
+				    //! compute the dimensionless twopf?
+				    bool dimensionless;
+
 			    };
 
 
 		    // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 				template <typename number>
 				zeta_twopf_line<number>::zeta_twopf_line(const zeta_twopf_list_task<number>& tk, filter::twopf_kconfig_filter& kfilter)
-		      : derived_line<number>(tk)
+		      : derived_line<number>(tk),
+		        dimensionless(false)
 					{
 				    // set up a list of serial numbers corresponding to the k-configurations for this derived line
             try
@@ -120,26 +144,42 @@ namespace transport
 				zeta_twopf_line<number>::zeta_twopf_line(Json::Value& reader)
 					: derived_line<number>(reader)
 					{
+						dimensionless = reader[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS].asBool();
 					}
 
 
 				template <typename number>
 				std::string zeta_twopf_line<number>::make_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+						if(this->dimensionless)
+							{
+								return( std::string(__CPP_TRANSPORT_LATEX_DIMENSIONLESS_PZETA) );
+							}
+						else
+							{
+						    return( std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_LATEX_ZETA_SYMBOL) );
+							}
 					}
 
 
 				template <typename number>
 				std::string zeta_twopf_line<number>::make_non_LaTeX_label(void) const
 					{
-				    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
+						if(this->dimensionless)
+							{
+								return( std::string(__CPP_TRANSPORT_NONLATEX_DIMENSIONLESS_PZETA) );
+							}
+						else
+							{
+						    return( std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) + std::string(" ") + std::string(__CPP_TRANSPORT_NONLATEX_ZETA_SYMBOL) );
+							}
 					}
 
 
 				template <typename number>
 				void zeta_twopf_line<number>::serialize(Json::Value& writer) const
 					{
+						writer[__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_ZETA_TWOPF_LINE_DIMENSIONLESS] = this->dimensionless;
 					}
 
 
