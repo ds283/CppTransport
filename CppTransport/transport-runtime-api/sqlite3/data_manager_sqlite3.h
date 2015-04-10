@@ -115,13 +115,13 @@ namespace transport
       public:
 
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        virtual twopf_batcher<number> create_temp_twopf_container(const boost::filesystem::path& tempdir,
+        virtual twopf_batcher<number> create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir,
                                                                   const boost::filesystem::path& logdir,
                                                                   unsigned int worker, unsigned int group, model<number>* m,
                                                                   generic_batcher::container_dispatch_function dispatcher) override;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        virtual threepf_batcher<number> create_temp_threepf_container(const boost::filesystem::path& tempdir,
+        virtual threepf_batcher<number> create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir,
                                                                       const boost::filesystem::path& logdir,
                                                                       unsigned int worker, unsigned int group, model<number>* m,
                                                                       generic_batcher::container_dispatch_function dispatcher) override;
@@ -416,7 +416,7 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing database maintenance ...";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing maintenance on SQLite3 container " << writer->get_relative_container_path();
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
@@ -552,7 +552,7 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing database maintenance ...";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing maintenance on SQLite3 container " << writer->get_relative_container_path();
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
@@ -652,7 +652,7 @@ namespace transport
 
     template <typename number>
     twopf_batcher<number>
-    data_manager_sqlite3<number>::create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+    data_manager_sqlite3<number>::create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                               unsigned int worker, unsigned int group,
                                                               model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
@@ -674,7 +674,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        twopf_batcher<number> batcher(this->batcher_capacity, m, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
+        twopf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary twopf container " << container;
 
@@ -687,7 +687,7 @@ namespace transport
 
     template <typename number>
     threepf_batcher<number>
-    data_manager_sqlite3<number>::create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+    data_manager_sqlite3<number>::create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
                                                                 unsigned int worker, unsigned int group,
                                                                 model<number>* m, generic_batcher::container_dispatch_function dispatcher)
       {
@@ -711,7 +711,7 @@ namespace transport
 	                                                                  this, tempdir, worker, m, std::placeholders::_1, std::placeholders::_2);
 
         // set up batcher
-        threepf_batcher<number> batcher(this->batcher_capacity, m, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
+        threepf_batcher<number> batcher(this->batcher_capacity, m, tk, container, logdir, writers, dispatcher, replacer, db, worker, group, m->supports_per_configuration_statistics());
 
         BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << "** Created new temporary threepf container " << container;
 
@@ -856,7 +856,7 @@ namespace transport
         this->open_containers.remove(db);
         sqlite3_close(db);
 
-        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Closed sqlite3 handle for " << batcher->get_container_path();
+        BOOST_LOG_SEV(batcher->get_log(), generic_batcher::normal) << "** Closed SQLite3 handle for " << batcher->get_container_path();
 
         if(action == generic_batcher::action_replace)
           {
@@ -1502,7 +1502,7 @@ namespace transport
 		    this->open_containers.push_back(db);
 		    pipe->set_manager_handle(db);
 
-		    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Attached sqlite3 container '" << ctr_path.string() << "' to datapipe";
+		    BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Attached SQLite3 container '" << ctr_path.string() << "' to datapipe";
 			}
 
 
@@ -1561,7 +1561,7 @@ namespace transport
 				this->open_containers.remove(db);
 				sqlite3_close(db);
 
-				BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Detached sqlite3 container from datapipe";
+				BOOST_LOG_SEV(pipe->get_log(), datapipe<number>::normal) << "** Detached SQLite3 container from datapipe";
 			}
 
 

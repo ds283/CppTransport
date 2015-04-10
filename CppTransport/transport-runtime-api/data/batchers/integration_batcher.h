@@ -14,8 +14,12 @@
 #include "transport-runtime-api/data/batchers/generic_batcher.h"
 #include "transport-runtime-api/data/batchers/postintegration_batcher.h"
 #include "transport-runtime-api/data/batchers/integration_items.h"
+#include "transport-runtime-api/data/batchers/zeta_compute.h"
 
 #include "transport-runtime-api/models/model_forward_declare.h"
+#include "transport-runtime-api/tasks/tasks_forward_declare.h"
+#include "transport-runtime-api/tasks/task_configurations.h"
+
 
 namespace transport
 	{
@@ -238,18 +242,28 @@ namespace transport
       public:
 
         template <typename handle_type>
-        twopf_batcher(unsigned int cap, model<number>* m,
+        twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
                       const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                       const writer_group& w,
                       generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                       handle_type h, unsigned int wn, unsigned int wg, bool s);
 
 
+        // ADMINISTRATION
+
+      public:
+
+        //! Override integration_batcher close() to push notification to a paired batcher, if one is present
+        virtual void close() override { this->integration_batcher<number>::close(); if(this->paired_batcher != nullptr) this->paired_batcher->close(); this->paired_batcher = nullptr; }
+
+
         // BATCH, UNBATCH
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& tpf);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg);
+
+        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& twopf, const std::vector<number>& backg);
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
 
@@ -274,7 +288,7 @@ namespace transport
 
       public:
 
-        //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present
+        //! Override generic batcher set_flush_mode() to push flush settings to a paired batcher, if one is present; then unpair
         virtual void set_flush_mode(generic_batcher::flush_mode f) override { this->generic_batcher::set_flush_mode(f); if(this->paired_batcher != nullptr) this->paired_batcher->set_flush_mode(f); }
 
 
@@ -311,8 +325,17 @@ namespace transport
 
         // PAIRING
 
+        //! task associated with this batcher (for computing gauge transforms, etc.)
+        twopf_task<number>* parent_task;
+
         //! Paired zeta batcher, if present
         zeta_twopf_batcher<number>* paired_batcher;
+
+
+        // ZETA COMPUTATION AGENT
+
+        //! compute delegate
+        zeta_compute<number> zeta_agent;
 
       };
 
@@ -343,7 +366,7 @@ namespace transport
       public:
 
         template <typename handle_type>
-        threepf_batcher(unsigned int cap, model<number>* m,
+        threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
                         const boost::filesystem::path& cp, const boost::filesystem::path& lp,
                         const writer_group& w,
                         generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
@@ -364,18 +387,35 @@ namespace transport
         virtual void report_integration_failure() override;
 
 
+        // ADMINISTRATION
+
+      public:
+
+        //! Override integration_batcher close() to push notification to a paired batcher, if one is present; then unpair
+        virtual void close() override { this->integration_batcher<number>::close(); if(this->paired_batcher != nullptr) this->paired_batcher->close(); this->paired_batcher = nullptr; }
+
+
         // BATCH, UNBATCH
 
       public:
 
-        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& tpf, twopf_type t = real_twopf);
+        void push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values, const std::vector<number>& backg, twopf_type t = real_twopf);
 
-        void push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values,
+        void push_threepf(unsigned int time_serial, double t,
+                          const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
                           const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                           const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
                           const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
         void push_tensor_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& values);
+
+        void push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial, const std::vector<number>& twopf, const std::vector<number>& backg);
+
+        void push_paired_threepf(unsigned int time_serial, double t,
+                                 const threepf_kconfig& kconfig, unsigned int source_serial, const std::vector<number>& values,
+                                 const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
+                                 const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
+                                 const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg);
 
         virtual void unbatch(unsigned int source_serial) override;
 
@@ -427,8 +467,17 @@ namespace transport
 
         // PAIRING
 
+        //! threepf-task associated with this batcher (for computing gauge transfroms etc.)
+        threepf_task<number>* parent_task;
+
         //! Paired zeta batcher, if present
         zeta_threepf_batcher<number>* paired_batcher;
+
+
+        // ZETA COMPUTATION AGENT
+
+        //! compute delegate
+        zeta_compute<number> zeta_agent;
 
 	    };
 
@@ -595,20 +644,23 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m,
+    twopf_batcher<number>::twopf_batcher(unsigned int cap, model<number>* m, twopf_task<number>* tk,
                                          const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                          generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                          handle_type h, unsigned int wn, unsigned int wg, bool s)
 	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
 	      writers(w),
-        paired_batcher(nullptr)
+        paired_batcher(nullptr),
+        parent_task(tk),
+        zeta_agent(m, tk)
 	    {
+        assert(this->parent_task != nullptr);
 	    }
 
 
     template <typename number>
     void twopf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                           const std::vector<number>& values, const std::vector<number>& tpf)
+                                           const std::vector<number>& values, const std::vector<number>& backg)
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
@@ -620,8 +672,23 @@ namespace transport
         item.elements       = values;
 
         this->twopf_batch.push_back(item);
+
+        if(this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+
         this->check_for_flush();
 	    }
+
+
+    template <typename number>
+    void twopf_batcher<number>::push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                  const std::vector<number>& twopf, const std::vector<number>& backg)
+      {
+        assert(this->mdl != nullptr);
+        assert(this->parent_task != nullptr);
+
+        number zeta_twopf = this->zeta_agent.zeta_twopf(twopf, backg);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+      }
 
 
     template <typename number>
@@ -740,20 +807,23 @@ namespace transport
 
     template <typename number>
     template <typename handle_type>
-    threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m,
+    threepf_batcher<number>::threepf_batcher(unsigned int cap, model<number>* m, threepf_task<number>* tk,
                                              const boost::filesystem::path& cp, const boost::filesystem::path& lp, const writer_group& w,
                                              generic_batcher::container_dispatch_function d, generic_batcher::container_replacement_function r,
                                              handle_type h, unsigned int wn, unsigned int wg, bool s)
 	    : integration_batcher<number>(cap, m, cp, lp, d, r, h, wn, wg, s),
 	      writers(w),
-        paired_batcher(nullptr)
+        paired_batcher(nullptr),
+        parent_task(tk),
+        zeta_agent(m, tk)
 	    {
+        assert(this->parent_task != nullptr);
 	    }
 
 
     template <typename number>
     void threepf_batcher<number>::push_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
-                                             const std::vector<number>& values, const std::vector<number>& tpf, twopf_type t)
+                                             const std::vector<number>& values, const std::vector<number>& backg, twopf_type t)
 	    {
         if(values.size() != 2*this->Nfields*2*this->Nfields) throw runtime_exception(runtime_exception::STORAGE_ERROR, __CPP_TRANSPORT_NFIELDS_TWOPF);
 
@@ -767,12 +837,26 @@ namespace transport
         if(t == real_twopf) this->twopf_re_batch.push_back(item);
         else                this->twopf_im_batch.push_back(item);
 
+        if(t == real_twopf && this->paired_batcher != nullptr) this->push_paired_twopf(time_serial, k_serial, source_serial, values, backg);
+
         this->check_for_flush();
 	    }
 
 
     template <typename number>
-    void threepf_batcher<number>::push_threepf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+    void threepf_batcher<number>::push_paired_twopf(unsigned int time_serial, unsigned int k_serial, unsigned int source_serial,
+                                                    const std::vector<number>& twopf, const std::vector<number>& backg)
+      {
+        assert(this->mdl != nullptr);
+        assert(this->parent_task != nullptr);
+
+        number zeta_twopf = this->zeta_agent.zeta_twopf(twopf, backg);
+        this->paired_batcher->push_twopf(time_serial, k_serial, zeta_twopf, source_serial);
+      }
+
+
+    template <typename number>
+    void threepf_batcher<number>::push_threepf(unsigned int time_serial, double t, const threepf_kconfig& kconfig, unsigned int source_serial,
                                                const std::vector<number>& values,
                                                const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
                                                const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
@@ -783,13 +867,39 @@ namespace transport
         typename integration_items<number>::threepf_item item;
 
         item.time_serial    = time_serial;
-        item.kconfig_serial = k_serial;
+        item.kconfig_serial = kconfig.serial;
         item.source_serial  = source_serial;
         item.elements       = values;
 
         this->threepf_batch.push_back(item);
+
+        if(this->paired_batcher != nullptr)
+          this->push_paired_threepf(time_serial, t, kconfig, source_serial, values,
+                                    tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg);
+
         this->check_for_flush();
 	    }
+
+
+    template <typename number>
+    void threepf_batcher<number>::push_paired_threepf(unsigned int time_serial, double t,
+                                                      const threepf_kconfig& kconfig, unsigned int source_serial,
+                                                      const std::vector<number>& threepf,
+                                                      const std::vector<number>& tpf_k1_re, const std::vector<number>& tpf_k1_im,
+                                                      const std::vector<number>& tpf_k2_re, const std::vector<number>& tpf_k2_im,
+                                                      const std::vector<number>& tpf_k3_re, const std::vector<number>& tpf_k3_im, const std::vector<number>& bg)
+      {
+        assert(this->mdl != nullptr);
+        assert(this->parent_task != nullptr);
+
+        number zeta_threepf = 0.0;
+        number redbsp = 0.0;
+
+        this->zeta_agent.zeta_threepf(kconfig, t, threepf, tpf_k1_re, tpf_k1_im, tpf_k2_re, tpf_k2_im, tpf_k3_re, tpf_k3_im, bg, zeta_threepf, redbsp);
+
+        this->paired_batcher->push_threepf(time_serial, kconfig.serial, zeta_threepf, source_serial);
+        this->paired_batcher->push_reduced_bispectrum(time_serial, kconfig.serial, redbsp, source_serial);
+      }
 
 
     template <typename number>

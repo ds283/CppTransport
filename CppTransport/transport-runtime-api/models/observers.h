@@ -40,16 +40,27 @@ namespace transport
           {
           }
 
+
+        // INTERFACE
+
+      public:
+
         //! Advance time-step counter
         void step() { this->time_step++; }
 
         //! Query whether the current time step should be stored
-        bool store_time_step() { return(this->storage_list[time_step].store); }
+        bool store_time_step() const { return(this->storage_list[time_step].store); }
 
         //! Query serial number to use when storing
-        unsigned int store_serial_number() { return(this->storage_list[time_step].tserial); }
+        unsigned int store_serial_number() const { return(this->storage_list[time_step].tserial); }
 
-      private:
+        //! Query time associated with storing
+        double store_time() const { return(this->storage_list[time_step].time); }
+
+
+        // INTERNAL DATA
+
+      protected:
 
         //! Records current time step
         unsigned int time_step;
@@ -70,6 +81,11 @@ namespace transport
 
         //! Create a timing observer object
         timing_observer(const std::vector< typename integration_task<number>::time_storage_record >& l, double t_int=1.0, bool s=false, unsigned int p=3);
+
+
+        // INTERFACE
+
+      public:
 
         //! Prepare for a batching step
         template <typename Level>
@@ -186,6 +202,11 @@ namespace transport
                                           unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                           double t_int = 1.0, bool s = true, unsigned int p = 3);
 
+
+        // INTERFACE
+
+      public:
+
         //! Push the current state to the batcher
         template <typename State>
         void push(const State& x);
@@ -288,6 +309,11 @@ namespace transport
                                             unsigned int tw_re_k3_st, unsigned int tw_im_k3_st,
                                             unsigned int th_st,
                                             double t_int = 1.0, bool s = true, unsigned int p = 3);
+
+
+        // INTERFACE
+
+      public:
 
         //! Push the current state to the batcher
         template <typename State>
@@ -419,7 +445,7 @@ namespace transport
                 this->batcher.push_twopf(this->store_serial_number(), this->k_config.index[2], this->k_config.serial, tpf_x3_im, bg_x, threepf_batcher<number>::imag_twopf);
               }
 
-            this->batcher.push_threepf(this->store_serial_number(), this->k_config.serial, this->k_config.serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
+            this->batcher.push_threepf(this->store_serial_number(), this->store_time(), this->k_config, this->k_config.serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
           }
 
         this->step();
@@ -449,6 +475,11 @@ namespace transport
                                          unsigned int bg_sz, unsigned int ten_sz, unsigned int tw_sz,
                                          unsigned int bg_st, unsigned int ten_st, unsigned int tw_st,
                                          double t_int = 1.0, bool s = false, unsigned int p = 3);
+
+
+        // INTERFACE
+
+      public:
 
         //! Push the current state to the batcher
         template <typename State>
@@ -564,6 +595,11 @@ namespace transport
                                                    unsigned int th_st,
                                                    double t_int=1.0, bool s=false, unsigned int p=3);
 
+
+        // INTERFACE
+
+      public:
+
         //! Push the current state to the batcher
         template <typename State>
         void push(const State& x);
@@ -583,7 +619,7 @@ namespace transport
         virtual void stop_timers(unsigned int refinement) override;
 
 
-        // INTERAL DATA
+        // INTERNAL DATA
 
       private:
 
@@ -702,7 +738,7 @@ namespace transport
                     this->batcher.push_twopf(this->store_serial_number(), this->work_list[c].index[2], this->work_list[c].serial, tpf_x3_im, bg_x, threepf_batcher<number>::imag_twopf);
                   }
 
-                this->batcher.push_threepf(this->store_serial_number(), this->work_list[c].serial, this->work_list[c].serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
+                this->batcher.push_threepf(this->store_serial_number(), this->store_time(), this->work_list[c], this->work_list[c].serial, thpf_x, tpf_x1_re, tpf_x1_im, tpf_x2_re, tpf_x2_im, tpf_x3_re, tpf_x3_im, bg_x);
               }
           }
 

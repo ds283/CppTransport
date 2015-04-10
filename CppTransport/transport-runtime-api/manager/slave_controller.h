@@ -471,7 +471,8 @@ namespace transport
                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
-            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(payload.get_tempdir_path(), payload.get_logdir_path(), this->get_rank(), 0, m, dispatcher);
+            twopf_batcher<number> batcher = this->data_mgr->create_temp_twopf_container(tka, payload.get_tempdir_path(), payload.get_logdir_path(),
+                                                                                        this->get_rank(), 0, m, dispatcher);
 
             // write log header
             boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
@@ -487,7 +488,7 @@ namespace transport
                                                                                 MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
             // construct a batcher to hold the output of the integration
-            threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(payload.get_tempdir_path(), payload.get_logdir_path(),
+            threepf_batcher<number> batcher = this->data_mgr->create_temp_threepf_container(tkb, payload.get_tempdir_path(), payload.get_logdir_path(),
                                                                                             this->get_rank(), 0, m, dispatcher);
 
             // write log header
@@ -965,7 +966,7 @@ namespace transport
                                                                                       MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
-                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
+                twopf_batcher<number> i_batcher = this->data_mgr->create_temp_twopf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
 
                 // pair batchers
                 i_batcher.pair(&batcher);
@@ -1016,7 +1017,7 @@ namespace transport
                                                                                       MPI::INTEGRATION_DATA_READY, std::string("INTEGRATION_DATA_READY"));
 
                 // construct a batcher to hold integration output
-                threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
+                threepf_batcher<number> i_batcher = this->data_mgr->create_temp_threepf_container(ptk, payload.get_paired_tempdir_path(), payload.get_paired_logdir_path(), this->get_rank(), 0, m, i_dispatcher);
 
                 // pair batchers
                 i_batcher.pair(&batcher);

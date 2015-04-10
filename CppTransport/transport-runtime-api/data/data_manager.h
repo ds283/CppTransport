@@ -124,12 +124,14 @@ namespace transport
       public:
 
         //! Create a temporary container for twopf data. Returns a batcher which can be used for writing to the container.
-        virtual twopf_batcher<number> create_temp_twopf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual twopf_batcher<number> create_temp_twopf_container(twopf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                  const boost::filesystem::path& logdir,
                                                                   unsigned int worker, unsigned int group, model<number>* m,
                                                                   generic_batcher::container_dispatch_function dispatcher) = 0;
 
         //! Create a temporary container for threepf data. Returns a batcher which can be used for writing to the container.
-        virtual threepf_batcher<number> create_temp_threepf_container(const boost::filesystem::path& tempdir, const boost::filesystem::path& logdir,
+        virtual threepf_batcher<number> create_temp_threepf_container(threepf_task<number>* tk, const boost::filesystem::path& tempdir,
+                                                                      const boost::filesystem::path& logdir,
                                                                       unsigned int worker, unsigned int group, model<number>* m,
                                                                       generic_batcher::container_dispatch_function dispatcher) = 0;
 

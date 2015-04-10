@@ -116,14 +116,17 @@ namespace transport
         class time_storage_record
           {
           public:
-            time_storage_record(bool s, unsigned int n)
-              : store(s), tserial(n)
+            time_storage_record(bool s, unsigned int n, double t)
+              : store(s),
+                tserial(n),
+                time(t)
               {
                 assert(s == true || (s== false && n == 0));
               }
 
             bool store;
             unsigned int tserial;
+            double time;
           };
 
 
@@ -527,7 +530,7 @@ namespace transport
 				if(Nstart < this->time_config_list.front().t)
 			    {
 				    times.push_back(Nstart);
-				    slist.push_back(time_storage_record(false, 0));
+				    slist.push_back(time_storage_record(false, 0, 0));
 			    }
 
 		    std::vector<time_config>::const_iterator t = this->time_config_list.begin();
@@ -539,13 +542,13 @@ namespace transport
 						    if(t != this->time_config_list.end() && t->serial == i)
 							    {
 								    times.push_back(this->raw_time_list[i]);
-								    slist.push_back(time_storage_record(true, t->serial));
+								    slist.push_back(time_storage_record(true, t->serial, t->t));
                     t++;
 							    }
 								else
 							    {
 								    times.push_back(this->raw_time_list[i]);
-								    slist.push_back(time_storage_record(false, 0));
+								    slist.push_back(time_storage_record(false, 0, 0));
 							    }
 
 								if(refine > 0 && i < this->raw_time_list.size()-1)
@@ -572,7 +575,7 @@ namespace transport
 		    for(unsigned int i = 1; i < mesh_grid.size(); i++)
           {
 	          times.push_back(mesh_grid[i]);
-				    slist.push_back(time_storage_record(false, 0));
+				    slist.push_back(time_storage_record(false, 0, 0));
           }
 	    }
 
