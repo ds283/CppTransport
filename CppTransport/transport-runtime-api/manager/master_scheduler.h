@@ -397,6 +397,13 @@ namespace transport
 
 				this->update_stack.clear();
         finished = false;
+
+				// reset metadata and statistics
+				this->total_aggregation_time = 0;
+				this->total_work_time = 0;
+				this->number_aggregations = 0;
+				this->number_work = 0;
+				this->timer.start();
 			}
 
 
@@ -524,8 +531,6 @@ namespace transport
 				        count += update_interval;
 					    }
 					}
-
-        this->finished = false;
 			}
 
 
