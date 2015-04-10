@@ -56,7 +56,7 @@ bool threepf_kconfig_fixed_kt_lo(const transport::derived_data::filter::threepf_
 bool threepf_kconfig_fixed_kt_hi(const transport::derived_data::filter::threepf_kconfig_filter_data& data)
 	{
     // use high value of k_t, restrict to isosceles triangles which have alpha=0
-    return(fabs(data.kt-exp(9.0)) < 0.001 && fabs(data.alpha) < 0.001);
+    return(fabs(data.kt-exp(7.0)) < 0.001 && fabs(data.alpha) < 0.001);
 	}
 
 bool twopf_kseries_axis_filter(const transport::derived_data::filter::twopf_kconfig_filter_data& data)
@@ -121,8 +121,8 @@ int main(int argc, char* argv[])
     // k=1 is the mode which crosses the horizon at time N*,
     // where N* is the 'offset' we pass to the integration method (see below)
     const double        ktmin      = exp(3.0);
-    const double        ktmax      = exp(9.0);
-    const unsigned int  k_samples = 40;
+    const double        ktmax      = exp(7.0);
+    const unsigned int  k_samples  = 20;
 
 		const double        alphamin   = -1.0;
 		const double        alphamax   = +1.0;
@@ -148,7 +148,7 @@ int main(int argc, char* argv[])
 
     // construct a threepf task
     transport::threepf_fls_task<double> tk3("axion.threepf-1", ics, times, kts, alphas, betas, TimeStoragePolicy(), ThreepfStoragePolicy());
-		tk3.set_fast_forward_efolds(4.0);
+		tk3.set_fast_forward_efolds(3.0);
 
 		// construct a zeta threepf task, paired with the primary integration task
     transport::zeta_threepf_task<double> ztk3("axion.threepf-1.zeta", tk3);
@@ -260,7 +260,7 @@ int main(int argc, char* argv[])
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
     tk3_zeta_redbsp_beta_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_beta_hi.set_current_x_axis_value(transport::derived_data::beta_axis);
-		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^9", "k_t/k* = exp(9)");
+		tk3_zeta_redbsp_beta_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_beta_plot("axion.threepf-1.redbsp-beta", "redbsp-beta.pdf");
 		tk3_redbsp_beta_plot.add_line(tk3_zeta_redbsp_beta_lo);
@@ -285,7 +285,7 @@ int main(int argc, char* argv[])
                                                                                                        transport::derived_data::filter::threepf_kconfig_filter(threepf_kconfig_fixed_kt_hi));
     tk3_zeta_redbsp_sqk3_hi.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
     tk3_zeta_redbsp_sqk3_hi.set_current_x_axis_value(transport::derived_data::squeezing_fraction_k3_axis);
-    tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^9$", "k_t/k* = exp(9)");
+    tk3_zeta_redbsp_sqk3_hi.set_label_text("$k_t/k_\\star = \\mathrm{e}^7$", "k_t/k* = exp(7)");
 
     transport::derived_data::wavenumber_series_plot<double> tk3_redbsp_sqk3_plot("axion.threepf-1.redbsp-sqk3", "redbsp-sqk3.pdf");
     tk3_redbsp_sqk3_plot.add_line(tk3_zeta_redbsp_sqk3_lo);
