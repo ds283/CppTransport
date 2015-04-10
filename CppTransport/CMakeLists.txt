@@ -7,6 +7,7 @@ SET ( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} "${CMAKE_SOURCE_DIR}/cmake/Modules/
 find_package(MPI REQUIRED)
 find_package(Boost REQUIRED COMPONENTS system filesystem random timer date_time mpi log_setup log serialization thread)
 find_package(GiNaC REQUIRED)
+find_package(GSL REQUIRED)
 #find_package(CUDA REQUIRED)
 #find_package(OpenCL REQUIRED)
 
