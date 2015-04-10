@@ -38,6 +38,10 @@
 #include "transport-runtime-api/derived-products/derived-content/threepf_kconfig_shift.h"
 
 
+#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT           "momentum-configuration-series"
+#define __CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX "spectral-index"
+
+
 namespace transport
 	{
 
@@ -64,6 +68,17 @@ namespace transport
 		        wavenumber_series(Json::Value& reader);
 
 		        virtual ~wavenumber_series() = default;
+
+
+		        // SPECTRAL INDEX CALCULATION
+
+          public:
+
+		        //! are we a spectral index series?
+		        bool is_spectral_index() const { return(this->compute_index); }
+
+		        //! set spectral index calculation
+		        void set_spectral_index(bool g) { this->compute_index = g; }
 
 
             // DATAPIPE SERVICES
@@ -114,7 +129,16 @@ namespace transport
 
           protected:
 
+		        // RUNTIME AGENTS
+
+		        // momentum->derivative shifter
             threepf_kconfig_shift<number> shifter;
+
+
+		        // SETTINGS
+
+						//! compute spectral index?
+		        bool compute_index;
 
 	        };
 
@@ -122,7 +146,8 @@ namespace transport
         // constructor DOESN'T CALL the correct derived_line<> constructor; concrete classes must call it for themselves
 		    template <typename number>
 		    wavenumber_series<number>::wavenumber_series(const derivable_task<number>& tk, filter::time_filter tfilter)
-          : derived_line<number>(tk)
+          : derived_line<number>(tk),
+            compute_index(false)
 			    {
 				    // set up list of serial numbers corresponding to the sample times for this derived line
             try
@@ -147,6 +172,7 @@ namespace transport
 		    wavenumber_series<number>::wavenumber_series(Json::Value& reader)
           : derived_line<number>(reader)
 			    {
+		        compute_index = reader[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX].asBool();
 			    }
 
 
@@ -302,6 +328,8 @@ namespace transport
 			    {
 				    // DON'T CALL derived_line<> serialization because of virtual inheritance;
 				    // concrete classes must call it themselves
+
+		        writer[__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_ROOT][__CPP_TRANSPORT_NODE_PRODUCT_WAVENUMBER_SERIES_SPECTRAL_INDEX] = this->compute_index;
 			    }
 
 
