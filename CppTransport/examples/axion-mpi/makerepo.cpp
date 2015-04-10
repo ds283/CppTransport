@@ -621,6 +621,7 @@ int main(int argc, char* argv[])
     transport::derived_data::zeta_twopf_time_series<double> tk3_zeta_twopf_group = transport::derived_data::zeta_twopf_time_series<double>(ztk3,
                                                                                                                                        transport::derived_data::filter::time_filter(timeseries_filter),
                                                                                                                                        transport::derived_data::filter::twopf_kconfig_filter(twopf_kconfig_filter));
+		tk3_zeta_twopf_group.set_dimensionless(true);
 
     transport::derived_data::time_series_plot<double> tk3_zeta_twopf = transport::derived_data::time_series_plot<double>("axion.threepf-1.zeta-twopf", "zeta-twopf.pdf");
 
@@ -697,6 +698,7 @@ int main(int argc, char* argv[])
                                                                                                                                                  transport::derived_data::filter::time_filter(time_config_filter),
                                                                                                                                                  transport::derived_data::filter::twopf_kconfig_filter(twopf_kseries_filter));
     tk3_zeta_2spec.set_klabel_meaning(transport::derived_data::derived_line<double>::conventional);
+		tk3_zeta_2spec.set_dimensionless(true);
 
     transport::derived_data::wavenumber_series_plot<double> tk3_zeta_2spec_plot = transport::derived_data::wavenumber_series_plot<double>("axion.threepf-1.zeta-2pec", "zeta-2spec.pdf");
     tk3_zeta_2spec_plot.add_line(tk3_zeta_2spec);
