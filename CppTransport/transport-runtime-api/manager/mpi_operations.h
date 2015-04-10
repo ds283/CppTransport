@@ -721,26 +721,51 @@ namespace transport
                 //! Default constructor (used for receiving messages)
                 new_postintegration_payload() = default;
 
-                //! Value constructor (used for constructing messages to send)
+                //! Value constructor for standard postintegrations (used for constructing messages to send)
                 new_postintegration_payload(const std::string& tk,
                                             const boost::filesystem::path& tmp_d,
                                             const boost::filesystem::path& log_d,
                                             const std::list<std::string>& tg)
-                  : task(tk), tempdir(tmp_d.string()), logdir(log_d.string()), tags(tg)
+                  : task(tk),
+                    tempdir(tmp_d.string()),
+                    logdir(log_d.string()),
+                    tags(tg)
+                  {
+                  }
+
+                //! Value constructor for paired integrations (used for constructing messages to send)
+                new_postintegration_payload(const std::string& tk,
+                                            const boost::filesystem::path& p_tmp_d,
+                                            const boost::filesystem::path& p_log_d,
+                                            const std::list<std::string>& tg,
+                                            const boost::filesystem::path& i_tmp_d,
+                                            const boost::filesystem::path& i_log_d)
+                  : task(tk),
+                    tempdir(p_tmp_d.string()),
+                    logdir(p_log_d.string()),
+                    tags(tg),
+                    paired_tempdir(i_tmp_d.string()),
+                    paired_logdir(i_log_d.string())
                   {
                   }
 
                 //! Get task name
-                const std::string&            get_task_name()     const { return(this->task); }
+                const std::string&            get_task_name()           const { return(this->task); }
 
                 //! Get path to the temporary directory
-                boost::filesystem::path       get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+                boost::filesystem::path       get_tempdir_path()        const { return(boost::filesystem::path(this->tempdir)); }
 
                 //! Get path to the log directory
-                boost::filesystem::path       get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+                boost::filesystem::path       get_logdir_path()         const { return(boost::filesystem::path(this->logdir)); }
+
+                //! Get path to paired temporary directory
+                boost::filesystem::path       get_paired_tempdir_path() const { return(boost::filesystem::path(this->paired_tempdir)); }
+
+                //! Get path to paired log directory
+                boost::filesystem::path       get_paired_logdir_path()  const { return(boost::filesystem::path(this->paired_logdir)); }
 
                 //! Get tags specified on the command line, used to narrow-down the list of output groups
-                const std::list<std::string>& get_tags()          const { return(this->tags); }
+                const std::list<std::string>& get_tags()                const { return(this->tags); }
 
               private:
 
@@ -756,6 +781,12 @@ namespace transport
                 //! Search tags specified on the command line
                 std::list<std::string> tags;
 
+                //! Pathname to paired directory for temporary files (if using)
+                std::string paired_tempdir;
+
+                //! Pathname to paired directory for log files (if using)
+                std::string paired_logdir;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -766,6 +797,8 @@ namespace transport
                     ar & tempdir;
                     ar & logdir;
                     ar & tags;
+                    ar & paired_tempdir;
+                    ar & paired_logdir;
                   }
 
               };

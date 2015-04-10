@@ -265,9 +265,13 @@ namespace transport
 		                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 		    //! Master node: Pass new integration task to the workers
-		    bool integration_task_to_workers(std::shared_ptr <integration_writer<number>>& writer,
+		    bool integration_task_to_workers(std::shared_ptr< integration_writer<number>>& writer,
                                          integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                          slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+
+        //! Master node: debrief after task completion
+        void debrief_integration(std::shared_ptr< integration_writer<number> >& writer,
+                                 integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_integration(std::shared_ptr<integration_writer<number> > &writer, MPI::data_ready_payload& payload, integration_metadata &metadata);
@@ -296,9 +300,19 @@ namespace transport
                                              slave_work_event::event_type end_label);
 
         //! Master node: Pass new postintegration task to workers
-		    bool postintegration_task_to_workers(std::shared_ptr <postintegration_writer<number>>& writer, const std::list<std::string>& tags,
+		    bool postintegration_task_to_workers(std::shared_ptr< postintegration_writer<number> >& writer, const std::list<std::string>& tags,
                                              integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                              slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+
+        //! Master node: Pass new paired postintegration task to workers
+        bool paired_postintegration_task_to_workers(std::shared_ptr< integration_writer<number> >& i_writer, std::shared_ptr< postintegration_writer<number> >& p_writer,
+                                                    const std::list<std::string>& tags,
+                                                    integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                                    slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+
+        //! Master node: debrief after task completion
+        void debrief_postintegration(std::shared_ptr< postintegration_writer<number> >& writer,
+                                     output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to an aggregation request
 		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, MPI::data_ready_payload& payload, output_metadata& metadata);
@@ -315,6 +329,10 @@ namespace transport
 		    bool output_task_to_workers(std::shared_ptr <derived_content_writer<number>>& writer, const std::list<std::string>& tags,
                                     integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+
+        //! Master node: debrief after task completion
+        void debrief_output(std::shared_ptr< derived_content_writer<number> >& writer,
+                            output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to a notification of new derived content
 		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, MPI::content_ready_payload& payload, output_metadata& metadata);
@@ -960,8 +978,17 @@ namespace transport
 
         // push task metadata we have collected to the writer
         writer->set_metadata(i_metadata);
-
         wallclock_timer.stop();
+        this->debrief_integration(writer, i_metadata, wallclock_timer);
+
+		    return(success);
+	    }
+
+
+    template <typename number>
+    void master_controller<number>::debrief_integration(std::shared_ptr< integration_writer<number> >& writer,
+                                                        integration_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer)
+      {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
@@ -977,9 +1004,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/ i_metadata.total_configurations);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
-
-		    return(success);
-	    }
+      }
 
 
     template <typename number>
@@ -1121,8 +1146,17 @@ namespace transport
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
         writer->set_metadata(o_metadata);
-
         wallclock_timer.stop();
+        this->debrief_output(writer, o_metadata, wallclock_timer);
+
+        return(success);
+	    }
+
+
+    template <typename number>
+    void master_controller<number>::debrief_output(std::shared_ptr< derived_content_writer<number> >& writer,
+                                                   output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
+      {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
@@ -1144,9 +1178,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
-
-        return(success);
-	    }
+      }
 
 
     template <typename number>
@@ -1349,8 +1381,8 @@ namespace transport
         this->data_mgr->initialize_writer(p_writer);
         this->data_mgr->create_tables(p_writer, tk);
 
-        // create an output writer for the integration task
-        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank());
+        // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
+        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), "-paired");
         this->data_mgr->initialize_writer(i_writer);
         this->data_mgr->create_tables(i_writer, ptk);
 
@@ -1365,7 +1397,9 @@ namespace transport
         BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << *ptk;
 
         // instruct workers to carry out the calculation
-        bool success = this->integration_task_to_workers(i_writer, i_agg, p_agg, d_agg, begin_label, end_label);
+        bool success = this->paired_postintegration_task_to_workers(i_writer, p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
+
+        journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
         // close both writers
         this->data_mgr->close_writer(i_writer);
@@ -1418,8 +1452,70 @@ namespace transport
 		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
 
         writer->set_metadata(o_metadata);
+        wallclock_timer.stop();
+        this->debrief_postintegration(writer, o_metadata, wallclock_timer);
+
+        return(success);
+	    }
+
+
+    template <typename number>
+    bool master_controller<number>::paired_postintegration_task_to_workers(std::shared_ptr< integration_writer<number> >& i_writer,
+                                                                           std::shared_ptr< postintegration_writer<number> >& p_writer,
+                                                                           const std::list<std::string>& tags,
+                                                                           integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
+                                                                           slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+      {
+        assert(this->repo != nullptr);
+
+        // set up a timer to keep track of the total wallclock time used
+        boost::timer::cpu_timer wallclock_timer;
+
+        // aggregate cache information
+        integration_metadata i_metadata;
+        output_metadata      o_metadata;
+
+        // get paths needed by different batchers on each worker
+        boost::filesystem::path i_tempdir_path = i_writer->get_abs_tempdir_path();
+        boost::filesystem::path i_logdir_path  = i_writer->get_abs_logdir_path();
+
+        boost::filesystem::path p_tempdir_path = p_writer->get_abs_tempdir_path();
+        boost::filesystem::path p_logdir_path  = p_writer->get_abs_logdir_path();
+
+        {
+          // journal instrument will log time spent doing MPI when it goes out of scope
+          journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
+
+          std::vector<boost::mpi::request> requests(this->world.size()-1);
+          MPI::new_postintegration_payload payload(p_writer->get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path);
+
+          for(unsigned int i = 0; i < this->world.size()-1; i++)
+            {
+              requests[i] = this->world.isend(this->worker_rank(i), MPI::NEW_POSTINTEGRATION, payload);
+            }
+
+          // wait for all messages to be received
+          boost::mpi::wait_all(requests.begin(), requests.end());
+          BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
+        }
+
+        bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, i_writer->get_log(), begin_label, end_label);
+
+        i_writer->set_metadata(i_metadata);
+        p_writer->set_metadata(o_metadata);
 
         wallclock_timer.stop();
+        this->debrief_integration(i_writer, i_metadata, wallclock_timer);
+//        this->debrief_postintegration(p_writer, o_metadata, wallclock_timer);
+
+        return(success);
+      }
+
+
+    template <typename number>
+    void master_controller<number>::debrief_postintegration(std::shared_ptr< postintegration_writer<number> >& writer,
+    output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
+      {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
@@ -1441,9 +1537,7 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
-
-        return(success);
-	    }
+      }
 
 
     template <typename number>
