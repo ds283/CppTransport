@@ -1443,10 +1443,11 @@ namespace transport
               {
                 for(unsigned int l = 0; l < betas.size(); l++)
                   {
-                    if(betas[l] >= 0.0 && betas[l] <= 1.0-smallest_squeezing && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions, with maximum squeezing on k3
-                       && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                                           // impose k1 >= k2 >= k3
+                    if(betas[l] >= 0.0 && betas[l] <= 1.0 && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions,
+                       && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                        // impose k1 >= k2 >= k3
+	                     && fabs(1.0 - betas[l]) > smallest_squeezing                                                  // impose maximum squeezing on k3
 	                     && fabs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
-	                     && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)                                                        // impose maximum squeezing on k1, k2
+	                     && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)                                     // impose maximum squeezing on k1, k2
                       {
                         threepf_kconfig kconfig;
 
