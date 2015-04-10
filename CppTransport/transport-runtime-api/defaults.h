@@ -36,6 +36,10 @@
 // tolerance when merging axis points; points closer than this are considered equivalent
 #define __CPP_TRANSPORT_AXIS_MERGE_TOLERANCE (1E-8)
 
+// smallest allowed squeezing in Fergusson--Shellard--Liguori coordinates
+// current 1E-8, which allows about |ln(1E-8)| ~ 18 e-folds of squeezing
+#define __CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING (1E-8)
+
 // log file name
 #define __CPP_TRANSPORT_LOG_FILENAME_A "worker_"
 #define __CPP_TRANSPORT_LOG_FILENAME_B "_%3N.log"

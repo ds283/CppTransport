@@ -1365,7 +1365,8 @@ namespace transport
         threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                          const range<double>& kts, const range<double>& alphas, const range<double>& betas,
                          typename integration_task<number>::time_config_storage_policy tp,
-                         typename threepf_task<number>::threepf_kconfig_storage_policy kp);
+                         typename threepf_task<number>::threepf_kconfig_storage_policy kp,
+                         double smallest_squeezing=__CPP_TRANSPORT_DEFAULT_SMALLEST_SQUEEZING);
 
         //! Construct a named three-point function task based on sampling at specified values of
         //! the Fergusson-Shellard-Liguori parameters k_t, alpha and beta,
@@ -1430,7 +1431,8 @@ namespace transport
     threepf_fls_task<number>::threepf_fls_task(const std::string& nm, const initial_conditions<number>& i, const range<double>& t,
                                                const range<double>& kts, const range<double>& alphas, const range<double>& betas,
                                                typename integration_task<number>::time_config_storage_policy tp,
-                                               typename threepf_task<number>::threepf_kconfig_storage_policy kp)
+                                               typename threepf_task<number>::threepf_kconfig_storage_policy kp,
+                                               double smallest_squeezing)
 	    : threepf_task<number>(nm, i, t, tp)
       {
         bool stored_background = false;
@@ -1441,8 +1443,10 @@ namespace transport
               {
                 for(unsigned int l = 0; l < betas.size(); l++)
                   {
-                    if(betas[l] >= 0.0 && betas[l] <= 1.0 && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions
-                       && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0)                                       // impose k1 >= k2 >= k3
+                    if(betas[l] >= 0.0 && betas[l] <= 1.0-smallest_squeezing && betas[l]-1.0 <= alphas[k] && alphas[k] <= 1.0-betas[l]  // impose triangle conditions, with maximum squeezing on k3
+                       && alphas[k] >= 0.0 && betas[l] >= (1.0+alphas[k])/3.0                                                           // impose k1 >= k2 >= k3
+	                     && fabs(1.0 + alphas[k] + betas[l]) > smallest_squeezing
+	                     && fabs(1.0 - alphas[k] + betas[l]) > smallest_squeezing)                                                        // impose maximum squeezing on k1, k2
                       {
                         threepf_kconfig kconfig;
 
