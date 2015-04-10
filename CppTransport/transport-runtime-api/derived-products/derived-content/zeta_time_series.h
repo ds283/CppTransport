@@ -307,8 +307,6 @@ namespace transport
 
             for(unsigned int i = 0; i < this->kconfig_sample_sns.size(); i++)
               {
-                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "§§ Processing 3pf k-configuration " << i << std::endl;
-
 		            zeta_threepf_time_data_tag<number> tag = pipe.new_zeta_threepf_time_data_tag(k_values[i]);
 
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
