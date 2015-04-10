@@ -190,10 +190,10 @@ namespace transport
             line_data.clear();
             line_data.assign(h->time_sample_sns.size(), 0.0);
 
-            std::vector<number> small;
-            std::vector<number> large;
-            small.assign(h->time_sample_sns.size(), +DBL_MAX);
-            large.assign(h->time_sample_sns.size(), -DBL_MAX);
+//            std::vector<number> small;
+//            std::vector<number> large;
+//            small.assign(h->time_sample_sns.size(), +DBL_MAX);
+//            large.assign(h->time_sample_sns.size(), -DBL_MAX);
 
             for(unsigned int m = 0; m < 2*N_fields; m++)
               {
@@ -209,23 +209,23 @@ namespace transport
                       {
                         number component = h->dN[j][m]*h->dN[j][n]*sigma_line[j];
 
-                        if(fabs(component) > large[j]) large[j] = fabs(component);
-                        if(fabs(component) < small[j]) small[j] = fabs(component);
+//                        if(fabs(component) > large[j]) large[j] = fabs(component);
+//                        if(fabs(component) < small[j]) small[j] = fabs(component);
                         line_data[j] += component;
                       }
                   }
               }
 
-            number global_small = +DBL_MAX;
-            number global_large = -DBL_MAX;
-            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
-              {
-                number large_fraction = fabs(large[j]/line_data[j]);
-                number small_fraction = fabs(small[j]/line_data[j]);
-
-                if(large_fraction > global_large) global_large = large_fraction;
-                if(small_fraction < global_small) global_small = small_fraction;
-              }
+//            number global_small = +DBL_MAX;
+//            number global_large = -DBL_MAX;
+//            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+//              {
+//                number large_fraction = fabs(large[j]/line_data[j]);
+//                number small_fraction = fabs(small[j]/line_data[j]);
+//
+//                if(large_fraction > global_large) global_large = large_fraction;
+//                if(small_fraction < global_small) global_small = small_fraction;
+//              }
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta twopf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
@@ -258,10 +258,10 @@ namespace transport
 //                h->mdl->compute_deltaN_xfm_2(h->tk->get_params(), h->background[j], ddN312[j]);
               }
 
-            std::vector<number> small;
-            std::vector<number> large;
-            small.assign(h->time_sample_sns.size(), +DBL_MAX);
-            large.assign(h->time_sample_sns.size(), -DBL_MAX);
+//            std::vector<number> small;
+//            std::vector<number> large;
+//            small.assign(h->time_sample_sns.size(), +DBL_MAX);
+//            large.assign(h->time_sample_sns.size(), -DBL_MAX);
 
             // linear component of the gauge transformation
             for(unsigned int l = 0; l < 2*N_fields; l++)
@@ -283,8 +283,8 @@ namespace transport
                           {
                             number component = h->dN[j][l]*h->dN[j][m]*h->dN[j][n]*threepf_line[j];
 
-                            if(fabs(component) > large[j])  large[j]  = fabs(component);
-                            if(fabs(component) < small[j]) small[j] = fabs(component);
+//                            if(fabs(component) > large[j])  large[j]  = fabs(component);
+//                            if(fabs(component) < small[j]) small[j] = fabs(component);
                             line_data[j] += component;
                           }
                       }
@@ -330,12 +330,12 @@ namespace transport
                                 number component2 = ddN213[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k3_re_mq[j] - k1_im_lp[j]*k3_im_mq[j]);
                                 number component3 = ddN312[j][l][m] * h->dN[j][p] * h->dN[j][q] * (k1_re_lp[j]*k2_re_mq[j] - k1_im_lp[j]*k2_im_mq[j]);
 
-                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
-                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
-                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
-                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
-                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
-                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
+//                                if(fabs(component1) > large[j]) large[j] = fabs(component1);
+//                                if(fabs(component1) < small[j]) small[j] = fabs(component1);
+//                                if(fabs(component2) > large[j]) large[j] = fabs(component2);
+//                                if(fabs(component2) < small[j]) small[j] = fabs(component2);
+//                                if(fabs(component3) > large[j]) large[j] = fabs(component3);
+//                                if(fabs(component3) < small[j]) small[j] = fabs(component3);
 
                                 line_data[j] += component1;
                                 line_data[j] += component2;
@@ -346,16 +346,16 @@ namespace transport
                   }
               }
 
-            number global_small = +DBL_MAX;
-            number global_large = -DBL_MAX;
-            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
-              {
-                number large_fraction = fabs(large[j]/line_data[j]);
-                number small_fraction = fabs(small[j]/line_data[j]);
-
-                if(large_fraction > global_large) global_large = large_fraction;
-                if(small_fraction < global_small) global_small = small_fraction;
-              }
+//            number global_small = +DBL_MAX;
+//            number global_large = -DBL_MAX;
+//            for(unsigned int j = 0; j < h->time_sample_sns.size(); j++)
+//              {
+//                number large_fraction = fabs(large[j]/line_data[j]);
+//                number small_fraction = fabs(small[j]/line_data[j]);
+//
+//                if(large_fraction > global_large) global_large = large_fraction;
+//                if(small_fraction < global_small) global_small = small_fraction;
+//              }
 
 //            std::ostringstream msg;
 //            msg << std::setprecision(2) << "-- zeta threepf time series: serial " << k.serial << ": smallest intermediate = " << global_small*100.0 << "%, largest intermediate = " << global_large*100.0 << "%";
