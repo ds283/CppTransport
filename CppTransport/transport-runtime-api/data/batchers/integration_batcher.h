@@ -612,11 +612,11 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final integration statistics";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->num_integrations << " individual integrations in " << format_time(this->integration_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean integration time           = " << format_time(this->integration_time/this->num_integrations);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean integration time           = " << format_time(this->integration_time/(this->num_integrations > 0 ? this->num_integrations : 1));
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual integration  = " << format_time(this->max_integration_time);
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual integration = " << format_time(this->min_integration_time);
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   total batching time             = " << format_time(this->batching_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean batching time              = " << format_time(this->batching_time/this->num_integrations);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean batching time              = " << format_time(this->batching_time/(this->num_integrations > 0 ? this->num_integrations : 1));
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual batch        = " << format_time(this->max_batching_time);
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual batch       = " << format_time(this->min_batching_time);
 

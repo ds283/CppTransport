@@ -332,7 +332,7 @@ namespace transport
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- Finished assignment: final statistics";
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   processed " << this->items_processed << " individual work items in " << format_time(this->total_time);
-        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/this->items_processed);
+        BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   mean processing time                = " << format_time(this->total_time/(this->items_processed > 0 ? this->items_processed : 1));
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   longest individual processing time  = " << format_time(this->longest_time);
         BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "--   shortest individual processing time = " << format_time(this->shortest_time);
 
