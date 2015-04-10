@@ -16,7 +16,7 @@
 #include "transport-runtime-api/derived-products/derived_product_forward_declare.h"
 
 
-#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (2)
+#define __CPP_TRANSPORT_DEFAULT_K_PRECISION (6)
 #define __CPP_TRANSPORT_DEFAULT_T_PRECISION (2)
 
 
