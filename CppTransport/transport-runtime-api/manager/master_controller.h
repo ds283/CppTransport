@@ -1605,7 +1605,7 @@ namespace transport
 
 		    // rebuild information about our workers; this information
 				// it is updated whenever we start a new task, because the details can vary
-				// between model instances
+				// between model instances (eg. CPU or GPU backends)
 				this->work_scheduler.reset(this->world.size()-1);
 
 		    while(!this->work_scheduler.is_ready())
