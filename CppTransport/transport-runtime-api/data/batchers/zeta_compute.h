@@ -49,11 +49,18 @@ namespace transport
                           const std::vector<number>& bg,
                           number& zeta_threepf, number& redbsp);
 
+      protected:
+
+        //! compute the zeta twopf -- internal version
+		    //! if 'precomputed' is set, we avoid computing the gauge transformation and use a cached version
+        number zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed);
+
 
         // INTERNAL API
 
       protected:
 
+		    //! shift a component of a threepf from momenta to derivatives
         void shift(unsigned int l, unsigned int m, unsigned int n,
                    const threepf_kconfig& kconfig, double t, const std::vector<number>& threepf,
                    const std::vector<number>& k1_re, const std::vector<number>& k1_im,
@@ -62,6 +69,7 @@ namespace transport
                    const std::vector<number>& bg,
                    number value);
 
+		    //! compute the shift from momenta to derivatives
         number compute_shift(double t, unsigned int p, unsigned int q, unsigned int r,
                              double p_comoving, double q_comoving, double r_comoving,
                              const std::vector<number>& p_re, const std::vector<number>& p_im,
@@ -119,12 +127,19 @@ namespace transport
       }
 
 
+		template <typename number>
+		number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg)
+			{
+				return(this->zeta_twopf(twopf, bg, false));
+			}
+
+
     template <typename number>
-    number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg)
+    number zeta_compute<number>::zeta_twopf(const std::vector<number>& twopf, const std::vector<number>& bg, bool precomputed)
       {
         number zeta_twopf = 0.0;
 
-        this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), bg, this->dN);
+        if(!precomputed) this->mdl->compute_gauge_xfm_1(this->parent_task->get_params(), bg, this->dN);
 
         for(unsigned int m = 0; m < 2*this->Nfields; m++)
           {
@@ -197,11 +212,11 @@ namespace transport
           }
 
         // compute reduced bispectrum
-        number z_tpf_k1 = this->zeta_twopf(k1_re, dN);
-        number z_tpf_k2 = this->zeta_twopf(k2_re, dN);
-        number z_tpf_k3 = this->zeta_twopf(k3_re, dN);
+        number z_tpf_k1 = this->zeta_twopf(k1_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        number z_tpf_k2 = this->zeta_twopf(k2_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
+        number z_tpf_k3 = this->zeta_twopf(k3_re, bg, true);  // 'true' flags that the gauge transformation is precomputed, so there is no need to recompute it
 
-        number form_factor = (6.0/5.0) * (z_tpf_k1 * z_tpf_k2 + z_tpf_k1 * z_tpf_k3 + z_tpf_k2 * z_tpf_k3);
+        number form_factor = (6.0/5.0) * (z_tpf_k1*z_tpf_k2 + z_tpf_k1*z_tpf_k3 + z_tpf_k2*z_tpf_k3);
         redbsp = zeta_threepf / form_factor;
       }
 
