@@ -310,10 +310,6 @@ namespace transport
                                                     integration_aggregator& i_agg, postintegration_aggregator& p_agg, derived_content_aggregator& d_agg,
                                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
-        //! Master node: debrief after task completion
-        void debrief_postintegration(std::shared_ptr< postintegration_writer<number> >& writer,
-                                     output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
-
 		    //! Master node: respond to an aggregation request
 		    void aggregate_postprocess(std::shared_ptr< postintegration_writer<number> >& writer, MPI::data_ready_payload& payload, output_metadata& metadata);
 
@@ -331,8 +327,8 @@ namespace transport
                                     slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
         //! Master node: debrief after task completion
-        void debrief_output(std::shared_ptr< derived_content_writer<number> >& writer,
-                            output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
+				template <typename WriterObject>
+        void debrief_output(WriterObject& writer, output_metadata& i_metadata, boost::timer::cpu_timer& wallclock_timer);
 
 		    //! Master node: respond to a notification of new derived content
 		    bool aggregate_content(std::shared_ptr< derived_content_writer<number> >& writer, MPI::content_ready_payload& payload, output_metadata& metadata);
@@ -998,10 +994,10 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/ i_metadata.total_configurations);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/ i_metadata.total_configurations);
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total batching time       = " << format_time(i_metadata.total_batching_time) << " | global mean batching time = " << format_time(i_metadata.total_batching_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean batching time    = " << format_time(i_metadata.min_mean_batching_time) << " | global min batching time = " << format_time(i_metadata.global_min_batching_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean batching time    = " << format_time(i_metadata.max_mean_batching_time) << " | global max batching time = " << format_time(i_metadata.global_max_batching_time);
       }
@@ -1154,8 +1150,8 @@ namespace transport
 
 
     template <typename number>
-    void master_controller<number>::debrief_output(std::shared_ptr< derived_content_writer<number> >& writer,
-                                                   output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
+    template <typename WriterObject>
+    void master_controller<number>::debrief_output(WriterObject& writer, output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
       {
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
@@ -1453,7 +1449,7 @@ namespace transport
 
         writer->set_metadata(o_metadata);
         wallclock_timer.stop();
-        this->debrief_postintegration(writer, o_metadata, wallclock_timer);
+        this->debrief_output(writer, o_metadata, wallclock_timer);
 
         return(success);
 	    }
@@ -1506,37 +1502,8 @@ namespace transport
 
         wallclock_timer.stop();
         this->debrief_integration(i_writer, i_metadata, wallclock_timer);
-//        this->debrief_postintegration(p_writer, o_metadata, wallclock_timer);
 
         return(success);
-      }
-
-
-    template <typename number>
-    void master_controller<number>::debrief_postintegration(std::shared_ptr< postintegration_writer<number> >& writer,
-    output_metadata& o_metadata, boost::timer::cpu_timer& wallclock_timer)
-      {
-        boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ TASK COMPLETE (at " << boost::posix_time::to_simple_string(now) << "): FINAL USAGE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time for task '" << writer->get_record()->get_name() << "' " << format_time(wallclock_timer.elapsed().wall);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total work time required by worker processes      = " << format_time(o_metadata.work_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(o_metadata.aggregation_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time spent reading database                 = " << format_time(o_metadata.db_time);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time-configuration cache hits               = " << o_metadata.time_config_hits << ", unloads = " << o_metadata.time_config_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache hits                   = " << o_metadata.twopf_kconfig_hits << ", unloads = " << o_metadata.twopf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache hits                 = " << o_metadata.threepf_kconfig_hits << ", unloads = " << o_metadata.threepf_kconfig_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache hits                             = " << o_metadata.data_hits << ", unloads = " << o_metadata.data_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache hits                             = " << o_metadata.zeta_hits << ", unloads = " << o_metadata.zeta_unloads;
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total time config cache evictions                 = " << format_time(o_metadata.time_config_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total twopf k-config cache evictions              = " << format_time(o_metadata.twopf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total threepf k-config cache evictions            = " << format_time(o_metadata.threepf_kconfig_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total data cache evictions                        = " << format_time(o_metadata.data_evictions);
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total zeta cache evictions                        = " << format_time(o_metadata.zeta_evictions);
       }
 
 
