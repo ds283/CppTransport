@@ -520,7 +520,7 @@ namespace transport
 
 				if(!this->fast_forward || Nstart <= 0.0) Nstart = 0.0;
 
-				unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(2.0, refine));
+				unsigned int reserve_size = (this->raw_time_list.size()+1) * static_cast<unsigned int>(pow(4.0, refine));
 
 				slist.clear();
 				slist.reserve(reserve_size);
@@ -567,7 +567,7 @@ namespace transport
     void integration_task<number>::refine_integration_step_times(std::vector<double>& times, std::vector<time_storage_record>& slist,
                                                                  unsigned int refine, double step_min, double step_max) const
 	    {
-				unsigned int steps = pow(2.0, refine);
+				unsigned int steps = pow(4.0, refine);
 
 		    range<double> mesh(step_min, step_max, steps, this->times.get_spacing());
         const std::vector<double>& mesh_grid = mesh.get_grid();
