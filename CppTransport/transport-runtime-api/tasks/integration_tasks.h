@@ -1325,7 +1325,7 @@ namespace transport
         if(!stored_background) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_BACKGROUND_STORE);
 
         // need linear spacing to be integrable
-        if(ks.get_spacing() != range<double>::linear) this->integrable = false;
+        if(ks.get_spacing() != linear_stepping) this->integrable = false;
         spacing = (ks.get_max() - ks.get_min())/ks.get_steps();
 
         this->apply_time_storage_policy();
@@ -1497,7 +1497,7 @@ namespace transport
         if(!stored_background) throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_BACKGROUND_STORE);
 
         // need linear spacing to be integrable
-        if(kts.get_spacing() != range<double>::linear || alphas.get_spacing() != range<double>::linear || betas.get_spacing() != range<double>::linear) this->integrable = false;
+        if(kts.get_spacing() != linear_stepping || alphas.get_spacing() != linear_stepping || betas.get_spacing() != linear_stepping) this->integrable = false;
         kt_spacing = (kts.get_max() - kts.get_min())/kts.get_steps();
         alpha_spacing = (alphas.get_max() - alphas.get_min())/alphas.get_steps();
         beta_spacing = (betas.get_max() - betas.get_min())/betas.get_steps();

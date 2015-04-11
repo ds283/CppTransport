@@ -10,6 +10,7 @@
 
 #include <vector>
 #include <stdexcept>
+#include <algorithm>
 
 #include "math.h"
 
@@ -18,12 +19,15 @@
 #include "transport-runtime-api/exceptions.h"
 
 
-#define __CPP_TRANSPORT_NODE_MIN          "min"
-#define __CPP_TRANSPORT_NODE_MAX          "max"
-#define __CPP_TRANSPORT_NODE_STEPS        "steps"
-#define __CPP_TRANSPORT_NODE_SPACING      "spacing"
-#define __CPP_TRANSPORT_VALUE_LINEAR      "linear"
-#define __CPP_TRANSPORT_VALUE_LOGARITHMIC "logarithmic"
+#define __CPP_TRANSPORT_NODE_RANGE_ROOT          "range-specification"
+
+#define __CPP_TRANSPORT_NODE_MIN                 "min"
+#define __CPP_TRANSPORT_NODE_MAX                 "max"
+#define __CPP_TRANSPORT_NODE_STEPS               "steps"
+#define __CPP_TRANSPORT_NODE_SPACING             "spacing"
+#define __CPP_TRANSPORT_VALUE_LINEAR             "linear"
+#define __CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM "logarithmic"
+#define __CPP_TRANSPORT_VALUE_LOGARITHMIC_TOP    "logarithmic-top"
 
 
 namespace transport
@@ -34,19 +38,18 @@ namespace transport
     template <typename value>
     std::ostream& operator<<(std::ostream& out, const range<value>& obj);
 
+    typedef enum { linear_stepping, logarithmic_bottom_stepping, logarithmic_top_stepping, INTERNAL__null_range_object } range_spacing_type;
+
     template <typename value>
     class range: public serializable
       {
-      public:
 
-        typedef enum { linear, logarithmic, INTERNAL__null_range_object } spacing_type;
-
-
-        // CONSTRUCTOR
+        // CONSTRUCTOR, DESTRUCTOR
 
       public:
+
         //! Construct a range object with specified minimum & maximum values, number of steps and spacing type.
-        range(value mn, value mx, unsigned int st, spacing_type sp=linear);
+        range(value mn, value mx, unsigned int st, range_spacing_type sp= linear_stepping);
 
         //! Deserialization constructor
         range(Json::Value& reader);
@@ -72,7 +75,7 @@ namespace transport
         unsigned int size()                   const { return(this->grid.size()); }
 
         //! Get spacing type
-        spacing_type get_spacing()            const { return(this->spacing); }
+        range_spacing_type get_spacing()      const { return(this->spacing); }
 
         //! Get grid of entries
         const std::vector<value>& get_grid()  const { return(this->grid); }
@@ -123,15 +126,16 @@ namespace transport
         unsigned int steps;
 
         //! Spacing type
-        spacing_type spacing;
+        range_spacing_type spacing;
 
         //! Grid of values
         std::vector<value> grid;
+
       };
 
 
     template <typename value>
-    range<value>::range(value mn, value mx, unsigned int st, spacing_type sp)
+    range<value>::range(value mn, value mx, unsigned int st, range_spacing_type sp)
       : min(mn), max(mx), steps(st), spacing(sp)
       {
         assert(sp != INTERNAL__null_range_object);
@@ -150,18 +154,19 @@ namespace transport
     template <typename value>
     range<value>::range(Json::Value& reader)
       {
-        double m = reader[__CPP_TRANSPORT_NODE_MIN].asDouble();
+        double m = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MIN].asDouble();
         min = static_cast<value>(m);
 
-        m = reader[__CPP_TRANSPORT_NODE_MAX].asDouble();
+        m = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MAX].asDouble();
         max = static_cast<value>(m);
 
-        steps = reader[__CPP_TRANSPORT_NODE_STEPS].asUInt();
+        steps = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_STEPS].asUInt();
 
-        std::string spc_string = reader[__CPP_TRANSPORT_NODE_SPACING].asString();
+        std::string spc_string = reader[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING].asString();
 
-        if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR) spacing = linear;
-        else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC) spacing = logarithmic;
+        if(spc_string == __CPP_TRANSPORT_VALUE_LINEAR)                  spacing = linear_stepping;
+        else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM) spacing = logarithmic_bottom_stepping;
+        else if(spc_string == __CPP_TRANSPORT_VALUE_LOGARITHMIC_TOP)    spacing = logarithmic_top_stepping;
         else throw runtime_exception(runtime_exception::SERIALIZATION_ERROR, __CPP_TRANSPORT_BADLY_FORMED_RANGE);
 
         this->populate_grid();
@@ -176,7 +181,7 @@ namespace transport
 
         switch(this->spacing)
           {
-            case linear:
+            case linear_stepping:
             case INTERNAL__null_range_object:
               {
                 for(unsigned int i = 0; i <= this->steps; i++)
@@ -192,7 +197,10 @@ namespace transport
             // to standardize, and also to allow log-spacing for ranges that contain 0,
             // we shift the range to begin at 1, perform the log-spacing, and then
             // reverse the shift
-            case logarithmic:
+
+            // logarithmic-bottom is log-spaced at the bottom end of the interval
+
+            case logarithmic_bottom_stepping:
               {
                 double shifted_max = this->max - (this->min-1.0);
                 for(unsigned int i = 0; i <= this->steps; i++)
@@ -202,12 +210,35 @@ namespace transport
                 break;
               }
 
+            // logarithmic-top is log-spaced at the top end of the interval
+
+            case logarithmic_top_stepping:
+              {
+                double shifted_max = this->max - (this->min-1.0);
+                for(unsigned int i = 0; i <= this->steps; i++)
+                  {
+                    grid.push_back(shifted_max - static_cast<value>(pow(shifted_max, static_cast<double>(i)/this->steps)));
+                  }
+                // the result is out-of-order, but it will be sorted below
+                break;
+              };
+
             default:
               {
                 assert(false);
                 throw runtime_exception(runtime_exception::RUNTIME_ERROR, __CPP_TRANSPORT_RANGE_INVALID_SPACING);
               }
           }
+
+        struct GridSorter
+          {
+            bool operator()(const value& a, const value& b)
+              {
+                return(a < b);
+              }
+          };
+
+        std::sort(this->grid.begin(), this->grid.end(), GridSorter());
       }
 
     template <typename value>
@@ -215,19 +246,23 @@ namespace transport
       {
         if(this->spacing == INTERNAL__null_range_object) throw std::runtime_error(__CPP_TRANSPORT_SERIALIZE_NULL_RANGE);
 
-        writer[__CPP_TRANSPORT_NODE_MIN] = static_cast<double>(this->min);
-        writer[__CPP_TRANSPORT_NODE_MAX] = static_cast<double>(this->max);
-        writer[__CPP_TRANSPORT_NODE_STEPS] = this->steps;
+        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MIN] = static_cast<double>(this->min);
+        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_MAX] = static_cast<double>(this->max);
+        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_STEPS] = this->steps;
 
 		    switch(this->spacing)
 			    {
-		        case linear:
-			        writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LINEAR);
+		        case linear_stepping:
+			        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LINEAR);
 				      break;
 
-		        case logarithmic:
-			        writer[__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC);
+		        case logarithmic_bottom_stepping:
+			        writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_BOTTOM);
 				      break;
+
+            case logarithmic_top_stepping:
+              writer[__CPP_TRANSPORT_NODE_RANGE_ROOT][__CPP_TRANSPORT_NODE_SPACING] = std::string(__CPP_TRANSPORT_VALUE_LOGARITHMIC_TOP);
+              break;
 
 		        default:
 			        assert(false);
@@ -239,9 +274,14 @@ namespace transport
     template <typename value>
     std::ostream& operator<<(std::ostream& out, const range<value>& obj)
       {
-        out << __CPP_TRANSPORT_RANGE_A << obj.steps
-            << __CPP_TRANSPORT_RANGE_B << (obj.spacing == range<value>::linear ? __CPP_TRANSPORT_RANGE_LINEAR : __CPP_TRANSPORT_RANGE_LOGARITHMIC)
-            << __CPP_TRANSPORT_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_RANGE_D << obj.max << std::endl;
+        out << __CPP_TRANSPORT_RANGE_A << obj.steps;
+        out << __CPP_TRANSPORT_RANGE_B;
+
+        if(obj.spacing == linear_stepping)                  out << __CPP_TRANSPORT_RANGE_LINEAR;
+        else if(obj.spacing == logarithmic_bottom_stepping) out << __CPP_TRANSPORT_RANGE_LOGARITHMIC_BOTTOM;
+        else if(obj.spacing == logarithmic_top_stepping)    out << __CPP_TRANSPORT_RANGE_LOGARITHMIC_TOP;
+
+        out << __CPP_TRANSPORT_RANGE_C << obj.min << ", " << __CPP_TRANSPORT_RANGE_D << obj.max << std::endl;
 
 		    for(unsigned int i = 0; i < obj.grid.size(); i++)
 			    {

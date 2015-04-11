@@ -151,7 +151,7 @@ int main(int argc, char* argv[])
         bool operator() (const transport::integration_task<double>::time_config_storage_policy_data& data) { return((data.serial % 1) == 0); }
       };
 
-    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::range<double>::logarithmic);
+    transport::range<double> times = transport::range<double >(Ninit, Nmax+Npre, t_samples, transport::logarithmic_bottom_stepping);
 
     // the conventions for k-numbers are as follows:
     // k=1 is the mode which crosses the horizon at time N*,
@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
 	    };
 
     // have to choose linear spacing if we want the task to be fNL-integrable
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::linear);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::linear_stepping);
 
     std::cout << ks;
 

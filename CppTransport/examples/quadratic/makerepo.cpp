@@ -167,7 +167,7 @@ int main(int argc, char* argv[])
         bool operator() (const transport::threepf_task<double>::threepf_kconfig_storage_policy_data& data) { return(true); }
 	    };
 
-    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::range<double>::logarithmic);
+    transport::range<double> ks = transport::range<double>(kmin, kmax, k_samples, transport::logarithmic_bottom_stepping);
 
     std::cout << ks;
 
