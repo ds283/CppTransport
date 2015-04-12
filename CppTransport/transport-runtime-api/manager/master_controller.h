@@ -992,8 +992,9 @@ namespace transport
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total wallclock time required by worker processes = " << format_time(i_metadata.total_wallclock_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total aggregation time required by master process = " << format_time(i_metadata.total_aggregation_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "";
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE CACHE STATISTICS";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ AGGREGATE PERFORMANCE STATISTICS";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Workers processed " << i_metadata.total_configurations << " individual integrations";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++  " << i_metadata.total_failures << " integrations failed, and " << i_metadata.total_refinements << " integrations required mesh refinement (may not match individual k-configurations for some backends)";
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Total integration time    = " << format_time(i_metadata.total_integration_time) << " | global mean integration time = " << format_time(i_metadata.total_integration_time/(i_metadata.total_configurations > 0 ? i_metadata.total_configurations : 1));
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Min mean integration time = " << format_time(i_metadata.min_mean_integration_time) << " | global min integration time = " << format_time(i_metadata.global_min_integration_time);
         BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++   Max mean integration time = " << format_time(i_metadata.max_mean_integration_time) << " | global max integration time = " << format_time(i_metadata.global_max_integration_time);
@@ -1054,6 +1055,11 @@ namespace transport
         if(metadata.global_min_batching_time == 0 || payload.get_min_batching_time() < metadata.global_min_batching_time) metadata.global_min_batching_time = payload.get_min_batching_time();
 
         metadata.total_configurations += payload.get_num_integrations();
+        metadata.total_failures += payload.get_num_failures();
+        metadata.total_refinements += payload.get_num_refinements();
+
+        std::list<unsigned int> failures = payload.get_failed_serials();
+        metadata.failed_serials.merge(failures);
 	    }
 
 

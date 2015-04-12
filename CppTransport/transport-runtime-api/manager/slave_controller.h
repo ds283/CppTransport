@@ -570,12 +570,14 @@ namespace transport
 				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending FINISHED_INTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
 				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)  << std::endl << "-- Worker reporting INTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-				            MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
-				                                                               batcher.get_max_integration_time(), batcher.get_min_integration_time(),
-				                                                               batcher.get_batching_time(),
-				                                                               batcher.get_max_batching_time(), batcher.get_min_batching_time(),
-				                                                               timer.elapsed().wall,
-				                                                               batcher.get_reported_integrations());
+                    MPI::finished_integration_payload outgoing_payload(batcher.get_integration_time(),
+                                                                       batcher.get_max_integration_time(), batcher.get_min_integration_time(),
+                                                                       batcher.get_batching_time(),
+                                                                       batcher.get_max_batching_time(), batcher.get_min_batching_time(),
+                                                                       timer.elapsed().wall,
+                                                                       batcher.get_reported_integrations(),
+                                                                       batcher.get_reported_refinements(), batcher.get_reported_failures(),
+                                                                       batcher.get_failed_serials());
 
 				            this->world.isend(MPI::RANK_MASTER, success ? MPI::FINISHED_INTEGRATION : MPI::INTEGRATION_FAIL, outgoing_payload);
 

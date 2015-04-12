@@ -99,6 +99,9 @@ namespace transport
         //! Report a failed integration
         virtual void report_integration_failure();
 
+        //! Report a failed integration for a specific serial number
+        virtual void report_integration_failure(unsigned int kserial);
+
         //! Report an integration which required mesh refinement
         void report_refinement();
 
@@ -107,7 +110,13 @@ namespace transport
         bool integrations_failed() const { return (this->failures > 0); }
 
         //! Query how many refinements occurred
-        unsigned int number_refinements() const { return (this->refinements); }
+        unsigned int get_reported_refinements() const { return(this->refinements); }
+
+        //! Query number of failed integration reports
+        unsigned int get_reported_failures() const { return(this->failures); }
+
+        //! Query a list of failed serial numbers (not all backends may support this)
+        const std::list< unsigned int>& get_failed_serials() const { return(this->failed_serials); }
 
 
         //! Prepare for new work assignment
@@ -186,6 +195,9 @@ namespace transport
 
         //! number of integrations which have failed
         unsigned int failures;
+
+        //! list of failed k-configuration serial numbers (not all backends may support tracking this)
+        std::list< unsigned int > failed_serials;
 
         //! number of integrations which required refinement
         unsigned int refinements;
@@ -282,6 +294,9 @@ namespace transport
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
+
+        //! Report a failed integration for a specific serial number
+        virtual void report_integration_failure(unsigned int kserial) override;
 
 
         // FLUSH INTERFACE
@@ -385,6 +400,10 @@ namespace transport
 
         //! Report a failed integration
         virtual void report_integration_failure() override;
+
+        //! Report a failed integration for a specific serial number
+        virtual void report_integration_failure(unsigned int kserial) override;
+
 
 
         // ADMINISTRATION
@@ -584,6 +603,14 @@ namespace transport
 
 
     template <typename number>
+    void integration_batcher<number>::report_integration_failure(unsigned int kserial)
+      {
+        this->failed_serials.push_back(kserial);
+        this->report_integration_failure();
+      }
+
+
+    template <typename number>
     void integration_batcher<number>::report_refinement()
 	    {
         this->refinements++;
@@ -603,6 +630,7 @@ namespace transport
 
         this->failures = 0;
         this->refinements = 0;
+        this->failed_serials.clear();
 	    }
 
 
@@ -624,11 +652,11 @@ namespace transport
 
         if(this->refinements > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- " << this->refinements << " work items required mesh refinement";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->refinements << " work items required mesh refinement";
 	        }
         if(this->failures > 0)
 	        {
-            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "-- " << this->failures << " work items failed to integrate";
+            BOOST_LOG_SEV(this->log_source, generic_batcher::normal) << "!! " << this->failures << " work items failed to integrate";
 	        }
 	    }
 
@@ -787,6 +815,7 @@ namespace transport
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 
+
     template <typename number>
     void twopf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
       {
@@ -794,10 +823,19 @@ namespace transport
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 
+
     template <typename number>
     void twopf_batcher<number>::report_integration_failure()
       {
         this->integration_batcher<number>::report_integration_failure();
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
+      }
+
+
+    template <typename number>
+    void twopf_batcher<number>::report_integration_failure(unsigned int kserial)
+      {
+        this->integration_batcher<number>::report_integration_failure(kserial);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
       }
 
@@ -1017,12 +1055,14 @@ namespace transport
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
 
+
     template <typename number>
     void threepf_batcher<number>::report_integration_success(boost::timer::nanosecond_type integration, boost::timer::nanosecond_type batching, unsigned int kserial, unsigned int refinement)
       {
         this->integration_batcher<number>::report_integration_success(integration, batching, kserial, refinement);
         if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(integration);
       }
+
 
     template <typename number>
     void threepf_batcher<number>::report_integration_failure()
@@ -1032,7 +1072,15 @@ namespace transport
       }
 
 
-	}   // namespace transport
+    template <typename number>
+    void threepf_batcher<number>::report_integration_failure(unsigned int kserial)
+      {
+        this->integration_batcher<number>::report_integration_failure(kserial);
+        if(this->paired_batcher != nullptr) this->paired_batcher->report_finished_item(0);
+      }
+
+
+  }   // namespace transport
 
 
 #endif //__integration_batcher_H_

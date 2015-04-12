@@ -273,7 +273,7 @@ namespace transport
 		            }
 	            catch(runtime_exception& xe)
 		            {
-	                batcher.report_integration_failure();
+	                batcher.report_integration_failure(list[i].serial);
 	                batcher.unbatch(list[i].serial);
 
 	                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)

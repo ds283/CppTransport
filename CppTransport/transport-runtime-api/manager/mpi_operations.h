@@ -317,7 +317,8 @@ namespace transport
                                              const boost::timer::nanosecond_type& b,
                                              const boost::timer::nanosecond_type& max_b, const boost::timer::nanosecond_type& min_b,
                                              const boost::timer::nanosecond_type& w,
-                                             const unsigned int& n)
+                                             const unsigned int& n, const unsigned int& nr, const unsigned int& nf,
+                                             const std::list<unsigned int>& fs)
                   : integration_time(i),
                     max_integration_time(max_i),
                     min_integration_time(min_i),
@@ -326,36 +327,48 @@ namespace transport
                     min_batching_time(min_b),
                     wallclock_time(w),
                     num_integrations(n),
+                    num_refinements(nr),
+                    num_failures(nf),
+                    failed_serials(fs),
                     timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
 
                 //! Get total integration time
-                boost::timer::nanosecond_type get_integration_time()     const { return(this->integration_time); }
+                boost::timer::nanosecond_type   get_integration_time()     const { return(this->integration_time); }
 
                 //! Get longest integration time
-                boost::timer::nanosecond_type get_max_integration_time() const { return(this->max_integration_time); }
+                boost::timer::nanosecond_type   get_max_integration_time() const { return(this->max_integration_time); }
 
                 //! Get shortest integration time
-                boost::timer::nanosecond_type get_min_integration_time() const { return(this->min_integration_time); }
+                boost::timer::nanosecond_type   get_min_integration_time() const { return(this->min_integration_time); }
 
                 //! Get total batching time
-                boost::timer::nanosecond_type get_batching_time()        const { return(this->batching_time); }
+                boost::timer::nanosecond_type   get_batching_time()        const { return(this->batching_time); }
 
                 //! Get longest batching time
-                boost::timer::nanosecond_type get_max_batching_time()    const { return(this->max_batching_time); }
+                boost::timer::nanosecond_type   get_max_batching_time()    const { return(this->max_batching_time); }
 
                 //! Get shortest batching time
-                boost::timer::nanosecond_type get_min_batching_time()    const { return(this->min_batching_time); }
+                boost::timer::nanosecond_type   get_min_batching_time()    const { return(this->min_batching_time); }
 
                 //! Get total wallclock time
-                boost::timer::nanosecond_type get_wallclock_time()       const { return(this->wallclock_time); }
+                boost::timer::nanosecond_type   get_wallclock_time()       const { return(this->wallclock_time); }
 
                 //! Get total number of reported integrations
-                unsigned int                  get_num_integrations()     const { return(this->num_integrations); }
+                unsigned int                    get_num_integrations()     const { return(this->num_integrations); }
+
+                //! Get total number of integrations which required mesh refinement
+                unsigned int                    get_num_refinements()      const { return(this->num_refinements); }
+
+                //! Get total number of failures (this counts failure reports, not necessarily individual k-configurations
+                unsigned int                    get_num_failures()         const { return(this->num_failures); }
+
+                //! Get list of failed serial numbers (if supported by the backend)
+                const std::list< unsigned int>& get_failed_serials()       const { return(this->failed_serials); }
 
 		            //! Get timestamp
-		            boost::posix_time::ptime      get_timestamp()            const { return(this->timestamp); }
+		            boost::posix_time::ptime        get_timestamp()            const { return(this->timestamp); }
 
               private:
 
@@ -380,8 +393,17 @@ namespace transport
                 //! Total number of reported integrations
                 unsigned int num_integrations;
 
+                //! Total number of reported failures (counts failure reports, not necessarily individual k-configurations)
+                unsigned int num_failures;
+
+                //! Total number of reported integrations requiring mesh refinement
+                unsigned int num_refinements;
+
                 //! Total elapsed wallclock time
                 boost::timer::nanosecond_type wallclock_time;
+
+                //! List of failed serial numbers (not all backends may support collection of this data)
+                std::list< unsigned int > failed_serials;
 
 		            //! Timestamp
 		            boost::posix_time::ptime timestamp;
@@ -400,6 +422,9 @@ namespace transport
                     ar & min_batching_time;
                     ar & wallclock_time;
                     ar & num_integrations;
+                    ar & num_failures;
+                    ar & num_refinements;
+                    ar & failed_serials;
 		                ar & timestamp;
                   }
 

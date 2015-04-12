@@ -101,7 +101,10 @@
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_MAX_MEAN_BATCH_TIME      "max-mean-batching-time"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME    "global-min-batching-time"
 #define __CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME    "global-max-batching-time"
-#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS       "total-configurations"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS       "configurations-processed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES             "configurations-failed"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED              "configurations-refined"
+#define __CPP_TRANSPORT_NODE_TIMINGDATA_FAILED_SERIALS           "failed-serial-numbers"
 
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_GROUP                    "output-metadata"
 #define __CPP_TRANSPORT_NODE_OUTPUTDATA_TOTAL_WALLCLOCK_TIME     "total-wallclock-time"
@@ -700,7 +703,9 @@ namespace transport
 	          max_mean_batching_time(0),
 	          global_min_batching_time(0),
 	          global_max_batching_time(0),
-	          total_configurations(0)
+	          total_configurations(0),
+            total_failures(0),
+            total_refinements(0)
 	        {
 	        }
 
@@ -710,7 +715,8 @@ namespace transport
                              boost::timer::nanosecond_type min_it, boost::timer::nanosecond_type max_it,
                              boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
                              boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
-                             unsigned int num)
+                             unsigned int num_processed, unsigned int num_failed, unsigned int num_refined,
+                             const std::list<unsigned int>& failures)
 	        : total_wallclock_time(wc),
 	          total_aggregation_time(ag),
 	          total_integration_time(it),
@@ -723,7 +729,10 @@ namespace transport
 	          max_mean_batching_time(max_m_bt),
 	          global_min_batching_time(min_bt),
 	          global_max_batching_time(max_bt),
-	          total_configurations(num)
+	          total_configurations(num_processed),
+            total_failures(num_failed),
+            total_refinements(num_refined),
+            failed_serials(failures)
 	        {
 	        }
 
@@ -781,6 +790,15 @@ namespace transport
 
         // total number of configurations processed
         unsigned int total_configurations;
+
+        //! total number of failures reported
+        unsigned int total_failures;
+
+        //! total number of mesh refinements reported
+        unsigned int total_refinements;
+
+        //! serial numbers reported requiring refinement, if this information is collected by the backend
+        std::list< unsigned int > failed_serials;
 
 	    };
 
@@ -1827,6 +1845,16 @@ namespace transport
         global_min_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME].asLargestInt();
         global_max_batching_time    = node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME].asLargestInt();
         total_configurations        = node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS].asUInt();
+        total_failures              = node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES].asUInt();
+        total_refinements           = node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED].asUInt();
+
+        Json::Value failure_array = node[__CPP_TRANSPORT_NODE_TIMINGDATA_FAILED_SERIALS];
+        assert(failure_array.isArray());
+        failed_serials.clear();
+        for(Json::Value::iterator t = failure_array.begin(); t != failure_array.end(); t++)
+          {
+            failed_serials.push_back(t->asUInt());
+          }
 	    }
 
 
@@ -1847,6 +1875,16 @@ namespace transport
         node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MIN_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_min_batching_time);
         node[__CPP_TRANSPORT_NODE_TIMINGDATA_GLOBAL_MAX_BATCH_TIME] = static_cast<Json::LargestInt>(this->global_max_batching_time);
         node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_CONFIGURATIONS]    = this->total_configurations;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_FAILURES]          = this->total_failures;
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_NUM_REFINED]           = this->total_refinements;
+
+        Json::Value failure_array(Json::arrayValue);
+        for(std::list<unsigned int>::const_iterator t = this->failed_serials.begin(); t != this->failed_serials.end(); t++)
+          {
+            Json::Value element = *t;
+            failure_array.append(element);
+          }
+        node[__CPP_TRANSPORT_NODE_TIMINGDATA_FAILED_SERIALS] = failure_array;
 
         writer[__CPP_TRANSPORT_NODE_TIMINGDATA_GROUP] = node;
 	    }
