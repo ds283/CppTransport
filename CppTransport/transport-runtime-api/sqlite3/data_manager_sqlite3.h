@@ -20,6 +20,7 @@
 
 #include "boost/filesystem/operations.hpp"
 #include "boost/timer/timer.hpp"
+#include "boost/algorithm/string.hpp"
 
 #include "sqlite3.h"
 #include "transport-runtime-api/sqlite3/operations/data_manager.h"
@@ -192,7 +193,7 @@ namespace transport
       protected:
 
         template <typename WriterObject, typename ConfigurationData>
-        std::list<unsigned int> advise_missing_content(WriterObject& writer, const std::vector<ConfigurationData>& configs);
+        std::list<unsigned int> advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const std::vector<ConfigurationData>& configs);
 
         std::list<unsigned int> compute_twopf_drop_list(const std::list<unsigned int>& serials, const std::vector<threepf_kconfig>& configs);
 
@@ -1131,9 +1132,25 @@ namespace transport
     // INTEGRITY CHECK
 
 
+    template <typename ConfigurationData>
+    class ConfigurationFinder
+	    {
+      public:
+        ConfigurationFinder(unsigned int s)
+	        : serial(s)
+	        {
+	        }
+
+        bool operator()(const ConfigurationData& a) { return(a.serial == this->serial); }
+
+      private:
+        unsigned int serial;
+	    };
+
+
     template <typename number>
     template <typename WriterObject, typename ConfigurationData>
-    std::list<unsigned int> data_manager_sqlite3<number>::advise_missing_content(WriterObject& writer, const std::vector<ConfigurationData>& configs)
+    std::list<unsigned int> data_manager_sqlite3<number>::advise_missing_content(WriterObject& writer, const std::list<unsigned int>& serials, const std::vector<ConfigurationData>& configs)
       {
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Detected missing data in container";
         writer.set_fail(true);
@@ -1141,37 +1158,28 @@ namespace transport
         std::list<unsigned int> advised_list = writer.get_missing_serials();
         if(advised_list.size() > 0) BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** Note: backend provided list of " << advised_list.size() << " missing items to cross-check";
 
-        for(typename std::vector<ConfigurationData>::const_iterator t = configs.begin(); t != configs.end(); t++)
-          {
-            // search for this element in the list
-            std::list<unsigned int>::iterator ad = std::find(advised_list.begin(), advised_list.end(), t->serial);
+		    for(typename std::list<unsigned int>::const_iterator t = serials.begin(); t != serials.end(); t++)
+			    {
+				    // find this configuration
+		        typename std::vector<ConfigurationData>::const_iterator u = std::find_if(configs.begin(), configs.end(), ConfigurationFinder<ConfigurationData>(*t));
 
-            // emit configuration information
-            BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << *t;
+		        // emit configuration information
+		        std::ostringstream msg;
+				    msg << *t;
+		        std::string msg_str = msg.str();
+		        boost::algorithm::trim_right(msg_str);
+		        BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "** " << msg_str;
 
-            // was this an item on the list we already knew would be missing?
-            if(ad != advised_list.end()) advised_list.erase(ad);
-          }
+		        // search for this element in the advised list
+		        std::list<unsigned int>::iterator ad = std::find(advised_list.begin(), advised_list.end(), *t);
+
+		        // was this an item on the list we already knew would be missing?
+		        if(ad != advised_list.end()) advised_list.erase(ad);
+			    }
 
         // return any remainder
         return(advised_list);
       }
-
-
-    template <typename ConfigurationData>
-    class ConfigurationFinder
-      {
-      public:
-        ConfigurationFinder(unsigned int s)
-          : serial(s)
-          {
-          }
-
-        bool operator()(const ConfigurationData& a) { return(a.serial == this->serial); }
-
-      private:
-        unsigned int serial;
-      };
 
 
     template <typename number>
@@ -1213,7 +1221,7 @@ namespace transport
           {
             twopf_task<number>* task = dynamic_cast< twopf_task<number>* >(tk);
             assert(task != nullptr);
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, task->get_twopf_kconfig_list());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, task->get_twopf_kconfig_list());
 
             if(remainder.size() > 0)
               {
@@ -1239,7 +1247,7 @@ namespace transport
           {
             threepf_task<number>* task = dynamic_cast< threepf_task<number>* >(tk);
             assert(task != nullptr);
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, task->get_threepf_kconfig_list());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, task->get_threepf_kconfig_list());
 
             if(remainder.size() > 0)
               {
@@ -1282,7 +1290,7 @@ namespace transport
           {
             zeta_twopf_task<number>* task = dynamic_cast< zeta_twopf_task<number>* >(tk);
             assert(task != nullptr);
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, task->get_twopf_kconfig_list());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, task->get_twopf_kconfig_list());
 
             if(remainder.size() > 0)
               {
@@ -1308,7 +1316,7 @@ namespace transport
           {
             zeta_threepf_task<number>* task = dynamic_cast< zeta_threepf_task<number>* >(tk);
             assert(task != nullptr);
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, task->get_threepf_kconfig_list());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, task->get_threepf_kconfig_list());
 
             if(remainder.size() > 0)
               {
@@ -1340,7 +1348,7 @@ namespace transport
           {
             zeta_threepf_task<number>* task = dynamic_cast< zeta_threepf_task<number>* >(tk);
             assert(task != nullptr);
-            std::list<unsigned int> remainder = this->advise_missing_content(writer, task->get_threepf_kconfig_list());
+            std::list<unsigned int> remainder = this->advise_missing_content(writer, serials, task->get_threepf_kconfig_list());
 
             if(remainder.size() > 0)
               {
