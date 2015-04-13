@@ -115,8 +115,11 @@ namespace transport
 		    void r_time_series<number>::derive_lines(datapipe<number>& pipe, std::list<data_line<number> >& lines,
 		                                             const std::list<std::string>& tags) const
 			    {
+            std::list< std::string > groups;
+
 						// attach our datapipe to an output group
-		        this->attach(pipe, tags, this->parent_task);
+            std::string group = this->attach(pipe, tags, this->parent_task);
+            groups.push_back(group);
 
 				    // pull time-axis data
 				    const std::vector<double> t_axis = this->pull_time_axis(pipe);
@@ -147,7 +150,8 @@ namespace transport
 				    postintegration_task<number>* ptk = dynamic_cast< postintegration_task<number>* >(this->parent_task);
 				    assert(ptk != nullptr);
 
-				    this->attach(pipe, tags, ptk->get_parent_task());
+            group = this->attach(pipe, tags, ptk->get_parent_task());
+            groups.push_back(group);
 
 						// rebind handles
 		        typename datapipe<number>::time_data_handle& t_handle = pipe.new_time_data_handle(this->time_sample_sns);
@@ -166,7 +170,7 @@ namespace transport
 				            line_data[j] = tensor_data[j] / zeta_data[i][j];
 					        }
 
-				        data_line<number> line = data_line<number>(this->x_type, r_value, t_axis, line_data,
+				        data_line<number> line = data_line<number>(groups, this->x_type, r_value, t_axis, line_data,
 				                                                   this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 
 				        lines.push_back(line);

@@ -241,7 +241,7 @@ namespace transport
 				//! Master node: main loop: poll workers for events
         template <typename WriterObject>
 				bool poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
-				                  integration_metadata& int_metadata, output_metadata& out_metadata,
+				                  integration_metadata& int_metadata, output_metadata& out_metadata, std::list<std::string>& content_groups,
 				                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 				//! Master node: generate new work assignments for workers
@@ -336,6 +336,9 @@ namespace transport
 		    //! Master node: update output metadata after a worker has finished its tasks
 		    template <typename PayloadObject>
 		    void update_output_metadata(PayloadObject& payload, output_metadata& metadata);
+
+        template <typename PayloadObject>
+        void update_content_group_list(PayloadObject& payload, std::list<std::string>& groups);
 
 
 		    // INTERNAL DATA
@@ -945,9 +948,10 @@ namespace transport
         // set up a timer to keep track of the total wallclock time used in this integration
         boost::timer::cpu_timer wallclock_timer;
 
-        // aggregate integration times reported by worker processes
-        integration_metadata i_metadata;
-        output_metadata      o_metadata;  // unused
+        // aggregate integration data reported by worker processes
+        integration_metadata   i_metadata;
+        output_metadata        o_metadata;      // unused
+        std::list<std::string> content_groups;  // unused
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
@@ -970,7 +974,7 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
         // push task metadata we have collected to the writer
         writer->set_metadata(i_metadata);
@@ -1118,8 +1122,9 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        integration_metadata i_metadata;  // unused
-        output_metadata      o_metadata;
+        integration_metadata   i_metadata;      // unused
+        output_metadata        o_metadata;
+        std::list<std::string> content_groups;  // unused
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
@@ -1142,7 +1147,7 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
         writer->set_metadata(o_metadata);
         wallclock_timer.stop();
@@ -1189,7 +1194,7 @@ namespace transport
         // set up a timer to measure how long we spend aggregating
         boost::timer::cpu_timer aggregate_timer;
 
-        bool success = writer->aggregate(payload.get_product_name());
+        bool success = writer->aggregate(payload.get_product_name(), payload.get_content_groups());
 
         aggregate_timer.stop();
         metadata.aggregation_time += aggregate_timer.elapsed().wall;
@@ -1223,6 +1228,18 @@ namespace transport
         metadata.zeta_unloads              += payload.get_zeta_unloads();
         metadata.zeta_evictions            += payload.get_zeta_evictions();
 	    }
+
+
+    template <typename number>
+    template <typename PayloadObject>
+    void master_controller<number>::update_content_group_list(PayloadObject& payload, std::list<std::string>& groups)
+      {
+        std::list<std::string> this_group = payload.get_content_groups();
+
+        groups.merge(this_group);
+        groups.sort();
+        groups.unique();
+      }
 
 
 		// POSTINTEGRATION TASKS
@@ -1386,7 +1403,8 @@ namespace transport
         this->data_mgr->create_tables(i_writer, ptk);
 
         // pair
-        p_writer->pair(i_writer->get_name());
+        p_writer->set_pair(true);
+        p_writer->set_parent_group(i_writer->get_name());
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);
@@ -1427,8 +1445,9 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        integration_metadata i_metadata;  // unused
-        output_metadata      o_metadata;
+        integration_metadata   i_metadata;  // unused
+        output_metadata        o_metadata;
+        std::list<std::string> content_groups;
 
         // get paths the workers will need
         boost::filesystem::path tempdir_path = writer->get_abs_tempdir_path();
@@ -1451,8 +1470,11 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, writer, begin_label, end_label);
 
+        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
+
+        writer->set_parent_group(content_groups.front());
         writer->set_metadata(o_metadata);
         wallclock_timer.stop();
         this->debrief_output(writer, o_metadata, wallclock_timer);
@@ -1474,8 +1496,9 @@ namespace transport
         boost::timer::cpu_timer wallclock_timer;
 
         // aggregate cache information
-        integration_metadata i_metadata;
-        output_metadata      o_metadata;
+        integration_metadata   i_metadata;
+        output_metadata        o_metadata;
+        std::list<std::string> content_groups;  // unused
 
         // get paths needed by different batchers on each worker
         boost::filesystem::path i_tempdir_path = i_writer->get_abs_tempdir_path();
@@ -1501,7 +1524,9 @@ namespace transport
           BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
-        bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, i_writer, begin_label, end_label);
+        bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, content_groups, i_writer, begin_label, end_label);
+
+        if(content_groups.size() > 1) throw runtime_exception(runtime_exception::RUNTIME_ERROR,  __CPP_TRANSPORT_POSTINTEGRATION_MULTIPLE_GROUPS);
 
         i_writer->set_metadata(i_metadata);
         p_writer->set_metadata(o_metadata);
@@ -1690,7 +1715,7 @@ namespace transport
     template <typename number>
     template <typename WriterObject>
     bool master_controller<number>::poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
-                                                 integration_metadata& int_metadata, output_metadata& out_metadata,
+                                                 integration_metadata& int_metadata, output_metadata& out_metadata, std::list<std::string>& content_groups,
                                                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
 		    bool success = true;
@@ -1836,6 +1861,7 @@ namespace transport
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
                         this->update_output_metadata(payload, out_metadata);
+                        this->update_content_group_list(payload, content_groups);
 
                         break;
                       }
@@ -1850,6 +1876,7 @@ namespace transport
                         // mark this scheduler as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
                         this->update_output_metadata(payload, out_metadata);
+                        this->update_content_group_list(payload, content_groups);
 
                         success = false;
                         break;
@@ -1865,6 +1892,7 @@ namespace transport
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
                         this->update_output_metadata(payload, out_metadata);
+                        this->update_content_group_list(payload, content_groups);
 
                         break;
                       }
@@ -1879,6 +1907,7 @@ namespace transport
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_processing_time(), payload.get_items_processed());
                         this->update_output_metadata(payload, out_metadata);
+                        this->update_content_group_list(payload, content_groups);
 
                         success = false;
                         break;

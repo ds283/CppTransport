@@ -79,7 +79,7 @@
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE       "database-path"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED         "failed"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED         "paired"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED_GROUP   "paired-group"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP   "parent-group"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED         "seeded"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP     "seed-group"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED_SERIALS "failed-serials"
@@ -94,7 +94,8 @@
 #define __CPP_TRANSPORT_NODE_PRECOMPUTED_FNL_DBI                    "fNL_DBI"
 
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FAILED                 "failed"
-#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                  "output-array"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_ARRAY                  "generated-products"
+#define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS            "used-content-groups"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME           "parent-product"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME               "filename"
 #define __CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED                "creation-time"
@@ -936,8 +937,13 @@ namespace transport
 
         //! Create a derived_product descriptor
         derived_content(const std::string& prod, const std::string& fnam, const boost::posix_time::ptime& now,
-                        const std::list<std::string>& nt, const std::list<std::string>& tg)
-	        : parent_product(prod), filename(fnam), created(now), notes(nt), tags(tg)
+                        const std::list<std::string>& gp, const std::list<std::string>& nt, const std::list<std::string>& tg)
+	        : parent_product(prod),
+            filename(fnam),
+            created(now),
+            content_groups(gp),
+            notes(nt),
+            tags(tg)
 	        {
 	        }
 
@@ -967,6 +973,9 @@ namespace transport
         //! Get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->created); }
 
+        //! Get content groups
+        const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+
 
         // SERIALIZATION -- implements a 'serializable' interface
 
@@ -994,6 +1003,9 @@ namespace transport
 
         //! Tags
         std::list<std::string> tags;
+
+        //! content groups used to create
+        std::list<std::string> content_groups;
 
 	    };
 
@@ -1277,13 +1289,16 @@ namespace transport
         void set_failed_serials(const std::list<unsigned int> f) { this->failed_serials = f; }
 
         //! Set pair
-        void set_pair(const std::string& p) { this->paired = true; this->paired_group = p; }
+        void set_pair(bool g) { this->paired = g; }
 
         //! Query paired status
         bool is_paired() const { return(this->paired); }
 
+        //! Set parent content group
+        void set_parent_group(const std::string& p) { this->parent_group = p; }
+
         //! Query paired gorup
-        const std::string& get_paired_group() const { return(this->paired_group); }
+        const std::string& get_parent_group() const { return(this->parent_group); }
 
         //! Set seed
         void set_seed(const std::string& s) { this->seeded = true; this->seed_group = s; }
@@ -1333,7 +1348,7 @@ namespace transport
         bool paired;
 
         //! Paired output group name, if used
-        std::string paired_group;
+        std::string parent_group;
 
         //! was this postintegration seeded?
         bool seeded;
@@ -1387,6 +1402,11 @@ namespace transport
         //! Set fail status
         void set_fail(bool g) { this->fail = g; }
 
+        //! Get list of used content groups
+        const std::list<std::string>& get_content_groups() const { return(this->used_groups); }
+
+        //! Set list of used content groups
+        void set_content_groups(const std::list<std::string>& list) { this->used_groups = list; }
 
         // WRITE TO A STREAM
 
@@ -1415,6 +1435,9 @@ namespace transport
 
         //! failed flag
         bool fail;
+
+        //! list of content groups used to produce this output
+        std::list<std::string> used_groups;
 
 	    };
 
@@ -2220,7 +2243,7 @@ namespace transport
         container    = reader[__CPP_TRANSPORT_NODE_PAYLOAD_INTEGRATION_DATABASE].asString();
         fail         = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED].asBool();
         paired       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED].asBool();
-        paired_group = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED_GROUP].asString();
+        parent_group = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP].asString();
         seeded       = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED].asBool();
         seed_group   = reader[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP].asString();
 
@@ -2239,7 +2262,7 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_DATABASE]     = this->container.string();
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_FAILED]       = this->fail;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED]       = this->paired;
-        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PAIRED_GROUP] = this->paired_group;
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_PARENT_GROUP] = this->parent_group;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEEDED]       = this->seeded;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_POSTINTEGRATION_SEED_GROUP]   = this->seed_group;
 
@@ -2315,6 +2338,14 @@ namespace transport
         std::string ctime_string = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED].asString();
         created = boost::posix_time::from_iso_string(ctime_string);
 
+        Json::Value& content_groups_array = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS];
+        assert(content_groups_array.isArray());
+
+        for(Json::Value::iterator t = content_groups_array.begin(); t != content_groups_array.end(); t++)
+          {
+            this->content_groups.push_back(t->asString());
+          }
+
         Json::Value note_list = reader[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_NOTES];
 		    assert(note_list.isArray());
 
@@ -2338,6 +2369,15 @@ namespace transport
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_PRODUCT_NAME] = this->parent_product;
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_FILENAME]     = this->filename.string();
         writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_CREATED]      = boost::posix_time::to_iso_string(this->created);
+
+        Json::Value content_groups_array(Json::arrayValue);
+
+        for(std::list<std::string>::const_iterator t = this->content_groups.begin(); t != this->content_groups.end(); t++)
+          {
+            Json::Value element = *t;
+            content_groups_array.append(element);
+          }
+        writer[__CPP_TRANSPORT_NODE_PAYLOAD_CONTENT_USED_GROUPS] = content_groups_array;
 
         Json::Value note_list(Json::arrayValue);
 

@@ -117,7 +117,7 @@ namespace transport
                                                           const std::list<std::string>& tags) const
           {
             // attach datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
@@ -142,13 +142,13 @@ namespace transport
 						            line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
 					            }
 
-		                data_line<number> line = data_line<number>(this->x_type, dimensionless_value, t_axis, line_data,
+		                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
 		                                                           this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 		                lines.push_back(line);
 			            }
 		            else
 			            {
-		                data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
 		                                                           this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 		                lines.push_back(line);
 			            }
@@ -305,7 +305,7 @@ namespace transport
                                                             const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
@@ -327,7 +327,7 @@ namespace transport
                 std::string latex_label = "$" + this->make_LaTeX_label() + "\\;" + this->make_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label) + "$";
                 std::string nonlatex_label = this->make_non_LaTeX_label() + " " + this->make_non_LaTeX_tag(k_values[i], this->use_kt_label, this->use_alpha_label, this->use_beta_label);
 
-                data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
                                                            this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 
                 lines.push_back(line);
@@ -486,7 +486,7 @@ namespace transport
                                                                        const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
@@ -507,7 +507,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-                data_line<number> line = data_line<number>(this->x_type, fNL_value, t_axis, line_data,
+                data_line<number> line = data_line<number>(group, this->x_type, fNL_value, t_axis, line_data,
                                                            this->get_LaTeX_label(k_values[i]), this->get_non_LaTeX_label(k_values[i]));
 
                 lines.push_back(line);

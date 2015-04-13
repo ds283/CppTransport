@@ -118,7 +118,7 @@ namespace transport
                                                             const std::list<std::string>& tags) const
 	        {
             // attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
 		        const std::vector<double> t_axis = this->pull_time_axis(pipe);
@@ -147,7 +147,7 @@ namespace transport
 								            // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
 								            const std::vector<number>& line_data = t_handle.lookup_tag(tag);
 
-								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
 
 								            lines.push_back(line);

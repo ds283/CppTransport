@@ -113,7 +113,7 @@ namespace transport
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
 		        // attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
 		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
@@ -154,13 +154,13 @@ namespace transport
 								                    line_data[j] *= k_values[j].k_comoving*k_values[j].k_comoving*k_values[j].k_comoving / (2.0*M_PI*M_PI);
 									                }
 
-								                data_line<number> line = data_line<number>(this->x_type, dimensionless_value, w_axis, line_data,
+								                data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, w_axis, line_data,
 								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 								                lines.push_back(line);
 									            }
 								            else
 									            {
-								                data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+								                data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
 								                                                           this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 								                lines.push_back(line);
 									            }
@@ -338,7 +338,7 @@ namespace transport
 		        unsigned int N_fields = this->gadget.get_N_fields();
 
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             // pull wavenumber-axis data
             std::vector<double> w_axis = this->pull_threepf_kconfig_axis(pipe);
@@ -392,7 +392,7 @@ namespace transport
 				                        if(this->get_dot_meaning() == derived_line<number>::derivatives)
 					                        this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, background[i], configs, line_data, l, m, n, this->time_sample_sns[i], t_values[i]);
 
-		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
 		                                                                       this->get_LaTeX_label(l,m,n,t_values[i]), this->get_non_LaTeX_label(l,m,n,t_values[i]), this->is_spectral_index());
 
 		                            lines.push_back(line);

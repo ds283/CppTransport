@@ -167,7 +167,7 @@ namespace transport
 		                                                      const std::list<std::string>& tags) const
           {
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
 
@@ -185,7 +185,7 @@ namespace transport
                     // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                     const std::vector<number>& line_data = handle.lookup_tag(tag);
 
-                    data_line<number> line = data_line<number>(this->x_type, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
+                    data_line<number> line = data_line<number>(group, this->x_type, this->gadget.get_model()->is_field(m) ? field_value : momentum_value, t_axis, line_data,
                                                                this->make_LaTeX_label(m), this->make_non_LaTeX_label(m));
 
                     lines.push_back(line);
@@ -340,7 +340,7 @@ namespace transport
 		                                                 const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
@@ -378,13 +378,13 @@ namespace transport
 		                                line_data[j] *= k_values[i].k_comoving*k_values[i].k_comoving*k_values[i].k_comoving / (2.0*M_PI*M_PI);
 			                            }
 
-		                            data_line<number> line = data_line<number>(this->x_type, dimensionless_value, t_axis, line_data,
+		                            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, t_axis, line_data,
 		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
 		                            lines.push_back(line);
 			                        }
 		                        else
 			                        {
-		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
 		                                                                       this->get_LaTeX_label(m,n,k_values[i]), this->get_non_LaTeX_label(m,n,k_values[i]));
 		                            lines.push_back(line);
 			                        }
@@ -560,7 +560,7 @@ namespace transport
                                                      const std::list<std::string>& tags) const
 			    {
             // attach our datapipe to an output group
-            this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull time-axis data
             const std::vector<double> t_axis = this->pull_time_axis(pipe);
@@ -597,7 +597,7 @@ namespace transport
 		                            if(this->get_dot_meaning() == derived_line<number>::derivatives)
 			                            this->shifter.shift(this->gadget.get_integration_task(), this->gadget.get_model(), pipe, this->time_sample_sns, line_data, t_axis, l, m, n, k_values[i]);
 
-		                            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, t_axis, line_data,
+		                            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, t_axis, line_data,
 		                                                                       this->get_LaTeX_label(l, m, n, k_values[i]), this->get_non_LaTeX_label(l, m, n, k_values[i]));
 
 		                            lines.push_back(line);

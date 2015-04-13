@@ -112,7 +112,7 @@ namespace transport
                                                                   const std::list<std::string>& tags) const
 	        {
 						// attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
             std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
@@ -143,7 +143,7 @@ namespace transport
 								            std::string latex_label = "$" + this->make_LaTeX_label(m,n) + "\\;" + this->make_LaTeX_tag(t_values[i]) + "$";
 								            std::string nonlatex_label = this->make_non_LaTeX_label(m,n) + " " + this->make_non_LaTeX_tag(t_values[i]);
 
-								            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+								            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
 								                                                       this->get_LaTeX_label(m,n,t_values[i]), this->get_non_LaTeX_label(m,n,t_values[i]), this->is_spectral_index());
 
 										        lines.push_back(line);

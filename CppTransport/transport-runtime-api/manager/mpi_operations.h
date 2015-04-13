@@ -512,18 +512,26 @@ namespace transport
                 content_ready_payload() = default;
 
                 //! Value constructor (used for sending messages)
-                content_ready_payload(const std::string& dp)
-	                : product(dp)
+                content_ready_payload(const std::string& dp, const std::list<std::string>& g)
+	                : product(dp),
+                    content_groups(g)
 	                {
 	                }
 
                 //! Get derived product name
-                const std::string& get_product_name() const { return(this->product); }
+                const std::string&            get_product_name()   const { return(this->product); }
+
+                //! Get content groups used
+                const std::list<std::string>& get_content_groups() const { return(this->content_groups); }
+
 
               private:
 
 		            //! Name of derived product
 		            std::string product;
+
+                //! Content groups used to create it
+                std::list<std::string> content_groups;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -532,6 +540,7 @@ namespace transport
                 void serialize(Archive& ar, unsigned int version)
 	                {
                     ar & product;
+                    ar & content_groups;
 	                }
 
 	            };
@@ -546,7 +555,7 @@ namespace transport
 		            finished_derived_payload() = default;
 
 		            //! Value constructor (used for sending messages)
-		            finished_derived_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+		            finished_derived_payload(const std::list<std::string>& cg, const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
 		                                     const unsigned int ip, const boost::timer::nanosecond_type tp,
 		                                     const boost::timer::nanosecond_type max_tp, const boost::timer::nanosecond_type min_tp,
 		                                     const unsigned int tc, const unsigned int tc_u,
@@ -557,7 +566,8 @@ namespace transport
 		                                     const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
 		                                     const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de,
                                          const boost::timer::nanosecond_type zeta_e)
-			            : database_time(db),
+			            : content_groups(cg),
+                    database_time(db),
 			              cpu_time(cpu),
 			              items_processed(ip),
 			              processing_time(tp),
@@ -581,6 +591,9 @@ namespace transport
 		                timestamp(boost::posix_time::second_clock::universal_time())
 			            {
 			            }
+
+                //! Get content gorups
+                const std::list<std::string>   get_content_groups()            const { return(this->content_groups); }
 
 		            //! Get database time
 		            boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
@@ -650,6 +663,9 @@ namespace transport
 
 
 		          private:
+
+                //! Content groups used to produce this derived content
+                std::list<std::string> content_groups;
 
 		            //! Time spent reading database
 		            boost::timer::nanosecond_type database_time;
@@ -723,6 +739,7 @@ namespace transport
 		            template <typename Archive>
 		            void serialize(Archive& ar, unsigned int version)
 			            {
+                    ar & content_groups;
 		                ar & database_time;
 				            ar & cpu_time;
 		                ar & items_processed;
@@ -860,7 +877,7 @@ namespace transport
                 finished_postintegration_payload() = default;
 
                 //! Value constructor (used for sending messages)
-                finished_postintegration_payload(const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
+                finished_postintegration_payload(const std::string& g, const boost::timer::nanosecond_type db, const boost::timer::nanosecond_type cpu,
                                                  const unsigned int ip, const boost::timer::nanosecond_type tp,
                                                  const boost::timer::nanosecond_type max_tp, const boost::timer::nanosecond_type min_tp,
                                                  const unsigned int tc, const unsigned int tc_u,
@@ -871,7 +888,8 @@ namespace transport
                                                  const boost::timer::nanosecond_type tce, const boost::timer::nanosecond_type twopf_e,
                                                  const boost::timer::nanosecond_type threepf_e, const boost::timer::nanosecond_type de,
                                                  const boost::timer::nanosecond_type zeta_e)
-                  : database_time(db),
+                  : content_groups(std::list<std::string>{g}),
+                    database_time(db),
                     cpu_time(cpu),
                     items_processed(ip),
                     processing_time(tp),
@@ -893,6 +911,9 @@ namespace transport
                     timestamp(boost::posix_time::second_clock::universal_time())
                   {
                   }
+
+                //! Get parent group
+                const std::list<std::string>&  get_content_groups()            const { return(this->content_groups); }
 
                 //! Get database time
                 boost::timer::nanosecond_type  get_database_time()             const { return(this->database_time); }
@@ -962,6 +983,9 @@ namespace transport
 
 
               private:
+
+                //! Parent content group
+                std::list<std::string> content_groups;
 
                 //! Time spent reading database
                 boost::timer::nanosecond_type database_time;
@@ -1035,6 +1059,7 @@ namespace transport
                 template <typename Archive>
                 void serialize(Archive& ar, unsigned int version)
                   {
+                    ar & content_groups;
                     ar & database_time;
                     ar & cpu_time;
 		                ar & items_processed;

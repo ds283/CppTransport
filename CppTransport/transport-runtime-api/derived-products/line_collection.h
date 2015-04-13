@@ -205,6 +205,14 @@ namespace transport
             virtual void get_task_list(typename std::vector< derivable_task<number>* >& list) const override;
 
 
+            // AGGREGATE OUTPUT GROUPS FROM A LIST OF LINES
+
+          public:
+
+            //! Collect a list of output groups used to derive content for this task
+            std::list<std::string> extract_output_groups(const std::list< data_line<number> >& list) const;
+
+
 						// GET AND SET BASIC LINE PROPERTIES
 
           public:
@@ -501,6 +509,24 @@ namespace transport
               {
                 list.push_back((*t)->get_parent_task());
               }
+          }
+
+
+        template <typename number>
+        std::list<std::string> line_collection<number>::extract_output_groups(const std::list< data_line<number> >& list) const
+          {
+            std::list<std::string> groups;
+
+            for(typename std::list< data_line<number> >::const_iterator t = list.begin(); t != list.end(); t++)
+              {
+                std::list<std::string> line_groups = t->get_parent_groups();
+                groups.merge(line_groups);
+              }
+
+            groups.sort();
+            groups.unique();
+
+            return(groups);
           }
 
 

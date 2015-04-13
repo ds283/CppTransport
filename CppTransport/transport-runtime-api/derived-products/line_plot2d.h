@@ -144,7 +144,7 @@ namespace transport
 		      public:
 
 				    //! Generate our derived output
-				    virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
+				    virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) override;
 
 
 		      protected:
@@ -422,7 +422,7 @@ namespace transport
 
 
 				template <typename number>
-				void line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
+				std::list<std::string> line_plot2d<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -449,18 +449,22 @@ namespace transport
 						// generate plot
 				    bool success = this->make_plot(pipe, axis, binned_lines, bin_types);
 
+            // get output groups which were used
+            std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
+
 						// commit product (even if the plot failed to generate and we are committing the script - the next line
 						// will prevent the whole output group being committed)
-						pipe.commit(this);
+						pipe.commit(this, used_groups);
 
 						if(!success) throw runtime_exception(runtime_exception::DERIVED_PRODUCT_ERROR, __CPP_TRANSPORT_PRODUCT_LINE_PLOT2D_PYTHON_FAIL);
+            return(used_groups);
 					}
 
 
-		    template <typename number>
-		    void line_plot2d<number>::bin_lines(std::vector< typename line_collection<number>::output_line >& input,
-		                                        std::vector< std::vector< typename line_collection<number>::output_line > >& output,
-		                                        std::vector< value_type >& bin_types)
+        template <typename number>
+        void line_plot2d<number>::bin_lines(std::vector<typename line_collection<number>::output_line>& input,
+                                            std::vector<std::vector<typename line_collection<number>::output_line> >& output,
+                                            std::vector<value_type>& bin_types)
 			    {
 						while(input.size() > 0)
 							{

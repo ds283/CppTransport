@@ -81,7 +81,7 @@ namespace transport
 		      public:
 
 						//! Generate our derived output
-		        virtual void derive(datapipe<number>& pipe, const std::list<std::string>& tags);
+		        virtual std::list<std::string> derive(datapipe<number>& pipe, const std::list<std::string>& tags) override;
 
 
 		      protected:
@@ -165,7 +165,7 @@ namespace transport
 
 
 				template <typename number>
-				void line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
+				std::list<std::string> line_asciitable<number>::derive(datapipe<number>& pipe, const std::list<std::string>& tags)
 					{
 						// generate output from our constituent lines
 				    std::list< data_line<number> > derived_lines;
@@ -179,8 +179,13 @@ namespace transport
 						// make table
 						this->make_table(pipe, axis, output_lines);
 
+            // get output groups which were used
+            std::list<std::string> used_groups = this->extract_output_groups(derived_lines);
+
 						// commit product
-						pipe.commit(this);
+						pipe.commit(this, used_groups);
+
+            return(used_groups);
 					}
 
 

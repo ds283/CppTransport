@@ -174,7 +174,7 @@ namespace transport
 		    void schedule_output(output_task<number>* tk, const MPI::new_derived_content_payload& payload);
 
 		    //! Push new derived content to the master process
-		    void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product);
+		    void push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product, const std::list<std::string>& used_groups);
 
 
 		    // INTERNAL DATA
@@ -697,7 +697,7 @@ namespace transport
         typename datapipe<number>::postintegration_content_finder p_finder = std::bind(&repository<number>::find_postintegration_task_output, this->repo, std::placeholders::_1, std::placeholders::_2);
 
         // set up content-dispatch function
-        typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2);
+        typename datapipe<number>::dispatch_function dispatcher = std::bind(&slave_controller<number>::push_derived_content, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
 
         // acquire a datapipe which we can use to stream content from the databse
         datapipe<number> pipe = this->data_mgr->create_datapipe(payload.get_logdir_path(), payload.get_tempdir_path(), i_finder, p_finder, dispatcher, this->get_rank());
@@ -737,6 +737,9 @@ namespace transport
 
 				            bool success = true;
 
+                    // track output groups we use
+                    std::list<std::string> content_groups;
+
 				            // keep track of wallclock time
 				            boost::timer::cpu_timer timer;
 				            boost::timer::nanosecond_type processing_time = 0;
@@ -772,10 +775,13 @@ namespace transport
 
 				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "-- Processing derived product '" << product->get_name() << "'";
 
+                        std::list<std::string> this_groups;
+
 				                try
 					                {
 				                    boost::timer::cpu_timer derive_timer;
-				                    product->derive(pipe, task_tags);
+				                    this_groups = product->derive(pipe, task_tags);
+                            content_groups.merge(this_groups);
 						                derive_timer.stop();
 						                processing_time += derive_timer.elapsed().wall;
 						                if(max_processing_time == 0 || derive_timer.elapsed().wall > max_processing_time) max_processing_time = derive_timer.elapsed().wall;
@@ -797,6 +803,10 @@ namespace transport
 				                BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << "";
 					            }
 
+                    // collect content groups used during this derivation
+                    content_groups.sort();
+                    content_groups.unique();
+
 				            // all work now done - stop the timer
 				            timer.stop();
 
@@ -805,7 +815,7 @@ namespace transport
 				            if(success) BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::normal) << std::endl << "-- Worker sending FINISHED_DERIVED_CONTENT to master | finished at " << boost::posix_time::to_simple_string(now);
 				            else        BOOST_LOG_SEV(pipe.get_log(), datapipe<number>::error)  << std::endl << "-- Worker reporting DERIVED_CONTENT_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-				            MPI::finished_derived_payload finish_payload(pipe.get_database_time(), timer.elapsed().wall,
+				            MPI::finished_derived_payload finish_payload(content_groups, pipe.get_database_time(), timer.elapsed().wall,
 				                                                         list.size(), processing_time,
 				                                                         min_processing_time, max_processing_time,
 				                                                         pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
@@ -1129,9 +1139,10 @@ namespace transport
 				            BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- NEW WORK ASSIGNMENT";
 
 				            // perform the task
+                    std::string group;
 				            try
 					            {
-				                pipe.attach(ptk, payload.get_tags());
+                        group = pipe.attach(ptk, payload.get_tags());
 				                this->work_handler.postintegration_handler(tk, ptk, work, batcher, pipe);
 				                pipe.detach();
 					            }
@@ -1152,7 +1163,7 @@ namespace transport
 				            if(success) BOOST_LOG_SEV(batcher.get_log(), generic_batcher::normal) << std::endl << "-- Worker sending FINISHED_POSTINTEGRATION to master | finished at " << boost::posix_time::to_simple_string(now);
 				            else        BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error)  << std::endl << "-- Worker reporting POSTINTEGRATION_FAIL to master | finished at " << boost::posix_time::to_simple_string(now);
 
-				            MPI::finished_postintegration_payload outgoing_payload(pipe.get_database_time(), timer.elapsed().wall,
+				            MPI::finished_postintegration_payload outgoing_payload(group, pipe.get_database_time(), timer.elapsed().wall,
 				                                                                   batcher.get_items_processed(), batcher.get_processing_time(),
 				                                                                   batcher.get_max_processing_time(), batcher.get_min_processing_time(),
 				                                                                   pipe.get_time_config_cache_hits(), pipe.get_time_config_cache_unloads(),
@@ -1213,7 +1224,8 @@ namespace transport
 
 
     template <typename number>
-    void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product)
+    void slave_controller<number>::push_derived_content(datapipe<number>* pipe, typename derived_data::derived_product<number>* product,
+                                                        const std::list<std::string>& used_groups)
 	    {
         assert(pipe != nullptr);
         assert(product != nullptr);
@@ -1227,7 +1239,7 @@ namespace transport
         boost::filesystem::path product_filename = pipe->get_abs_tempdir_path() / product->get_filename();
         if(boost::filesystem::exists(product_filename))
 	        {
-            MPI::content_ready_payload payload(product->get_name());
+            MPI::content_ready_payload payload(product->get_name(), used_groups);
             this->world.isend(MPI::RANK_MASTER, MPI::DERIVED_CONTENT_READY, payload);
 	        }
         else

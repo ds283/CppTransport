@@ -95,7 +95,7 @@ namespace transport
         typedef std::function<void(datapipe<number>*)> detach_callback;
 
         //! Push derived content
-        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*)> dispatch_function;
+        typedef std::function<void(datapipe<number>*, typename derived_data::derived_product<number>*, const std::list<std::string>&)> dispatch_function;
 
         //! Extract a set of time sample-points from a datapipe
         typedef std::function<void(datapipe<number>*, const std::vector<unsigned int>&, std::vector<double>&)> time_config_callback;
@@ -268,7 +268,7 @@ namespace transport
       public:
 
         //! Commit an output
-        void commit(typename derived_data::derived_product<number>* product) { this->utilities.dispatch(this, product); }
+        void commit(typename derived_data::derived_product<number>* product, const std::list<std::string>& groups) { this->utilities.dispatch(this, product, groups); }
 
 
         // CACHE STATISTICS
@@ -330,8 +330,8 @@ namespace transport
 
       public:
 
-        //! Attach a content group to the datapipe, ready for reading
-        void attach(derivable_task<number>* tk, const std::list<std::string>& tags);
+        //! Attach a content group to the datapipe, ready for reading. Returns name of attached content group.
+        std::string attach(derivable_task<number>* tk, const std::list<std::string>& tags);
 
         //! Detach a content group from the datapipe
         void detach(void);
@@ -744,7 +744,7 @@ namespace transport
 
 
     template <typename number>
-    void datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
+    std::string datapipe<number>::attach(derivable_task<number>* tk, const std::list<std::string>& tags)
 	    {
         assert(this->validate_unattached());
         if(!this->validate_unattached()) throw runtime_exception(runtime_exception::DATAPIPE_ERROR, __CPP_TRANSPORT_DATAMGR_ATTACH_PIPE_ALREADY_ATTACHED);
@@ -769,6 +769,8 @@ namespace transport
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH integration content group " << boost::posix_time::to_simple_string(this->attached_integration_group->get_creation_time())
 		            << " (from integration task '" << tk->get_name() << "')";
+
+            return(this->attached_integration_group->get_name());
 	        }
         else if((ptk = dynamic_cast< postintegration_task<number>* >(tk)) != nullptr)      // trying to attach to a postintegration content group
 	        {
@@ -782,13 +784,13 @@ namespace transport
 
             BOOST_LOG_SEV(this->get_log(), normal) << "** ATTACH postintegration content group " << boost::posix_time::to_simple_string(this->attached_postintegration_group->get_creation_time())
 		            << " (from postintegration task '" << tk->get_name() << "')";
+
+            return(this->attached_postintegration_group->get_name());
 	        }
-        else
-	        {
-            std::stringstream msg;
-            msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
-            throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
-	        }
+
+        std::stringstream msg;
+        msg << __CPP_TRANSPORT_DATAMGR_UNKNOWN_DERIVABLE_TASK << " '" << tk->get_name() << "'";
+        throw runtime_exception(runtime_exception::DATAPIPE_ERROR, msg.str());
 	    }
 
 

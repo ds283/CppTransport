@@ -154,7 +154,7 @@ namespace transport
         bool aggregate_threepf_batch(integration_writer<number>& writer, const std::string& temp_ctr);
 
         //! Aggregate a derived product
-        bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name);
+        bool aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name, const std::list<std::string>& used_groups);
 
         //! Aggregate a temporary zeta_twopf container
         bool aggregate_zeta_twopf_batch(postintegration_writer<number>& writer, const std::string& temp_ctr);
@@ -436,7 +436,7 @@ namespace transport
 		void data_manager_sqlite3<number>::initialize_writer(std::shared_ptr< derived_content_writer<number> >& writer)
 			{
         // set up aggregation handler
-        writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2));
+        writer->set_aggregation_handler(std::bind(&data_manager_sqlite3<number>::aggregate_derived_product, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3));
 			}
 
 
@@ -1045,7 +1045,8 @@ namespace transport
 
 
     template <typename number>
-    bool data_manager_sqlite3<number>::aggregate_derived_product(derived_content_writer<number>& writer, const std::string& temp_name)
+    bool data_manager_sqlite3<number>::aggregate_derived_product(derived_content_writer<number>& writer,
+                                                                 const std::string& temp_name, const std::list<std::string>& used_groups)
       {
         bool success = true;
 
@@ -1085,7 +1086,7 @@ namespace transport
         BOOST_LOG_SEV(writer.get_log(), base_writer::normal) << "++ Emplaced derived product " << dest_location;
 
         // commit this product to the current output group
-        writer.push_content(*product);
+        writer.push_content(*product, used_groups);
 
         return(success);
       }

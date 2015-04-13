@@ -670,7 +670,8 @@ namespace transport
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
 
-        if(writer.is_paired()) output_record->get_payload().set_pair(writer.get_paired_group());
+        output_record->get_payload().set_pair(writer.is_paired());
+        output_record->get_payload().set_parent_group(writer.get_parent_group());
 
         output_record->get_payload().set_fail(writer.is_failed());
         output_record->get_payload().set_failed_serials(writer.get_missing_serials());
@@ -749,6 +750,7 @@ namespace transport
             output_record->get_payload().add_derived_content(*t);
 	        }
         output_record->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_fail(false);
 
         // commit new output record
         output_record->commit();

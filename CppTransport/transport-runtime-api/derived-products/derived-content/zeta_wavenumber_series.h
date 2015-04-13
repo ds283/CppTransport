@@ -111,7 +111,7 @@ namespace transport
 		                                                            const std::list<std::string>& tags) const
 			    {
 		        // attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
 		        std::vector<double> w_axis = this->pull_twopf_kconfig_axis(pipe);
@@ -144,13 +144,13 @@ namespace transport
 								        line_data[j] *= k_values[j].k_comoving*k_values[j].k_comoving*k_values[j].k_comoving / (2.0*M_PI*M_PI);
 							        }
 
-				            data_line<number> line = data_line<number>(this->x_type, dimensionless_value, w_axis, line_data,
+				            data_line<number> line = data_line<number>(group, this->x_type, dimensionless_value, w_axis, line_data,
 				                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 				            lines.push_back(line);
 					        }
 				        else
 					        {
-				            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+				            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
 				                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 				            lines.push_back(line);
 					        }
@@ -316,7 +316,7 @@ namespace transport
 		                                                              const std::list<std::string>& tags) const
 			    {
 		        // attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
 		        std::vector<double> w_axis = this->pull_threepf_kconfig_axis(pipe);
@@ -337,7 +337,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            data_line<number> line = data_line<number>(this->x_type, correlation_function_value, w_axis, line_data,
+		            data_line<number> line = data_line<number>(group, this->x_type, correlation_function_value, w_axis, line_data,
 		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 
 		            lines.push_back(line);
@@ -503,7 +503,7 @@ namespace transport
 		                                                                         const std::list<std::string>& tags) const
 			    {
 		        // attach our datapipe to an output group
-		        this->attach(pipe, tags);
+            std::string group = this->attach(pipe, tags);
 
 		        // pull wavenumber-axis data
 		        std::vector<double> w_axis = this->pull_threepf_kconfig_axis(pipe);
@@ -524,7 +524,7 @@ namespace transport
                 // it's safe to take a reference here to avoid a copy; we don't need the cache data to survive over multiple calls to lookup_tag()
                 const std::vector<number>& line_data = z_handle.lookup_tag(tag);
 
-		            data_line<number> line = data_line<number>(this->x_type, fNL_value, w_axis, line_data,
+		            data_line<number> line = data_line<number>(group, this->x_type, fNL_value, w_axis, line_data,
 		                                                       this->get_LaTeX_label(t_values[i]), this->get_non_LaTeX_label(t_values[i]), this->is_spectral_index());
 
 		            lines.push_back(line);

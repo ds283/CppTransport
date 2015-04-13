@@ -35,9 +35,17 @@ namespace transport
           public:
 
 		        //! Construct a dataline object from a sequence of axis and data points
-            data_line(axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
+            data_line(const std::list<std::string>& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
                       const std::string& Ll, const std::string& nLl,
                       bool spectral_index=false);
+
+            //! Construct a dataline object from a sequence of axis and data points
+            data_line(const std::string& g, axis_value at, value_type vt, const std::vector<double>& a, const std::vector<number>& d,
+                      const std::string& Ll, const std::string& nLl,
+                      bool spectral_index=false)
+              : data_line(std::list<std::string>{g}, at, vt, a, d, Ll, nLl, spectral_index)
+              {
+              }
 
             ~data_line() = default;
 
@@ -64,6 +72,9 @@ namespace transport
 		        //! Get value type
 		        value_type get_value_type() const { return(this->y_type); }
 
+            //! Get parent content groups
+            const std::list<std::string>& get_parent_groups() const { return(this->groups); }
+
 
             // INTERNAL API
 
@@ -78,6 +89,9 @@ namespace transport
 
 
             // DATA LINE
+
+            //! source content group
+            std::list<std::string> groups;
 
 		        //! axis type
 		        const axis_value x_type;
@@ -100,10 +114,11 @@ namespace transport
 
 
         template <typename number>
-        data_line<number>::data_line(axis_value at, value_type vt,
+        data_line<number>::data_line(const std::list<std::string>& g, axis_value at, value_type vt,
                                      const std::vector<double>& a, const std::vector<number>& d,
                                      const std::string& Ll, const std::string& nLl, bool spectral_index)
-	        : x_type(at),
+	        : groups(g),
+            x_type(at),
 	          y_type(spectral_index ? spectral_index_value : vt),
 	          LaTeX_label(Ll),
 	          non_LaTeX_label(nLl)

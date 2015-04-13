@@ -102,13 +102,16 @@ namespace transport
       public:
 
         //! pair with a named integration output group
-        void pair(const std::string& p) { this->paired = true; this->paired_group = p; }
+        void set_pair(bool g) { this->paired = g; }
 
         //! query pairing status
         bool is_paired() const { return(this->paired); }
 
+        //! set parent group
+        void set_parent_group(const std::string& p) { this->parent_group = p; }
+
         //! query paired group
-        const std::string& get_paired_group() const { return(this->paired_group); }
+        const std::string& get_parent_group() const { return(this->parent_group); }
 
 
         // METADATA
@@ -169,13 +172,13 @@ namespace transport
         output_metadata metadata;
 
 
-        // PAIRED STATUS
+        // PARENT CONTENT
 
         //! is this a paired postintegration
         bool paired;
 
-        //! name of paired integration group, if present
-        std::string paired_group;
+        //! name of parent integration group
+        std::string parent_group;
 
 
         // FAILURE STATUS
