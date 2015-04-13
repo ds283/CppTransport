@@ -93,4 +93,7 @@
 
 #define __CPP_TRANSPORT_DATAMGR_UNKNOWN_FNL_TEMPLATE                "Data manager error: Unknown fNL template type"
 
+#define __CPP_TRANSPORT_DATAMGR_INTEGRITY_READ_FAIL                 "Data manager error: Failure while performing integrity check (backend code="
+
+
 #endif // __CPP_TRANSPORT_MESSAGES_EN_DATA_MANAGER_H

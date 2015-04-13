@@ -51,6 +51,9 @@ namespace transport
         //! Define an aggregation callback object. Used to aggregate results from worker processes
         typedef std::function<bool(integration_writer<number>&, const std::string&)> aggregate_callback;
 
+        //! Define an integrity check callback object.
+        typedef std::function<void(integration_writer<number>&, integration_task<number>*)> integrity_callback;
+
         class callback_group
 	        {
           public:
@@ -94,6 +97,12 @@ namespace transport
 
         //! Commit contents of this integration_writer to the database
         void commit() { this->callbacks.commit(*this); this->committed = true; }
+
+        //! Set integrity check callback
+        void set_integrity_check_handler(integrity_callback c) { this->integrity_checker = c; }
+
+        //! Check integrity
+        void check_integrity(integration_task<number>* tk) { if(this->integrity_checker) this->integrity_checker(*this, tk); }
 
 
         // STATISTICS
@@ -147,6 +156,9 @@ namespace transport
         //! Aggregate callback
         aggregate_callback aggregator;
 
+        //! Integrity check callback
+        integrity_callback integrity_checker;
+
 
         // METADATA
 
@@ -194,6 +206,7 @@ namespace transport
         workgroup_number(wg),
 	      callbacks(c),
 	      aggregator(nullptr),
+        integrity_checker(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),
 	      supports_stats(rec->get_task()->get_model()->supports_per_configuration_statistics()),
 	      metadata()

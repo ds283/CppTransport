@@ -930,6 +930,9 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
+        // perform integrity check
+        writer->check_integrity(tk);
+
         // close the writer
         this->data_mgr->close_writer(writer);
 
@@ -1371,6 +1374,9 @@ namespace transport
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
 
+        // perform integrity check
+        writer->check_integrity(tk);
+
         // close the writer
         this->data_mgr->close_writer(writer);
 
@@ -1420,6 +1426,10 @@ namespace transport
         bool success = this->paired_postintegration_task_to_workers(i_writer, p_writer, tags, i_agg, p_agg, d_agg, begin_label, end_label);
 
         journal_instrument instrument(this->journal, master_work_event::database_begin, master_work_event::database_end);
+
+        // perform integrity check
+        i_writer->check_integrity(ptk);
+        p_writer->check_integrity(tk);
 
         // close both writers
         this->data_mgr->close_writer(i_writer);
