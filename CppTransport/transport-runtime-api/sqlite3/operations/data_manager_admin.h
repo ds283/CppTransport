@@ -1428,6 +1428,26 @@ namespace transport
 			    }
 
 
+        void warn_time_serial_too_few(unsigned int expected, unsigned int received, std::string name)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_A << " " << expected << ", "
+              << __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_B << " " << received
+              << " [" << name << "]";
+            throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+          }
+
+
+        void warn_kconfig_serial_too_few(unsigned int expected, unsigned int received, std::string name)
+          {
+            std::ostringstream msg;
+            msg << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_A << " " << expected << " "
+              << __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_B << " " << received
+              << " [" << name << "]";
+            throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, msg.str());
+          }
+
+
 		    // Pull a set of time sample points, identified by their serial numbers
 		    void pull_time_sample(sqlite3* db, const std::vector<unsigned int>& serial_numbers, std::vector<double>& sample, unsigned int worker)
 			    {
@@ -1474,7 +1494,7 @@ namespace transport
 				    drop_temporary_timeserial_table(db, worker);
 
 				    // check that we have as many values as we expect
-				    if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != serial_numbers.size()) warn_time_serial_too_few(serial_numbers.size(), sample.size(), __func__);
 			    }
 
 
@@ -1534,7 +1554,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != serial_numbers.size()) warn_kconfig_serial_too_few(serial_numbers.size(), sample.size(), __func__);
 	        }
 
 
@@ -1636,7 +1656,7 @@ namespace transport
             exec(db, drop_stmt.str(), __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL);
 
             // check that we have as many values as we expect
-            if(sample.size() != serial_numbers.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != serial_numbers.size()) warn_kconfig_serial_too_few(serial_numbers.size(), sample.size(), __func__);
 	        }
 
 
@@ -1694,7 +1714,7 @@ namespace transport
 		        drop_temporary_timeserial_table(db, worker);
 
 		        // check that we have as many values as we expect
-		        if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 			    }
 
 
@@ -1752,7 +1772,7 @@ namespace transport
 		        drop_temporary_timeserial_table(db, worker);
 
 		        // check that we have as many values as we expect
-		        if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 			    }
 
 
@@ -1810,7 +1830,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -1868,7 +1888,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
           }
 
 
@@ -1926,7 +1946,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -1984,7 +2004,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2042,7 +2062,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
           }
 
 
@@ -2095,7 +2115,7 @@ namespace transport
 		        drop_temporary_timeserial_table(db, worker);
 
 		        // check that we have as many values as we expect
-		        if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 			    }
 
 
@@ -2148,7 +2168,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2201,7 +2221,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2253,7 +2273,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2305,7 +2325,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2357,8 +2377,8 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != t_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW);
-	        }
+            if(sample.size() != t_serials.size()) warn_time_serial_too_few(t_serials.size(), sample.size(), __func__);
+          }
 
 
         // Pull a sample of a zeta twopf, for a specific k-configuration and a specific set of time serial numbers
@@ -2410,7 +2430,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2463,7 +2483,7 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
 	        }
 
 
@@ -2516,8 +2536,9 @@ namespace transport
             drop_temporary_timeserial_table(db, worker);
 
             // check that we have as many values as we expect
-            if(sample.size() != k_serials.size()) throw runtime_exception(runtime_exception::DATA_MANAGER_BACKEND_ERROR, __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW);
+            if(sample.size() != k_serials.size()) warn_kconfig_serial_too_few(k_serials.size(), sample.size(), __func__);
 	        }
+
 
 	    }   // namespace sqlite3_operations
 
