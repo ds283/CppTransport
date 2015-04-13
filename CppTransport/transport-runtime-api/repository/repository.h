@@ -190,6 +190,8 @@ namespace transport
 
       protected:
 
+        virtual std::string reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix) = 0;
+
         std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec,
                                                                                        const std::list<std::string>& tags,
                                                                                        unsigned int worker, unsigned int workgroup,
@@ -431,10 +433,8 @@ namespace transport
 		    // get current time
 		    boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-		    // construct paths for the various output files and directories.
-		    // We use the ISO form of the current time to label the output group directory.
-		    // This means the repository directory structure will be human-readable if necessary.
-		    std::string output_leaf = boost::posix_time::to_iso_string(now) + suffix;
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
 		    boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
 		    boost::filesystem::path sql_path    = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;
@@ -472,10 +472,8 @@ namespace transport
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        // construct paths for output files and directories
-        // We use the ISO form of the current time to label the output group directory.
-        // This means the repository directory structure is human-readable if necessary.
-        std::string output_leaf = boost::posix_time::to_iso_string(now) + suffix;
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
         boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
 
@@ -510,8 +508,8 @@ namespace transport
         // get current time
         boost::posix_time::ptime now = boost::posix_time::second_clock::universal_time();
 
-        // construct paths for output files and directories
-        std::string output_leaf = boost::posix_time::to_iso_string(now) + suffix;
+        // request a name for this content group
+        std::string output_leaf = this->reserve_content_name(now, suffix);
 
         boost::filesystem::path output_path = static_cast<boost::filesystem::path>(__CPP_TRANSPORT_REPO_TASKOUTPUT_LEAF) / rec->get_name() / output_leaf;
         boost::filesystem::path sql_path     = output_path / __CPP_TRANSPORT_REPO_DATABASE_LEAF;

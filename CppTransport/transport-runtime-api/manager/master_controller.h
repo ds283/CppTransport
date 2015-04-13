@@ -1398,7 +1398,7 @@ namespace transport
         this->data_mgr->create_tables(p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
-        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "-paired");
+        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "paired");
         this->data_mgr->initialize_writer(i_writer);
         this->data_mgr->create_tables(i_writer, ptk);
 

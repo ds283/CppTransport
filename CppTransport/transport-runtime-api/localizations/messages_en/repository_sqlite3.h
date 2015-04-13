@@ -24,6 +24,9 @@
 #define __CPP_TRANSPORT_REPO_STORE_PRODUCT_FAIL           "Repository error: failed to store derived product record (backend code="
 #define __CPP_TRANSPORT_REPO_STORE_OUTPUT_FAIL            "Repository error: failed to store output record (backend code="
 
+#define __CPP_TRANSPORT_REPO_STORE_RESERVE_FAIL           "Repository error: failed to store content group name reservation (backend code="
+#define __CPP_TRANSPORT_REPO_COMMIT_OUTPUT_NOT_RESERVED   "Repository error: attempt to commit output group for unreserved name"
+
 #define __CPP_TRANSPORT_BADLY_FORMED_RANGE                "Repository error: badly formed JSON document for 'range' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_PARAMS               "Repository error: badly formed JSON for 'parameters' group"
 #define __CPP_TRANSPORT_BADLY_FORMED_ICS                  "Repository error: badly formed JSON for 'initial_conditions' group"

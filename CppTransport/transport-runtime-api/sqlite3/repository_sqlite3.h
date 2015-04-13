@@ -295,6 +295,13 @@ namespace transport
 		    void commit_replace(repository_record& record, find_function finder);
 
 
+        // CONTENT GROUP MANAGEMENT
+
+      protected:
+
+        virtual std::string reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix) override;
+
+
 		    // INTERNAL DATA
 
 		  private:
@@ -455,7 +462,13 @@ namespace transport
 		repository_sqlite3<number>::~repository_sqlite3()
 			{
 				// close open handles if it exists
-				if(this->db != nullptr) sqlite3_close(this->db);
+				if(this->db != nullptr)
+          {
+            // perform routine maintenance
+            sqlite3_operations::exec(this->db, "VACUUM;");
+
+            sqlite3_close(this->db);
+          }
 			}
 
 
@@ -1174,6 +1187,22 @@ namespace transport
 						list.push_back(std::shared_ptr< output_group_record<Payload> >(this->template content_group_record_factory<Payload>(root)));
 					}
 			}
+
+
+    // CONTENT GROUP MANAGEMENT
+
+
+    template <typename number>
+    std::string repository_sqlite3<number>::reserve_content_name(boost::posix_time::ptime& now, const std::string& suffix)
+      {
+        std::string posix_time_string = boost::posix_time::to_iso_string(now);
+
+        transaction_manager transaction = this->transaction_factory();
+        std::string name = sqlite3_operations::reserve_content_name(transaction, this->db, posix_time_string, suffix);
+        transaction.commit();
+
+        return(name);
+      }
 
 
     // FACTORY FUNCTIONS TO BUILD A REPOSITORY
