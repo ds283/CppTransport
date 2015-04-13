@@ -785,8 +785,11 @@ namespace transport
         // search for output groups associated with this task
         std::list< std::shared_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
 
+        // remove items which are marked as failed
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().get_metadata().is_failed); } );
+
         // remove items from the list which have mismatching tags
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> > group) { return(group.get()->check_tags(tags)); } );
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
 
         if(output.empty())
 	        {

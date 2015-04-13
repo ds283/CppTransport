@@ -107,7 +107,7 @@ namespace transport
 
 
         //! Query whether any integrations failed
-        bool integrations_failed() const { return (this->failures > 0); }
+        bool is_failed() const { return (this->failures > 0); }
 
         //! Query how many refinements occurred
         unsigned int get_reported_refinements() const { return(this->refinements); }

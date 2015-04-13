@@ -83,9 +83,11 @@
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_INSERT_FAIL             "Data manager error: Failed to insert value in temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_SERIAL_DROP_FAIL               "Data manager error: Failed to drop temporary table of serial numbers (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_READ_FAIL               "Data manager error: Failed to select time sample (backend code="
-#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW                 "Data manager error: Read fewer time samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_A               "Data manager error: Read too few time samples from the container: expected"
+#define __CPP_TRANSPORT_DATAMGR_TIME_SERIAL_TOO_FEW_B               "received"
 #define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_READ_FAIL            "Data manager error: Failed to select k-configuration sample (backend code="
-#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW              "Data manager error: Read fewer k-configuration samples from the container than expected"
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_A            "Data manager error: Read too few k-configuration samples from the container: expected"
+#define __CPP_TRANSPORT_DATAMGR_KCONFIG_SERIAL_TOO_FEW_B            "received"
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_CREATE_FAIL            "Data manager error: Failed to create temporary table of threepf configurations (backend code="
 #define __CPP_TRANSPORT_DATAMGR_TEMP_THREEPF_DROP_FAIL              "Data manager error: Failed to drop temporary table of threepf configurations (backend code="
 

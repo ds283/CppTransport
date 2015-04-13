@@ -1060,6 +1060,8 @@ namespace transport
 
         std::list<unsigned int> failures = payload.get_failed_serials();
         metadata.failed_serials.merge(failures);
+
+        if(payload.get_num_failures() > 0) metadata.is_failed = true;
 	    }
 
 

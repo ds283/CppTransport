@@ -559,7 +559,6 @@ namespace transport
 				                success = false;
 				                BOOST_LOG_SEV(batcher.get_log(), generic_batcher::error) << "-- Exception reported during integration: code=" << xe.get_exception_code() << ": " << xe.what();
 					            }
-				            if(batcher.integrations_failed()) success = false;
 
 				            // all work is now done - stop the wallclock timer
 						        batcher.end_assignment();

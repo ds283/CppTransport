@@ -705,7 +705,8 @@ namespace transport
 	          global_max_batching_time(0),
 	          total_configurations(0),
             total_failures(0),
-            total_refinements(0)
+            total_refinements(0),
+            is_failed(false)
 	        {
 	        }
 
@@ -716,7 +717,7 @@ namespace transport
                              boost::timer::nanosecond_type bt, boost::timer::nanosecond_type min_m_bt, boost::timer::nanosecond_type max_m_bt,
                              boost::timer::nanosecond_type min_bt, boost::timer::nanosecond_type max_bt,
                              unsigned int num_processed, unsigned int num_failed, unsigned int num_refined,
-                             const std::list<unsigned int>& failures)
+                             const std::list<unsigned int>& failures, bool f)
 	        : total_wallclock_time(wc),
 	          total_aggregation_time(ag),
 	          total_integration_time(it),
@@ -732,7 +733,8 @@ namespace transport
 	          total_configurations(num_processed),
             total_failures(num_failed),
             total_refinements(num_refined),
-            failed_serials(failures)
+            failed_serials(failures),
+            is_failed(f)
 	        {
 	        }
 
@@ -751,6 +753,9 @@ namespace transport
         // DATA
 
       public:
+
+        //! mark this group as failed?
+        bool is_failed;
 
         //! total wallclock time (measured on master process)
         boost::timer::nanosecond_type total_wallclock_time;
