@@ -465,7 +465,7 @@ namespace transport
 				if(this->db != nullptr)
           {
             // perform routine maintenance
-            sqlite3_operations::exec(this->db, "VACUUM;");
+            if(this->access_mode == repository<number>::readwrite) sqlite3_operations::exec(this->db, "VACUUM;");
 
             sqlite3_close(this->db);
           }
