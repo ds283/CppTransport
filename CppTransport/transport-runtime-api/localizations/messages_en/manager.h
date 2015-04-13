@@ -15,6 +15,7 @@
 #define __CPP_TRANSPORT_EXPECTED_CAPACITY               "Too few arguments: expected capacity"
 #define __CPP_TRANSPORT_EXPECTED_POSITIVE               "Argument error: expected positive integer following"
 #define __CPP_TRANSPORT_EXPECTED_GANTT_FILENAME         "Too few arguments: expected Gantt chart filename"
+#define __CPP_TRANSPORT_EXPECTED_SEED_GROUP             "Too few arguments: expected seed group identifier"
 
 #define __CPP_TRANSPORT_EXPECTED_GET_TYPE               "Too few arguments: expected record type following 'get'"
 #define __CPP_TRANSPORT_EXPECTED_GET_NAME               "Too few arguments: expected record name for 'get'"

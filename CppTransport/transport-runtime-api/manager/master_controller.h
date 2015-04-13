@@ -57,6 +57,7 @@
 
 #define __CPP_TRANSPORT_VERB_TASK                "task"
 #define __CPP_TRANSPORT_VERB_GET                 "get"
+#define __CPP_TRANSPORT_VERB_SEED                "seed"
 
 #define __CPP_TRANSPORT_NOUN_TASK                "task"
 #define __CPP_TRANSPORT_NOUN_PACKAGE             "package"
@@ -109,14 +110,16 @@ namespace transport
 			        : type(t),
 			          name(n),
 			          tags(tg),
-			          output(o)
+			          output(o),
+		            seeded(false)
 			        {
 			        }
 
 		        job_descriptor(job_type t, const std::string& n, const std::list<std::string>& tg)
 			        : type(t),
 			          name(n),
-			          tags(tg)
+			          tags(tg),
+		            seeded(false)
 			        {
 			        }
 
@@ -125,13 +128,19 @@ namespace transport
 
 		      public:
 
-		        job_type get_type() const { return(this->type); }
+		        job_type                      get_type()                     const { return(this->type); }
 
-		        const std::string& get_name() const { return(this->name); }
+		        const std::string&            get_name()                     const { return(this->name); }
 
-		        const std::list<std::string>& get_tags() const { return(this->tags); }
+		        const std::list<std::string>& get_tags()                     const { return(this->tags); }
 
-		        const std::string& get_output() const { return(this->output); }
+		        const std::string&            get_output()                   const { return(this->output); }
+
+				    void                          set_seed(const std::string& s)       { this->seeded = true; this->seed_group = s; }
+
+				    bool                          is_seeded()                    const { return(this->seeded); }
+
+				    const std::string&            get_seed_group()               const { return(this->seed_group); };
 
 
 		        // INTERNAL DATA
@@ -149,6 +158,12 @@ namespace transport
 
 		        //! output destination, if needed
 		        std::string            output;
+
+				    //! is this job seeded
+				    bool                   seeded;
+
+				    //! seed group, if used
+				    std::string            seed_group;
 
 			    };
 
@@ -458,6 +473,9 @@ namespace transport
 			{
 		    bool multiple_repo_warn = false;
 
+				bool seed = false;
+		    std::string seed_group;
+
 		    std::list<std::string> tags;
 
 		    for(unsigned int i = 1; i < argc; i++)
@@ -606,6 +624,16 @@ namespace transport
 			        {
 				        this->arg_cache.set_verbose(true);
 			        }
+		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_SEED)
+			        {
+								if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_SEED_GROUP);
+								else
+									{
+								    ++i;
+										seed_group = std::string(argv[i]);
+								    seed = true;
+									}
+			        }
 		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_TASK)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_TASK_ID);
@@ -614,35 +642,48 @@ namespace transport
 		                ++i;
 		                job_queue.push_back(job_descriptor(job_task, argv[i], tags));
 		                tags.clear();
+
+				            if(seed) job_queue.back().set_seed(seed_group);
+				            seed_group.clear();
+				            seed = false;
 			            }
 			        }
 		        else if(std::string(argv[i]) == __CPP_TRANSPORT_VERB_GET)
 			        {
 		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_TYPE);
-		            ++i;
-
-		            job_type type;
-		            if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
-		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
-		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
-		            else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
-		            else
+				        else
 			            {
-		                std::ostringstream msg;
-		                msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
-		                this->error_handler(msg.str());
+		                ++i;
+
+		                job_type type;
+		                if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PACKAGE)      type = job_get_package;
+		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_TASK)    type = job_get_task;
+		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_PRODUCT) type = job_get_product;
+		                else if(std::string(argv[i]) == __CPP_TRANSPORT_NOUN_CONTENT) type = job_get_content;
+		                else
+			                {
+		                    std::ostringstream msg;
+		                    msg << __CPP_TRANSPORT_UNKNOWN_GET_TYPE << " '" << argv[i] << "'";
+		                    this->error_handler(msg.str());
+			                }
+
+		                if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_NAME);
+		                else
+			                {
+		                    ++i;
+		                    std::string name = argv[i];
+
+		                    if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
+				                else
+			                    {
+		                        ++i;
+		                        std::string output = argv[i];
+
+		                        job_queue.push_back(job_descriptor(type, name, tags, output));
+		                        tags.clear();
+			                    }
+			                }
 			            }
-
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_NAME);
-		            ++i;
-		            std::string name = argv[i];
-
-		            if(i+1 >= argc) this->error_handler(__CPP_TRANSPORT_EXPECTED_GET_OUTPUT);
-		            ++i;
-		            std::string output = argv[i];
-
-		            job_queue.push_back(job_descriptor(type, name, tags, output));
-		            tags.clear();
 			        }
 		        else
 			        {
