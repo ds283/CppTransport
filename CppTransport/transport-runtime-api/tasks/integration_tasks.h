@@ -920,17 +920,6 @@ namespace transport
         ~twopf_task() = default;
 
 
-        // INTERFACE
-
-      public:
-
-        //! Get list of k-configurations at which this task will sample the twopf
-        const std::vector<twopf_kconfig>& get_sample() const { return(this->twopf_config_list); }
-
-        //! Get the number of k-configurations at which this task will sample the twopf
-        unsigned int get_number_kconfigs() const { return(this->twopf_config_list.size()); }
-
-
         // SERIALIZATION (implements a 'serializable' interface)
 
       public:
