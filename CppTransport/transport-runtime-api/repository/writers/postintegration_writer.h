@@ -97,6 +97,20 @@ namespace transport
         void commit() { this->callbacks.commit(*this); this->committed = true; }
 
 
+        // PAIRING
+
+      public:
+
+        //! pair with a named integration output group
+        void pair(const std::string& p) { this->paired = true; this->paired_group = p; }
+
+        //! query pairing status
+        bool is_paired() const { return(this->paired); }
+
+        //! query paired group
+        const std::string& get_paired_group() const { return(this->paired_group); }
+
+
         // METADATA
 
       public:
@@ -109,6 +123,17 @@ namespace transport
 
         //! Get metadata
         const output_metadata& get_metadata() const { return(this->metadata); }
+
+        //! Merge list of failed serials reported by backend or paired integrator (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); this->failed_serials.merge(temp); }
+
+
+        // INTEGRITY CHECK
+
+      public:
+
+        //! get list of missing k-configuration serials
+        const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
 
 		    // CONTENT
@@ -144,6 +169,29 @@ namespace transport
         output_metadata metadata;
 
 
+        // PAIRED STATUS
+
+        //! is this a paired postintegration
+        bool paired;
+
+        //! name of paired integration group, if present
+        std::string paired_group;
+
+
+        // FAILURE STATUS
+
+        //! List of failed serial numbers
+        std::list<unsigned int> failed_serials;
+
+
+        // INTEGRITY STATUS
+
+        //! List of missing serial numbers
+        //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
+        //! integrity of the database directly and cross-check with failures reported by the backend)
+        std::list<unsigned int> missing_serials;
+
+
 		    // CONTENT TAGS
 
 		    //! record products associated with this writer
@@ -160,6 +208,7 @@ namespace transport
                                                            const typename postintegration_writer<number>::callback_group& c,
                                                            const generic_writer::metadata_group& m, const generic_writer::paths_group& p, unsigned int w)
 	    : generic_writer(n, m, p, w),
+        paired(false),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< postintegration_task_record<number>* >(rec->clone())),

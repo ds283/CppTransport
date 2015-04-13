@@ -35,5 +35,6 @@
 #define __CPP_TRANSPORT_PROCESSED_TASKS_D               "time now"
 
 #define __CPP_TRANSPORT_TASK_MANAGER_LABEL              "Task manager:"
+#define __CPP_TRANSPORT_TASK_MANAGER_WARNING_LABEL      "Warning:"
 
 #endif // __CPP_TRANSPORT_MESSAGES_EN_TASK_MANAGER_H

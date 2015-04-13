@@ -235,21 +235,29 @@ namespace transport
                 //! Value constructor (used for constructing messages to send)
                 new_integration_payload(const std::string& tk,
                                         const boost::filesystem::path& tmp_d,
-                                        const boost::filesystem::path& log_d)
-                : task(tk), tempdir(tmp_d.string()), logdir(log_d.string())
+                                        const boost::filesystem::path& log_d,
+                                        unsigned int wg)
+                : task(tk),
+                  tempdir(tmp_d.string()),
+                  logdir(log_d.string()),
+                  workgroup_number(wg)
                   {
                   }
 
 		            //! Get task name
-                const std::string&      get_task_name()     const { return(this->task); }
+                const std::string&      get_task_name()        const { return(this->task); }
 
 		            //! Get path to temporary directory
-                boost::filesystem::path get_tempdir_path()  const { return(boost::filesystem::path(this->tempdir)); }
+                boost::filesystem::path get_tempdir_path()     const { return(boost::filesystem::path(this->tempdir)); }
 
 		            //! Get path to log directory
-                boost::filesystem::path get_logdir_path()   const { return(boost::filesystem::path(this->logdir)); }
+                boost::filesystem::path get_logdir_path()      const { return(boost::filesystem::path(this->logdir)); }
+
+                //! Get workgroup numbers
+                unsigned int            get_workgroup_number() const { return(this->workgroup_number); }
 
               private:
+
                 //! Name of task, to be looked up in repository database
                 std::string task;
 
@@ -258,6 +266,9 @@ namespace transport
 
                 //! Pathname to directory for log files
                 std::string logdir;
+
+                //! Workgroup number
+                unsigned int workgroup_number;
 
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
@@ -268,6 +279,7 @@ namespace transport
                     ar & task;
                     ar & tempdir;
                     ar & logdir;
+                    ar & workgroup_number;
                   }
 
               };
@@ -754,7 +766,8 @@ namespace transport
                   : task(tk),
                     tempdir(tmp_d.string()),
                     logdir(log_d.string()),
-                    tags(tg)
+                    tags(tg),
+                    workgroup_number(0)
                   {
                   }
 
@@ -764,33 +777,38 @@ namespace transport
                                             const boost::filesystem::path& p_log_d,
                                             const std::list<std::string>& tg,
                                             const boost::filesystem::path& i_tmp_d,
-                                            const boost::filesystem::path& i_log_d)
+                                            const boost::filesystem::path& i_log_d,
+                                            unsigned int wg)
                   : task(tk),
                     tempdir(p_tmp_d.string()),
                     logdir(p_log_d.string()),
                     tags(tg),
                     paired_tempdir(i_tmp_d.string()),
-                    paired_logdir(i_log_d.string())
+                    paired_logdir(i_log_d.string()),
+                    workgroup_number(wg)
                   {
                   }
 
                 //! Get task name
-                const std::string&            get_task_name()           const { return(this->task); }
+                const std::string&            get_task_name()               const { return(this->task); }
 
                 //! Get path to the temporary directory
-                boost::filesystem::path       get_tempdir_path()        const { return(boost::filesystem::path(this->tempdir)); }
+                boost::filesystem::path       get_tempdir_path()            const { return(boost::filesystem::path(this->tempdir)); }
 
                 //! Get path to the log directory
-                boost::filesystem::path       get_logdir_path()         const { return(boost::filesystem::path(this->logdir)); }
+                boost::filesystem::path       get_logdir_path()             const { return(boost::filesystem::path(this->logdir)); }
 
                 //! Get path to paired temporary directory
-                boost::filesystem::path       get_paired_tempdir_path() const { return(boost::filesystem::path(this->paired_tempdir)); }
+                boost::filesystem::path       get_paired_tempdir_path()     const { return(boost::filesystem::path(this->paired_tempdir)); }
 
                 //! Get path to paired log directory
-                boost::filesystem::path       get_paired_logdir_path()  const { return(boost::filesystem::path(this->paired_logdir)); }
+                boost::filesystem::path       get_paired_logdir_path()      const { return(boost::filesystem::path(this->paired_logdir)); }
+
+                //! Get workgroup number for paired integration
+                unsigned int                  get_paired_workgroup_number() const { return(this->workgroup_number); }
 
                 //! Get tags specified on the command line, used to narrow-down the list of output groups
-                const std::list<std::string>& get_tags()                const { return(this->tags); }
+                const std::list<std::string>& get_tags()                    const { return(this->tags); }
 
               private:
 
@@ -812,6 +830,9 @@ namespace transport
                 //! Pathname to paired directory for log files (if using)
                 std::string paired_logdir;
 
+                //! Workgroup number for paired integration (if using)
+                unsigned int workgroup_number;
+
                 // enable boost::serialization support, and hence automated packing for transmission over MPI
                 friend class boost::serialization::access;
 
@@ -824,6 +845,7 @@ namespace transport
                     ar & tags;
                     ar & paired_tempdir;
                     ar & paired_logdir;
+                    ar & workgroup_number;
                   }
 
               };

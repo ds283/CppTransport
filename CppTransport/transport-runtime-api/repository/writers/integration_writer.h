@@ -68,7 +68,7 @@ namespace transport
         //! by the task_manager, which can depute a data_manager object of its choice to do the work.
         integration_writer(const std::string& n, integration_task_record<number>* rec, const callback_group& c,
                            const typename generic_writer::metadata_group& m, const typename generic_writer::paths_group& p,
-                           unsigned int w);
+                           unsigned int w, unsigned int wg);
 
         //! disallow copying to ensure consistency of RAII idiom
         integration_writer(const integration_writer<number>& obj) = delete;
@@ -108,6 +108,9 @@ namespace transport
 
       public:
 
+        //! get workgroup number
+        unsigned int get_workgroup_number() const { return(this->workgroup_number); }
+
         //! Return task
         integration_task_record<number>* get_record() const { return(this->parent_record); }
 
@@ -116,6 +119,17 @@ namespace transport
 
         //! Get metadata
         const integration_metadata& get_metadata() const { return(this->metadata); }
+
+        //! Merge list of failed serials reported by backend (not all backends may support this)
+        void merge_failure_list(const std::list<unsigned int>& failed) { std::list<unsigned int> temp = failed; this->set_fail(true); this->failed_serials.merge(temp); }
+
+
+        // INTEGRITY CHECK
+
+      public:
+
+        //! get list of missing k-configuration serials
+        const std::list<unsigned int>& get_missing_serials() const { return(this->missing_serials); }
 
 
         // INTERNAL DATA
@@ -136,11 +150,28 @@ namespace transport
 
         // METADATA
 
+        //! workgroup number
+        unsigned int workgroup_number;
+
         //! task associated with this integration writer
         integration_task_record<number>* parent_record;
 
         //! metadata for this integration
         integration_metadata metadata;
+
+
+        // FAILURE STATUS
+
+        //! List of failed serial numbers reported by backend (not all backends may support this)
+        std::list<unsigned int> failed_serials;
+
+
+        // INTEGRITY STATUS
+
+        //! List of missing serial numbers
+        //! (this isn't the same as the list of failed serials reported by the backend; we compute this by testing the
+        //! integrity of the database directly and cross-check with failures reported by the backend)
+        std::list<unsigned int> missing_serials;
 
 
         // MISCELLANEOUS
@@ -158,8 +189,9 @@ namespace transport
     integration_writer<number>::integration_writer(const std::string& n, integration_task_record<number>* rec,
                                                    const typename integration_writer<number>::callback_group& c,
                                                    const generic_writer::metadata_group& m, const generic_writer::paths_group& p,
-                                                   unsigned int w)
+                                                   unsigned int w, unsigned int wg)
 	    : generic_writer(n, m, p, w),
+        workgroup_number(wg),
 	      callbacks(c),
 	      aggregator(nullptr),
 	      parent_record(dynamic_cast< integration_task_record<number>* >(rec->clone())),

@@ -176,7 +176,7 @@ namespace transport
 		    //! Generate a writer object for new integration output
 		    virtual std::shared_ptr< integration_writer<number> > new_integration_task_content(integration_task_record<number>* rec,
                                                                                            const std::list<std::string>& tags,
-                                                                                           unsigned int worker, std::string suffix="");
+                                                                                           unsigned int worker, unsigned int workgroup, std::string suffix="");
 
 		    //! Generate a writer object for new derived-content output
 		    virtual std::shared_ptr< derived_content_writer<number> > new_output_task_content(output_task_record<number>* rec,
@@ -192,7 +192,7 @@ namespace transport
 
         std::shared_ptr <integration_writer<number>> base_new_integration_task_content(integration_task_record<number>* rec,
                                                                                        const std::list<std::string>& tags,
-                                                                                       unsigned int worker,
+                                                                                       unsigned int worker, unsigned int workgroup,
                                                                                        typename integration_writer<number>::callback_group& callbacks,
                                                                                        std::string suffix="");
 
@@ -269,11 +269,11 @@ namespace transport
 
 		    //! Create a new content group for an integration task
 		    virtual output_group_record<integration_payload>* integration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                                              bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                   bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 		    //! Create a new content group for a postintegration task
 		    virtual output_group_record<postintegration_payload>* postintegration_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
-		                                                                                                      bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
+                                                                                                           bool lock, const std::list<std::string>& nt, const std::list<std::string>& tg) = 0;
 
 		    //! Create a new content group for an output task
 		    virtual output_group_record<output_payload>* output_content_group_record_factory(const std::string& tn, const boost::filesystem::path& path,
@@ -386,13 +386,13 @@ namespace transport
     template <typename number>
     std::shared_ptr< integration_writer<number> >
     repository<number>::new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
-                                                     unsigned int worker, std::string suffix)
+                                                     unsigned int worker, unsigned int workgroup, std::string suffix)
 	    {
         typename integration_writer<number>::callback_group callbacks;
         callbacks.commit = std::bind(&repository<number>::close_integration_writer, this, std::placeholders::_1);
         callbacks.abort  = std::bind(&repository<number>::abort_integration_writer, this, std::placeholders::_1);
 
-        return this->base_new_integration_task_content(rec, tags, worker, callbacks, suffix);
+        return this->base_new_integration_task_content(rec, tags, worker, workgroup, callbacks, suffix);
 	    }
 
 
@@ -424,7 +424,8 @@ namespace transport
 
 		template <typename number>
 		std::shared_ptr< integration_writer<number> >
-		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags, unsigned int worker,
+		repository<number>::base_new_integration_task_content(integration_task_record<number>* rec, const std::list<std::string>& tags,
+                                                          unsigned int worker, unsigned int workgroup,
 		                                                      typename integration_writer<number>::callback_group& callbacks, std::string suffix)
 			{
 		    // get current time
@@ -459,7 +460,7 @@ namespace transport
 		    paths.temp   = temp_path;
 
 		    // integration_writer constructor takes a copy of the integration_task_record
-		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker));
+		    return std::shared_ptr< integration_writer<number> >(new integration_writer<number>(output_leaf, rec, callbacks, metadata, paths, worker, workgroup));
 			}
 
 
@@ -555,6 +556,14 @@ namespace transport
 	        << __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D << " " << boost::posix_time::to_simple_string(now);
 
         this->message(msg.str());
+
+        if(group->get_payload().is_failed())
+          {
+            std::ostringstream warn;
+            warn << __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_A << " '" << group->get_name() << "' "
+              << __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_B;
+            this->warning(warn.str());
+          }
 	    }
 
 
@@ -585,6 +594,10 @@ namespace transport
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
+        output_record->get_payload().set_workgroup_number(writer.get_workgroup_number());
+
+        output_record->get_payload().set_fail(writer.is_failed());
+        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
 
         // commit new output record
         output_record->commit();
@@ -656,6 +669,11 @@ namespace transport
         // populate output group with content from the writer
         output_record->get_payload().set_container_path(writer.get_relative_container_path());
         output_record->get_payload().set_metadata(writer.get_metadata());
+
+        if(writer.is_paired()) output_record->get_payload().set_pair(writer.get_paired_group());
+
+        output_record->get_payload().set_fail(writer.is_failed());
+        output_record->get_payload().set_failed_serials(writer.get_missing_serials());
 
         // tag this output group with its contents
         if(writer.get_products().get_zeta_twopf())   output_record->get_payload().get_precomputed_products().add_zeta_twopf();
@@ -786,7 +804,7 @@ namespace transport
         std::list< std::shared_ptr< output_group_record<integration_payload> > > output = this->enumerate_integration_task_content(name);
 
         // remove items which are marked as failed
-        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().get_metadata().is_failed); } );
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
         output.remove_if( [&] (const std::shared_ptr< output_group_record<integration_payload> >& group) { return(group->check_tags(tags)); } );
@@ -808,6 +826,9 @@ namespace transport
 	    {
         // search for output groups associated with this task
         std::list< std::shared_ptr< output_group_record<postintegration_payload> > > output = this->enumerate_postintegration_task_content(name);
+
+        // remove items which are marked as failed
+        output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> >& group) { return(group->get_payload().is_failed()); } );
 
         // remove items from the list which have mismatching tags
         output.remove_if( [&] (const std::shared_ptr< output_group_record<postintegration_payload> > group) { return(group.get()->check_tags(tags)); } );

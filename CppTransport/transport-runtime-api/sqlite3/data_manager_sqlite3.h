@@ -416,7 +416,7 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);
@@ -552,7 +552,7 @@ namespace transport
         writer->get_data_manager_handle(&db); // throws an exception if handle is unset, so the return value is guaranteed not to be nullptr
 
         // vacuum the database
-        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
+        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << std::endl << "** Performing routine maintenance on SQLite3 container '" << writer->get_abs_container_path().string() << "'";
         boost::timer::cpu_timer timer;
         char* errmsg;
         sqlite3_exec(db, "VACUUM;", nullptr, nullptr, &errmsg);

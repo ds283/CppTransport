@@ -56,8 +56,11 @@
 #define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_C   "tags"
 #define __CPP_TRANSPORT_REPO_COMMITTING_OUTPUT_GROUP_D   "at"
 
+#define __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_A         "Output group"
+#define __CPP_TRANSPORT_REPO_WARN_OUTPUT_GROUP_B         "has some missing content"
+
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_A       "Task"
-#define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Some momentum configurations failed to integrate, or other errors were encountered. Failing output group"
+#define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_B       "Errors were encountered during integration. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_OUTPUT_GROUP_C       "moved to fail cache in repository"
 
 #define __CPP_TRANSPORT_REPO_FAILED_CONTENT_GROUP_A      "Task"
@@ -68,8 +71,8 @@
 #define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_B      "Some postprocessing could not be completed, or other errors were encountered. Failing output group"
 #define __CPP_TRANSPORT_REPO_FAILED_POSTINT_GROUP_C      "moved to fail cache in repository"
 
-#define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: Root directory already exists"
-#define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: Attempt to access repository when unset in 'task_manager'"
+#define __CPP_TRANSPORT_REPO_ROOT_EXISTS                 "Repository error: root directory already exists"
+#define __CPP_TRANSPORT_REPO_NOT_SET                     "Internal error: attempt to access repository when unset in 'task_manager'"
 
 #define __CPP_TRANSPORT_REPO_MISSING_RECORD              "Repository error: Could not find database record"
 
@@ -77,13 +80,14 @@
 #define __CPP_TRANSPORT_REPO_NONE                        "Nothing to do: no repository specified"
 #define __CPP_TRANSPORT_RUN_REPAIR                       "; consider checking database integrity"
 #define __CPP_TRANSPORT_REPO_FOR_TASK                    "while processing task"
-#define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: Unexpected job type in 'task_manager'"
-#define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Repository error: Attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
-#define __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Repository error: Aggregator unset in writer object"
+#define __CPP_TRANSPORT_UNKNOWN_JOB_TYPE                 "Internal error: unexpected job type in 'task_manager'"
+#define __CPP_TRANSPORT_REPO_OUTPUT_WRITER_UNSETHANDLE   "Internal error: attempt to read an unset 'data_manager' data-container handle in 'integration_writer'"
+#define __CPP_TRANSPORT_REPO_WRITER_AGGREGATOR_UNSET     "Internal error: aggregator unset in writer object"
+#define __CPP_TRANSPORT_REPO_WRITER_FAILURE_UNSUPPORTED  "Internal error: writer doesn't support failure lists"
 
-#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: Attempt to enumerate derived contents for non-integration task"
-#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT "Repository error: Attempt to enumerate derived contents for non-postintegration task"
-#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: Attempt to enumerate derived contents for non-output task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_INTGRTN "Repository error: attempt to enumerate derived contents for non-integration task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_POSTINT "Repository error: attempt to enumerate derived contents for non-postintegration task"
+#define __CPP_TRANSPORT_REPO_EXTRACT_DERIVED_NOT_OUTPUT  "Repository error: attempt to enumerate derived contents for non-output task"
 
 #define __CPP_TRANSPORT_REPO_TASK_NOT_INTEGRATION        "Repository error: derived product requires an integration task"
 #define __CPP_TRANSPORT_REPO_ZETA_TASK_NOT_DERIVABLE     "Repository error: task named in zeta task is not of derivable-type"

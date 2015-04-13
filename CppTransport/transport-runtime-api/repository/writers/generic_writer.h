@@ -128,6 +128,12 @@ namespace transport
         //! Get creation time
         const boost::posix_time::ptime& get_creation_time() const { return(this->generic_metadata.creation_time); }
 
+        //! Set failed status
+        void set_fail(bool g) { this->fail = g; }
+
+        //! Query failed status
+        bool is_failed() const { return(this->fail); }
+
 
         // ABSOLUTE PATHS
 
@@ -189,6 +195,9 @@ namespace transport
         //! metadata
         metadata_group generic_metadata;
 
+        //! fail flag (eg. failed integrations, failed content generation)
+        bool fail;
+
 
         // MISCELLANEOUS
 
@@ -214,14 +223,14 @@ namespace transport
 
 
     generic_writer::generic_writer(const std::string& n, const generic_writer::metadata_group& m,
-                                   const generic_writer::paths_group& p,
-                                   unsigned int w)
+                                   const generic_writer::paths_group& p, unsigned int w)
 	    : generic_metadata(m),
 	      paths(p),
         name(n),
 	      worker_number(w),
 	      data_manager_handle(nullptr),
-	      committed(false)
+	      committed(false),
+        fail(false)
 	    {
         // set up logging
 

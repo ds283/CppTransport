@@ -239,10 +239,10 @@ namespace transport
 				void close_down_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
 
 				//! Master node: main loop: poll workers for events
+        template <typename WriterObject>
 				bool poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
 				                  integration_metadata& int_metadata, output_metadata& out_metadata,
-				                  boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
-				                  slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
+				                  WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label);
 
 				//! Master node: generate new work assignments for workers
 				void assign_work_to_workers(boost::log::sources::severity_logger< base_writer::log_severity_level >& log);
@@ -903,7 +903,7 @@ namespace transport
         // create an output writer to commit the result of this integration to the repository.
         // like all writers, it aborts (ie. executes a rollback if needed) when it goes out of scope unless
         // it is explicitly committed
-        std::shared_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank());
+        std::shared_ptr< integration_writer<number> > writer = this->repo->new_integration_task_content(rec, tags, this->get_rank(), 0);
 
         // initialize the writer
         this->data_mgr->initialize_writer(writer);
@@ -958,7 +958,7 @@ namespace transport
 	        journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
 	        std::vector<boost::mpi::request> requests(this->world.size()-1);
-	        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path);
+	        MPI::new_integration_payload payload(writer->get_record()->get_name(), tempdir_path, logdir_path, writer->get_workgroup_number());
 
 	        for(unsigned int i = 0; i < this->world.size()-1; i++)
 		        {
@@ -970,7 +970,7 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_INTEGRATION instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
 
         // push task metadata we have collected to the writer
         writer->set_metadata(i_metadata);
@@ -1057,11 +1057,6 @@ namespace transport
         metadata.total_configurations += payload.get_num_integrations();
         metadata.total_failures += payload.get_num_failures();
         metadata.total_refinements += payload.get_num_refinements();
-
-        std::list<unsigned int> failures = payload.get_failed_serials();
-        metadata.failed_serials.merge(failures);
-
-        if(payload.get_num_failures() > 0) metadata.is_failed = true;
 	    }
 
 
@@ -1147,7 +1142,7 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_DERIVED_CONTENT instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
 
         writer->set_metadata(o_metadata);
         wallclock_timer.stop();
@@ -1386,9 +1381,12 @@ namespace transport
         this->data_mgr->create_tables(p_writer, tk);
 
         // create an output writer for the integration task; use suffix option to add "-paired" to distinguish the different output groups
-        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), "-paired");
+        std::shared_ptr<integration_writer<number> > i_writer = this->repo->new_integration_task_content(prec, tags, this->get_rank(), 0, "-paired");
         this->data_mgr->initialize_writer(i_writer);
         this->data_mgr->create_tables(i_writer, ptk);
+
+        // pair
+        p_writer->pair(i_writer->get_name());
 
         // set up aggregators
         integration_aggregator     i_agg = std::bind(&master_controller<number>::aggregate_integration, this, i_writer, std::placeholders::_1, std::placeholders::_2);
@@ -1453,7 +1451,7 @@ namespace transport
 	        BOOST_LOG_SEV(writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
-		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer->get_log(), begin_label, end_label);
+		    bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, writer, begin_label, end_label);
 
         writer->set_metadata(o_metadata);
         wallclock_timer.stop();
@@ -1491,7 +1489,7 @@ namespace transport
           journal_instrument instrument(this->journal, master_work_event::MPI_begin, master_work_event::MPI_end);
 
           std::vector<boost::mpi::request> requests(this->world.size()-1);
-          MPI::new_postintegration_payload payload(p_writer->get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path);
+          MPI::new_postintegration_payload payload(p_writer->get_record()->get_name(), p_tempdir_path, p_logdir_path, tags, i_tempdir_path, i_logdir_path, i_writer->get_workgroup_number());
 
           for(unsigned int i = 0; i < this->world.size()-1; i++)
             {
@@ -1503,7 +1501,7 @@ namespace transport
           BOOST_LOG_SEV(i_writer->get_log(), base_writer::normal) << "++ All workers received NEW_POSTINTEGRATION instruction";
         }
 
-        bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, i_writer->get_log(), begin_label, end_label);
+        bool success = this->poll_workers(i_agg, p_agg, d_agg, i_metadata, o_metadata, i_writer, begin_label, end_label);
 
         i_writer->set_metadata(i_metadata);
         p_writer->set_metadata(o_metadata);
@@ -1690,12 +1688,14 @@ namespace transport
 
 
     template <typename number>
+    template <typename WriterObject>
     bool master_controller<number>::poll_workers(integration_aggregator& int_agg, postintegration_aggregator& post_agg, derived_content_aggregator& derived_agg,
                                                  integration_metadata& int_metadata, output_metadata& out_metadata,
-                                                 boost::log::sources::severity_logger< base_writer::log_severity_level >& log,
-                                                 slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
+                                                 WriterObject& writer, slave_work_event::event_type begin_label, slave_work_event::event_type end_label)
 	    {
 		    bool success = true;
+
+        boost::log::sources::severity_logger <base_writer::log_severity_level>& log = writer->get_log();
 
         // set up aggregation queues
         std::list<MPI::data_ready_payload>    int_agg_queue;
@@ -1806,6 +1806,7 @@ namespace transport
                         // mark this worker as unassigned, and update its mean time per work item
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
                         this->update_integration_metadata(payload, int_metadata);
+                        if(payload.get_num_failures() > 0) writer->merge_failure_list(payload.get_failed_serials());
 
                         break;
                       }
@@ -1819,6 +1820,7 @@ namespace transport
 
                         this->work_scheduler.mark_unassigned(this->worker_number(stat->source()), payload.get_integration_time(), payload.get_num_integrations());
                         this->update_integration_metadata(payload, int_metadata);
+                        if(payload.get_num_failures() > 0) writer->merge_failure_list(payload.get_failed_serials());
 
                         success = false;
                         break;
