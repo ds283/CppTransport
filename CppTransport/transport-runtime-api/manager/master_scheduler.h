@@ -652,7 +652,7 @@ namespace transport
 
 								    boost::timer::nanosecond_type total_wallclock_time         = this->timer.elapsed().wall;
 								    boost::timer::nanosecond_type mean_wallclock_time_per_item = total_wallclock_time / this->number_work;
-								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size());
+								    boost::timer::nanosecond_type estimated_time_remaining     = mean_wallclock_time_per_item * static_cast<unsigned int>(this->queue.size()) + this->current_granularity;
 
 								    boost::posix_time::time_duration duration        = boost::posix_time::seconds(estimated_time_remaining / (1000 * 1000 * 1000));
 								    boost::posix_time::ptime         now             = boost::posix_time::second_clock::local_time();
