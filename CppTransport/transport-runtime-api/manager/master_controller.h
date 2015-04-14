@@ -1402,6 +1402,7 @@ namespace transport
               {
                 model<number>* m = ptk->get_model();
                 this->work_scheduler.set_state_size(m->backend_threepf_state_size());
+                this->work_scheduler.prepare_queue(*ptk);
                 this->schedule_paired_postintegration(rec, z3pf, ptk, seeded, seed_group, tags, slave_work_event::begin_threepf_assignment, slave_work_event::end_threepf_assignment);
               }
             else
